@@ -489,6 +489,23 @@ declare module 'react-native-reanimated' {
     targetGlobalOriginY: number;
   }
 
+  export enum SensorType {
+    ACCELEROMETER = 1,
+    GYROSCOPE = 2,
+    GRAVITY = 3,
+    MAGNETIC_FIELD = 4,
+    ROTATION = 5,
+  }
+
+  export type SensorConfig = {
+    interval: number;
+  };
+
+  export function useAnimatedSensor(
+    sensorType: SensorType,
+    userConfig?: SensorConfig
+  );
+
   export interface ExitAnimationsValues {
     currentOriginX: number;
     currentOriginY: number;

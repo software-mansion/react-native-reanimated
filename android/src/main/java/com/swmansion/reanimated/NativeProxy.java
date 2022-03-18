@@ -19,6 +19,8 @@ import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
+import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
+import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,12 +75,26 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  public static class SensorSetter {
+
+    @DoNotStrip private final HybridData mHybridData;
+
+    @DoNotStrip
+    private SensorSetter(HybridData hybridData) {
+      mHybridData = hybridData;
+    }
+
+    public native void sensorSetter(float[] value);
+  }
+
+  @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
+  private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
@@ -93,6 +109,7 @@ public class NativeProxy {
             context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
+    reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     addDevMenuOption();
 
     GestureHandlerStateManager tempHandlerStateManager;
@@ -204,6 +221,17 @@ public class NativeProxy {
   private void registerEventHandler(EventHandler handler) {
     handler.mCustomEventNamesResolver = mNodesManager.getEventNameResolver();
     mNodesManager.registerEventHandler(handler);
+  }
+
+  @DoNotStrip
+  private int registerSensor(int sensorType, int interval, SensorSetter setter) {
+    return reanimatedSensorContainer.registerSensor(
+        ReanimatedSensorType.getInstanceById(sensorType), interval, setter);
+  }
+
+  @DoNotStrip
+  private void unregisterSensor(int sensorId) {
+    reanimatedSensorContainer.unregisterSensor(sensorId);
   }
 
   public void onCatalystInstanceDestroy() {

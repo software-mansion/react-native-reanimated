@@ -62,6 +62,7 @@ add_library(
         "${COMMON_SRC_DIR}/cpp/Tools/WorkletEventHandler.cpp"
         "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
+        "${COMMON_SRC_DIR}/cpp/AnimatedSensor/AnimatedSensorModule.cpp"
 )
 
 # includes
@@ -92,6 +93,7 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/headers/SharedItems"
         "${COMMON_SRC_DIR}/cpp/headers/Registries"
         "${COMMON_SRC_DIR}/cpp/headers/LayoutAnimations"
+        "${COMMON_SRC_DIR}/cpp/headers/AnimatedSensor"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${SRC_DIR}/main/cpp/headers"
 )

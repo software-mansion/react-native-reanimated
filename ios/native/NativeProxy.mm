@@ -16,6 +16,7 @@
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "REAUIManager.h"
+#import "ReanimatedSensorContainer.h"
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
@@ -280,12 +281,27 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // Layout Animations end
 
+  // sensors
+  ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
+  auto registerSensorFunction = [=](int sensorType, int interval, std::function<void(double[])> setter) -> int {
+    return [reanimatedSensorContainer registerSensor:(ReanimatedSensorType)sensorType
+                                            interval:interval
+                                              setter:^(double *data) {
+                                                setter(data);
+                                              }];
+  };
+
+  auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
+  // end sensors
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       propUpdater,
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
+      registerSensorFunction,
+      unregisterSensorFunction,
       setGestureStateFunction,
       configurePropsFunction};
 

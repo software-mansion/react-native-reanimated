@@ -8,6 +8,7 @@
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
 #include "MapperRegistry.h"
+#include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
@@ -71,6 +72,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
       propObtainer(propObtainer),
+      animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
@@ -87,6 +89,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.measuringFunction,
       platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.registerSensor,
+      platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
       layoutAnimationsProxy);
   onRenderCallback = [this](double timestampMs) {
@@ -306,6 +310,21 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     this->errorHandler->setError(str);
     this->errorHandler->raise();
   }
+}
+
+jsi::Value NativeReanimatedModule::registerSensor(
+    jsi::Runtime &rt,
+    const jsi::Value &sensorType,
+    const jsi::Value &interval,
+    const jsi::Value &sensorDataContainer) {
+  return animatedSensorModule.registerSensor(
+      rt, sensorType, interval, sensorDataContainer);
+}
+
+void NativeReanimatedModule::unregisterSensor(
+    jsi::Runtime &rt,
+    const jsi::Value &sensorId) {
+  animatedSensorModule.unregisterSensor(sensorId);
 }
 
 } // namespace reanimated

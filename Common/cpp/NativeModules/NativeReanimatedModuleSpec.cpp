@@ -108,6 +108,26 @@ static jsi::Value SPEC_PREFIX(enableLayoutAnimations)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(registerSensor)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->registerSensor(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+}
+
+static jsi::Value SPEC_PREFIX(unregisterSensor)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->unregisterSensor(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
 static jsi::Value SPEC_PREFIX(configureProps)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -139,7 +159,9 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["getViewProp"] = MethodMetadata{3, SPEC_PREFIX(getViewProp)};
   methodMap_["enableLayoutAnimations"] =
       MethodMetadata{2, SPEC_PREFIX(enableLayoutAnimations)};
+  methodMap_["registerSensor"] = MethodMetadata{3, SPEC_PREFIX(registerSensor)};
+  methodMap_["unregisterSensor"] =
+      MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};
   methodMap_["configureProps"] = MethodMetadata{2, SPEC_PREFIX(configureProps)};
 }
-
 } // namespace reanimated

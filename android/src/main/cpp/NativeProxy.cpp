@@ -117,10 +117,18 @@ void NativeProxy::installJSIBindings() {
     scrollTo(viewTag, x, y, animated);
   };
 
+  auto registerSensorFunction =
+      [this](int sensorType, int interval, std::function<void(double[])> setter)
+      -> int {
+    return this->registerSensor(sensorType, interval, std::move(setter));
+  };
+  auto unregisterSensorFunction = [this](int sensorId) {
+    unregisterSensor(sensorId);
+  };
+
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
-
 #if FOR_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
@@ -169,6 +177,8 @@ void NativeProxy::installJSIBindings() {
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
+      registerSensorFunction,
+      unregisterSensorFunction,
       setGestureStateFunction,
       configurePropsFunction};
 
@@ -270,6 +280,24 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   result.push_back({"height", elements[5]});
 
   return result;
+}
+
+int NativeProxy::registerSensor(
+    int sensorType,
+    int interval,
+    std::function<void(double[])> setter) {
+  static auto method =
+      javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
+          "registerSensor");
+  return method(
+      javaPart_.get(),
+      sensorType,
+      interval,
+      SensorSetter::newObjectCxxArgs(std::move(setter)).get());
+}
+void NativeProxy::unregisterSensor(int sensorId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>("unregisterSensor");
+  method(javaPart_.get(), sensorId);
 }
 
 void NativeProxy::setGestureState(int handlerTag, int newState) {

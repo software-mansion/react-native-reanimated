@@ -1,5 +1,9 @@
 import { NativeModules } from 'react-native';
-import { SharedValue } from '../commonTypes';
+import {
+  SharedValue,
+  SensorValue3D,
+  SensorValueRotation,
+} from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
 
 export class NativeReanimated {
@@ -29,6 +33,22 @@ export class NativeReanimated {
 
   makeRemote<T>(object = {}): T {
     return this.InnerNativeModule.makeRemote(object);
+  }
+
+  registerSensor(
+    sensorType: number,
+    interval: number,
+    sensorData: SensorValue3D | SensorValueRotation
+  ) {
+    return this.InnerNativeModule.registerSensor(
+      sensorType,
+      interval,
+      sensorData
+    );
+  }
+
+  unregisterSensor(sensorId: number) {
+    return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
   startMapper(
