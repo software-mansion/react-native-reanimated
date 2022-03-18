@@ -13,10 +13,11 @@ AnimatedSensorModule::AnimatedSensorModule(
       runtimeManager_(runtimeManager) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
+  // It is called during app reload because app reload doesn't call hooks
+  // unmounting
   for (auto sensorId : sensorsIds_) {
     platformUnregisterSensorFunction_(sensorId);
   }
-  sensorsIds_.clear();
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
@@ -63,6 +64,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
 }
 
 void AnimatedSensorModule::unregisterSensor(const jsi::Value &sensorId) {
+  // It is called during sensor hook unmounting
   sensorsIds_.erase(sensorId.getNumber());
   platformUnregisterSensorFunction_(sensorId.asNumber());
 }
