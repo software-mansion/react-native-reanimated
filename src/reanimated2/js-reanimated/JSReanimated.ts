@@ -106,7 +106,7 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   registerSensor(): number {
-    console.warn('[Reanimated] sensors API is not available for WEB');
+    console.warn('[Reanimated] useAnimatedSensor is not available on web yet.');
     return -1;
   }
 

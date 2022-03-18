@@ -6,15 +6,15 @@ namespace reanimated {
 
 AnimatedSensorModule::AnimatedSensorModule(
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    RuntimeManager *runtimeManager) {
-  platformRegisterSensorFunction = platformDepMethodsHolder.registerSensor;
-  platformUnregisterSensorFunction = platformDepMethodsHolder.unregisterSensor;
-  this->runtimeManager = runtimeManager;
-}
+    RuntimeManager *runtimeManager)
+    : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
+      platformUnregisterSensorFunction_(
+          platformDepMethodsHolder.unregisterSensor),
+      runtimeManager_(runtimeManager) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
   for (auto sensorId : sensorsIds) {
-    platformUnregisterSensorFunction(sensorId);
+    platformUnregisterSensorFunction_(sensorId);
   }
   sensorsIds.clear();
 }
@@ -24,27 +24,37 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const jsi::Value &sensorType,
     const jsi::Value &interval,
     const jsi::Value &sensorDataContainer) {
-  std::vector<const char *> propertiesName;
-  if (sensorType.asNumber() == SensorType::ROTATION_VECTOR) {
-    propertiesName = {"qw", "qx", "qy", "qz", "yaw", "pitch", "roll"};
-  } else {
-    propertiesName = {"x", "y", "z"};
-  }
   std::shared_ptr<ShareableValue> sensorsData = ShareableValue::adapt(
-      rt, sensorDataContainer.getObject(rt), runtimeManager);
+      rt, sensorDataContainer.getObject(rt), runtimeManager_);
   auto &mutableObject =
       ValueWrapper::asMutableValue(sensorsData->valueContainer);
-  auto setter = [&, mutableObject, propertiesName](double newValues[]) {
-    jsi::Runtime &rt = *runtimeManager->runtime.get();
-    jsi::Object value(rt);
-    int index = 0;
-    for (const auto &name : propertiesName) {
-      value.setProperty(rt, name, newValues[index]);
-      index++;
-    }
-    mutableObject->setValue(rt, std::move(value));
-  };
-  int sensorId = platformRegisterSensorFunction(
+
+  std::function<void(double[])> setter;
+  if (sensorType.asNumber() == SensorType::ROTATION_VECTOR) {
+    setter = [&, mutableObject](double newValues[]) {
+      jsi::Runtime &runtime = *runtimeManager_->runtime.get();
+      jsi::Object value(runtime);
+      value.setProperty(runtime, "qw", newValues[0]);
+      value.setProperty(runtime, "qx", newValues[1]);
+      value.setProperty(runtime, "qy", newValues[2]);
+      value.setProperty(runtime, "qz", newValues[3]);
+      value.setProperty(runtime, "yaw", newValues[4]);
+      value.setProperty(runtime, "pitch", newValues[5]);
+      value.setProperty(runtime, "roll", newValues[6]);
+      mutableObject->setValue(runtime, std::move(value));
+    };
+  } else {
+    setter = [&, mutableObject](double newValues[]) {
+      jsi::Runtime &runtime = *runtimeManager_->runtime.get();
+      jsi::Object value(runtime);
+      value.setProperty(runtime, "x", newValues[0]);
+      value.setProperty(runtime, "y", newValues[1]);
+      value.setProperty(runtime, "z", newValues[2]);
+      mutableObject->setValue(runtime, std::move(value));
+    };
+  }
+
+  int sensorId = platformRegisterSensorFunction_(
       sensorType.asNumber(), interval.asNumber(), setter);
   if (sensorId != -1) {
     sensorsIds.insert(sensorId);
@@ -54,7 +64,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
 
 void AnimatedSensorModule::unregisterSensor(const jsi::Value &sensorId) {
   sensorsIds.erase(sensorId.getNumber());
-  platformUnregisterSensorFunction(sensorId.asNumber());
+  platformUnregisterSensorFunction_(sensorId.asNumber());
 }
 
 } // namespace reanimated

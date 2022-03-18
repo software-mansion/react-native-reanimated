@@ -7,7 +7,7 @@ export enum SensorType {
   ACCELEROMETER = 1,
   GYROSCOPE = 2,
   GRAVITY = 3,
-  MAGNETIC = 4,
+  MAGNETIC_FIELD = 4,
   ROTATION = 5,
 }
 
@@ -40,7 +40,7 @@ export function useAnimatedSensor(
   });
 
   if (ref.current.sensor === null) {
-    ref.current.config = Object.assign({ interval: 10 }, userConfig);
+    ref.current.config = { interval: 10, ...userConfig };
     let sensorData;
     if (sensorType === SensorType.ROTATION) {
       sensorData = {
@@ -63,7 +63,7 @@ export function useAnimatedSensor(
   }
 
   useEffect(() => {
-    ref.current.config = Object.assign({ interval: 10 }, userConfig);
+    ref.current.config = { interval: 10, ...userConfig };
     const id = NativeReanimated.registerSensor(
       sensorType,
       ref.current.config.interval,

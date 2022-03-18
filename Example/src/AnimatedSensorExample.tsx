@@ -5,37 +5,42 @@ import Animated, {
   useAnimatedSensor,
   SensorType,
 } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 
-function AnimatedStyleUpdateExample(): React.ReactElement {
+export default function AnimatedStyleUpdateExample() {
   const animatedSensor = useAnimatedSensor(SensorType.ROTATION, {
-    interval: 100,
+    interval: 10,
   });
   const style = useAnimatedStyle(() => {
-    let x = animatedSensor.sensor.value.yaw;
-    x *= x < 0 ? -1 : 1;
-    let y = animatedSensor.sensor.value.pitch;
-    y *= y < 0 ? -1 : 1;
+    const yaw = Math.abs(animatedSensor.sensor.value.yaw);
+    const pitch = Math.abs(animatedSensor.sensor.value.pitch);
     return {
-      height: withTiming(x * 200 + 20, { duration: 100 }),
-      width: withTiming(y * 200 + 20, { duration: 100 }),
+      height: withTiming(yaw * 200 + 20, { duration: 100 }),
+      width: withTiming(pitch * 200 + 20, { duration: 100 }),
     };
   });
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={componentStyle.container}>
       <Button
         title={'log data'}
         onPress={() => console.log(animatedSensor.sensor.value)}
       />
-      <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
-        ]}
-      />
+      <Animated.View style={[componentStyle.square, style]} />
     </View>
   );
 }
 
-export default AnimatedStyleUpdateExample;
+const componentStyle = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  square: {
+    width: 50,
+    height: 50,
+    backgroundColor: 'black',
+    margin: 30,
+  },
+});

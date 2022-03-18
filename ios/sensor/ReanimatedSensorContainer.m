@@ -11,9 +11,7 @@ static NSNumber *_nextSensorId = nil;
 {
   self = [super init];
   _sensors = [[NSMutableDictionary alloc] init];
-  if (_nextSensorId == nil) {
-    _nextSensorId = @0;
-  }
+  _nextSensorId = @0;
   return self;
 }
 

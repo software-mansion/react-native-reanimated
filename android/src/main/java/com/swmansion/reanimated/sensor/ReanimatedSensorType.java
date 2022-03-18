@@ -25,6 +25,6 @@ public enum ReanimatedSensorType {
             case 4: return ReanimatedSensorType.MAGNETIC_FIELD;
             case 5: return ReanimatedSensorType.ROTATION_VECTOR;
         }
-        return ReanimatedSensorType.ACCELEROMETER;
+        throw new IllegalArgumentException("[Reanimated] Unknown sensor type");
     }
 }

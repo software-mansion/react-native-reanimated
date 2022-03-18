@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <set>
+#include <unordered_set>
 
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeManager.h"
@@ -19,10 +19,10 @@ enum SensorType {
 };
 
 class AnimatedSensorModule {
-  std::set<int> sensorsIds;
-  RegisterSensorFunction platformRegisterSensorFunction;
-  UnregisterSensorFunction platformUnregisterSensorFunction;
-  RuntimeManager *runtimeManager;
+  std::unordered_set<int> sensorsIds;
+  RegisterSensorFunction platformRegisterSensorFunction_;
+  UnregisterSensorFunction platformUnregisterSensorFunction_;
+  RuntimeManager *runtimeManager_;
 
  public:
   AnimatedSensorModule(

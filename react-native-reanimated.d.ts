@@ -493,7 +493,7 @@ declare module 'react-native-reanimated' {
     ACCELEROMETER = 1,
     GYROSCOPE = 2,
     GRAVITY = 3,
-    MAGNETIC = 4,
+    MAGNETIC_FIELD = 4,
     ROTATION = 5,
   }
 
