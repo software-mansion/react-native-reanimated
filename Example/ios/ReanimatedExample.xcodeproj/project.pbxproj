@@ -236,7 +236,7 @@
 				ORGANIZATIONNAME = Facebook;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						DevelopmentTeam = H623Z5ALYX;
+						DevelopmentTeam = J5FM626PE2;
 					};
 					715B4D02242364A80073FC2F = {
 						CreatedOnToolsVersion = 11.3.1;
@@ -432,7 +432,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = NO;
-				DEVELOPMENT_TEAM = H623Z5ALYX;
+				DEVELOPMENT_TEAM = J5FM626PE2;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../node_modules/react-native-gesture-handler/ios/**",
@@ -451,7 +451,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.mleko.ReanimatedExample;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.cokolwiek.ReanimatedExample;
 				PRODUCT_NAME = ReanimatedExample;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
@@ -467,7 +467,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = H623Z5ALYX;
+				DEVELOPMENT_TEAM = J5FM626PE2;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../node_modules/react-native-gesture-handler/ios/**",
@@ -480,7 +480,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.mleko.ReanimatedExample;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.cokolwiek.ReanimatedExample;
 				PRODUCT_NAME = ReanimatedExample;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
