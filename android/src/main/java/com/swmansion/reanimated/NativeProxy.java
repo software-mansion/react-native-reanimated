@@ -14,6 +14,7 @@ import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
@@ -21,13 +22,11 @@ import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
-// import com.facebook.soloader.SoLoader;
 
 public class NativeProxy {
 
   static {
-    System.loadLibrary("reanimated");
-    // SoLoader.loadLibrary("reanimated");
+    SoLoader.loadLibrary("reanimated");
   }
 
   @DoNotStrip
