@@ -13,10 +13,10 @@ AnimatedSensorModule::AnimatedSensorModule(
       runtimeManager_(runtimeManager) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
-  for (auto sensorId : sensorsIds) {
+  for (auto sensorId : sensorsIds_) {
     platformUnregisterSensorFunction_(sensorId);
   }
-  sensorsIds.clear();
+  sensorsIds_.clear();
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
@@ -57,13 +57,13 @@ jsi::Value AnimatedSensorModule::registerSensor(
   int sensorId = platformRegisterSensorFunction_(
       sensorType.asNumber(), interval.asNumber(), setter);
   if (sensorId != -1) {
-    sensorsIds.insert(sensorId);
+    sensorsIds_.insert(sensorId);
   }
   return jsi::Value(sensorId);
 }
 
 void AnimatedSensorModule::unregisterSensor(const jsi::Value &sensorId) {
-  sensorsIds.erase(sensorId.getNumber());
+  sensorsIds_.erase(sensorId.getNumber());
   platformUnregisterSensorFunction_(sensorId.asNumber());
 }
 

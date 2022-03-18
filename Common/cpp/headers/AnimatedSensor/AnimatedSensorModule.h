@@ -19,7 +19,7 @@ enum SensorType {
 };
 
 class AnimatedSensorModule {
-  std::unordered_set<int> sensorsIds;
+  std::unordered_set<int> sensorsIds_;
   RegisterSensorFunction platformRegisterSensorFunction_;
   UnregisterSensorFunction platformUnregisterSensorFunction_;
   RuntimeManager *runtimeManager_;
