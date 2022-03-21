@@ -1,4 +1,5 @@
 #include <cxxabi.h>
+#include <react/renderer/uimanager/UIManager.h> // isShadowNodeWrapperForThirdPartyLibs, shadowNodeFromValueForThirdPartyLibs
 #include "FrozenObject.h"
 #include "MutableValue.h"
 #include "MutableValueSetterProxy.h"
@@ -157,10 +158,13 @@ void ShareableValue::adapt(
       valueContainer =
           std::make_unique<RemoteObjectWrapper>(std::make_shared<RemoteObject>(
               rt, object, runtimeManager, runtimeManager->scheduler));
-    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
+      // } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
+    } else if (isShadowNodeWrapperForThirdPartyLibs(rt, object)) {
       type = ValueType::ShadowNodeType;
-      valueContainer = std::make_unique<ShadowNodeValueWrapper>(
-          object.getHostObject<ShadowNodeWrapper>(rt)->shadowNode);
+      // valueContainer = std::make_unique<ShadowNodeValueWrapper>(
+      //     object.getHostObject<ShadowNodeWrapper>(rt)->shadowNode);
+      auto shadowNode = shadowNodeFromValueForThirdPartyLibs(rt, value);
+      valueContainer = std::make_unique<ShadowNodeValueWrapper>(shadowNode);
       adaptCache(rt, value);
     } else {
       // create frozen object based on a copy of a given object

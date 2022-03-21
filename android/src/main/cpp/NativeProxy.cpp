@@ -13,12 +13,6 @@
 #include <jsi/JSCRuntime.h>
 #endif
 
-// #include <react/renderer/core/ReanimatedListener.h> // ReanimatedListener
-// #include <react/renderer/core/ShadowNode.h> // ShadowNode
-// #include <react/renderer/mounting/ShadowTreeRegistry.h> // ShadowTreeRegistry
-// #include <react/renderer/uimanager/UIManager.h> // ReanimatedThings,
-// UIManager
-
 #include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
@@ -62,16 +56,6 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 void NativeProxy::installJSIBindings() {
-  auto propUpdater = [this](
-                         jsi::Runtime &rt,
-                         int viewTag,
-                         const jsi::Value &viewName,
-                         const jsi::Value &shadowNodeValue,
-                         const jsi::Object &props) {
-    // viewName is for iOS only, we skip it here
-    this->updateProps(rt, viewTag, props);
-  };
-
   auto getCurrentTime = [this]() {
     auto method =
         javaPart_->getClass()->getMethod<local_ref<JString>()>("getUptime");
@@ -98,6 +82,14 @@ void NativeProxy::installJSIBindings() {
     };
     this->requestRender(std::move(wrappedOnRender));
   };
+
+  auto synchronouslyUpdateUIPropsFunction =
+      [](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
+        // NSNumber *viewTag = @(tag);
+        // NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt,
+        // props.asObject(rt)); [reanimatedModule.nodesManager
+        // synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+      };
 
   auto propObtainer = [this](
                           jsi::Runtime &rt,
@@ -166,7 +158,7 @@ void NativeProxy::installJSIBindings() {
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
-      propUpdater,
+      synchronouslyUpdateUIPropsFunction,
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
@@ -236,70 +228,8 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
   return _nativeReanimatedModule->isAnyHandlerWaitingForEvent(s);
 }
 
-void NativeProxy::updateNativeProps(int viewTag, std::string nativePropsJson) {
-  // std::shared_ptr nativePropsJsonPtr =
-  //     std::make_shared<std::string>(nativePropsJson);
-
-  // std::shared_ptr<UIManager> uiManager = ReanimatedThings::uiManager;
-  // ShadowTreeRegistry *shadowTreeRegistry =
-  // ReanimatedThings::shadowTreeRegistry; std::shared_ptr<const
-  // ContextContainer> contextContainer =
-  //     uiManager->getContextContainer();
-  // SurfaceId surfaceId = 1;
-  // PropsParserContext propsParserContext{surfaceId, *contextContainer};
-
-  // ShadowNode::Shared shadowNode =
-  //     ShadowNode::newestShadowNodesRegistry->getByTag(viewTag);
-  // // react_native_assert(shadowNode !== nullptr); // TODO: assert
-  // if (shadowNode == nullptr) {
-  //   return; // better safe than sorry
-  // }
-
-  // shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
-  //   if
-  //   (shadowTree.getCurrentRevision().rootShadowNode->getChildren().empty()) {
-  //     return; // empty shadow tree (only RootShadowNode with no children)
-  //   }
-
-  //   ShadowTreeCommitTransaction transaction =
-  //       [&](RootShadowNode const &oldRootShadowNode) {
-  //         // TODO: don't clone root here
-  //         ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
-  //             oldRootShadowNode.getChildren()[0]->getFamily(),
-  //             [&](ShadowNode const &oldShadowNode) {
-  //               return oldShadowNode.clone(ShadowNodeFragment{});
-  //             });
-
-  //         Tag tag = viewTag; // TODO: use ShadowNode::Shared instead of Tag
-  //         folly::dynamic props = folly::parseJson(*nativePropsJsonPtr);
-
-  //         ShadowNode::Shared shadowNode =
-  //             ShadowNode::newestShadowNodesRegistry->getByTag(tag);
-  //         const ShadowNodeFamily &family = shadowNode->getFamily();
-  //         // react_native_assert(family.getSurfaceId() == 1); // TODO:
-  //         support
-  //         // other surfaces
-
-  //         std::function<ShadowNode::Unshared(ShadowNode const
-  //         &oldShadowNode)>
-  //             callback = [&](ShadowNode const &oldShadowNode) {
-  //               Props::Shared newProps =
-  //                   oldShadowNode.getComponentDescriptor().cloneProps(
-  //                       propsParserContext,
-  //                       oldShadowNode.getProps(),
-  //                       RawProps(props));
-
-  //               ShadowNodeFragment fragment{/* .props = */ newProps};
-  //               return oldShadowNode.clone(fragment);
-  //             };
-
-  //         newRoot = newRoot->cloneTree(family, callback);
-  //         return std::static_pointer_cast<RootShadowNode>(newRoot);
-  //       };
-
-  //   ShadowTree::CommitOptions commitOptions{};
-  //   shadowTree.commit(transaction, commitOptions);
-  // });
+void NativeProxy::performOperations() {
+  _nativeReanimatedModule->performOperations();
 }
 
 void NativeProxy::registerNatives() {
@@ -309,7 +239,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("updateNativeProps", NativeProxy::updateNativeProps)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
@@ -330,17 +260,6 @@ void NativeProxy::registerEventHandler(
   method(
       javaPart_.get(),
       EventHandler::newObjectCxxArgs(std::move(handler)).get());
-}
-
-void NativeProxy::updateProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Object &props) {
-  auto method = javaPart_->getClass()
-                    ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-                        "updateProps");
-  method(
-      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {

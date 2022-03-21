@@ -115,7 +115,7 @@ public class NativeProxy {
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
-  public native void updateNativeProps(int viewTag, String nativePropsJson);
+  public native void performOperations();
 
   public Scheduler getScheduler() {
     return mScheduler;

@@ -80,7 +80,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 
   void updateProps(
       jsi::Runtime &rt,
@@ -105,6 +104,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
   std::function<void(double)> onRenderCallback;
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   std::shared_ptr<UIManager> uiManager_;
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>

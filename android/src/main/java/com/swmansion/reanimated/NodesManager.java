@@ -222,15 +222,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void performOperations() {
-    if (!mOperationsInBatch.isEmpty()) {
-      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
-      mOperationsInBatch = new LinkedList<>();
-
-      while (!copiedOperationsQueue.isEmpty()) {
-        NativeUpdateOperation op = copiedOperationsQueue.remove();
-        mNativeProxy.updateNativeProps(op.mViewTag, op.mNativeProps);
-      }
-    }
+    mNativeProxy.performOperations();
   }
 
   private void onAnimationFrame(long frameTimeNanos) {

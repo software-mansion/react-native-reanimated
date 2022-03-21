@@ -1,4 +1,6 @@
 #include "NativeReanimatedModule.h"
+#include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
 #include <functional>
 #include <memory>
 #include <thread>
@@ -389,12 +391,8 @@ void NativeReanimatedModule::performOperations() {
   shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
     ShadowTreeCommitTransaction transaction =
         [&](RootShadowNode const &oldRootShadowNode) {
-          // TODO: don't clone root here
-          ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
-              oldRootShadowNode.getChildren()[0]->getFamily(),
-              [&](ShadowNode const &oldShadowNode) {
-                return oldShadowNode.clone(ShadowNodeFragment{});
-              });
+          ShadowNode::Unshared newRoot =
+              oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
           for (const auto &pair : copiedOperationsQueue) {
             const ShadowNodeFamily &family = pair.first->getFamily();

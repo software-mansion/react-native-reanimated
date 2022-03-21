@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.1)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare")
+set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -DANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
 
 if(${NATIVE_DEBUG})
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
@@ -20,12 +20,12 @@ if(${CLIENT_SIDE_BUILD})
     set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
     set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 else()
-    set (NODE_MODULES_DIR "../node_modules")
+    set (NODE_MODULES_DIR "../FabricExample/node_modules")
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
 
 set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
-set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
+set (FBJNI_HEADERS_DIR ../node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/../../fbjni/headers)
 
 # reanimated shared
 
@@ -133,13 +133,60 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+# find_library(
+#         REACT_RENDER_UIMANAGER
+#         react_render_uimanager
+#         PATHS ${LIBRN_DIR}
+#         NO_CMAKE_FIND_ROOT_PATH
+# )
+add_library( react_render_uimanager
+             SHARED
+             IMPORTED )
+set_target_properties( 
+             react_render_uimanager
+
+             # Specifies the parameter you want to define.
+             PROPERTIES IMPORTED_LOCATION
+
+             # Provides the path to the library you want to import.
+             "/Users/tomekzaw/RNOS/fabric/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build/intermediates/ndkBuild/debug/obj/local/${ANDROID_ABI}/libreact_render_uimanager.so"
+)
 find_library(
-        REACT_RENDER_UIMANAGER
-        react_render_uimanager
+        REACT_RENDER_MOUNTING
+        react_render_mounting
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
+find_library(
+        REACT_RENDER_COMPONENTREGISTRY
+        react_render_componentregistry
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        REACT_RENDER_CORE
+        react_render_core
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        REACT_DEBUG
+        react_debug
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        REACT_RENDER_DEBUG
+        react_render_debug
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        RRC_ROOT
+        rrc_root
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 find_library(
         GLOG_LIB
         glog
@@ -179,7 +226,14 @@ if(${FOR_HERMES})
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
-            ${REACT_RENDER_UIMANAGER}
+            react_render_uimanager
+            ${REACT_RENDER_CORE}
+            ${REACT_DEBUG}
+            ${REACT_RENDER_COMPONENTREGISTRY}
+            ${REACT_RENDER_DEBUG}
+            ${RUNTIMEEXECUTOR}
+            ${REACT_RENDER_MOUNTING}
+            ${RRC_ROOT}
             android
     )
 else()
@@ -192,7 +246,14 @@ else()
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
-            ${REACT_RENDER_UIMANAGER}
+            react_render_uimanager
+            ${REACT_RENDER_CORE}
+            ${REACT_DEBUG}
+            ${REACT_RENDER_COMPONENTREGISTRY}
+            ${REACT_RENDER_DEBUG}
+            ${RUNTIMEEXECUTOR}
+            ${REACT_RENDER_MOUNTING}
+            ${RRC_ROOT}
             android
     )
 endif()
