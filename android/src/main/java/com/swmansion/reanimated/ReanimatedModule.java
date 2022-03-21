@@ -6,7 +6,6 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
@@ -15,8 +14,6 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
 import com.swmansion.reanimated.transitions.TransitionModule;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
