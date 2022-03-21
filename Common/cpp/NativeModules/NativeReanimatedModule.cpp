@@ -279,7 +279,16 @@ jsi::Value NativeReanimatedModule::configureProps(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
+  // Paper
   configurePropsPlatformFunction(rt, uiProps, nativeProps);
+
+  // Fabric
+  jsi::Array array = nativeProps.asObject(rt).asArray(rt);
+  for (int i = 0; i < array.size(rt); ++i) {
+    std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    nativePropNames_.insert(name);
+  }
+
   return jsi::Value::undefined();
 }
 
