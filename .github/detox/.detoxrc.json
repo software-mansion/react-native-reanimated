@@ -1,0 +1,40 @@
+{
+    "testRunner": "jest",
+    "runnerConfig": "e2e/config.json",
+    "skipLegacyWorkersInjection": true,
+    "apps": {
+      "ios": {
+        "type": "ios.app",
+        "binaryPath": "./ios/build/Build/Products/Release-iphonesimulator/reactApp.app",
+        "build": "xcodebuild -workspace ios/reactApp.xcworkspace -configuration release -scheme reactApp -sdk iphonesimulator -derivedDataPath ios/build"
+      },
+      "android": {
+        "type": "android.apk",
+        "binaryPath": "SPECIFY_PATH_TO_YOUR_APP_BINARY"
+      }
+    },
+    "devices": {
+      "simulator": {
+        "type": "ios.simulator",
+        "device": {
+          "type": "iPhone 11 Pro"
+        }
+      },
+      "emulator": {
+        "type": "android.emulator",
+        "device": {
+          "avdName": "Pixel_3a_API_30_x86"
+        }
+      }
+    },
+    "configurations": {
+      "ios": {
+        "device": "simulator",
+        "app": "ios"
+      },
+      "android": {
+        "device": "emulator",
+        "app": "android"
+      }
+    }
+  }
