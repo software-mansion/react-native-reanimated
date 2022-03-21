@@ -272,9 +272,8 @@ void NativeProxy::synchronouslyUpdateUIProps(
       javaPart_->getClass()
           ->getMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
               "synchronouslyUpdateUIProps");
-  jni::local_ref<ReadableMap::javaobject> uiProps =
-      castReadableMap(ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(
-          rt, props))); // TODO: use RawProps instead of jsi::dynamicFromValue
+  jni::local_ref<ReadableMap::javaobject> uiProps = castReadableMap(
+      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
   method(javaPart_.get(), tag, uiProps);
 }
 
