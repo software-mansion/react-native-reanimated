@@ -25,6 +25,7 @@ import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
+import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.common.ViewUtil;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
@@ -51,9 +52,6 @@ import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -530,57 +528,9 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void updateProps(int viewTag, Map<String, Object> props) {
-    // TODO: update PropsNode to use this method instead of its own way of updating props
-    // TODO: move implementation to C++
-    boolean hasUIProps = false;
-    boolean hasNativeProps = false;
-    boolean hasJSProps = false;
-    JavaOnlyMap newUIProps = new JavaOnlyMap();
-    WritableMap newJSProps = Arguments.createMap();
-    WritableMap newNativeProps = Arguments.createMap();
-    JSONObject newNativePropsJSON = new JSONObject();
-
-    FabricUIManager fuim =
-        (FabricUIManager)
-            UIManagerHelper.getUIManager(
-                mReactApplicationContext, ViewUtil.getUIManagerType(viewTag));
-
-    for (Map.Entry<String, Object> entry : props.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      if (uiProps.contains(key)) {
-        hasUIProps = true;
-        addProp(newUIProps, key, value);
-      } else if (nativeProps.contains(key)) {
-        hasNativeProps = true;
-        addProp(newNativeProps, key, value);
-        try {
-          newNativePropsJSON.put(key, value);
-        } catch (JSONException e) {
-          // TODO: handle exception
-        }
-      } else {
-        hasJSProps = true;
-        addProp(newJSProps, key, value);
-      }
-    }
-
-    if (viewTag != View.NO_ID) {
-      if (hasUIProps) {
-        fuim.synchronouslyUpdateViewOnUIThread(viewTag, newUIProps);
-      }
-      if (hasNativeProps) {
-        enqueueUpdateViewOnNativeThread(viewTag, newNativePropsJSON.toString());
-      }
-      if (hasJSProps) {
-        // TODO: handle JS props?
-        // WritableMap evt = Arguments.createMap();
-        // evt.putInt("viewTag", viewTag);
-        // evt.putMap("props", newJSProps);
-        // sendEvent("onReanimatedPropsChange", evt);
-      }
-    }
+  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
+    FabricUIManager fabricUIManager = (FabricUIManager) UIManagerHelper.getUIManager(mReactApplicationContext, UIManagerType.FABRIC);
+    fabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, uiProps);
   }
 
   public String obtainProp(int viewTag, String propName) {

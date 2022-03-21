@@ -84,11 +84,8 @@ void NativeProxy::installJSIBindings() {
   };
 
   auto synchronouslyUpdateUIPropsFunction =
-      [](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
-        // NSNumber *viewTag = @(tag);
-        // NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt,
-        // props.asObject(rt)); [reanimatedModule.nodesManager
-        // synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+      [this](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
+        this->synchronouslyUpdateUIProps(rt, tag, props);
       };
 
   auto propObtainer = [this](
@@ -260,6 +257,25 @@ void NativeProxy::registerEventHandler(
   method(
       javaPart_.get(),
       EventHandler::newObjectCxxArgs(std::move(handler)).get());
+}
+
+inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
+    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
+  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
+}
+
+void NativeProxy::synchronouslyUpdateUIProps(
+    jsi::Runtime &rt,
+    Tag tag,
+    const jsi::Value &props) {
+  static const auto method =
+      javaPart_->getClass()
+          ->getMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
+              "synchronouslyUpdateUIProps");
+  jni::local_ref<ReadableMap::javaobject> uiProps =
+      castReadableMap(ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(
+          rt, props))); // TODO: use RawProps instead of jsi::dynamicFromValue
+  method(javaPart_.get(), tag, uiProps);
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {

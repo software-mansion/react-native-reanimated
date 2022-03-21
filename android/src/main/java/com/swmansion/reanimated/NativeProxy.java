@@ -8,6 +8,7 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
@@ -21,7 +22,6 @@ import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.Map;
 
 public class NativeProxy {
 
@@ -145,8 +145,8 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private void updateProps(int viewTag, Map<String, Object> props) {
-    mNodesManager.updateProps(viewTag, props);
+  private void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
+    mNodesManager.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
   @DoNotStrip

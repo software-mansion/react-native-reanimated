@@ -112,6 +112,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   void installJSIBindings();
   bool isAnyHandlerWaitingForEvent(std::string);
+  void synchronouslyUpdateUIProps(
+      jsi::Runtime &rt,
+      Tag viewTag,
+      const jsi::Value &uiProps);
   void performOperations();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler(
