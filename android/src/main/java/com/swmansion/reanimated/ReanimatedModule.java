@@ -6,7 +6,6 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.module.annotations.ReactModule;
@@ -14,8 +13,6 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
 import com.swmansion.reanimated.transitions.TransitionModule;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
@@ -206,28 +203,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
           @Override
           public void execute(NodesManager nodesManager) {
             nodesManager.detachEvent(viewTag, eventName, eventNodeID);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void configureProps(ReadableArray nativePropsArray, ReadableArray uiPropsArray) {
-    int size = nativePropsArray.size();
-    final Set<String> nativeProps = new HashSet<>(size);
-    for (int i = 0; i < size; i++) {
-      nativeProps.add(nativePropsArray.getString(i));
-    }
-
-    size = uiPropsArray.size();
-    final Set<String> uiProps = new HashSet<>(size);
-    for (int i = 0; i < size; i++) {
-      uiProps.add(uiPropsArray.getString(i));
-    }
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.configureProps(nativeProps, uiProps);
           }
         });
   }

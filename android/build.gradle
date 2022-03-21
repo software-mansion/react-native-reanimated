@@ -92,7 +92,7 @@ def resolveReactNativeDirectory() {
     if (isDeveloperMode()) {
         return file("$projectDir/../node_modules/react-native")
     }
-    return file("$rootDir/../node_modules/react-native")
+    return file("$projectDir/../../react-native")
 }
 
 abstract class replaceSoTask extends DefaultTask {
@@ -230,43 +230,60 @@ def engine = detectJsRuntime()
 def aar = detectAAR(minor, engine)
 boolean BUILD_FROM_SOURCE = shouldBuildFromSource(aar)
 
-if (!BUILD_FROM_SOURCE) {
-    def replaceSoTaskDebug
-    def replaceSoTaskRelease
+def getTaskByPath(project, String appName, String secondPart, String flavorString, String lastPart) {
+    String pathName = "${appName}:${secondPart}${flavorString}${lastPart}"
+    Task task = project.getTasks().findByPath(pathName)
+    if (task != null) {
+        return task
+    }
+    pathName = "${appName}:${secondPart}${flavorString.capitalize()}${lastPart}"
+    return project.getTasks().findByPath(pathName)
+}
 
+if (!BUILD_FROM_SOURCE) {
     if (rnMinorVersion < 65) {
         tasks.register("replaceSoTaskDebug", replaceSoTask)
         tasks.register("replaceSoTaskRelease", replaceSoTask)
-        replaceSoTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskDebug")
-        replaceSoTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskRelease")
-    }
+        Task replaceSoTaskDebug = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskDebug")
+        Task replaceSoTaskRelease = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskRelease")
 
-    rootProject.getSubprojects().forEach({project ->
-        if (project.plugins.hasPlugin("com.android.application")) {
-            if (project.getProperties().get("android") && rnMinorVersion < 65) {
-                def projectProperties = project.getProperties()
-                def flavorString = getCurrentFlavor()
-                if (flavorString != "NOT-FOUND" && (!projectProperties.get("reanimated")
-                        || projectProperties.get("reanimated").get("enablePackagingOptions"))
-                ) {
-                    replaceSoTask.appName = projectProperties.path
-                    replaceSoTask.buildDir = projectProperties.buildDir
-                    def appName = projectProperties.path
+        if (replaceSoTaskDebug != null && replaceSoTaskRelease != null) {
+            rootProject.getSubprojects().forEach({project ->
+                if (project.plugins.hasPlugin("com.android.application") && project.getProperties().get("android")) {
+                    def projectProperties = project.getProperties()
+                    def flavorString = getCurrentFlavor()
+                    def reanimatedConf = projectProperties.get("reanimated")
 
-                    replaceSoTaskDebug.dependsOn(
-                            project.getTasks().getByPath("${appName}:merge${flavorString}DebugNativeLibs"),
-                            project.getTasks().getByPath("${appName}:strip${flavorString}DebugDebugSymbols")
-                    )
-                    project.getTasks().getByPath("${appName}:package${flavorString}Debug").dependsOn(replaceSoTaskDebug)
-                    replaceSoTaskRelease.dependsOn(
-                            project.getTasks().getByPath("${appName}:merge${flavorString}ReleaseNativeLibs"),
-                            project.getTasks().getByPath("${appName}:strip${flavorString}ReleaseDebugSymbols")
-                    )
-                    project.getTasks().getByPath("${appName}:package${flavorString}Release").dependsOn(replaceSoTaskRelease)
+                    if (
+                        flavorString != "NOT-FOUND"
+                        && (!reanimatedConf || (reanimatedConf && !reanimatedConf.get("enablePackagingOptions")))
+                    ) {
+                        replaceSoTask.appName = projectProperties.path
+                        replaceSoTask.buildDir = projectProperties.buildDir
+                        def appName = projectProperties.path
+
+                        Task debugNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "DebugNativeLibs")
+                        Task debugDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "DebugDebugSymbols")
+                        Task releaseNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "ReleaseNativeLibs")
+                        Task releaseDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "ReleaseDebugSymbols")
+                        Task debugTask = getTaskByPath(project, appName, "package", flavorString, "Debug")
+                        Task releaseTask = getTaskByPath(project, appName, "package", flavorString, "Release")
+
+                        if (
+                            debugNativeLibsTask != null && debugDebugSymbolsTask != null
+                            && releaseNativeLibsTask != null && releaseDebugSymbolsTask != null
+                            && debugTask != null && releaseTask != null
+                        ) {
+                            replaceSoTaskDebug.dependsOn(debugNativeLibsTask, debugDebugSymbolsTask)
+                            debugTask.dependsOn(replaceSoTaskDebug)
+                            replaceSoTaskRelease.dependsOn(releaseNativeLibsTask, releaseDebugSymbolsTask)
+                            releaseTask.dependsOn(replaceSoTaskRelease)
+                        }
+                    }
                 }
-            }
+            })
         }
-    })
+    }
 
     artifacts.add("default", aar)
 }
@@ -310,6 +327,11 @@ if (findProject(":app")) {
     FOR_HERMES = project(":app").ext.react.enableHermes;
 } else {
     FOR_HERMES = System.getenv("FOR_HERMES") == "True";
+}
+
+def reactNativeArchitectures() {
+    def value = project.getProperties().get("reactNativeArchitectures")
+    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
 // You need to have following folders in this directory:
@@ -369,10 +391,11 @@ android {
                         "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
+                        "-DBUILD_DIR=${buildDir}",
                         "-DFOR_HERMES=${FOR_HERMES}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "--clean-first"
-                abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
+                abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
         }
@@ -645,11 +668,11 @@ repositories {
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$rootDir/../node_modules/react-native/android"
+        url "$reactNative/android"
     }
     maven {
         // Android JSC is installed from npm
-        url "$rootDir/../node_modules/jsc-android/dist"
+        url "$reactNative/../jsc-android/dist"
     }
     google()
 }
@@ -669,8 +692,8 @@ dependencies {
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
     extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
-    def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
-    def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
+    def rnAAR = fileTree("$reactNative/android").matching({ it.include "**/**/*.aar" }).singleFile
+    def jscAAR = fileTree("$reactNative/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
     extractSO(files(rnAAR, jscAAR))
 }
 

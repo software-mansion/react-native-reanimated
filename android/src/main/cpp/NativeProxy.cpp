@@ -113,10 +113,18 @@ void NativeProxy::installJSIBindings() {
     scrollTo(viewTag, x, y, animated);
   };
 
+  auto registerSensorFunction =
+      [this](int sensorType, int interval, std::function<void(double[])> setter)
+      -> int {
+    return this->registerSensor(sensorType, interval, std::move(setter));
+  };
+  auto unregisterSensorFunction = [this](int sensorId) {
+    unregisterSensor(sensorId);
+  };
+
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
-
 #if FOR_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
@@ -145,6 +153,12 @@ void NativeProxy::installJSIBindings() {
     this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
   };
 
+  auto configurePropsFunction = [=](jsi::Runtime &rt,
+                                    const jsi::Value &uiProps,
+                                    const jsi::Value &nativeProps) {
+    this->configureProps(rt, uiProps, nativeProps);
+  };
+
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(
           notifyAboutProgress, notifyAboutEnd);
@@ -159,8 +173,10 @@ void NativeProxy::installJSIBindings() {
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
+      registerSensorFunction,
+      unregisterSensorFunction,
       setGestureStateFunction,
-  };
+      configurePropsFunction};
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -304,10 +320,45 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   return result;
 }
 
+int NativeProxy::registerSensor(
+    int sensorType,
+    int interval,
+    std::function<void(double[])> setter) {
+  static auto method =
+      javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
+          "registerSensor");
+  return method(
+      javaPart_.get(),
+      sensorType,
+      interval,
+      SensorSetter::newObjectCxxArgs(std::move(setter)).get());
+}
+void NativeProxy::unregisterSensor(int sensorId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>("unregisterSensor");
+  method(javaPart_.get(), sensorId);
+}
+
 void NativeProxy::setGestureState(int handlerTag, int newState) {
   auto method =
       javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");
   method(javaPart_.get(), handlerTag, newState);
+}
+
+void NativeProxy::configureProps(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<void(
+                        ReadableNativeArray::javaobject,
+                        ReadableNativeArray::javaobject)>("configureProps");
+  method(
+      javaPart_.get(),
+      ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps))
+          .get(),
+      ReadableNativeArray::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, nativeProps))
+          .get());
 }
 
 } // namespace reanimated

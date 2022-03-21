@@ -105,6 +105,15 @@ export default class JSReanimated extends NativeReanimated {
     );
   }
 
+  registerSensor(): number {
+    console.warn('[Reanimated] useAnimatedSensor is not available on web yet.');
+    return -1;
+  }
+
+  unregisterSensor(): void {
+    // noop
+  }
+
   jestResetModule() {
     if (isJest()) {
       /**

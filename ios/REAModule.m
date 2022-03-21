@@ -88,6 +88,13 @@ RCT_EXPORT_METHOD(triggerRender)
   });
 }
 
+RCT_EXPORT_METHOD(setValue : (nonnull NSNumber *)nodeID newValue : (nonnull NSNumber *)newValue)
+{
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager setValueForNodeID:nodeID value:newValue];
+  }];
+}
+
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
 {
   RCTAssertMainQueue();
@@ -122,15 +129,6 @@ RCT_EXPORT_METHOD(triggerRender)
       operation(nodesManager);
     }
     [nodesManager operationsBatchDidComplete];
-  }];
-}
-
-RCT_EXPORT_METHOD(configureProps
-                  : (nonnull NSArray<NSString *> *)nativeProps uiProps
-                  : (nonnull NSArray<NSString *> *)uiProps)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager configureProps:[NSSet setWithArray:nativeProps] uiProps:[NSSet setWithArray:uiProps]];
   }];
 }
 

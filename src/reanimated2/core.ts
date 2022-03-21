@@ -416,11 +416,16 @@ export function enableLayoutAnimations(
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
 }
-
-export function initializeForFabric(): void {
-  NativeReanimatedModule.initializeForFabric();
+export function configureProps(uiProps: string[], nativeProps: string[]): void {
+  if (!nativeShouldBeMock()) {
+    NativeReanimatedModule.configureProps(uiProps, nativeProps);
+  }
 }
 
 export function jestResetJsReanimatedModule() {
   (NativeReanimatedModule as JSReanimated).jestResetModule();
+}
+
+export function initializeForFabric(): void {
+  NativeReanimatedModule.initializeForFabric();
 }

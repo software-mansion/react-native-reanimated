@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import ReanimatedModule from './ReanimatedModule';
+import { configureProps as jsiConfigureProps } from './reanimated2/core';
 
 const COLOR_PROPS: Record<string, boolean> = {
   backgroundColor: true,
@@ -115,9 +115,9 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
 };
 
 function configureProps(): void {
-  ReanimatedModule.configureProps(
-    Object.keys(NATIVE_THREAD_PROPS_WHITELIST),
-    Object.keys(UI_THREAD_PROPS_WHITELIST)
+  jsiConfigureProps(
+    Object.keys(UI_THREAD_PROPS_WHITELIST),
+    Object.keys(NATIVE_THREAD_PROPS_WHITELIST)
   );
 }
 

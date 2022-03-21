@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
@@ -72,6 +73,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
+  jsi::Value configureProps(
+      jsi::Runtime &rt,
+      const jsi::Value &uiProps,
+      const jsi::Value &nativeProps) override;
 
   jsi::Value initializeForFabric(jsi::Runtime &rt) override;
 
@@ -94,6 +99,13 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
     return uiManager_;
   }
 
+  jsi::Value registerSensor(
+      jsi::Runtime &rt,
+      const jsi::Value &sensorType,
+      const jsi::Value &interval,
+      const jsi::Value &sensorDataContainer) override;
+  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+
  private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
@@ -106,6 +118,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<void(double)> onRenderCallback;
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+  AnimatedSensorModule animatedSensorModule;
+  ConfigurePropsFunction configurePropsPlatformFunction;
+
   std::shared_ptr<UIManager> uiManager_;
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct

@@ -39,7 +39,8 @@ typedef void (^REAPerformOperations)();
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync;
 
-- (void)configureProps:(nonnull NSSet<NSString *> *)nativeProps uiProps:(nonnull NSSet<NSString *> *)uiProps;
+- (void)configureUiProps:(nonnull NSSet<NSString *> *)uiPropsSet
+          andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet;
 
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
 

@@ -10,6 +10,7 @@
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
 #include "MapperRegistry.h"
+#include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
@@ -74,7 +75,10 @@ NativeReanimatedModule::NativeReanimatedModule(
       requestRender(platformDepMethodsHolder.requestRender),
       propObtainer(propObtainer),
       synchronouslyUpdateUIPropsFunction(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction) {
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      animatedSensorModule(platformDepMethodsHolder, this),
+      configurePropsPlatformFunction(
+          platformDepMethodsHolder.configurePropsFunction) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -96,6 +100,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.measuringFunction,
       platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.registerSensor,
+      platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
       layoutAnimationsProxy);
   onRenderCallback = [this](double timestampMs) {
@@ -269,6 +275,14 @@ jsi::Value NativeReanimatedModule::initializeForFabric(jsi::Runtime &rt) {
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::configureProps(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps) {
+  configurePropsPlatformFunction(rt, uiProps, nativeProps);
+  return jsi::Value::undefined();
+}
+
 void NativeReanimatedModule::onEvent(
     std::string eventName,
     jsi::Value &&payload) {
@@ -322,6 +336,21 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     this->errorHandler->setError(str);
     this->errorHandler->raise();
   }
+}
+
+jsi::Value NativeReanimatedModule::registerSensor(
+    jsi::Runtime &rt,
+    const jsi::Value &sensorType,
+    const jsi::Value &interval,
+    const jsi::Value &sensorDataContainer) {
+  return animatedSensorModule.registerSensor(
+      rt, sensorType, interval, sensorDataContainer);
+}
+
+void NativeReanimatedModule::unregisterSensor(
+    jsi::Runtime &rt,
+    const jsi::Value &sensorId) {
+  animatedSensorModule.unregisterSensor(sensorId);
 }
 
 // TODO: move to separate file
