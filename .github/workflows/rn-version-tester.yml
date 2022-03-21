@@ -18,14 +18,14 @@ jobs:
       - name: Check out
         uses: actions/checkout@v1
 
-      - name: Use Node.js 14
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-          cache: 'yarn'
+      # - name: Use Node.js 14
+      #   uses: actions/setup-node@v2
+      #   with:
+      #     node-version: 14
+      #     cache: 'yarn'
 
-      - name: Set up Node
-        run: npm install -g react-native-cli detox-cli
+      # - name: Set up Node
+      #   run: npm install -g react-native-cli detox-cli
 
       # - name: Set up JDK 11
       #   uses: actions/setup-java@v1
@@ -47,26 +47,38 @@ jobs:
       # - name: Get package name
       #   run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
 
-      - name: Create react app
-        run: npx react-native init reactApp --version 0.68.0-rc.2
+      # - name: Create react app
+      #   run: npx react-native init reactApp --version 0.68.0-rc.2
+
+      - name: Create react app 2
+        run: mkdir reactApp
       
-      - name: Config app
-        run: cd reactApp && yarn add react-native-reanimated detox jest-circus
+      # - name: Config app
+      #   run: cd reactApp && yarn add react-native-reanimated detox jest-circus
 
       # - name: Replace Reanimated package
       #   run: rm -rf reactApp/node_modules/react-native-reanimated/* && tar zxvf ${{ env.PACKAGE_NAME }} && cp -R package/* reactApp/node_modules/react-native-reanimated/
 
-      - name: Configure ios
-        run: cd reactApp/ios && pod install && cd ..
+      # - name: Configure ios
+      #   run: cd reactApp/ios && pod install && cd ..
       
-      - name: Build ios
-        run: cd reactApp && npx react-native run-ios
+      # - name: Build ios
+      #   run: cd reactApp && npx react-native run-ios
 
       - name: Setup Detox
-        run: cp -r .github/detox/* reactApp && ls && ls reactApp
+        run: cp -r .github/detox/* reactApp && ls -la && ls reactApp
 
-      - name: Run Detox
-        run: cd reactApp && detox build --configuration ios && detox test --configuration ios
+      - name: test A
+        run: ls -la && ls reactApp
+
+      - name: test B
+        run: ls -la reactApp
+
+      - name: test C
+        run: ls -la .github/detox
+
+      # - name: Run Detox
+      #   run: cd reactApp && detox build --configuration ios && detox test --configuration ios
 
       # todo: run detox
       # todo: test other versions
