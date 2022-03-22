@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.1)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -DANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
+set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
 
 if(${NATIVE_DEBUG})
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
@@ -13,18 +13,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 set (PACKAGE_NAME "reanimated")
+set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
 if(${CLIENT_SIDE_BUILD})
     set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
     set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 else()
-    set (NODE_MODULES_DIR "../FabricExample/node_modules")
+    set (NODE_MODULES_DIR "../node_modules")
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
 
 set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
-set (FBJNI_HEADERS_DIR ../node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/../../fbjni/headers)
+set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
 
 # reanimated shared
 
@@ -36,11 +37,11 @@ file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (
-                INCLUDE_JSI_CPP
+                INCLUDE_JSI_CPP 
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
         )
         set (
-                INCLUDE_JSIDYNAMIC_CPP
+                INCLUDE_JSIDYNAMIC_CPP 
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
         )
 endif()
@@ -134,23 +135,11 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-# find_library(
-#         REACT_RENDER_UIMANAGER
-#         react_render_uimanager
-#         PATHS ${LIBRN_DIR}
-#         NO_CMAKE_FIND_ROOT_PATH
-# )
-add_library( react_render_uimanager
-             SHARED
-             IMPORTED )
-set_target_properties( 
-             react_render_uimanager
-
-             # Specifies the parameter you want to define.
-             PROPERTIES IMPORTED_LOCATION
-
-             # Provides the path to the library you want to import.
-             "/Users/tomekzaw/RNOS/fabric/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build/intermediates/ndkBuild/debug/obj/local/${ANDROID_ABI}/libreact_render_uimanager.so"
+find_library(
+        REACT_RENDER_UIMANAGER
+        react_render_uimanager
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
         REACT_RENDER_MOUNTING
@@ -227,13 +216,12 @@ if(${FOR_HERMES})
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
-            react_render_uimanager
+            ${REACT_RENDER_UIMANAGER}
+            ${REACT_RENDER_MOUNTING}
+            ${REACT_RENDER_COMPONENTREGISTRY}
             ${REACT_RENDER_CORE}
             ${REACT_DEBUG}
-            ${REACT_RENDER_COMPONENTREGISTRY}
             ${REACT_RENDER_DEBUG}
-            ${RUNTIMEEXECUTOR}
-            ${REACT_RENDER_MOUNTING}
             ${RRC_ROOT}
             android
     )
@@ -247,13 +235,12 @@ else()
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
-            react_render_uimanager
+            ${REACT_RENDER_UIMANAGER}
+            ${REACT_RENDER_MOUNTING}
+            ${REACT_RENDER_COMPONENTREGISTRY}
             ${REACT_RENDER_CORE}
             ${REACT_DEBUG}
-            ${REACT_RENDER_COMPONENTREGISTRY}
             ${REACT_RENDER_DEBUG}
-            ${RUNTIMEEXECUTOR}
-            ${REACT_RENDER_MOUNTING}
             ${RRC_ROOT}
             android
     )

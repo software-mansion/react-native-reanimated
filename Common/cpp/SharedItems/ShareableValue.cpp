@@ -158,12 +158,9 @@ void ShareableValue::adapt(
       valueContainer =
           std::make_unique<RemoteObjectWrapper>(std::make_shared<RemoteObject>(
               rt, object, runtimeManager, runtimeManager->scheduler));
-      // } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
-    } else if (isShadowNodeWrapperForThirdPartyLibs(rt, object)) {
+    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
       type = ValueType::ShadowNodeType;
-      // valueContainer = std::make_unique<ShadowNodeValueWrapper>(
-      //     object.getHostObject<ShadowNodeWrapper>(rt)->shadowNode);
-      auto shadowNode = shadowNodeFromValueForThirdPartyLibs(rt, value);
+      auto shadowNode = object.getHostObject<ShadowNodeWrapper>(rt)->shadowNode;
       valueContainer = std::make_unique<ShadowNodeValueWrapper>(shadowNode);
       adaptCache(rt, value);
     } else {
