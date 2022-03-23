@@ -20,12 +20,13 @@ if(${CLIENT_SIDE_BUILD})
     set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
     set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 else()
-    set (NODE_MODULES_DIR "../node_modules")
+    set (NODE_MODULES_DIR "../FabricExample/node_modules")
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
 
-set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
-set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
+# get react .so built from sources instead of .so from react's aar
+set (RN_SO_DIR "/Users/tomekzaw/RNOS/fabric/react-native-reanimated/FabricExample/android/app/build/react-ndk/exported")
+set (FBJNI_HEADERS_DIR "/Users/tomekzaw/RNOS/fabric/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
 
 # reanimated shared
 
