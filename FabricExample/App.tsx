@@ -1,6 +1,7 @@
 import React from 'react';
-import UIPropsExample from './src/UIPropsExample';
+// import UIPropsExample from './src/UIPropsExample';
 // import ScrollViewExample from './src/ScrollViewExample';
+import AnimatedSensorExample from './src/AnimatedSensorExample';
 import { initializeForFabric } from '../src/reanimated2/core';
 
 export default function App() {
@@ -8,6 +9,7 @@ export default function App() {
     initializeForFabric();
   }, []);
 
-  return <UIPropsExample />;
+  // return <UIPropsExample />;
   // return <ScrollViewExample />;
+  return <AnimatedSensorExample />;
 }
