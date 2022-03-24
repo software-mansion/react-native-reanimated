@@ -1018,6 +1018,17 @@ declare module 'react-native-reanimated' {
   export class RollInRight extends ComplexAnimationBuilder {}
   export class RollOutLeft extends ComplexAnimationBuilder {}
   export class RollOutRight extends ComplexAnimationBuilder {}
+
+  // Entry exit Animation API v2
+
+  export class Fade {
+    static InPlace(): ComplexAnimationBuilder;
+    static RightEdge(): ComplexAnimationBuilder;
+    static LeftEdge(): ComplexAnimationBuilder;
+    static TopEdge(): ComplexAnimationBuilder;
+    static BottomEdge(): ComplexAnimationBuilder;
+  }
+
   interface EasingNodeStatic {
     linear: Animated.EasingNodeFunction;
     ease: Animated.EasingNodeFunction;

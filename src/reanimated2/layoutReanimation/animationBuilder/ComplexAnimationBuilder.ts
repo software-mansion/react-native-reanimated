@@ -3,6 +3,7 @@ import {
   AnimationFunction,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
+  IEntryExitAnimationBuilder,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
@@ -128,11 +129,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     return this;
   }
 
-  getAnimationAndConfig(): LayoutAnimationAndConfig {
+  getAnimationConfig(): BaseBuilderAnimationConfig {
     const duration = this.durationV;
     const easing = this.easingV;
     const rotate = this.rotateV;
-    const type = this.type ? this.type : (withTiming as AnimationFunction);
     const damping = this.dampingV;
     const mass = this.massV;
     const stiffness = this.stiffnessV;
@@ -140,11 +140,9 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     const restDisplacementThreshold = this.restDisplacementThresholdV;
     const restSpeedThreshold = this.restSpeedThresholdV;
 
-    const animation = type;
-
     const config: BaseBuilderAnimationConfig = {};
-
-    if (type === withTiming) {
+    config.type = this.type ? this.type : (withTiming as AnimationFunction);
+    if (config.type === withTiming) {
       if (easing) {
         config.easing = easing;
       }
@@ -177,6 +175,40 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
         config.rotate = rotate;
       }
     }
+    return { ...config, ...this.remoteConfigObject };
+  }
+
+  static getAnimationAndConfig(): LayoutAnimationAndConfig {
+    const instance = this.createInstance();
+    return instance.getAnimationAndConfig();
+  }
+
+  getAnimationAndConfig(): LayoutAnimationAndConfig {
+    const config = this.getAnimationConfig();
+    const animation = config.type;
     return [animation, config];
+  }
+}
+
+type InstanceableEntryExitAnimationBuilder =
+  new () => IEntryExitAnimationBuilder;
+type StaticClassEntryExitAnimationBuilder = {
+  createInstance: () => BaseAnimationBuilder;
+};
+export type ClassEntryExitAnimationBuilder =
+  InstanceableEntryExitAnimationBuilder & StaticClassEntryExitAnimationBuilder;
+
+export class LayoutAnimationVariant extends ComplexAnimationBuilder {
+  enteringAnimationClass: ClassEntryExitAnimationBuilder;
+  exitingAnimationClass: ClassEntryExitAnimationBuilder;
+
+  constructor(
+    enteringAnimationClass: ClassEntryExitAnimationBuilder,
+    exitingAnimationClass: ClassEntryExitAnimationBuilder
+  ) {
+    super();
+    this.isApiV2V = true;
+    this.enteringAnimationClass = enteringAnimationClass;
+    this.exitingAnimationClass = exitingAnimationClass;
   }
 }

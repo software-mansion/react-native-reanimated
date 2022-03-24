@@ -2,7 +2,10 @@ import {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
 } from '../animationBuilder/commonTypes';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  LayoutAnimationVariant,
+} from '../animationBuilder';
 
 export class FadeIn
   extends ComplexAnimationBuilder
@@ -344,4 +347,26 @@ export class FadeOutDown
       };
     };
   };
+}
+
+export class Fade {
+  static InPlace() {
+    return new LayoutAnimationVariant(FadeIn, FadeOut);
+  }
+
+  static RightEdge() {
+    return new LayoutAnimationVariant(FadeInRight, FadeOutRight);
+  }
+
+  static LeftEdge() {
+    return new LayoutAnimationVariant(FadeInLeft, FadeOutLeft);
+  }
+
+  static TopEdge() {
+    return new LayoutAnimationVariant(FadeInUp, FadeOutUp);
+  }
+
+  static BottomEdge() {
+    return new LayoutAnimationVariant(FadeInDown, FadeOutDown);
+  }
 }

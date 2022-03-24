@@ -3,13 +3,16 @@ import {
   EntryExitAnimationFunction,
   AnimationFunction,
   LayoutAnimationFunction,
+  BaseBuilderAnimationConfig,
 } from './commonTypes';
 
 export class BaseAnimationBuilder {
+  isApiV2V = false;
   durationV?: number;
   delayV?: number;
   randomizeDelay = false;
   callbackV?: (finished: boolean) => void;
+  remoteConfigObject?: BaseBuilderAnimationConfig;
 
   static createInstance: () => BaseAnimationBuilder;
   build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
@@ -82,6 +85,29 @@ export class BaseAnimationBuilder {
           'worklet';
           return animation;
         };
+  }
+
+  static isApiV2(): boolean {
+    const instance = this.createInstance();
+    return instance.isApiV2();
+  }
+
+  isApiV2(): boolean {
+    return this.isApiV2V;
+  }
+
+  _setRemoteConfig(remoteConfigObject: BaseBuilderAnimationConfig) {
+    // used by predefined layout animation api v2
+    this.remoteConfigObject = remoteConfigObject;
+  }
+
+  getAnimationConfig(): BaseBuilderAnimationConfig {
+    throw Error('Unimplemented method in child class.');
+  }
+
+  static getAnimationConfig(): BaseBuilderAnimationConfig {
+    const instance = this.createInstance();
+    return instance.getAnimationConfig();
   }
 
   static build(): EntryExitAnimationFunction | LayoutAnimationFunction {

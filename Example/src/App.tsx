@@ -51,6 +51,7 @@ import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
+import LayoutAnimationV2Example from './LayoutReanimation/LayoutAnimationV2Example';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -70,6 +71,10 @@ const SCREENS: Screens = {
   AnimatedSensor: {
     screen: AnimatedSensorExample,
     title: '🆕 Use Animated Sensor',
+  },
+  LayoutAnimationV2: {
+    screen: LayoutAnimationV2Example,
+    title: '🆕 Layout Animation API v2',
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,

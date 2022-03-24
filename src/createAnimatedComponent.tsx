@@ -1,6 +1,6 @@
-import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
+import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 
 // @ts-ignore JS file
 import AnimatedEvent from './reanimated1/core/AnimatedEvent';
@@ -37,6 +37,7 @@ import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  LayoutAnimationVariant,
 } from './reanimated2/layoutReanimation';
 import { SharedValue, StyleProps } from './reanimated2/commonTypes';
 import {
@@ -144,12 +145,14 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe;
+    | Keyframe
+    | LayoutAnimationVariant;
   exiting?:
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe;
+    | Keyframe
+    | LayoutAnimationVariant;
 };
 
 type Options<P> = {
@@ -553,10 +556,24 @@ export default function createAnimatedComponent(
           }
 
           if (has('build', entering)) {
+            if (entering.isApiV2()) {
+              const config = entering.getAnimationConfig();
+              entering = (
+                entering as LayoutAnimationVariant
+              ).enteringAnimationClass.createInstance();
+              entering._setRemoteConfig(config);
+            }
             entering = entering.build() as EntryExitAnimationFunction;
           }
 
           if (has('build', exiting)) {
+            if (exiting.isApiV2()) {
+              const config = exiting.getAnimationConfig();
+              exiting = (
+                exiting as LayoutAnimationVariant
+              ).exitingAnimationClass.createInstance();
+              exiting._setRemoteConfig(config);
+            }
             exiting = exiting.build() as EntryExitAnimationFunction;
           }
 
