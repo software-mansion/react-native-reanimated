@@ -39,21 +39,21 @@ declare module 'react-native-reanimated' {
   import('./lib/reanimated2/globals');
 
   export type TimingAnimation =
-    import('./lib/types/src/reanimated2/animation/index').TimingAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').TimingAnimation;
   export type SpringAnimation =
-    import('./lib/types/src/reanimated2/animation/index').SpringAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').SpringAnimation;
   export type DecayAnimation =
-    import('./lib/types/src/reanimated2/animation/index').DecayAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').DecayAnimation;
   export type DelayAnimation =
-    import('./lib/types/src/reanimated2/animation/commonTypes').DelayAnimation;
+    import('./lib/types/lib/reanimated2/animation/commonTypes').DelayAnimation;
   export type RepeatAnimation =
-    import('./lib/types/src/reanimated2/animation/index').RepeatAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').RepeatAnimation;
   export type SequenceAnimation =
-    import('./lib/types/src/reanimated2/animation/index').SequenceAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').SequenceAnimation;
   export type StyleLayoutAnimation =
-    import('./lib/types/src/reanimated2/animation/index').StyleLayoutAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').StyleLayoutAnimation;
   export type Animation<T> =
-    import('./lib/types/src/reanimated2/commonTypes').Animation<T>;
+    import('./lib/types/lib/reanimated2/commonTypes').Animation<T>;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;

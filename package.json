@@ -22,7 +22,7 @@
     "type:generate:clean": "rm -rf lib/ && mkdir lib/",
     "type:generate:cp-js-src": "cp -RL src/* lib/",
     "type:generate:tsc": "yarn tsc",
-    "type:generate:tsc:declaration": "yarn tsc --project tsconfig.declaration.json --pretty --declaration --emitDeclarationOnly --outDir lib/types",
+    "type:generate:tsc:declaration": "yarn tsc --project tsconfig.json --pretty --declaration --emitDeclarationOnly --outDir lib/types",
     "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.js:from-src": "find ./src/reanimated2 -type f -name \"*.js\" -delete",
