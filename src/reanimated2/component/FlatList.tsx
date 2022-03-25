@@ -23,7 +23,7 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
   return cellRenderer;
 };
 
-interface ReanimatedFlatlistProps<ItemT> extends FlatListProps<ItemT> {
+export interface ReanimatedFlatlistProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 

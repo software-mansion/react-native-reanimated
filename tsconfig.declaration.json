@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig",
+  "include": [
+    "src",
+    "react-native-reanimated.d.ts",
+    "react-native-reanimated-tests.tsx"
+  ]
+}
