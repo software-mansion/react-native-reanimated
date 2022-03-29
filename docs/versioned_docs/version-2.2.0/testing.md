@@ -77,7 +77,7 @@ test('stop in a middle of animation', () => {
     expect(view).toHaveAnimatedStyle(style);
 
     fireEvent.press(button);
-    moveAnimationByTime(250); // if whole animation duration is a 500ms
+    advanceAnimationByTime(250); // if whole animation duration is a 500ms
     style.width = 46.08; // value of component width after 250ms of animation
     expect(view).toHaveAnimatedStyle(style);
   });
