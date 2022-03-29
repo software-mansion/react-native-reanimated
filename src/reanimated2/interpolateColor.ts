@@ -58,13 +58,13 @@ const getInterpolateRGB = (
   const a = [];
   for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
-    const proocessedColor = processColor(color);
+    const processedColor = processColor(color);
     // explicit check in case if processedColor is 0
-    if (proocessedColor !== null && proocessedColor !== undefined) {
-      r.push(red(proocessedColor));
-      g.push(green(proocessedColor));
-      b.push(blue(proocessedColor));
-      a.push(opacity(proocessedColor));
+    if (processedColor !== null && processedColor !== undefined) {
+      r.push(red(processedColor));
+      g.push(green(processedColor));
+      b.push(blue(processedColor));
+      a.push(opacity(processedColor));
     }
   }
   return { r, g, b, a };
@@ -85,11 +85,11 @@ const getInterpolateHSV = (
   const v = [];
   for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
-    const proocessedColor = RGBtoHSV(processColor(color) as any);
-    if (proocessedColor) {
-      h.push(proocessedColor.h);
-      s.push(proocessedColor.s);
-      v.push(proocessedColor.v);
+    const processedColor = RGBtoHSV(processColor(color) as any);
+    if (processedColor) {
+      h.push(processedColor.h);
+      s.push(processedColor.s);
+      v.push(processedColor.v);
     }
   }
   return { h, s, v };
