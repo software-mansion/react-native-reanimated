@@ -193,7 +193,6 @@ export default function createAnimatedComponent(
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
-    _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
     sv: SharedValue<null | Record<string, unknown>> | null;
@@ -586,12 +585,10 @@ export default function createAnimatedComponent(
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
-              if (this._isFirstRender) {
-                this.initialStyle = {
-                  ...style.initial.value,
-                  ...initialUpdaterRun<StyleProps>(style.initial.updater),
-                };
-              }
+              this.initialStyle = {
+                ...style.initial.value,
+                ...initialUpdaterRun<StyleProps>(style.initial.updater),
+              };
               return this.initialStyle;
             } else {
               return style;
@@ -637,10 +634,6 @@ export default function createAnimatedComponent(
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
-      }
-
-      if (this._isFirstRender) {
-        this._isFirstRender = false;
       }
 
       const platformProps = Platform.select({
