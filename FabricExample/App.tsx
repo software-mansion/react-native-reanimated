@@ -4,7 +4,8 @@ import React from 'react';
 // import ColorExample from './src/ColorExample';
 // import ScrollViewExample from './src/ScrollViewExample';
 // import AnimatedSensorExample from './src/AnimatedSensorExample';
-import ChessboardExample from './src/ChessboardExample';
+// import ChessboardExample from './src/ChessboardExample';
+import LayoutPropsExample from './src/LayoutPropsExample';
 import { initializeForFabric } from '../src/reanimated2/core';
 
 export default function App() {
@@ -17,5 +18,6 @@ export default function App() {
   // return <ColorExample />;
   // return <ScrollViewExample />;
   // return <AnimatedSensorExample />;
-  return <ChessboardExample />;
+  // return <ChessboardExample />;
+  return <LayoutPropsExample />;
 }
