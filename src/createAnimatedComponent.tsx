@@ -486,6 +486,7 @@ export default function createAnimatedComponent(
           tag: viewTag!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
+          shareableNode,
         });
       }
     }

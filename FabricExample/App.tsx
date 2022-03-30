@@ -4,9 +4,10 @@ import React from 'react';
 // import ColorExample from './src/ColorExample';
 // import WidthExample from './src/WidthExample';
 // import ChessboardExample from './src/ChessboardExample';
-import RefExample from './src/RefExample';
+// import RefExample from './src/RefExample';
 // import ScrollViewExample from './src/ScrollViewExample';
 // import AnimatedSensorExample from './src/AnimatedSensorExample';
+import AnimatedTextExample from './src/AnimatedTextExample';
 import { initializeForFabric } from '../src/reanimated2/core';
 
 export default function App() {
@@ -19,7 +20,8 @@ export default function App() {
   // return <ColorExample />;
   // return <WidthExample />;
   // return <ChessboardExample />;
-  return <RefExample />;
+  // return <RefExample />;
   // return <ScrollViewExample />;
   // return <AnimatedSensorExample />;
+  return <AnimatedTextExample />;
 }
