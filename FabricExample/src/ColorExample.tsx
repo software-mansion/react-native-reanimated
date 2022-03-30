@@ -3,17 +3,17 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
 function makeColor(x: number) {
   'worklet';
-  return `hsl(${Math.round(100 + x * 150)}, 100%, 50%)`;
+  return `hsl(${Math.round(x * 240)}, 100%, 50%)`;
 }
 
 export default function ColorExample() {
-  const state = React.useRef(0);
+  const ref = React.useRef(0);
 
   const sv = useSharedValue(0);
 
@@ -35,17 +35,20 @@ export default function ColorExample() {
 
   // TODO: textDecorationColor, tintColor, textShadowColor, overlayColor
 
-  const handleToggleSharedValue = () => {
-    state.current = 1 - state.current;
-    sv.value = withTiming(state.current, { duration: 1500 });
+  const handleToggle = () => {
+    ref.current = 1 - ref.current;
+    sv.value = withTiming(ref.current, { duration: 1500 });
   };
 
   return (
-    <View style={styles.container} onTouchStart={handleToggleSharedValue}>
+    <View style={styles.container}>
       <Animated.View style={[styles.box1, style1]} />
       <Animated.View style={[styles.box2, style2]} />
       <Animated.Text style={[styles.text3, style3]}>Reanimated</Animated.Text>
       <Animated.View style={[styles.box4, style4]} />
+      <View style={styles.buttons}>
+        <Button onPress={handleToggle} title="Toggle shared value" />
+      </View>
     </View>
   );
 }
@@ -59,20 +62,20 @@ const styles = StyleSheet.create({
   box1: {
     width: 100,
     height: 100,
-    backgroundColor: 'red',
+    backgroundColor: 'black',
     marginBottom: 20,
   },
   box2: {
     width: 100,
     height: 100,
     borderWidth: 10,
-    borderColor: 'red',
+    borderColor: 'black',
     marginBottom: 20,
   },
   text3: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: 'red',
+    color: 'black',
     marginBottom: 20,
   },
   box4: {
@@ -85,6 +88,9 @@ const styles = StyleSheet.create({
     },
     shadowRadius: 5,
     shadowOpacity: 1,
-    shadowColor: 'red',
+    shadowColor: 'black',
+  },
+  buttons: {
+    marginTop: 50,
   },
 });

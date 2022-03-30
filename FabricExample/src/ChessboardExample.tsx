@@ -12,14 +12,16 @@ const colors = ['white', 'black'];
 
 export default function ChessboardExample() {
   const [state, setState] = React.useState(0);
+
   const ref = React.useRef(0);
+
   const sv = useSharedValue(0);
 
   const size = useDerivedValue(() => {
     return 10 + sv.value * 30;
   });
 
-  const style = useAnimatedStyle(() => {
+  const animatedStyle = useAnimatedStyle(() => {
     return {
       width: size.value,
       height: size.value,
@@ -50,7 +52,7 @@ export default function ChessboardExample() {
                   key={j}
                   style={[
                     { backgroundColor: colors[(i + j + state) % 2] },
-                    style,
+                    animatedStyle,
                   ]}
                 />
               ))}

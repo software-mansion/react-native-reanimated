@@ -9,14 +9,13 @@ import React from 'react';
 
 export default function UIPropsExample() {
   const [count, setCount] = React.useState(0);
-  const state = React.useRef(0);
+
+  const ref = React.useRef(0);
 
   const sv = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      width: 100 + sv.value * 50,
-      backgroundColor: `hsl(${Math.round(sv.value * 240)}, 100%, 50%)`,
       transform: [
         { rotate: `${sv.value * 180}deg` },
         { rotateY: `${sv.value * 360}deg` },
@@ -27,8 +26,8 @@ export default function UIPropsExample() {
   });
 
   const handleToggle = () => {
-    state.current = 1 - state.current;
-    sv.value = withTiming(state.current, { duration: 2000 });
+    ref.current = 1 - ref.current;
+    sv.value = withTiming(ref.current, { duration: 2000 });
   };
 
   const handleIncrement = () => {
@@ -42,9 +41,10 @@ export default function UIPropsExample() {
       <Animated.View style={[styles.box, animatedStyle]}>
         <Text style={styles.text}>{count}</Text>
       </Animated.View>
-      <View style={{ height: 40 }} />
-      <Button onPress={handleToggle} title="Toggle shared value" />
-      <Button onPress={handleIncrement} title="Increment" />
+      <View style={styles.buttons}>
+        <Button onPress={handleToggle} title="Toggle shared value" />
+        <Button onPress={handleIncrement} title="Increment counter" />
+      </View>
     </View>
   );
 }
@@ -65,5 +65,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 80,
     color: 'white',
+  },
+  buttons: {
+    marginTop: 50,
   },
 });

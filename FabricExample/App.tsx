@@ -1,11 +1,11 @@
 import React from 'react';
 // import WorkletExample from './src/WorkletExample';
-// import UIPropsExample from './src/UIPropsExample';
+// import TransformExample from './src/TransformExample';
 // import ColorExample from './src/ColorExample';
+// import WidthExample from './src/WidthExample';
+import ChessboardExample from './src/ChessboardExample';
 // import ScrollViewExample from './src/ScrollViewExample';
 // import AnimatedSensorExample from './src/AnimatedSensorExample';
-// import ChessboardExample from './src/ChessboardExample';
-import LayoutPropsExample from './src/LayoutPropsExample';
 import { initializeForFabric } from '../src/reanimated2/core';
 
 export default function App() {
@@ -14,10 +14,10 @@ export default function App() {
   }, []);
 
   // return <WorkletExample />;
-  // return <UIPropsExample />;
+  // return <TransformExample />;
   // return <ColorExample />;
+  // return <WidthExample />;
+  return <ChessboardExample />;
   // return <ScrollViewExample />;
   // return <AnimatedSensorExample />;
-  // return <ChessboardExample />;
-  return <LayoutPropsExample />;
 }
