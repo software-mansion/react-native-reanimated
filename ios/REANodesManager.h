@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 
 #import <React/RCTBridgeModule.h>
+#import <React/RCTPrimitives.h>
 #import <React/RCTSurfacePresenterStub.h>
 #import <React/RCTUIManager.h>
 
@@ -43,6 +44,8 @@ typedef void (^REAPerformOperations)();
           andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet;
 
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
+
+- (void)scrollTo:(ReactTag)reactTag x:(double)x y:(double)y animated:(BOOL)animated;
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 

@@ -221,10 +221,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return std::vector<std::pair<std::string, double>>(0);
   };
 
-  auto scrollToFunction = [](int viewTag, double x, double y, bool animated) {
-    //  scrollTo(viewTag, uiManager, x, y, animated); TODO
-  };
-
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
   auto setGestureStateFunction = [gestureHandlerStateManager](int handlerTag, int newState) {
     setGestureState(gestureHandlerStateManager, handlerTag, newState);
@@ -275,6 +271,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSNumber *viewTag = @(tag);
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
     [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+  };
+
+  auto scrollToFunction = [reanimatedModule](int viewTag, double x, double y, bool animated) {
+    ReactTag reactTag = viewTag;
+    [reanimatedModule.nodesManager scrollTo:reactTag x:x y:y animated:animated];
   };
 
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
