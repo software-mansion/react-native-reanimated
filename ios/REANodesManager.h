@@ -45,8 +45,6 @@ typedef void (^REAPerformOperations)();
 
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
 
-- (void)scrollTo:(ReactTag)reactTag x:(double)x y:(double)y animated:(BOOL)animated;
-
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 
 // events

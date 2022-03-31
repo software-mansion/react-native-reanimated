@@ -2,15 +2,8 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Component } from 'react';
-import { findNodeHandle } from 'react-native';
 import { RefObjectFunction } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
-
-export function getTag(
-  view: null | number | React.Component<any, any> | React.ComponentClass<any>
-): null | number {
-  return findNodeHandle(view);
-}
 
 export interface MeasuredDimensions {
   x: number;
@@ -58,8 +51,8 @@ export function scrollTo(
   if (!_WORKLET || isNativeIndefined) {
     return;
   }
-  const viewTag = animatedRef();
-  _scrollTo(viewTag, x, y, animated);
+  const shadowNodeWrapper = animatedRef();
+  _scrollTo(shadowNodeWrapper, x, y, animated);
 }
 
 export function setGestureState(handlerTag: number, newState: number): void {

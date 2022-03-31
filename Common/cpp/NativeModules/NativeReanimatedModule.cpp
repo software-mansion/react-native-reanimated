@@ -93,11 +93,20 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, shadowNodeValue, props);
   };
 
+  auto scrollTo = [this](
+                      jsi::Runtime &rt,
+                      const jsi::Value &shadowNodeValue,
+                      const jsi::Value &x,
+                      const jsi::Value &y,
+                      const jsi::Value &animated) {
+    this->scrollTo(rt, shadowNodeValue, x, y, animated);
+  };
+
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
       updateProps,
+      scrollTo,
       requestAnimationFrame,
-      platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.measuringFunction,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
@@ -459,6 +468,30 @@ void NativeReanimatedModule::performOperations() {
     ShadowTree::CommitOptions commitOptions{};
     shadowTree.commit(transaction, commitOptions);
   });
+}
+
+void NativeReanimatedModule::scrollTo(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue,
+    const jsi::Value &x,
+    const jsi::Value &y,
+    const jsi::Value &animated) {
+  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+
+  // UIManager::dispatchCommand is a private method, we cannot call it directly
+  std::shared_ptr<UIManager> uiManager = uiManager_;
+  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
+  UIManagerDelegate *delegate = uiManagerPublic->delegate_;
+  if (!delegate) {
+    return;
+  }
+
+  folly::dynamic args = folly::dynamic::array(
+      static_cast<double>(x.asNumber()),
+      static_cast<double>(y.asNumber()),
+      animated.getBool());
+
+  delegate->uiManagerDidDispatchCommand(shadowNode, "scrollTo", args);
 }
 
 } // namespace reanimated

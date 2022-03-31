@@ -92,6 +92,13 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &props);
   void performOperations();
 
+  void scrollTo(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeValue,
+      const jsi::Value &x,
+      const jsi::Value &y,
+      const jsi::Value &animated);
+
   std::shared_ptr<UIManager> getUIManager() const {
     react_native_assert(
         uiManager_ !=

@@ -18,7 +18,6 @@ using SynchronouslyUpdateUIPropsFunction =
 
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
-using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasuringFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 using TimeProviderFunction = std::function<double(void)>;
@@ -35,7 +34,6 @@ using ConfigurePropsFunction = std::function<void(
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
-  ScrollToFunction scrollToFunction;
   MeasuringFunction measuringFunction;
   TimeProviderFunction getCurrentTime;
   RegisterSensorFunction registerSensor;

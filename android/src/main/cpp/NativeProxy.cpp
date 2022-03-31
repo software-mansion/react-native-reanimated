@@ -108,11 +108,6 @@ void NativeProxy::installJSIBindings() {
     return measure(viewTag);
   };
 
-  auto scrollToFunction =
-      [this](int viewTag, double x, double y, bool animated) -> void {
-    scrollTo(viewTag, x, y, animated);
-  };
-
   auto registerSensorFunction =
       [this](int sensorType, int interval, std::function<void(double[])> setter)
       -> int {
@@ -170,7 +165,6 @@ void NativeProxy::installJSIBindings() {
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       synchronouslyUpdateUIPropsFunction,
-      scrollToFunction,
       measuringFunction,
       getCurrentTime,
       registerSensorFunction,
@@ -291,13 +285,6 @@ void NativeProxy::synchronouslyUpdateUIProps(
   jni::local_ref<ReadableMap::javaobject> uiProps = castReadableMap(
       ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
   method(javaPart_.get(), tag, uiProps);
-}
-
-void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
-  auto method =
-      javaPart_->getClass()->getMethod<void(int, double, double, bool)>(
-          "scrollTo");
-  method(javaPart_.get(), viewTag, x, y, animated);
 }
 
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {

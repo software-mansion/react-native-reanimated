@@ -108,8 +108,13 @@ void RuntimeDecorator::decorateUIRuntime(
         jsi::Runtime &rt,
         const jsi::Value &shadowNodeValue,
         const jsi::Value &props)> updateProps,
+    const std::function<void(
+        jsi::Runtime &rt,
+        const jsi::Value &shadowNodeValue,
+        const jsi::Value &x,
+        const jsi::Value &y,
+        const jsi::Value &animated)> scrollTo,
     const RequestFrameFunction requestFrame,
-    const ScrollToFunction scrollTo,
     const MeasuringFunction measure,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
@@ -154,11 +159,11 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    int viewTag = static_cast<int>(args[0].asNumber());
-    double x = args[1].asNumber();
-    double y = args[2].asNumber();
-    bool animated = args[3].getBool();
-    scrollTo(viewTag, x, y, animated);
+    const jsi::Value &shadowNode = args[0];
+    const jsi::Value &x = args[1];
+    const jsi::Value &y = args[2];
+    const jsi::Value &animated = args[3];
+    scrollTo(rt, shadowNode, x, y, animated);
     return jsi::Value::undefined();
   };
   jsi::Value scrollToFunction = jsi::Function::createFromHostFunction(

@@ -1,5 +1,4 @@
 import { Component, useRef } from 'react';
-import { getTag } from '../NativeMethods';
 import { useSharedValue } from './useSharedValue';
 import { RefObjectFunction } from './commonTypes';
 
@@ -12,7 +11,7 @@ export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
       'worklet';
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTag(component);
+        tag.value = component._internalInstanceHandle.stateNode.node;
         fun.current = component;
       }
       return tag.value;

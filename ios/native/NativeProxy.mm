@@ -273,11 +273,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  auto scrollToFunction = [reanimatedModule](int viewTag, double x, double y, bool animated) {
-    ReactTag reactTag = viewTag;
-    [reanimatedModule.nodesManager scrollTo:reactTag x:x y:y animated:animated];
-  };
-
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
   // Layout Animations start
@@ -367,7 +362,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       synchronouslyUpdateUIPropsFunction,
-      scrollToFunction,
       measuringFunction,
       getCurrentTime,
       registerSensorFunction,
