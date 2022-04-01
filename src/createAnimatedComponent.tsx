@@ -586,12 +586,12 @@ export default function createAnimatedComponent(
         const value = inputStyle[key];
         if (!hasAnimatedNodes(value)) {
           style[key] = value;
-          changed = changed || style[key] !== this._lastSentStyle?.[key];
+          changed = changed || style[key] !== this._lastSentStyle[key];
         } else if (value instanceof AnimatedValue) {
           // if any style in animated component is set directly to the `Value` we set those styles to the first value of `Value` node in order
           // to avoid flash of default styles when `Value` is being asynchrounously sent via bridge and initialized in the native side.
           style[key] = value._startingValue;
-          changed = changed || style[key] !== this._lastSentStyle?.[key];
+          changed = changed || style[key] !== this._lastSentStyle[key];
         }
       }
       if (!changed) {
