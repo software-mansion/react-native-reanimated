@@ -195,7 +195,7 @@ export default function createAnimatedComponent(
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
-    _lastSentStyle?: StyleProps;
+    _lastSentStyle: StyleProps = {};
     sv: SharedValue<null | Record<string, unknown>> | null;
     _propsAnimated?: PropsAnimated;
     _component: ComponentRef | null = null;
@@ -601,6 +601,7 @@ export default function createAnimatedComponent(
           return this._lastSentStyle;
         }
       }
+      this._lastSentStyle = style;
       return style;
     }
 
