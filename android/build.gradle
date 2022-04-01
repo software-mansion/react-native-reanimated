@@ -74,15 +74,6 @@ def resolveBuildType() {
     return true
 }
 
-def resolveExpoLinkingGradle() {
-    def gradleScript = file("./expo/linking.gradle")
-    if (gradleScript.exists()) {
-        return "./expo/linking.gradle"
-    } else {
-        return "../android-npm/expo/linking.gradle"
-    }
-}
-
 def isDeveloperMode() {
     // developer mode, to run Example app
     return file("$projectDir/../node_modules/react-native/package.json").exists()
@@ -290,9 +281,6 @@ if (!BUILD_FROM_SOURCE) {
 
 // end if already loaded aar
 if (!BUILD_FROM_SOURCE) return
-
-// apply expo config
-apply from: resolveExpoLinkingGradle()
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
