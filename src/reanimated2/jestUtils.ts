@@ -2,6 +2,17 @@
 // @ts-nocheck
 import { jestResetJsReanimatedModule } from './core';
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toHaveAnimatedStyle(
+        style: Record<string, unknown>[] | Record<string, unknown>
+      ): R;
+    }
+  }
+}
+
 let config = {
   fps: 60,
 };
