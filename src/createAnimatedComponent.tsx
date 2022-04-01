@@ -161,7 +161,7 @@ interface ComponentRef extends Component {
   getScrollableNode?: () => ComponentRef;
 }
 
-interface InitialComponentProps extends Record<string, unknown> {
+export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
 }

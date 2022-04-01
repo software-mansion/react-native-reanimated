@@ -7,8 +7,6 @@ declare module 'react-native-reanimated' {
     ReactNode,
     Component,
     RefObject,
-    ComponentType,
-    ComponentProps,
     FunctionComponent,
   } from 'react';
   import {
@@ -31,7 +29,6 @@ declare module 'react-native-reanimated' {
     NativeScrollEvent,
     NativeSyntheticEvent,
     ColorValue,
-    OpaqueColorValue,
     EasingFunction,
   } from 'react-native';
   import {
@@ -39,24 +36,24 @@ declare module 'react-native-reanimated' {
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
 
-  import('./src/reanimated2/globals');
+  import('./lib/reanimated2/globals');
 
   export type TimingAnimation =
-    import('./src/reanimated2/animation/index').TimingAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').TimingAnimation;
   export type SpringAnimation =
-    import('./src/reanimated2/animation/index').SpringAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').SpringAnimation;
   export type DecayAnimation =
-    import('./src/reanimated2/animation/index').DecayAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').DecayAnimation;
   export type DelayAnimation =
-    import('./src/reanimated2/animation/commonTypes').DelayAnimation;
+    import('./lib/types/lib/reanimated2/animation/commonTypes').DelayAnimation;
   export type RepeatAnimation =
-    import('./src/reanimated2/animation/index').RepeatAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').RepeatAnimation;
   export type SequenceAnimation =
-    import('./src/reanimated2/animation/index').SequenceAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').SequenceAnimation;
   export type StyleLayoutAnimation =
-    import('./src/reanimated2/animation/index').StyleLayoutAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').StyleLayoutAnimation;
   export type Animation<T> =
-    import('./src/reanimated2/commonTypes').Animation<T>;
+    import('./lib/types/lib/reanimated2/commonTypes').Animation<T>;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;
