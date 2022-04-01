@@ -199,8 +199,8 @@ export type ClassEntryExitAnimationBuilder =
   InstanceableEntryExitAnimationBuilder & StaticClassEntryExitAnimationBuilder;
 
 export class LayoutAnimationVariant extends ComplexAnimationBuilder {
-  enteringAnimationClass: ClassEntryExitAnimationBuilder;
-  exitingAnimationClass: ClassEntryExitAnimationBuilder;
+  enteringAnimationClass: ClassEntryExitAnimationBuilder; // ClassEntryAnimationBuilder
+  exitingAnimationClass: ClassEntryExitAnimationBuilder; // ClassExitAnimationBuilder
 
   constructor(
     enteringAnimationClass: ClassEntryExitAnimationBuilder,

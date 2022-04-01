@@ -5,6 +5,9 @@ import {
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
+import {
+  LayoutAnimationVariant,
+} from '../animationBuilder';
 import { Dimensions } from 'react-native';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
@@ -274,4 +277,22 @@ export class SlideOutDown
       };
     };
   };
+}
+
+export class Bounce {
+  static RightEdge() {
+    return new LayoutAnimationVariant(SlideInRight, SlideOutRight);
+  }
+
+  static LeftEdge() {
+    return new LayoutAnimationVariant(SlideInLeft, SlideOutLeft);
+  }
+
+  static TopEdge() {
+    return new LayoutAnimationVariant(SlideInUp, SlideOutUp);
+  }
+
+  static BottomEdge() {
+    return new LayoutAnimationVariant(SlideInDown, SlideOutDown);
+  }
 }

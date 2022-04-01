@@ -1028,6 +1028,13 @@ declare module 'react-native-reanimated' {
     static TopEdge(): ComplexAnimationBuilder;
     static BottomEdge(): ComplexAnimationBuilder;
   }
+  export class Bounce {
+    static InPlace(): ComplexAnimationBuilder;
+    static RightEdge(): ComplexAnimationBuilder;
+    static LeftEdge(): ComplexAnimationBuilder;
+    static TopEdge(): ComplexAnimationBuilder;
+    static BottomEdge(): ComplexAnimationBuilder;
+  }
 
   interface EasingNodeStatic {
     linear: Animated.EasingNodeFunction;

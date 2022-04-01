@@ -2,6 +2,9 @@ import {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
+import {
+  LayoutAnimationVariant,
+} from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { Dimensions } from 'react-native';
 import { ComplexAnimationBuilder } from '../animationBuilder/ComplexAnimationBuilder';
@@ -528,4 +531,26 @@ export class BounceOutRight
       };
     };
   };
+}
+
+export class Bounce {
+  static InPlace() {
+    return new LayoutAnimationVariant(BounceIn, BounceOut);
+  }
+
+  static RightEdge() {
+    return new LayoutAnimationVariant(BounceInRight, BounceOutRight);
+  }
+
+  static LeftEdge() {
+    return new LayoutAnimationVariant(BounceInLeft, BounceOutLeft);
+  }
+
+  static TopEdge() {
+    return new LayoutAnimationVariant(BounceInUp, BounceOutUp);
+  }
+
+  static BottomEdge() {
+    return new LayoutAnimationVariant(BounceInDown, BounceOutDown);
+  }
 }

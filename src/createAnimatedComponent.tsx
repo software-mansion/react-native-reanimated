@@ -563,6 +563,10 @@ export default function createAnimatedComponent(
               ).enteringAnimationClass.createInstance();
               entering._setRemoteConfig(config);
             }
+            else {
+              // add info aboud deprecated api
+              // console.log("deprecated")
+            }
             entering = entering.build() as EntryExitAnimationFunction;
           }
 
@@ -573,6 +577,10 @@ export default function createAnimatedComponent(
                 exiting as LayoutAnimationVariant
               ).exitingAnimationClass.createInstance();
               exiting._setRemoteConfig(config);
+            }
+            else {
+              // add info aboud deprecated api
+              // console.log("deprecated")
             }
             exiting = exiting.build() as EntryExitAnimationFunction;
           }
