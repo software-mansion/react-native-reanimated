@@ -2,9 +2,10 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
-#include <unistd.h>
 #include <memory>
 #include <string>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "AnimatedSensorModule.h"

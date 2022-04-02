@@ -1,12 +1,11 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <stdio.h>
+#include <react/renderer/core/ReactPrimitives.h>
+
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <react/renderer/core/ReactPrimitives.h>
 
 using namespace facebook;
 using namespace react;
