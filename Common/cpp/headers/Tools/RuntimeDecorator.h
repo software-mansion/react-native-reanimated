@@ -41,8 +41,10 @@ class RuntimeDecorator {
           const jsi::Value &x,
           const jsi::Value &y,
           const jsi::Value &animated)> scrollTo,
+      const std::function<
+          jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>
+          measure,
       const RequestFrameFunction requestFrame,
-      const MeasuringFunction measure,
       const TimeProviderFunction getCurrentTime,
       const RegisterSensorFunction registerSensor,
       const UnregisterSensorFunction unregisterSensor,

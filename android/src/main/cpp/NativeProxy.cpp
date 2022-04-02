@@ -103,11 +103,6 @@ void NativeProxy::installJSIBindings() {
     return jsi::Value(rt, jsi::String::createFromAscii(rt, str.c_str()));
   };
 
-  auto measuringFunction =
-      [this](int viewTag) -> std::vector<std::pair<std::string, double>> {
-    return measure(viewTag);
-  };
-
   auto registerSensorFunction =
       [this](int sensorType, int interval, std::function<void(double[])> setter)
       -> int {
@@ -165,7 +160,6 @@ void NativeProxy::installJSIBindings() {
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       synchronouslyUpdateUIPropsFunction,
-      measuringFunction,
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,

@@ -114,8 +114,10 @@ void RuntimeDecorator::decorateUIRuntime(
         const jsi::Value &x,
         const jsi::Value &y,
         const jsi::Value &animated)> scrollTo,
+    const std::function<
+        jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>
+        measure,
     const RequestFrameFunction requestFrame,
-    const MeasuringFunction measure,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
     const UnregisterSensorFunction unregisterSensor,
@@ -175,13 +177,8 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    int viewTag = static_cast<int>(args[0].asNumber());
-    auto result = measure(viewTag);
-    jsi::Object resultObject(rt);
-    for (auto &i : result) {
-      resultObject.setProperty(rt, i.first.c_str(), i.second);
-    }
-    return resultObject;
+    const jsi::Value &shadowNode = args[0];
+    return measure(rt, shadowNode);
   };
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);

@@ -102,12 +102,16 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->scrollTo(rt, shadowNodeValue, x, y, animated);
   };
 
+  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+    return this->measure(rt, shadowNodeValue);
+  };
+
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
       updateProps,
       scrollTo,
+      measure,
       requestAnimationFrame,
-      platformDepMethodsHolder.measuringFunction,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
@@ -492,6 +496,90 @@ void NativeReanimatedModule::scrollTo(
       animated.getBool());
 
   delegate->uiManagerDidDispatchCommand(shadowNode, "scrollTo", args);
+}
+
+static inline LayoutMetrics getRelativeLayoutMetrics(
+    std::shared_ptr<UIManager> uiManager,
+    ShadowNode const &shadowNode,
+    ShadowNode const *ancestorShadowNode,
+    LayoutableShadowNode::LayoutInspectingPolicy policy) {
+  // based on implementation from UIManager.cpp
+
+  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
+  ShadowTreeRegistry *shadowTreeRegistry =
+      &uiManagerPublic->shadowTreeRegistry_;
+
+  // We might store here an owning pointer to `ancestorShadowNode` to ensure
+  // that the node is not deallocated during method execution lifetime.
+  auto owningAncestorShadowNode = ShadowNode::Shared{};
+
+  if (!ancestorShadowNode) {
+    shadowTreeRegistry->visit(
+        shadowNode.getSurfaceId(), [&](ShadowTree const &shadowTree) {
+          owningAncestorShadowNode =
+              shadowTree.getCurrentRevision().rootShadowNode;
+          ancestorShadowNode = owningAncestorShadowNode.get();
+        });
+  } else {
+    // It is possible for JavaScript (or other callers) to have a reference
+    // to a previous version of ShadowNodes, but we enforce that
+    // metrics are only calculated on most recently committed versions.
+    owningAncestorShadowNode =
+        uiManager->getNewestCloneOfShadowNode(*ancestorShadowNode);
+    ancestorShadowNode = owningAncestorShadowNode.get();
+  }
+
+  auto layoutableAncestorShadowNode =
+      traitCast<LayoutableShadowNode const *>(ancestorShadowNode);
+
+  if (!layoutableAncestorShadowNode) {
+    return EmptyLayoutMetrics;
+  }
+
+  return LayoutableShadowNode::computeRelativeLayoutMetrics(
+      shadowNode.getFamily(), *layoutableAncestorShadowNode, policy);
+}
+
+jsi::Value NativeReanimatedModule::measure(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue) {
+  // based on implementation from UIManagerBinding.cpp
+
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  // TODO: use uiManager_->getRelativeLayoutMetrics once it's public
+  // auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
+  //     *shadowNode, nullptr, {/* .includeTransform = */ true});
+  auto layoutMetrics = getRelativeLayoutMetrics(
+      uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
+
+  if (layoutMetrics == EmptyLayoutMetrics) {
+    return jsi::Value::undefined();
+  }
+  auto newestCloneOfShadowNode =
+      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+
+  auto layoutableShadowNode =
+      traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+  facebook::react::Point originRelativeToParent = layoutableShadowNode
+      ? layoutableShadowNode->getLayoutMetrics().frame.origin
+      : facebook::react::Point();
+
+  auto frame = layoutMetrics.frame;
+
+  jsi::Object result(rt);
+  result.setProperty(
+      rt, "x", jsi::Value(static_cast<double>(originRelativeToParent.x)));
+  result.setProperty(
+      rt, "y", jsi::Value(static_cast<double>(originRelativeToParent.y)));
+  result.setProperty(
+      rt, "width", jsi::Value(static_cast<double>(frame.size.width)));
+  result.setProperty(
+      rt, "height", jsi::Value(static_cast<double>(frame.size.height)));
+  result.setProperty(
+      rt, "pageX", jsi::Value(static_cast<double>(frame.origin.x)));
+  result.setProperty(
+      rt, "pageY", jsi::Value(static_cast<double>(frame.origin.y)));
+  return result;
 }
 
 } // namespace reanimated

@@ -216,10 +216,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
   // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
-  auto measuringFunction = [](int viewTag) -> std::vector<std::pair<std::string, double>> {
-    // return measure(viewTag, uiManager);
-    return std::vector<std::pair<std::string, double>>(0);
-  };
 
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
   auto setGestureStateFunction = [gestureHandlerStateManager](int handlerTag, int newState) {
@@ -362,7 +358,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       synchronouslyUpdateUIPropsFunction,
-      measuringFunction,
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,

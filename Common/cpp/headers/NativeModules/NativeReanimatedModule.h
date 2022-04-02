@@ -99,6 +99,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &y,
       const jsi::Value &animated);
 
+  jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
+
   std::shared_ptr<UIManager> getUIManager() const {
     react_native_assert(
         uiManager_ !=
