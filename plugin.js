@@ -70,7 +70,7 @@ const globals = new Set([
   'Error',
   'global',
   '_measure',
-  '_scrollTo',
+  '_dispatchCommand',
   '_setGestureState',
   '_getCurrentTime',
   '_eventTimestamp',

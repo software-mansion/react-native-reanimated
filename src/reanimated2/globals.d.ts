@@ -21,11 +21,10 @@ declare global {
     updates: StyleProps | AnimatedStyle
   ) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
-  const _scrollTo: (
-    shadowNodeWrapper: any,
-    x: number,
-    y: number,
-    animated: boolean
+  const _dispatchCommand: (
+    shadowNodeWrapper: unknown,
+    commandName: string,
+    args: Array<unknown>
   ) => void;
   const _chronoNow: () => number;
   const ReanimatedDataMock: {
@@ -41,7 +40,7 @@ declare global {
       __reanimatedModuleProxy: NativeReanimated;
       _frameTimestamp: number | null;
       _measure: () => MeasuredDimensions;
-      _scrollTo: () => void;
+      _dispatchCommand: () => void;
       _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationRepository: {

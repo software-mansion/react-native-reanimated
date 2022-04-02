@@ -93,13 +93,12 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, shadowNodeValue, props);
   };
 
-  auto scrollTo = [this](
-                      jsi::Runtime &rt,
-                      const jsi::Value &shadowNodeValue,
-                      const jsi::Value &x,
-                      const jsi::Value &y,
-                      const jsi::Value &animated) {
-    this->scrollTo(rt, shadowNodeValue, x, y, animated);
+  auto dispatchCommand = [this](
+                             jsi::Runtime &rt,
+                             const jsi::Value &shadowNodeValue,
+                             const jsi::Value &commandNameValue,
+                             const jsi::Value &argsValue) {
+    this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
@@ -109,7 +108,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
       updateProps,
-      scrollTo,
+      dispatchCommand,
       measure,
       requestAnimationFrame,
       platformDepMethodsHolder.getCurrentTime,
@@ -474,13 +473,14 @@ void NativeReanimatedModule::performOperations() {
   });
 }
 
-void NativeReanimatedModule::scrollTo(
+void NativeReanimatedModule::dispatchCommand(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
-    const jsi::Value &x,
-    const jsi::Value &y,
-    const jsi::Value &animated) {
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue) {
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  std::string commandName = stringFromValue(rt, commandNameValue);
+  folly::dynamic args = commandArgsFromValue(rt, argsValue);
 
   // UIManager::dispatchCommand is a private method, we cannot call it directly
   std::shared_ptr<UIManager> uiManager = uiManager_;
@@ -490,12 +490,7 @@ void NativeReanimatedModule::scrollTo(
     return;
   }
 
-  folly::dynamic args = folly::dynamic::array(
-      static_cast<double>(x.asNumber()),
-      static_cast<double>(y.asNumber()),
-      animated.getBool());
-
-  delegate->uiManagerDidDispatchCommand(shadowNode, "scrollTo", args);
+  delegate->uiManagerDidDispatchCommand(shadowNode, commandName, args);
 }
 
 static inline LayoutMetrics getRelativeLayoutMetrics(

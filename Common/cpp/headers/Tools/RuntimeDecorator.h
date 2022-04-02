@@ -38,9 +38,8 @@ class RuntimeDecorator {
       const std::function<void(
           jsi::Runtime &rt,
           const jsi::Value &shadowNodeValue,
-          const jsi::Value &x,
-          const jsi::Value &y,
-          const jsi::Value &animated)> scrollTo,
+          const jsi::Value &commandNameValue,
+          const jsi::Value &argsValue)> dispatchCommand,
       const std::function<
           jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>
           measure,

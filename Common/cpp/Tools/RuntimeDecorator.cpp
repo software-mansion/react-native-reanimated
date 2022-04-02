@@ -111,9 +111,8 @@ void RuntimeDecorator::decorateUIRuntime(
     const std::function<void(
         jsi::Runtime &rt,
         const jsi::Value &shadowNodeValue,
-        const jsi::Value &x,
-        const jsi::Value &y,
-        const jsi::Value &animated)> scrollTo,
+        const jsi::Value &commandNameValue,
+        const jsi::Value &argsValue)> dispatchCommand,
     const std::function<
         jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>
         measure,
@@ -156,21 +155,17 @@ void RuntimeDecorator::decorateUIRuntime(
       rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
   rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
 
-  auto clb3 = [scrollTo](
+  auto clb3 = [dispatchCommand](
                   jsi::Runtime &rt,
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    const jsi::Value &shadowNode = args[0];
-    const jsi::Value &x = args[1];
-    const jsi::Value &y = args[2];
-    const jsi::Value &animated = args[3];
-    scrollTo(rt, shadowNode, x, y, animated);
+    dispatchCommand(rt, args[0], args[1], args[2]);
     return jsi::Value::undefined();
   };
-  jsi::Value scrollToFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_scrollTo"), 4, clb3);
-  rt.global().setProperty(rt, "_scrollTo", scrollToFunction);
+  jsi::Value dispatchCommandFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 4, clb3);
+  rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandFunction);
 
   auto clb4 = [measure](
                   jsi::Runtime &rt,

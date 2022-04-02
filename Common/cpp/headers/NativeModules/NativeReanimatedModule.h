@@ -93,12 +93,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &props);
   void performOperations();
 
-  void scrollTo(
+  void dispatchCommand(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,
-      const jsi::Value &x,
-      const jsi::Value &y,
-      const jsi::Value &animated);
+      const jsi::Value &commandNameValue,
+      const jsi::Value &argsValue);
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 

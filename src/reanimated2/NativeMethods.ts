@@ -1,4 +1,4 @@
-/* global _WORKLET _measure _scrollTo _setGestureState */
+/* global _WORKLET _measure _dispatchCommand _setGestureState */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Component } from 'react';
@@ -41,6 +41,19 @@ export function measure(
   return result;
 }
 
+export function dispatchCommand(
+  animatedRef: RefObjectFunction<Component>,
+  commandName: string,
+  args: Array<unknown>
+): void {
+  'worklet';
+  if (!_WORKLET || isNativeIndefined) {
+    return;
+  }
+  const shadowNodeWrapper = animatedRef();
+  _dispatchCommand(shadowNodeWrapper, commandName, args);
+}
+
 export function scrollTo(
   animatedRef: RefObjectFunction<Component>,
   x: number,
@@ -48,11 +61,7 @@ export function scrollTo(
   animated: boolean
 ): void {
   'worklet';
-  if (!_WORKLET || isNativeIndefined) {
-    return;
-  }
-  const shadowNodeWrapper = animatedRef();
-  _scrollTo(shadowNodeWrapper, x, y, animated);
+  dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
 }
 
 export function setGestureState(handlerTag: number, newState: number): void {
