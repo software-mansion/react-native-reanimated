@@ -1,7 +1,6 @@
 #import <Foundation/Foundation.h>
 
 #import <React/RCTBridgeModule.h>
-#import <React/RCTPrimitives.h>
 #import <React/RCTSurfacePresenterStub.h>
 #import <React/RCTUIManager.h>
 

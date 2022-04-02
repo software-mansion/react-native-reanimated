@@ -6,9 +6,6 @@
 #import <React/RCTShadowView.h>
 //#import <stdatomic.h>
 
-#import <React/RCTMountingManager.h>
-#import <React/RCTSurfacePresenter.h>
-
 #import <react/renderer/core/ShadowNode.h> // ShadowNode, ShadowTreeCommitTransaction
 #import <react/renderer/uimanager/UIManager.h> // UIManager
 
@@ -322,12 +319,6 @@ using namespace facebook::react;
   } else {
     [_surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   }
-}
-
-- (void)scrollTo:(ReactTag)reactTag x:(double)x y:(double)y animated:(BOOL)animated
-{
-  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ? _bridge.surfacePresenter : _surfacePresenter;
-  [surfacePresenter.mountingManager dispatchCommand:reactTag commandName:@"scrollTo" args:@[ @(x), @(y), @(animated) ]];
 }
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
