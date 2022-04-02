@@ -22,7 +22,7 @@ declare global {
   ) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _scrollTo: (
-    viewTag: number,
+    shadowNodeWrapper: any,
     x: number,
     y: number,
     animated: boolean
