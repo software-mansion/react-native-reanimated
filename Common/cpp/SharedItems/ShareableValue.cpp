@@ -1,5 +1,5 @@
 #include <cxxabi.h>
-#include <react/renderer/uimanager/UIManager.h> // isShadowNodeWrapperForThirdPartyLibs, shadowNodeFromValueForThirdPartyLibs
+#include <react/renderer/uimanager/primitives.h>
 #include "FrozenObject.h"
 #include "MutableValue.h"
 #include "MutableValueSetterProxy.h"
