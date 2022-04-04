@@ -457,7 +457,10 @@ void NativeReanimatedModule::performOperations() {
                           *pair.second);
 
                   ShadowNodeFragment fragment{/* .props = */ newProps};
-                  return oldShadowNode.clone(fragment);
+                  auto clone = oldShadowNode.clone(fragment);
+                  setNewestCloneOfShadowNodeFromReanimated(clone);
+                  // TODO: what if transaction fails?
+                  return clone;
                 };
 
             newRoot = newRoot->cloneTree(family, callback);

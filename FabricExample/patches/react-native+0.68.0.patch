@@ -1,0 +1,143 @@
+diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
+index 8455efb..fb955bc 100644
+--- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
++++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
+@@ -22,6 +22,20 @@
+ 
+ namespace facebook::react {
+ 
++ShadowNodeWrapper::~ShadowNodeWrapper() {
++  // implementation is kept empty as there is nothing necessary to do in destrutor
++  // however, it still needs to exist in order to act as a "key function" for
++  // the ShadowNodeWrapper class -- this allow for RTTI to work properly across
++  // the library boundaries (i.e. dynamic_cast that is used by isHostObject method)
++}
++
++ShadowNodeListWrapper::~ShadowNodeListWrapper() {
++  // implementation is kept empty as there is nothing necessary to do in destrutor
++  // however, it still needs to exist in order to act as a "key function" for
++  // the ShadowNodeListWrapper class -- this allow for RTTI to work properly across
++  // the library boundaries (i.e. dynamic_cast that is used by isHostObject method)
++}
++
+ static std::unique_ptr<LeakChecker> constructLeakCheckerIfNeeded(
+     RuntimeExecutor const &runtimeExecutor) {
+ #ifdef REACT_NATIVE_DEBUG
+diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
+index da6eeb6..14bd6f9 100644
+--- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
++++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
+@@ -144,6 +144,24 @@ void UIManagerBinding::invalidate() const {
+   uiManager_->setDelegate(nullptr);
+ }
+ 
++std::map<Tag, ShadowNode::Shared>
++    newestClonesFromReanimated; // TODO: synchronize std::map
++
++void setNewestCloneOfShadowNodeFromReanimated(ShadowNode::Shared shadowNode) {
++  newestClonesFromReanimated[shadowNode->getTag()] = shadowNode;
++}
++
++void deleteNewestCloneOfShadowNodeFromReanimated(
++    ShadowNode::Shared shadowNode) {
++  newestClonesFromReanimated.erase(shadowNode->getTag());
++}
++
++ShadowNode::Shared getNewestCloneOfShadowNodeFromReanimated(
++    ShadowNode::Shared shadowNode) {
++  const auto it = newestClonesFromReanimated.find(shadowNode->getTag());
++  return it == newestClonesFromReanimated.cend() ? shadowNode : it->second;
++}
++
+ jsi::Value UIManagerBinding::get(
+     jsi::Runtime &runtime,
+     jsi::PropNameID const &name) {
+@@ -220,7 +238,8 @@ jsi::Value UIManagerBinding::get(
+             size_t count) noexcept -> jsi::Value {
+           return valueFromShadowNode(
+               runtime,
+-              uiManager->cloneNode(shadowNodeFromValue(runtime, arguments[0])));
++              uiManager->cloneNode(getNewestCloneOfShadowNodeFromReanimated(
++                  shadowNodeFromValue(runtime, arguments[0]))));
+         });
+   }
+ 
+@@ -287,7 +306,8 @@ jsi::Value UIManagerBinding::get(
+           return valueFromShadowNode(
+               runtime,
+               uiManager->cloneNode(
+-                  shadowNodeFromValue(runtime, arguments[0]),
++                  getNewestCloneOfShadowNodeFromReanimated(
++                      shadowNodeFromValue(runtime, arguments[0])),
+                   ShadowNode::emptySharedShadowNodeSharedList()));
+         });
+   }
+@@ -307,7 +327,8 @@ jsi::Value UIManagerBinding::get(
+           return valueFromShadowNode(
+               runtime,
+               uiManager->cloneNode(
+-                  shadowNodeFromValue(runtime, arguments[0]),
++                  getNewestCloneOfShadowNodeFromReanimated(
++                      shadowNodeFromValue(runtime, arguments[0])),
+                   nullptr,
+                   &rawProps));
+         });
+@@ -328,7 +349,8 @@ jsi::Value UIManagerBinding::get(
+           return valueFromShadowNode(
+               runtime,
+               uiManager->cloneNode(
+-                  shadowNodeFromValue(runtime, arguments[0]),
++                  getNewestCloneOfShadowNodeFromReanimated(
++                      shadowNodeFromValue(runtime, arguments[0])),
+                   ShadowNode::emptySharedShadowNodeSharedList(),
+                   &rawProps));
+         });
+diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h
+index 9ddd53d..24dc054 100644
+--- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h
++++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h
+@@ -80,4 +80,11 @@ class UIManagerBinding : public jsi::HostObject {
+   RuntimeExecutor runtimeExecutor_;
+ };
+ 
++void setNewestCloneOfShadowNodeFromReanimated(ShadowNode::Shared shadowNode);
++
++void deleteNewestCloneOfShadowNodeFromReanimated(ShadowNode::Shared shadowNode);
++
++ShadowNode::Shared getNewestCloneOfShadowNodeFromReanimated(
++    ShadowNode::Shared shadowNode);
++
+ } // namespace facebook::react
+diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
+index 101155f..4212893 100644
+--- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
++++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
+@@ -30,6 +30,10 @@ struct ShadowNodeWrapper : public jsi::HostObject {
+   ShadowNodeWrapper(SharedShadowNode shadowNode)
+       : shadowNode(std::move(shadowNode)) {}
+ 
++  // The below method needs to be out-of-line in order for the class to have
++  // at least one "key function" (see https://itanium-cxx-abi.github.io/cxx-abi/abi.html#vague-vtable)
++  ~ShadowNodeWrapper() override;
++
+   ShadowNode::Shared shadowNode;
+ };
+ 
+@@ -37,6 +41,10 @@ struct ShadowNodeListWrapper : public jsi::HostObject {
+   ShadowNodeListWrapper(SharedShadowNodeUnsharedList shadowNodeList)
+       : shadowNodeList(shadowNodeList) {}
+ 
++  // The below method needs to be out-of-line in order for the class to have
++  // at least one "key function" (see https://itanium-cxx-abi.github.io/cxx-abi/abi.html#vague-vtable)
++  ~ShadowNodeListWrapper() override;
++
+   SharedShadowNodeUnsharedList shadowNodeList;
+ };
+ 
+diff --git a/node_modules/react-native/scripts/.packager.env b/node_modules/react-native/scripts/.packager.env
+new file mode 100644
+index 0000000..361f5fb
+--- /dev/null
++++ b/node_modules/react-native/scripts/.packager.env
+@@ -0,0 +1 @@
++export RCT_METRO_PORT=8081
