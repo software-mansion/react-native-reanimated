@@ -1,11 +1,15 @@
+#if !TARGET_OS_TV
 #import <CoreMotion/CoreMotion.h>
+#endif
 #import "ReanimatedSensorType.h"
 
 @interface ReanimatedSensor : NSObject {
   ReanimatedSensorType _sensorType;
   double _interval;
   double _lastTimestamp;
+#if !TARGET_OS_TV
   CMMotionManager *_motionManager;
+#endif
   void (^_setter)(double[]);
 }
 
