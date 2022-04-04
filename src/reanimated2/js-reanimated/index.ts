@@ -20,7 +20,7 @@ if (shouldBeUseWeb()) {
   };
   global._measure = () => {
     console.warn(
-      "[Reanimated] You can't use 'measue' method with Chrome Debugger or with web version"
+      "[Reanimated] You can't use `measure` with Chrome Debugger or with web version"
     );
     return {
       x: 0,
@@ -33,12 +33,12 @@ if (shouldBeUseWeb()) {
   };
   global._scrollTo = () => {
     console.warn(
-      "[Reanimated] You can't use 'scrollTo' method with Chrome Debugger or with web version"
+      "[Reanimated] You can't use `scrollTo` with Chrome Debugger or with web version"
     );
   };
   global._setGestureState = () => {
     console.warn(
-      "[Reanimated] You can't use 'setGestureState' method with Chrome Debugger or with web version"
+      "[Reanimated] You can't use `setGestureState` with Chrome Debugger or with web version"
     );
   };
 }
