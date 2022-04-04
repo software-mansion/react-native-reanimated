@@ -29,6 +29,8 @@ jobs:
           node-version: 14
           cache: 'yarn'
           cache-dependency-path: 'TVOSExample/yarn.lock'
+      - name: Install Reanimated node dependencies
+        run: yarn
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
