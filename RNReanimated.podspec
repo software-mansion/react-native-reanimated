@@ -27,7 +27,7 @@ rescue
       # /react-native-reanimated/node_modules/react-native/package.json
       reactJson = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))
       reactVersion = reactJson["version"]
-      reactTargetTvOS = ENV.include?('ReanimatedTVOSExample')
+      reactTargetTvOS = ENV["ReanimatedTVOSExample"] == "1"
     rescue
       # should never happen
       reactVersion = '0.68.0'

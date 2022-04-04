@@ -6,9 +6,9 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import {View} from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 
-export default function AnimatedStyleUpdateExample() {
+export default function App() {
   const randomWidth = useSharedValue(10);
 
   const config = {
@@ -22,7 +22,9 @@ export default function AnimatedStyleUpdateExample() {
     };
   });
 
-  randomWidth.value = 200;
+  useEffect(() => {
+    randomWidth.value = 200;
+  });
 
   return (
     <View
@@ -32,7 +34,7 @@ export default function AnimatedStyleUpdateExample() {
       }}>
       <Animated.View
         style={[
-          {width: 100, height: 80, backgroundColor: 'black', margin: 30},
+          {width: 10, height: 80, backgroundColor: 'black', margin: 30},
           style,
         ]}
       />

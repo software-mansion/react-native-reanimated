@@ -1,7 +1,4 @@
 #import "ReanimatedSensorContainer.h"
-#if !TARGET_OS_TV
-#import <CoreMotion/CoreMotion.h>
-#endif
 #import <Foundation/Foundation.h>
 #import "ReanimatedSensor.h"
 

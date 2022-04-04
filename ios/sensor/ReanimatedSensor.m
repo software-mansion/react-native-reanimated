@@ -1,6 +1,6 @@
 #import "ReanimatedSensor.h"
 
-#if !TARGET_OS_TV
+#if __has_include(<CoreMotion/CoreMotion.h>)
 @implementation ReanimatedSensor
 
 - (instancetype)init:(ReanimatedSensorType)sensorType interval:(int)interval setter:(void (^)(double[]))setter

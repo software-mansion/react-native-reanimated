@@ -48,7 +48,7 @@ target 'TVOSExample-tvOS' do
     # An abosolute path to your application root.
     :app_path => "#{Dir.pwd}/.."
   )
-  ENV["ReanimatedTVOSExample"] = "true"
+  ENV["ReanimatedTVOSExample"] = "1"
   pod 'RNReanimated', :path => '../../'
   
   target 'TVOSExample-tvOSTests' do

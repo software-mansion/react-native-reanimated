@@ -1,4 +1,4 @@
-#if !TARGET_OS_TV
+#if __has_include(<CoreMotion/CoreMotion.h>)
 #import <CoreMotion/CoreMotion.h>
 #endif
 #import "ReanimatedSensorType.h"
