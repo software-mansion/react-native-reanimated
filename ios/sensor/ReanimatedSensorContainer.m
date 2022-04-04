@@ -1,5 +1,4 @@
 #import "ReanimatedSensorContainer.h"
-#import <CoreMotion/CoreMotion.h>
 #import <Foundation/Foundation.h>
 #import "ReanimatedSensor.h"
 

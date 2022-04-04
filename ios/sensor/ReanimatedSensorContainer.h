@@ -1,4 +1,3 @@
-#import <CoreMotion/CoreMotion.h>
 #import "ReanimatedSensorType.h"
 
 @interface ReanimatedSensorContainer : NSObject {

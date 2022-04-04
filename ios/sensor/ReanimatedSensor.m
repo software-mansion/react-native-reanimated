@@ -1,5 +1,6 @@
 #import "ReanimatedSensor.h"
 
+#if __has_include(<CoreMotion/CoreMotion.h>)
 @implementation ReanimatedSensor
 
 - (instancetype)init:(ReanimatedSensorType)sensorType interval:(int)interval setter:(void (^)(double[]))setter
@@ -167,3 +168,50 @@
 }
 
 @end
+
+#else
+
+@implementation ReanimatedSensor
+
+- (instancetype)init:(ReanimatedSensorType)sensorType interval:(int)interval setter:(void (^)(double[]))setter
+{
+  self = [super init];
+  return self;
+}
+
+- (bool)initialize
+{
+  return false;
+}
+
+- (bool)initializeGyroscope
+{
+  return false;
+}
+
+- (bool)initializeAccelerometer
+{
+  return false;
+}
+
+- (bool)initializeGravity
+{
+  return false;
+}
+
+- (bool)initializeMagnetometer
+{
+  return false;
+}
+
+- (bool)initializeOrientation
+{
+  return false;
+}
+
+- (void)cancel
+{
+}
+
+@end
+#endif
