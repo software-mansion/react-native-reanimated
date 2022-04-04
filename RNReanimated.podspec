@@ -29,13 +29,15 @@ rescue
       # /react-native-reanimated/RNReanimated.podspec
       # /react-native-reanimated/node_modules/react-native/package.json
       puts "mleko3"
-      reactJson = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))
-      reactVersion = reactJson["version"]
-      puts "mleko"
       puts ENV
       puts ENV["ReanimatedTVOSExample"]
       puts ENV.include?("ReanimatedTVOSExample")
+      puts __dir__
+      puts File.join(__dir__, "node_modules", "react-native", "package.json")
       puts "mleko"
+
+      reactJson = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))
+      reactVersion = reactJson["version"]
       reactTargetTvOS = ENV.include?("ReanimatedTVOSExample")
     rescue
       # should never happen
