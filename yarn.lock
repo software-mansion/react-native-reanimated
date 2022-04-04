@@ -4260,7 +4260,7 @@ deprecated-obj@2.0.0:
 
 deprecated-react-native-prop-types@^2.3.0:
   version "2.3.0"
-  resolved "https://registry.npmjs.org/deprecated-react-native-prop-types/-/deprecated-react-native-prop-types-2.3.0.tgz"
+  resolved "https://registry.yarnpkg.com/deprecated-react-native-prop-types/-/deprecated-react-native-prop-types-2.3.0.tgz#c10c6ee75ff2b6de94bb127f142b814e6e08d9ab"
   integrity sha512-pWD0voFtNYxrVqvBMYf5gq3NA2GCpfodS1yNynTPc93AYA/KEMGeWDqqeUB6R2Z9ZofVhks2aeJXiuQqKNpesA==
   dependencies:
     "@react-native/normalize-color" "*"
@@ -8366,7 +8366,7 @@ prompts@^2.4.0:
 
 prop-types@*:
   version "15.8.1"
-  resolved "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz"
+  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
   dependencies:
     loose-envify "^1.4.0"
@@ -8443,9 +8443,9 @@ rc@^1.2.7, rc@^1.2.8:
     strip-json-comments "~2.0.1"
 
 react-devtools-core@^4.23.0:
-  version "4.23.0"
-  resolved "https://registry.npmjs.org/react-devtools-core/-/react-devtools-core-4.23.0.tgz"
-  integrity sha512-KkzneT1LczFtebbTJlvRphIRvzuHLhI9ghfrseVv9ktBs+l2cXy8Svw5U16lzQnwU9okVEcURmGPgH79WWrlaw==
+  version "4.24.3"
+  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.24.3.tgz#371fef3f5c639db0dc59eeef334dd5e10ac61661"
+  integrity sha512-+htKZxLxDN14jhRG3+IXRiJqNSGHUiPYrMtv9e7qlZxcbKeJjVs+C/hd8kZF5rydp3faBwFN6ZpTaZnLA3/ZGA==
   dependencies:
     shell-quote "^1.6.1"
     ws "^7"
@@ -8469,7 +8469,7 @@ react-freeze@^1.0.0:
 
 react-is@^16.13.1:
   version "16.13.1"
-  resolved "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
 react-is@^16.8.1, react-is@^16.8.4:
@@ -8524,10 +8524,10 @@ react-native-screens@^3.11.1:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-react-native@0.68.0-rc.2:
-  version "0.68.0-rc.2"
-  resolved "https://registry.npmjs.org/react-native/-/react-native-0.68.0-rc.2.tgz"
-  integrity sha512-PdaPs+g5DCZdWTFScZ42nv6m+iTvLSo34efxDiWBwrkU7kr6M9WjNSnPhd07KAOxHWBOQKZgV0UwwlN2ugvqtw==
+react-native@0.68.0:
+  version "0.68.0"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.68.0.tgz#00204818c7fa5a9802ee73f3905a6d9b1c945a31"
+  integrity sha512-Qi8KpG9rqiU0hVp05GKkuRe8iAVhblYMwpnwG3wkBi99Z/X8iZ0jD1b1UW0/y6oesmCyGQAxpsB36imU8zg1AQ==
   dependencies:
     "@jest/create-cache-key-function" "^27.0.1"
     "@react-native-community/cli" "^7.0.3"

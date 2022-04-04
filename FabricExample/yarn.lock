@@ -5517,9 +5517,9 @@ range-parser@~1.2.1:
   integrity sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==
 
 react-devtools-core@^4.23.0:
-  version "4.23.0"
-  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.23.0.tgz#dff9d12202a472ef62632203d6de3877dc6e58be"
-  integrity sha512-KkzneT1LczFtebbTJlvRphIRvzuHLhI9ghfrseVv9ktBs+l2cXy8Svw5U16lzQnwU9okVEcURmGPgH79WWrlaw==
+  version "4.24.3"
+  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.24.3.tgz#371fef3f5c639db0dc59eeef334dd5e10ac61661"
+  integrity sha512-+htKZxLxDN14jhRG3+IXRiJqNSGHUiPYrMtv9e7qlZxcbKeJjVs+C/hd8kZF5rydp3faBwFN6ZpTaZnLA3/ZGA==
   dependencies:
     shell-quote "^1.6.1"
     ws "^7"
@@ -5568,10 +5568,10 @@ react-native-screens@^3.11.1:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-react-native@0.68.0-rc.2:
-  version "0.68.0-rc.2"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.68.0-rc.2.tgz#6b826810355e70193fcc3a4f4c862767e5c2cce2"
-  integrity sha512-PdaPs+g5DCZdWTFScZ42nv6m+iTvLSo34efxDiWBwrkU7kr6M9WjNSnPhd07KAOxHWBOQKZgV0UwwlN2ugvqtw==
+react-native@0.68.0:
+  version "0.68.0"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.68.0.tgz#00204818c7fa5a9802ee73f3905a6d9b1c945a31"
+  integrity sha512-Qi8KpG9rqiU0hVp05GKkuRe8iAVhblYMwpnwG3wkBi99Z/X8iZ0jD1b1UW0/y6oesmCyGQAxpsB36imU8zg1AQ==
   dependencies:
     "@jest/create-cache-key-function" "^27.0.1"
     "@react-native-community/cli" "^7.0.3"

@@ -83,10 +83,10 @@
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
+    "@babel/preset-typescript": "*",
     "react": "*",
     "react-native": "*",
-    "react-native-gesture-handler": "*",
-    "@babel/preset-typescript": "*"
+    "react-native-gesture-handler": "*"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.6",
@@ -100,10 +100,10 @@
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^5.0.3",
     "@testing-library/react-native": "^7.1.0",
+    "@types/babel-types": "^7.0.11",
     "@types/babel__core": "^7.1.18",
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.14.2",
-    "@types/babel-types": "^7.0.11",
     "@types/jest": "^27.4.0",
     "@types/react-native": "^0.66.15",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
@@ -126,7 +126,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.68.0-rc.2",
+    "react-native": "0.68.0",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "17.0.2",
