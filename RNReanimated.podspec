@@ -9,6 +9,7 @@ begin
   # standard app
   # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
   # /appName/node_modules/react-native/package.json
+  puts "mleko1"
   reactJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))
   reactVersion = reactJson["version"]
   reactTargetTvOS = reactJson["name"] == "react-native-tvos"
@@ -17,6 +18,7 @@ rescue
     # monorepo
     # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
     # /monorepo/node_modules/react-native/package.json
+    puts "mleko2"
     reactJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))
     reactVersion = reactJson["version"]
     reactTargetTvOS = reactJson["name"] == "react-native-tvos"
