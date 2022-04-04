@@ -21,12 +21,14 @@ rescue
     puts "mleko2"
     reactJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))
     reactVersion = reactJson["version"]
+    puts reactJson["name"]
     reactTargetTvOS = reactJson["name"] == "react-native-tvos"
   rescue
     begin
       # Example app in reanimated repo
       # /react-native-reanimated/RNReanimated.podspec
       # /react-native-reanimated/node_modules/react-native/package.json
+      puts "mleko3"
       reactJson = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))
       reactVersion = reactJson["version"]
       puts "mleko"
@@ -37,6 +39,7 @@ rescue
       reactTargetTvOS = ENV.include?("ReanimatedTVOSExample")
     rescue
       # should never happen
+      puts "mleko4"
       reactVersion = '0.68.0'
       puts "[RNReanimated] Unable to recognized your `react-native` version! Default `react-native` version: " + reactVersion
     end
