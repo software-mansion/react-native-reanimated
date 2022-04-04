@@ -255,7 +255,7 @@ PODS:
     - React-jsi (= 0.68.0-0)
     - React-logger (= 0.68.0-0)
     - React-perflogger (= 0.68.0-0)
-  - RNReanimated (2.5.0):
+  - RNReanimated (2.6.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -412,9 +412,9 @@ SPEC CHECKSUMS:
   React-RCTText: a83b3bf5a5140b3d40c718ecd76f3a64355bbfee
   React-runtimeexecutor: 5d1482345a0f47d08c8c72865420eb65c695f5a3
   ReactCommon: 946395267f1f0c2d4b62c14a798b7bdb5cb19eee
-  RNReanimated: 02d3341bf021b0d26399d4ef5fd6809b11a3677c
+  RNReanimated: 51e8417dacbb4faf2f04c92e55c712e4b90399ce
   Yoga: 2dd7e4fe11c3ac6e0e009ca7877bcfd00d955bb8
 
-PODFILE CHECKSUM: 6a03b9a61a1635ce720f78a223d4d514c727dc3c
+PODFILE CHECKSUM: 252e5be06330220b0f5ac8dd954a25046b50c10e
 
 COCOAPODS: 1.11.2
