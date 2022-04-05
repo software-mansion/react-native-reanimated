@@ -513,16 +513,18 @@ function makeWorklet(t, fun, fileName) {
 
   statements.push(
     t.expressionStatement(
-      t.callExpression(
+      t.assignmentExpression(
+        '=',
         t.memberExpression(
-          t.identifier('global'),
-          t.identifier('__reanimatedWorkletInit'),
+          t.identifier('_f'),
+          t.identifier('__worklet'),
           false
         ),
-        [privateFunctionId]
+        t.booleanLiteral(true)
       )
     )
   );
+  // TODO: fix spread (inline _toConsumableArray and _mergeObjectsReanimated)
   statements.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));

@@ -1,4 +1,4 @@
-import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
+import { AnimatedStyle, StyleProps } from './commonTypes';
 import { ReanimatedConsole } from './core';
 import { MeasuredDimensions } from './NativeMethods';
 import { NativeReanimated } from './NativeReanimated/NativeReanimated';
@@ -32,7 +32,6 @@ declare global {
   };
   namespace NodeJS {
     interface Global {
-      __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
       _setGestureState: () => void;
