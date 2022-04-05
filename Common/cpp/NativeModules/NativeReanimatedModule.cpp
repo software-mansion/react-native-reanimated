@@ -386,11 +386,18 @@ struct UIManagerPublic {
   ContextContainer::Shared contextContainer_;
 };
 
+static SurfaceId globalSurfaceId = -1;
+// After app reload, surfaceId on iOS is still 1 but on Android it's 11.
+// We can store the maximum SurfaceId as a workaround.
+// TODO: support multiple Fabric surfaces
+
 void NativeReanimatedModule::updateProps(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &props) {
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+
+  globalSurfaceId = std::max(globalSurfaceId, shadowNode->getSurfaceId());
 
   // TODO: move to separate method
   bool uiPropsOnly = [&]() {
@@ -435,10 +442,9 @@ void NativeReanimatedModule::performOperations() {
       &uiManagerPublic->shadowTreeRegistry_;
   std::shared_ptr<const ContextContainer> contextContainer =
       uiManagerPublic->contextContainer_;
-  SurfaceId surfaceId = 1; // TODO: handle surface id
-  PropsParserContext propsParserContext{surfaceId, *contextContainer};
+  PropsParserContext propsParserContext{globalSurfaceId, *contextContainer};
 
-  shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+  shadowTreeRegistry->visit(globalSurfaceId, [&](ShadowTree const &shadowTree) {
     ShadowTreeCommitTransaction transaction =
         [&](RootShadowNode const &oldRootShadowNode) {
           ShadowNode::Unshared newRoot =
@@ -446,7 +452,7 @@ void NativeReanimatedModule::performOperations() {
 
           for (const auto &pair : copiedOperationsQueue) {
             const ShadowNodeFamily &family = pair.first->getFamily();
-            react_native_assert(family.getSurfaceId() == 1);
+            react_native_assert(family.getSurfaceId() == globalSurfaceId);
 
             std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)>
                 callback = [&](ShadowNode const &oldShadowNode) {
