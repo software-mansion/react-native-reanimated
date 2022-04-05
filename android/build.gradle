@@ -88,6 +88,14 @@ def isDeveloperMode() {
     return file("$projectDir/../node_modules/react-native/package.json").exists()
 }
 
+def isNewArchitectureEnabled() {
+    // To opt-in for the New Architecture, you can either:
+    // - Set `newArchEnabled` to true inside the `gradle.properties` file
+    // - Invoke gradle with `-newArchEnabled=true`
+    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
 def resolveReactNativeDirectory() {
     if (isDeveloperMode()) {
         return file("$projectDir/../node_modules/react-native")
@@ -391,9 +399,9 @@ android {
                         "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
-                        "-DBUILD_DIR=${buildDir}",
                         "-DFOR_HERMES=${FOR_HERMES}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
+                        "-DNEW_ARCHITECTURE=${isNewArchitectureEnabled()}",
                         "--clean-first"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
@@ -709,37 +717,19 @@ task downloadNdkBuildDependencies {
 task prepareThirdPartyNdkHeaders(dependsOn:[downloadNdkBuildDependencies, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog]) {
 }
 
-tasks.whenTaskAdded { task ->
-    if (
-        task.name.contains("externalNativeBuild")
-        || task.name.contains("buildCMake")
-    ) {
-        task.dependsOn(prepareThirdPartyNdkHeaders)
-        extractAARHeaders.dependsOn(prepareThirdPartyNdkHeaders)
-        extractSOFiles.dependsOn(prepareThirdPartyNdkHeaders)
-        task.dependsOn(extractAARHeaders)
-        task.dependsOn(extractSOFiles)
-    }
+def nativeBuildDependsOn(dependsOnTask) {
+    def buildTasks = tasks.findAll({ task ->
+        !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake")) })
+    buildTasks.forEach { task -> task.dependsOn(dependsOnTask) }
+}
 
-    // for RNTester
-    if (task.name.startsWith('buildCMake')) {
-        task.dependsOn(':ReactAndroid:prepareBoost')
-        task.dependsOn(':ReactAndroid:prepareDoubleConversion')
-        task.dependsOn(':ReactAndroid:prepareFolly')
-        task.dependsOn(':ReactAndroid:prepareGlog')
-        task.dependsOn(':ReactAndroid:buildNdkBuildDebug')
-    }
+afterEvaluate {
+    extractAARHeaders.dependsOn(prepareThirdPartyNdkHeaders)
+    extractSOFiles.dependsOn(prepareThirdPartyNdkHeaders)
 
-    // RNTester uses "jsc" and "hermes" build flavors which appear in various task names, e.g. `compileJscDebugSources`.
-    // Due to unknown reasons, some of the Gradle tasks in Reanimated are not attached as dependencies.
-    // That's why we need to add the dependencies manually.
-    // NOTE: Currently, this works only for debug mode.
-    if (task.name.startsWith('merge') && task.name.endsWith('NativeLibs')) {
-        task.dependsOn(':react-native-reanimated:externalNativeBuildDebug')
-    }
-    if (task.name.startsWith('merge') && task.name.endsWith('JniLibFolders')) {
-        task.dependsOn(':react-native-reanimated:packageNdkLibs')
-    }
+    nativeBuildDependsOn(prepareThirdPartyNdkHeaders)
+    nativeBuildDependsOn(extractAARHeaders)
+    nativeBuildDependsOn(extractSOFiles)
 }
 
 if (CLIENT_SIDE_BUILD) {

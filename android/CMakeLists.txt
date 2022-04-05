@@ -25,10 +25,19 @@ else()
 endif()
 
 # get react .so built from sources instead of .so from react's aar
-set (RN_SO_DIR "/Users/tomekzaw/RNOS/fabric/react-native-reanimated/FabricExample/android/app/build/react-ndk/exported")
-set (FBJNI_HEADERS_DIR "/Users/tomekzaw/RNOS/fabric/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
-# TODO: get path to app project and use it in RN_SO_DIR and FBJNI_HEADERS_DIR
-message(FATAL_ERROR "Please manually update RN_SO_DIR and FBJNI_HEADERS_DIR paths in react-native-reanimated/android/CMakeLists.txt:28-29")
+
+if(${NEW_ARCHITECTURE})
+    if(${CLIENT_SIDE_BUILD})
+        set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
+        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../../react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+    else()
+        set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../FabricExample/android/app/build/react-ndk/exported")
+        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../FabricExample/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+    endif()
+else()
+    set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
+    set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
+endif()
 
 # reanimated shared
 
