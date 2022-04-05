@@ -2,9 +2,11 @@
 
 #import <React/RCTConvert.h>
 #import <React/RCTFollyConvert.h>
-
 #import <React/RCTShadowView.h>
 //#import <stdatomic.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
+#import <React/RCTSurfacePresenter.h>
 
 #import <react/renderer/core/ShadowNode.h> // ShadowNode, ShadowTreeCommitTransaction
 #import <react/renderer/uimanager/UIManager.h> // UIManager
@@ -314,11 +316,16 @@ using namespace facebook::react;
 
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
 {
-  if (_bridge.surfacePresenter) {
-    [_bridge.surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-  } else {
-    [_surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-  }
+  // adapted from RCTPropsAnimatedNode.m
+  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ? _bridge.surfacePresenter : _surfacePresenter;
+  [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+
+  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
+  // so that's why we need to call `finalizeUpdates` here.
+  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+  UIView<RCTComponentViewProtocol> *componentView =
+      [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
+  [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName

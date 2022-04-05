@@ -1,16 +1,4 @@
-import { Platform } from 'react-native';
 import { configureProps as jsiConfigureProps } from './reanimated2/core';
-
-const COLOR_PROPS: Record<string, boolean> = {
-  backgroundColor: true,
-  borderRightColor: true,
-  borderBottomColor: true,
-  borderColor: true,
-  borderEndColor: true,
-  borderLeftColor: true,
-  borderStartColor: true,
-  borderTopColor: true,
-};
 
 /**
  * Styles allowed to be direcly updated in UI thread
@@ -26,17 +14,21 @@ let UI_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   scaleY: true,
   translateX: true,
   translateY: true,
-
-  ...(Platform.OS === 'android' && COLOR_PROPS),
+  /* colors */
+  backgroundColor: true,
+  borderRightColor: true,
+  borderBottomColor: true,
+  borderColor: true,
+  borderEndColor: true,
+  borderLeftColor: true,
+  borderStartColor: true,
+  borderTopColor: true,
 };
 
 /**
  * Whitelist of view props that can be updated in native thread via UIManagerModule
  */
 let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
-  // TODO: check if colors can be handled like UI props (iOS)
-  ...(Platform.OS === 'ios' && COLOR_PROPS),
-
   borderBottomWidth: true,
   borderEndWidth: true,
   borderLeftWidth: true,
