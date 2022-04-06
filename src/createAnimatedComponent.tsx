@@ -2,8 +2,6 @@ import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
-// @ts-ignore JS file
-import AnimatedEvent from './reanimated1/core/AnimatedEvent';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/LayoutAnimationRepository';
@@ -190,22 +188,11 @@ export default function createAnimatedComponent(
       this._attachAnimatedStyles();
     }
 
-    _getEventViewRef() {
-      // Make sure to get the scrollable node for components that implement
-      // `ScrollResponder.Mixin`.
-      return this._component?.getScrollableNode
-        ? this._component.getScrollableNode()
-        : this._component;
-    }
-
     _attachNativeEvents() {
-      const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      const viewTag = findNodeHandle(this);
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          (prop as AnimatedEvent).attachEvent(node, key);
-        } else if (
+        if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
@@ -215,13 +202,9 @@ export default function createAnimatedComponent(
     }
 
     _detachNativeEvents() {
-      const node = this._getEventViewRef();
-
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          (prop as AnimatedEvent).detachEvent(node, key);
-        } else if (
+        if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
@@ -250,16 +233,11 @@ export default function createAnimatedComponent(
     _reattachNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      const node = this._getEventViewRef();
-      const attached = new Set();
-      const nextEvts = new Set();
       let viewTag: number | undefined;
 
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          nextEvts.add((prop as AnimatedEvent).__nodeID);
-        } else if (
+        if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
@@ -270,15 +248,7 @@ export default function createAnimatedComponent(
       }
       for (const key in prevProps) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has((prop as AnimatedEvent).__nodeID)) {
-            // event was in prev props but not in current props, we detach
-            (prop as AnimatedEvent).detachEvent(node, key);
-          } else {
-            // event was in prev and is still in current props
-            attached.add((prop as AnimatedEvent).__nodeID);
-          }
-        } else if (
+        if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
@@ -290,12 +260,6 @@ export default function createAnimatedComponent(
       for (const key in this.props) {
         const prop = this.props[key];
         if (
-          prop instanceof AnimatedEvent &&
-          !attached.has((prop as AnimatedEvent).__nodeID)
-        ) {
-          // not yet attached
-          (prop as AnimatedEvent).attachEvent(node, key);
-        } else if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
@@ -524,12 +488,6 @@ export default function createAnimatedComponent(
               animatedProp.viewsRef?.add(this);
             });
           }
-        } else if (value instanceof AnimatedEvent) {
-          // we cannot filter out event listeners completely as some components
-          // rely on having a callback registered in order to generate events
-          // alltogether. Therefore we provide a dummy callback here to allow
-          // native event dispatcher to hijack events.
-          props[key] = dummyListener;
         } else if (
           has('current', value) &&
           value.current instanceof WorkletEventHandler
