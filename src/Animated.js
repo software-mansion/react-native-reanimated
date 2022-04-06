@@ -4,7 +4,6 @@ import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
 } from './ConfigHelper';
-import * as reanimated1 from './reanimated1';
 import ReanimatedComponents from './reanimated2/component';
 
 const Animated = {
@@ -14,12 +13,9 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
-  // reanimated 1
-  ...reanimated1,
 };
 
 export * from './reanimated2';
-export * from './reanimated1';
 export default Animated;
 
 // I think we can ignore this message as long as Gesture Handler doesn't
