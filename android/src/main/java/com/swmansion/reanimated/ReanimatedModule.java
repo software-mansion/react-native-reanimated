@@ -7,8 +7,9 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
 import com.swmansion.reanimated.transitions.TransitionModule;
@@ -73,10 +74,10 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
     }
     final ArrayList<UIThreadOperation> operations = mOperations;
     mOperations = new ArrayList<>();
-    UiThreadUtil.runOnUiThread(
-        new Runnable() {
+    uiManager.addUIBlock(
+        new UIBlock() {
           @Override
-          public void run() {
+          public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
             NodesManager nodesManager = getNodesManager();
             for (UIThreadOperation operation : operations) {
               operation.execute(nodesManager);

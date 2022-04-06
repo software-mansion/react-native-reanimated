@@ -27,6 +27,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class NativeProxy {
@@ -163,6 +164,11 @@ public class NativeProxy {
   @DoNotStrip
   private void requestRender(AnimationFrameCallback callback) {
     mNodesManager.postOnAnimation(callback);
+  }
+
+  @DoNotStrip
+  private void updateProps(int viewTag, Map<String, Object> props) {
+    mNodesManager.updateProps(viewTag, props);
   }
 
   @DoNotStrip

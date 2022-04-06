@@ -21,12 +21,12 @@ import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.ReactShadowNode;
+import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
-import com.facebook.react.uimanager.common.ViewUtil;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -149,9 +149,9 @@ public class NodesManager implements EventDispatcherListener {
 
   private final class NativeUpdateOperation {
     public int mViewTag;
-    public String mNativeProps;
+    public WritableMap mNativeProps;
 
-    public NativeUpdateOperation(int viewTag, String nativeProps) {
+    public NativeUpdateOperation(int viewTag, WritableMap nativeProps) {
       mViewTag = viewTag;
       mNativeProps = nativeProps;
     }
@@ -400,16 +400,12 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
-  // public void enqueueUpdateViewOnNativeThread(
-  //     int viewTag, WritableMap nativeProps, boolean trySynchronously) {
-  //   if (trySynchronously) {
-  //     mTryRunBatchUpdatesSynchronously = true;
-  //   }
-  //   mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
-  // }
-
-  public void enqueueUpdateViewOnNativeThread(int viewTag, String nativePropsJson) {
-    mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativePropsJson));
+  public void enqueueUpdateViewOnNativeThread(
+      int viewTag, WritableMap nativeProps, boolean trySynchronously) {
+    if (trySynchronously) {
+      mTryRunBatchUpdatesSynchronously = true;
+    }
+    mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 
   public void attachEvent(int viewTag, String eventName, int eventNodeID) {
@@ -525,6 +521,47 @@ public class NodesManager implements EventDispatcherListener {
     Node node = mAnimatedNodes.get(nodeID);
     if (node != null) {
       ((ValueNode) node).setValue(newValue);
+    }
+  }
+
+  public void updateProps(int viewTag, Map<String, Object> props) {
+    // TODO: update PropsNode to use this method instead of its own way of updating props
+    boolean hasUIProps = false;
+    boolean hasNativeProps = false;
+    boolean hasJSProps = false;
+    JavaOnlyMap newUIProps = new JavaOnlyMap();
+    WritableMap newJSProps = Arguments.createMap();
+    WritableMap newNativeProps = Arguments.createMap();
+
+    for (Map.Entry<String, Object> entry : props.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      if (uiProps.contains(key)) {
+        hasUIProps = true;
+        addProp(newUIProps, key, value);
+      } else if (nativeProps.contains(key)) {
+        hasNativeProps = true;
+        addProp(newNativeProps, key, value);
+      } else {
+        hasJSProps = true;
+        addProp(newJSProps, key, value);
+      }
+    }
+
+    if (viewTag != View.NO_ID) {
+      if (hasUIProps) {
+        mUIImplementation.synchronouslyUpdateViewOnUIThread(
+            viewTag, new ReactStylesDiffMap(newUIProps));
+      }
+      if (hasNativeProps) {
+        enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
+      }
+      if (hasJSProps) {
+        WritableMap evt = Arguments.createMap();
+        evt.putInt("viewTag", viewTag);
+        evt.putMap("props", newJSProps);
+        sendEvent("onReanimatedPropsChange", evt);
+      }
     }
   }
 
