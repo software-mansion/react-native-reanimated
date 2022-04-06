@@ -1,8 +1,8 @@
 {
-  "name": "RNTesterApp",
-  "displayName": "RNTesterApp",
+  "name": "ReanimatedExample",
+  "displayName": "ReanimatedExample",
   "expo": {
-    "name": "RNTesterApp",
+    "name": "ReanimatedExample",
     "privacy": "unlisted",
     "sdkVersion": "34.0.0",
     "version": "1.0.0",

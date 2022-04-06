@@ -50,8 +50,7 @@ export default function AnimatedSharedStyleExample() {
       style={{
         flex: 1,
         flexDirection: 'column',
-      }}
-    >
+      }}>
       <Button
         title="animate"
         onPress={() => {
