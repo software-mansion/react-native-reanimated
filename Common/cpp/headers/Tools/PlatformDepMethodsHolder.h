@@ -15,6 +15,18 @@ namespace reanimated {
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Value &props)>;
 
+using UpdatePropsFunction = std::function<void(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue,
+    const jsi::Value &props)>;
+using DispatchCommandFunction = std::function<void(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue)>;
+using MeasureFunction = std::function<
+    jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
+
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using TimeProviderFunction = std::function<double(void)>;

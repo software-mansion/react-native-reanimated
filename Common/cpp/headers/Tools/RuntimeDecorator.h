@@ -31,18 +31,9 @@ class RuntimeDecorator {
   static void decorateRuntime(jsi::Runtime &rt, const std::string &label);
   static void decorateUIRuntime(
       jsi::Runtime &rt,
-      const std::function<void(
-          jsi::Runtime &rt,
-          const jsi::Value &shadowNodeValue,
-          const jsi::Value &props)> updateProps,
-      const std::function<void(
-          jsi::Runtime &rt,
-          const jsi::Value &shadowNodeValue,
-          const jsi::Value &commandNameValue,
-          const jsi::Value &argsValue)> dispatchCommand,
-      const std::function<
-          jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>
-          measure,
+      const UpdatePropsFunction updateProps,
+      const DispatchCommandFunction dispatchCommand,
+      const MeasureFunction measure,
       const RequestFrameFunction requestFrame,
       const TimeProviderFunction getCurrentTime,
       const RegisterSensorFunction registerSensor,
