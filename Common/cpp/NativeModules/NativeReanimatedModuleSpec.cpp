@@ -169,7 +169,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["getViewProp"] = MethodMetadata{3, SPEC_PREFIX(getViewProp)};
   methodMap_["enableLayoutAnimations"] =
       MethodMetadata{2, SPEC_PREFIX(enableLayoutAnimations)};
-
   methodMap_["registerSensor"] = MethodMetadata{3, SPEC_PREFIX(registerSensor)};
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};

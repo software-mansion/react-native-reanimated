@@ -101,13 +101,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
-  std::shared_ptr<UIManager> getUIManager() const {
-    react_native_assert(
-        uiManager_ !=
-        nullptr); // make sure you have called initializeForFabric() before
-    return uiManager_;
-  }
-
   jsi::Value registerSensor(
       jsi::Runtime &rt,
       const jsi::Value &sensorType,
