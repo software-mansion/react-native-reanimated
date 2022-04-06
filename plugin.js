@@ -524,7 +524,7 @@ function makeWorklet(t, fun, fileName) {
       )
     )
   );
-  // TODO: fix spread (inline _toConsumableArray and _mergeObjectsReanimated)
+
   statements.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
