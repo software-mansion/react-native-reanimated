@@ -221,9 +221,7 @@ using namespace facebook::react;
 
 - (void)performOperations
 {
-  if (_performOperations) {
-    _performOperations(); // calls NativeReanimatedModule::performOperations
-  }
+  _performOperations(); // calls NativeReanimatedModule::performOperations
   _wantRunUpdates = NO;
 }
 
