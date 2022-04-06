@@ -5,8 +5,6 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 // @ts-ignore JS file
 import AnimatedEvent from './reanimated1/core/AnimatedEvent';
 // @ts-ignore JS file
-import AnimatedNode from './reanimated1/core/AnimatedNode';
-// @ts-ignore JS file
 import AnimatedValue from './reanimated1/core/AnimatedValue';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
@@ -57,21 +55,6 @@ function listener(data: ListenerData) {
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
-}
-
-function hasAnimatedNodes(value: unknown): boolean {
-  if (value instanceof AnimatedNode) {
-    return true;
-  }
-  if (Array.isArray(value)) {
-    return value.some((item) => hasAnimatedNodes(item));
-  }
-  if (value && typeof value === 'object') {
-    return Object.keys(value).some((key) =>
-      hasAnimatedNodes((value as Record<string, unknown>)[key])
-    );
-  }
-  return false;
 }
 
 type NestedArray<T> = T | NestedArray<T>[];
@@ -512,12 +495,12 @@ export default function createAnimatedComponent(
       const style: StyleProps = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-        if (!hasAnimatedNodes(value)) {
-          style[key] = value;
-        } else if (value instanceof AnimatedValue) {
+        if (value instanceof AnimatedValue) {
           // if any style in animated component is set directly to the `Value` we set those styles to the first value of `Value` node in order
           // to avoid flash of default styles when `Value` is being asynchrounously sent via bridge and initialized in the native side.
           style[key] = value._startingValue;
+        } else {
+          style[key] = value;
         }
       }
       return style;
@@ -581,10 +564,11 @@ export default function createAnimatedComponent(
           } else {
             props[key] = dummyListener;
           }
-        } else if (!(value instanceof AnimatedNode)) {
-          if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
-            props[key] = value;
-          }
+        } else if (
+          key !== 'onGestureHandlerStateChange' ||
+          !isChromeDebugger()
+        ) {
+          props[key] = value;
         } else if (value instanceof AnimatedValue) {
           // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
           // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
