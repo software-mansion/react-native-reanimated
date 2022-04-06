@@ -502,7 +502,7 @@ void NativeReanimatedModule::dispatchCommand(
   delegate->uiManagerDidDispatchCommand(shadowNode, commandName, args);
 }
 
-static inline LayoutMetrics getRelativeLayoutMetrics(
+static inline LayoutMetrics UIManager_getRelativeLayoutMetrics(
     std::shared_ptr<UIManager> uiManager,
     ShadowNode const &shadowNode,
     ShadowNode const *ancestorShadowNode,
@@ -553,7 +553,7 @@ jsi::Value NativeReanimatedModule::measure(
   // TODO: use uiManager_->getRelativeLayoutMetrics once it's public
   // auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
   //     *shadowNode, nullptr, {/* .includeTransform = */ true});
-  auto layoutMetrics = getRelativeLayoutMetrics(
+  auto layoutMetrics = UIManager_getRelativeLayoutMetrics(
       uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
