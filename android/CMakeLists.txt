@@ -24,8 +24,6 @@ else()
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
 
-# get react .so built from sources instead of .so from react's aar
-
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
@@ -76,6 +74,7 @@ add_library(
         "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor/AnimatedSensorModule.cpp"
+        "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
 )
 
 # includes
@@ -110,6 +109,7 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/headers/Registries"
         "${COMMON_SRC_DIR}/cpp/headers/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/headers/AnimatedSensor"
+        "${COMMON_SRC_DIR}/cpp/headers/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${SRC_DIR}/main/cpp/headers"
 )

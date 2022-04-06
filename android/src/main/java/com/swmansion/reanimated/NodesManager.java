@@ -221,46 +221,44 @@ public class NodesManager implements EventDispatcherListener {
   private void performOperations() {
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       mNativeProxy.performOperations();
-    } else {
-      if (!mOperationsInBatch.isEmpty()) {
-        final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
-        mOperationsInBatch = new LinkedList<>();
-        final boolean trySynchronously = mTryRunBatchUpdatesSynchronously;
-        mTryRunBatchUpdatesSynchronously = false;
-        final Semaphore semaphore = new Semaphore(0);
-        mContext.runOnNativeModulesQueueThread(
-            new GuardedRunnable(mContext.getExceptionHandler()) {
-              @Override
-              public void runGuarded() {
-                boolean queueWasEmpty =
-                    UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
-                boolean shouldDispatchUpdates = trySynchronously && queueWasEmpty;
-                if (!shouldDispatchUpdates) {
-                  semaphore.release();
-                }
-                while (!copiedOperationsQueue.isEmpty()) {
-                  NativeUpdateOperation op = copiedOperationsQueue.remove();
-                  ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
-                  if (shadowNode != null) {
-                    mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
-                  }
-                }
-                if (queueWasEmpty) {
-                  mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
-                }
-                if (shouldDispatchUpdates) {
-                  semaphore.release();
+    } else if (!mOperationsInBatch.isEmpty()) {
+      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
+      mOperationsInBatch = new LinkedList<>();
+      final boolean trySynchronously = mTryRunBatchUpdatesSynchronously;
+      mTryRunBatchUpdatesSynchronously = false;
+      final Semaphore semaphore = new Semaphore(0);
+      mContext.runOnNativeModulesQueueThread(
+          new GuardedRunnable(mContext.getExceptionHandler()) {
+            @Override
+            public void runGuarded() {
+              boolean queueWasEmpty =
+                  UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+              boolean shouldDispatchUpdates = trySynchronously && queueWasEmpty;
+              if (!shouldDispatchUpdates) {
+                semaphore.release();
+              }
+              while (!copiedOperationsQueue.isEmpty()) {
+                NativeUpdateOperation op = copiedOperationsQueue.remove();
+                ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
+                if (shadowNode != null) {
+                  mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                 }
               }
-            });
-        if (trySynchronously) {
-          while (true) {
-            try {
-              semaphore.acquire();
-              break;
-            } catch (InterruptedException e) {
-              // noop
+              if (queueWasEmpty) {
+                mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+              }
+              if (shouldDispatchUpdates) {
+                semaphore.release();
+              }
             }
+          });
+      if (trySynchronously) {
+        while (true) {
+          try {
+            semaphore.acquire();
+            break;
+          } catch (InterruptedException e) {
+            // noop
           }
         }
       }

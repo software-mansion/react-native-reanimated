@@ -154,9 +154,10 @@ void RuntimeDecorator::decorateUIRuntime(
     dispatchCommand(rt, args[0], args[1], args[2]);
     return jsi::Value::undefined();
   };
-  jsi::Value dispatchCommandFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 4, clb3);
-  rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandFunction);
+  jsi::Value dispatchCommandHostFunction =
+      jsi::Function::createFromHostFunction(
+          rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 4, clb3);
+  rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandHostFunction);
 
   auto clb4 = [measure](
                   jsi::Runtime &rt,
