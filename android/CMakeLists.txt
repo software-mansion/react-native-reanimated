@@ -26,7 +26,7 @@ endif()
 
 # get react .so built from sources instead of .so from react's aar
 
-if(${NEW_ARCHITECTURE})
+if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
         set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../../react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")

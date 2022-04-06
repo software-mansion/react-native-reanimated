@@ -401,7 +401,7 @@ android {
                         "-DBOOST_VERSION=${BOOST_VERSION}",
                         "-DFOR_HERMES=${FOR_HERMES}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
-                        "-DNEW_ARCHITECTURE=${isNewArchitectureEnabled()}",
+                        "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
                         "--clean-first"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
