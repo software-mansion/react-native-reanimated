@@ -478,6 +478,20 @@ void NativeReanimatedModule::performOperations() {
   });
 }
 
+static inline void UIManager_dispatchCommand(
+    const std::shared_ptr<UIManager> &uiManager,
+    const ShadowNode::Shared &shadowNode,
+    std::string const &commandName,
+    folly::dynamic const &args) {
+  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
+  UIManagerDelegate *delegate_ = uiManagerPublic->delegate_;
+
+  // copied from UIManager.cpp
+  if (delegate_) {
+    delegate_->uiManagerDidDispatchCommand(shadowNode, commandName, args);
+  }
+}
+
 void NativeReanimatedModule::dispatchCommand(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
@@ -487,15 +501,8 @@ void NativeReanimatedModule::dispatchCommand(
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
 
-  // UIManager::dispatchCommand is a private method, we cannot call it directly
-  std::shared_ptr<UIManager> uiManager = uiManager_;
-  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
-  UIManagerDelegate *delegate = uiManagerPublic->delegate_;
-  if (!delegate) {
-    return;
-  }
-
-  delegate->uiManagerDidDispatchCommand(shadowNode, commandName, args);
+  // TODO: use uiManager_->dispatchCommand once it's public
+  UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
 }
 
 static inline LayoutMetrics UIManager_getRelativeLayoutMetrics(
