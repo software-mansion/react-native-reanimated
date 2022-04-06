@@ -7,8 +7,6 @@ declare module 'react-native-reanimated' {
     ReactNode,
     Component,
     RefObject,
-    ComponentType,
-    ComponentProps,
     FunctionComponent,
   } from 'react';
   import {
@@ -31,7 +29,6 @@ declare module 'react-native-reanimated' {
     NativeScrollEvent,
     NativeSyntheticEvent,
     ColorValue,
-    OpaqueColorValue,
     EasingFunction,
   } from 'react-native';
   import {
@@ -39,24 +36,24 @@ declare module 'react-native-reanimated' {
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
 
-  import('./src/reanimated2/globals');
+  import('./lib/reanimated2/globals');
 
   export type TimingAnimation =
-    import('./src/reanimated2/animation/index').TimingAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').TimingAnimation;
   export type SpringAnimation =
-    import('./src/reanimated2/animation/index').SpringAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').SpringAnimation;
   export type DecayAnimation =
-    import('./src/reanimated2/animation/index').DecayAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').DecayAnimation;
   export type DelayAnimation =
-    import('./src/reanimated2/animation/commonTypes').DelayAnimation;
+    import('./lib/types/lib/reanimated2/animation/commonTypes').DelayAnimation;
   export type RepeatAnimation =
-    import('./src/reanimated2/animation/index').RepeatAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').RepeatAnimation;
   export type SequenceAnimation =
-    import('./src/reanimated2/animation/index').SequenceAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').SequenceAnimation;
   export type StyleLayoutAnimation =
-    import('./src/reanimated2/animation/index').StyleLayoutAnimation;
+    import('./lib/types/lib/reanimated2/animation/index').StyleLayoutAnimation;
   export type Animation<T> =
-    import('./src/reanimated2/commonTypes').Animation<T>;
+    import('./lib/types/lib/reanimated2/commonTypes').Animation<T>;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;
@@ -402,16 +399,16 @@ declare module 'react-native-reanimated' {
       value: Adaptable<number>,
       config: InterpolationConfig
     ): AnimatedNode<number>;
-    export function interpolateColors(
+    export function interpolateColors<T extends string | number>(
       animationValue: Adaptable<number>,
       {
         inputRange,
         outputColorRange,
       }: {
         inputRange: ReadonlyArray<Adaptable<number>>;
-        outputColorRange: ReadonlyArray<Adaptable<number | string>>;
+        outputColorRange: ReadonlyArray<Adaptable<T>>;
       }
-    ): AnimatedNode<number | string>;
+    ): AnimatedNode<T>;
     export const max: BinaryOperator;
     export const min: BinaryOperator;
 
@@ -602,29 +599,34 @@ declare module 'react-native-reanimated' {
     restDisplacementThreshold?: number;
     velocity?: number;
   }
-  export function withTiming(
-    toValue: AnimatableValue,
+  export function withTiming<T extends AnimatableValue>(
+    toValue: T,
     userConfig?: WithTimingConfig,
     callback?: AnimationCallback
-  ): number;
-  export function withSpring(
-    toValue: AnimatableValue,
+  ): T;
+  export function withSpring<T extends AnimatableValue>(
+    toValue: T,
     userConfig?: WithSpringConfig,
     callback?: AnimationCallback
-  ): number;
+  ): T;
   export function withDecay(
     userConfig: WithDecayConfig,
     callback?: AnimationCallback
   ): number;
   export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
-  export function withDelay(delayMS: number, delayedAnimation: number): number;
-  export function withRepeat(
-    animation: number,
+  export function withDelay<T extends AnimatableValue>(
+    delayMS: number,
+    delayedAnimation: T
+  ): T;
+  export function withRepeat<T extends AnimatableValue>(
+    animation: T,
     numberOfReps?: number,
     reverse?: boolean,
     callback?: AnimationCallback
-  ): number;
-  export function withSequence(...animations: [number, ...number[]]): number;
+  ): T;
+  export function withSequence<T extends AnimatableValue>(
+    ...animations: [T, ...T[]]
+  ): T;
 
   // reanimated2 functions
   export function runOnUI<A extends any[], R>(
@@ -645,12 +647,12 @@ declare module 'react-native-reanimated' {
     fn: (...args: A) => R
   ): (...args: Parameters<typeof fn>) => R;
 
-  export function interpolateColor(
+  export function interpolateColor<T extends string | number>(
     value: number,
     inputRange: readonly number[],
-    outputRange: readonly (string | number)[],
+    outputRange: readonly T[],
     colorSpace?: 'RGB' | 'HSV'
-  ): string | number;
+  ): T;
 
   export enum ColorSpace {
     RGB = 0,

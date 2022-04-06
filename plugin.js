@@ -87,6 +87,7 @@ const blacklistedFunctions = new Set([
   'toString',
   'map',
   'filter',
+  'findIndex',
   'forEach',
   'valueOf',
   'toPrecision',

@@ -133,7 +133,7 @@ using namespace facebook::react;
 - (void)invalidate
 {
   _eventHandler = nil;
-  [self stopUpdatingOnAnimationFrame];
+  [_displayLink invalidate];
 }
 
 - (void)operationsBatchDidComplete
