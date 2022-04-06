@@ -1,6 +1,3 @@
-// spread and rest parameters can't be used in worklets right now
-/* eslint-disable prefer-rest-params */
-/* eslint-disable prefer-spread */
 import { Bezier } from './Bezier';
 
 /**
