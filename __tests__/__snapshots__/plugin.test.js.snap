@@ -103,6 +103,90 @@ function Box() {
 }"
 `;
 
+exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `
+"var foo = function () {
+  var _f = function _f() {
+    var bar = [4, 5];
+    var baz = [1].concat([2, 3], bar);
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}\\";
+  _f.__workletHash = 3161057533258;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (2:6)\\";
+  _f.__worklet = true;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin transforms spread operator in worklets for function arguments 1`] = `
+"var foo = function () {
+  var _f = function _f() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    console.log(args);
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function foo(...args){console.log(args);}\\";
+  _f.__workletHash = 9866931756941;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (2:6)\\";
+  _f.__worklet = true;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin transforms spread operator in worklets for function calls 1`] = `
+"var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
+
+var _toConsumableArray2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/toConsumableArray\\"));
+
+var foo = function () {
+  var _f = function _f(arg) {
+    var _console;
+
+    (_console = console).log.apply(_console, (0, _toConsumableArray2.default)(arg));
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function foo(arg){console.log(...arg);}\\";
+  _f.__workletHash = 2015887751437;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (2:6)\\";
+  _f.__worklet = true;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin transforms spread operator in worklets for objects 1`] = `
+"var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
+
+var _extends2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/extends\\"));
+
+var foo = function () {
+  var _f = function _f() {
+    var bar = {
+      d: 4,
+      e: 5
+    };
+    var baz = (0, _extends2.default)({
+      a: 1
+    }, {
+      b: 2,
+      c: 3
+    }, {}, bar);
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}\\";
+  _f.__workletHash = 792186851025;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (2:6)\\";
+  _f.__worklet = true;
+  return _f;
+}();"
+`;
+
 exports[`babel plugin workletizes ArrowFunctionExpression 1`] = `
 "var foo = function () {
   var _f = function _f(x) {

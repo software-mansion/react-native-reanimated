@@ -434,4 +434,54 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
+
+  it('transforms spread operator in worklets for arrays', () => {
+    const input = `
+      function foo() {
+        'worklet';
+        const bar = [4, 5];
+        const baz = [1, ...[2, 3], ...bar];
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('transforms spread operator in worklets for objects', () => {
+    const input = `
+      function foo() {
+        'worklet';
+        const bar = {d: 4, e: 5};
+        const baz = { a: 1, ...{ b: 2, c: 3 }, ...bar };
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('transforms spread operator in worklets for function arguments', () => {
+    const input = `
+      function foo(...args) {
+        'worklet';
+        console.log(args);
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('transforms spread operator in worklets for function calls', () => {
+    const input = `
+      function foo(arg) {
+        'worklet';
+        console.log(...arg);
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
 });
