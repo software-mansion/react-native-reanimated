@@ -8,8 +8,6 @@ import AnimatedEvent from './reanimated1/core/AnimatedEvent';
 import AnimatedNode from './reanimated1/core/AnimatedNode';
 // @ts-ignore JS file
 import AnimatedValue from './reanimated1/core/AnimatedValue';
-// @ts-ignore JS file
-import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/LayoutAnimationRepository';
@@ -166,14 +164,6 @@ export interface InitialComponentProps extends Record<string, unknown> {
   collapsable?: boolean;
 }
 
-interface PropsAnimated {
-  __onEvaluate: () => StyleProps;
-  __detach: () => void;
-  __getValue: () => StyleProps;
-  update: () => void;
-  setNativeView: (view: Component) => void;
-}
-
 export default function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
@@ -188,7 +178,6 @@ export default function createAnimatedComponent(
   class AnimatedComponent extends React.Component<
     AnimatedComponentProps<InitialComponentProps>
   > {
-    _invokeAnimatedPropsCallbackOnMount = false;
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
@@ -196,13 +185,11 @@ export default function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
     sv: SharedValue<null | Record<string, unknown>> | null;
-    _propsAnimated?: PropsAnimated;
     _component: ComponentRef | null = null;
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
-      this._attachProps(this.props);
       if (isJest()) {
         this.animatedStyle = { value: {} };
       }
@@ -211,21 +198,12 @@ export default function createAnimatedComponent(
 
     componentWillUnmount() {
       this._detachPropUpdater();
-      this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
       this._detachStyles();
       this.sv = null;
     }
 
     componentDidMount() {
-      if (this._invokeAnimatedPropsCallbackOnMount) {
-        this._invokeAnimatedPropsCallbackOnMount = false;
-        this._animatedPropsCallback();
-      }
-
-      this._propsAnimated &&
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._propsAnimated.setNativeView(this._component!);
       this._attachNativeEvents();
       this._attachPropUpdater();
       this._attachAnimatedStyles();
@@ -345,49 +323,6 @@ export default function createAnimatedComponent(
           prop.current.registerForEvents(viewTag!, key);
           prop.current.reattachNeeded = false;
         }
-      }
-    }
-
-    // The system is best designed when setNativeProps is implemented. It is
-    // able to avoid re-rendering and directly set the attributes that changed.
-    // However, setNativeProps can only be implemented on native components
-    // If you want to animate a composite component, you need to re-render it.
-    // In this case, we have a fallback that uses forceUpdate.
-    _animatedPropsCallback = () => {
-      if (this._component == null) {
-        // AnimatedProps is created in will-mount because it's used in render.
-        // But this callback may be invoked before mount in async mode,
-        // In which case we should defer the setNativeProps() call.
-        // React may throw away uncommitted work in async mode,
-        // So a deferred call won't always be invoked.
-        this._invokeAnimatedPropsCallbackOnMount = true;
-      } else if (typeof this._component.setNativeProps !== 'function') {
-        this.forceUpdate();
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._component.setNativeProps(this._propsAnimated!.__getValue());
-      }
-    };
-
-    _attachProps(nextProps: StyleProps) {
-      const oldPropsAnimated = this._propsAnimated;
-
-      this._propsAnimated = createOrReusePropsNode(
-        nextProps,
-        this._animatedPropsCallback,
-        oldPropsAnimated
-      );
-      // If prop node has been reused we don't need to call into "__detach"
-      if (oldPropsAnimated !== this._propsAnimated) {
-        // When you call detach, it removes the element from the parent list
-        // of children. If it goes to 0, then the parent also detaches itself
-        // and so on.
-        // An optimization is to attach the new elements and THEN detach the old
-        // ones instead of detaching and THEN attaching.
-        // This way the intermediate state isn't to go to 0 and trigger
-        // this expensive recursive detaching to then re-attach everything on
-        // the very next operation.
-        oldPropsAnimated && oldPropsAnimated.__detach();
       }
     }
 
@@ -516,12 +451,7 @@ export default function createAnimatedComponent(
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
-
-      this._propsAnimated &&
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._propsAnimated.setNativeView(this._component!);
       this._attachAnimatedStyles();
     }
 
