@@ -386,10 +386,10 @@ struct UIManagerPublic {
   ContextContainer::Shared contextContainer_;
 };
 
-static SurfaceId globalSurfaceId = -1;
 // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
-// We can store the maximum SurfaceId as a workaround.
+// We can store the surfaceId of the most recent ShadowNode as a workaround.
 // TODO: support multiple Fabric surfaces
+static SurfaceId globalSurfaceId = -1;
 
 void NativeReanimatedModule::updateProps(
     jsi::Runtime &rt,
@@ -397,7 +397,7 @@ void NativeReanimatedModule::updateProps(
     const jsi::Value &props) {
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
 
-  globalSurfaceId = std::max(globalSurfaceId, shadowNode->getSurfaceId());
+  globalSurfaceId = shadowNode->getSurfaceId();
 
   // TODO: move to separate method
   bool uiPropsOnly = [&]() {
