@@ -4,8 +4,6 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 // @ts-ignore JS file
 import AnimatedEvent from './reanimated1/core/AnimatedEvent';
-// @ts-ignore JS file
-import AnimatedValue from './reanimated1/core/AnimatedValue';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/LayoutAnimationRepository';
@@ -491,21 +489,6 @@ export default function createAnimatedComponent(
       },
     });
 
-    _filterNonAnimatedStyle(inputStyle: StyleProps) {
-      const style: StyleProps = {};
-      for (const key in inputStyle) {
-        const value = inputStyle[key];
-        if (value instanceof AnimatedValue) {
-          // if any style in animated component is set directly to the `Value` we set those styles to the first value of `Value` node in order
-          // to avoid flash of default styles when `Value` is being asynchrounously sent via bridge and initialized in the native side.
-          style[key] = value._startingValue;
-        } else {
-          style[key] = value;
-        }
-      }
-      return style;
-    }
-
     _filterNonAnimatedProps(
       inputProps: AnimatedComponentProps<InitialComponentProps>
     ): Record<string, unknown> {
@@ -530,9 +513,7 @@ export default function createAnimatedComponent(
               return style;
             }
           });
-          props[key] = this._filterNonAnimatedStyle(
-            StyleSheet.flatten(processedStyle)
-          );
+          props[key] = StyleSheet.flatten(processedStyle);
         } else if (key === 'animatedProps') {
           const animatedProp = inputProps.animatedProps as Partial<
             AnimatedComponentProps<AnimatedProps>
@@ -569,10 +550,6 @@ export default function createAnimatedComponent(
           !isChromeDebugger()
         ) {
           props[key] = value;
-        } else if (value instanceof AnimatedValue) {
-          // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
-          // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
-          props[key] = (value as AnimatedValue)._startingValue;
         }
       }
       return props;
