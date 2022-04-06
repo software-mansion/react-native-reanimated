@@ -131,6 +131,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   ConfigurePropsFunction configurePropsPlatformFunction;
 
   std::shared_ptr<UIManager> uiManager_;
+
+  // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
+  // We can store surfaceId of the most recent ShadowNode as a workaround.
+  SurfaceId surfaceId_ = -1;
+
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
