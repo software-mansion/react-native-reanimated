@@ -16,8 +16,6 @@
 
 #import <react/config/ReactNativeConfig.h>
 
-#import <RNReanimated/REAInitializer.h>
-
 @interface AppDelegate () <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate> {
   RCTTurboModuleManager *_turboModuleManager;
   RCTSurfacePresenterBridgeAdapter *_bridgeAdapter;
@@ -74,12 +72,10 @@
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
-// ta metodę trzeba usunąć i przenieść do REAModule
   _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge
                                                              delegate:self
                                                             jsInvoker:bridge.jsCallInvoker];
-//  return RCTAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
-  return REAAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
+  return RCTAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
 }
 
 #pragma mark RCTTurboModuleManagerDelegate

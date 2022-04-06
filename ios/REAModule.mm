@@ -9,6 +9,10 @@
 
 @end
 
+@interface RCTBridge (RCTTurboModule)
+- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
+@end
+
 @interface RCTSurfacePresenter
 - (RCTScheduler *_Nullable)scheduler;
 @end
@@ -53,6 +57,17 @@ RCT_EXPORT_MODULE(ReanimatedModule);
       : nullptr;
 
   if (jsiRuntime) {
+    // Reanimated
+    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+    jsiRuntime->global().setProperty(
+        *jsiRuntime,
+        "_WORKLET_RUNTIME",
+        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+
+    jsiRuntime->global().setProperty(
+        *jsiRuntime,
+        jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
   }
 }
 
@@ -70,7 +85,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
         std::make_shared<facebook::react::EventListener>([](const EventTarget *eventTarget,
                                                             const std::string &type,
                                                             ReactEventPriority priority,
-                                                            const ValueFactory &payloadFactory) { return true; });
+                                                            const ValueFactory &payloadFactory) { return false; });
     [scheduler addEventListener:eventListener];
 
     _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
