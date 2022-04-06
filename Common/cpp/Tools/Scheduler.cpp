@@ -1,7 +1,7 @@
-#ifdef ONANDROID
-#include "Scheduler.h"
-#else
+#ifdef __APPLE__
 #include "RNReanimated/Scheduler.h"
+#else
+#include "Scheduler.h"
 #endif
 
 namespace reanimated {

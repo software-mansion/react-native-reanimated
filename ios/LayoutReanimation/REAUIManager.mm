@@ -1,14 +1,5 @@
 #import "REAUIManager.h"
 #import <Foundation/Foundation.h>
-#include "FeaturesConfig.h"
-#import "REAIOSScheduler.h"
-
-#ifdef ONANDROID
-#include "Scheduler.h"
-#else
-#include "RNReanimated/Scheduler.h"
-#endif
-
 #import <React/RCTComponentData.h>
 #import <React/RCTLayoutAnimation.h>
 #import <React/RCTLayoutAnimationGroup.h>
@@ -16,6 +7,9 @@
 #import <React/RCTRootShadowView.h>
 #import <React/RCTRootViewInternal.h>
 #import <React/RCTUIManagerObserverCoordinator.h>
+#include "FeaturesConfig.h"
+#import "REAIOSScheduler.h"
+#include "Scheduler.h"
 
 #if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNScreens/RNSScreen.h>
@@ -383,9 +377,9 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
   } @catch (id anException) {
   }
 #if __has_include(<RNScreens/RNSScreen.h>)
-  /*if ([view isKindOfClass:[RNSScreenView class]]) {
+  if ([view isKindOfClass:[RNSScreenView class]]) {
     [parentView didUpdateReactSubviews];
-  }*/
+  }
 #endif
   [viewRegistry removeObjectForKey:view.reactTag];
 }
