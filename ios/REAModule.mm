@@ -1,6 +1,17 @@
 #import "REAModule.h"
+#import <React/RCTScheduler.h>
 #import "REANodesManager.h"
 #import "native/NativeProxy.h"
+
+@interface RCTBridge (JSIRuntime)
+
+- (void *)runtime;
+
+@end
+
+@interface RCTSurfacePresenter
+- (RCTScheduler *_Nullable)scheduler;
+@end
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
@@ -24,6 +35,27 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return RCTGetUIManagerQueue();
 }
 
++ (BOOL)requiresMainQueueSetup
+{
+  return true;
+}
+
+- (NSDictionary *)constantsToExport
+{
+  [self installReanimatedModuleHostObject];
+  return nil;
+}
+
+- (void)installReanimatedModuleHostObject
+{
+  facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
+      ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
+      : nullptr;
+
+  if (jsiRuntime) {
+  }
+}
+
 #pragma mark-- Initialize
 
 - (void)setBridge:(RCTBridge *)bridge
@@ -31,6 +63,16 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [super setBridge:bridge];
   if (self.bridge) {
     _surfacePresenter = self.bridge.surfacePresenter;
+    __weak RCTSurfacePresenter *sp = reinterpret_cast<RCTSurfacePresenter *>(self.bridge.surfacePresenter);
+    RCTScheduler *scheduler = [sp scheduler];
+
+    auto eventListener =
+        std::make_shared<facebook::react::EventListener>([](const EventTarget *eventTarget,
+                                                            const std::string &type,
+                                                            ReactEventPriority priority,
+                                                            const ValueFactory &payloadFactory) { return true; });
+    [scheduler addEventListener:eventListener];
+
     _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
   } else {
     // _surfacePresenter set in setSurfacePresenter:
