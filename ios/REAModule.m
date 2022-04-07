@@ -1,21 +1,17 @@
 #import "REAModule.h"
-
 #import "REANodesManager.h"
-#import "Transitioning/REATransitionManager.h"
 #import "native/NativeProxy.h"
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
-  REATransitionManager *_transitionManager;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
-  _transitionManager = nil;
   [_nodesManager invalidate];
   [self.bridge.uiManager.observerCoordinator removeObserver:self];
 }
@@ -36,9 +32,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   _nodesManager = [[REANodesManager alloc] initWithModule:self uiManager:self.bridge.uiManager];
   _operations = [NSMutableArray new];
-
-  _transitionManager = [[REATransitionManager alloc] initWithUIManager:self.bridge.uiManager];
-
   [bridge.uiManager.observerCoordinator addObserver:self];
 }
 
