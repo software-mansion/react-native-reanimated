@@ -262,10 +262,6 @@ public class NodesManager implements EventDispatcherListener {
     nativeProps = nativePropsSet;
   }
 
-  public void postRunUpdatesAfterAnimation() {
-    startUpdatingOnAnimationFrame();
-  }
-
   public void postOnAnimation(OnAnimationFrame onAnimationFrame) {
     mFrameCallbacks.add(onAnimationFrame);
     startUpdatingOnAnimationFrame();

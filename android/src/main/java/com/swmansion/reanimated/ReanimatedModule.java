@@ -24,10 +24,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
   }
 
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
-
   private @Nullable NodesManager mNodesManager;
-
-  private UIManagerModule mUIManager;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -39,8 +36,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
-
-    mUIManager = uiManager;
   }
 
   @Override
