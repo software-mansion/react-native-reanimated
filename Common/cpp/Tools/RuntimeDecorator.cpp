@@ -121,9 +121,7 @@ void RuntimeDecorator::decorateUIRuntime(
                  const jsi::Value &thisValue,
                  const jsi::Value *args,
                  const size_t count) -> jsi::Value {
-    const jsi::Value &shadowNode = args[2];
-    const jsi::Value &params = args[3];
-    updateProps(rt, shadowNode, params);
+    updateProps(rt, args[0], args[1]);
     return jsi::Value::undefined();
   };
   jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
@@ -156,7 +154,7 @@ void RuntimeDecorator::decorateUIRuntime(
   };
   jsi::Value dispatchCommandHostFunction =
       jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 4, clb3);
+          rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 3, clb3);
   rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandHostFunction);
 
   auto clb4 = [measure](
@@ -164,8 +162,7 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    const jsi::Value &shadowNode = args[0];
-    return measure(rt, shadowNode);
+    return measure(rt, args[0]);
   };
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);

@@ -57,12 +57,7 @@ if (shouldBeUseWeb()) {
     }
 
     viewDescriptors.value.forEach((viewDescriptor) => {
-      _updateProps(
-        viewDescriptor.tag,
-        viewDescriptor.name || 'RCTView',
-        viewDescriptor.shareableNode,
-        updates
-      );
+      _updateProps(viewDescriptor.shareableNode, updates);
     });
   };
 }

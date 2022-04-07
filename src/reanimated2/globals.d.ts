@@ -15,14 +15,12 @@ declare global {
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
   const _updateProps: (
-    tag: number,
-    name: string,
-    shareableNode: any,
-    updates: StyleProps | AnimatedStyle
+    shadowNodeWrapper: object,
+    props: StyleProps | AnimatedStyle
   ) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _dispatchCommand: (
-    shadowNodeWrapper: unknown,
+    shadowNodeWrapper: object,
     commandName: string,
     args: Array<unknown>
   ) => void;
