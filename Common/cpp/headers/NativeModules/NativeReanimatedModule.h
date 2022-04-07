@@ -109,6 +109,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
 
  private:
+  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
+
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
   std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
@@ -133,8 +135,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
-
-  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
 };
 
 } // namespace reanimated
