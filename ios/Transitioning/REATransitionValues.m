@@ -1,8 +1,8 @@
 #import <React/RCTView.h>
 #import <React/RCTViewManager.h>
 
-#import "REATransition.h"
-#import "REATransitionValues.h"
+#import <RNReanimated/REATransition.h>
+#import <RNReanimated/REATransitionValues.h>
 
 @implementation REATransitionValues
 

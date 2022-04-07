@@ -1,8 +1,8 @@
-#import "REAPropsNode.h"
+#import <RNReanimated/REAPropsNode.h>
 
-#import "REAModule.h"
-#import "REANodesManager.h"
-#import "REAStyleNode.h"
+#import <RNReanimated/REAModule.h>
+#import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REAStyleNode.h>
 
 #import <React/RCTComponentData.h>
 #import <React/RCTLog.h>

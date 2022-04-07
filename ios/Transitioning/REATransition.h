@@ -2,8 +2,8 @@
 #import <React/RCTView.h>
 #import <UIKit/UIKit.h>
 
-#import "REATransitionAnimation.h"
-#import "REATransitionValues.h"
+#import <RNReanimated/REATransitionAnimation.h>
+#import <RNReanimated/REATransitionValues.h>
 
 // TODO: fix below implementation
 #define IS_LAYOUT_ONLY(view) ([view isKindOfClass:[RCTView class]] && view.backgroundColor == nil)

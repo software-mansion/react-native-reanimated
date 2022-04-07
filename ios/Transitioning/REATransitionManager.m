@@ -1,9 +1,9 @@
-#import "REATransitionManager.h"
+#import <RNReanimated/REATransitionManager.h>
 
 #import <React/RCTUIManager.h>
 #import <React/RCTUIManagerObserverCoordinator.h>
 
-#import "REATransition.h"
+#import <RNReanimated/REATransition.h>
 
 @interface REATransitionManager () <RCTUIManagerObserver>
 @end

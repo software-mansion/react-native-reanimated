@@ -1,4 +1,4 @@
-#import "REANode.h"
+#import <RNReanimated/REANode.h>
 
 #import <React/RCTEventDispatcher.h>
 
