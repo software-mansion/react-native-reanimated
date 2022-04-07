@@ -79,7 +79,6 @@
 
 @implementation REANodesManager {
   CADisplayLink *_displayLink;
-  REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
@@ -97,7 +96,6 @@
   if ((self = [super init])) {
     _reanimatedModule = reanimatedModule;
     _uiManager = uiManager;
-    _updateContext = [REAUpdateContext new];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
