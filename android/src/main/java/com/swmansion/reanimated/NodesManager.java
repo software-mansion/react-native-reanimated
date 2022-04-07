@@ -78,7 +78,6 @@ public class NodesManager implements EventDispatcherListener {
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   public double currentFrameTimeMs;
-  public final UpdateContext updateContext;
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
 
@@ -124,7 +123,6 @@ public class NodesManager implements EventDispatcherListener {
   public NodesManager(ReactContext context) {
     mContext = context;
     mUIManager = context.getNativeModule(UIManagerModule.class);
-    updateContext = new UpdateContext();
     mUIImplementation = mUIManager.getUIImplementation();
     mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
