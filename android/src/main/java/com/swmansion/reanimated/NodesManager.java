@@ -1,11 +1,8 @@
 package com.swmansion.reanimated;
 
-import android.util.SparseArray;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
@@ -28,30 +25,8 @@ import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
-import com.swmansion.reanimated.nodes.AlwaysNode;
-import com.swmansion.reanimated.nodes.BezierNode;
-import com.swmansion.reanimated.nodes.BlockNode;
-import com.swmansion.reanimated.nodes.CallFuncNode;
-import com.swmansion.reanimated.nodes.ClockNode;
-import com.swmansion.reanimated.nodes.ClockOpNode;
-import com.swmansion.reanimated.nodes.ConcatNode;
-import com.swmansion.reanimated.nodes.CondNode;
-import com.swmansion.reanimated.nodes.DebugNode;
-import com.swmansion.reanimated.nodes.EventNode;
-import com.swmansion.reanimated.nodes.FunctionNode;
-import com.swmansion.reanimated.nodes.JSCallNode;
-import com.swmansion.reanimated.nodes.Node;
-import com.swmansion.reanimated.nodes.NoopNode;
-import com.swmansion.reanimated.nodes.OperatorNode;
-import com.swmansion.reanimated.nodes.ParamNode;
-import com.swmansion.reanimated.nodes.PropsNode;
-import com.swmansion.reanimated.nodes.SetNode;
-import com.swmansion.reanimated.nodes.StyleNode;
-import com.swmansion.reanimated.nodes.TransformNode;
-import com.swmansion.reanimated.nodes.ValueNode;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +38,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
-
-  private static final Double ZERO = Double.valueOf(0);
 
   public void scrollTo(int viewTag, double x, double y, boolean animated) {
     View view;
@@ -92,24 +65,18 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
-  private AnimationsManager mAnimationManager = null;
-  private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
-  private final Map<String, EventNode> mEventMapping = new HashMap<>();
+  private AnimationsManager mAnimationManager;
   private final UIImplementation mUIImplementation;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
   private final ReactChoreographer mReactChoreographer;
   private final GuardedFrameCallback mChoreographerCallback;
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
-  private final NoopNode mNoopNode;
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
-
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
-  private boolean mWantRunUpdates;
-
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
   public Set<String> uiProps = Collections.emptySet();
@@ -170,8 +137,6 @@ public class NodesManager implements EventDispatcherListener {
             onAnimationFrame(frameTimeNanos);
           }
         };
-
-    mNoopNode = new NoopNode(this);
 
     // We register as event listener at the end, because we pass `this` and we haven't finished
     // contructing an object yet.
@@ -274,56 +239,14 @@ public class NodesManager implements EventDispatcherListener {
       }
     }
 
-    if (mWantRunUpdates) {
-      Node.runUpdates(updateContext);
-    }
     performOperations();
 
     mCallbackPosted.set(false);
-    mWantRunUpdates = false;
 
     if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }
-  }
-
-  /**
-   * Null-safe way of getting node's value. If node is not present we return 0. This also matches
-   * iOS behavior when the app won't just crash.
-   */
-  public Object getNodeValue(int nodeID) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node != null) {
-      return node.value();
-    }
-    return ZERO;
-  }
-
-  /**
-   * Null-safe way of getting node reference. This method always returns non-null instance. If the
-   * node is not present we try to return a "no-op" node that allows for "set" calls and always
-   * returns 0 as a value.
-   */
-  public <T extends Node> T findNodeById(int id, Class<T> type) {
-    Node node = mAnimatedNodes.get(id);
-    if (node == null) {
-      if (type == Node.class || type == ValueNode.class) {
-        return (T) mNoopNode;
-      }
-      throw new IllegalArgumentException(
-          "Requested node with id " + id + " of type " + type + " cannot be found");
-    }
-    if (type.isInstance(node)) {
-      return (T) node;
-    }
-    throw new IllegalArgumentException(
-        "Node with id "
-            + id
-            + " is of incompatible type "
-            + node.getClass()
-            + ", requested type was "
-            + type);
   }
 
   public void enqueueUpdateViewOnNativeThread(
@@ -340,7 +263,6 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void postRunUpdatesAfterAnimation() {
-    mWantRunUpdates = true;
     startUpdatingOnAnimationFrame();
   }
 
@@ -377,32 +299,14 @@ public class NodesManager implements EventDispatcherListener {
     // If the event has a different name in native, convert it to it's JS name.
     String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
     int viewTag = event.getViewTag();
-    String key = viewTag + eventName;
-
     if (mCustomEventHandler != null) {
       event.dispatch(mCustomEventHandler);
-    }
-
-    if (!mEventMapping.isEmpty()) {
-      EventNode node = mEventMapping.get(key);
-      if (node != null) {
-        event.dispatch(node);
-      }
     }
   }
 
   private void handleEvent(int targetTag, String eventName, @Nullable WritableMap event) {
     if (mCustomEventHandler != null) {
       mCustomEventHandler.receiveEvent(targetTag, eventName, event);
-    }
-
-    String key = targetTag + eventName;
-
-    if (!mEventMapping.isEmpty()) {
-      EventNode node = mEventMapping.get(key);
-      if (node != null) {
-        node.receiveEvent(targetTag, eventName, event);
-      }
     }
   }
 

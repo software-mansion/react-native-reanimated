@@ -20,17 +20,17 @@ public class JSCallNode extends Node {
   protected Double evaluate() {
     WritableArray args = Arguments.createArray();
     for (int i = 0; i < mInputIDs.length; i++) {
-      Node node = mNodesManager.findNodeById(mInputIDs[i], Node.class);
-      if (node.value() == null) {
-        args.pushNull();
-      } else {
-        Object value = node.value();
-        if (value instanceof String) {
-          args.pushString((String) value);
-        } else {
-          args.pushDouble(node.doubleValue());
-        }
-      }
+//      Node node = mNodesManager.findNodeById(mInputIDs[i], Node.class);
+//      if (node.value() == null) {
+//        args.pushNull();
+//      } else {
+//        Object value = node.value();
+//        if (value instanceof String) {
+//          args.pushString((String) value);
+//        } else {
+//          args.pushDouble(node.doubleValue());
+//        }
+//      }
     }
     WritableMap eventData = Arguments.createMap();
     eventData.putInt("id", mNodeID);

@@ -23,7 +23,7 @@ public class AlwaysNode extends Node implements FinalNode {
 
   @Override
   protected Double evaluate() {
-    mNodesManager.findNodeById(mNodeToBeEvaluated, Node.class).value();
+//    mNodesManager.findNodeById(mNodeToBeEvaluated, Node.class).value();
     return ZERO;
   }
 }

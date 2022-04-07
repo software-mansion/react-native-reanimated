@@ -1,18 +1,15 @@
 package com.swmansion.reanimated;
 
 import android.util.Log;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
-import com.swmansion.reanimated.transitions.TransitionModule;
 import java.util.ArrayList;
 import javax.annotation.Nullable;
 
@@ -111,11 +108,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
           "[REANIMATED]",
           "Unable to create Reanimated Native Module. You can ignore this message if you are using Chrome Debugger now.");
     }
-  }
-
-  @ReactMethod
-  public void createNode(final int tag, final ReadableMap config) {
-
   }
 
   @ReactMethod

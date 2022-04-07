@@ -14,7 +14,8 @@ public class FunctionNode extends Node {
 
   @Override
   protected Object evaluate() {
-    Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-    return what.value();
+//    Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+//    return what.value();
+    return null;
   }
 }

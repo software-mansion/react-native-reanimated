@@ -75,49 +75,49 @@ public class PropsNode extends Node implements FinalNode {
     final WritableMap nativeProps = Arguments.createMap();
 
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
-      Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
-      if (node instanceof StyleNode) {
-        WritableMap style = (WritableMap) node.value();
-        ReadableMapKeySetIterator iter = style.keySetIterator();
-        while (iter.hasNextKey()) {
-          String key = iter.nextKey();
-          WritableMap dest;
-          if (mNodesManager.uiProps.contains(key)) {
-            hasUIProps = true;
-            dest = mPropMap;
-          } else if (mNodesManager.nativeProps.contains(key)) {
-            hasNativeProps = true;
-            dest = nativeProps;
-          } else {
-            hasJSProps = true;
-            dest = jsProps;
-          }
-          ReadableType type = style.getType(key);
-          switch (type) {
-            case Number:
-              dest.putDouble(key, style.getDouble(key));
-              break;
-            case String:
-              dest.putString(key, style.getString(key));
-              break;
-            case Array:
-              dest.putArray(key, (WritableArray) style.getArray(key));
-              break;
-            default:
-              throw new IllegalArgumentException("Unexpected type " + type);
-          }
-        }
-      } else {
-        String key = entry.getKey();
-        Object value = node.value();
-        if (mNodesManager.uiProps.contains(key)) {
-          hasUIProps = true;
-          addProp(mPropMap, key, value);
-        } else {
-          hasNativeProps = true;
-          addProp(nativeProps, key, value);
-        }
-      }
+//      Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
+//      if (node instanceof StyleNode) {
+//        WritableMap style = (WritableMap) node.value();
+//        ReadableMapKeySetIterator iter = style.keySetIterator();
+//        while (iter.hasNextKey()) {
+//          String key = iter.nextKey();
+//          WritableMap dest;
+//          if (mNodesManager.uiProps.contains(key)) {
+//            hasUIProps = true;
+//            dest = mPropMap;
+//          } else if (mNodesManager.nativeProps.contains(key)) {
+//            hasNativeProps = true;
+//            dest = nativeProps;
+//          } else {
+//            hasJSProps = true;
+//            dest = jsProps;
+//          }
+//          ReadableType type = style.getType(key);
+//          switch (type) {
+//            case Number:
+//              dest.putDouble(key, style.getDouble(key));
+//              break;
+//            case String:
+//              dest.putString(key, style.getString(key));
+//              break;
+//            case Array:
+//              dest.putArray(key, (WritableArray) style.getArray(key));
+//              break;
+//            default:
+//              throw new IllegalArgumentException("Unexpected type " + type);
+//          }
+//        }
+//      } else {
+//        String key = entry.getKey();
+//        Object value = node.value();
+//        if (mNodesManager.uiProps.contains(key)) {
+//          hasUIProps = true;
+//          addProp(mPropMap, key, value);
+//        } else {
+//          hasNativeProps = true;
+//          addProp(nativeProps, key, value);
+//        }
+//      }
     }
 
     if (mConnectedViewTag != View.NO_ID) {

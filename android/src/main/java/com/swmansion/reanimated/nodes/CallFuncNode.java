@@ -24,26 +24,27 @@ public class CallFuncNode extends Node {
         mNodesManager.updateContext.callID + '/' + String.valueOf(mNodeID);
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
-      ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
-      paramNode.beginContext(mArgs[i], mPreviousCallID);
+//      ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
+//      paramNode.beginContext(mArgs[i], mPreviousCallID);
     }
   }
 
   private void endContext() {
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
-      ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
-      paramNode.endContext();
+//      ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
+//      paramNode.endContext();
     }
     mNodesManager.updateContext.callID = mPreviousCallID;
   }
 
   @Override
   protected Object evaluate() {
-    beginContext();
-    Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-    Object retVal = whatNode.value();
-    endContext();
-    return retVal;
+//    beginContext();
+//    Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+//    Object retVal = whatNode.value();
+//    endContext();
+//    return retVal;
+    return null;
   }
 }

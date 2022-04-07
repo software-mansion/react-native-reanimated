@@ -23,7 +23,8 @@ public class TransformNode extends Node {
 
     @Override
     public Object getValue(NodesManager nodesManager) {
-      return nodesManager.getNodeValue(nodeID);
+//      return nodesManager.getNodeValue(nodeID);
+      return null;
     }
   }
 

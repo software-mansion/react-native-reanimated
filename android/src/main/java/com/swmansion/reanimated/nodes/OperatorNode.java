@@ -370,7 +370,7 @@ public class OperatorNode extends Node {
   @Override
   protected Object evaluate() {
     for (int i = 0; i < mInputIDs.length; i++) {
-      mInputNodes[i] = mNodesManager.findNodeById(mInputIDs[i], Node.class);
+//      mInputNodes[i] = mNodesManager.findNodeById(mInputIDs[i], Node.class);
     }
     return mOperator.evaluate(mInputNodes);
   }
