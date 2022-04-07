@@ -381,60 +381,6 @@ public class NodesManager implements EventDispatcherListener {
     mAnimatedNodes.put(nodeID, node);
   }
 
-  public void dropNode(int tag) {
-    Node node = mAnimatedNodes.get(tag);
-    if (node != null) {
-      node.onDrop();
-    }
-    mAnimatedNodes.remove(tag);
-  }
-
-  public void connectNodes(int parentID, int childID) {
-    Node parentNode = mAnimatedNodes.get(parentID);
-    Node childNode = mAnimatedNodes.get(childID);
-    if (childNode == null) {
-      throw new JSApplicationIllegalArgumentException(
-          "Animated node with ID " + childID + " does not exists");
-    }
-    parentNode.addChild(childNode);
-  }
-
-  public void disconnectNodes(int parentID, int childID) {
-    Node parentNode = mAnimatedNodes.get(parentID);
-    Node childNode = mAnimatedNodes.get(childID);
-    if (childNode == null) {
-      throw new JSApplicationIllegalArgumentException(
-          "Animated node with ID " + childID + " does not exists");
-    }
-    parentNode.removeChild(childNode);
-  }
-
-  public void connectNodeToView(int nodeID, int viewTag) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node == null) {
-      throw new JSApplicationIllegalArgumentException(
-          "Animated node with ID " + nodeID + " does not exists");
-    }
-    if (!(node instanceof PropsNode)) {
-      throw new JSApplicationIllegalArgumentException(
-          "Animated node connected to view should be" + "of type " + PropsNode.class.getName());
-    }
-    ((PropsNode) node).connectToView(viewTag);
-  }
-
-  public void disconnectNodeFromView(int nodeID, int viewTag) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node == null) {
-      throw new JSApplicationIllegalArgumentException(
-          "Animated node with ID " + nodeID + " does not exists");
-    }
-    if (!(node instanceof PropsNode)) {
-      throw new JSApplicationIllegalArgumentException(
-          "Animated node connected to view should be" + "of type " + PropsNode.class.getName());
-    }
-    ((PropsNode) node).disconnectFromView(viewTag);
-  }
-
   public void enqueueUpdateViewOnNativeThread(
       int viewTag, WritableMap nativeProps, boolean trySynchronously) {
     if (trySynchronously) {

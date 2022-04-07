@@ -29,7 +29,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
 
   private @Nullable NodesManager mNodesManager;
-  private @Nullable TransitionModule mTransitionManager;
 
   private UIManagerModule mUIManager;
 
@@ -43,7 +42,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
-    mTransitionManager = new TransitionModule(uiManager);
 
     mUIManager = uiManager;
   }
@@ -116,72 +114,12 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
   }
 
   @ReactMethod
-  public void animateNextTransition(int tag, ReadableMap config) {
-    mTransitionManager.animateNextTransition(tag, config);
-  }
-
-  @ReactMethod
   public void createNode(final int tag, final ReadableMap config) {
     mOperations.add(
         new UIThreadOperation() {
           @Override
           public void execute(NodesManager nodesManager) {
             nodesManager.createNode(tag, config);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void dropNode(final int tag) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.dropNode(tag);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void connectNodes(final int parentID, final int childID) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.connectNodes(parentID, childID);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void disconnectNodes(final int parentID, final int childID) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.disconnectNodes(parentID, childID);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void connectNodeToView(final int nodeID, final int viewTag) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.connectNodeToView(nodeID, viewTag);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void disconnectNodeFromView(final int nodeID, final int viewTag) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.disconnectNodeFromView(nodeID, viewTag);
           }
         });
   }
