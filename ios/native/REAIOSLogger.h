@@ -1,5 +1,3 @@
-#pragma once
-
 #import <RNReanimated/ReanimatedHiddenHeaders.h>
 #include <stdio.h>
 

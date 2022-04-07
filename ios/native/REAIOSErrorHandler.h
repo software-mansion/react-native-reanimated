@@ -1,5 +1,3 @@
-#pragma once
-
 #import <RNReanimated/ErrorHandler.h>
 #import <RNReanimated/Scheduler.h>
 #include <memory>

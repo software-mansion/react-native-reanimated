@@ -1,5 +1,3 @@
-#pragma once
-
 #import <RNReanimated/Scheduler.h>
 #import <React/RCTUIManager.h>
 #import <ReactCommon/CallInvoker.h>
