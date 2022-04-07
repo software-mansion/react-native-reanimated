@@ -1,11 +1,8 @@
 import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import ReanimatedEventEmitter from './ReanimatedEventEmitter';
-
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/LayoutAnimationRepository';
-
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
@@ -35,18 +32,6 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
-
-const NODE_MAPPING = new Map();
-
-interface ListenerData {
-  viewTag: number;
-  props: StyleProps;
-}
-
-function listener(data: ListenerData) {
-  const component = NODE_MAPPING.get(data.viewTag);
-  component && component._updateFromNative(data.props);
-}
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -176,7 +161,6 @@ export default function createAnimatedComponent(
     }
 
     componentWillUnmount() {
-      this._detachPropUpdater();
       this._detachNativeEvents();
       this._detachStyles();
       this.sv = null;
@@ -184,7 +168,6 @@ export default function createAnimatedComponent(
 
     componentDidMount() {
       this._attachNativeEvents();
-      this._attachPropUpdater();
       this._attachAnimatedStyles();
     }
 
@@ -281,14 +264,6 @@ export default function createAnimatedComponent(
       }
     }
 
-    _attachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.set(viewTag, this);
-      if (NODE_MAPPING.size === 1) {
-        ReanimatedEventEmitter.addListener('onReanimatedPropsChange', listener);
-      }
-    }
-
     _attachAnimatedStyles() {
       const styles = this.props.style
         ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
@@ -382,14 +357,6 @@ export default function createAnimatedComponent(
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
         });
-      }
-    }
-
-    _detachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.delete(viewTag);
-      if (NODE_MAPPING.size === 0) {
-        ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
       }
     }
 
