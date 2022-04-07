@@ -115,13 +115,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
 
   @ReactMethod
   public void createNode(final int tag, final ReadableMap config) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.createNode(tag, config);
-          }
-        });
+
   }
 
   @ReactMethod

@@ -326,61 +326,6 @@ public class NodesManager implements EventDispatcherListener {
             + type);
   }
 
-  public void createNode(int nodeID, ReadableMap config) {
-    if (mAnimatedNodes.get(nodeID) != null) {
-      throw new JSApplicationIllegalArgumentException(
-          "Animated node with ID " + nodeID + " already exists");
-    }
-    String type = config.getString("type");
-    final Node node;
-    if ("props".equals(type)) {
-      node = new PropsNode(nodeID, config, this, mUIImplementation);
-    } else if ("style".equals(type)) {
-      node = new StyleNode(nodeID, config, this);
-    } else if ("transform".equals(type)) {
-      node = new TransformNode(nodeID, config, this);
-    } else if ("value".equals(type)) {
-      node = new ValueNode(nodeID, config, this);
-    } else if ("block".equals(type)) {
-      node = new BlockNode(nodeID, config, this);
-    } else if ("cond".equals(type)) {
-      node = new CondNode(nodeID, config, this);
-    } else if ("op".equals(type)) {
-      node = new OperatorNode(nodeID, config, this);
-    } else if ("set".equals(type)) {
-      node = new SetNode(nodeID, config, this);
-    } else if ("debug".equals(type)) {
-      node = new DebugNode(nodeID, config, this);
-    } else if ("clock".equals(type)) {
-      node = new ClockNode(nodeID, config, this);
-    } else if ("clockStart".equals(type)) {
-      node = new ClockOpNode.ClockStartNode(nodeID, config, this);
-    } else if ("clockStop".equals(type)) {
-      node = new ClockOpNode.ClockStopNode(nodeID, config, this);
-    } else if ("clockTest".equals(type)) {
-      node = new ClockOpNode.ClockTestNode(nodeID, config, this);
-    } else if ("call".equals(type)) {
-      node = new JSCallNode(nodeID, config, this);
-    } else if ("bezier".equals(type)) {
-      node = new BezierNode(nodeID, config, this);
-    } else if ("event".equals(type)) {
-      node = new EventNode(nodeID, config, this);
-    } else if ("always".equals(type)) {
-      node = new AlwaysNode(nodeID, config, this);
-    } else if ("concat".equals(type)) {
-      node = new ConcatNode(nodeID, config, this);
-    } else if ("param".equals(type)) {
-      node = new ParamNode(nodeID, config, this);
-    } else if ("func".equals(type)) {
-      node = new FunctionNode(nodeID, config, this);
-    } else if ("callfunc".equals(type)) {
-      node = new CallFuncNode(nodeID, config, this);
-    } else {
-      throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
-    }
-    mAnimatedNodes.put(nodeID, node);
-  }
-
   public void enqueueUpdateViewOnNativeThread(
       int viewTag, WritableMap nativeProps, boolean trySynchronously) {
     if (trySynchronously) {
