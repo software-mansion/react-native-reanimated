@@ -187,50 +187,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
   }
 
   @ReactMethod
-  public void attachEvent(final int viewTag, final String eventName, final int eventNodeID) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.attachEvent(viewTag, eventName, eventNodeID);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void detachEvent(final int viewTag, final String eventName, final int eventNodeID) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.detachEvent(viewTag, eventName, eventNodeID);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void getValue(final int nodeID, final Callback callback) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.getValue(nodeID, callback);
-          }
-        });
-  }
-
-  @ReactMethod
-  public void setValue(final int nodeID, final Double newValue) {
-    mOperations.add(
-        new UIThreadOperation() {
-          @Override
-          public void execute(NodesManager nodesManager) {
-            nodesManager.setValue(nodeID, newValue);
-          }
-        });
-  }
-
-  @ReactMethod
   public void addListener(String eventName) {
     // Keep: Required for RN built in Event Emitter Calls.
   }

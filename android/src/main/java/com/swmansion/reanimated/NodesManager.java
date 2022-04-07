@@ -443,34 +443,9 @@ public class NodesManager implements EventDispatcherListener {
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 
-  public void attachEvent(int viewTag, String eventName, int eventNodeID) {
-    String key = viewTag + eventName;
-
-    EventNode node = (EventNode) mAnimatedNodes.get(eventNodeID);
-    if (node == null) {
-      throw new JSApplicationIllegalArgumentException(
-          "Event node " + eventNodeID + " does not exists");
-    }
-    if (mEventMapping.containsKey(key)) {
-      throw new JSApplicationIllegalArgumentException(
-          "Event handler already set for the given view and event type");
-    }
-
-    mEventMapping.put(key, node);
-  }
-
-  public void detachEvent(int viewTag, String eventName, int eventNodeID) {
-    String key = viewTag + eventName;
-    mEventMapping.remove(key);
-  }
-
   public void configureProps(Set<String> uiPropsSet, Set<String> nativePropsSet) {
     uiProps = uiPropsSet;
     nativeProps = nativePropsSet;
-  }
-
-  public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value());
   }
 
   public void postRunUpdatesAfterAnimation() {
@@ -550,13 +525,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void sendEvent(String name, WritableMap body) {
     mEventEmitter.emit(name, body);
-  }
-
-  public void setValue(int nodeID, Double newValue) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node != null) {
-      ((ValueNode) node).setValue(newValue);
-    }
   }
 
   public void updateProps(int viewTag, Map<String, Object> props) {
