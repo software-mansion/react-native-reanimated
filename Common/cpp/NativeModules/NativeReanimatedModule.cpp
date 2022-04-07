@@ -5,6 +5,7 @@
 #include <memory>
 #include <thread>
 #include "EventHandlerRegistry.h"
+#include "FabricUtils.h"
 #include "FeaturesConfig.h"
 #include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
@@ -271,19 +272,8 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
-struct UIManagerBindingPublic {
-  void *vtable;
-  std::shared_ptr<UIManager> uiManager_;
-};
-
 jsi::Value NativeReanimatedModule::initializeForFabric(jsi::Runtime &rt) {
-  auto uiManagerBinding = UIManagerBinding::getBinding(rt);
-  react_native_assert(
-      uiManagerBinding !=
-      nullptr); // too early, UIManagerBinding is not registered yet
-  auto uiManagerBindingPublic =
-      reinterpret_cast<UIManagerBindingPublic *>(&*uiManagerBinding);
-  uiManager_ = uiManagerBindingPublic->uiManager_;
+  uiManager_ = getUIManagerFromBinding(rt);
   return jsi::Value::undefined();
 }
 
@@ -374,17 +364,21 @@ void NativeReanimatedModule::unregisterSensor(
   animatedSensorModule.unregisterSensor(sensorId);
 }
 
-// TODO: move to separate file
-struct UIManagerPublic {
-  void *vtable;
-  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  UIManagerDelegate *delegate_;
-  UIManagerAnimationDelegate *animationDelegate_{nullptr};
-  RuntimeExecutor const runtimeExecutor_{};
-  ShadowTreeRegistry shadowTreeRegistry_{};
-  BackgroundExecutor const backgroundExecutor_{};
-  ContextContainer::Shared contextContainer_;
-};
+bool NativeReanimatedModule::isThereAnyLayoutProp(
+    jsi::Runtime &rt,
+    const jsi::Value &props) {
+  const jsi::Array propNames = props.asObject(rt).getPropertyNames(rt);
+  for (size_t i = 0; i < propNames.size(rt); ++i) {
+    const std::string propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    bool isLayoutProp =
+        nativePropNames_.find(propName) != nativePropNames_.end();
+    if (isLayoutProp) {
+      return true;
+    }
+  }
+  return false;
+}
 
 void NativeReanimatedModule::updateProps(
     jsi::Runtime &rt,
@@ -395,29 +389,13 @@ void NativeReanimatedModule::updateProps(
   // TODO: support multiple surfaces
   surfaceId_ = shadowNode->getSurfaceId();
 
-  // TODO: move to separate method
-  bool uiPropsOnly = [&]() {
-    const jsi::Array propNames = props.asObject(rt).getPropertyNames(rt);
-    for (size_t i = 0; i < propNames.size(rt); ++i) {
-      const std::string propName =
-          propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-      bool isNativeProp =
-          nativePropNames_.find(propName) != nativePropNames_.end();
-      // TODO: std::unordered_set<std::string>::contains?
-      if (isNativeProp) {
-        return false;
-      }
-    }
-    return true;
-  }();
-
-  if (uiPropsOnly) {
-    Tag tag = shadowNode->getTag();
-    synchronouslyUpdateUIPropsFunction(rt, tag, props);
-  } else {
+  if (isThereAnyLayoutProp(rt, props)) {
     // TODO: use uiManager_->getNewestCloneOfShadowNode?
     auto rawProps = std::make_unique<RawProps>(rt, props);
     operationsInBatch_.emplace_back(shadowNode, std::move(rawProps));
+  } else {
+    Tag tag = shadowNode->getTag();
+    synchronouslyUpdateUIPropsFunction(rt, tag, props);
   }
 }
 
@@ -430,14 +408,11 @@ void NativeReanimatedModule::performOperations() {
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>();
 
-  // TODO: move shadowTreeRegistry and contextContainer to
-  // NativeReanimatedModule fields
-  std::shared_ptr<UIManager> uiManager = uiManager_;
-  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
+  // TODO: store ShadowTreeRegistry and ContextContainer as private fields
   ShadowTreeRegistry *shadowTreeRegistry =
-      &uiManagerPublic->shadowTreeRegistry_;
+      getShadowTreeRegistryFromUIManager(uiManager_);
   std::shared_ptr<const ContextContainer> contextContainer =
-      uiManagerPublic->contextContainer_;
+      getContextContainerFromUIManager(uiManager_);
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
 
   shadowTreeRegistry->visit(surfaceId_, [&](ShadowTree const &shadowTree) {
@@ -478,20 +453,6 @@ void NativeReanimatedModule::performOperations() {
   });
 }
 
-static inline void UIManager_dispatchCommand(
-    const std::shared_ptr<UIManager> &uiManager,
-    const ShadowNode::Shared &shadowNode,
-    std::string const &commandName,
-    folly::dynamic const &args) {
-  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
-  UIManagerDelegate *delegate_ = uiManagerPublic->delegate_;
-
-  // copied from UIManager.cpp
-  if (delegate_) {
-    delegate_->uiManagerDidDispatchCommand(shadowNode, commandName, args);
-  }
-}
-
 void NativeReanimatedModule::dispatchCommand(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
@@ -503,48 +464,6 @@ void NativeReanimatedModule::dispatchCommand(
 
   // TODO: use uiManager_->dispatchCommand once it's public
   UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
-}
-
-static inline LayoutMetrics UIManager_getRelativeLayoutMetrics(
-    std::shared_ptr<UIManager> uiManager,
-    ShadowNode const &shadowNode,
-    ShadowNode const *ancestorShadowNode,
-    LayoutableShadowNode::LayoutInspectingPolicy policy) {
-  // based on implementation from UIManager.cpp
-
-  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
-  ShadowTreeRegistry *shadowTreeRegistry =
-      &uiManagerPublic->shadowTreeRegistry_;
-
-  // We might store here an owning pointer to `ancestorShadowNode` to ensure
-  // that the node is not deallocated during method execution lifetime.
-  auto owningAncestorShadowNode = ShadowNode::Shared{};
-
-  if (!ancestorShadowNode) {
-    shadowTreeRegistry->visit(
-        shadowNode.getSurfaceId(), [&](ShadowTree const &shadowTree) {
-          owningAncestorShadowNode =
-              shadowTree.getCurrentRevision().rootShadowNode;
-          ancestorShadowNode = owningAncestorShadowNode.get();
-        });
-  } else {
-    // It is possible for JavaScript (or other callers) to have a reference
-    // to a previous version of ShadowNodes, but we enforce that
-    // metrics are only calculated on most recently committed versions.
-    owningAncestorShadowNode =
-        uiManager->getNewestCloneOfShadowNode(*ancestorShadowNode);
-    ancestorShadowNode = owningAncestorShadowNode.get();
-  }
-
-  auto layoutableAncestorShadowNode =
-      traitCast<LayoutableShadowNode const *>(ancestorShadowNode);
-
-  if (!layoutableAncestorShadowNode) {
-    return EmptyLayoutMetrics;
-  }
-
-  return LayoutableShadowNode::computeRelativeLayoutMetrics(
-      shadowNode.getFamily(), *layoutableAncestorShadowNode, policy);
 }
 
 jsi::Value NativeReanimatedModule::measure(

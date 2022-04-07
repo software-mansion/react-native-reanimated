@@ -133,6 +133,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
+
+  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
 };
 
 } // namespace reanimated
