@@ -78,7 +78,6 @@
     "@types/invariant": "^2.2.35",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
-    "react-native-screens": "^3.11.1",
     "setimmediate": "^1.0.5",
     "string-hash-64": "^1.0.3"
   },
