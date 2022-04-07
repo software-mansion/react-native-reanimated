@@ -18,8 +18,8 @@
 {
   NSMutableDictionary *styles = [NSMutableDictionary new];
   for (NSString *prop in _styleConfig) {
-    REANode *propNode = [self.nodesManager findNodeByID:_styleConfig[prop]];
-    styles[prop] = [propNode value];
+    //    REANode *propNode = [self.nodesManager findNodeByID:_styleConfig[prop]];
+    //    styles[prop] = [propNode value];
   }
 
   return styles;

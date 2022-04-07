@@ -25,10 +25,11 @@
 
 - (id)evaluate
 {
-  NSNumber *newValue = [[self.nodesManager findNodeByID:_valueNodeID] value];
-  REAValueNode *what = (REAValueNode *)[self.nodesManager findNodeByID:_whatNodeID];
-  [what setValue:newValue];
-  return newValue;
+  //  NSNumber *newValue = [[self.nodesManager findNodeByID:_valueNodeID] value];
+  //  REAValueNode *what = (REAValueNode *)[self.nodesManager findNodeByID:_whatNodeID];
+  //  [what setValue:newValue];
+  //  return newValue;
+  return nil;
 }
 
 @end

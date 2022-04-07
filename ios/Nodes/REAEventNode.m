@@ -25,8 +25,8 @@
       if (i < eventPath.count - 1) {
         value = [value valueForKey:eventPath[i]];
       } else {
-        REAValueNode *node = (REAValueNode *)[self.nodesManager findNodeByID:eventPath[i]];
-        [node setValue:value];
+        //        REAValueNode *node = (REAValueNode *)[self.nodesManager findNodeByID:eventPath[i]];
+        //        [node setValue:value];
       }
     }
   }

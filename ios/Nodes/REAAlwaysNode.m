@@ -23,7 +23,7 @@
 
 - (id)evaluate
 {
-  [[self.nodesManager findNodeByID:_nodeToBeEvaluated] value];
+  //  [[self.nodesManager findNodeByID:_nodeToBeEvaluated] value];
   return @(0);
 }
 

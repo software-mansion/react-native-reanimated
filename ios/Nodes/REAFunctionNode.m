@@ -17,8 +17,9 @@
 
 - (id)evaluate
 {
-  REANode *node = [self.nodesManager findNodeByID:_nodeToBeEvaluated];
-  return [node value];
+  //  REANode *node = [self.nodesManager findNodeByID:_nodeToBeEvaluated];
+  //  return [node value];
+  return @(0);
 }
 
 @end

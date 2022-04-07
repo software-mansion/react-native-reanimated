@@ -18,12 +18,12 @@
 
 - (void)setValue:(NSNumber *)value
 {
-  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-  NSString *callID = self.updateContext.callID;
-  self.updateContext.callID = _prevCallID;
-  [(REAValueNode *)node setValue:value];
-  self.updateContext.callID = callID;
-  [self forceUpdateMemoizedValue:value];
+  //  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
+  //  NSString *callID = self.updateContext.callID;
+  //  self.updateContext.callID = _prevCallID;
+  //  [(REAValueNode *)node setValue:value];
+  //  self.updateContext.callID = callID;
+  //  [self forceUpdateMemoizedValue:value];
 }
 
 - (void)beginContext:(NSNumber *)ref prevCallID:(NSString *)prevCallID
@@ -41,39 +41,40 @@
 {
   NSString *callID = self.updateContext.callID;
   self.updateContext.callID = _prevCallID;
-  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-  id val = [node value];
-  self.updateContext.callID = callID;
-  return val;
+  //  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
+  //  id val = [node value];
+  //  self.updateContext.callID = callID;
+  return nil;
 }
 
 - (void)start
 {
-  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-  if ([node isKindOfClass:[REAParamNode class]]) {
-    [(REAParamNode *)node start];
-  } else {
-    [(REAClockNode *)node start];
-  }
+  //  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
+  //  if ([node isKindOfClass:[REAParamNode class]]) {
+  //    [(REAParamNode *)node start];
+  //  } else {
+  //    [(REAClockNode *)node start];
+  //  }
 }
 
 - (void)stop
 {
-  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-  if ([node isKindOfClass:[REAParamNode class]]) {
-    [(REAParamNode *)node stop];
-  } else {
-    [(REAClockNode *)node stop];
-  }
+  //  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
+  //  if ([node isKindOfClass:[REAParamNode class]]) {
+  //    [(REAParamNode *)node stop];
+  //  } else {
+  //    [(REAClockNode *)node stop];
+  //  }
 }
 
 - (BOOL)isRunning
 {
-  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-  if ([node isKindOfClass:[REAParamNode class]]) {
-    return [(REAParamNode *)node isRunning];
-  }
-  return [(REAClockNode *)node isRunning];
+  //  REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
+  //  if ([node isKindOfClass:[REAParamNode class]]) {
+  //    return [(REAParamNode *)node isRunning];
+  //  }
+  //  return [(REAClockNode *)node isRunning];
+  return false;
 }
 
 @end

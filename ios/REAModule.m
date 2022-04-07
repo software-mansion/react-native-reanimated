@@ -47,99 +47,6 @@ RCT_EXPORT_METHOD(installTurboModule)
   // TODO: Move initialization from UIResponder+Reanimated to here
 }
 
-#pragma mark-- Transitioning API
-
-RCT_EXPORT_METHOD(animateNextTransition : (nonnull NSNumber *)rootTag config : (NSDictionary *)config)
-{
-  [_transitionManager animateNextTransitionInRoot:rootTag withConfig:config];
-}
-
-#pragma mark-- API
-
-RCT_EXPORT_METHOD(createNode : (nonnull NSNumber *)nodeID config : (NSDictionary<NSString *, id> *)config)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager createNode:nodeID config:config];
-  }];
-}
-
-RCT_EXPORT_METHOD(dropNode : (nonnull NSNumber *)nodeID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager dropNode:nodeID];
-  }];
-}
-
-RCT_EXPORT_METHOD(getValue : (nonnull NSNumber *)nodeID callback : (RCTResponseSenderBlock)callback)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager getValue:nodeID callback:(RCTResponseSenderBlock)callback];
-  }];
-}
-
-RCT_EXPORT_METHOD(connectNodes : (nonnull NSNumber *)parentID childTag : (nonnull NSNumber *)childID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager connectNodes:parentID childID:childID];
-  }];
-}
-
-RCT_EXPORT_METHOD(disconnectNodes : (nonnull NSNumber *)parentID childTag : (nonnull NSNumber *)childID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager disconnectNodes:parentID childID:childID];
-  }];
-}
-
-RCT_EXPORT_METHOD(connectNodeToView : (nonnull NSNumber *)nodeID viewTag : (nonnull NSNumber *)viewTag)
-{
-  NSString *viewName = [self.bridge.uiManager viewNameForReactTag:viewTag];
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager connectNodeToView:nodeID viewTag:viewTag viewName:viewName];
-  }];
-}
-
-RCT_EXPORT_METHOD(disconnectNodeFromView : (nonnull NSNumber *)nodeID viewTag : (nonnull NSNumber *)viewTag)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager disconnectNodeFromView:nodeID viewTag:viewTag];
-  }];
-}
-
-RCT_EXPORT_METHOD(attachEvent
-                  : (nonnull NSNumber *)viewTag eventName
-                  : (nonnull NSString *)eventName eventNodeID
-                  : (nonnull NSNumber *)eventNodeID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager attachEvent:viewTag eventName:eventName eventNodeID:eventNodeID];
-  }];
-}
-
-RCT_EXPORT_METHOD(detachEvent
-                  : (nonnull NSNumber *)viewTag eventName
-                  : (nonnull NSString *)eventName eventNodeID
-                  : (nonnull NSNumber *)eventNodeID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager detachEvent:viewTag eventName:eventName eventNodeID:eventNodeID];
-  }];
-}
-
-RCT_EXPORT_METHOD(setValue : (nonnull NSNumber *)nodeID newValue : (nonnull NSNumber *)newValue)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager setValueForNodeID:nodeID value:newValue];
-  }];
-}
-
-RCT_EXPORT_METHOD(triggerRender)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager postRunUpdatesAfterAnimation];
-  }];
-}
-
 #pragma mark-- Batch handling
 
 - (void)addOperationBlock:(AnimatedOperation)operation
@@ -173,7 +80,7 @@ RCT_EXPORT_METHOD(triggerRender)
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[ @"onReanimatedCall", @"onReanimatedPropsChange" ];
+  return @[];
 }
 
 - (void)eventDispatcherWillDispatchEvent:(id<RCTEvent>)event

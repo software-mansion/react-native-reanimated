@@ -107,7 +107,7 @@ return self;
 - (id)evaluate
 {
   for (NSUInteger i = 0; i < _input.count; i++) {
-    _inputNodes[i] = [self.nodesManager findNodeByID:_input[i]];
+    //    _inputNodes[i] = [self.nodesManager findNodeByID:_input[i]];
   }
   return _op(_inputNodes);
 }

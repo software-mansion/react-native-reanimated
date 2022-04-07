@@ -22,8 +22,8 @@
     REANodeID nodeID = [RCTConvert NSNumber:transformConfig[@"nodeID"]];
     NSNumber *value;
     if (nodeID) {
-      REANode *node = [self.nodesManager findNodeByID:nodeID];
-      value = [node value];
+      //      REANode *node = [self.nodesManager findNodeByID:nodeID];
+      //      value = [node value];
     } else {
       value = transformConfig[@"value"];
     }

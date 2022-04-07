@@ -42,8 +42,8 @@
   // with the current arguments:
   for (NSUInteger i = 0; i < _params.count; i++) {
     NSNumber *paramID = [_params objectAtIndex:i];
-    REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
-    [param beginContext:_args[i] prevCallID:_prevCallID];
+    //    REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
+    //    [param beginContext:_args[i] prevCallID:_prevCallID];
   }
 }
 
@@ -51,8 +51,8 @@
 {
   for (NSUInteger i = 0; i < _params.count; i++) {
     NSNumber *paramID = [_params objectAtIndex:i];
-    REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
-    [param endContext];
+    //    REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
+    //    [param endContext];
   }
   self.updateContext.callID = _prevCallID;
 }
@@ -60,10 +60,11 @@
 - (id)evaluate
 {
   [self beginContext];
-  REAFunctionNode *what = (REAFunctionNode *)[self.nodesManager findNodeByID:_whatNodeID];
-  NSNumber *newValue = [what value];
-  [self endContext];
-  return newValue;
+  //  REAFunctionNode *what = (REAFunctionNode *)[self.nodesManager findNodeByID:_whatNodeID];
+  //  NSNumber *newValue = [what value];
+  //  [self endContext];
+  //  return newValue;
+  return nil;
 }
 
 @end

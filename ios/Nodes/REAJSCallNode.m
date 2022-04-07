@@ -18,7 +18,7 @@
 {
   NSMutableArray *args = [NSMutableArray arrayWithCapacity:_input.count];
   for (NSUInteger i = 0; i < _input.count; i++) {
-    args[i] = [[self.nodesManager findNodeByID:_input[i]] value];
+    //    args[i] = [[self.nodesManager findNodeByID:_input[i]] value];
   }
 
   [self.nodesManager.reanimatedModule sendEventWithName:@"onReanimatedCall"

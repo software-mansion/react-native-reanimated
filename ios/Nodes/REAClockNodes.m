@@ -69,7 +69,8 @@
 
 - (REANode *)clockNode
 {
-  return (REANode *)[self.nodesManager findNodeByID:_clockNodeID];
+  //  return (REANode *)[self.nodesManager findNodeByID:_clockNodeID];
+  return NULL;
 }
 
 @end

@@ -22,9 +22,10 @@
 
 - (id)evaluate
 {
-  id value = [[self.nodesManager findNodeByID:_valueNodeID] value];
-  NSLog(@"%@ %@", _message, value);
-  return value;
+  //  id value = [[self.nodesManager findNodeByID:_valueNodeID] value];
+  //  NSLog(@"%@ %@", _message, value);
+  //  return value;
+  return @(0);
 }
 
 @end
