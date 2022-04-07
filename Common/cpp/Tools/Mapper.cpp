@@ -55,9 +55,9 @@ void Mapper::enableFastMode(
                     const jsi::Value &props) {
     this->module->updateProps(rt, shadowNodeValue, props);
   };
-  jsi::Runtime *rt = module->runtime.get();
+  jsi::Runtime &rt = *module->runtime;
   userUpdater = std::make_shared<jsi::Function>(
-      updater->getValue(*rt).asObject(*rt).asFunction(*rt));
+      updater->getValue(rt).asObject(rt).asFunction(rt));
 }
 
 Mapper::~Mapper() {
