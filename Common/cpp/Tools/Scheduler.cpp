@@ -1,5 +1,5 @@
 #ifdef __APPLE__
-#include "RNReanimated/Scheduler.h"
+#include <RNReanimated/Scheduler.h>
 #else
 #include "Scheduler.h"
 #endif

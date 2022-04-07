@@ -1,14 +1,9 @@
 #pragma once
 
+#include <RNReanimated/Scheduler.h>
 #include <memory>
 #include <string>
 #include "ErrorHandler.h"
-
-#ifdef ONANDROID
-#include "Scheduler.h"
-#else
-#include "RNReanimated/Scheduler.h"
-#endif
 
 namespace reanimated {
 
