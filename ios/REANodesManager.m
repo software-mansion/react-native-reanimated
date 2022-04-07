@@ -1,7 +1,3 @@
-#import <RNReanimated/REANodesManager.h>
-
-#import <React/RCTConvert.h>
-
 #import <RNReanimated/REAAlwaysNode.h>
 #import <RNReanimated/REABezierNode.h>
 #import <RNReanimated/REABlockNode.h>
@@ -15,6 +11,7 @@
 #import <RNReanimated/REAJSCallNode.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANode.h>
+#import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAOperatorNode.h>
 #import <RNReanimated/REAParamNode.h>
 #import <RNReanimated/REAPropsNode.h>
@@ -22,6 +19,7 @@
 #import <RNReanimated/REAStyleNode.h>
 #import <RNReanimated/REATransformNode.h>
 #import <RNReanimated/REAValueNode.h>
+#import <React/RCTConvert.h>
 #import <React/RCTShadowView.h>
 #import <stdatomic.h>
 

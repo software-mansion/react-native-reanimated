@@ -1,7 +1,6 @@
-#import <React/RCTViewManager.h>
-
 #import <RNReanimated/RCTConvert+REATransition.h>
 #import <RNReanimated/REAAllTransitions.h>
+#import <React/RCTViewManager.h>
 
 @interface REASnapshotRemover : NSObject <CAAnimationDelegate>
 @end

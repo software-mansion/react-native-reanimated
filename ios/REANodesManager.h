@@ -1,5 +1,4 @@
 #import <Foundation/Foundation.h>
-
 #import <RNReanimated/REANode.h>
 #import <React/RCTBridgeModule.h>
 #import <React/RCTUIManager.h>

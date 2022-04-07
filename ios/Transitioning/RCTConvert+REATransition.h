@@ -1,6 +1,5 @@
-#import <React/RCTConvert.h>
-
 #import <RNReanimated/REATransition.h>
+#import <React/RCTConvert.h>
 
 @interface RCTConvert (REATransition)
 

@@ -1,9 +1,7 @@
-#import <RNReanimated/REAPropsNode.h>
-
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REAPropsNode.h>
 #import <RNReanimated/REAStyleNode.h>
-
 #import <React/RCTComponentData.h>
 #import <React/RCTLog.h>
 #import <React/RCTUIManager.h>

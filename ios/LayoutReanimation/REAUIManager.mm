@@ -3,7 +3,6 @@
 #import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/Scheduler.h>
-
 #import <React/RCTComponentData.h>
 #import <React/RCTLayoutAnimation.h>
 #import <React/RCTLayoutAnimationGroup.h>
