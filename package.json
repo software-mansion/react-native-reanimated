@@ -84,7 +84,6 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-gesture-handler": "*",
     "@babel/preset-typescript": "*"
   },
   "devDependencies": {
