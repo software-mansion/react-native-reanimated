@@ -312,7 +312,7 @@ function createChecker(
     }
     // @ts-ignore this is implicitly any - TODO
     const res = worklet.apply(this, arguments);
-    if (!_WORKLET && res && typeof res === 'function' && res.__worklet) {
+    if (!_WORKLET && res && typeof res === 'function' && res.__workletHash) {
       return createChecker(res, workletName, arguments);
     }
     return res;

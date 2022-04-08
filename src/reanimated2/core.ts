@@ -4,7 +4,6 @@ import { Platform } from 'react-native';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   BasicWorkletFunction,
-  WorkletFunction,
   ComplexWorkletFunction,
   SharedValue,
   AnimationObject,
@@ -13,10 +12,6 @@ import {
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
-
-global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
-  worklet.__worklet = true;
-};
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
@@ -71,48 +66,6 @@ export const isConfiguredCheck: () => void = () => {
     throw new Error(
       'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation'
     );
-  }
-};
-
-function _toArrayReanimated<T>(object: Iterable<T> | ArrayLike<T> | T[]): T[] {
-  'worklet';
-  if (Array.isArray(object)) {
-    return object;
-  }
-  if (
-    typeof Symbol !== 'undefined' &&
-    (typeof Symbol === 'function' ? Symbol.iterator : '@@iterator') in
-      Object(object)
-  ) {
-    return Array.from(object);
-  }
-  throw new Error(
-    'Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'
-  );
-}
-
-function _mergeObjectsReanimated(): unknown {
-  'worklet';
-  // we can't use rest parameters in worklets at the moment
-  // eslint-disable-next-line prefer-rest-params
-  const arr = Array.from(arguments);
-  return Object.assign.apply(null, [arr[0], ...arr.slice(1)]);
-}
-
-global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
-  worklet.__worklet = true;
-
-  if (worklet._closure) {
-    const closure = worklet._closure;
-    Object.keys(closure).forEach((key) => {
-      if (key === '_toConsumableArray') {
-        closure[key] = _toArrayReanimated;
-      }
-
-      if (key === '_objectSpread') {
-        closure[key] = _mergeObjectsReanimated;
-      }
-    });
   }
 };
 

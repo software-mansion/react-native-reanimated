@@ -511,18 +511,6 @@ function makeWorklet(t, fun, fileName) {
     );
   }
 
-  statements.push(
-    t.expressionStatement(
-      t.callExpression(
-        t.memberExpression(
-          t.identifier('global'),
-          t.identifier('__reanimatedWorkletInit'),
-          false
-        ),
-        [privateFunctionId]
-      )
-    )
-  );
   statements.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
