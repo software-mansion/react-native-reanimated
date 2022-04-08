@@ -8,22 +8,24 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function WidthExample() {
+  const [padding, setPadding] = React.useState(15);
   const [height, setHeight] = React.useState(80);
-
-  const ref = React.useRef(0);
 
   const sv = useSharedValue(0);
 
   const handleAnimateWidth = () => {
-    ref.current = 1 - ref.current;
-    sv.value = withTiming(ref.current, { duration: 1500 });
+    sv.value = withTiming(Math.random(), { duration: 300 });
+  };
+
+  const handleIncreasePadding = () => {
+    setPadding((p) => p + 3);
   };
 
   const handleIncreaseHeight = () => {
     setHeight((h) => h + 10);
   };
 
-  const animatedStyle = useAnimatedStyle(() => {
+  const childStyle = useAnimatedStyle(() => {
     return {
       width: 80 + 230 * sv.value,
     };
@@ -33,10 +35,11 @@ export default function WidthExample() {
     <>
       <View style={styles.buttons}>
         <Button onPress={handleAnimateWidth} title="Animate width" />
+        <Button onPress={handleIncreasePadding} title="Increase padding" />
         <Button onPress={handleIncreaseHeight} title="Increase height" />
       </View>
-      <View style={styles.parent}>
-        <Animated.View style={[styles.left, { height }, animatedStyle]} />
+      <View style={[styles.parent, { padding }]}>
+        <Animated.View style={[styles.left, { height }, childStyle]} />
         <View style={styles.right} />
       </View>
     </>
@@ -50,6 +53,7 @@ const styles = StyleSheet.create({
   },
   parent: {
     flexDirection: 'row',
+    backgroundColor: 'red',
   },
   left: {
     backgroundColor: 'blue',
