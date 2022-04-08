@@ -9,7 +9,7 @@ When installing Reanimated 2, you will be able to use the old API as well as the
 We made the latest stable Reanimated 1 available from the same package with a few exceptions, as we needed to address some naming collisions.
 Whenever there was a naming collision with Reanimated 1, we'd rename the Reanimated 1 version of such method in order to keep the naming in Reanimated 2 cleaner.
 This strategy made the most sense to us, as we are planning to slowly phase out the old API (we will keep making fixes to Reanimated 1 core but most likely stop new feature development).
-Unfortunately, it means that Reanimated 2 introduces some breaking changes to the API, where some methods pulled from Reanimated 1 changed there name.
+Unfortunately, it means that Reanimated 2 introduces some breaking changes to the API, where some methods pulled from Reanimated 1 changed their name.
 Thankfully the list of the renamed methods is relatively short, and the renamed methods weren't too frequently used anyways.
 
 ### Renamed methods:
