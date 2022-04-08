@@ -31,15 +31,17 @@ const Child = React.forwardRef<ChildHandle, ChildProps>((_, ref) => {
 
 export default function RefExample() {
   const x = useSharedValue(0);
+  const y = useSharedValue(0);
 
   const ref = React.useRef<ChildHandle>(null);
 
   const style = useAnimatedStyle(() => {
-    return { left: 200 * x.value };
+    return { left: 200 * x.value, top: 200 * y.value };
   }, []);
 
   const handleToggleSharedValue = () => {
-    x.value = withTiming(1 - x.value, { duration: 1000 });
+    x.value = withTiming(Math.random(), { duration: 500 });
+    y.value = withTiming(Math.random(), { duration: 500 });
   };
 
   const handleToggleState = () => {
