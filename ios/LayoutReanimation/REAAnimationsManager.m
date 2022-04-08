@@ -22,7 +22,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, NSNumber *> *_states;
-  NSMutableDictionary<NSNumber *, UIView *> *_viewForTag;
+  NSMapTable<NSNumber *, UIView *> *_viewForTag;
   NSMutableSet<NSNumber *> *_toRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
@@ -45,7 +45,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _uiManager = uiManager;
     _reaUiManager = (REAUIManager *)uiManager;
     _states = [NSMutableDictionary new];
-    _viewForTag = [NSMutableDictionary new];
+    _viewForTag = [NSMapTable strongToWeakObjectsMapTable];
     _toRemove = [NSMutableSet new];
     _cleaningScheduled = false;
 
@@ -150,15 +150,15 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 {
   NSMutableSet<NSNumber *> *roots = [NSMutableSet new];
   for (NSNumber *viewTag in _toRemove) {
-    UIView *view = _viewForTag[viewTag];
+    UIView *view = [_viewForTag objectForKey:viewTag];
     if (view == nil) {
       view = [_reaUiManager viewForReactTag:viewTag];
-      _viewForTag[viewTag] = view;
+      [_viewForTag setObject:view forKey:viewTag];
     }
     [self findRoot:view roots:roots];
   }
   for (NSNumber *viewTag in roots) {
-    UIView *view = _viewForTag[viewTag];
+    UIView *view = [_viewForTag objectForKey:viewTag];
     [self dfs:view view:view cands:_toRemove];
   }
 }
@@ -192,7 +192,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  [self setNewProps:[newStyle mutableCopy] forView:_viewForTag[tag] withComponentData:componentData];
+  [self setNewProps:[newStyle mutableCopy] forView:[_viewForTag objectForKey:tag] withComponentData:componentData];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -315,7 +315,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSNumber *tag = view.reactTag;
   if (_states[tag] == nil) {
     _states[tag] = [NSNumber numberWithInt:Inactive];
-    _viewForTag[tag] = view;
+    [_viewForTag setObject:view forKey:tag];
   }
   NSMutableDictionary *targetValues = after.values;
   ViewState state = [_states[tag] intValue];
