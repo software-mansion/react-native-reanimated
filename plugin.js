@@ -511,20 +511,6 @@ function makeWorklet(t, fun, fileName) {
     );
   }
 
-  statements.push(
-    t.expressionStatement(
-      t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          t.identifier('_f'),
-          t.identifier('__worklet'),
-          false
-        ),
-        t.booleanLiteral(true)
-      )
-    )
-  );
-
   statements.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
