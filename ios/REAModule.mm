@@ -11,6 +11,7 @@
 
 @interface RCTBridge (RCTTurboModule)
 - (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
+- (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
 
 @interface RCTSurfacePresenter
@@ -46,29 +47,40 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (NSDictionary *)constantsToExport
 {
-  [self installReanimatedModuleHostObject];
   return nil;
+}
+
+- (void)ensureOnJavaScriptThread:(dispatch_block_t)block
+{
+  NSThread *jsThread = [self.bridge valueForKey:@"_jsThread"];
+  if ([NSThread currentThread] == jsThread) {
+    [self.bridge _tryAndHandleError:block];
+  } else {
+    [self.bridge performSelector:@selector(_tryAndHandleError:) onThread:jsThread withObject:block waitUntilDone:YES];
+  }
 }
 
 - (void)installReanimatedModuleHostObject
 {
-  facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
-      ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
-      : nullptr;
+  [self ensureOnJavaScriptThread:^{
+    facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
+        ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
+        : nullptr;
 
-  if (jsiRuntime) {
-    // Reanimated
-    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
-    jsiRuntime->global().setProperty(
-        *jsiRuntime,
-        "_WORKLET_RUNTIME",
-        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+    if (jsiRuntime) {
+      // Reanimated
+      auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+      jsiRuntime->global().setProperty(
+          *jsiRuntime,
+          "_WORKLET_RUNTIME",
+          static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
 
-    jsiRuntime->global().setProperty(
-        *jsiRuntime,
-        jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
-  }
+      jsiRuntime->global().setProperty(
+          *jsiRuntime,
+          jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
+          jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
+    }
+  }];
 }
 
 #pragma mark-- Initialize
@@ -101,9 +113,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [bridge.uiManager.observerCoordinator addObserver:self];
 }
 
-RCT_EXPORT_METHOD(installTurboModule)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   // TODO: Move initialization from UIResponder+Reanimated to here
+  [self installReanimatedModuleHostObject];
+  return nil;
 }
 
 #pragma mark-- Transitioning API
