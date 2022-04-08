@@ -147,7 +147,7 @@ public class NativeProxy {
   }
 
   private void addDevMenuOption() {
-    // in Expo, ApplicationContext is not instance of ReactApplication
+    // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
     if (mContext.get().getApplicationContext() instanceof ReactApplication) {
       final DevSupportManager devSupportManager =
               ((ReactApplication) mContext.get().getApplicationContext())
