@@ -150,13 +150,13 @@ public class NativeProxy {
     // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
     if (mContext.get().getApplicationContext() instanceof ReactApplication) {
       final DevSupportManager devSupportManager =
-              ((ReactApplication) mContext.get().getApplicationContext())
-                      .getReactNativeHost()
-                      .getReactInstanceManager()
-                      .getDevSupportManager();
+          ((ReactApplication) mContext.get().getApplicationContext())
+              .getReactNativeHost()
+              .getReactInstanceManager()
+              .getDevSupportManager();
 
       devSupportManager.addCustomDevOption(
-              "Toggle slow animations (Reanimated)", this::toggleSlowAnimations);
+          "Toggle slow animations (Reanimated)", this::toggleSlowAnimations);
     }
   }
 
