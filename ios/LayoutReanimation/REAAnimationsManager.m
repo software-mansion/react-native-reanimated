@@ -22,8 +22,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, NSNumber *> *_states;
-  NSMapTable<NSNumber *, UIView *> *_viewForTag;
-  NSMutableSet<NSNumber *> *_toRemove;
+  NSMutableDictionary<NSNumber *, UIView *> *_viewToRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
@@ -45,8 +44,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _uiManager = uiManager;
     _reaUiManager = (REAUIManager *)uiManager;
     _states = [NSMutableDictionary new];
-    _viewForTag = [NSMapTable strongToWeakObjectsMapTable];
-    _toRemove = [NSMutableSet new];
+    _viewToRemove = [NSMutableDictionary new];
     _cleaningScheduled = false;
 
     _targetKeys = [NSMutableArray new];
@@ -65,8 +63,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _removeConfigForTag = nil;
   _uiManager = nil;
   _states = nil;
-  _viewForTag = nil;
-  _toRemove = nil;
+  _viewToRemove = nil;
   _cleaningScheduled = false;
   _targetKeys = nil;
   _currentKeys = nil;
@@ -119,20 +116,20 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   }
 }
 
-- (BOOL)dfs:(UIView *)root view:(UIView *)view cands:(NSMutableSet<NSNumber *> *)cands
+- (BOOL)dfs:(UIView *)root view:(UIView *)view
 {
   NSNumber *tag = view.reactTag;
   if (tag == nil) {
     return true;
   }
-  if (![cands containsObject:tag] && _states[tag] != nil) {
+  if (_viewToRemove[tag] == nil && _states[tag] != nil) {
     return true;
   }
   BOOL cannotStripe = false;
   NSArray<UIView *> *toRemoveCopy = [view.reactSubviews copy];
   for (UIView *child in toRemoveCopy) {
     if (![view isKindOfClass:[RCTTextView class]]) {
-      cannotStripe |= [self dfs:root view:child cands:cands];
+      cannotStripe |= [self dfs:root view:child];
     }
   }
   if (!cannotStripe) {
@@ -140,26 +137,30 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
       [_reaUiManager unregisterView:view];
     }
     [_states removeObjectForKey:tag];
-    [_viewForTag removeObjectForKey:tag];
-    [_toRemove removeObject:tag];
+    [_viewToRemove removeObjectForKey:tag];
   }
   return cannotStripe;
+}
+
+- (UIView *)findView:(NSNumber *)tag
+{
+  UIView *view = _viewToRemove[tag];
+  if (view != nil) {
+    return view;
+  }
+  return [_reaUiManager viewForReactTag:tag];
 }
 
 - (void)removeLeftovers
 {
   NSMutableSet<NSNumber *> *roots = [NSMutableSet new];
-  for (NSNumber *viewTag in _toRemove) {
-    UIView *view = [_viewForTag objectForKey:viewTag];
-    if (view == nil) {
-      view = [_reaUiManager viewForReactTag:viewTag];
-      [_viewForTag setObject:view forKey:viewTag];
-    }
+  for (id key in _viewToRemove) {
+    UIView *view = _viewToRemove[key];
     [self findRoot:view roots:roots];
   }
   for (NSNumber *viewTag in roots) {
-    UIView *view = [_viewForTag objectForKey:viewTag];
-    [self dfs:view view:view cands:_toRemove];
+    UIView *view = [self findView:viewTag];
+    [self dfs:view view:view];
   }
 }
 
@@ -173,7 +174,10 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     if (state == Disappearing) {
       _states[tag] = [NSNumber numberWithInt:ToRemove];
       if (tag != nil) {
-        [_toRemove addObject:tag];
+        UIView *view = [self findView:tag];
+        if (view != nil) {
+          [_viewToRemove setObject:view forKey:tag];
+        }
       }
       [self scheduleCleaning];
     }
@@ -192,7 +196,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  [self setNewProps:[newStyle mutableCopy] forView:[_viewForTag objectForKey:tag] withComponentData:componentData];
+  UIView *view = [self findView:tag];
+  [self setNewProps:[newStyle mutableCopy] forView:view withComponentData:componentData];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -299,7 +304,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (state == Inactive) {
     if (startValues != nil) {
       _states[tag] = [NSNumber numberWithInt:ToRemove];
-      [_toRemove addObject:tag];
+      [_viewToRemove setObject:view forKey:tag];
       [self scheduleCleaning];
     }
     return;
@@ -315,7 +320,6 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSNumber *tag = view.reactTag;
   if (_states[tag] == nil) {
     _states[tag] = [NSNumber numberWithInt:Inactive];
-    [_viewForTag setObject:view forKey:tag];
   }
   NSMutableDictionary *targetValues = after.values;
   ViewState state = [_states[tag] intValue];
