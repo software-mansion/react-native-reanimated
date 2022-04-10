@@ -75,6 +75,7 @@
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
+    "@babel/preset-typescript": "^7.16.7",
     "@types/invariant": "^2.2.35",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
@@ -83,14 +84,12 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*",
-    "@babel/preset-typescript": "*"
+    "react-native": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.17.2",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
     "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
     "@react-native-community/bob": "^0.17.1",
     "@react-native-community/eslint-config": "^0.0.5",
     "@testing-library/jest-native": "^4.0.4",
