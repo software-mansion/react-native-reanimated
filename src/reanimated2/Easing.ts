@@ -109,7 +109,10 @@ function cubic(t: number): number {
  */
 function poly(n: number): EasingFn {
   'worklet';
-  return (t) => Math.pow(t, n);
+  return (t) => {
+    'worklet';
+    return Math.pow(t, n);
+  };
 }
 
 /**
