@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.h b/node_modules/react-native/React/Fabric/RCTScheduler.h
-index b201c0a..29d0f70 100644
+index b201c0a..ae10c0e 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.h
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.h
 @@ -10,11 +10,13 @@
@@ -20,7 +20,7 @@ index b201c0a..29d0f70 100644
  @interface RCTScheduler : NSObject
  
  @property (atomic, weak, nullable) id<RCTSchedulerDelegate> delegate;
-+@property (readonly, nullable) facebook::react::UIManager const *uiManager;
++@property (readonly) std::shared_ptr<facebook::react::UIManager> uiManager;
  
  - (instancetype)initWithToolbox:(facebook::react::SchedulerToolbox)toolbox;
  
@@ -36,7 +36,7 @@ index b201c0a..29d0f70 100644
  
  NS_ASSUME_NONNULL_END
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.mm b/node_modules/react-native/React/Fabric/RCTScheduler.mm
-index 4bc19fd..0c42e21 100644
+index 4bc19fd..650f1a8 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.mm
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.mm
 @@ -193,4 +193,19 @@ - (void)onAllAnimationsComplete
@@ -53,9 +53,9 @@ index 4bc19fd..0c42e21 100644
 +  return _scheduler->removeEventListener(listener);
 +}
 +
-+- (facebook::react::UIManager const *)uiManager
++- (std::shared_ptr<facebook::react::UIManager>)uiManager
 +{
-+  return _scheduler->getUIManager().get();
++  return _scheduler->getUIManager();
 +}
 +
  @end
@@ -444,91 +444,6 @@ index 8455efb..fb955bc 100644
  static std::unique_ptr<LeakChecker> constructLeakCheckerIfNeeded(
      RuntimeExecutor const &runtimeExecutor) {
  #ifdef REACT_NATIVE_DEBUG
-diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
-index da6eeb6..14bd6f9 100644
---- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
-+++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
-@@ -144,6 +144,24 @@ void UIManagerBinding::invalidate() const {
-   uiManager_->setDelegate(nullptr);
- }
- 
-+std::map<Tag, ShadowNode::Shared>
-+    newestClonesFromReanimated; // TODO: synchronize std::map
-+
-+void setNewestCloneOfShadowNodeFromReanimated(ShadowNode::Shared shadowNode) {
-+  newestClonesFromReanimated[shadowNode->getTag()] = shadowNode;
-+}
-+
-+void deleteNewestCloneOfShadowNodeFromReanimated(
-+    ShadowNode::Shared shadowNode) {
-+  newestClonesFromReanimated.erase(shadowNode->getTag());
-+}
-+
-+ShadowNode::Shared getNewestCloneOfShadowNodeFromReanimated(
-+    ShadowNode::Shared shadowNode) {
-+  const auto it = newestClonesFromReanimated.find(shadowNode->getTag());
-+  return it == newestClonesFromReanimated.cend() ? shadowNode : it->second;
-+}
-+
- jsi::Value UIManagerBinding::get(
-     jsi::Runtime &runtime,
-     jsi::PropNameID const &name) {
-@@ -220,7 +238,8 @@ jsi::Value UIManagerBinding::get(
-             size_t count) noexcept -> jsi::Value {
-           return valueFromShadowNode(
-               runtime,
--              uiManager->cloneNode(shadowNodeFromValue(runtime, arguments[0])));
-+              uiManager->cloneNode(getNewestCloneOfShadowNodeFromReanimated(
-+                  shadowNodeFromValue(runtime, arguments[0]))));
-         });
-   }
- 
-@@ -287,7 +306,8 @@ jsi::Value UIManagerBinding::get(
-           return valueFromShadowNode(
-               runtime,
-               uiManager->cloneNode(
--                  shadowNodeFromValue(runtime, arguments[0]),
-+                  getNewestCloneOfShadowNodeFromReanimated(
-+                      shadowNodeFromValue(runtime, arguments[0])),
-                   ShadowNode::emptySharedShadowNodeSharedList()));
-         });
-   }
-@@ -307,7 +327,8 @@ jsi::Value UIManagerBinding::get(
-           return valueFromShadowNode(
-               runtime,
-               uiManager->cloneNode(
--                  shadowNodeFromValue(runtime, arguments[0]),
-+                  getNewestCloneOfShadowNodeFromReanimated(
-+                      shadowNodeFromValue(runtime, arguments[0])),
-                   nullptr,
-                   &rawProps));
-         });
-@@ -328,7 +349,8 @@ jsi::Value UIManagerBinding::get(
-           return valueFromShadowNode(
-               runtime,
-               uiManager->cloneNode(
--                  shadowNodeFromValue(runtime, arguments[0]),
-+                  getNewestCloneOfShadowNodeFromReanimated(
-+                      shadowNodeFromValue(runtime, arguments[0])),
-                   ShadowNode::emptySharedShadowNodeSharedList(),
-                   &rawProps));
-         });
-diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h
-index 9ddd53d..24dc054 100644
---- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h
-+++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.h
-@@ -80,4 +80,11 @@ class UIManagerBinding : public jsi::HostObject {
-   RuntimeExecutor runtimeExecutor_;
- };
- 
-+void setNewestCloneOfShadowNodeFromReanimated(ShadowNode::Shared shadowNode);
-+
-+void deleteNewestCloneOfShadowNodeFromReanimated(ShadowNode::Shared shadowNode);
-+
-+ShadowNode::Shared getNewestCloneOfShadowNodeFromReanimated(
-+    ShadowNode::Shared shadowNode);
-+
- } // namespace facebook::react
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
 index 101155f..4212893 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h

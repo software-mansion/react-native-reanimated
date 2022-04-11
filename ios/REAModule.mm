@@ -1,12 +1,20 @@
+#import <React/RCTBridge+Private.h>
+#import <React/RCTScheduler.h>
+#import <React/RCTSurfacePresenter.h>
+
 #import "REAModule.h"
 #import "REANodesManager.h"
+#import "ReanimatedUIManagerBinding.h"
 #import "native/NativeProxy.h"
+
+using namespace facebook::react;
+using namespace reanimated;
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
-  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
+  __weak RCTSurfacePresenter *_surfacePresenter;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -24,6 +32,27 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return RCTGetUIManagerQueue();
 }
 
++ (BOOL)requiresMainQueueSetup
+{
+  return true;
+}
+
+- (void)installReanimatedModuleHostObject
+{
+  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+  if (!cxxBridge.runtime) {
+    return;
+  }
+  jsi::Runtime &runtime = *(jsi::Runtime *)cxxBridge.runtime;
+
+  RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  std::shared_ptr<UIManager> uiManager = scheduler.uiManager;
+  RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
+    callback(runtime);
+  };
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(runtime, syncRuntimeExecutor, uiManager);
+}
+
 #pragma mark-- Initialize
 
 - (void)setBridge:(RCTBridge *)bridge
@@ -31,11 +60,13 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [super setBridge:bridge];
   if (self.bridge) {
     _surfacePresenter = self.bridge.surfacePresenter;
-    _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
   } else {
     // _surfacePresenter set in setSurfacePresenter:
-    _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:nil surfacePresenter:_surfacePresenter];
   }
+
+  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
+
+  [self installReanimatedModuleHostObject];
 
   [_surfacePresenter addObserver:self];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];

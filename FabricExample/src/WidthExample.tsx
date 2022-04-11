@@ -39,8 +39,10 @@ export default function WidthExample() {
         <Button onPress={handleIncreaseHeight} title="Increase height" />
       </View>
       <View style={[styles.parent, { padding }]}>
-        <Animated.View style={[styles.left, { height }, childStyle]} />
-        <View style={styles.right} />
+        <View collapsable={false} style={styles.middle}>
+          <Animated.View style={[styles.left, { height }, childStyle]} />
+          <View style={styles.right} />
+        </View>
       </View>
     </>
   );
@@ -54,6 +56,10 @@ const styles = StyleSheet.create({
   parent: {
     flexDirection: 'row',
     backgroundColor: 'red',
+  },
+  middle: {
+    flexDirection: 'row',
+    flex: 1,
   },
   left: {
     backgroundColor: 'blue',

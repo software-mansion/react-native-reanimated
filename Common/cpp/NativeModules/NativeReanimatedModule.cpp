@@ -13,6 +13,7 @@
 #include "MapperRegistry.h"
 #include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
+#include "ReanimatedUIManagerBinding.h"
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
 #include "WorkletEventHandler.h"
@@ -409,10 +410,8 @@ void NativeReanimatedModule::performOperations() {
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>();
 
   // TODO: store ShadowTreeRegistry and ContextContainer as private fields
-  ShadowTreeRegistry *shadowTreeRegistry =
-      getShadowTreeRegistryFromUIManager(uiManager_);
-  std::shared_ptr<const ContextContainer> contextContainer =
-      getContextContainerFromUIManager(uiManager_);
+  auto shadowTreeRegistry = getShadowTreeRegistryFromUIManager(uiManager_);
+  auto contextContainer = getContextContainerFromUIManager(&*uiManager_);
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
 
   shadowTreeRegistry->visit(surfaceId_, [&](ShadowTree const &shadowTree) {
@@ -434,13 +433,20 @@ void NativeReanimatedModule::performOperations() {
                           *pair.second);
 
                   ShadowNodeFragment fragment{/* .props = */ newProps};
-                  auto clone = oldShadowNode.clone(fragment);
-                  setNewestCloneOfShadowNodeFromReanimated(clone);
-                  // TODO: what if transaction fails?
-                  return clone;
+                  return oldShadowNode.clone(fragment);
                 };
 
             newRoot = newRoot->cloneTree(family, callback);
+
+            setNewestCloneOfShadowNodeFromReanimated(newRoot);
+            auto ancestors = family.getAncestors(*newRoot);
+            for (const auto &pair : ancestors) {
+              ShadowNode::Shared ancestor =
+                  pair.first.get().getChildren().at(pair.second);
+              setNewestCloneOfShadowNodeFromReanimated(ancestor);
+            }
+            // TODO: what if transaction fails?
+
             if (!newRoot) { // cloneTree returned ShadowNode::Unshared{nullptr}
               break; // cancel transaction by returning null RootShadowNode
             }

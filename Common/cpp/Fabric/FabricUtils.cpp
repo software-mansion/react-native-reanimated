@@ -1,6 +1,6 @@
-#include <react/renderer/uimanager/UIManagerBinding.h>
-
 #include "FabricUtils.h"
+
+#include <react/renderer/uimanager/UIManagerBinding.h>
 
 using namespace facebook::react;
 
@@ -10,23 +10,28 @@ std::shared_ptr<UIManager> getUIManagerFromBinding(jsi::Runtime &rt) {
   auto binding = UIManagerBinding::getBinding(rt);
   react_native_assert(
       binding != nullptr); // too early, UIManagerBinding is not registered yet
-  return reinterpret_cast<UIManagerBindingPublic *>(&*binding)->uiManager_;
+  return reinterpret_cast<const UIManagerBindingPublic *>(&*binding)
+      ->uiManager_;
 }
 
-ShadowTreeRegistry *getShadowTreeRegistryFromUIManager(
+inline static const UIManagerPublic *getUIManagerPublic(
+    const UIManager *uiManager) {
+  return reinterpret_cast<const UIManagerPublic *>(uiManager);
+}
+
+const ShadowTreeRegistry *getShadowTreeRegistryFromUIManager(
     const std::shared_ptr<UIManager> &uiManager) {
-  return &(
-      reinterpret_cast<UIManagerPublic *>(&*uiManager)->shadowTreeRegistry_);
+  return &(getUIManagerPublic(&*uiManager)->shadowTreeRegistry_);
 }
 
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
-    const std::shared_ptr<UIManager> &uiManager) {
-  return reinterpret_cast<UIManagerPublic *>(&*uiManager)->contextContainer_;
+    const UIManager *uiManager) {
+  return getUIManagerPublic(uiManager)->contextContainer_;
 }
 
 inline static UIManagerDelegate *getDelegateFromUIManager(
-    const std::shared_ptr<UIManager> &uiManager) {
-  return reinterpret_cast<UIManagerPublic *>(&*uiManager)->delegate_;
+    const UIManager *uiManager) {
+  return getUIManagerPublic(uiManager)->delegate_;
 }
 
 void UIManager_dispatchCommand(
@@ -34,7 +39,7 @@ void UIManager_dispatchCommand(
     const ShadowNode::Shared &shadowNode,
     std::string const &commandName,
     folly::dynamic const &args) {
-  UIManagerDelegate *delegate_ = getDelegateFromUIManager(uiManager);
+  auto delegate_ = getDelegateFromUIManager(&*uiManager);
 
   // copied from UIManager.cpp
   if (delegate_) {
@@ -48,9 +53,7 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
     ShadowNode const *ancestorShadowNode,
     LayoutableShadowNode::LayoutInspectingPolicy policy) {
   // based on implementation from UIManager.cpp
-
-  ShadowTreeRegistry *shadowTreeRegistry =
-      getShadowTreeRegistryFromUIManager(uiManager);
+  auto shadowTreeRegistry = getShadowTreeRegistryFromUIManager(uiManager);
 
   // We might store here an owning pointer to `ancestorShadowNode` to ensure
   // that the node is not deallocated during method execution lifetime.
@@ -81,6 +84,45 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
 
   return LayoutableShadowNode::computeRelativeLayoutMetrics(
       shadowNode.getFamily(), *layoutableAncestorShadowNode, policy);
+}
+
+SharedShadowNode UIManager_cloneNode(
+    const UIManager *uiManager,
+    const ShadowNode::Shared &shadowNode,
+    const SharedShadowNodeSharedList &children,
+    const RawProps *rawProps) {
+  auto delegate_ = getDelegateFromUIManager(uiManager);
+  auto contextContainer_ = getContextContainerFromUIManager(uiManager);
+
+  // copied from UIManager.cpp
+  PropsParserContext propsParserContext{
+      shadowNode->getFamily().getSurfaceId(), *contextContainer_.get()};
+
+  auto &componentDescriptor = shadowNode->getComponentDescriptor();
+  auto clonedShadowNode = componentDescriptor.cloneShadowNode(
+      *shadowNode,
+      {
+          /* .props = */
+          rawProps ? componentDescriptor.cloneProps(
+                         propsParserContext, shadowNode->getProps(), *rawProps)
+                   : ShadowNodeFragment::propsPlaceholder(),
+          /* .children = */ children,
+      });
+
+  if (delegate_) {
+    delegate_->uiManagerDidCloneShadowNode(
+        *shadowNode.get(), *clonedShadowNode);
+  }
+
+  return clonedShadowNode;
+}
+
+void UIManager_appendChild(
+    const ShadowNode::Shared &parentShadowNode,
+    const ShadowNode::Shared &childShadowNode) {
+  // copied from UIManager.cpp
+  auto &componentDescriptor = parentShadowNode->getComponentDescriptor();
+  componentDescriptor.appendChild(parentShadowNode, childShadowNode);
 }
 
 } // namespace reanimated

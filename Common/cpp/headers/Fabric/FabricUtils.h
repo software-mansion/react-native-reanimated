@@ -27,11 +27,11 @@ struct UIManagerPublic {
 
 std::shared_ptr<UIManager> getUIManagerFromBinding(jsi::Runtime &rt);
 
-ShadowTreeRegistry *getShadowTreeRegistryFromUIManager(
+const ShadowTreeRegistry *getShadowTreeRegistryFromUIManager(
     const std::shared_ptr<UIManager> &uiManager);
 
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
-    const std::shared_ptr<UIManager> &uiManager);
+    const UIManager *uiManager);
 
 void UIManager_dispatchCommand(
     const std::shared_ptr<UIManager> &uiManager,
@@ -44,5 +44,15 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
     ShadowNode const &shadowNode,
     ShadowNode const *ancestorShadowNode,
     LayoutableShadowNode::LayoutInspectingPolicy policy);
+
+SharedShadowNode UIManager_cloneNode(
+    const UIManager *uiManager,
+    const ShadowNode::Shared &shadowNode,
+    const SharedShadowNodeSharedList &children = nullptr,
+    const RawProps *rawProps = nullptr);
+
+void UIManager_appendChild(
+    const ShadowNode::Shared &parentShadowNode,
+    const ShadowNode::Shared &childShadowNode);
 
 } // namespace reanimated
