@@ -11,6 +11,7 @@ import WidthExample from './src/WidthExample';
 // import MeasureExample from './src/MeasureExample';
 // import AnimatedSensorExample from './src/AnimatedSensorExample';
 // import AnimatedTextExample from './src/AnimatedTextExample';
+// import GestureHandlerExample from './src/GestureHandlerExample';
 import { initializeForFabric } from '../src/reanimated2/core';
 
 export default function App() {
@@ -30,4 +31,5 @@ export default function App() {
   // return <MeasureExample />;
   // return <AnimatedSensorExample />;
   // return <AnimatedTextExample />;
+  // return <GestureHandlerExample />;
 }
