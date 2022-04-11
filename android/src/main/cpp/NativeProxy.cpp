@@ -18,6 +18,7 @@
 #include "AndroidScheduler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
+#include "NewestShadowNodesRegistry.h"
 #include "PlatformDepMethodsHolder.h"
 
 namespace reanimated {
@@ -166,6 +167,10 @@ void NativeProxy::installJSIBindings() {
       setGestureStateFunction,
       configurePropsFunction};
 
+  // TODO: use the same instance in ReanimatedUIManagerBinding
+  auto newestShadowNodesRegistry =
+      std::make_shared<NewestShadowNodesRegistry>();
+
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
@@ -173,6 +178,7 @@ void NativeProxy::installJSIBindings() {
       errorHandler,
       propObtainer,
       layoutAnimationsProxy,
+      newestShadowNodesRegistry,
       platformDepMethodsHolder);
 
   _nativeReanimatedModule = module;
