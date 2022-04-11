@@ -52,37 +52,25 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return nil;
 }
 
-- (void)ensureOnJavaScriptThread:(dispatch_block_t)block
-{
-  NSThread *jsThread = [self.bridge valueForKey:@"_jsThread"];
-  if ([NSThread currentThread] == jsThread) {
-    [self.bridge _tryAndHandleError:block];
-  } else {
-    [self.bridge performSelector:@selector(_tryAndHandleError:) onThread:jsThread withObject:block waitUntilDone:YES];
-  }
-}
-
 - (void)installReanimatedModuleHostObject
 {
-  [self ensureOnJavaScriptThread:^{
-    facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
-        ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
-        : nullptr;
+  facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
+      ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
+      : nullptr;
 
-    if (jsiRuntime) {
-      // Reanimated
-      auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
-      jsiRuntime->global().setProperty(
-          *jsiRuntime,
-          "_WORKLET_RUNTIME",
-          static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+  if (jsiRuntime) {
+    // Reanimated
+    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+    jsiRuntime->global().setProperty(
+        *jsiRuntime,
+        "_WORKLET_RUNTIME",
+        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
 
-      jsiRuntime->global().setProperty(
-          *jsiRuntime,
-          jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
-          jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
-    }
-  }];
+    jsiRuntime->global().setProperty(
+        *jsiRuntime,
+        jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
+  }
 }
 
 #pragma mark-- Initialize
