@@ -30,6 +30,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)invalidate
 {
   [_nodesManager invalidate];
+  [_surfacePresenter removeObserver:self];
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:RCTJavaScriptDidLoadNotification object:nil];
 }
 
 - (dispatch_queue_t)methodQueue
@@ -85,9 +87,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 #pragma mark-- Initialize
 
-- (void)setBridge:(RCTBridge *)bridge
+- (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
 {
-  [super setBridge:bridge];
   if (self.bridge) {
     _surfacePresenter = self.bridge.surfacePresenter;
     __weak RCTSurfacePresenter *sp = reinterpret_cast<RCTSurfacePresenter *>(self.bridge.surfacePresenter);
@@ -107,6 +108,18 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 
   [_surfacePresenter addObserver:self];
+}
+
+- (void)setBridge:(RCTBridge *)bridge
+{
+  [super setBridge:bridge];
+
+  // the surfacePresenter and scheduler is set up only after JS loads
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(handleJavaScriptDidLoadNotification:)
+                                               name:RCTJavaScriptDidLoadNotification
+                                             object:nil];
+
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 
   _operations = [NSMutableArray new];
