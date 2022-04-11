@@ -84,7 +84,8 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "@babel/core": "^7.0.0-0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.2",
