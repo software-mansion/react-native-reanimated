@@ -109,7 +109,10 @@ function cubic(t: number): number {
  */
 function poly(n: number): EasingFn {
   'worklet';
-  return (t) => Math.pow(t, n);
+  return (t) => {
+    'worklet';
+    return Math.pow(t, n);
+  };
 }
 
 /**
@@ -171,7 +174,10 @@ function elastic(bounciness = 1): EasingFn {
  */
 function back(s = 1.70158): (t: number) => number {
   'worklet';
-  return (t) => t * t * ((s + 1) * t - s);
+  return (t) => {
+    'worklet';
+    return t * t * ((s + 1) * t - s);
+  };
 }
 
 /**
@@ -312,7 +318,7 @@ function createChecker(
     }
     // @ts-ignore this is implicitly any - TODO
     const res = worklet.apply(this, arguments);
-    if (!_WORKLET && res && typeof res === 'function' && res.__worklet) {
+    if (!_WORKLET && res && typeof res === 'function' && res.__workletHash) {
       return createChecker(res, workletName, arguments);
     }
     return res;
