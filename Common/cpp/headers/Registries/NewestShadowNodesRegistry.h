@@ -14,6 +14,11 @@ class NewestShadowNodesRegistry {
 
   ShadowNode::Shared get(ShadowNode::Shared shadowNode);
 
+  ShadowNode::Shared update(
+      ShadowNode::Shared shadowNode,
+      const std::function<ShadowNode::Shared(ShadowNode::Shared)>
+          &&callback); // same behaviour as get+set but using only one lock
+
   void remove(ShadowNode::Shared shadowNode);
 
  private:

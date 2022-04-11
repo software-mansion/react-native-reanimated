@@ -22,6 +22,16 @@ ShadowNode::Shared NewestShadowNodesRegistry::get(
   return it == map_.cend() ? shadowNode : it->second;
 }
 
+ShadowNode::Shared NewestShadowNodesRegistry::update(
+    ShadowNode::Shared shadowNode,
+    const std::function<ShadowNode::Shared(ShadowNode::Shared)> &&callback) {
+  const auto key = getKey(shadowNode);
+  std::lock_guard<std::mutex> lock(mutex_);
+  const auto it = map_.find(key);
+  ShadowNode::Shared newest = it == map_.cend() ? shadowNode : it->second;
+  return map_[key] = callback(newest);
+}
+
 void NewestShadowNodesRegistry::remove(ShadowNode::Shared shadowNode) {
   std::lock_guard<std::mutex> lock(mutex_);
   map_.erase(getKey(shadowNode));
