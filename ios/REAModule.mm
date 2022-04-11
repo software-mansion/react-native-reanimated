@@ -3,6 +3,7 @@
 #import <React/RCTSurfacePresenter.h>
 
 #import <RNReanimated/NativeProxy.h>
+#import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
@@ -15,6 +16,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
   __weak RCTSurfacePresenter *_surfacePresenter;
+  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -50,7 +52,14 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
     callback(runtime);
   };
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(runtime, syncRuntimeExecutor, uiManager);
+  newestShadowNodesRegistry_ = std::make_shared<NewestShadowNodesRegistry>();
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
+}
+
+- (std::shared_ptr<NewestShadowNodesRegistry>)getNewestShadowNodesRegistry
+{
+  return newestShadowNodesRegistry_;
 }
 
 #pragma mark-- Initialize

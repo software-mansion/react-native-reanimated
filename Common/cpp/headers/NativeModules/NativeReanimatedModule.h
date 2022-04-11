@@ -12,6 +12,7 @@
 #include "ErrorHandler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
+#include "NewestShadowNodesRegistry.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
@@ -40,6 +41,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
           propObtainer,
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
+      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
@@ -135,6 +137,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
+
+  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
 };
 
 } // namespace reanimated

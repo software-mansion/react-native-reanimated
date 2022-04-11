@@ -209,6 +209,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 {
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
+  // TODO: create NewestShadowNodesRegistry somewhere else
+  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry =
+      [reanimatedModule getNewestShadowNodesRegistry];
+
   // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
 
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
@@ -361,6 +365,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       errorHandler,
       propObtainer,
       layoutAnimationsProxy,
+      newestShadowNodesRegistry,
       platformDepMethodsHolder);
 
   scheduler->setRuntimeManager(module);

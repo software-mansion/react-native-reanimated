@@ -12,6 +12,7 @@
 #include "Mapper.h"
 #include "MapperRegistry.h"
 #include "MutableValue.h"
+#include "NewestShadowNodesRegistry.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "ReanimatedUIManagerBinding.h"
 #include "RuntimeDecorator.h"
@@ -69,6 +70,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
         propObtainer,
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
+    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
@@ -80,7 +82,8 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
       animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction) {
+          platformDepMethodsHolder.configurePropsFunction),
+      newestShadowNodesRegistry_(newestShadowNodesRegistry) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -438,12 +441,14 @@ void NativeReanimatedModule::performOperations() {
 
             newRoot = newRoot->cloneTree(family, callback);
 
-            setNewestCloneOfShadowNodeFromReanimated(newRoot);
+            // TODO: is this necessary?
+            newestShadowNodesRegistry_->set(newRoot);
+
             auto ancestors = family.getAncestors(*newRoot);
             for (const auto &pair : ancestors) {
               ShadowNode::Shared ancestor =
                   pair.first.get().getChildren().at(pair.second);
-              setNewestCloneOfShadowNodeFromReanimated(ancestor);
+              newestShadowNodesRegistry_->set(ancestor);
             }
             // TODO: what if transaction fails?
 
