@@ -78,7 +78,6 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   borderTopLeftRadius: true,
   borderTopRightRadius: true,
   borderTopStartRadius: true,
-  opacity: true,
   elevation: true,
   fontSize: true,
   lineHeight: true,

@@ -2,10 +2,10 @@
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
 
-#import "REAModule.h"
-#import "REANodesManager.h"
-#import "ReanimatedUIManagerBinding.h"
-#import "native/NativeProxy.h"
+#import <RNReanimated/NativeProxy.h>
+#import <RNReanimated/REAModule.h>
+#import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/ReanimatedUIManagerBinding.h>
 
 using namespace facebook::react;
 using namespace reanimated;

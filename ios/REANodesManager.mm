@@ -1,17 +1,14 @@
-#import "REANodesManager.h"
-
+#import <RNReanimated/REAModule.h>
+#import <RNReanimated/REANodesManager.h>
+#import <React/RCTComponentViewRegistry.h>
 #import <React/RCTConvert.h>
 #import <React/RCTFollyConvert.h>
-#import <React/RCTShadowView.h>
-//#import <stdatomic.h>
-#import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
+#import <React/RCTShadowView.h>
 #import <React/RCTSurfacePresenter.h>
-
-#import <react/renderer/core/ShadowNode.h> // ShadowNode, ShadowTreeCommitTransaction
-#import <react/renderer/uimanager/UIManager.h> // UIManager
-
-#import "REAModule.h"
+#import <react/renderer/core/ShadowNode.h>
+#import <react/renderer/uimanager/UIManager.h>
+// #import <stdatomic.h>
 
 using namespace facebook::react;
 

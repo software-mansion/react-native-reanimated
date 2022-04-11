@@ -1,5 +1,6 @@
-#import "REAInitializer.h"
-
+#import <RNReanimated/NativeProxy.h>
+#import <RNReanimated/REAInitializer.h>
+#import <RNReanimated/REAUIManager.h>
 #import <React/CoreModulesPlugins.h>
 #import <React/RCTDataRequestHandler.h>
 #import <React/RCTFabricSurfaceHostingProxyRootView.h>
@@ -10,8 +11,6 @@
 #import <React/RCTJSIExecutorRuntimeInstaller.h>
 #import <React/RCTLocalAssetImageLoader.h>
 #import <React/RCTNetworking.h>
-
-#import "NativeProxy.h"
 
 std::unique_ptr<facebook::react::JSExecutorFactory> REAAppSetupDefaultJsExecutorFactory(
     RCTBridge *bridge,

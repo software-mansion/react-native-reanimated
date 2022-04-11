@@ -75,7 +75,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).not.toContain('__reanimatedWorkletInit');
+    expect(code).not.toContain('_f.__workletHash');
   });
 
   it('removes comments from worklets', () => {
@@ -183,7 +183,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -197,7 +197,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -211,7 +211,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -225,7 +225,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -243,7 +243,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -259,7 +259,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -275,7 +275,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -290,7 +290,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).toMatchSnapshot();
   });
 
@@ -304,7 +304,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).toMatchSnapshot();
   });
 
@@ -318,7 +318,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).toMatchSnapshot();
   });
 
@@ -334,7 +334,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).toMatchSnapshot();
   });
 
@@ -348,7 +348,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).toMatchSnapshot();
   });
 
@@ -362,7 +362,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).toMatchSnapshot();
   });
 
@@ -376,7 +376,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__reanimatedWorkletInit');
+    expect(code).toContain('_f.__workletHash');
     expect(code).toMatchSnapshot();
   });
 
@@ -398,7 +398,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/^(.*)(__reanimatedWorkletInit(.*)){3}$/s);
+    expect(code).toMatch(/^(.*)(_f\.__workletHash(.*)){3}$/s);
   });
 
   // React Native Gesture Handler
@@ -429,6 +429,56 @@ describe('babel plugin', () => {
       const foo = Something.Tap().onEnd((_event, _success) => {
         console.log('onEnd');
       });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('transforms spread operator in worklets for arrays', () => {
+    const input = `
+      function foo() {
+        'worklet';
+        const bar = [4, 5];
+        const baz = [1, ...[2, 3], ...bar];
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('transforms spread operator in worklets for objects', () => {
+    const input = `
+      function foo() {
+        'worklet';
+        const bar = {d: 4, e: 5};
+        const baz = { a: 1, ...{ b: 2, c: 3 }, ...bar };
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('transforms spread operator in worklets for function arguments', () => {
+    const input = `
+      function foo(...args) {
+        'worklet';
+        console.log(args);
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('transforms spread operator in worklets for function calls', () => {
+    const input = `
+      function foo(arg) {
+        'worklet';
+        console.log(...arg);
+      }
     `;
 
     const { code } = runPlugin(input);
