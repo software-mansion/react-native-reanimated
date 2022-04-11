@@ -22,8 +22,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, NSNumber *> *_states;
-  NSMutableDictionary<NSNumber *, UIView *> *_viewToRemove;
-  NSMutableDictionary<NSNumber *, UIView *> *_viewWithExitingAnimation;
+  NSMutableDictionary<NSNumber *, UIView *> *_viewsToRemove;
+  NSMutableDictionary<NSNumber *, UIView *> *_viewsWithExitingAnimation;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
@@ -45,8 +45,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _uiManager = uiManager;
     _reaUiManager = (REAUIManager *)uiManager;
     _states = [NSMutableDictionary new];
-    _viewToRemove = [NSMutableDictionary new];
-    _viewWithExitingAnimation = [NSMutableDictionary new];
+    _viewsToRemove = [NSMutableDictionary new];
+    _viewsWithExitingAnimation = [NSMutableDictionary new];
     _cleaningScheduled = false;
 
     _targetKeys = [NSMutableArray new];
@@ -65,7 +65,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _removeConfigForTag = nil;
   _uiManager = nil;
   _states = nil;
-  _viewToRemove = nil;
+  _viewsToRemove = nil;
+  _viewsWithExitingAnimation = nil;
   _cleaningScheduled = false;
   _targetKeys = nil;
   _currentKeys = nil;
@@ -124,7 +125,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (tag == nil) {
     return true;
   }
-  if (_viewToRemove[tag] == nil && _states[tag] != nil) {
+  if (_viewsToRemove[tag] == nil && _states[tag] != nil) {
     return true;
   }
   BOOL cannotStripe = false;
@@ -139,15 +140,15 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
       [_reaUiManager unregisterView:view];
     }
     [_states removeObjectForKey:tag];
-    [_viewToRemove removeObjectForKey:tag];
-    [_viewWithExitingAnimation removeObjectForKey:tag];
+    [_viewsToRemove removeObjectForKey:tag];
+    [_viewsWithExitingAnimation removeObjectForKey:tag];
   }
   return cannotStripe;
 }
 
 - (UIView *)findView:(NSNumber *)tag
 {
-  UIView *view = _viewToRemove[tag];
+  UIView *view = _viewsToRemove[tag];
   if (view != nil) {
     return view;
   }
@@ -155,14 +156,14 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (view != nil) {
     return view;
   }
-  return _viewWithExitingAnimation[tag];
+  return _viewsWithExitingAnimation[tag];
 }
 
 - (void)removeLeftovers
 {
   NSMutableSet<NSNumber *> *roots = [NSMutableSet new];
-  for (id key in _viewToRemove) {
-    UIView *view = _viewToRemove[key];
+  for (NSNumber *key in _viewsToRemove) {
+    UIView *view = _viewsToRemove[key];
     [self findRoot:view roots:roots];
   }
   for (NSNumber *viewTag in roots) {
@@ -183,7 +184,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
       if (tag != nil) {
         UIView *view = [self findView:tag];
         if (view != nil) {
-          [_viewToRemove setObject:view forKey:tag];
+          [_viewsToRemove setObject:view forKey:tag];
         }
       }
       [self scheduleCleaning];
@@ -311,13 +312,13 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (state == Inactive) {
     if (startValues != nil) {
       _states[tag] = [NSNumber numberWithInt:ToRemove];
-      [_viewToRemove setObject:view forKey:tag];
+      [_viewsToRemove setObject:view forKey:tag];
       [self scheduleCleaning];
     }
     return;
   }
   _states[tag] = [NSNumber numberWithInt:Disappearing];
-  [_viewWithExitingAnimation setObject:view forKey:tag];
+  [_viewsWithExitingAnimation setObject:view forKey:tag];
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:startValues frameConfig:ExitingFrame];
   _startAnimationForTag(tag, @"exiting", preparedValues, @(0));
 }
