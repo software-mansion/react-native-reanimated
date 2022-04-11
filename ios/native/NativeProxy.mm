@@ -218,12 +218,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto propObtainer = [reanimatedModule](
                           jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
-    /* NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
-    std::string resultStr = std::string([[reanimatedModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
-                                                                          propName:propNameConverted] UTF8String]);
-    jsi::Value val = jsi::String::createFromUtf8(rt, resultStr);
-    return val; */
-    return 5;
+    // TODO: support propObtainer on Fabric?
+    return jsi::Value::undefined();
   };
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
