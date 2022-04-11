@@ -1,8 +1,8 @@
 #pragma once
 
 #include <react/renderer/core/ShadowNode.h>
-#include <map>
 #include <memory>
+#include <unordered_map>
 
 using namespace facebook::react;
 
@@ -17,7 +17,7 @@ class NewestShadowNodesRegistry {
   void remove(ShadowNode::Shared shadowNode);
 
  private:
-  std::map<Tag, ShadowNode::Shared> map_;
+  std::unordered_map<Tag, ShadowNode::Shared> map_;
   mutable std::mutex mutex_; // Protects `map_`.
 };
 
