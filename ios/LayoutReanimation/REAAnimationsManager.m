@@ -23,6 +23,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, NSNumber *> *_states;
   NSMutableDictionary<NSNumber *, UIView *> *_viewToRemove;
+  NSMutableDictionary<NSNumber *, UIView *> *_viewWithExitingAnimation;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
@@ -45,6 +46,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _reaUiManager = (REAUIManager *)uiManager;
     _states = [NSMutableDictionary new];
     _viewToRemove = [NSMutableDictionary new];
+    _viewWithExitingAnimation = [NSMutableDictionary new];
     _cleaningScheduled = false;
 
     _targetKeys = [NSMutableArray new];
@@ -138,6 +140,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     }
     [_states removeObjectForKey:tag];
     [_viewToRemove removeObjectForKey:tag];
+    [_viewWithExitingAnimation removeObjectForKey:tag];
   }
   return cannotStripe;
 }
@@ -148,7 +151,11 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (view != nil) {
     return view;
   }
-  return [_reaUiManager viewForReactTag:tag];
+  view = [_reaUiManager viewForReactTag:tag];
+  if (view != nil) {
+    return view;
+  }
+  return _viewWithExitingAnimation[tag];
 }
 
 - (void)removeLeftovers
@@ -310,6 +317,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     return;
   }
   _states[tag] = [NSNumber numberWithInt:Disappearing];
+  [_viewWithExitingAnimation setObject:view forKey:tag];
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:startValues frameConfig:ExitingFrame];
   _startAnimationForTag(tag, @"exiting", preparedValues, @(0));
 }
