@@ -17,7 +17,8 @@ class NewestShadowNodesRegistry {
   void remove(ShadowNode::Shared shadowNode);
 
  private:
-  std::map<Tag, ShadowNode::Shared> map_; // TODO: synchronize access
+  std::map<Tag, ShadowNode::Shared> map_;
+  mutable std::mutex mutex_; // Protects `map_`.
 };
 
 } // namespace reanimated
