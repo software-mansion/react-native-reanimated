@@ -152,11 +152,10 @@ jsi::Value ReanimatedUIManagerBinding::get(
         runtime,
         name,
         2,
-        [uiManager](
-            jsi::Runtime &runtime,
-            jsi::Value const &thisValue,
-            jsi::Value const *arguments,
-            size_t count) noexcept -> jsi::Value {
+        [](jsi::Runtime &runtime,
+           jsi::Value const &thisValue,
+           jsi::Value const *arguments,
+           size_t count) noexcept -> jsi::Value {
           UIManager_appendChild(
               shadowNodeFromValue(runtime, arguments[0]),
               getNewestCloneOfShadowNodeFromReanimated(
