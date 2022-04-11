@@ -1,4 +1,5 @@
 import React from 'react';
+// import EmptyExample from './src/EmptyExample';
 // import WorkletExample from './src/WorkletExample';
 // import TransformExample from './src/TransformExample';
 // import ColorExample from './src/ColorExample';
@@ -17,6 +18,7 @@ export default function App() {
     initializeForFabric();
   }, []);
 
+  // return <EmptyExample />;
   // return <WorkletExample />;
   // return <TransformExample />;
   // return <ColorExample />;
