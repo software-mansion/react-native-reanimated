@@ -377,6 +377,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       int width = displayMetrics.widthPixels;
       preparedValues.put("windowWidth", PixelUtil.toDIPFromPixel(width));
       preparedValues.put("windowHeight", PixelUtil.toDIPFromPixel(height));
+    } else {
+      preparedValues.put("windowWidth", PixelUtil.toDIPFromPixel(0));
+      preparedValues.put("windowHeight", PixelUtil.toDIPFromPixel(0));
     }
     return preparedValues;
   }
