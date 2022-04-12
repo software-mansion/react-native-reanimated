@@ -8,7 +8,10 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-const colors = ['white', 'black'];
+const colors = [
+  ['lime', 'green'],
+  ['blue', 'cyan'],
+];
 
 export default function ChessboardExample() {
   const [state, setState] = React.useState(0);
@@ -18,7 +21,7 @@ export default function ChessboardExample() {
   const sv = useSharedValue(0);
 
   const size = useDerivedValue(() => {
-    return 10 + sv.value * 30;
+    return 10 + sv.value * 20;
   });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -51,7 +54,7 @@ export default function ChessboardExample() {
                 <Animated.View
                   key={j}
                   style={[
-                    { backgroundColor: colors[(i + j + state) % 2] },
+                    { backgroundColor: colors[state % 2][(i + j) % 2] },
                     animatedStyle,
                   ]}
                 />
@@ -74,7 +77,7 @@ const styles = StyleSheet.create({
   },
   border: {
     borderWidth: 10,
-    borderColor: 'lime',
+    borderColor: 'red',
   },
   row: {
     flexDirection: 'row',

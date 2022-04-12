@@ -418,49 +418,35 @@ void NativeReanimatedModule::performOperations() {
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
 
   shadowTreeRegistry->visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    ShadowTreeCommitTransaction transaction =
-        [&](RootShadowNode const &oldRootShadowNode) {
-          ShadowNode::Unshared newRoot =
-              oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
+    shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
+      auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          for (const auto &pair : copiedOperationsQueue) {
-            const ShadowNodeFamily &family = pair.first->getFamily();
-            react_native_assert(family.getSurfaceId() == surfaceId_);
+      for (const auto &pair : copiedOperationsQueue) {
+        const ShadowNodeFamily &family = pair.first->getFamily();
+        react_native_assert(family.getSurfaceId() == surfaceId_);
 
-            std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)>
-                callback = [&](ShadowNode const &oldShadowNode) {
-                  Props::Shared newProps =
-                      oldShadowNode.getComponentDescriptor().cloneProps(
-                          propsParserContext,
-                          oldShadowNode.getProps(),
-                          *pair.second);
+        rootNode =
+            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
+              auto newProps = oldShadowNode.getComponentDescriptor().cloneProps(
+                  propsParserContext, oldShadowNode.getProps(), *pair.second);
 
-                  ShadowNodeFragment fragment{/* .props = */ newProps};
-                  return oldShadowNode.clone(fragment);
-                };
+              return oldShadowNode.clone({/* .props = */ newProps});
+              // TODO: what about children?
+            });
 
-            newRoot = newRoot->cloneTree(family, callback);
+        newestShadowNodesRegistry_->set(rootNode);
+        // TODO: is this necessary?
 
-            // TODO: is this necessary?
-            newestShadowNodesRegistry_->set(newRoot);
+        auto ancestors = family.getAncestors(*rootNode);
+        for (const auto &pair : ancestors) {
+          auto ancestor = pair.first.get().getChildren().at(pair.second);
+          newestShadowNodesRegistry_->set(ancestor);
+        }
+        // TODO: what if transaction fails?
+      }
 
-            auto ancestors = family.getAncestors(*newRoot);
-            for (const auto &pair : ancestors) {
-              ShadowNode::Shared ancestor =
-                  pair.first.get().getChildren().at(pair.second);
-              newestShadowNodesRegistry_->set(ancestor);
-            }
-            // TODO: what if transaction fails?
-
-            if (!newRoot) { // cloneTree returned ShadowNode::Unshared{nullptr}
-              break; // cancel transaction by returning null RootShadowNode
-            }
-          }
-
-          return std::static_pointer_cast<RootShadowNode>(newRoot);
-        };
-    ShadowTree::CommitOptions commitOptions{};
-    shadowTree.commit(transaction, commitOptions);
+      return std::static_pointer_cast<RootShadowNode>(rootNode);
+    });
   });
 }
 
