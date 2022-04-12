@@ -1,5 +1,4 @@
-#import <CoreMotion/CoreMotion.h>
-#import "ReanimatedSensorType.h"
+#import <RNReanimated/ReanimatedSensorType.h>
 
 @interface ReanimatedSensorContainer : NSObject {
   NSNumber *_nextSensorId;

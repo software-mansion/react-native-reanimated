@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.5.0",
+  "version": "2.7.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -18,10 +18,11 @@
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "release": "npm login && release-it",
     "type:check": "yarn tsc --noEmit",
-    "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc && yarn type:generate:remove.ts && yarn type:generate:remove.tsx && yarn type:generate:remove.js:from-src",
+    "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc && yarn type:generate:tsc:declaration && yarn type:generate:remove.ts && yarn type:generate:remove.tsx && yarn type:generate:remove.js:from-src",
     "type:generate:clean": "rm -rf lib/ && mkdir lib/",
     "type:generate:cp-js-src": "cp -RL src/* lib/",
     "type:generate:tsc": "yarn tsc",
+    "type:generate:tsc:declaration": "yarn tsc --project tsconfig.json --pretty --declaration --emitDeclarationOnly --outDir lib/types",
     "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.js:from-src": "find ./src/reanimated2 -type f -name \"*.js\" -delete",
@@ -54,7 +55,6 @@
     "react-native-reanimated.d.ts",
     "mock.js",
     "plugin.js",
-    "expo-module.config.json",
     "!__snapshots__",
     "!*.test.js",
     "!*.test.js.map"
@@ -75,24 +75,22 @@
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
+    "@babel/preset-typescript": "^7.16.7",
     "@types/invariant": "^2.2.35",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
-    "react-native-screens": "^3.11.1",
     "setimmediate": "^1.0.5",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-gesture-handler": "*",
-    "@babel/preset-typescript": "*"
+    "@babel/core": "^7.0.0-0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.2",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
     "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
     "@react-native-community/bob": "^0.17.1",
     "@react-native-community/eslint-config": "^0.0.5",
     "@testing-library/jest-native": "^4.0.4",
@@ -124,7 +122,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.68.0-rc.1",
+    "react-native": "0.68.0",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "17.0.2",

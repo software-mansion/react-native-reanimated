@@ -74,15 +74,6 @@ def resolveBuildType() {
     return true
 }
 
-def resolveExpoLinkingGradle() {
-    def gradleScript = file("./expo/linking.gradle")
-    if (gradleScript.exists()) {
-        return "./expo/linking.gradle"
-    } else {
-        return "../android-npm/expo/linking.gradle"
-    }
-}
-
 def isDeveloperMode() {
     // developer mode, to run Example app
     return file("$projectDir/../node_modules/react-native/package.json").exists()
@@ -290,9 +281,6 @@ if (!BUILD_FROM_SOURCE) {
 
 // end if already loaded aar
 if (!BUILD_FROM_SOURCE) return
-
-// apply expo config
-apply from: resolveExpoLinkingGradle()
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
@@ -701,17 +689,19 @@ task downloadNdkBuildDependencies {
 task prepareThirdPartyNdkHeaders(dependsOn:[downloadNdkBuildDependencies, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog]) {
 }
 
-tasks.whenTaskAdded { task ->
-    if (
-        task.name.contains("externalNativeBuild")
-        || task.name.contains("buildCMake")
-    ) {
-        task.dependsOn(prepareThirdPartyNdkHeaders)
-        extractAARHeaders.dependsOn(prepareThirdPartyNdkHeaders)
-        extractSOFiles.dependsOn(prepareThirdPartyNdkHeaders)
-        task.dependsOn(extractAARHeaders)
-        task.dependsOn(extractSOFiles)
-    }
+def nativeBuildDependsOn(dependsOnTask) {
+    def buildTasks = tasks.findAll({ task ->
+        !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake")) })
+    buildTasks.forEach { task -> task.dependsOn(dependsOnTask) }
+}
+
+afterEvaluate {
+    extractAARHeaders.dependsOn(prepareThirdPartyNdkHeaders)
+    extractSOFiles.dependsOn(prepareThirdPartyNdkHeaders)
+
+    nativeBuildDependsOn(prepareThirdPartyNdkHeaders)
+    nativeBuildDependsOn(extractAARHeaders)
+    nativeBuildDependsOn(extractSOFiles)
 }
 
 if (CLIENT_SIDE_BUILD) {
