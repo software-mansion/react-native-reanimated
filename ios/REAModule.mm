@@ -11,6 +11,15 @@
 using namespace facebook::react;
 using namespace reanimated;
 
+@interface RCTBridge (JSIRuntime)
+- (void *)runtime;
+@end
+
+@interface RCTBridge (RCTTurboModule)
+- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
+- (void)_tryAndHandleError:(dispatch_block_t)block;
+@end
+
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 @implementation REAModule {
@@ -64,9 +73,28 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 #pragma mark-- Initialize
 
+- (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
+{
+  _surfacePresenter = self.bridge.surfacePresenter;
+  __weak RCTSurfacePresenter *sp = reinterpret_cast<RCTSurfacePresenter *>(self.bridge.surfacePresenter);
+  RCTScheduler *scheduler = [sp scheduler];
+
+  auto eventListener =
+      std::make_shared<facebook::react::EventListener>([](const EventTarget *eventTarget,
+                                                          const std::string &type,
+                                                          ReactEventPriority priority,
+                                                          const ValueFactory &payloadFactory) { return false; });
+  [scheduler addEventListener:eventListener];
+}
+
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(handleJavaScriptDidLoadNotification:)
+                                               name:RCTJavaScriptDidLoadNotification
+                                             object:nil];
+
   if (self.bridge) {
     _surfacePresenter = self.bridge.surfacePresenter;
   } else {
@@ -84,9 +112,26 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [bridge.uiManager.observerCoordinator addObserver:self];
 }
 
-RCT_EXPORT_METHOD(installTurboModule)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
-  // TODO: Move initialization from UIResponder+Reanimated to here
+  facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
+      ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
+      : nullptr;
+
+  if (jsiRuntime) {
+    // Reanimated
+    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+    jsiRuntime->global().setProperty(
+        *jsiRuntime,
+        "_WORKLET_RUNTIME",
+        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+
+    jsiRuntime->global().setProperty(
+        *jsiRuntime,
+        jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
+  }
+  return nil;
 }
 
 #pragma mark-- Transitioning API

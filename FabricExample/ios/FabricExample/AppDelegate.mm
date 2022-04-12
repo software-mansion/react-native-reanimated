@@ -16,8 +16,6 @@
 
 #import <react/config/ReactNativeConfig.h>
 
-#import <RNReanimated/REAInitializer.h>
-
 @interface AppDelegate () <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate> {
   RCTTurboModuleManager *_turboModuleManager;
   RCTSurfacePresenterBridgeAdapter *_bridgeAdapter;
@@ -77,8 +75,7 @@
   _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge
                                                              delegate:self
                                                             jsInvoker:bridge.jsCallInvoker];
-//  return RCTAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
-  return REAAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
+  return RCTAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
 }
 
 #pragma mark RCTTurboModuleManagerDelegate
