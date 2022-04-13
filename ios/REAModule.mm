@@ -32,6 +32,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
+  [_surfacePresenter removeObserver:self];
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
 }
 
