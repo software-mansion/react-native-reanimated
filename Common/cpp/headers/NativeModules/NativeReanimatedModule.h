@@ -44,6 +44,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
+  ~NativeReanimatedModule() {
+    // TODO: no need to clear registry once initialization works properly
+    auto lock = newestShadowNodesRegistry_->createLock();
+    newestShadowNodesRegistry_->clear();
+  }
+
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
       override;
 
@@ -133,12 +139,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   // We can store surfaceId of the most recent ShadowNode as a workaround.
   SurfaceId surfaceId_ = -1;
 
-  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>
+  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
 
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+
+  jsi::Runtime
+      *rt_; // TODO: do we really need jsi::Runtime in performOperations?
 };
 
 } // namespace reanimated

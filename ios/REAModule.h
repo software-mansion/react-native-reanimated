@@ -14,7 +14,4 @@ using namespace reanimated;
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 
-// TODO: refactor NewestShadowNodesRegistry initialization
-- (std::shared_ptr<NewestShadowNodesRegistry>)getNewestShadowNodesRegistry;
-
 @end

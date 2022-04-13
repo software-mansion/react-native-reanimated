@@ -52,25 +52,23 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)installReanimatedModuleHostObject
 {
-  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-  if (!cxxBridge.runtime) {
-    return;
-  }
-  jsi::Runtime &runtime = *(jsi::Runtime *)cxxBridge.runtime;
+  // TODO: fix initialization after app reload
+  // newestShadowNodesRegistry_ = std::make_shared<NewestShadowNodesRegistry>();
 
-  RCTScheduler *scheduler = [_surfacePresenter scheduler];
-  std::shared_ptr<UIManager> uiManager = scheduler.uiManager;
-  RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
-    callback(runtime);
-  };
-  newestShadowNodesRegistry_ = std::make_shared<NewestShadowNodesRegistry>();
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
-}
+  // RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+  // if (!cxxBridge.runtime) {
+  //   // TODO: cxxBridge.runtime is null after app reload
+  //   return;
+  // }
+  // jsi::Runtime &runtime = *(jsi::Runtime *)cxxBridge.runtime;
 
-- (std::shared_ptr<NewestShadowNodesRegistry>)getNewestShadowNodesRegistry
-{
-  return newestShadowNodesRegistry_;
+  // RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  // std::shared_ptr<UIManager> uiManager = scheduler.uiManager;
+  // RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
+  //   callback(runtime);
+  // };
+  // ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+  //     runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
 }
 
 #pragma mark-- Initialize

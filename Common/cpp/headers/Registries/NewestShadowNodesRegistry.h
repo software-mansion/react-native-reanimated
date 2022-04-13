@@ -14,12 +14,13 @@ class NewestShadowNodesRegistry {
 
   ShadowNode::Shared get(ShadowNode::Shared shadowNode);
 
-  ShadowNode::Shared update(
-      ShadowNode::Shared shadowNode,
-      const std::function<ShadowNode::Shared(ShadowNode::Shared)>
-          &&callback); // same behaviour as get+set but using only one lock
+  const ShadowNode &get(const ShadowNode &shadowNode);
 
   void remove(ShadowNode::Shared shadowNode);
+
+  void clear();
+
+  std::lock_guard<std::mutex> createLock();
 
  private:
   std::unordered_map<Tag, ShadowNode::Shared> map_;

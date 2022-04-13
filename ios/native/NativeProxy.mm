@@ -9,6 +9,7 @@
 #import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
+#import <RNReanimated/ReanimatedUIManagerBinding.h>
 #import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode::Shared
 #import <React-Fabric/react/renderer/uimanager/primitives.h> // shadowNodeFromValue
 #import <React/RCTFollyConvert.h>
@@ -210,8 +211,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
   // TODO: create NewestShadowNodesRegistry somewhere else
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry =
-      [reanimatedModule getNewestShadowNodesRegistry];
+  auto newestShadowNodesRegistry = getNewestShadowNodesRegistry();
 
   // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
 
@@ -386,8 +386,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
   }];
 
+  std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
   [reanimatedModule.nodesManager registerPerformOperations:^() {
-    module->performOperations();
+    weakModule.lock()->performOperations();
   }];
 
   //  facebook::react::ReanimatedListener::handleEvent = [module](RawEvent &rawEvent) {

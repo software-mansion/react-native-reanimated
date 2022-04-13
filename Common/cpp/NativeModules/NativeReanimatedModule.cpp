@@ -84,6 +84,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {
+  rt_ = rt.get();
+
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -395,8 +397,8 @@ void NativeReanimatedModule::updateProps(
 
   if (isThereAnyLayoutProp(rt, props)) {
     // TODO: use uiManager_->getNewestCloneOfShadowNode?
-    auto rawProps = std::make_unique<RawProps>(rt, props);
-    operationsInBatch_.emplace_back(shadowNode, std::move(rawProps));
+    operationsInBatch_.emplace_back(
+        shadowNode, std::make_unique<jsi::Value>(rt, props));
   } else {
     Tag tag = shadowNode->getTag();
     synchronouslyUpdateUIPropsFunction(rt, tag, props);
@@ -410,12 +412,14 @@ void NativeReanimatedModule::performOperations() {
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
-      std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>();
+      std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
   // TODO: store ShadowTreeRegistry and ContextContainer as private fields
   auto shadowTreeRegistry = getShadowTreeRegistryFromUIManager(uiManager_);
   auto contextContainer = getContextContainerFromUIManager(&*uiManager_);
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
+
+  auto lock = newestShadowNodesRegistry_->createLock();
 
   shadowTreeRegistry->visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
@@ -427,11 +431,15 @@ void NativeReanimatedModule::performOperations() {
 
         rootNode =
             rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              auto newProps = oldShadowNode.getComponentDescriptor().cloneProps(
-                  propsParserContext, oldShadowNode.getProps(), *pair.second);
+              const auto &newest =
+                  newestShadowNodesRegistry_->get(oldShadowNode);
 
-              return oldShadowNode.clone({/* .props = */ newProps});
-              // TODO: what about children?
+              auto newProps = newest.getComponentDescriptor().cloneProps(
+                  propsParserContext,
+                  newest.getProps(),
+                  RawProps(*rt_, *pair.second));
+
+              return newest.clone({/* .props = */ newProps});
             });
 
         newestShadowNodesRegistry_->set(rootNode);

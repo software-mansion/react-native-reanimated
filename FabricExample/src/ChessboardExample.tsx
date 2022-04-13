@@ -33,7 +33,7 @@ export default function ChessboardExample() {
 
   const handleAnimateSize = () => {
     ref.current = 1 - ref.current;
-    sv.value = withTiming(ref.current, { duration: 1000 });
+    sv.value = withTiming(ref.current, { duration: 2000 });
   };
 
   const handleToggleColors = () => {
@@ -48,9 +48,9 @@ export default function ChessboardExample() {
       </View>
       <View style={styles.chessboard}>
         <View style={styles.border}>
-          {[...Array(8).keys()].map((i) => (
+          {[...Array(12).keys()].map((i) => (
             <View style={styles.row} key={i}>
-              {[...Array(8).keys()].map((j) => (
+              {[...Array(12).keys()].map((j) => (
                 <Animated.View
                   key={j}
                   style={[

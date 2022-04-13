@@ -444,6 +444,34 @@ index 8455efb..fb955bc 100644
  static std::unique_ptr<LeakChecker> constructLeakCheckerIfNeeded(
      RuntimeExecutor const &runtimeExecutor) {
  #ifdef REACT_NATIVE_DEBUG
+diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
+index da6eeb6..2476c69 100644
+--- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
++++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
+@@ -14,11 +14,14 @@
+ #include <react/renderer/debug/SystraceSection.h>
+ #include <react/renderer/runtimescheduler/RuntimeSchedulerBinding.h>
+ #include <react/renderer/uimanager/primitives.h>
++#include <RNReanimated/ReanimatedUIManagerBinding.h>
+ 
+ #include <utility>
+ 
+ #include "bindingUtils.h"
+ 
++using namespace reanimated;
++
+ namespace facebook::react {
+ 
+ void UIManagerBinding::createAndInstallIfNeeded(
+@@ -33,7 +36,7 @@ void UIManagerBinding::createAndInstallIfNeeded(
+     // The global namespace does not have an instance of the binding;
+     // we need to create, install and return it.
+     auto uiManagerBinding =
+-        std::make_shared<UIManagerBinding>(uiManager, runtimeExecutor);
++        std::make_shared<ReanimatedUIManagerBinding>(uiManager, runtimeExecutor, getNewestShadowNodesRegistry());
+     auto object = jsi::Object::createFromHostObject(runtime, uiManagerBinding);
+     runtime.global().setProperty(
+         runtime, uiManagerModuleName, std::move(object));
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
 index 101155f..4212893 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
