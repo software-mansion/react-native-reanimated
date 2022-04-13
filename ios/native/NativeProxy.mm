@@ -14,6 +14,10 @@
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
 
+#import <React/RCTBridge+Private.h>
+#import <React/RCTScheduler.h>
+#import <React/RCTSurfacePresenter.h>
+
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
 #endif
@@ -390,25 +394,32 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     module->performOperations();
   }];
 
-  //  facebook::react::ReanimatedListener::handleEvent = [module](RawEvent &rawEvent) {
-  //    // handles RawEvents from React Native
-  //
-  //    auto &rt = *module->runtime;
-  //
-  //    int tag = rawEvent.eventTarget->getTag();
-  //    std::string eventType = rawEvent.type;
-  //    if (eventType.rfind("top", 0) == 0) {
-  //      eventType = "on" + eventType.substr(3);
-  //    }
-  //    std::string eventName = std::to_string(tag) + eventType;
-  //    jsi::Value payload = rawEvent.payloadFactory(rt);
-  //
-  //    jsi::Object global = rt.global();
-  //    jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
-  //    global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
-  //    module->onEvent(eventName, std::move(payload));
-  //    global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
-  //  };
+  __weak RCTSurfacePresenter *surfacePresenter = reinterpret_cast<RCTSurfacePresenter *>(bridge.surfacePresenter);
+  auto scheduler_ = [surfacePresenter scheduler];
+  auto eventDispatcherOptional = [scheduler_ eventDispatcher];
+
+  auto eventListener = std::make_shared<facebook::react::EventListener>([module](
+                                                                            const EventTarget *eventTarget,
+                                                                            const std::string &type,
+                                                                            EventPriority priority,
+                                                                            const ValueFactory &payloadFactory) {
+    auto &rt = *module->runtime;
+    int tag = eventTarget->getTag();
+    std::string eventType = type;
+    if (eventType.rfind("top", 0) == 0) {
+      eventType = "on" + eventType.substr(3);
+    }
+    std::string eventName = std::to_string(tag) + eventType;
+    jsi::Value payload = payloadFactory(rt);
+
+    jsi::Object global = rt.global();
+    jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
+    global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
+    module->onEvent(eventName, std::move(payload));
+    global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+    return false;
+  });
+  eventDispatcherOptional.get()->value().addEventListener(eventListener);
 
   return module;
 }

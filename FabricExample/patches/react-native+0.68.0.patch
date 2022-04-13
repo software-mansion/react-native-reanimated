@@ -190,7 +190,7 @@ index 0000000..dffb099
 +
 +} // namespace facebook::react
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
-index 615390b..43d3823 100644
+index 615390b..493b13a 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
 @@ -36,7 +36,11 @@ EventDispatcher::EventDispatcher(
@@ -206,7 +206,19 @@ index 615390b..43d3823 100644
  }
  
  void EventDispatcher::dispatchStateUpdate(
-@@ -62,5 +66,15 @@ const EventQueue &EventDispatcher::getEventQueue(EventPriority priority) const {
+@@ -46,7 +50,10 @@ void EventDispatcher::dispatchStateUpdate(
+ }
+ 
+ void EventDispatcher::dispatchUniqueEvent(RawEvent &&rawEvent) const {
+-  asynchronousBatchedQueue_->enqueueUniqueEvent(std::move(rawEvent));
++  auto eventIntercepted = eventListeners_.willProcessEvent(std::move(rawEvent), EventPriority::Deferred);
++  if (!eventIntercepted) {
++    asynchronousBatchedQueue_->enqueueUniqueEvent(std::move(rawEvent));
++  }
+ }
+ 
+ const EventQueue &EventDispatcher::getEventQueue(EventPriority priority) const {
+@@ -62,5 +69,15 @@ const EventQueue &EventDispatcher::getEventQueue(EventPriority priority) const {
    }
  }
  

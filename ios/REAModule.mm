@@ -76,15 +76,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
 {
   _surfacePresenter = self.bridge.surfacePresenter;
-  __weak RCTSurfacePresenter *surfacePresenter = reinterpret_cast<RCTSurfacePresenter *>(self.bridge.surfacePresenter);
-  RCTScheduler *scheduler = [surfacePresenter scheduler];
-  auto eventDispatcherOptional = [scheduler eventDispatcher];
-  auto eventListener =
-      std::make_shared<facebook::react::EventListener>([](const EventTarget *eventTarget,
-                                                          const std::string &type,
-                                                          EventPriority priority,
-                                                          const ValueFactory &payloadFactory) { return false; });
-  eventDispatcherOptional.get()->value().addEventListener(eventListener);
 }
 
 - (void)setBridge:(RCTBridge *)bridge
