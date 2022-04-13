@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.h b/node_modules/react-native/React/Fabric/RCTScheduler.h
-index b201c0a..e0e697c 100644
+index b201c0a..2a45b14 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.h
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.h
 @@ -10,11 +10,13 @@
@@ -21,19 +21,19 @@ index b201c0a..e0e697c 100644
  
  @property (atomic, weak, nullable) id<RCTSchedulerDelegate> delegate;
 +@property (readonly) std::shared_ptr<facebook::react::UIManager> uiManager;
-+@property (readonly) std::shared_ptr<butter::optional<facebook::react::EventDispatcher>> eventDispatcher;
++@property (readonly) std::shared_ptr<butter::optional<facebook::react::EventDispatcher const>> eventDispatcher;
  
  - (instancetype)initWithToolbox:(facebook::react::SchedulerToolbox)toolbox;
  
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.mm b/node_modules/react-native/React/Fabric/RCTScheduler.mm
-index 4bc19fd..31b0233 100644
+index 4bc19fd..562b4b6 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.mm
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.mm
 @@ -193,4 +193,14 @@ - (void)onAllAnimationsComplete
    }
  }
  
-+- (std::shared_ptr<butter::optional<EventDispatcher>>)eventDispatcher
++- (std::shared_ptr<butter::optional<EventDispatcher const>>)eventDispatcher
 +{
 +  return _scheduler->getEventDispatcher();
 +}
@@ -190,7 +190,7 @@ index 0000000..dffb099
 +
 +} // namespace facebook::react
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
-index 615390b..6e81ee5 100644
+index 615390b..43d3823 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
 @@ -36,7 +36,11 @@ EventDispatcher::EventDispatcher(
@@ -211,19 +211,19 @@ index 615390b..6e81ee5 100644
  }
  
 +void EventDispatcher::addEventListener(
-+    const std::shared_ptr<EventListener const> &listener) {
++    const std::shared_ptr<EventListener const> &listener) const {
 +  eventListeners_.addListener(listener);
 +}
 +
 +void EventDispatcher::removeEventListener(
-+    const std::shared_ptr<EventListener const> &listener) {
++    const std::shared_ptr<EventListener const> &listener) const {
 +  eventListeners_.removeListener(listener);
 +}
 +
  } // namespace react
  } // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
-index 9b630b3..baffb96 100644
+index 9b630b3..ef7d661 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
 @@ -13,6 +13,7 @@
@@ -239,8 +239,8 @@ index 9b630b3..baffb96 100644
        const;
  
 +#pragma mark - Event listeners
-+  void addEventListener(const std::shared_ptr<EventListener const> &listener);
-+  void removeEventListener(const std::shared_ptr<EventListener const> &listener);
++  void addEventListener(const std::shared_ptr<EventListener const> &listener) const;
++  void removeEventListener(const std::shared_ptr<EventListener const> &listener) const;
 +      
   private:
    EventQueue const &getEventQueue(EventPriority priority) const;
@@ -250,7 +250,7 @@ index 9b630b3..baffb96 100644
    std::unique_ptr<UnbatchedEventQueue> asynchronousUnbatchedQueue_;
    std::unique_ptr<BatchedEventQueue> asynchronousBatchedQueue_;
 +  
-+  EventListenerHolder eventListeners_;
++  mutable EventListenerHolder eventListeners_;
  };
  
  } // namespace react
@@ -356,18 +356,10 @@ index 0000000..d9cdf6e
 +} // namespace react
 +} // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
-index 3a782a9..c061a39 100644
+index 3a782a9..f816819 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
-@@ -43,14 +43,31 @@ Scheduler::Scheduler(
- 
-   // Creating a container for future `EventDispatcher` instance.
-   eventDispatcher_ =
--      std::make_shared<butter::optional<EventDispatcher const>>();
-+      std::make_shared<butter::optional<EventDispatcher>>();
- 
-   auto uiManager = std::make_shared<UIManager>(
-       runtimeExecutor_, schedulerToolbox.backgroundExecutor, contextContainer_);
+@@ -50,7 +50,24 @@ Scheduler::Scheduler(
    auto eventOwnerBox = std::make_shared<EventBeat::OwnerBox>();
    eventOwnerBox->owner = eventDispatcher_;
  
@@ -401,14 +393,14 @@ index 3a782a9..c061a39 100644
 +  return uiManager_;
 +}
 +
-+std::shared_ptr<butter::optional<EventDispatcher>> Scheduler::getEventDispatcher() const {
++std::shared_ptr<butter::optional<EventDispatcher const>> Scheduler::getEventDispatcher() const {
 +  return eventDispatcher_;
 +}
 +
  } // namespace react
  } // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
-index 488a656..283d573 100644
+index 488a656..fdbc4f1 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
 @@ -107,6 +107,17 @@ class Scheduler final : public UIManagerDelegate {
@@ -419,7 +411,7 @@ index 488a656..283d573 100644
 +  std::shared_ptr<UIManager> getUIManager() const;
 +  
 +#pragma mark - EventDispatcher
-+  std::shared_ptr<butter::optional<EventDispatcher>> getEventDispatcher() const;
++  std::shared_ptr<butter::optional<EventDispatcher const>> getEventDispatcher() const;
 +
 +#pragma mark - Event listeners
 +  void addEventListener(const std::shared_ptr<EventListener const> &listener);
@@ -429,15 +421,6 @@ index 488a656..283d573 100644
   private:
    friend class SurfaceHandler;
  
-@@ -125,7 +136,7 @@ class Scheduler final : public UIManagerDelegate {
-    * parts that need to have ownership (and only ownership) of that, and then
-    * fill the optional.
-    */
--  std::shared_ptr<butter::optional<EventDispatcher const>> eventDispatcher_;
-+  std::shared_ptr<butter::optional<EventDispatcher>> eventDispatcher_;
- 
-   /**
-    * Hold onto ContextContainer. See SchedulerToolbox.
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
 index 8455efb..fb955bc 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
