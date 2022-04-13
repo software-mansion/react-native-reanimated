@@ -76,23 +76,15 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
 {
   _surfacePresenter = self.bridge.surfacePresenter;
-  __weak RCTSurfacePresenter *sp = reinterpret_cast<RCTSurfacePresenter *>(self.bridge.surfacePresenter);
-  RCTScheduler *scheduler = [sp scheduler];
-  //  auto cppScheduler = [scheduler valueForKey:@"_scheduler"];
-  auto cppEventDispatcherOptional = [scheduler eventDispatcher];
+  __weak RCTSurfacePresenter *surfacePresenter = reinterpret_cast<RCTSurfacePresenter *>(self.bridge.surfacePresenter);
+  RCTScheduler *scheduler = [surfacePresenter scheduler];
+  auto eventDispatcherOptional = [scheduler eventDispatcher];
   auto eventListener =
       std::make_shared<facebook::react::EventListener>([](const EventTarget *eventTarget,
                                                           const std::string &type,
                                                           EventPriority priority,
                                                           const ValueFactory &payloadFactory) { return false; });
-  [scheduler addEventListener:eventListener];
-  //  cppEventDispatcherOptional->value();
-  //  std::shared_ptr<facebook::react::EventDispatcher const> cppEventDispatcher = cppEventDispatcherOptional.get();
-  //  auto a = cppEventDispatcherOptional.get();
-  //  std::shared_ptr<EventDispatcher> b = cppEventDispatcherOptional->value();
-  //  cppEventDispatcherOptional
-  cppEventDispatcherOptional.get()->value().addEventListener(eventListener);
-  int b12 = 9;
+  eventDispatcherOptional.get()->value().addEventListener(eventListener);
 }
 
 - (void)setBridge:(RCTBridge *)bridge
