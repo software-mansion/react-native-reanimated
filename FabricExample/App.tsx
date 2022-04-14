@@ -4,7 +4,7 @@ import React from 'react';
 // import TransformExample from './src/TransformExample';
 // import ColorExample from './src/ColorExample';
 // import WidthExample from './src/WidthExample';
-import ChessboardExample from './src/ChessboardExample';
+// import ChessboardExample from './src/ChessboardExample';
 // import RefExample from './src/RefExample';
 // import ScrollViewExample from './src/ScrollViewExample';
 // import ScrollToExample from './src/ScrollToExample';
@@ -12,6 +12,7 @@ import ChessboardExample from './src/ChessboardExample';
 // import AnimatedSensorExample from './src/AnimatedSensorExample';
 // import AnimatedTextExample from './src/AnimatedTextExample';
 // import GestureHandlerExample from './src/GestureHandlerExample';
+import BokehExample from './src/BokehExample';
 import { initializeForFabric } from '../src/reanimated2/core';
 
 export default function App() {
@@ -24,7 +25,7 @@ export default function App() {
   // return <TransformExample />;
   // return <ColorExample />;
   // return <WidthExample />;
-  return <ChessboardExample />;
+  // return <ChessboardExample />;
   // return <RefExample />;
   // return <ScrollViewExample />;
   // return <ScrollToExample />;
@@ -32,4 +33,5 @@ export default function App() {
   // return <AnimatedSensorExample />;
   // return <AnimatedTextExample />;
   // return <GestureHandlerExample />;
+  return <BokehExample />;
 }
