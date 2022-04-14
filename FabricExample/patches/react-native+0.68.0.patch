@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.h b/node_modules/react-native/React/Fabric/RCTScheduler.h
-index b201c0a..2a45b14 100644
+index b201c0a..ae10c0e 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.h
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.h
 @@ -10,11 +10,13 @@
@@ -16,26 +16,41 @@ index b201c0a..2a45b14 100644
  #import <react/utils/ContextContainer.h>
  
  NS_ASSUME_NONNULL_BEGIN
-@@ -47,6 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
+@@ -47,6 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
  @interface RCTScheduler : NSObject
  
  @property (atomic, weak, nullable) id<RCTSchedulerDelegate> delegate;
 +@property (readonly) std::shared_ptr<facebook::react::UIManager> uiManager;
-+@property (readonly) std::shared_ptr<butter::optional<facebook::react::EventDispatcher const>> eventDispatcher;
  
  - (instancetype)initWithToolbox:(facebook::react::SchedulerToolbox)toolbox;
  
+@@ -64,6 +67,10 @@ NS_ASSUME_NONNULL_BEGIN
+ 
+ - (void)animationTick;
+ 
++- (void)addEventListener:(std::shared_ptr<facebook::react::EventListener> const &)listener;
++
++- (void)removeEventListener:(std::shared_ptr<facebook::react::EventListener> const &)listener;
++
+ @end
+ 
+ NS_ASSUME_NONNULL_END
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.mm b/node_modules/react-native/React/Fabric/RCTScheduler.mm
-index 4bc19fd..562b4b6 100644
+index 4bc19fd..650f1a8 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.mm
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.mm
-@@ -193,4 +193,14 @@ - (void)onAllAnimationsComplete
+@@ -193,4 +193,19 @@ - (void)onAllAnimationsComplete
    }
  }
  
-+- (std::shared_ptr<butter::optional<EventDispatcher const>>)eventDispatcher
++- (void)addEventListener:(std::shared_ptr<EventListener> const &)listener
 +{
-+  return _scheduler->getEventDispatcher();
++  return _scheduler->addEventListener(listener);
++}
++
++- (void)removeEventListener:(std::shared_ptr<EventListener> const &)listener
++{
++  return _scheduler->removeEventListener(listener);
 +}
 +
 +- (std::shared_ptr<facebook::react::UIManager>)uiManager
@@ -190,7 +205,7 @@ index 0000000..dffb099
 +
 +} // namespace facebook::react
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
-index 615390b..493b13a 100644
+index 615390b..74c8271 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
 @@ -36,7 +36,11 @@ EventDispatcher::EventDispatcher(
@@ -222,12 +237,12 @@ index 615390b..493b13a 100644
    }
  }
  
-+void EventDispatcher::addEventListener(
++void EventDispatcher::addListener(
 +    const std::shared_ptr<EventListener const> &listener) const {
 +  eventListeners_.addListener(listener);
 +}
 +
-+void EventDispatcher::removeEventListener(
++void EventDispatcher::removeListener(
 +    const std::shared_ptr<EventListener const> &listener) const {
 +  eventListeners_.removeListener(listener);
 +}
@@ -235,7 +250,7 @@ index 615390b..493b13a 100644
  } // namespace react
  } // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
-index 9b630b3..ef7d661 100644
+index 9b630b3..3b1c732 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
 @@ -13,6 +13,7 @@
@@ -251,8 +266,8 @@ index 9b630b3..ef7d661 100644
        const;
  
 +#pragma mark - Event listeners
-+  void addEventListener(const std::shared_ptr<EventListener const> &listener) const;
-+  void removeEventListener(const std::shared_ptr<EventListener const> &listener) const;
++  void addListener(const std::shared_ptr<EventListener const> &listener) const;
++  void removeListener(const std::shared_ptr<EventListener const> &listener) const;
 +      
   private:
    EventQueue const &getEventQueue(EventPriority priority) const;
@@ -368,7 +383,7 @@ index 0000000..d9cdf6e
 +} // namespace react
 +} // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
-index 3a782a9..f816819 100644
+index 3a782a9..4dc226c 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
 @@ -50,7 +50,24 @@ Scheduler::Scheduler(
@@ -397,7 +412,7 @@ index 3a782a9..f816819 100644
                         jsi::Runtime &runtime,
                         const EventTarget *eventTarget,
                         const std::string &type,
-@@ -351,5 +368,13 @@ ContextContainer::Shared Scheduler::getContextContainer() const {
+@@ -351,5 +368,23 @@ ContextContainer::Shared Scheduler::getContextContainer() const {
    return contextContainer_;
  }
  
@@ -405,25 +420,32 @@ index 3a782a9..f816819 100644
 +  return uiManager_;
 +}
 +
-+std::shared_ptr<butter::optional<EventDispatcher const>> Scheduler::getEventDispatcher() const {
-+  return eventDispatcher_;
++void Scheduler::addEventListener(
++    const std::shared_ptr<EventListener const> &listener) {
++  if (eventDispatcher_->hasValue()) {
++    eventDispatcher_->value().addListener(listener);
++  }
++}
++
++void Scheduler::removeEventListener(
++    const std::shared_ptr<EventListener const> &listener) {
++  if (eventDispatcher_->hasValue()) {
++    eventDispatcher_->value().removeListener(listener);
++  }
 +}
 +
  } // namespace react
  } // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
-index 488a656..fdbc4f1 100644
+index 488a656..5744839 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
-@@ -107,6 +107,17 @@ class Scheduler final : public UIManagerDelegate {
+@@ -107,6 +107,14 @@ class Scheduler final : public UIManagerDelegate {
  #pragma mark - ContextContainer
    ContextContainer::Shared getContextContainer() const;
  
 +#pragma mark - UIManager
 +  std::shared_ptr<UIManager> getUIManager() const;
-+  
-+#pragma mark - EventDispatcher
-+  std::shared_ptr<butter::optional<EventDispatcher const>> getEventDispatcher() const;
 +
 +#pragma mark - Event listeners
 +  void addEventListener(const std::shared_ptr<EventListener const> &listener);

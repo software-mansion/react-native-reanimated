@@ -396,8 +396,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   __weak RCTSurfacePresenter *surfacePresenter = reinterpret_cast<RCTSurfacePresenter *>(bridge.surfacePresenter);
   auto scheduler_ = [surfacePresenter scheduler];
-  auto eventDispatcherOptional = [scheduler_ eventDispatcher];
-
   auto eventListener = std::make_shared<facebook::react::EventListener>([module](
                                                                             const EventTarget *eventTarget,
                                                                             const std::string &type,
@@ -419,8 +417,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
     return false;
   });
-  eventDispatcherOptional.get()->value().addEventListener(eventListener);
-
+  [scheduler_ addEventListener:eventListener];
   return module;
 }
 
