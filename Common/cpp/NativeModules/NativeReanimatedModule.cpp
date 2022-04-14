@@ -429,7 +429,7 @@ void NativeReanimatedModule::performOperations() {
         const ShadowNodeFamily &family = pair.first->getFamily();
         react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        rootNode =
+        auto newRootNode =
             rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
               const auto &newest =
                   newestShadowNodesRegistry_->get(oldShadowNode);
@@ -441,6 +441,13 @@ void NativeReanimatedModule::performOperations() {
 
               return newest.clone({/* .props = */ newProps});
             });
+
+        if (newRootNode == nullptr) {
+          // this happens when React removed the component but Reanimated still
+          // tries to animate it, let's skip update for this specific component
+          continue;
+        }
+        rootNode = newRootNode;
 
         newestShadowNodesRegistry_->set(rootNode);
         // TODO: is this necessary?
