@@ -1,30 +1,54 @@
-import { SharedValue } from '../commonTypes';
+import { NativeModules } from 'react-native';
+import {
+  SharedValue,
+  SensorValue3D,
+  SensorValueRotation,
+} from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
 
-const InnerNativeModule = global.__reanimatedModuleProxy;
 export class NativeReanimated {
   native: boolean;
-  useOnlyV1: boolean;
+  private InnerNativeModule: any;
 
   constructor(native = true) {
+    if (global.__reanimatedModuleProxy === undefined) {
+      const { ReanimatedModule } = NativeModules;
+      ReanimatedModule?.installTurboModule();
+    }
+    this.InnerNativeModule = global.__reanimatedModuleProxy;
     this.native = native;
-    this.useOnlyV1 = InnerNativeModule === null;
   }
 
   installCoreFunctions(valueSetter: <T>(value: T) => void): void {
-    return InnerNativeModule.installCoreFunctions(valueSetter);
+    return this.InnerNativeModule.installCoreFunctions(valueSetter);
   }
 
   makeShareable<T>(value: T): T {
-    return InnerNativeModule.makeShareable(value);
+    return this.InnerNativeModule.makeShareable(value);
   }
 
   makeMutable<T>(value: T): SharedValue<T> {
-    return InnerNativeModule.makeMutable(value);
+    return this.InnerNativeModule.makeMutable(value);
   }
 
   makeRemote<T>(object = {}): T {
-    return InnerNativeModule.makeRemote(object);
+    return this.InnerNativeModule.makeRemote(object);
+  }
+
+  registerSensor(
+    sensorType: number,
+    interval: number,
+    sensorData: SensorValue3D | SensorValueRotation
+  ) {
+    return this.InnerNativeModule.registerSensor(
+      sensorType,
+      interval,
+      sensorData
+    );
+  }
+
+  unregisterSensor(sensorId: number) {
+    return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
   startMapper(
@@ -34,7 +58,7 @@ export class NativeReanimated {
     updater: () => void,
     viewDescriptors: Descriptor[] | SharedValue<Descriptor[]>
   ): number {
-    return InnerNativeModule.startMapper(
+    return this.InnerNativeModule.startMapper(
       mapper,
       inputs,
       outputs,
@@ -44,18 +68,18 @@ export class NativeReanimated {
   }
 
   stopMapper(mapperId: number): void {
-    return InnerNativeModule.stopMapper(mapperId);
+    return this.InnerNativeModule.stopMapper(mapperId);
   }
 
   registerEventHandler<T>(
     eventHash: string,
     eventHandler: (event: T) => void
   ): string {
-    return InnerNativeModule.registerEventHandler(eventHash, eventHandler);
+    return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
   }
 
   unregisterEventHandler(id: string): void {
-    return InnerNativeModule.unregisterEventHandler(id);
+    return this.InnerNativeModule.unregisterEventHandler(id);
   }
 
   getViewProp<T>(
@@ -63,10 +87,14 @@ export class NativeReanimated {
     propName: string,
     callback?: (result: T) => void
   ): Promise<T> {
-    return InnerNativeModule.getViewProp(viewTag, propName, callback);
+    return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
   enableLayoutAnimations(flag: boolean): void {
-    InnerNativeModule.enableLayoutAnimations(flag);
+    this.InnerNativeModule.enableLayoutAnimations(flag);
+  }
+
+  configureProps(uiProps: string[], nativeProps: string[]): void {
+    this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 }

@@ -1,4 +1,4 @@
-import ReanimatedModule from './ReanimatedModule';
+import { configureProps as jsiConfigureProps } from './reanimated2/core';
 
 /**
  * Styles allowed to be direcly updated in UI thread
@@ -78,7 +78,6 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   borderTopLeftRadius: true,
   borderTopRightRadius: true,
   borderTopStartRadius: true,
-  opacity: true,
   elevation: true,
   fontSize: true,
   lineHeight: true,
@@ -107,9 +106,9 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
 };
 
 function configureProps(): void {
-  ReanimatedModule.configureProps(
-    Object.keys(NATIVE_THREAD_PROPS_WHITELIST),
-    Object.keys(UI_THREAD_PROPS_WHITELIST)
+  jsiConfigureProps(
+    Object.keys(UI_THREAD_PROPS_WHITELIST),
+    Object.keys(NATIVE_THREAD_PROPS_WHITELIST)
   );
 }
 

@@ -42,7 +42,7 @@ If you have custom babel configuration for testing, make sure that Reanimated's 
 #### Timers
 You can use jest timers to control animation
 ```js
-jest.useFakeTimers();
+jest.useFakeTimers(); // jest.useFakeTimers('legacy') for jest >= 27
 // call animation
 jest.runAllTimers();
 ```
@@ -77,7 +77,7 @@ test('stop in a middle of animation', () => {
     expect(view).toHaveAnimatedStyle(style);
 
     fireEvent.press(button);
-    moveAnimationByTime(250); // if whole animation duration is a 500ms
+    advanceAnimationByTime(250); // if whole animation duration is a 500ms
     style.width = 46.08; // value of component width after 250ms of animation
     expect(view).toHaveAnimatedStyle(style);
   });

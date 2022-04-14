@@ -13,7 +13,8 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
     return (
       <WrappedComponents.View
         layout={itemLayoutAnimation}
-        onLayout={props.onLayout}>
+        onLayout={props.onLayout}
+      >
         {props.children}
       </WrappedComponents.View>
     );
@@ -22,7 +23,7 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
   return cellRenderer;
 };
 
-interface ReanimatedFlatlistProps<ItemT> extends FlatListProps<ItemT> {
+export interface ReanimatedFlatlistProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 

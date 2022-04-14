@@ -7,7 +7,8 @@ import { BaseAnimationBuilder } from '../animationBuilder';
 
 export class SequencedTransition
   extends BaseAnimationBuilder
-  implements ILayoutAnimationBuilder {
+  implements ILayoutAnimationBuilder
+{
   reversed = false;
 
   static createInstance(): SequencedTransition {

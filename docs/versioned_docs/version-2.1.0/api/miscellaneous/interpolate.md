@@ -31,7 +31,7 @@ Can be either object or string. If the object is passed it should specify extrap
 ```js
 const extrapolation = {
     extrapolateLeft: Extrapolate.CLAMP,
-    extrapolateRight: Extrapolate.IDENTITYY
+    extrapolateRight: Extrapolate.IDENTITY
 }
 ```
 

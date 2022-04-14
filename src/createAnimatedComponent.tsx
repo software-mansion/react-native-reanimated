@@ -161,7 +161,7 @@ interface ComponentRef extends Component {
   getScrollableNode?: () => ComponentRef;
 }
 
-interface InitialComponentProps extends Record<string, unknown> {
+export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
 }
@@ -194,6 +194,7 @@ export default function createAnimatedComponent(
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
+    initialStyle = {};
     sv: SharedValue<null | Record<string, unknown>> | null;
     _propsAnimated?: PropsAnimated;
     _component: ComponentRef | null = null;
@@ -631,13 +632,12 @@ export default function createAnimatedComponent(
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
               if (this._isFirstRender) {
-                return {
+                this.initialStyle = {
                   ...style.initial.value,
                   ...initialUpdaterRun<StyleProps>(style.initial.updater),
                 };
-              } else {
-                return style.initial.value;
               }
+              return this.initialStyle;
             } else {
               return style;
             }

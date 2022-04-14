@@ -36,7 +36,7 @@ Please note that Reanimated 2 doesn't support remote debugging, only Flipper can
 First step is to install `react-native-reanimated` alpha as a dependency in your project:
 
 ```bash
-yarn add react-native-reanimated@next
+yarn add react-native-reanimated
 ```
 
 ### Reanimated 2 in Expo

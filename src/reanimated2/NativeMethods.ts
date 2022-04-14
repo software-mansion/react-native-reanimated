@@ -3,8 +3,8 @@
 // @ts-nocheck
 import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
-import { RefObjectFunction } from './hook/useAnimatedRef';
-import { isChromeDebugger } from './PlatformChecker';
+import { RefObjectFunction } from './commonTypes';
+import { shouldBeUseWeb } from './PlatformChecker';
 
 export function getTag(
   view: null | number | React.Component<any, any> | React.ComponentClass<any>
@@ -21,12 +21,24 @@ export interface MeasuredDimensions {
   pageY: number;
 }
 
+const isNativeIndefined = shouldBeUseWeb();
+
 export function measure(
   animatedRef: RefObjectFunction<Component>
 ): MeasuredDimensions {
   'worklet';
-  if (!_WORKLET && !isChromeDebugger()) {
-    throw new Error('(measure) method cannot be used on RN side!');
+  if (!_WORKLET || isNativeIndefined) {
+    console.warn(
+      '[reanimated.measure] method cannot be used for web or Chrome Debugger'
+    );
+    return {
+      x: NaN,
+      y: NaN,
+      width: NaN,
+      height: NaN,
+      pageX: NaN,
+      pageY: NaN,
+    };
   }
   const viewTag = animatedRef();
   const result = _measure(viewTag);
@@ -43,7 +55,7 @@ export function scrollTo(
   animated: boolean
 ): void {
   'worklet';
-  if (!_WORKLET && !isChromeDebugger()) {
+  if (!_WORKLET || isNativeIndefined) {
     return;
   }
   const viewTag = animatedRef();
@@ -52,10 +64,11 @@ export function scrollTo(
 
 export function setGestureState(handlerTag: number, newState: number): void {
   'worklet';
-  if (!_WORKLET && !isChromeDebugger()) {
+  if (!_WORKLET || isNativeIndefined) {
     console.warn(
       '[Reanimated] You can not use setGestureState in non-worklet function.'
     );
+    return;
   }
   _setGestureState(handlerTag, newState);
 }

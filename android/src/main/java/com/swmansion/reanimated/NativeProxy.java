@@ -6,10 +6,13 @@ import android.view.View;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -19,9 +22,14 @@ import com.swmansion.common.SharedElementAnimatorDelegate;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
+import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
+import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class NativeProxy {
 
@@ -83,13 +91,29 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  public static class SensorSetter {
+
+    @DoNotStrip private final HybridData mHybridData;
+
+    @DoNotStrip
+    private SensorSetter(HybridData hybridData) {
+      mHybridData = hybridData;
+    }
+
+    public native void sensorSetter(float[] value);
+  }
+
+  @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
+  private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
+  private Long firstUptime = SystemClock.uptimeMillis();
+  private boolean slowAnimationsEnabled = false;
 
   public NativeProxy(ReactApplicationContext context) {
     CallInvokerHolderImpl holder =
@@ -101,6 +125,8 @@ public class NativeProxy {
             context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
+    reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
+    addDevMenuOption();
 
     GestureHandlerStateManager tempHandlerStateManager;
     try {
@@ -127,6 +153,27 @@ public class NativeProxy {
 
   public Scheduler getScheduler() {
     return mScheduler;
+  }
+
+  private void toggleSlowAnimations() {
+    slowAnimationsEnabled = !slowAnimationsEnabled;
+    if (slowAnimationsEnabled) {
+      firstUptime = SystemClock.uptimeMillis();
+    }
+  }
+
+  private void addDevMenuOption() {
+    // In Expo, `ApplicationContext` is not an instance of `ReactApplication`
+    if (mContext.get().getApplicationContext() instanceof ReactApplication) {
+      final DevSupportManager devSupportManager =
+          ((ReactApplication) mContext.get().getApplicationContext())
+              .getReactNativeHost()
+              .getReactInstanceManager()
+              .getDevSupportManager();
+
+      devSupportManager.addCustomDevOption(
+          "Toggle slow animations (Reanimated)", this::toggleSlowAnimations);
+    }
   }
 
   @DoNotStrip
@@ -157,8 +204,15 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private String getUpTime() {
-    return Long.toString(SystemClock.uptimeMillis());
+  private String getUptime() {
+    if (slowAnimationsEnabled) {
+      final long ANIMATIONS_DRAG_FACTOR = 10;
+      return Long.toString(
+          this.firstUptime
+              + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+    } else {
+      return Long.toString(SystemClock.uptimeMillis());
+    }
   }
 
   @DoNotStrip
@@ -167,9 +221,36 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  private void configureProps(ReadableNativeArray uiProps, ReadableNativeArray nativeProps) {
+    Set<String> uiPropsSet = convertProps(uiProps);
+    Set<String> nativePropsSet = convertProps(nativeProps);
+    mNodesManager.configureProps(uiPropsSet, nativePropsSet);
+  }
+
+  private Set<String> convertProps(ReadableNativeArray props) {
+    Set<String> propsSet = new HashSet<>();
+    ArrayList<Object> propsList = props.toArrayList();
+    for (int i = 0; i < propsList.size(); i++) {
+      propsSet.add((String) propsList.get(i));
+    }
+    return propsSet;
+  }
+
+  @DoNotStrip
   private void registerEventHandler(EventHandler handler) {
     handler.mCustomEventNamesResolver = mNodesManager.getEventNameResolver();
     mNodesManager.registerEventHandler(handler);
+  }
+
+  @DoNotStrip
+  private int registerSensor(int sensorType, int interval, SensorSetter setter) {
+    return reanimatedSensorContainer.registerSensor(
+        ReanimatedSensorType.getInstanceById(sensorType), interval, setter);
+  }
+
+  @DoNotStrip
+  private void unregisterSensor(int sensorId) {
+    reanimatedSensorContainer.unregisterSensor(sensorId);
   }
 
   public void onCatalystInstanceDestroy() {

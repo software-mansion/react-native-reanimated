@@ -30,7 +30,9 @@ const objectHooks = new Set([
 const globals = new Set([
   'this',
   'console',
+  'performance',
   '_setGlobalConsole',
+  '_chronoNow',
   'Date',
   'Array',
   'ArrayBuffer',
@@ -85,6 +87,7 @@ const blacklistedFunctions = new Set([
   'toString',
   'map',
   'filter',
+  'findIndex',
   'forEach',
   'valueOf',
   'toPrecision',
@@ -328,7 +331,7 @@ function makeWorkletName(t, fun) {
   return '_f'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
 }
 
-function makeWorklet(t, fun, fileName) {
+function makeWorklet(t, fun, state) {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -355,7 +358,7 @@ function makeWorklet(t, fun, fileName) {
     '\n(' + (t.isObjectMethod(fun) ? 'function ' : '') + fun.toString() + '\n)';
 
   const transformed = transformSync(code, {
-    filename: fileName,
+    filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
       '@babel/plugin-transform-shorthand-properties',
@@ -442,11 +445,17 @@ function makeWorklet(t, fun, fileName) {
   );
   const workletHash = hash(funString);
 
+  let location = state.file.opts.filename;
+  if (state.opts.relativeSourceLocation) {
+    const path = require('path');
+    location = path.relative(state.cwd, location);
+  }
+
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
   if (loc) {
     const { line, column } = loc;
     if (typeof line === 'number' && typeof column === 'number') {
-      fileName = `${fileName} (${line}:${column})`;
+      location = `${location} (${line}:${column})`;
     }
   }
 
@@ -487,7 +496,7 @@ function makeWorklet(t, fun, fileName) {
           t.identifier('__location'),
           false
         ),
-        t.stringLiteral(fileName)
+        t.stringLiteral(location)
       )
     ),
   ];
@@ -508,18 +517,6 @@ function makeWorklet(t, fun, fileName) {
     );
   }
 
-  statements.push(
-    t.expressionStatement(
-      t.callExpression(
-        t.memberExpression(
-          t.identifier('global'),
-          t.identifier('__reanimatedWorkletInit'),
-          false
-        ),
-        [privateFunctionId]
-      )
-    )
-  );
   statements.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
@@ -527,7 +524,7 @@ function makeWorklet(t, fun, fileName) {
   return newFun;
 }
 
-function processWorkletFunction(t, fun, fileName) {
+function processWorkletFunction(t, fun, state) {
   // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
   // with a workletized version of itself.
 
@@ -535,7 +532,7 @@ function processWorkletFunction(t, fun, fileName) {
     return;
   }
 
-  const newFun = makeWorklet(t, fun, fileName);
+  const newFun = makeWorklet(t, fun, state);
 
   const replacement = t.callExpression(newFun, []);
 
@@ -555,14 +552,14 @@ function processWorkletFunction(t, fun, fileName) {
   );
 }
 
-function processWorkletObjectMethod(t, path, fileName) {
+function processWorkletObjectMethod(t, path, state) {
   // Replaces ObjectMethod with a workletized version of itself.
 
   if (!t.isFunctionParent(path)) {
     return;
   }
 
-  const newFun = makeWorklet(t, path, fileName);
+  const newFun = makeWorklet(t, path, state);
 
   const replacement = t.objectProperty(
     t.identifier(path.node.key.name),
@@ -572,7 +569,7 @@ function processWorkletObjectMethod(t, path, fileName) {
   path.replaceWith(replacement);
 }
 
-function processIfWorkletNode(t, fun, fileName) {
+function processIfWorkletNode(t, fun, state) {
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;
@@ -590,14 +587,14 @@ function processIfWorkletNode(t, fun, fileName) {
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(t, fun, fileName);
+          processWorkletFunction(t, fun, state);
         }
       }
     },
   });
 }
 
-function processIfGestureHandlerEventCallbackFunctionNode(t, fun, fileName) {
+function processIfGestureHandlerEventCallbackFunctionNode(t, fun, state) {
   // Auto-workletizes React Native Gesture Handler callback functions.
   // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
   // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
@@ -650,7 +647,7 @@ function processIfGestureHandlerEventCallbackFunctionNode(t, fun, fileName) {
     t.isCallExpression(fun.parent) &&
     isGestureObjectEventCallbackMethod(t, fun.parent.callee)
   ) {
-    processWorkletFunction(t, fun, fileName);
+    processWorkletFunction(t, fun, state);
   }
 }
 
@@ -706,7 +703,7 @@ function isGestureObject(t, node) {
   );
 }
 
-function processWorklets(t, path, fileName) {
+function processWorklets(t, path, state) {
   const name =
     path.node.callee.type === 'MemberExpression'
       ? path.node.callee.property.name
@@ -718,17 +715,17 @@ function processWorklets(t, path, fileName) {
     const properties = path.get('arguments.0.properties');
     for (const property of properties) {
       if (t.isObjectMethod(property)) {
-        processWorkletObjectMethod(t, property, fileName);
+        processWorkletObjectMethod(t, property, state);
       } else {
         const value = property.get('value');
-        processWorkletFunction(t, value, fileName);
+        processWorkletFunction(t, value, state);
       }
     }
   } else {
     const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processWorkletFunction(t, path.get(`arguments.${index}`), fileName);
+        processWorkletFunction(t, path.get(`arguments.${index}`), state);
       });
     }
   }
@@ -773,14 +770,13 @@ module.exports = function ({ types: t }) {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          processWorklets(t, path, state.file.opts.filename);
+          processWorklets(t, path, state);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         enter(path, state) {
-          const fileName = state.file.opts.filename;
-          processIfWorkletNode(t, path, fileName);
-          processIfGestureHandlerEventCallbackFunctionNode(t, path, fileName);
+          processIfWorkletNode(t, path, state);
+          processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
         },
       },
     },

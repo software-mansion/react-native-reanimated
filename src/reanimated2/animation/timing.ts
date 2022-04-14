@@ -5,7 +5,7 @@ import {
   AnimationCallback,
   Timestamp,
   AnimatableValue,
-} from './commonTypes';
+} from '../commonTypes';
 
 interface TimingConfig {
   duration?: number;
@@ -80,7 +80,9 @@ export function withTiming(
         // new timing over the old one with the same parameters. If so, we want
         // to copy animation timeline properties
         animation.startTime = (previousAnimation as TimingAnimation).startTime;
-        animation.startValue = (previousAnimation as TimingAnimation).startValue;
+        animation.startValue = (
+          previousAnimation as TimingAnimation
+        ).startValue;
       } else {
         animation.startTime = now;
         animation.startValue = value;
