@@ -91,6 +91,7 @@ void RuntimeDecorator::decorateRuntime(
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
     const UpdatePropsFunction updateProps,
+    const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
     const DispatchCommandFunction dispatchCommand,
     const MeasureFunction measure,
     const RequestFrameFunction requestFrame,
@@ -113,6 +114,25 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);
   rt.global().setProperty(rt, "_updateProps", updatePropsHostFunction);
+
+  auto clb1 = [removeShadowNodeFromRegistry](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    removeShadowNodeFromRegistry(rt, args[0]);
+    return jsi::Value::undefined();
+  };
+  jsi::Value removeShadowNodeFromRegistryHostFunction =
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_removeShadowNodeFromRegistry"),
+          2,
+          clb1);
+  rt.global().setProperty(
+      rt,
+      "_removeShadowNodeFromRegistry",
+      removeShadowNodeFromRegistryHostFunction);
 
   auto clb2 = [requestFrame](
                   jsi::Runtime &rt,

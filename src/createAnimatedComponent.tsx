@@ -280,6 +280,11 @@ export default function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
+        const shareableNode = getShadowNodeFromRef(this); // ShadowNodeWrapper
+        runOnUI(() => {
+          'worklet';
+          _removeShadowNodeFromRegistry(shareableNode);
+        })();
       }
     }
 

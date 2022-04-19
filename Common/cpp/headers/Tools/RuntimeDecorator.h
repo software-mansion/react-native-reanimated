@@ -32,6 +32,7 @@ class RuntimeDecorator {
   static void decorateUIRuntime(
       jsi::Runtime &rt,
       const UpdatePropsFunction updateProps,
+      const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
       const DispatchCommandFunction dispatchCommand,
       const MeasureFunction measure,
       const RequestFrameFunction requestFrame,

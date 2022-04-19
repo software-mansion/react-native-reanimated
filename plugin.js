@@ -66,6 +66,7 @@ const globals = new Set([
   'Set',
   '_log',
   '_updateProps',
+  '_removeShadowNodeFromRegistry',
   'RegExp',
   'Error',
   'global',

@@ -64,13 +64,14 @@ jsi::Value ReanimatedUIManagerBinding::get(
             jsi::Value const &thisValue,
             jsi::Value const *arguments,
             size_t count) noexcept -> jsi::Value {
+          auto original = shadowNodeFromValue(runtime, arguments[0]);
           auto lock = newestShadowNodesRegistry->createLock();
-          return valueFromShadowNode(
-              runtime,
-              newestShadowNodesRegistry->set(UIManager_cloneNode(
-                  uiManager,
-                  newestShadowNodesRegistry->get(
-                      shadowNodeFromValue(runtime, arguments[0])))));
+          auto newest = newestShadowNodesRegistry->get(original);
+          auto result = UIManager_cloneNode(uiManager, newest);
+          if (newestShadowNodesRegistry->has(original)) {
+            newestShadowNodesRegistry->set(result);
+          }
+          return valueFromShadowNode(runtime, result);
         });
   }
 
@@ -85,14 +86,15 @@ jsi::Value ReanimatedUIManagerBinding::get(
             jsi::Value const &thisValue,
             jsi::Value const *arguments,
             size_t count) noexcept -> jsi::Value {
+          auto original = shadowNodeFromValue(runtime, arguments[0]);
           auto lock = newestShadowNodesRegistry->createLock();
-          return valueFromShadowNode(
-              runtime,
-              newestShadowNodesRegistry->set(UIManager_cloneNode(
-                  uiManager,
-                  newestShadowNodesRegistry->get(
-                      shadowNodeFromValue(runtime, arguments[0])),
-                  ShadowNode::emptySharedShadowNodeSharedList())));
+          auto newest = newestShadowNodesRegistry->get(original);
+          auto result = UIManager_cloneNode(
+              uiManager, newest, ShadowNode::emptySharedShadowNodeSharedList());
+          if (newestShadowNodesRegistry->has(original)) {
+            newestShadowNodesRegistry->set(result);
+          }
+          return valueFromShadowNode(runtime, result);
         });
   }
 
@@ -107,16 +109,16 @@ jsi::Value ReanimatedUIManagerBinding::get(
             jsi::Value const &thisValue,
             jsi::Value const *arguments,
             size_t count) noexcept -> jsi::Value {
+          auto original = shadowNodeFromValue(runtime, arguments[0]);
           auto const &rawProps = RawProps(runtime, arguments[1]);
           auto lock = newestShadowNodesRegistry->createLock();
-          return valueFromShadowNode(
-              runtime,
-              newestShadowNodesRegistry->set(UIManager_cloneNode(
-                  uiManager,
-                  newestShadowNodesRegistry->get(
-                      shadowNodeFromValue(runtime, arguments[0])),
-                  nullptr,
-                  &rawProps)));
+          auto newest = newestShadowNodesRegistry->get(original);
+          auto result =
+              UIManager_cloneNode(uiManager, newest, nullptr, &rawProps);
+          if (newestShadowNodesRegistry->has(original)) {
+            newestShadowNodesRegistry->set(result);
+          }
+          return valueFromShadowNode(runtime, result);
         });
   }
 
@@ -131,16 +133,19 @@ jsi::Value ReanimatedUIManagerBinding::get(
             jsi::Value const &thisValue,
             jsi::Value const *arguments,
             size_t count) noexcept -> jsi::Value {
+          auto original = shadowNodeFromValue(runtime, arguments[0]);
           auto const &rawProps = RawProps(runtime, arguments[1]);
           auto lock = newestShadowNodesRegistry->createLock();
-          return valueFromShadowNode(
-              runtime,
-              newestShadowNodesRegistry->set(UIManager_cloneNode(
-                  uiManager,
-                  newestShadowNodesRegistry->get(
-                      shadowNodeFromValue(runtime, arguments[0])),
-                  ShadowNode::emptySharedShadowNodeSharedList(),
-                  &rawProps)));
+          auto newest = newestShadowNodesRegistry->get(original);
+          auto result = UIManager_cloneNode(
+              uiManager,
+              newest,
+              ShadowNode::emptySharedShadowNodeSharedList(),
+              &rawProps);
+          if (newestShadowNodesRegistry->has(original)) {
+            newestShadowNodesRegistry->set(result);
+          }
+          return valueFromShadowNode(runtime, result);
         });
   }
 
@@ -154,11 +159,11 @@ jsi::Value ReanimatedUIManagerBinding::get(
             jsi::Value const &thisValue,
             jsi::Value const *arguments,
             size_t count) noexcept -> jsi::Value {
+          auto parent = shadowNodeFromValue(runtime, arguments[0]);
+          auto child = shadowNodeFromValue(runtime, arguments[1]);
           auto lock = newestShadowNodesRegistry->createLock();
-          UIManager_appendChild(
-              shadowNodeFromValue(runtime, arguments[0]),
-              newestShadowNodesRegistry->get(
-                  shadowNodeFromValue(runtime, arguments[1])));
+          auto newestChild = newestShadowNodesRegistry->get(child);
+          UIManager_appendChild(parent, newestChild);
           return jsi::Value::undefined();
         });
   }
