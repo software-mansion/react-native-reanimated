@@ -100,6 +100,11 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, shadowNodeValue, props);
   };
 
+  auto removeShadowNodeFromRegistry =
+      [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+        this->removeShadowNodeFromRegistry(rt, shadowNodeValue);
+      };
+
   auto dispatchCommand = [this](
                              jsi::Runtime &rt,
                              const jsi::Value &shadowNodeValue,
@@ -115,6 +120,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
       updateProps,
+      removeShadowNodeFromRegistry,
       dispatchCommand,
       measure,
       requestAnimationFrame,
@@ -396,10 +402,10 @@ void NativeReanimatedModule::updateProps(
   surfaceId_ = shadowNode->getSurfaceId();
 
   if (isThereAnyLayoutProp(rt, props)) {
-    // TODO: use uiManager_->getNewestCloneOfShadowNode?
     operationsInBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, props));
   } else {
+    // TODO: batch with layout props changes?
     Tag tag = shadowNode->getTag();
     synchronouslyUpdateUIPropsFunction(rt, tag, props);
   }
@@ -413,6 +419,9 @@ void NativeReanimatedModule::performOperations() {
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
+
+  auto copiedTagsToRemove = std::move(tagsToRemove_);
+  tagsToRemove_ = std::vector<Tag>();
 
   // TODO: store ShadowTreeRegistry and ContextContainer as private fields
   auto shadowTreeRegistry = getShadowTreeRegistryFromUIManager(uiManager_);
@@ -456,13 +465,28 @@ void NativeReanimatedModule::performOperations() {
         for (const auto &pair : ancestors) {
           auto ancestor = pair.first.get().getChildren().at(pair.second);
           newestShadowNodesRegistry_->set(ancestor);
+          auto parentTag = pair.first.get().getTag();
+          auto childTag = ancestor->getTag();
+          newestShadowNodesRegistry_->setParent(parentTag, childTag);
         }
         // TODO: what if transaction fails?
+      }
+
+      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+      for (auto tag : copiedTagsToRemove) {
+        newestShadowNodesRegistry_->remove(tag);
       }
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });
   });
+}
+
+void NativeReanimatedModule::removeShadowNodeFromRegistry(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  tagsToRemove_.push_back(shadowNode->getTag());
 }
 
 void NativeReanimatedModule::dispatchCommand(

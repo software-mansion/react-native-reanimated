@@ -16,15 +16,21 @@ class NewestShadowNodesRegistry {
 
   const ShadowNode &get(const ShadowNode &shadowNode);
 
-  void remove(ShadowNode::Shared shadowNode);
+  bool has(ShadowNode::Shared shadowNode);
+
+  void remove(Tag tag); // with ancestors
 
   void clear();
+
+  void setParent(Tag parent, Tag child);
 
   std::lock_guard<std::mutex> createLock();
 
  private:
   std::unordered_map<Tag, ShadowNode::Shared> map_;
   mutable std::mutex mutex_; // Protects `map_`.
+
+  std::unordered_map<Tag, Tag> map2_; // child -> tag
 };
 
 } // namespace reanimated

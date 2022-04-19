@@ -12,7 +12,8 @@ import React from 'react';
 // import AnimatedSensorExample from './src/AnimatedSensorExample';
 // import AnimatedTextExample from './src/AnimatedTextExample';
 // import GestureHandlerExample from './src/GestureHandlerExample';
-import BokehExample from './src/BokehExample';
+// import BokehExample from './src/BokehExample';
+import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
 import { initializeForFabric } from '../src/reanimated2/core';
 
 export default function App() {
@@ -33,5 +34,6 @@ export default function App() {
   // return <AnimatedSensorExample />;
   // return <AnimatedTextExample />;
   // return <GestureHandlerExample />;
-  return <BokehExample />;
+  // return <BokehExample />;
+  return <NewestShadowNodesRegistryRemoveExample />;
 }

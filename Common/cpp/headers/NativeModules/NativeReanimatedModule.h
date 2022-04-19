@@ -101,6 +101,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &props);
   void performOperations();
 
+  void removeShadowNodeFromRegistry(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeValue);
+
   void dispatchCommand(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,
@@ -145,6 +149,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
 
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+
+  std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
 
   jsi::Runtime
       *rt_; // TODO: do we really need jsi::Runtime in performOperations?

@@ -27,9 +27,39 @@ const ShadowNode &NewestShadowNodesRegistry::get(const ShadowNode &shadowNode) {
   return it == map_.cend() ? shadowNode : *it->second;
 }
 
-void NewestShadowNodesRegistry::remove(ShadowNode::Shared shadowNode) {
-  // TODO: remove unused ancestors as well
-  map_.erase(getKey(shadowNode));
+bool NewestShadowNodesRegistry::has(ShadowNode::Shared shadowNode) {
+  return map_.find(getKey(shadowNode)) != map_.cend();
+}
+
+void NewestShadowNodesRegistry::setParent(Tag parent, Tag child) {
+  map2_[child] = parent;
+}
+
+void NewestShadowNodesRegistry::remove(Tag tag) {
+  if (map_.find(tag) == map_.cend()) {
+    return;
+  }
+
+  auto shadowNode = map_[tag];
+
+  while (shadowNode != nullptr) {
+    bool hasAnyChildInMap = false;
+    for (const auto &child : shadowNode->getChildren()) {
+      if (has(child)) {
+        hasAnyChildInMap = true;
+        break;
+      }
+    }
+
+    if (hasAnyChildInMap) {
+      break;
+    }
+
+    map_.erase(shadowNode->getTag());
+    auto parentTag = map2_[shadowNode->getTag()];
+    map2_.erase(shadowNode->getTag());
+    shadowNode = map_[parentTag];
+  }
 }
 
 void NewestShadowNodesRegistry::clear() {
