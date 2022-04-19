@@ -13,8 +13,12 @@ import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
+import com.facebook.react.fabric.Binding;
+import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
@@ -24,6 +28,7 @@ import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -106,9 +111,26 @@ public class NativeProxy {
         (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
     mScheduler = new Scheduler(context);
-    mHybridData =
-        initHybrid(
-            context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
+    FabricUIManager fabricUIManager =
+        (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
+
+    HybridData tempHybridData;
+    try {
+      Field mBindingField = FabricUIManager.class.getDeclaredField("mBinding");
+      mBindingField.setAccessible(true);
+      Binding binding = (Binding) mBindingField.get(fabricUIManager);
+      tempHybridData =
+          initHybrid(
+              context.getJavaScriptContextHolder().get(),
+              holder,
+              mScheduler,
+              LayoutAnimations,
+              binding);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      tempHybridData = null;
+    }
+
+    mHybridData = tempHybridData;
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
@@ -131,7 +153,8 @@ public class NativeProxy {
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
       Scheduler scheduler,
-      LayoutAnimations LayoutAnimations);
+      LayoutAnimations LayoutAnimations,
+      Binding binding);
 
   private native void installJSIBindings();
 

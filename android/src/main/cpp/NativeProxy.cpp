@@ -1,3 +1,4 @@
+#include <Binding.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
@@ -20,11 +21,29 @@
 #include "NativeProxy.h"
 #include "NewestShadowNodesRegistry.h"
 #include "PlatformDepMethodsHolder.h"
+#include "ReanimatedUIManagerBinding.h"
 
 namespace reanimated {
 
 using namespace facebook;
 using namespace react;
+
+class BindingPublic : public jni::HybridClass<Binding>,
+                      public SchedulerDelegate,
+                      public LayoutAnimationStatusDelegate {
+ public:
+  butter::shared_mutex installMutex_;
+  std::shared_ptr<FabricMountingManager> mountingManager_;
+  std::shared_ptr<Scheduler> scheduler_;
+};
+
+class SchedulerPublic : public UIManagerDelegate {
+ public:
+  SchedulerDelegate *delegate_;
+  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
+  RuntimeExecutor runtimeExecutor_;
+  std::shared_ptr<UIManager> uiManager_;
+};
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
@@ -44,10 +63,24 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
-    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations) {
+    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+    jni::alias_ref<facebook::react::Binding::javaobject> binding) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
+
+  BindingPublic *bindingPublic =
+      reinterpret_cast<BindingPublic *>(binding->cthis());
+  SchedulerPublic *schedulerPublic =
+      reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
+  RuntimeExecutor runtimeExecutor = schedulerPublic->runtimeExecutor_;
+  std::shared_ptr<UIManager> uiManager = schedulerPublic->uiManager_;
+
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+      *((jsi::Runtime *)jsContext),
+      runtimeExecutor,
+      uiManager,
+      std::make_shared<NewestShadowNodesRegistry>());
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,

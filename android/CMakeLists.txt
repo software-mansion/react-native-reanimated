@@ -94,6 +94,7 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/React/Base"
         "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni"
         "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/fabric/jni"
         "${NODE_MODULES_DIR}/react-native/ReactCommon"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
