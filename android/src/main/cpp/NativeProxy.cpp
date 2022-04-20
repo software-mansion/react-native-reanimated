@@ -1,4 +1,4 @@
-#include <Binding.h>
+#include <JFabricUIManager.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
@@ -17,6 +17,7 @@
 #include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
+#include "FabricUtils.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
 #include "NewestShadowNodesRegistry.h"
@@ -27,23 +28,6 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
-
-class BindingPublic : public jni::HybridClass<Binding>,
-                      public SchedulerDelegate,
-                      public LayoutAnimationStatusDelegate {
- public:
-  butter::shared_mutex installMutex_;
-  std::shared_ptr<FabricMountingManager> mountingManager_;
-  std::shared_ptr<Scheduler> scheduler_;
-};
-
-class SchedulerPublic : public UIManagerDelegate {
- public:
-  SchedulerDelegate *delegate_;
-  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  RuntimeExecutor runtimeExecutor_;
-  std::shared_ptr<UIManager> uiManager_;
-};
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
@@ -64,23 +48,28 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
         jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<facebook::react::Binding::javaobject> binding) {
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
 
-  BindingPublic *bindingPublic =
-      reinterpret_cast<BindingPublic *>(binding->cthis());
+  Binding *binding = fabricUIManager->getBinding();
+  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
   SchedulerPublic *schedulerPublic =
       reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
   RuntimeExecutor runtimeExecutor = schedulerPublic->runtimeExecutor_;
-  std::shared_ptr<UIManager> uiManager = schedulerPublic->uiManager_;
+  std::shared_ptr<UIManager> uiManager =
+      bindingPublic->scheduler_->getUIManager();
+
+  auto newestShadowNodesRegistry =
+      std::make_shared<NewestShadowNodesRegistry>();
 
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
       *((jsi::Runtime *)jsContext),
       runtimeExecutor,
       uiManager,
-      std::make_shared<NewestShadowNodesRegistry>());
+      newestShadowNodesRegistry);
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,

@@ -204,6 +204,19 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+find_library(
+        FABRICJNI
+        fabricjni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+
+find_library(
+        REACT_RENDER_SCHEDULER
+        react_render_scheduler
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (JSI_LIB "")
@@ -237,6 +250,8 @@ if(${FOR_HERMES})
             ${REACT_DEBUG}
             ${REACT_RENDER_DEBUG}
             ${RRC_ROOT}
+            ${FABRICJNI}
+            ${REACT_RENDER_SCHEDULER}
             android
     )
 else()
@@ -256,6 +271,8 @@ else()
             ${REACT_DEBUG}
             ${REACT_RENDER_DEBUG}
             ${RRC_ROOT}
+            ${FABRICJNI}
+            ${REACT_RENDER_SCHEDULER}
             android
     )
 endif()

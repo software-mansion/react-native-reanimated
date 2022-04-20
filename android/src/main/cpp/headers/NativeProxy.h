@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Binding.h>
+#include <JFabricUIManager.h>
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
@@ -130,7 +130,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           jsCallInvokerHolder,
       jni::alias_ref<AndroidScheduler::javaobject> scheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<facebook::react::Binding::javaobject> binding);
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+          fabricUIManager);
   static void registerNatives();
 
  private:

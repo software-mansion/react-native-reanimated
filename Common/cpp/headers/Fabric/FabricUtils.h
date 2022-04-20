@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Binding.h>
+#include <fbjni/fbjni.h>
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
@@ -23,6 +25,20 @@ struct UIManagerPublic {
   ShadowTreeRegistry shadowTreeRegistry_{};
   BackgroundExecutor const backgroundExecutor_{};
   ContextContainer::Shared contextContainer_;
+};
+
+struct BindingPublic : public jni::HybridClass<Binding>,
+                       public SchedulerDelegate,
+                       public LayoutAnimationStatusDelegate {
+  butter::shared_mutex installMutex_;
+  std::shared_ptr<FabricMountingManager> mountingManager_;
+  std::shared_ptr<facebook::react::Scheduler> scheduler_;
+};
+
+struct SchedulerPublic : public UIManagerDelegate {
+  SchedulerDelegate *delegate_;
+  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
+  RuntimeExecutor runtimeExecutor_;
 };
 
 std::shared_ptr<UIManager> getUIManagerFromBinding(jsi::Runtime &rt);
