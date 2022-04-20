@@ -1,7 +1,9 @@
 #pragma once
 
+#ifdef ANDROID
 #include <Binding.h>
 #include <fbjni/fbjni.h>
+#endif
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
@@ -27,12 +29,13 @@ struct UIManagerPublic {
   ContextContainer::Shared contextContainer_;
 };
 
+#ifdef ANDROID
 struct BindingPublic : public jni::HybridClass<Binding>,
                        public SchedulerDelegate,
                        public LayoutAnimationStatusDelegate {
   butter::shared_mutex installMutex_;
   std::shared_ptr<FabricMountingManager> mountingManager_;
-  std::shared_ptr<facebook::react::Scheduler> scheduler_;
+  std::shared_ptr<Scheduler> scheduler_;
 };
 
 struct SchedulerPublic : public UIManagerDelegate {
@@ -40,6 +43,12 @@ struct SchedulerPublic : public UIManagerDelegate {
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   RuntimeExecutor runtimeExecutor_;
 };
+
+RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding);
+
+std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding);
+
+#endif
 
 std::shared_ptr<UIManager> getUIManagerFromBinding(jsi::Runtime &rt);
 

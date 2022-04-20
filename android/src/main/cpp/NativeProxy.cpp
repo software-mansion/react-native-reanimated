@@ -55,21 +55,16 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   scheduler->setJSCallInvoker(jsCallInvoker);
 
   Binding *binding = fabricUIManager->getBinding();
-  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
-  SchedulerPublic *schedulerPublic =
-      reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
-  RuntimeExecutor runtimeExecutor = schedulerPublic->runtimeExecutor_;
-  std::shared_ptr<UIManager> uiManager =
-      bindingPublic->scheduler_->getUIManager();
+  RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
+  std::shared_ptr<UIManager> uiManager = getUIManagerFromBinding(binding);
 
   auto newestShadowNodesRegistry =
       std::make_shared<NewestShadowNodesRegistry>();
 
+  jsi::Runtime &jsRuntime = *((jsi::Runtime *)jsContext);
+
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      *((jsi::Runtime *)jsContext),
-      runtimeExecutor,
-      uiManager,
-      newestShadowNodesRegistry);
+      jsRuntime, runtimeExecutor, uiManager, newestShadowNodesRegistry);
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,

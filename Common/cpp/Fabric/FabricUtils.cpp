@@ -125,4 +125,19 @@ void UIManager_appendChild(
   componentDescriptor.appendChild(parentShadowNode, childShadowNode);
 }
 
+#ifdef ANDROID
+RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding) {
+  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
+  SchedulerPublic *schedulerPublic =
+      reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
+  return schedulerPublic->runtimeExecutor_;
+}
+
+std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding) {
+  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
+  SchedulerPublic *schedulerPublic =
+      reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
+  return bindingPublic->scheduler_->getUIManager();
+}
+#endif
 } // namespace reanimated
