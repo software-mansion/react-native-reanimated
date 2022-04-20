@@ -62,7 +62,7 @@ void NewestShadowNodesRegistry::clear() {
   map_.clear();
 }
 
-std::lock_guard<std::mutex> NewestShadowNodesRegistry::createLock() {
+std::lock_guard<std::mutex> NewestShadowNodesRegistry::createLock() const {
   return std::lock_guard<std::mutex>(mutex_);
 }
 

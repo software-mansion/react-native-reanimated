@@ -11,7 +11,7 @@ namespace reanimated {
 
 class NewestShadowNodesRegistry {
  public:
-  std::lock_guard<std::mutex> createLock();
+  std::lock_guard<std::mutex> createLock() const;
 
   void set(ShadowNode::Shared shadowNode, Tag parentTag);
   // updates ShadowNode and sets parent tag, to be called from Reanimated
