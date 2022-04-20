@@ -135,8 +135,6 @@ RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding) {
 
 std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding) {
   BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
-  SchedulerPublic *schedulerPublic =
-      reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
   return bindingPublic->scheduler_->getUIManager();
 }
 #endif
