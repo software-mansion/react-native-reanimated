@@ -50,7 +50,7 @@ std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding);
 
 #endif
 
-std::shared_ptr<UIManager> getUIManagerFromBinding(jsi::Runtime &rt);
+std::shared_ptr<UIManager> getUIManagerFromRuntime(jsi::Runtime &rt);
 
 const ShadowTreeRegistry *getShadowTreeRegistryFromUIManager(
     const std::shared_ptr<UIManager> &uiManager);

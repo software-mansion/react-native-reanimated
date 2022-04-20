@@ -285,7 +285,7 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
 }
 
 jsi::Value NativeReanimatedModule::initializeForFabric(jsi::Runtime &rt) {
-  uiManager_ = getUIManagerFromBinding(rt);
+  uiManager_ = getUIManagerFromRuntime(rt);
   return jsi::Value::undefined();
 }
 

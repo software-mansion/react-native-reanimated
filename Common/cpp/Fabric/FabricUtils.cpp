@@ -6,7 +6,7 @@ using namespace facebook::react;
 
 namespace reanimated {
 
-std::shared_ptr<UIManager> getUIManagerFromBinding(jsi::Runtime &rt) {
+std::shared_ptr<UIManager> getUIManagerFromRuntime(jsi::Runtime &rt) {
   auto binding = UIManagerBinding::getBinding(rt);
   react_native_assert(
       binding != nullptr); // too early, UIManagerBinding is not registered yet
