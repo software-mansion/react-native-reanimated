@@ -21,7 +21,7 @@ bool NewestShadowNodesRegistry::has(
 ShadowNode::Shared NewestShadowNodesRegistry::get(
     const ShadowNode::Shared &shadowNode) const {
   const auto it = map_.find(shadowNode->getTag());
-  return it != map_.cend() ? it->second.first : shadowNode;
+  return it != map_.cend() ? it->second.first : nullptr;
 }
 
 void NewestShadowNodesRegistry::update(ShadowNode::Shared shadowNode) {

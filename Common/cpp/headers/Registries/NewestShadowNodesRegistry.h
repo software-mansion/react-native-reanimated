@@ -20,7 +20,7 @@ class NewestShadowNodesRegistry {
   // checks if ShadowNode exists in the registry
 
   ShadowNode::Shared get(const ShadowNode::Shared &shadowNode) const;
-  // returns the most recent version of ShadowNode or the argument if not found
+  // returns the most recent version of ShadowNode or nullptr if not found
 
   void update(ShadowNode::Shared shadowNode);
   // updates ShadowNode that already exists in registry, to be called from RN
