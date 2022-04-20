@@ -441,10 +441,17 @@ void NativeReanimatedModule::performOperations() {
 
         auto newRootNode =
             rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              return newestShadowNodesRegistry_->cloneWithNewProps(
-                  oldShadowNode,
+              const auto newest =
+                  newestShadowNodesRegistry_->get(oldShadowNode.getTag());
+
+              const auto &source = newest == nullptr ? oldShadowNode : *newest;
+
+              const auto newProps = source.getComponentDescriptor().cloneProps(
                   propsParserContext,
+                  source.getProps(),
                   RawProps(*rt_, *pair.second));
+
+              return source.clone({/* .props = */ newProps});
             });
 
         if (newRootNode == nullptr) {

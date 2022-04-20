@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function WidthExample() {
-  const [padding, setPadding] = React.useState(15);
+  const [padding, setPadding] = React.useState(20);
   const [height, setHeight] = React.useState(80);
 
   const sv = useSharedValue(0);
@@ -38,7 +38,7 @@ export default function WidthExample() {
         <Button onPress={handleIncreasePadding} title="Increase padding" />
         <Button onPress={handleIncreaseHeight} title="Increase height" />
       </View>
-      <View style={[styles.parent, { padding }]}>
+      <View style={[styles.parent, { paddingVertical: padding }]}>
         <View collapsable={false} style={styles.middle}>
           <Animated.View style={[styles.left, { height }, childStyle]} />
           <View style={styles.right} />
@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
   parent: {
     flexDirection: 'row',
     backgroundColor: 'red',
+    paddingHorizontal: 20,
   },
   middle: {
     flexDirection: 'row',

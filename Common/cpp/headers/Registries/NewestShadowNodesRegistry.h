@@ -19,7 +19,7 @@ class NewestShadowNodesRegistry {
   bool has(const ShadowNode::Shared &shadowNode) const;
   // checks if ShadowNode exists in the registry
 
-  ShadowNode::Shared get(const ShadowNode::Shared &shadowNode) const;
+  ShadowNode::Shared get(Tag tag) const;
   // returns the most recent version of ShadowNode or nullptr if not found
 
   void update(ShadowNode::Shared shadowNode);
@@ -30,12 +30,6 @@ class NewestShadowNodesRegistry {
 
   void clear();
   // clears the map, called from NativeReanimatedModule destructor on app reload
-
-  ShadowNode::Unshared cloneWithNewProps(
-      const ShadowNode &oldShadowNode,
-      const PropsParserContext &propsParserContext,
-      RawProps &&rawProps);
-  // returns a clone of newest ShadowNode with new props
 
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, Tag>> map_;

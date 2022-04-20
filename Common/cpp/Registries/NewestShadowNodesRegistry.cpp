@@ -18,9 +18,8 @@ bool NewestShadowNodesRegistry::has(
   return map_.find(shadowNode->getTag()) != map_.cend();
 }
 
-ShadowNode::Shared NewestShadowNodesRegistry::get(
-    const ShadowNode::Shared &shadowNode) const {
-  const auto it = map_.find(shadowNode->getTag());
+ShadowNode::Shared NewestShadowNodesRegistry::get(Tag tag) const {
+  const auto it = map_.find(tag);
   return it != map_.cend() ? it->second.first : nullptr;
 }
 
@@ -61,17 +60,6 @@ void NewestShadowNodesRegistry::remove(Tag tag) {
 void NewestShadowNodesRegistry::clear() {
   // TODO: remove this method
   map_.clear();
-}
-
-ShadowNode::Unshared NewestShadowNodesRegistry::cloneWithNewProps(
-    ShadowNode const &oldShadowNode,
-    PropsParserContext const &propsParserContext,
-    RawProps &&rawProps) {
-  const auto it = map_.find(oldShadowNode.getTag());
-  const auto &source = it != map_.cend() ? *it->second.first : oldShadowNode;
-  auto newProps = source.getComponentDescriptor().cloneProps(
-      propsParserContext, source.getProps(), rawProps);
-  return source.clone({/* .props = */ newProps});
 }
 
 std::lock_guard<std::mutex> NewestShadowNodesRegistry::createLock() {
