@@ -1,38 +1,33 @@
 #include "NewestShadowNodesRegistry.h"
 
+#include <react/renderer/core/ComponentDescriptor.h>
+#include <react/renderer/core/ShadowNodeFragment.h>
+
 using namespace facebook::react;
 
 namespace reanimated {
 
-inline static Tag getKey(ShadowNode::Shared shadowNode) {
-  return shadowNode->getTag();
+void NewestShadowNodesRegistry::set(
+    ShadowNode::Shared shadowNode,
+    Tag parentTag) {
+  map_[shadowNode->getTag()] = std::make_pair(shadowNode, parentTag);
 }
 
-ShadowNode::Shared NewestShadowNodesRegistry::set(
-    ShadowNode::Shared shadowNode) {
-  map_[getKey(shadowNode)] = shadowNode;
-  return shadowNode; // for convenience
+bool NewestShadowNodesRegistry::has(
+    const ShadowNode::Shared &shadowNode) const {
+  return map_.find(shadowNode->getTag()) != map_.cend();
 }
 
 ShadowNode::Shared NewestShadowNodesRegistry::get(
-    ShadowNode::Shared shadowNode) {
-  const auto it = map_.find(getKey(shadowNode));
-  return it == map_.cend() ? shadowNode : it->second;
+    const ShadowNode::Shared &shadowNode) const {
+  const auto it = map_.find(shadowNode->getTag());
+  return it != map_.cend() ? it->second.first : shadowNode;
 }
 
-const ShadowNode &NewestShadowNodesRegistry::get(const ShadowNode &shadowNode) {
-  // TODO: don't return const reference here, convert to cloneNewestClone or
-  // something
-  const auto it = map_.find(shadowNode.getTag());
-  return it == map_.cend() ? shadowNode : *it->second;
-}
-
-bool NewestShadowNodesRegistry::has(ShadowNode::Shared shadowNode) {
-  return map_.find(getKey(shadowNode)) != map_.cend();
-}
-
-void NewestShadowNodesRegistry::setParent(Tag parent, Tag child) {
-  map2_[child] = parent;
+void NewestShadowNodesRegistry::update(ShadowNode::Shared shadowNode) {
+  const auto it = map_.find(shadowNode->getTag());
+  react_native_assert(it != map_.cend());
+  it->second.first = shadowNode;
 }
 
 void NewestShadowNodesRegistry::remove(Tag tag) {
@@ -40,7 +35,7 @@ void NewestShadowNodesRegistry::remove(Tag tag) {
     return;
   }
 
-  auto shadowNode = map_[tag];
+  auto shadowNode = map_[tag].first;
 
   while (shadowNode != nullptr) {
     bool hasAnyChildInMap = false;
@@ -55,16 +50,28 @@ void NewestShadowNodesRegistry::remove(Tag tag) {
       break;
     }
 
-    map_.erase(shadowNode->getTag());
-    auto parentTag = map2_[shadowNode->getTag()];
-    map2_.erase(shadowNode->getTag());
-    shadowNode = map_[parentTag];
+    auto it = map_.find(shadowNode->getTag());
+    Tag parentTag = it->second.second;
+    map_.erase(it);
+
+    shadowNode = map_[parentTag].first;
   }
 }
 
 void NewestShadowNodesRegistry::clear() {
   // TODO: remove this method
   map_.clear();
+}
+
+ShadowNode::Unshared NewestShadowNodesRegistry::cloneWithNewProps(
+    ShadowNode const &oldShadowNode,
+    PropsParserContext const &propsParserContext,
+    RawProps &&rawProps) {
+  const auto it = map_.find(oldShadowNode.getTag());
+  const auto &source = it != map_.cend() ? *it->second.first : oldShadowNode;
+  auto newProps = source.getComponentDescriptor().cloneProps(
+      propsParserContext, source.getProps(), rawProps);
+  return source.clone({/* .props = */ newProps});
 }
 
 std::lock_guard<std::mutex> NewestShadowNodesRegistry::createLock() {

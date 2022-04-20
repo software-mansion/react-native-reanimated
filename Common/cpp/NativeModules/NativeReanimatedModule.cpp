@@ -428,10 +428,11 @@ void NativeReanimatedModule::performOperations() {
   auto contextContainer = getContextContainerFromUIManager(&*uiManager_);
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
 
-  auto lock = newestShadowNodesRegistry_->createLock();
-
   shadowTreeRegistry->visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
+      // lock once due to performance reasons
+      auto lock = newestShadowNodesRegistry_->createLock();
+
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
       for (const auto &pair : copiedOperationsQueue) {
@@ -440,15 +441,10 @@ void NativeReanimatedModule::performOperations() {
 
         auto newRootNode =
             rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto &newest =
-                  newestShadowNodesRegistry_->get(oldShadowNode);
-
-              auto newProps = newest.getComponentDescriptor().cloneProps(
+              return newestShadowNodesRegistry_->cloneWithNewProps(
+                  oldShadowNode,
                   propsParserContext,
-                  newest.getProps(),
                   RawProps(*rt_, *pair.second));
-
-              return newest.clone({/* .props = */ newProps});
             });
 
         if (newRootNode == nullptr) {
@@ -458,18 +454,12 @@ void NativeReanimatedModule::performOperations() {
         }
         rootNode = newRootNode;
 
-        newestShadowNodesRegistry_->set(rootNode);
-        // TODO: is this necessary?
-
         auto ancestors = family.getAncestors(*rootNode);
         for (const auto &pair : ancestors) {
-          auto ancestor = pair.first.get().getChildren().at(pair.second);
-          newestShadowNodesRegistry_->set(ancestor);
-          auto parentTag = pair.first.get().getTag();
-          auto childTag = ancestor->getTag();
-          newestShadowNodesRegistry_->setParent(parentTag, childTag);
+          const auto &parent = pair.first.get();
+          const auto &child = parent.getChildren().at(pair.second);
+          newestShadowNodesRegistry_->set(child, parent.getTag());
         }
-        // TODO: what if transaction fails?
       }
 
       // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
