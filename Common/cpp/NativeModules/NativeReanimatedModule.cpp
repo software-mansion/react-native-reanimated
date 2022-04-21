@@ -423,12 +423,11 @@ void NativeReanimatedModule::performOperations() {
   auto copiedTagsToRemove = std::move(tagsToRemove_);
   tagsToRemove_ = std::vector<Tag>();
 
-  // TODO: store ShadowTreeRegistry and ContextContainer as private fields
-  auto shadowTreeRegistry = getShadowTreeRegistryFromUIManager(uiManager_);
+  const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
   auto contextContainer = getContextContainerFromUIManager(&*uiManager_);
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
 
-  shadowTreeRegistry->visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+  shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       // lock once due to performance reasons
       auto lock = newestShadowNodesRegistry_->createLock();

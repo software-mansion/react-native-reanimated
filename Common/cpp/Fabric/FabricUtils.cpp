@@ -19,11 +19,6 @@ inline static const UIManagerPublic *getUIManagerPublic(
   return reinterpret_cast<const UIManagerPublic *>(uiManager);
 }
 
-const ShadowTreeRegistry *getShadowTreeRegistryFromUIManager(
-    const std::shared_ptr<UIManager> &uiManager) {
-  return &(getUIManagerPublic(&*uiManager)->shadowTreeRegistry_);
-}
-
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
     const UIManager *uiManager) {
   return getUIManagerPublic(uiManager)->contextContainer_;
@@ -53,14 +48,14 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
     ShadowNode const *ancestorShadowNode,
     LayoutableShadowNode::LayoutInspectingPolicy policy) {
   // based on implementation from UIManager.cpp
-  auto shadowTreeRegistry = getShadowTreeRegistryFromUIManager(uiManager);
+  const auto &shadowTreeRegistry = uiManager->getShadowTreeRegistry();
 
   // We might store here an owning pointer to `ancestorShadowNode` to ensure
   // that the node is not deallocated during method execution lifetime.
   auto owningAncestorShadowNode = ShadowNode::Shared{};
 
   if (!ancestorShadowNode) {
-    shadowTreeRegistry->visit(
+    shadowTreeRegistry.visit(
         shadowNode.getSurfaceId(), [&](ShadowTree const &shadowTree) {
           owningAncestorShadowNode =
               shadowTree.getCurrentRevision().rootShadowNode;

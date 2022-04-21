@@ -52,9 +52,6 @@ std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding);
 
 std::shared_ptr<UIManager> getUIManagerFromRuntime(jsi::Runtime &rt);
 
-const ShadowTreeRegistry *getShadowTreeRegistryFromUIManager(
-    const std::shared_ptr<UIManager> &uiManager);
-
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
     const UIManager *uiManager);
 
