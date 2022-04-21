@@ -77,9 +77,6 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) = 0;
-
-  // Fabric
-  virtual jsi::Value initializeForFabric(jsi::Runtime &rt) = 0;
 };
 
 } // namespace reanimated

@@ -87,8 +87,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
 
-  jsi::Value initializeForFabric(jsi::Runtime &rt) override;
-
   void onRender(double timestampMs);
   void onEvent(std::string eventName, jsi::Value &&eventAsString);
   bool isAnyHandlerWaitingForEvent(std::string eventName);
@@ -119,6 +117,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+  void setUIManager(std::shared_ptr<UIManager> uiManager);
 
  private:
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);

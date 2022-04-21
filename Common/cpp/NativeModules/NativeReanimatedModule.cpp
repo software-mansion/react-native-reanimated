@@ -284,11 +284,6 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::initializeForFabric(jsi::Runtime &rt) {
-  uiManager_ = getUIManagerFromRuntime(rt);
-  return jsi::Value::undefined();
-}
-
 jsi::Value NativeReanimatedModule::configureProps(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
@@ -539,6 +534,11 @@ jsi::Value NativeReanimatedModule::measure(
   result.setProperty(
       rt, "pageY", jsi::Value(static_cast<double>(frame.origin.y)));
   return result;
+}
+
+void NativeReanimatedModule::setUIManager(
+    std::shared_ptr<UIManager> uiManager) {
+  uiManager_ = uiManager;
 }
 
 } // namespace reanimated

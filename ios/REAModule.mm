@@ -26,6 +26,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   NSMutableArray<AnimatedOperation> *_operations;
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<NativeReanimatedModule> _reanimatedModule;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -45,10 +46,10 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return RCTGetUIManagerQueue();
 }
 
-+ (BOOL)requiresMainQueueSetup
-{
-  return true;
-}
+//+ (BOOL)requiresMainQueueSetup
+//{
+//  return true;
+//}
 
 - (void)installReanimatedModuleHostObject
 {
@@ -76,6 +77,10 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
 {
   _surfacePresenter = self.bridge.surfacePresenter;
+  RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
+    self->_reanimatedModule->setUIManager(scheduler.uiManager);
+  });
 }
 
 - (void)setBridge:(RCTBridge *)bridge
@@ -111,16 +116,16 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   if (jsiRuntime) {
     // Reanimated
-    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+    _reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
     jsiRuntime->global().setProperty(
         *jsiRuntime,
         "_WORKLET_RUNTIME",
-        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+        static_cast<double>(reinterpret_cast<std::uintptr_t>(_reanimatedModule->runtime.get())));
 
     jsiRuntime->global().setProperty(
         *jsiRuntime,
         jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
+        jsi::Object::createFromHostObject(*jsiRuntime, _reanimatedModule));
   }
   return nil;
 }
