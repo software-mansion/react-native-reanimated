@@ -12,6 +12,7 @@ namespace reanimated {
 class NewestShadowNodesRegistry {
  public:
   std::lock_guard<std::mutex> createLock() const;
+  // returns a lock you need to hold when calling any of the methods below
 
   void set(ShadowNode::Shared shadowNode, Tag parentTag);
   // updates ShadowNode and sets parent tag, to be called from Reanimated
@@ -33,7 +34,7 @@ class NewestShadowNodesRegistry {
 
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, Tag>> map_;
-  // tag -> (most recent shadow node, parent tag)
+  // tag -> (most recent clone of shadow node, parent tag)
   mutable std::mutex mutex_; // Protects `map_`.
 };
 
