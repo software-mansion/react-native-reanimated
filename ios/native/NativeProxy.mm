@@ -397,11 +397,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   __weak RCTSurfacePresenter *surfacePresenter = reinterpret_cast<RCTSurfacePresenter *>(bridge.surfacePresenter);
   auto scheduler_ = [surfacePresenter scheduler];
-  auto eventListener = std::make_shared<facebook::react::EventListener>([module](
-                                                                            const EventTarget *eventTarget,
-                                                                            const std::string &type,
-                                                                            EventPriority priority,
-                                                                            const ValueFactory &payloadFactory) {
+  auto eventListener = std::make_shared<facebook::react::EventListener>([module](const RawEvent &rawEvent) {
+    const EventTarget *eventTarget = rawEvent.eventTarget.get();
+    react_native_assert(eventTarget != nullptr); // TODO: why is this nullptr after app reload?
+
+    const std::string &type = rawEvent.type;
+    const ValueFactory &payloadFactory = rawEvent.payloadFactory;
+
     auto &rt = *module->runtime;
     int tag = eventTarget->getTag();
     std::string eventType = type;
@@ -416,6 +418,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
     module->onEvent(eventName, std::move(payload));
     global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+
+    // TODO: return true if Reanimated successfully handled the event
     return false;
   });
   [scheduler_ addEventListener:eventListener];

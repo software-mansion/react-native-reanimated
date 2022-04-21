@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.h b/node_modules/react-native/React/Fabric/RCTScheduler.h
-index b201c0a..ae10c0e 100644
+index b201c0a..bebc5fd 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.h
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.h
 @@ -10,11 +10,13 @@
@@ -20,7 +20,7 @@ index b201c0a..ae10c0e 100644
  @interface RCTScheduler : NSObject
  
  @property (atomic, weak, nullable) id<RCTSchedulerDelegate> delegate;
-+@property (readonly) std::shared_ptr<facebook::react::UIManager> uiManager;
++@property (readonly) std::shared_ptr<facebook::react::UIManager> const uiManager;
  
  - (instancetype)initWithToolbox:(facebook::react::SchedulerToolbox)toolbox;
  
@@ -36,7 +36,7 @@ index b201c0a..ae10c0e 100644
  
  NS_ASSUME_NONNULL_END
 diff --git a/node_modules/react-native/React/Fabric/RCTScheduler.mm b/node_modules/react-native/React/Fabric/RCTScheduler.mm
-index 4bc19fd..650f1a8 100644
+index 4bc19fd..8ba0b34 100644
 --- a/node_modules/react-native/React/Fabric/RCTScheduler.mm
 +++ b/node_modules/react-native/React/Fabric/RCTScheduler.mm
 @@ -193,4 +193,19 @@ - (void)onAllAnimationsComplete
@@ -53,7 +53,7 @@ index 4bc19fd..650f1a8 100644
 +  return _scheduler->removeEventListener(listener);
 +}
 +
-+- (std::shared_ptr<facebook::react::UIManager>)uiManager
++- (std::shared_ptr<facebook::react::UIManager> const)uiManager
 +{
 +  return _scheduler->getUIManager();
 +}
@@ -205,35 +205,32 @@ index 0000000..dffb099
 +
 +} // namespace facebook::react
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
-index 615390b..74c8271 100644
+index 615390b..34f68f4 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.cpp
-@@ -36,7 +36,11 @@ EventDispatcher::EventDispatcher(
+@@ -36,6 +36,10 @@ EventDispatcher::EventDispatcher(
  
  void EventDispatcher::dispatchEvent(RawEvent &&rawEvent, EventPriority priority)
      const {
--  getEventQueue(priority).enqueueEvent(std::move(rawEvent));
-+  auto eventIntercepted = eventListeners_.willProcessEvent(std::move(rawEvent), priority);
-+  // Allows event listeners to intercept the event, skipping default handling
-+  if (!eventIntercepted) {
-+    getEventQueue(priority).enqueueEvent(std::move(rawEvent));
++  // Allows the event listener to interrupt default event dispatch
++  if (eventListeners_.willDispatchEvent(rawEvent)) {
++    return;
 +  }
+   getEventQueue(priority).enqueueEvent(std::move(rawEvent));
  }
  
- void EventDispatcher::dispatchStateUpdate(
-@@ -46,7 +50,10 @@ void EventDispatcher::dispatchStateUpdate(
+@@ -46,6 +50,10 @@ void EventDispatcher::dispatchStateUpdate(
  }
  
  void EventDispatcher::dispatchUniqueEvent(RawEvent &&rawEvent) const {
--  asynchronousBatchedQueue_->enqueueUniqueEvent(std::move(rawEvent));
-+  auto eventIntercepted = eventListeners_.willProcessEvent(std::move(rawEvent), EventPriority::Deferred);
-+  if (!eventIntercepted) {
-+    asynchronousBatchedQueue_->enqueueUniqueEvent(std::move(rawEvent));
++  // Allows the event listener to interrupt default event dispatch
++  if (eventListeners_.willDispatchEvent(rawEvent)) {
++    return;
 +  }
+   asynchronousBatchedQueue_->enqueueUniqueEvent(std::move(rawEvent));
  }
  
- const EventQueue &EventDispatcher::getEventQueue(EventPriority priority) const {
-@@ -62,5 +69,15 @@ const EventQueue &EventDispatcher::getEventQueue(EventPriority priority) const {
+@@ -62,5 +70,18 @@ const EventQueue &EventDispatcher::getEventQueue(EventPriority priority) const {
    }
  }
  
@@ -242,6 +239,9 @@ index 615390b..74c8271 100644
 +  eventListeners_.addListener(listener);
 +}
 +
++/*
++ * Removes provided event listener to the event dispatcher.
++ */
 +void EventDispatcher::removeListener(
 +    const std::shared_ptr<EventListener const> &listener) const {
 +  eventListeners_.removeListener(listener);
@@ -250,43 +250,51 @@ index 615390b..74c8271 100644
  } // namespace react
  } // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
-index 9b630b3..3b1c732 100644
+index 9b630b3..a0643ea 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventDispatcher.h
-@@ -13,6 +13,7 @@
+@@ -9,6 +9,7 @@
+ 
+ #include <react/renderer/core/BatchedEventQueue.h>
+ #include <react/renderer/core/EventBeat.h>
++#include <react/renderer/core/EventListener.h>
+ #include <react/renderer/core/EventPriority.h>
  #include <react/renderer/core/EventQueueProcessor.h>
  #include <react/renderer/core/StateUpdate.h>
- #include <react/renderer/core/UnbatchedEventQueue.h>
-+#include <react/renderer/core/EventListener.h>
- 
- namespace facebook {
- namespace react {
-@@ -52,6 +53,10 @@ class EventDispatcher {
+@@ -52,6 +53,18 @@ class EventDispatcher {
    void dispatchStateUpdate(StateUpdate &&stateUpdate, EventPriority priority)
        const;
  
 +#pragma mark - Event listeners
++  /*
++   * Adds provided event listener to the event dispatcher.
++   */
 +  void addListener(const std::shared_ptr<EventListener const> &listener) const;
-+  void removeListener(const std::shared_ptr<EventListener const> &listener) const;
++
++  /*
++   * Removes provided event listener to the event dispatcher.
++   */
++  void removeListener(
++      const std::shared_ptr<EventListener const> &listener) const;
 +      
   private:
    EventQueue const &getEventQueue(EventPriority priority) const;
  
-@@ -59,6 +64,8 @@ class EventDispatcher {
+@@ -59,6 +72,8 @@ class EventDispatcher {
    std::unique_ptr<BatchedEventQueue> synchronousBatchedQueue_;
    std::unique_ptr<UnbatchedEventQueue> asynchronousUnbatchedQueue_;
    std::unique_ptr<BatchedEventQueue> asynchronousBatchedQueue_;
-+  
-+  mutable EventListenerHolder eventListeners_;
++
++  mutable EventListenerContainer eventListeners_;
  };
  
  } // namespace react
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventListener.cpp b/node_modules/react-native/ReactCommon/react/renderer/core/EventListener.cpp
 new file mode 100644
-index 0000000..326fd13
+index 0000000..48f5793
 --- /dev/null
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventListener.cpp
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,39 @@
 +/*
 + * Copyright (c) Meta Platforms, Inc. and affiliates.
 + *
@@ -298,28 +306,24 @@ index 0000000..326fd13
 +
 +namespace facebook::react {
 +
-+bool EventListenerHolder::willProcessEvent(RawEvent &&rawEvent, EventPriority priority) const {
++bool EventListenerContainer::willDispatchEvent(const RawEvent &event) {
 +  std::shared_lock<butter::shared_mutex> lock(mutex_);
 +
 +  bool handled = false;
-+  const EventTarget *eventTarget = rawEvent.eventTarget.get();
-+  const std::string &type = rawEvent.type;
-+  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
 +  for (auto const &listener : eventListeners_) {
-+    handled = handled ||
-+        listener->operator()(eventTarget, type, priority, payloadFactory);
++    handled = handled || listener->operator()(event);
 +  }
 +  return handled;
 +}
 +
-+void EventListenerHolder::addListener(
++void EventListenerContainer::addListener(
 +    const std::shared_ptr<EventListener const> &listener) {
 +  std::unique_lock<butter::shared_mutex> lock(mutex_);
 +
 +  eventListeners_.push_back(listener);
 +}
 +
-+void EventListenerHolder::removeListener(
++void EventListenerContainer::removeListener(
 +    const std::shared_ptr<EventListener const> &listener) {
 +  std::unique_lock<butter::shared_mutex> lock(mutex_);
 +
@@ -332,10 +336,10 @@ index 0000000..326fd13
 +} // namespace facebook::react
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/core/EventListener.h b/node_modules/react-native/ReactCommon/react/renderer/core/EventListener.h
 new file mode 100644
-index 0000000..d9cdf6e
+index 0000000..f9176b5
 --- /dev/null
 +++ b/node_modules/react-native/ReactCommon/react/renderer/core/EventListener.h
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,44 @@
 +/*
 + * Copyright (c) Meta Platforms, Inc. and affiliates.
 + *
@@ -347,11 +351,8 @@ index 0000000..d9cdf6e
 +
 +#include <string>
 +
-+#include <react/renderer/core/EventTarget.h>
-+#include <react/renderer/core/ReactEventPriority.h>
-+#include <react/renderer/core/ValueFactory.h>
-+#include <react/renderer/core/EventPriority.h>
-+#include "RawEvent.h"
++#include <react/renderer/core/RawEvent.h>
++
 +#include <butter/mutex.h>
 +
 +namespace facebook {
@@ -362,28 +363,29 @@ index 0000000..d9cdf6e
 + * Return `true` to interrupt default dispatch to JS event emitter, `false` to
 + * pass through to default handlers.
 + */
-+using EventListener = std::function<bool(
-+    const EventTarget *eventTarget,
-+    const std::string &type,
-+    EventPriority priority,
-+    const ValueFactory &payloadFactory)>;
++using EventListener = std::function<bool(const RawEvent &event)>;
 +
-+class EventListenerHolder {
++class EventListenerContainer {
 + public:
-+  bool willProcessEvent(RawEvent &&rawEvent, EventPriority priority) const;
++  /*
++   * Invoke listeners in this container with the event.
++   * Returns true if event was handled by the listener, false to continue
++   * default dispatch.
++   */
++  bool willDispatchEvent(const RawEvent &event);
 +
 +  void addListener(const std::shared_ptr<EventListener const> &listener);
 +  void removeListener(const std::shared_ptr<EventListener const> &listener);
 +
 + private:
-+  mutable butter::shared_mutex mutex_;
++  butter::shared_mutex mutex_;
 +  std::vector<std::shared_ptr<EventListener const>> eventListeners_;
 +};
 +
 +} // namespace react
 +} // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
-index 3a782a9..4dc226c 100644
+index 3a782a9..a6731f9 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.cpp
 @@ -50,7 +50,24 @@ Scheduler::Scheduler(
@@ -422,14 +424,14 @@ index 3a782a9..4dc226c 100644
 +
 +void Scheduler::addEventListener(
 +    const std::shared_ptr<EventListener const> &listener) {
-+  if (eventDispatcher_->hasValue()) {
++  if (eventDispatcher_->has_value()) {
 +    eventDispatcher_->value().addListener(listener);
 +  }
 +}
 +
 +void Scheduler::removeEventListener(
 +    const std::shared_ptr<EventListener const> &listener) {
-+  if (eventDispatcher_->hasValue()) {
++  if (eventDispatcher_->has_value()) {
 +    eventDispatcher_->value().removeListener(listener);
 +  }
 +}
@@ -437,10 +439,18 @@ index 3a782a9..4dc226c 100644
  } // namespace react
  } // namespace facebook
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
-index 488a656..5744839 100644
+index 488a656..bfce80f 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/scheduler/Scheduler.h
-@@ -107,6 +107,14 @@ class Scheduler final : public UIManagerDelegate {
+@@ -16,6 +16,7 @@
+ #include <react/renderer/components/root/RootComponentDescriptor.h>
+ #include <react/renderer/core/ComponentDescriptor.h>
+ #include <react/renderer/core/EventEmitter.h>
++#include <react/renderer/core/EventListener.h>
+ #include <react/renderer/core/LayoutConstraints.h>
+ #include <react/renderer/mounting/MountingOverrideDelegate.h>
+ #include <react/renderer/scheduler/InspectorData.h>
+@@ -107,6 +108,14 @@ class Scheduler final : public UIManagerDelegate {
  #pragma mark - ContextContainer
    ContextContainer::Shared getContextContainer() const;
  
@@ -480,6 +490,48 @@ index 8455efb..fb955bc 100644
  static std::unique_ptr<LeakChecker> constructLeakCheckerIfNeeded(
      RuntimeExecutor const &runtimeExecutor) {
  #ifdef REACT_NATIVE_DEBUG
+diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
+index 16553ad..6f9a616 100644
+--- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
++++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
+@@ -111,14 +111,6 @@ class UIManager final : public ShadowTreeDelegate {
+       RootShadowNode::Shared const &oldRootShadowNode,
+       RootShadowNode::Unshared const &newRootShadowNode) const override;
+ 
+- private:
+-  friend class UIManagerBinding;
+-  friend class Scheduler;
+-  friend class SurfaceHandler;
+-
+-  // `TimelineController` needs to call private `getShadowTreeRegistry()`.
+-  friend class TimelineController;
+-
+   ShadowNode::Shared createNode(
+       Tag tag,
+       std::string const &componentName,
+@@ -174,6 +166,13 @@ class UIManager final : public ShadowTreeDelegate {
+       const ShadowNode::Shared &shadowNode,
+       std::string const &eventType);
+ 
++  ShadowTreeRegistry const &getShadowTreeRegistry() const;
++
++ private:
++  friend class UIManagerBinding;
++  friend class Scheduler;
++  friend class SurfaceHandler;
++
+   /**
+    * Configure a LayoutAnimation to happen on the next commit.
+    * This API configures a global LayoutAnimation starting from the root node.
+@@ -184,8 +183,6 @@ class UIManager final : public ShadowTreeDelegate {
+       jsi::Value const &successCallback,
+       jsi::Value const &failureCallback) const;
+ 
+-  ShadowTreeRegistry const &getShadowTreeRegistry() const;
+-
+   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
+   UIManagerDelegate *delegate_;
+   UIManagerAnimationDelegate *animationDelegate_{nullptr};
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
 index da6eeb6..2476c69 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
