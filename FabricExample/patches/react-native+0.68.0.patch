@@ -533,30 +533,39 @@ index 16553ad..6f9a616 100644
    UIManagerDelegate *delegate_;
    UIManagerAnimationDelegate *animationDelegate_{nullptr};
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
-index da6eeb6..2476c69 100644
+index da6eeb6..64f45d9 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManagerBinding.cpp
-@@ -14,11 +14,14 @@
- #include <react/renderer/debug/SystraceSection.h>
+@@ -15,10 +15,18 @@
  #include <react/renderer/runtimescheduler/RuntimeSchedulerBinding.h>
  #include <react/renderer/uimanager/primitives.h>
-+#include <RNReanimated/ReanimatedUIManagerBinding.h>
  
++#ifdef __APPLE__
++#include <RNReanimated/ReanimatedUIManagerBinding.h>
++#endif
++
  #include <utility>
  
  #include "bindingUtils.h"
  
++#ifdef __APPLE__
 +using namespace reanimated;
++#endif
 +
  namespace facebook::react {
  
  void UIManagerBinding::createAndInstallIfNeeded(
-@@ -33,7 +36,7 @@ void UIManagerBinding::createAndInstallIfNeeded(
+@@ -32,8 +40,13 @@ void UIManagerBinding::createAndInstallIfNeeded(
+   if (uiManagerValue.isUndefined()) {
      // The global namespace does not have an instance of the binding;
      // we need to create, install and return it.
-     auto uiManagerBinding =
--        std::make_shared<UIManagerBinding>(uiManager, runtimeExecutor);
++#ifdef __APPLE__
++    auto uiManagerBinding =
 +        std::make_shared<ReanimatedUIManagerBinding>(uiManager, runtimeExecutor, getNewestShadowNodesRegistry());
++#else
+     auto uiManagerBinding =
+         std::make_shared<UIManagerBinding>(uiManager, runtimeExecutor);
++#endif
      auto object = jsi::Object::createFromHostObject(runtime, uiManagerBinding);
      runtime.global().setProperty(
          runtime, uiManagerModuleName, std::move(object));
