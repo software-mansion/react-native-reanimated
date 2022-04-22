@@ -26,7 +26,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   NSMutableArray<AnimatedOperation> *_operations;
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
-  std::shared_ptr<NativeReanimatedModule> _reanimatedModule;
+  NativeReanimatedModule *_reanimatedModule;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -36,6 +36,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [_surfacePresenter removeObserver:self];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
+  [super invalidate];
 }
 
 - (dispatch_queue_t)methodQueue
@@ -116,16 +117,17 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   if (jsiRuntime) {
     // Reanimated
-    _reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
     jsiRuntime->global().setProperty(
         *jsiRuntime,
         "_WORKLET_RUNTIME",
-        static_cast<double>(reinterpret_cast<std::uintptr_t>(_reanimatedModule->runtime.get())));
+        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
 
     jsiRuntime->global().setProperty(
         *jsiRuntime,
         jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(*jsiRuntime, _reanimatedModule));
+        jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
+    _reanimatedModule = reanimatedModule.get();
   }
   return nil;
 }
