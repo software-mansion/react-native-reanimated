@@ -27,7 +27,7 @@ typedef void (^REAPerformOperations)();
 
 - (void)operationsBatchDidComplete;
 
-//
+- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
 - (void)postRunUpdatesAfterAnimation;

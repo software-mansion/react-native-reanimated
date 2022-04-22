@@ -133,6 +133,11 @@ using namespace facebook::react;
   [_displayLink invalidate];
 }
 
+- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
+{
+  _surfacePresenter = surfacePresenter;
+}
+
 - (void)operationsBatchDidComplete
 {
   if (![_displayLink isPaused]) {
