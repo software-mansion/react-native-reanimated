@@ -5986,9 +5986,10 @@ react-native-codegen@*, react-native-codegen@^0.0.13:
     jscodeshift "^0.13.1"
     nullthrows "^1.1.1"
 
-react-native-gesture-handler@software-mansion/react-native-gesture-handler#@jpiasecki/support-reanimated-fabric:
-  version "2.3.2"
-  resolved "https://codeload.github.com/software-mansion/react-native-gesture-handler/tar.gz/9da78d09fe14ea28faefc9ece97602ad82181c0c"
+react-native-gesture-handler@^2.4.1:
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.4.1.tgz#f4cb1784b6dcdf41ae35b4fff6022ec21038e2cd"
+  integrity sha512-qJHkZAWyuvZvEm8jV6TsYKeTgkYmoNsKrO/CEx0YaisAcHSiaiMx2Dy/0/QQ7oZr3t5aL4rJqWtOEZCADNbfeQ==
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"
