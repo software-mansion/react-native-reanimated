@@ -85,7 +85,7 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {
   rt_ = rt.get();
-
+  react_native_assert(newestShadowNodesRegistry->empty());
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -281,11 +281,6 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
     jsi::Runtime &rt,
     const jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
-  return jsi::Value::undefined();
-}
-
-jsi::Value NativeReanimatedModule::initializeForFabric(jsi::Runtime &rt) {
-  uiManager_ = getUIManagerFromRuntime(rt);
   return jsi::Value::undefined();
 }
 
@@ -538,6 +533,11 @@ jsi::Value NativeReanimatedModule::measure(
   result.setProperty(
       rt, "pageY", jsi::Value(static_cast<double>(frame.origin.y)));
   return result;
+}
+
+void NativeReanimatedModule::setUIManager(
+    std::shared_ptr<UIManager> uiManager) {
+  uiManager_ = uiManager;
 }
 
 } // namespace reanimated

@@ -371,7 +371,3 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
 export function jestResetJsReanimatedModule() {
   (NativeReanimatedModule as JSReanimated).jestResetModule();
 }
-
-export function initializeForFabric(): void {
-  NativeReanimatedModule.initializeForFabric();
-}

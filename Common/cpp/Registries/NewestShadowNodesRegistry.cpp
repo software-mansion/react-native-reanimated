@@ -66,4 +66,8 @@ std::lock_guard<std::mutex> NewestShadowNodesRegistry::createLock() const {
   return std::lock_guard<std::mutex>(mutex_);
 }
 
+bool NewestShadowNodesRegistry::empty() {
+  return map_.empty();
+}
+
 } // namespace reanimated

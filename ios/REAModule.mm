@@ -26,6 +26,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   NSMutableArray<AnimatedOperation> *_operations;
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -35,6 +36,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [_surfacePresenter removeObserver:self];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
+  [super invalidate];
 }
 
 - (dispatch_queue_t)methodQueue
@@ -45,10 +47,10 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return RCTGetUIManagerQueue();
 }
 
-+ (BOOL)requiresMainQueueSetup
-{
-  return true;
-}
+//+ (BOOL)requiresMainQueueSetup
+//{
+//  return true;
+//}
 
 - (void)installReanimatedModuleHostObject
 {
@@ -76,6 +78,17 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
 {
   _surfacePresenter = self.bridge.surfacePresenter;
+  RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  __weak __typeof__(self) weakSelf = self;
+  _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
+      reanimatedModule->setUIManager(scheduler.uiManager);
+    }
+  });
 }
 
 - (void)setBridge:(RCTBridge *)bridge
@@ -121,6 +134,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         *jsiRuntime,
         jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
+    reanimatedModule_ = reanimatedModule;
   }
   return nil;
 }

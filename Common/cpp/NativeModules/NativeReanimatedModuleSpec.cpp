@@ -108,16 +108,6 @@ static jsi::Value SPEC_PREFIX(enableLayoutAnimations)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value SPEC_PREFIX(initializeForFabric)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->initializeForFabric(rt);
-  return jsi::Value::undefined();
-}
-
 static jsi::Value SPEC_PREFIX(registerSensor)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -173,8 +163,5 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};
   methodMap_["configureProps"] = MethodMetadata{2, SPEC_PREFIX(configureProps)};
-
-  methodMap_["initializeForFabric"] =
-      MethodMetadata{0, SPEC_PREFIX(initializeForFabric)};
 }
 } // namespace reanimated

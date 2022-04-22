@@ -97,8 +97,4 @@ export class NativeReanimated {
   configureProps(uiProps: string[], nativeProps: string[]): void {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
-
-  initializeForFabric(): void {
-    this.InnerNativeModule.initializeForFabric();
-  }
 }
