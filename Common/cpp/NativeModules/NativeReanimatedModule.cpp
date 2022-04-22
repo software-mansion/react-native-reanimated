@@ -85,7 +85,7 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {
   rt_ = rt.get();
-
+  react_native_assert(newestShadowNodesRegistry->isEmpty());
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();

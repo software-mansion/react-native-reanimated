@@ -31,6 +31,8 @@ class NewestShadowNodesRegistry {
   void clear();
   // clears the map, called from NativeReanimatedModule destructor on app reload
 
+  bool isEmpty();
+
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, Tag>> map_;
   // tag -> (most recent shadow node, parent tag)
