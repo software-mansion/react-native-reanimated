@@ -90,6 +90,11 @@ export class NativeReanimated {
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
+  configureLayoutAnimation(viewTag: number, type: string, config: any) {
+    console.log("CONFIGURE LA", viewTag, type, config, config.__workletHash);
+    this.InnerNativeModule.configureLayoutAnimation(viewTag, type, config);
+  }
+
   enableLayoutAnimations(flag: boolean): void {
     this.InnerNativeModule.enableLayoutAnimations(flag);
   }

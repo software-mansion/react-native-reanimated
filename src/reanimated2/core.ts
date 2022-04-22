@@ -370,6 +370,14 @@ export function enableLayoutAnimations(
   }
 }
 
+export function configureLayoutAnimations(
+  viewTag: number,
+  type: string,
+  config: any
+): void {
+  NativeReanimatedModule.configureLayoutAnimation(viewTag, type, config);
+}
+
 export function configureProps(uiProps: string[], nativeProps: string[]): void {
   if (!nativeShouldBeMock()) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);

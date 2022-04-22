@@ -40,4 +40,42 @@ void LayoutAnimationsProxy::notifyAboutCancellation(int tag) {
   this->notifyAboutEnd(tag, false);
 }
 
+void LayoutAnimationsProxy::configureAnimation(int tag, const std::string &type, std::shared_ptr<ShareableValue> config) {
+  if (type == "entering") {
+    enteringAnimations[tag] = config;
+  } else if (type == "exiting") {
+    exitingAnimations[tag] = config;
+  } else if (type == "layout") {
+    layoutAnimations[tag] = config;
+  }
+}
+
+bool LayoutAnimationsProxy::hasLayoutAnimation(int tag, const std::string &type) {
+  if (type == "entering") {
+    return enteringAnimations.find(tag) != enteringAnimations.end();
+  } else if (type == "exiting") {
+    return exitingAnimations.find(tag) != exitingAnimations.end();
+  } else if (type == "layout") {
+    return layoutAnimations.find(tag) != layoutAnimations.end();
+  }
+  return false;
+}
+
+void LayoutAnimationsProxy::startLayoutAnimation(jsi::Runtime &rt, int tag, const std::string &type, const jsi::Object &values) {
+  std::shared_ptr<ShareableValue> config;
+  if (type == "entering") {
+    config = enteringAnimations[tag];
+  } else if (type == "exiting") {
+    config = exitingAnimations[tag];
+  } else if (type == "layout") {
+    config = layoutAnimations[tag];
+  }
+  jsi::Value layoutAnimationRepositoryAsValue = rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationRepository");
+  if (!layoutAnimationRepositoryAsValue.isUndefined()) {
+    jsi::Function startAnimationForTag =
+        layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "startAnimationForTag");
+    startAnimationForTag.call(rt, jsi::Value(tag), jsi::String::createFromAscii(rt, type), values, config->toJSValue(rt));
+  }
+}
+
 } // namespace reanimated

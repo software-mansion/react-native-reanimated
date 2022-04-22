@@ -138,6 +138,16 @@ static jsi::Value SPEC_PREFIX(configureProps)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->configureLayoutAnimation(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -163,5 +173,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};
   methodMap_["configureProps"] = MethodMetadata{2, SPEC_PREFIX(configureProps)};
+
+  methodMap_["configureLayoutAnimation"] = MethodMetadata{3, SPEC_PREFIX(configureLayoutAnimation)};
 }
 } // namespace reanimated

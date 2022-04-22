@@ -19,7 +19,7 @@ import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   makeMutable,
-  runOnUI,
+  configureLayoutAnimations,
   enableLayoutAnimations,
 } from './reanimated2/core';
 import {
@@ -59,6 +59,14 @@ function listener(data: ListenerData) {
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
+}
+
+function maybeBuild(layoutAnimationOrBuilder) {
+  if (typeof layoutAnimationOrBuilder.build == 'function') {
+    console.log('BUIDL ANIMATION');
+    return layoutAnimationOrBuilder.build();
+  }
+  return layoutAnimationOrBuilder;
 }
 
 function hasAnimatedNodes(value: unknown): boolean {
@@ -533,43 +541,50 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
         const tag = findNodeHandle(ref);
-        if (
-          (this.props.layout || this.props.entering || this.props.exiting) &&
-          tag != null
-        ) {
+        const { layout, entering, exiting } = this.props;
+        if ((layout || entering || exiting) && tag != null) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
           }
-          let layout = this.props.layout ? this.props.layout : DefaultLayout;
-          let entering = this.props.entering
-            ? this.props.entering
-            : DefaultEntering;
-          let exiting = this.props.exiting
-            ? this.props.exiting
-            : DefaultExiting;
-
-          if (has('build', layout)) {
-            layout = layout.build();
+          if (layout) {
+            configureLayoutAnimations(tag, 'layout', maybeBuild(layout));
           }
-
-          if (has('build', entering)) {
-            entering = entering.build() as EntryExitAnimationFunction;
+          if (entering) {
+            configureLayoutAnimations(tag, 'entering', maybeBuild(entering));
           }
-
-          if (has('build', exiting)) {
-            exiting = exiting.build() as EntryExitAnimationFunction;
+          if (exiting) {
+            configureLayoutAnimations(tag, 'exiting', maybeBuild(exiting));
           }
+          //   let layout = this.props.layout ? this.props.layout : DefaultLayout;
+          //   let entering = this.props.entering
+          //     ? this.props.entering
+          //     : DefaultEntering;
+          //   let exiting = this.props.exiting
+          //     ? this.props.exiting
+          //     : DefaultExiting;
 
-          const config = {
-            layout,
-            entering,
-            exiting,
-            sv: this.sv,
-          };
-          runOnUI(() => {
-            'worklet';
-            global.LayoutAnimationRepository.registerConfig(tag, config);
-          })();
+          //   if (has('build', layout)) {
+          //     layout = layout.build();
+          //   }
+
+          //   if (has('build', entering)) {
+          //     entering = entering.build() as EntryExitAnimationFunction;
+          //   }
+
+          //   if (has('build', exiting)) {
+          //     exiting = exiting.build() as EntryExitAnimationFunction;
+          //   }
+
+          //   const config = {
+          //     layout,
+          //     entering,
+          //     exiting,
+          //     sv: this.sv,
+          //   };
+          //   runOnUI(() => {
+          //     'worklet';
+          //     global.LayoutAnimationRepository.registerConfig(tag, config);
+          //   })();
         }
 
         if (ref !== this._component) {

@@ -257,6 +257,15 @@ jsi::Value NativeReanimatedModule::configureProps(
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::configureLayoutAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &type,
+      const jsi::Value &config) {
+  layoutAnimationsProxy->configureAnimation(viewTag.asNumber(), type.asString(rt).utf8(rt), ShareableValue::adapt(rt, config, this));
+  return jsi::Value::undefined();
+}
+
 void NativeReanimatedModule::onEvent(
     std::string eventName,
     std::string eventAsString) {

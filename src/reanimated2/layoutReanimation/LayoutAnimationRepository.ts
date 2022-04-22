@@ -6,43 +6,39 @@ import { processColor } from '../Colors';
 
 runOnUI(() => {
   'worklet';
-
   const configs: Record<string, any> = {};
-  const enteringAnimationForTag: Record<string, any> = {};
 
   global.LayoutAnimationRepository = {
     configs,
-    registerConfig(tag, config) {
-      configs[tag] = config;
-      enteringAnimationForTag[tag] = null;
-    },
-    removeConfig(tag) {
-      delete configs[tag];
-      delete enteringAnimationForTag[tag];
-    },
-    startAnimationForTag(tag, type, yogaValues) {
-      if (configs[tag] == null) {
-        return; // :(
-      }
-      const style = configs[tag][type](yogaValues);
+    startAnimationForTag(tag, type, yogaValues, config) {
+      console.log("START ANIMATION FOR TAG", tag);
+      // if (configs[tag] == null) {
+      //   console.log("NO ANIMATION FOR", tag);
+      //   return; // :(
+      // }
+      const style = config(yogaValues);
       let currentAnimation = style.animations;
-      if (type === 'entering') {
-        enteringAnimationForTag[tag] = style;
-      } else if (type === 'layout' && enteringAnimationForTag[tag] !== null) {
-        const entryAniamtion = enteringAnimationForTag[tag].animations;
-        const layoutAnimation = style.animations;
-        currentAnimation = {};
-        for (const key in entryAniamtion) {
-          currentAnimation[key] = entryAniamtion[key];
-        }
-        for (const key in layoutAnimation) {
-          currentAnimation[key] = layoutAnimation[key];
-        }
-      }
+      // if (type === 'entering') {
+      //   enteringAnimationForTag[tag] = style;
+      // } else if (type === 'layout' && enteringAnimationForTag[tag] !== null) {
+      //   const entryAniamtion = enteringAnimationForTag[tag].animations;
+      //   const layoutAnimation = style.animations;
+      //   currentAnimation = {};
+      //   for (const key in entryAniamtion) {
+      //     currentAnimation[key] = entryAniamtion[key];
+      //   }
+      //   for (const key in layoutAnimation) {
+      //     currentAnimation[key] = layoutAnimation[key];
+      //   }
+      // }
 
-      const sv: { value: boolean; _value: boolean } = configs[tag].sv;
+      console.log("Hello");
+      const sv: { value: boolean; _value: boolean } = config.sv;
+      console.log("Hello2");
       _stopObservingProgress(tag, false);
+      console.log("Hello3");
       _startObservingProgress(tag, sv);
+      console.log("Hello4");
 
       const backupColor: Record<string, string> = {};
       for (const key in style.initialValues) {
@@ -64,11 +60,11 @@ runOnUI(() => {
         style.callback && style.callback(finished);
       };
 
-      if (backupColor) {
-        configs[tag].sv._value = { ...configs[tag].sv.value, ...backupColor };
-      }
+      // if (backupColor) {
+      //   configs[tag].sv._value = { ...configs[tag].sv.value, ...backupColor };
+      // }
 
-      configs[tag].sv.value = animation;
+      sv.value = animation;
       _startObservingProgress(tag, sv);
     },
   };

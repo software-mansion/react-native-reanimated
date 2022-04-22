@@ -270,10 +270,10 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       }
 
       // Reanimated changes /start
-      REASnapshot *snapshotBefore;
-      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
-        snapshotBefore = [[REASnapshot alloc] init:view];
-      }
+      REASnapshot *snapshotBefore = isNew ? nil : [_animationsManager prepareSnapshotBeforeMountForView:view];
+//      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
+//        snapshotBefore = [[REASnapshot alloc] init:view];
+//      }
       // Reanimated changes /end
 
       if (creatingLayoutAnimation) {
@@ -322,18 +322,17 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       }
 
       // Reanimated changes /start
-      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
-        if (isNew) {
-          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-          [_animationsManager onViewCreate:view after:snapshot];
-        } else {
-          REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
-          [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
-        }
-      }
+      [_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore];
+//      if ([_animationsManager viewDidMount:view]) {
+//        if (isNew) {
+//          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+//          [_animationsManager onViewCreate:view after:snapshot];
+//        } else {
+//          REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
+//          [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
+//        }
+//      }
     }
-
-    [_animationsManager removeLeftovers];
     // Clean up
     // uiManager->_layoutAnimationGroup = nil;
     [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];

@@ -5,28 +5,21 @@
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
 
-@interface REAAnimationsManager ()
-
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
-
-@property (atomic, nullable) void (^startAnimationForTag)(NSNumber *, NSString *, NSDictionary *, NSNumber *);
-@property (atomic, nullable) void (^removeConfigForTag)(NSNumber *);
-
-- (void)removeLeftovers;
-- (void)scheduleCleaning;
-- (double)getDoubleOrZero:(NSNumber *)number;
-
-@end
 
 @implementation REAAnimationsManager {
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, NSNumber *> *_states;
-  NSMutableDictionary<NSNumber *, UIView *> *_viewForTag;
+//  NSMutableDictionary<NSNumber *, UIView *> *_viewForTag;
+  NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
   NSMutableSet<NSNumber *> *_toRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
+  REAAnimationStartingBlock _startAnimationForTag;
+  REAHasAnimationBlock _hasAnimationForTag;
+  REAAnimationRemovingBlock _removeConfigForTag;
 }
 
 + (NSArray *)layoutKeys
@@ -45,7 +38,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _uiManager = uiManager;
     _reaUiManager = (REAUIManager *)uiManager;
     _states = [NSMutableDictionary new];
-    _viewForTag = [NSMutableDictionary new];
+//    _viewForTag = [NSMutableDictionary new];
     _toRemove = [NSMutableSet new];
     _cleaningScheduled = false;
 
@@ -62,23 +55,28 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 - (void)invalidate
 {
   _startAnimationForTag = nil;
+  _hasAnimationForTag = nil;
   _removeConfigForTag = nil;
   _uiManager = nil;
   _states = nil;
-  _viewForTag = nil;
+//  _viewForTag = nil;
   _toRemove = nil;
   _cleaningScheduled = false;
   _targetKeys = nil;
   _currentKeys = nil;
 }
 
-- (void)setAnimationStartingBlock:
-    (void (^)(NSNumber *tag, NSString *type, NSDictionary *yogaValues, NSNumber *depth))startAnimation
+- (void)setAnimationStartingBlock:(REAAnimationStartingBlock )startAnimation
 {
   _startAnimationForTag = startAnimation;
 }
 
-- (void)setRemovingConfigBlock:(void (^)(NSNumber *tag))block
+- (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation
+{
+  _hasAnimationForTag = hasAnimation;
+}
+
+- (void)setRemovingConfigBlock:(REAAnimationRemovingBlock)block
 {
   _removeConfigForTag = block;
 }
@@ -140,27 +138,36 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
       [_reaUiManager unregisterView:view];
     }
     [_states removeObjectForKey:tag];
-    [_viewForTag removeObjectForKey:tag];
+//    [_viewForTag removeObjectForKey:tag];
     [_toRemove removeObject:tag];
   }
   return cannotStripe;
 }
 
+- (UIView*)viewForTag:(NSNumber *)tag
+{
+  UIView *view = [_reaUiManager viewForReactTag:tag];
+  if (view == nil) {
+    return [_exitingViews objectForKey:tag];
+  }
+  return view;
+}
+
 - (void)removeLeftovers
 {
-  NSMutableSet<NSNumber *> *roots = [NSMutableSet new];
-  for (NSNumber *viewTag in _toRemove) {
-    UIView *view = _viewForTag[viewTag];
-    if (view == nil) {
-      view = [_reaUiManager viewForReactTag:viewTag];
-      _viewForTag[viewTag] = view;
-    }
-    [self findRoot:view roots:roots];
-  }
-  for (NSNumber *viewTag in roots) {
-    UIView *view = _viewForTag[viewTag];
-    [self dfs:view view:view cands:_toRemove];
-  }
+//  NSMutableSet<NSNumber *> *roots = [NSMutableSet new];
+//  for (NSNumber *viewTag in _toRemove) {
+//    UIView *view = _viewForTag[viewTag];
+//    if (view == nil) {
+//      view = [_reaUiManager viewForReactTag:viewTag];
+//      _viewForTag[viewTag] = view;
+//    }
+//    [self findRoot:view roots:roots];
+//  }
+//  for (NSNumber *viewTag in roots) {
+//    UIView *view = _viewForTag[viewTag];
+//    [self dfs:view view:view cands:_toRemove];
+//  }
 }
 
 - (void)notifyAboutEnd:(NSNumber *)tag cancelled:(BOOL)cancelled
@@ -192,7 +199,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  [self setNewProps:[newStyle mutableCopy] forView:_viewForTag[tag] withComponentData:componentData];
+  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] withComponentData:componentData];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -311,11 +318,11 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after
 {
-  _reaUiManager.flushUiOperations();
+//  _reaUiManager.flushUiOperations();
   NSNumber *tag = view.reactTag;
   if (_states[tag] == nil) {
-    _states[tag] = [NSNumber numberWithInt:Inactive];
-    _viewForTag[tag] = view;
+    _states[tag] = [NSNumber numberWithInt:Inactive]; // TODO: don't retain tags that are unused
+//    _viewForTag[tag] = view;
   }
   NSMutableDictionary *targetValues = after.values;
   ViewState state = [_states[tag] intValue];
@@ -355,6 +362,27 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _states[view.reactTag] = [NSNumber numberWithInt:Layout];
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
+}
+
+- (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view
+{
+  if (_hasAnimationForTag(view.reactTag, @"layout")) {
+    return [[REASnapshot alloc] init:view];
+  }
+  return nil;
+}
+
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)snapshot
+{
+  NSString *type = snapshot == nil ? @"entering" : @"layout";
+  if (_hasAnimationForTag(view.reactTag, type)) {
+    REASnapshot *after = [[REASnapshot alloc] init:view];
+    if (snapshot == nil) {
+      [self onViewCreate:view after:after];
+    } else {
+      [self onViewUpdate:view before:snapshot after:after];
+    }
+  }
 }
 
 @end
