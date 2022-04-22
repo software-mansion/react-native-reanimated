@@ -26,7 +26,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   NSMutableArray<AnimatedOperation> *_operations;
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
-  NativeReanimatedModule *_reanimatedModule;
+  std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -79,8 +79,15 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   _surfacePresenter = self.bridge.surfacePresenter;
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  __weak __typeof__(self) weakSelf = self;
   _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
-    self->_reanimatedModule->setUIManager(scheduler.uiManager);
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
+      reanimatedModule->setUIManager(scheduler.uiManager);
+    }
   });
 }
 
@@ -127,7 +134,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         *jsiRuntime,
         jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
-    _reanimatedModule = reanimatedModule.get();
+    reanimatedModule_ = reanimatedModule;
   }
   return nil;
 }

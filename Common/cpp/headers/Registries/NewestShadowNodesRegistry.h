@@ -31,7 +31,7 @@ class NewestShadowNodesRegistry {
   void clear();
   // clears the map, called from NativeReanimatedModule destructor on app reload
 
-  bool isEmpty();
+  bool empty();
 
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, Tag>> map_;
