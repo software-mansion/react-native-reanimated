@@ -418,8 +418,11 @@ void NativeReanimatedModule::performOperations() {
   auto copiedTagsToRemove = std::move(tagsToRemove_);
   tagsToRemove_ = std::vector<Tag>();
 
+  react_native_assert(
+      uiManager_ != nullptr); // TODO: call setUIManager on Android
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  auto contextContainer = getContextContainerFromUIManager(&*uiManager_);
+  auto contextContainer = getContextContainerFromUIManager(
+      &*uiManager_); // TODO: use Scheduler::getContextContainer
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
