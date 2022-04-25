@@ -209,23 +209,7 @@ void NativeProxy::installJSIBindings(
 
   auto eventListener = std::make_shared<EventListener>(
       [module, getCurrentTime](const RawEvent &rawEvent) {
-        int tag = rawEvent.eventTarget->getTag();
-        std::string eventType = rawEvent.type;
-        if (eventType.rfind("top", 0) == 0) {
-          eventType = "on" + eventType.substr(3);
-        }
-        std::string eventName = std::to_string(tag) + eventType;
-        jsi::Value payload = rawEvent.payloadFactory(*module->runtime);
-
-        jsi::Object global = module->runtime->global();
-        jsi::String eventTimestampName =
-            jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-        global.setProperty(
-            *module->runtime, eventTimestampName, getCurrentTime());
-        module->onEvent(eventName, std::move(payload));
-        global.setProperty(
-            *module->runtime, eventTimestampName, jsi::Value::undefined());
-        return false;
+        return module->handleRawEvent(rawEvent, getCurrentTime());
       });
 
   std::shared_ptr<facebook::react::Scheduler> reactScheduler =

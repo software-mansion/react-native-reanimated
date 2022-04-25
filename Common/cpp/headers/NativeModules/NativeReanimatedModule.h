@@ -93,6 +93,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void maybeRequestRender();
 
+  bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
+
   void updateProps(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,

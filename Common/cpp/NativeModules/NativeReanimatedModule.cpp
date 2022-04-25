@@ -387,6 +387,36 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
+bool NativeReanimatedModule::handleRawEvent(
+    const RawEvent &rawEvent,
+    double currentTime) {
+  const EventTarget *eventTarget = rawEvent.eventTarget.get();
+  react_native_assert(
+      eventTarget != nullptr); // TODO: why is this nullptr after app reload?
+  const std::string &type = rawEvent.type;
+  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
+
+  auto &rt = *rt_;
+  int tag = eventTarget->getTag();
+  std::string eventType = type;
+  if (eventType.rfind("top", 0) == 0) {
+    eventType = "on" + eventType.substr(3);
+  }
+  std::string eventName = std::to_string(tag) + eventType;
+  jsi::Value payload = payloadFactory(rt);
+
+  jsi::Object global = rt.global();
+  jsi::String eventTimestampName =
+      jsi::String::createFromAscii(rt, "_eventTimestamp");
+  global.setProperty(rt, eventTimestampName, currentTime);
+  onEvent(eventName, std::move(payload));
+  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+
+  // TODO: return true if Reanimated successfully handled the event
+  // to avoid sending it to JavaScript
+  return false;
+}
+
 void NativeReanimatedModule::updateProps(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
