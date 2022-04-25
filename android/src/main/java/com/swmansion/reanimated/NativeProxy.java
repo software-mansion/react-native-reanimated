@@ -144,7 +144,7 @@ public class NativeProxy {
       LayoutAnimations LayoutAnimations,
       FabricUIManager fabricUIManager);
 
-  private native void installJSIBindings();
+  private native void installJSIBindings(FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
@@ -268,7 +268,9 @@ public class NativeProxy {
       return;
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
-    installJSIBindings();
+    FabricUIManager fabricUIManager =
+        (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
+    installJSIBindings(fabricUIManager);
     AnimationsManager animationsManager =
         mContext
             .get()

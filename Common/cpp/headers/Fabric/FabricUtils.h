@@ -35,7 +35,7 @@ struct BindingPublic : public jni::HybridClass<Binding>,
                        public LayoutAnimationStatusDelegate {
   butter::shared_mutex installMutex_;
   std::shared_ptr<FabricMountingManager> mountingManager_;
-  std::shared_ptr<Scheduler> scheduler_;
+  std::shared_ptr<facebook::react::Scheduler> scheduler_;
 };
 
 struct SchedulerPublic : public UIManagerDelegate {
@@ -47,6 +47,9 @@ struct SchedulerPublic : public UIManagerDelegate {
 RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding);
 
 std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding);
+
+std::shared_ptr<facebook::react::Scheduler> getReactSchedulerFromBinding(
+    Binding *binding);
 
 #endif
 

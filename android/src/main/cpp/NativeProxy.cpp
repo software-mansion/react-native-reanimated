@@ -73,7 +73,9 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       make_global(layoutAnimations));
 }
 
-void NativeProxy::installJSIBindings() {
+void NativeProxy::installJSIBindings(
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager) {
   auto getCurrentTime = [this]() {
     auto method =
         javaPart_->getClass()->getMethod<local_ref<JString>()>("getUptime");
@@ -200,47 +202,35 @@ void NativeProxy::installJSIBindings() {
 
   _nativeReanimatedModule = module;
 
-  this->registerEventHandler([module, getCurrentTime](
-                                 std::string eventName,
-                                 std::string eventAsString) {
-    // handles RCTEvents from RNGestureHandler
-    jsi::Object global = module->runtime->global();
-    std::string eventJSON = eventAsString.substr(
-        13, eventAsString.length() - 15); // remove "{ NativeMap: " and " }"
-    jsi::Value payload =
-        jsi::valueFromDynamic(*module->runtime, folly::parseJson(eventJSON));
-    // TODO: support NaN and INF values
-    // TODO: convert event directly to jsi::Value without JSON serialization
-    jsi::String eventTimestampName =
-        jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-    global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
-    module->onEvent(eventName, std::move(payload));
-    global.setProperty(
-        *module->runtime, eventTimestampName, jsi::Value::undefined());
-  });
+  Binding *binding = fabricUIManager->getBinding();
+  std::shared_ptr<UIManager> uiManager = getUIManagerFromBinding(binding);
 
-  // facebook::react::ReanimatedListener::handleEvent = [module,
-  // getCurrentTime](
-  //                                                        RawEvent &rawEvent)
-  //                                                        {
-  //   // handles RawEvents from React Native
+  module->setUIManager(uiManager);
 
-  //   int tag = rawEvent.eventTarget->getTag();
-  //   std::string eventType = rawEvent.type;
-  //   if (eventType.rfind("top", 0) == 0) {
-  //     eventType = "on" + eventType.substr(3);
-  //   }
-  //   std::string eventName = std::to_string(tag) + eventType;
-  //   jsi::Value payload = rawEvent.payloadFactory(*module->runtime);
+  auto eventListener = std::make_shared<EventListener>(
+      [module, getCurrentTime](const RawEvent &rawEvent) {
+        int tag = rawEvent.eventTarget->getTag();
+        std::string eventType = rawEvent.type;
+        if (eventType.rfind("top", 0) == 0) {
+          eventType = "on" + eventType.substr(3);
+        }
+        std::string eventName = std::to_string(tag) + eventType;
+        jsi::Value payload = rawEvent.payloadFactory(*module->runtime);
 
-  //   jsi::Object global = module->runtime->global();
-  //   jsi::String eventTimestampName =
-  //       jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-  //   global.setProperty(*module->runtime, eventTimestampName,
-  //   getCurrentTime()); module->onEvent(eventName, std::move(payload));
-  //   global.setProperty(
-  //       *module->runtime, eventTimestampName, jsi::Value::undefined());
-  // };
+        jsi::Object global = module->runtime->global();
+        jsi::String eventTimestampName =
+            jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+        global.setProperty(
+            *module->runtime, eventTimestampName, getCurrentTime());
+        module->onEvent(eventName, std::move(payload));
+        global.setProperty(
+            *module->runtime, eventTimestampName, jsi::Value::undefined());
+        return false;
+      });
+
+  std::shared_ptr<facebook::react::Scheduler> reactScheduler =
+      getReactSchedulerFromBinding(binding);
+  reactScheduler->addEventListener(eventListener);
 
   runtime_->global().setProperty(
       *runtime_,

@@ -143,7 +143,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<Scheduler> scheduler_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations;
 
-  void installJSIBindings();
+  void installJSIBindings(
+      jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
   bool isAnyHandlerWaitingForEvent(std::string);
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
