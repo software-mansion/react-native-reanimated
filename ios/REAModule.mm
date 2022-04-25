@@ -27,6 +27,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
+  std::shared_ptr<EventListener> eventListener_;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -34,6 +35,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)invalidate
 {
   [_surfacePresenter removeObserver:self];
+  RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  [scheduler removeEventListener:eventListener_];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
   [super invalidate];
@@ -87,6 +90,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     }
     if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
       reanimatedModule->setUIManager(scheduler.uiManager);
+      self->eventListener_ =
+          std::make_shared<facebook::react::EventListener>([reanimatedModule](const RawEvent &rawEvent) {
+            return reanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
+          });
+      [scheduler addEventListener:self->eventListener_];
     }
   });
 }

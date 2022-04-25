@@ -394,12 +394,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [reanimatedModule.nodesManager registerPerformOperations:^() {
     weakModule.lock()->performOperations();
   }];
-
-  __weak RCTSurfacePresenter *surfacePresenter = reinterpret_cast<RCTSurfacePresenter *>(bridge.surfacePresenter);
-  auto scheduler_ = [surfacePresenter scheduler];
-  auto eventListener = std::make_shared<facebook::react::EventListener>(
-      [module](const RawEvent &rawEvent) { return module->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000); });
-  [scheduler_ addEventListener:eventListener];
   return module;
 }
 

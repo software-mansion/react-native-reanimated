@@ -391,8 +391,13 @@ bool NativeReanimatedModule::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
-  react_native_assert(
-      eventTarget != nullptr); // TODO: why is this nullptr after app reload?
+  if (eventTarget == nullptr) {
+    // after app reload scrollview is unmounted and its content offset is set to
+    // 0 and view is thrown into recycle pool setting content offset triggers
+    // scroll event eventTarget is null though, because it's unmounting we can
+    // just ignore this event, because it's an event on unmounted component
+    return false;
+  }
   const std::string &type = rawEvent.type;
   const ValueFactory &payloadFactory = rawEvent.payloadFactory;
 
