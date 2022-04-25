@@ -6,6 +6,15 @@ using namespace facebook::react;
 
 namespace reanimated {
 
+#ifdef ANDROID
+RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding) {
+  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
+  SchedulerPublic *schedulerPublic =
+      reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
+  return schedulerPublic->runtimeExecutor_;
+}
+#endif
+
 inline static const UIManagerPublic *getUIManagerPublic(
     const UIManager *uiManager) {
   return reinterpret_cast<const UIManagerPublic *>(uiManager);
@@ -112,13 +121,4 @@ void UIManager_appendChild(
   componentDescriptor.appendChild(parentShadowNode, childShadowNode);
 }
 
-#ifdef ANDROID
-RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding) {
-  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
-  SchedulerPublic *schedulerPublic =
-      reinterpret_cast<SchedulerPublic *>((bindingPublic->scheduler_).get());
-  return schedulerPublic->runtimeExecutor_;
-}
-
-#endif
 } // namespace reanimated
