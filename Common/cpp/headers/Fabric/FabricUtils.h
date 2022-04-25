@@ -50,8 +50,6 @@ std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding);
 
 #endif
 
-std::shared_ptr<UIManager> getUIManagerFromRuntime(jsi::Runtime &rt);
-
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
     const UIManager *uiManager);
 
