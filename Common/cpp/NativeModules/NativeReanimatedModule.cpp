@@ -83,8 +83,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction),
-      newestShadowNodesRegistry_(newestShadowNodesRegistry) {
-  rt_ = rt.get();
+      newestShadowNodesRegistry_(newestShadowNodesRegistry),
+      rt_(*rt.get()) {
   react_native_assert(newestShadowNodesRegistry->empty());
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
@@ -396,21 +396,20 @@ bool NativeReanimatedModule::handleRawEvent(
   const std::string &type = rawEvent.type;
   const ValueFactory &payloadFactory = rawEvent.payloadFactory;
 
-  auto &rt = *rt_;
   int tag = eventTarget->getTag();
   std::string eventType = type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
   std::string eventName = std::to_string(tag) + eventType;
-  jsi::Value payload = payloadFactory(rt);
+  jsi::Value payload = payloadFactory(rt_);
 
-  jsi::Object global = rt.global();
+  jsi::Object global = rt_.global();
   jsi::String eventTimestampName =
-      jsi::String::createFromAscii(rt, "_eventTimestamp");
-  global.setProperty(rt, eventTimestampName, currentTime);
+      jsi::String::createFromAscii(rt_, "_eventTimestamp");
+  global.setProperty(rt_, eventTimestampName, currentTime);
   onEvent(eventName, std::move(payload));
-  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+  global.setProperty(rt_, eventTimestampName, jsi::Value::undefined());
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -476,7 +475,7 @@ void NativeReanimatedModule::performOperations() {
               const auto newProps = source.getComponentDescriptor().cloneProps(
                   propsParserContext,
                   source.getProps(),
-                  RawProps(*rt_, *pair.second));
+                  RawProps(rt_, *pair.second));
 
               return source.clone({/* .props = */ newProps});
             });

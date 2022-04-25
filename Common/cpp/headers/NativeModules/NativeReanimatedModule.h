@@ -153,8 +153,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
 
-  jsi::Runtime
-      *rt_; // TODO: do we really need jsi::Runtime in performOperations?
+  jsi::Runtime &rt_; // worklet (UI) runtime
+  // we cannot store `shared_ptr<jsi::Runtime>` here because this would result
+  // in a retain cycle (NativeReanimatedModule is a HostObject installed in JS
+  // runtime as `__reanimatedModuleProxy`)
 };
 
 } // namespace reanimated
