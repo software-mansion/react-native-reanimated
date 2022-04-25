@@ -56,7 +56,8 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 
   Binding *binding = fabricUIManager->getBinding();
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
-  std::shared_ptr<UIManager> uiManager = getUIManagerFromBinding(binding);
+  std::shared_ptr<UIManager> uiManager =
+      binding->getScheduler()->getUIManager();
 
   auto newestShadowNodesRegistry =
       std::make_shared<NewestShadowNodesRegistry>();
@@ -203,8 +204,8 @@ void NativeProxy::installJSIBindings(
   _nativeReanimatedModule = module;
 
   Binding *binding = fabricUIManager->getBinding();
-  std::shared_ptr<UIManager> uiManager = getUIManagerFromBinding(binding);
-
+  std::shared_ptr<UIManager> uiManager =
+      binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
 
   auto eventListener = std::make_shared<EventListener>(

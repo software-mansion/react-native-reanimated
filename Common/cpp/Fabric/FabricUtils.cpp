@@ -120,10 +120,5 @@ RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding) {
   return schedulerPublic->runtimeExecutor_;
 }
 
-std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding) {
-  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
-  return bindingPublic->scheduler_->getUIManager();
-}
-
 #endif
 } // namespace reanimated

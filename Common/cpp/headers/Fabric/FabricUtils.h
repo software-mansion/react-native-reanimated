@@ -45,9 +45,6 @@ struct SchedulerPublic : public UIManagerDelegate {
 };
 
 RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding);
-
-std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding);
-
 #endif
 
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
