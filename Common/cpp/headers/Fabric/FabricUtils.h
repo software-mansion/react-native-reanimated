@@ -48,9 +48,6 @@ RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding);
 
 std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding);
 
-std::shared_ptr<facebook::react::Scheduler> getReactSchedulerFromBinding(
-    Binding *binding);
-
 #endif
 
 std::shared_ptr<UIManager> getUIManagerFromRuntime(jsi::Runtime &rt);

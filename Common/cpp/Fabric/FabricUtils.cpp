@@ -133,10 +133,5 @@ std::shared_ptr<UIManager> getUIManagerFromBinding(Binding *binding) {
   return bindingPublic->scheduler_->getUIManager();
 }
 
-std::shared_ptr<facebook::react::Scheduler> getReactSchedulerFromBinding(
-    Binding *binding) {
-  BindingPublic *bindingPublic = reinterpret_cast<BindingPublic *>(binding);
-  return bindingPublic->scheduler_;
-}
 #endif
 } // namespace reanimated

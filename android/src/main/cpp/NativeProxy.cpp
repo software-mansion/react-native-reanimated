@@ -229,7 +229,7 @@ void NativeProxy::installJSIBindings(
       });
 
   std::shared_ptr<facebook::react::Scheduler> reactScheduler =
-      getReactSchedulerFromBinding(binding);
+      binding->getScheduler();
   reactScheduler->addEventListener(eventListener);
 
   runtime_->global().setProperty(
