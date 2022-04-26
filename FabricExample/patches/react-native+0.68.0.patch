@@ -491,19 +491,10 @@ index 8455efb..fb955bc 100644
      RuntimeExecutor const &runtimeExecutor) {
  #ifdef REACT_NATIVE_DEBUG
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
-index 16553ad..9de507f 100644
+index 16553ad..6f9a616 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
-@@ -30,6 +30,8 @@ namespace facebook::react {
- class UIManagerBinding;
- class UIManagerCommitHook;
- 
-+using SurfaceWillStartHook = std::function<void()>;
-+
- class UIManager final : public ShadowTreeDelegate {
-  public:
-   UIManager(
-@@ -111,14 +113,6 @@ class UIManager final : public ShadowTreeDelegate {
+@@ -111,14 +111,6 @@ class UIManager final : public ShadowTreeDelegate {
        RootShadowNode::Shared const &oldRootShadowNode,
        RootShadowNode::Unshared const &newRootShadowNode) const override;
  
@@ -518,7 +509,7 @@ index 16553ad..9de507f 100644
    ShadowNode::Shared createNode(
        Tag tag,
        std::string const &componentName,
-@@ -174,6 +168,13 @@ class UIManager final : public ShadowTreeDelegate {
+@@ -174,6 +166,13 @@ class UIManager final : public ShadowTreeDelegate {
        const ShadowNode::Shared &shadowNode,
        std::string const &eventType);
  
@@ -532,7 +523,7 @@ index 16553ad..9de507f 100644
    /**
     * Configure a LayoutAnimation to happen on the next commit.
     * This API configures a global LayoutAnimation starting from the root node.
-@@ -184,8 +185,6 @@ class UIManager final : public ShadowTreeDelegate {
+@@ -184,8 +183,6 @@ class UIManager final : public ShadowTreeDelegate {
        jsi::Value const &successCallback,
        jsi::Value const &failureCallback) const;
  
