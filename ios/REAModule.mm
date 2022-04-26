@@ -1,7 +1,9 @@
 #import <React/RCTBridge+Private.h>
+#import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
+#import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
 
 #import <RNReanimated/NativeProxy.h>
@@ -10,9 +12,6 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/ReaRCTFabricSurface.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
-#import <React/RCTFabricSurface.h>
-#import <React/RCTSurfacePresenterBridgeAdapter.h>
-#include <react/renderer/uimanager/UIManagerCommitHook.h>
 
 using namespace facebook::react;
 using namespace reanimated;

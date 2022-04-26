@@ -1,14 +1,9 @@
-#import <RNReanimated/ReaRCTFabricSurface.h>
-#import <React/RCTBridge+Private.h>
-#import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
-#import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfaceView.h>
+#import <memory>
 
 #import <RNReanimated/REAModule.h>
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
-#import <React/RCTFabricSurface.h>
-#include <memory>
+#import <RNReanimated/ReaRCTFabricSurface.h>
 
 @implementation ReaRCTFabricSurface {
   std::shared_ptr<facebook::react::SurfaceHandler> _surfaceHandler;
