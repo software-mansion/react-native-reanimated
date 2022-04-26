@@ -14,34 +14,6 @@
 using namespace facebook::react;
 using namespace reanimated;
 
-class ReaUIManagerCommitHook : public UIManagerCommitHook {
- public:
-  void commitHookWasRegistered(UIManager const &uiManager) const noexcept override {}
-  void commitHookWasUnregistered(UIManager const &uiManager) const noexcept override {}
-  RootShadowNode::Unshared shadowTreeWillCommit(
-      ShadowTree const &shadowTree,
-      RootShadowNode::Shared const &oldRootShadowNode,
-      RootShadowNode::Unshared const &newRootShadowNode) const noexcept override
-  {
-    if (__typeof__(REAModule) *strongSelf = weakSelf_) {
-      if (counter == 2) {
-        //        [strongSelf installReanimatedModuleHostObject];
-      }
-    }
-    counter++;
-    return newRootShadowNode;
-  }
-
-  ReaUIManagerCommitHook() {}
-  static int counter;
-  __weak __typeof__(REAModule) *weakSelf_;
-  ReaUIManagerCommitHook(__weak __typeof__(REAModule) *weakSelf)
-  {
-    weakSelf_ = weakSelf;
-  }
-  ~ReaUIManagerCommitHook() {}
-};
-
 struct Link {
   facebook::react::SurfaceHandler::Status status{facebook::react::SurfaceHandler::Status::Unregistered};
   UIManager *uiManager{};
@@ -55,7 +27,6 @@ struct SurfaceHandlerPublic {
 };
 
 @interface ReaRCTFabricSurface : RCTFabricSurface
-//-(void)setReaModule:(REAModule*)reaModule;
 @property REAModule *reaModule;
 @end
 
@@ -144,8 +115,6 @@ struct SurfaceHandlerPublic {
 
 @end
 
-int ReaUIManagerCommitHook::counter = 0;
-
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
 @end
@@ -165,8 +134,6 @@ static __strong ReaRCTFabricSurface *reaSurface;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
   std::weak_ptr<REAModule> reaModule_;
-  //  std::shared_ptr<ReaUIManagerCommitHook> commitHook;
-  ReaUIManagerCommitHook commitHook;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -204,6 +171,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   std::shared_ptr<UIManager> uiManager = scheduler.uiManager;
+
+  if (auto reanimatedModule = reanimatedModule_.lock()) {
+    reanimatedModule->setUIManager(scheduler.uiManager);
+  }
+
   RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
     callback(runtime);
   };
@@ -213,124 +185,35 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)installReanimatedModuleHostObjectJS
 {
-  //  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-  //  if (!cxxBridge.runtime) {
-  //    return;
-  //  }
-  //  jsi::Runtime &runtime = *(jsi::Runtime *)cxxBridge.runtime;
-  //
-  //  newestShadowNodesRegistry_ = getNewestShadowNodesRegistry();
-  //  _surfacePresenter = self.bridge.surfacePresenter;
-  //  RCTScheduler *scheduler = [_surfacePresenter scheduler];
-
-  //  facebook::react::executeAsynchronously(
-  //    _surfacePresenter.runtimeExecutor,
-  //    ^(jsi::Runtime &runtime) {
-  //      RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
-  //        callback(runtime);
-  //      };
-  //      ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-  //        runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
-  //    }
-  //  );
-
-  //  __weak __typeof__(self) weakSelf = self;
-  //
-  //  dispatch_async(dispatch_get_main_queue(), ^{
-  //    _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
-  //
-  //      if (__typeof__(self) strongSelf = weakSelf) {
-  //        if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
-  //          reanimatedModule->setUIManager(scheduler.uiManager);
-  //        }
-  //      }
-  //
-  //      RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
-  //        callback(runtime);
-  //      };
-  //      ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-  //        runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
-  //    });
-  //  });
+  __weak __typeof__(self) weakSelf = self;
+  _surfacePresenter = self.bridge.surfacePresenter;
+  [_surfacePresenter addObserver:self];
+  [_nodesManager setSurfacePresenter:_surfacePresenter];
 
   RCTRuntimeExecutorFromBridge(self.bridge)(^(jsi::Runtime &runtime) {
-    RCTScheduler *scheduler = [_surfacePresenter scheduler];
-    std::shared_ptr<UIManager> uiManager = scheduler.uiManager;
-    RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
-      callback(runtime);
-    };
-    ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-        runtime, syncRuntimeExecutor, uiManager, self->newestShadowNodesRegistry_);
+    if (__typeof__(self) strongSelf = weakSelf) {
+      RCTScheduler *scheduler = [strongSelf->_surfacePresenter scheduler];
+      react_native_assert(scheduler != nil);
+      std::shared_ptr<UIManager> uiManager = scheduler.uiManager;
+
+      if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
+        reanimatedModule->setUIManager(scheduler.uiManager);
+      }
+
+      RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
+        callback(runtime);
+      };
+      ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+          runtime, syncRuntimeExecutor, uiManager, self->newestShadowNodesRegistry_);
+    }
   });
 }
 
 #pragma mark-- Initialize
 
-- (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
-{
-  __weak __typeof__(self) weakSelf = self;
-  bool surfacePresenterAlreadyExists = _surfacePresenter != nil;
-  _surfacePresenter = self.bridge.surfacePresenter;
-
-  if (!surfacePresenterAlreadyExists) {
-    [_surfacePresenter addObserver:self];
-    [_nodesManager setSurfacePresenter:_surfacePresenter];
-  }
-
-  RCTScheduler *scheduler = [_surfacePresenter scheduler];
-  std::shared_ptr<UIManager> uiManager = scheduler.uiManager;
-
-  //  commitHook = std::make_shared<ReaUIManagerCommitHook>(weakSelf);
-  //  commitHook = ReaUIManagerCommitHook(weakSelf);
-  //  uiManager->registerCommitHook(commitHook);
-
-  //  uiManager->registerSurfaceWillStartHook(std::make_shared<SurfaceWillStartHook>(^() {
-  //    if (__typeof__(self) strongSelf = weakSelf) {
-  //      [strongSelf installReanimatedModuleHostObject];
-  //    }
-  //  }));
-
-  //  static dispatch_once_t onceToken;
-  //  dispatch_once(&onceToken, ^{
-  //    id appDelegate = UIApplication.sharedApplication.delegate;
-  //    RCTSurfacePresenterBridgeAdapter *bridgeAdapter = [appDelegate valueForKey:@"_bridgeAdapter"];
-  //
-  //    ReaRCTSurfacePresenter *reaSurfacePresenter = [[ReaRCTSurfacePresenter alloc] init];
-  //    RCTSurfacePresenter *surfacePresenter = bridgeAdapter.surfacePresenter;
-  //
-  //    [reaSurfacePresenter setRuntimeExecutor:RCTRuntimeExecutorFromBridge(self.bridge)];
-  //    [reaSurfacePresenter setValue:[surfacePresenter valueForKey:@"_contextContainer"] forKey:@"_contextContainer"];
-  //    [reaSurfacePresenter setValue:[surfacePresenter valueForKey:@"_surfaceRegistry"] forKey:@"_surfaceRegistry"];
-  //    [reaSurfacePresenter setValue:[surfacePresenter valueForKey:@"_mountingManager"] forKey:@"_mountingManager"];
-  //    [reaSurfacePresenter setValue:[surfacePresenter valueForKey:@"_observers"] forKey:@"_observers"];
-  //    [reaSurfacePresenter setValue:[surfacePresenter valueForKey:@"_scheduler"] forKey:@"_scheduler"];
-  //
-  //    [bridgeAdapter setValue:reaSurfacePresenter forKey:@"_surfacePresenter"];
-  //  });
-  //  _surfacePresenter = reaSurfacePresenter;
-
-  _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
-    if (__typeof__(self) strongSelf = weakSelf) {
-      if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
-        reanimatedModule->setUIManager(scheduler.uiManager);
-      }
-    }
-  });
-}
-
-//-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void
-//*)context
-//{
-//    NSLog(@"From KVO");
-//}
-
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(handleJavaScriptDidLoadNotification:)
-                                               name:RCTJavaScriptDidLoadNotification
-                                             object:nil];
 
   if (self.bridge) {
     _surfacePresenter = self.bridge.surfacePresenter;
@@ -367,6 +250,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
     reanimatedModule_ = reanimatedModule;
+
+    RCTScheduler *scheduler = [_surfacePresenter scheduler];
+    if (scheduler != nil) { // first load, on reload scheduler will be null
+      reanimatedModule->setUIManager(scheduler.uiManager);
+    }
   }
   return nil;
 }
