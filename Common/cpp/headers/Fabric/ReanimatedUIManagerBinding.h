@@ -19,17 +19,14 @@ std::shared_ptr<NewestShadowNodesRegistry> getNewestShadowNodesRegistry();
 
 class ReanimatedUIManagerBinding : public UIManagerBinding {
  public:
-  static void createAndInstallIfNeeded(
+  static std::shared_ptr<NewestShadowNodesRegistry> createAndInstallIfNeeded(
       jsi::Runtime &runtime,
       RuntimeExecutor const &runtimeExecutor,
-      std::shared_ptr<UIManager> const &uiManager,
-      std::shared_ptr<NewestShadowNodesRegistry> const
-          &newestShadowNodesRegistry_);
+      std::shared_ptr<UIManager> const &uiManager);
 
   ReanimatedUIManagerBinding(
       std::shared_ptr<UIManager> uiManager,
-      RuntimeExecutor runtimeExecutor,
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+      RuntimeExecutor runtimeExecutor);
 
   ~ReanimatedUIManagerBinding();
 

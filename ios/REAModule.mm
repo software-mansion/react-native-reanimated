@@ -62,34 +62,32 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)injectUIManagerBinding:(jsi::Runtime &)runtime uiManager:(std::shared_ptr<UIManager>)uiManager
+- (std::shared_ptr<NewestShadowNodesRegistry>)injectUIManagerBinding:(jsi::Runtime &)runtime
+                                                           uiManager:(std::shared_ptr<UIManager>)uiManager
 {
   RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
     callback(runtime);
   };
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
+  return ReanimatedUIManagerBinding::createAndInstallIfNeeded(runtime, syncRuntimeExecutor, uiManager);
 }
 
-- (void)injectREAModule:(std::shared_ptr<UIManager>)uiManager
+- (void)setUpNativeReanimatedMdule:(std::shared_ptr<UIManager>)uiManager
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     reanimatedModule->setUIManager(uiManager);
+    reanimatedModule->setShadowNodeRegistry(newestShadowNodesRegistry_);
   }
 }
 
-#pragma mark-- Initialize
-
-- (void)installUIManagerBinding
+- (void)injectDependencies:(jsi::Runtime &)runtime
 {
-  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-  react_native_assert(cxxBridge.runtime != nil);
-  jsi::Runtime &runtime = *(jsi::Runtime *)cxxBridge.runtime;
-
   auto uiManager = [self getUiManager];
-  [self injectREAModule:uiManager];
-  [self injectUIManagerBinding:runtime uiManager:uiManager];
+  react_native_assert(uiManager.get() != nil);
+  newestShadowNodesRegistry_ = [self injectUIManagerBinding:runtime uiManager:uiManager];
+  [self setUpNativeReanimatedMdule:uiManager];
 }
+
+#pragma mark-- Initialize
 
 - (void)installUIManagerBindingAfterReload
 {
@@ -100,10 +98,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   RCTRuntimeExecutorFromBridge(self.bridge)(^(jsi::Runtime &runtime) {
     if (__typeof__(self) strongSelf = weakSelf) {
-      auto uiManager = [strongSelf getUiManager];
-      react_native_assert(uiManager.get() != nil);
-      [self injectREAModule:uiManager];
-      [self injectUIManagerBinding:runtime uiManager:uiManager];
+      [strongSelf injectDependencies:runtime];
     }
   });
 }
@@ -114,7 +109,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _operations = [NSMutableArray new];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
   [bridge.uiManager.observerCoordinator addObserver:self];
-  newestShadowNodesRegistry_ = getNewestShadowNodesRegistry();
 
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
@@ -130,8 +124,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:nil];
     return;
   }
-
-  [self installUIManagerBinding];
 
   [_surfacePresenter addObserver:self];
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
@@ -156,10 +148,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
     reanimatedModule_ = reanimatedModule;
-
-    RCTScheduler *scheduler = [_surfacePresenter scheduler];
-    if (scheduler != nil) { // first load, on reload scheduler will be null
-      reanimatedModule->setUIManager(scheduler.uiManager);
+    if (_surfacePresenter != nil) {
+      // reload, uiManager is null right now, we need to wait for `installUIManagerBindingAfterReload`
+      [self injectDependencies:*jsiRuntime];
     }
   }
   return nil;
