@@ -112,11 +112,13 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
   _surfacePresenter = self.bridge.surfacePresenter;
+#ifdef DEBUG
   if (reaSurface == nil) {
     reaSurface = [[ReaRCTFabricSurface alloc] init];
     [_surfacePresenter registerSurface:reaSurface];
   }
   reaSurface.reaModule = self;
+#endif
 
   if (_surfacePresenter == nil) {
     // _surfacePresenter will be set in installUIManagerBindingAfterReload
