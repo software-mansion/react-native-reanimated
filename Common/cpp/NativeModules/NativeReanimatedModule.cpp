@@ -407,7 +407,6 @@ void NativeReanimatedModule::performOperations() {
   if (operationsInBatch_.empty()) {
     return;
   }
-  react_native_assert(newestShadowNodesRegistry_.get() != nullptr);
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
