@@ -8,6 +8,7 @@
 #import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/ReaRCTFabricSurface.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 #import <React/RCTFabricSurface.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
@@ -15,71 +16,6 @@
 
 using namespace facebook::react;
 using namespace reanimated;
-
-@interface ReaRCTFabricSurface : RCTFabricSurface
-@property REAModule *reaModule;
-@end
-
-@implementation ReaRCTFabricSurface {
-  std::shared_ptr<facebook::react::SurfaceHandler> _surfaceHandler;
-  int _reaTag;
-  RCTSurface *_surface;
-  RCTSurfaceView *_view;
-}
-
-- (instancetype)init
-{
-  if (self = [super init]) {
-    _reaTag = -1;
-    _surface = [[RCTSurface alloc] init];
-    _view = [[RCTSurfaceView alloc] initWithSurface:_surface];
-    _surfaceHandler = std::make_shared<facebook::react::SurfaceHandler>("REASurface", _reaTag);
-  }
-  return self;
-}
-
-- (NSNumber *)rootViewTag
-{
-  return @(_reaTag);
-}
-
-- (NSInteger)rootTag
-{
-  return (NSInteger)_reaTag;
-}
-
-- (void)start
-{
-  [_reaModule installUIManagerBindingAfterReload];
-}
-
-- (facebook::react::SurfaceHandler const &)surfaceHandler
-{
-  return *_surfaceHandler.get();
-}
-
-- (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
-{
-}
-- (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize viewportOffset:(CGPoint)viewportOffset
-{
-}
-- (void)stop
-{
-}
-
-- (CGSize)sizeThatFitsMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
-{
-  CGSize size{0, 0};
-  return size;
-}
-
-- (nonnull RCTSurfaceView *)view
-{
-  return _view;
-}
-
-@end
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -152,6 +88,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _surfacePresenter = self.bridge.surfacePresenter;
   [_surfacePresenter addObserver:self];
   [_nodesManager setSurfacePresenter:_surfacePresenter];
+  newestShadowNodesRegistry_ = getNewestShadowNodesRegistry();
 
   RCTRuntimeExecutorFromBridge(self.bridge)(^(jsi::Runtime &runtime) {
     if (__typeof__(self) strongSelf = weakSelf) {
@@ -175,21 +112,29 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
-
-  if (self.bridge) {
-    _surfacePresenter = self.bridge.surfacePresenter;
-    [_surfacePresenter addObserver:self];
-    if (reaSurface == nil) {
-      reaSurface = [[ReaRCTFabricSurface alloc] init];
-      [_surfacePresenter registerSurface:reaSurface];
-    }
-  }
-  reaSurface.reaModule = self;
-  [self installUIManagerBinding];
   _operations = [NSMutableArray new];
-  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
   [bridge.uiManager.observerCoordinator addObserver:self];
+
+  // only within the first loading `self.bridge.surfacePresenter` exists
+  // during the reload `self.bridge.surfacePresenter` is null
+  _surfacePresenter = self.bridge.surfacePresenter;
+  if (reaSurface == nil) {
+    reaSurface = [[ReaRCTFabricSurface alloc] init];
+    [_surfacePresenter registerSurface:reaSurface];
+  }
+  reaSurface.reaModule = self;
+
+  if (_surfacePresenter == nil) {
+    // _surfacePresenter will be set in installUIManagerBindingAfterReload
+    _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:nil];
+    return;
+  }
+
+  [self installUIManagerBinding];
+
+  [_surfacePresenter addObserver:self];
+  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
 }
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
