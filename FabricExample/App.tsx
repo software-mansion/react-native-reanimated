@@ -4,7 +4,7 @@ import React from 'react';
 // import TransformExample from './src/TransformExample';
 // import ColorExample from './src/ColorExample';
 // import WidthExample from './src/WidthExample';
-import ChessboardExample from './src/ChessboardExample';
+// import ChessboardExample from './src/ChessboardExample';
 // import RefExample from './src/RefExample';
 // import ScrollViewExample from './src/ScrollViewExample';
 // import ScrollToExample from './src/ScrollToExample';
@@ -14,6 +14,7 @@ import ChessboardExample from './src/ChessboardExample';
 // import GestureHandlerExample from './src/GestureHandlerExample';
 // import BokehExample from './src/BokehExample';
 // import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
+import BubblesExample from './src/BubblesExample';
 
 export default function App() {
   // return <EmptyExample />;
@@ -21,7 +22,7 @@ export default function App() {
   // return <TransformExample />;
   // return <ColorExample />;
   // return <WidthExample />;
-  return <ChessboardExample />;
+  // return <ChessboardExample />;
   // return <RefExample />;
   // return <ScrollViewExample />;
   // return <ScrollToExample />;
@@ -31,4 +32,5 @@ export default function App() {
   // return <GestureHandlerExample />;
   // return <BokehExample />;
   // return <NewestShadowNodesRegistryRemoveExample />;
+  return <BubblesExample />;
 }
