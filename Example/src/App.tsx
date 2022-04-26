@@ -9,13 +9,13 @@ export default function App() {
     <View style={{ margin: 40 }}>
       <Button title="show/hide" onPress={() => setShow(!show)} />
       {show && (
-        // <View style={{ borderWidth: 1, borderColor: 'red' }}>
-        <Animated.View
-          style={{ width: 30, height: 30, backgroundColor: 'red' }}
-          exiting={FadeOut.duration(1500)}
-          entering={FadeIn.duration(1500)}
-        />
-        // </View>
+        <View style={{ borderWidth: 1, padding: 5, borderColor: 'red' }}>
+          <Animated.View
+            style={{ width: 30, height: 30, backgroundColor: 'red' }}
+            exiting={FadeOut.duration(1500)}
+            entering={FadeIn.duration(1500)}
+          />
+        </View>
       )}
       <Button title="show/hide" onPress={() => setShow2(!show2)} />
       {show2 && (

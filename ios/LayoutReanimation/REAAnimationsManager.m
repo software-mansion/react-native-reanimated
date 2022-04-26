@@ -7,12 +7,28 @@
 
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
+static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
+{
+  if (view.reactTag) {
+    if (block(view)) {
+      return YES;
+    }
+
+    for (id<RCTComponent> subview in view.reactSubviews) {
+      if (REANodeFind(subview, block)) {
+        return YES;
+      }
+    }
+  }
+  return NO;
+}
+
 @implementation REAAnimationsManager {
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
   NSMutableDictionary<NSNumber *, NSNumber *> *_ancestorsOfExitingViews;
-  NSMutableSet<NSNumber *> *_toRemove;
+  NSMutableSet<NSNumber *> *_ancestorsToRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
@@ -37,7 +53,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _uiManager = uiManager;
     _reaUiManager = (REAUIManager *)uiManager;
     _exitingViews = [NSMutableDictionary new];
-    _toRemove = [NSMutableSet new];
+    _ancestorsOfExitingViews = [NSMutableDictionary new];
+    _ancestorsToRemove = [NSMutableSet new];
     _cleaningScheduled = false;
 
     _targetKeys = [NSMutableArray new];
@@ -58,8 +75,6 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _removeConfigForTag = nil;
   _uiManager = nil;
   _exitingViews = nil;
-  _ancestorsOfExitingViews = nil;
-  _toRemove = nil;
   _cleaningScheduled = false;
   _targetKeys = nil;
   _currentKeys = nil;
@@ -108,17 +123,14 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 - (void)notifyAboutEnd:(NSNumber *)tag cancelled:(BOOL)cancelled
 {
-  NSLog(@"END %@", tag);
   UIView *view = [_exitingViews objectForKey:tag];
   [_exitingViews removeObjectForKey:tag];
+  [self maybeDropAncestors:view];
   [view removeFromSuperview];
 }
 
 - (void)notifyAboutProgress:(NSDictionary *)newStyle tag:(NSNumber *)tag
 {
-
-  NSLog(@"PROGRESS %@ %@", tag, newStyle);
-
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
   [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] withComponentData:componentData];
@@ -219,26 +231,84 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 - (BOOL)wantsHandleRemovalOfView:(UIView *)view
 {
-  // TODO: we also want to handle removal if views are kept "alive" b.c. of exiting animation of their children
-  return _hasAnimationForTag(view.reactTag, @"exiting");
+  return REANodeFind(view, ^(id<RCTComponent> view) {
+    return [self->_ancestorsOfExitingViews objectForKey:view.reactTag] != nil || self->_hasAnimationForTag(view.reactTag, @"exiting");
+  });
+}
+
+- (void)registerExitingAncestors:(UIView*)child
+{
+  UIView *parent = child.superview;
+  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+    if (parent.reactTag != nil) {
+      _ancestorsOfExitingViews[parent.reactTag] = @([_ancestorsOfExitingViews[parent.reactTag] intValue] + 1);
+    }
+    parent = parent.superview;
+  }
+}
+
+- (void)maybeDropAncestors:(UIView*)child
+{
+  UIView *parent = child.superview;
+  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+    UIView *view = parent;
+    parent = parent.superview;
+    if (view.reactTag != nil) {
+      int trackingCount = [_ancestorsOfExitingViews[view.reactTag] intValue] - 1;
+      if (trackingCount <= 0) {
+        if ([_ancestorsToRemove containsObject:view.reactTag]) {
+          [view removeFromSuperview];
+          [_ancestorsToRemove removeObject:view.reactTag];
+        }
+        [_ancestorsOfExitingViews removeObjectForKey:view.reactTag];
+      } else {
+        _ancestorsOfExitingViews[parent.reactTag] = @(trackingCount);
+      }
+    }
+
+  }
+}
+
+- (BOOL)removeRecursive:(UIView*)view fromContainer:(UIView*)container;
+{
+  if (view.reactTag) {
+    BOOL hasExitingChildren = NO;
+    for (UIView *subview in view.reactSubviews) {
+      hasExitingChildren = hasExitingChildren || [self removeRecursive:subview fromContainer:view];
+    }
+    BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting");
+    if (hasExitingChildren || hasExitAnimation) {
+      REASnapshot *before;
+      if (hasExitAnimation) {
+        before = [[REASnapshot alloc] init:view];
+      }
+      // start exit animation
+      UIView *originalSuperview = view.superview;
+      NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:view];
+      [container removeReactSubview:view];
+      view.userInteractionEnabled = NO;
+      [originalSuperview insertSubview:view atIndex:originalIndex];
+      if (hasExitAnimation) {
+        NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
+        [_exitingViews setObject:view forKey:view.reactTag];
+        [self registerExitingAncestors:view];
+        _startAnimationForTag(view.reactTag, @"exiting", preparedValues, @(0));
+      } else {
+        [_ancestorsToRemove addObject:view.reactTag];
+      }
+      return YES;
+    } else {
+      [container removeReactSubview:view];
+    }
+  }
+  return NO;
 }
 
 - (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container
 {
   for (UIView *removedChild in children) {
-    if (_hasAnimationForTag(removedChild.reactTag, @"exiting")) {
-      REASnapshot *before = [[REASnapshot alloc] init:removedChild];
-      // start exit animation
-      UIView *originalSuperview = removedChild.superview;
-      NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:removedChild];
-      [container removeReactSubview:removedChild];
-      removedChild.userInteractionEnabled = NO;
-      [originalSuperview insertSubview:removedChild atIndex:originalIndex];
-      NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
-      [_exitingViews setObject:removedChild forKey:removedChild.reactTag];
-      _startAnimationForTag(removedChild.reactTag, @"exiting", preparedValues, @(0));
-    } else {
-      [container removeReactSubview:removedChild];
+    if (![self removeRecursive:removedChild fromContainer:container]) {
+      [removedChild removeFromSuperview];
     }
   }
 }

@@ -105,15 +105,13 @@
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   if (isUIViewRegistry) {
     if (!_proxyViewRemoval) {
-      if (isUIViewRegistry) {
-        id<RCTComponent> container = registry[containerTag];
-        NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
-                                                                                           atIndices:removeAtIndices];
-        for (UIView *removedChild in permanentlyRemovedChildren) {
-          if ([_animationsManager wantsHandleRemovalOfView:removedChild]) {
-            _proxyViewRemoval = YES;
-            break;
-          }
+      id<RCTComponent> container = registry[containerTag];
+      NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
+                                                                                         atIndices:removeAtIndices];
+      for (UIView *removedChild in permanentlyRemovedChildren) {
+        if ([_animationsManager wantsHandleRemovalOfView:removedChild]) {
+          _proxyViewRemoval = YES;
+          break;
         }
       }
     }
