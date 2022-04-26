@@ -1,6 +1,8 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
+#import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
+#import <React/RCTSurfaceView.h>
 
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/NewestShadowNodesRegistry.h>
@@ -14,103 +16,67 @@
 using namespace facebook::react;
 using namespace reanimated;
 
-struct Link {
-  facebook::react::SurfaceHandler::Status status{facebook::react::SurfaceHandler::Status::Unregistered};
-  UIManager *uiManager{};
-  ShadowTree const *shadowTree{};
-};
-
-struct SurfaceHandlerPublic {
-  void *vtable;
-  butter::shared_mutex linkMutex;
-  mutable Link link;
-};
-
 @interface ReaRCTFabricSurface : RCTFabricSurface
 @property REAModule *reaModule;
 @end
 
 @implementation ReaRCTFabricSurface {
-  std::shared_ptr<facebook::react::SurfaceHandler> tmp;
-  std::shared_ptr<UIManager> uiManager;
+  std::shared_ptr<facebook::react::SurfaceHandler> _surfaceHandler;
+  int _reaTag;
+  RCTSurface *_surface;
+  RCTSurfaceView *_view;
 }
 
 - (instancetype)init
 {
   if (self = [super init]) {
-    tmp = std::make_shared<facebook::react::SurfaceHandler>("mleko", 0);
+    _reaTag = -1;
+    _surface = [[RCTSurface alloc] init];
+    _view = [[RCTSurfaceView alloc] initWithSurface:_surface];
+    _surfaceHandler = std::make_shared<facebook::react::SurfaceHandler>("REASurface", _reaTag);
   }
   return self;
 }
 
 - (NSNumber *)rootViewTag
 {
-  return @(5);
+  return @(_reaTag);
 }
 
 - (NSInteger)rootTag
 {
-  return (NSInteger)(@0);
+  return (NSInteger)_reaTag;
 }
 
 - (void)start
 {
-  //  UIManager* uiManagerPtr = reinterpret_cast<SurfaceHandlerPublic *>(tmp.get())->link.uiManager;
-  //  std::shared_ptr<UIManager> uiManagerLocal;
-  ////  uiManager = std::shared_ptr<UIManager>();
-  //  uiManagerLocal.reset(uiManagerPtr);
-  [_reaModule installReanimatedModuleHostObjectJS];
+  [_reaModule installUIManagerBindingAfterReload];
 }
 
 - (facebook::react::SurfaceHandler const &)surfaceHandler
 {
-  return *tmp.get();
+  return *_surfaceHandler.get();
 }
 
 - (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
 {
 }
-
 - (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize viewportOffset:(CGPoint)viewportOffset
+{
+}
+- (void)stop
 {
 }
 
 - (CGSize)sizeThatFitsMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
 {
-  return minimumSize;
-}
-
-- (void)stop
-{
+  CGSize size{0, 0};
+  return size;
 }
 
 - (nonnull RCTSurfaceView *)view
 {
-  return nil;
-}
-
-@synthesize delegate;
-
-@synthesize intrinsicSize;
-
-@synthesize moduleName;
-
-@synthesize properties;
-
-@synthesize stage;
-
-@end
-
-@interface ReaRCTSurfacePresenter : RCTSurfacePresenter
-- (BOOL)resume;
-@end
-
-@implementation ReaRCTSurfacePresenter
-
-- (BOOL)resume
-{
-  BOOL superResume = [super resume];
-  return superResume;
+  return _view;
 }
 
 @end
@@ -154,12 +120,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return RCTGetUIManagerQueue();
 }
 
-//+ (BOOL)requiresMainQueueSetup
-//{
-//  return true;
-//}
+#pragma mark-- Initialize
 
-- (void)installReanimatedModuleHostObject
+- (void)installUIManagerBinding
 {
   newestShadowNodesRegistry_ = getNewestShadowNodesRegistry();
 
@@ -183,7 +146,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
       runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
 }
 
-- (void)installReanimatedModuleHostObjectJS
+- (void)installUIManagerBindingAfterReload
 {
   __weak __typeof__(self) weakSelf = self;
   _surfacePresenter = self.bridge.surfacePresenter;
@@ -209,8 +172,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   });
 }
 
-#pragma mark-- Initialize
-
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
@@ -224,7 +185,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     }
   }
   reaSurface.reaModule = self;
-  [self installReanimatedModuleHostObject];
+  [self installUIManagerBinding];
   _operations = [NSMutableArray new];
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
