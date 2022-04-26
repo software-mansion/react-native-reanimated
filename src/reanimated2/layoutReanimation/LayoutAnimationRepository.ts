@@ -10,8 +10,8 @@ runOnUI(() => {
 
   global.LayoutAnimationRepository = {
     configs,
-    startAnimationForTag(tag, type, yogaValues, config) {
-      console.log("START ANIMATION FOR TAG", tag);
+    startAnimationForTag(tag, type, yogaValues, config, viewSharedValue) {
+      console.log("START", type, "ANIMATION FOR TAG", tag, viewSharedValue);
       // if (configs[tag] == null) {
       //   console.log("NO ANIMATION FOR", tag);
       //   return; // :(
@@ -33,11 +33,11 @@ runOnUI(() => {
       // }
 
       console.log("Hello");
-      const sv: { value: boolean; _value: boolean } = config.sv;
+      // const sv: { value: boolean; _value: boolean } = config.sv;
       console.log("Hello2");
       _stopObservingProgress(tag, false);
       console.log("Hello3");
-      _startObservingProgress(tag, sv);
+      // _startObservingProgress(tag, viewSharedValue);
       console.log("Hello4");
 
       const backupColor: Record<string, string> = {};
@@ -49,8 +49,8 @@ runOnUI(() => {
         }
       }
 
-      sv.value = Object.assign({}, sv._value, style.initialValues);
-      _stopObservingProgress(tag, false);
+      viewSharedValue.value = Object.assign({}, viewSharedValue._value, style.initialValues);
+      // _stopObservingProgress(tag, false);
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
@@ -64,8 +64,8 @@ runOnUI(() => {
       //   configs[tag].sv._value = { ...configs[tag].sv.value, ...backupColor };
       // }
 
-      sv.value = animation;
-      _startObservingProgress(tag, sv);
+      viewSharedValue.value = animation;
+      _startObservingProgress(tag, viewSharedValue);
     },
   };
 })();

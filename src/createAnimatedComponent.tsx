@@ -547,13 +547,28 @@ export default function createAnimatedComponent(
             enableLayoutAnimations(true, false);
           }
           if (layout) {
-            configureLayoutAnimations(tag, 'layout', maybeBuild(layout));
+            configureLayoutAnimations(
+              tag,
+              'layout',
+              maybeBuild(layout),
+              this.sv
+            );
           }
           if (entering) {
-            configureLayoutAnimations(tag, 'entering', maybeBuild(entering));
+            configureLayoutAnimations(
+              tag,
+              'entering',
+              maybeBuild(entering),
+              this.sv
+            );
           }
           if (exiting) {
-            configureLayoutAnimations(tag, 'exiting', maybeBuild(exiting));
+            configureLayoutAnimations(
+              tag,
+              'exiting',
+              maybeBuild(exiting),
+              this.sv
+            );
           }
           //   let layout = this.props.layout ? this.props.layout : DefaultLayout;
           //   let entering = this.props.entering

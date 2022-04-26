@@ -24,17 +24,22 @@
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry;
 
+- (void)_removeChildren:(NSArray<UIView *> *)children
+          fromContainer:(UIView *)container
+          withAnimation:(RCTLayoutAnimationGroup *)animation;
+
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
 
-@implementation REAUIManager
-
-BOOL blockSetter = false;
-NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *_toBeRemovedRegister;
-NSMutableDictionary<NSNumber *, NSNumber *> *_parentMapper;
-REAAnimationsManager *_animationsManager;
-std::weak_ptr<reanimated::Scheduler> _scheduler;
+@implementation REAUIManager {
+  BOOL _proxyViewRemoval;
+  RCTLayoutAnimationGroup *_reactLayoutAnimationGroup;
+  NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *_toBeRemovedRegister;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_parentMapper;
+  REAAnimationsManager *_animationsManager;
+  std::weak_ptr<reanimated::Scheduler> _scheduler;
+}
 
 + (NSString *)moduleName
 {
@@ -43,6 +48,8 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
 
 - (void)setBridge:(RCTBridge *)bridge
 {
+  RCTLayoutAnimation *deletingAnimation = [[RCTLayoutAnimation alloc] initWithDuration:0.5 config:@{}];
+  _reactLayoutAnimationGroup = [[RCTLayoutAnimationGroup alloc] initWithCreatingLayoutAnimation:nil updatingLayoutAnimation:nil deletingLayoutAnimation:deletingAnimation callback:nil];
   if (!_blockSetter) {
     _blockSetter = true;
 
@@ -61,6 +68,17 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
     [self setValue:[bridge.uiManager valueForKey:@"_componentDataByName"] forKey:@"_componentDataByName"];
 
     _blockSetter = false;
+  }
+}
+
+- (void)_removeChildren:(NSArray<UIView *> *)children
+          fromContainer:(UIView *)container
+          withAnimation:(RCTLayoutAnimationGroup *)animation
+{
+  if (_proxyViewRemoval) {
+    [_animationsManager removeChildren:children fromContainer:container];
+  } else {
+    [super _removeChildren:children fromContainer:container withAnimation:animation];
   }
 }
 
@@ -85,23 +103,23 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
 
   // Reanimated changes /start
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
-  id<RCTComponent> container;
-  NSMutableArray<id<RCTComponent>> *permanentlyRemovedChildren;
   if (isUIViewRegistry) {
-    container = registry[containerTag];
-    for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
-      [container removeReactSubview:toRemoveChild];
-    }
-
-    permanentlyRemovedChildren = (NSMutableArray *)[super _childrenToRemoveFromContainer:container
-                                                                               atIndices:removeAtIndices];
-    if (permanentlyRemovedChildren != nil) {
-      for (id<RCTComponent> permanentlyRemovedChild in permanentlyRemovedChildren) {
-        if (_toBeRemovedRegister[containerTag] == nil) {
-          _toBeRemovedRegister[containerTag] = [[NSMutableSet<id<RCTComponent>> alloc] init];
+    if (!_proxyViewRemoval) {
+      if (isUIViewRegistry) {
+        id<RCTComponent> container = registry[containerTag];
+        NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
+                                                                                           atIndices:removeAtIndices];
+        for (UIView *removedChild in permanentlyRemovedChildren) {
+          if ([_animationsManager wantsHandleRemovalOfView:removedChild]) {
+            _proxyViewRemoval = YES;
+            break;
+          }
         }
-        [_toBeRemovedRegister[containerTag] addObject:permanentlyRemovedChild];
       }
+    }
+    if (_proxyViewRemoval) {
+      // set layout animation group
+      [super setNextLayoutAnimationGroup:_reactLayoutAnimationGroup];
     }
   }
   // Reanimated changes /end
@@ -113,36 +131,6 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
             addAtIndices:addAtIndices
          removeAtIndices:removeAtIndices
                 registry:registry];
-
-  // Reanimated changes /start
-  if (isUIViewRegistry) {
-    NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
-    for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
-      NSInteger lastIndex = [container reactSubviews].count - 1;
-      if (lastIndex < 0) {
-        lastIndex = 0;
-      }
-      if ([toRemoveChild isKindOfClass:[RCTModalHostView class]]
-#if __has_include(<RNScreens/RNSScreen.h>)
-          || ([toRemoveChild isKindOfClass:[RNSScreenView class]])
-#endif
-      ) {
-        // we don't want layout animations when removing modals or Screens of native-stack since it brings buggy
-        // behavior
-        [_toBeRemovedRegister[container.reactTag] removeObject:toRemoveChild];
-        [permanentlyRemovedChildren removeObject:toRemoveChild];
-
-      } else {
-        [container insertReactSubview:toRemoveChild atIndex:lastIndex];
-        viewRegistry[toRemoveChild.reactTag] = toRemoveChild;
-      }
-    }
-
-    for (UIView *removedChild in permanentlyRemovedChildren) {
-      [self callAnimationForTree:removedChild parentTag:containerTag];
-    }
-  }
-  // Reanimated changes /end
 }
 
 - (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag

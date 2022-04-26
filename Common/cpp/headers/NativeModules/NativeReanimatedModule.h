@@ -94,7 +94,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &type,
-      const jsi::Value &config) override;
+      const jsi::Value &config,
+      const jsi::Value &viewSharedValue) override;
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
 

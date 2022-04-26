@@ -27,6 +27,8 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
 - (REASnapshot*)prepareSnapshotBeforeMountForView:(UIView*)view;
+- (BOOL)wantsHandleRemovalOfView:(UIView *)view;
+- (void)removeChildren:(NSArray<UIView*> *)children fromContainer:(UIView *)container;
 - (void)onViewRemoval:(UIView *)view before:(REASnapshot *)before;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;

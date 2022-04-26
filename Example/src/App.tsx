@@ -12,8 +12,8 @@ export default function App() {
         // <View style={{ borderWidth: 1, borderColor: 'red' }}>
         <Animated.View
           style={{ width: 30, height: 30, backgroundColor: 'red' }}
-          exiting={FadeOut}
-          entering={FadeIn}
+          exiting={FadeOut.duration(1500)}
+          entering={FadeIn.duration(1500)}
         />
         // </View>
       )}

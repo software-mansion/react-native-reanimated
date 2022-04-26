@@ -40,7 +40,7 @@ void LayoutAnimationsProxy::notifyAboutCancellation(int tag) {
   this->notifyAboutEnd(tag, false);
 }
 
-void LayoutAnimationsProxy::configureAnimation(int tag, const std::string &type, std::shared_ptr<ShareableValue> config) {
+void LayoutAnimationsProxy::configureAnimation(int tag, const std::string &type, std::shared_ptr<ShareableValue> config, std::shared_ptr<ShareableValue> viewSharedValue) {
   if (type == "entering") {
     enteringAnimations[tag] = config;
   } else if (type == "exiting") {
@@ -48,6 +48,7 @@ void LayoutAnimationsProxy::configureAnimation(int tag, const std::string &type,
   } else if (type == "layout") {
     layoutAnimations[tag] = config;
   }
+  viewSharedValues[tag] = viewSharedValue;
 }
 
 bool LayoutAnimationsProxy::hasLayoutAnimation(int tag, const std::string &type) {
@@ -74,7 +75,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(jsi::Runtime &rt, int tag, cons
   if (!layoutAnimationRepositoryAsValue.isUndefined()) {
     jsi::Function startAnimationForTag =
         layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "startAnimationForTag");
-    startAnimationForTag.call(rt, jsi::Value(tag), jsi::String::createFromAscii(rt, type), values, config->toJSValue(rt));
+    startAnimationForTag.call(rt, jsi::Value(tag), jsi::String::createFromAscii(rt, type), values, config->toJSValue(rt), viewSharedValues[tag]->toJSValue(rt));
   }
 }
 

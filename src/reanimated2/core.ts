@@ -373,9 +373,10 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: string,
-  config: any
+  config: any,
+  viewSharedValue: any
 ): void {
-  NativeReanimatedModule.configureLayoutAnimation(viewTag, type, config);
+  NativeReanimatedModule.configureLayoutAnimation(viewTag, type, config, viewSharedValue);
 }
 
 export function configureProps(uiProps: string[], nativeProps: string[]): void {
