@@ -466,7 +466,7 @@ index 488a656..bfce80f 100644
    friend class SurfaceHandler;
  
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
-index 8455efb..1b3d190 100644
+index 8455efb..fb955bc 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.cpp
 @@ -22,6 +22,20 @@
@@ -490,36 +490,8 @@ index 8455efb..1b3d190 100644
  static std::unique_ptr<LeakChecker> constructLeakCheckerIfNeeded(
      RuntimeExecutor const &runtimeExecutor) {
  #ifdef REACT_NATIVE_DEBUG
-@@ -172,6 +186,9 @@ void UIManager::startSurface(
- 
-   runtimeExecutor_([=](jsi::Runtime &runtime) {
-     SystraceSection s("UIManager::startSurface::onRuntime");
-+    for (auto const &surfaceWillStartHook : surfaceWillStartHooks_) {
-+      surfaceWillStartHook->operator()();
-+    }
-     SurfaceRegistryBinding::startSurface(
-         runtime, surfaceId, moduleName, props, displayMode);
-   });
-@@ -396,6 +413,17 @@ void UIManager::unregisterCommitHook(
-   commitHook.commitHookWasUnregistered(*this);
- }
- 
-+void UIManager::registerSurfaceWillStartHook(const std::shared_ptr<SurfaceWillStartHook const> &hook) {
-+  surfaceWillStartHooks_.push_back(hook);
-+}
-+
-+void UIManager::unregisterSurfaceWillStartHook(const std::shared_ptr<SurfaceWillStartHook const> &hook) {
-+  auto it = std::find(surfaceWillStartHooks_.begin(), surfaceWillStartHooks_.end(), hook);
-+  if (it != surfaceWillStartHooks_.end()) {
-+    surfaceWillStartHooks_.erase(it);
-+  }
-+}
-+
- #pragma mark - ShadowTreeDelegate
- 
- RootShadowNode::Unshared UIManager::shadowTreeWillCommit(
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
-index 16553ad..fe17cc2 100644
+index 16553ad..9de507f 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
 +++ b/node_modules/react-native/ReactCommon/react/renderer/uimanager/UIManager.h
 @@ -30,6 +30,8 @@ namespace facebook::react {
@@ -531,20 +503,7 @@ index 16553ad..fe17cc2 100644
  class UIManager final : public ShadowTreeDelegate {
   public:
    UIManager(
-@@ -81,6 +83,12 @@ class UIManager final : public ShadowTreeDelegate {
-   void registerCommitHook(UIManagerCommitHook const &commitHook) const;
-   void unregisterCommitHook(UIManagerCommitHook const &commitHook) const;
-   
-+  /*
-+   * Registers and unregisters a surfaceWillStart hook.
-+   */
-+  void registerSurfaceWillStartHook(const std::shared_ptr<SurfaceWillStartHook const> &hook);
-+  void unregisterSurfaceWillStartHook(const std::shared_ptr<SurfaceWillStartHook const> &hook);
-+
-   ShadowNode::Shared getNewestCloneOfShadowNode(
-       ShadowNode const &shadowNode) const;
- 
-@@ -111,14 +119,6 @@ class UIManager final : public ShadowTreeDelegate {
+@@ -111,14 +113,6 @@ class UIManager final : public ShadowTreeDelegate {
        RootShadowNode::Shared const &oldRootShadowNode,
        RootShadowNode::Unshared const &newRootShadowNode) const override;
  
@@ -559,7 +518,7 @@ index 16553ad..fe17cc2 100644
    ShadowNode::Shared createNode(
        Tag tag,
        std::string const &componentName,
-@@ -174,6 +174,13 @@ class UIManager final : public ShadowTreeDelegate {
+@@ -174,6 +168,13 @@ class UIManager final : public ShadowTreeDelegate {
        const ShadowNode::Shared &shadowNode,
        std::string const &eventType);
  
@@ -573,7 +532,7 @@ index 16553ad..fe17cc2 100644
    /**
     * Configure a LayoutAnimation to happen on the next commit.
     * This API configures a global LayoutAnimation starting from the root node.
-@@ -184,8 +191,6 @@ class UIManager final : public ShadowTreeDelegate {
+@@ -184,8 +185,6 @@ class UIManager final : public ShadowTreeDelegate {
        jsi::Value const &successCallback,
        jsi::Value const &failureCallback) const;
  
@@ -582,14 +541,6 @@ index 16553ad..fe17cc2 100644
    SharedComponentDescriptorRegistry componentDescriptorRegistry_;
    UIManagerDelegate *delegate_;
    UIManagerAnimationDelegate *animationDelegate_{nullptr};
-@@ -196,6 +201,7 @@ class UIManager final : public ShadowTreeDelegate {
- 
-   mutable butter::shared_mutex commitHookMutex_;
-   mutable std::vector<UIManagerCommitHook const *> commitHooks_;
-+  std::vector<std::shared_ptr<SurfaceWillStartHook const>> surfaceWillStartHooks_;
- 
-   std::unique_ptr<LeakChecker> leakChecker_;
- };
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h b/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
 index 101155f..4212893 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/uimanager/primitives.h
