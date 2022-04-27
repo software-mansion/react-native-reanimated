@@ -7,13 +7,6 @@ using namespace react;
 
 namespace reanimated {
 
-// TODO: remove this function and create new registry during initialization
-std::shared_ptr<NewestShadowNodesRegistry> getNewestShadowNodesRegistry() {
-  static std::shared_ptr<NewestShadowNodesRegistry> registry =
-      std::make_shared<NewestShadowNodesRegistry>();
-  return registry;
-}
-
 void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
     jsi::Runtime &runtime,
     RuntimeExecutor const &runtimeExecutor,

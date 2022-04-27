@@ -34,7 +34,6 @@ static __strong REAInitializerRCTFabricSurface *reaSurface;
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
-  std::weak_ptr<REAModule> reaModule_;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -74,7 +73,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     reanimatedModule->setUIManager(uiManager);
-    reanimatedModule->setNewestShadowNodeRegistry(newestShadowNodesRegistry_);
+    reanimatedModule->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
   }
 }
 

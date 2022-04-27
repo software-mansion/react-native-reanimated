@@ -111,7 +111,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
   void setUIManager(std::shared_ptr<UIManager> uiManager);
-  void setNewestShadowNodeRegistry(
+  void setNewestShadowNodesRegistry(
       std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
 
  private:
