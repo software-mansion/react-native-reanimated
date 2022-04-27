@@ -198,7 +198,6 @@ void NativeProxy::installJSIBindings(
       errorHandler,
       propObtainer,
       layoutAnimationsProxy,
-      newestShadowNodesRegistry,
       platformDepMethodsHolder);
 
   _nativeReanimatedModule = module;
