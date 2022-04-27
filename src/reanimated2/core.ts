@@ -362,6 +362,7 @@ export function enableLayoutAnimations(
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
 }
+
 export function configureProps(uiProps: string[], nativeProps: string[]): void {
   if (!nativeShouldBeMock()) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
