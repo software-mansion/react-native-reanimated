@@ -29,11 +29,6 @@ class NewestShadowNodesRegistry {
   void remove(Tag tag);
   // removes ShadowNode from map along with its ancestors
 
-  void clear();
-  // clears the map, called from NativeReanimatedModule destructor on app reload
-
-  bool empty();
-
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, Tag>> map_;
   // tag -> (most recent clone of shadow node, parent tag)
