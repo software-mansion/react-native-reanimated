@@ -1,5 +1,6 @@
 import { AnimatedStyle, StyleProps } from './commonTypes';
 import { ReanimatedConsole } from './core';
+import { ShadowNodeWrapper } from './hook/commonTypes';
 import { MeasuredDimensions } from './NativeMethods';
 import { NativeReanimated } from './NativeReanimated/NativeReanimated';
 declare global {
@@ -15,12 +16,12 @@ declare global {
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
   const _updateProps: (
-    shadowNodeWrapper: object,
+    shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
   ) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _dispatchCommand: (
-    shadowNodeWrapper: object,
+    shadowNodeWrapper: ShadowNodeWrapper,
     commandName: string,
     args: Array<unknown>
   ) => void;

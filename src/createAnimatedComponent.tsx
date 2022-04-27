@@ -43,7 +43,8 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
-import { getShadowNodeFromRef } from './reanimated2/getShadowNodeFromRef';
+import { getShadowNodeWrapperFromRef } from './reanimated2/getShadowNodeWrapperFromRef';
+import { ShadowNodeWrapper } from './reanimated2/hook/commonTypes';
 
 const NODE_MAPPING = new Map();
 
@@ -280,7 +281,7 @@ export default function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        const shareableNode = getShadowNodeFromRef(this); // ShadowNodeWrapper
+        const shareableNode = getShadowNodeWrapperFromRef(this); // ShadowNodeWrapper
         runOnUI(() => {
           'worklet';
           _removeShadowNodeFromRegistry(shareableNode);
@@ -405,7 +406,7 @@ export default function createAnimatedComponent(
 
       let viewTag: number | null;
       let viewName: string | null;
-      let shareableNode: any; // TODO: add ShadowNodeWrapper type
+      let shareableNode: ShadowNodeWrapper | null;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
@@ -431,7 +432,7 @@ export default function createAnimatedComponent(
         if (hasReanimated2Props && hostInstance?.viewConfig) {
           adaptViewConfig(hostInstance.viewConfig);
         }
-        shareableNode = getShadowNodeFromRef(this); // ShadowNodeWrapper
+        shareableNode = getShadowNodeWrapperFromRef(this);
       }
       this._viewTag = viewTag as number;
 
