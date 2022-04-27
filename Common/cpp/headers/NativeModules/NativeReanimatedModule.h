@@ -41,14 +41,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
           propObtainer,
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
       PlatformDepMethodsHolder platformDepMethodsHolder);
-
-  ~NativeReanimatedModule() {
-    // TODO: no need to clear registry once initialization works properly
-    auto lock = newestShadowNodesRegistry_->createLock();
-    newestShadowNodesRegistry_->clear();
-  }
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
       override;
@@ -124,6 +117,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
   void setUIManager(std::shared_ptr<UIManager> uiManager);
+  void setNewestShadowNodesRegistry(
+      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
 
  private:
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);

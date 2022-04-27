@@ -70,7 +70,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
         propObtainer,
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
@@ -82,9 +81,7 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
       animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction),
-      newestShadowNodesRegistry_(newestShadowNodesRegistry) {
-  react_native_assert(newestShadowNodesRegistry->empty());
+          platformDepMethodsHolder.configurePropsFunction) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -584,6 +581,11 @@ jsi::Value NativeReanimatedModule::measure(
 void NativeReanimatedModule::setUIManager(
     std::shared_ptr<UIManager> uiManager) {
   uiManager_ = uiManager;
+}
+
+void NativeReanimatedModule::setNewestShadowNodesRegistry(
+    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
+  newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
 
 } // namespace reanimated
