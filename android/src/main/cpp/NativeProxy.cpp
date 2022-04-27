@@ -34,12 +34,14 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rt,
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
     std::shared_ptr<Scheduler> scheduler,
-    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations)
+    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations,
+    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
     : javaPart_(jni::make_global(jThis)),
       runtime_(rt),
       jsCallInvoker_(jsCallInvoker),
       scheduler_(scheduler),
-      layoutAnimations(std::move(_layoutAnimations)) {}
+      layoutAnimations(std::move(_layoutAnimations)),
+      newestShadowNodesRegistry_(newestShadowNodesRegistry) {}
 
 NativeProxy::~NativeProxy() {
   runtime_->global().setProperty(
@@ -78,7 +80,8 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       scheduler,
-      make_global(layoutAnimations));
+      make_global(layoutAnimations),
+      newestShadowNodesRegistry);
 }
 
 void NativeProxy::installJSIBindings(
@@ -194,10 +197,6 @@ void NativeProxy::installJSIBindings(
       setGestureStateFunction,
       configurePropsFunction};
 
-  // TODO: use the same instance in ReanimatedUIManagerBinding
-  auto newestShadowNodesRegistry =
-      std::make_shared<NewestShadowNodesRegistry>();
-
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
@@ -232,6 +231,8 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
+  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
+  newestShadowNodesRegistry_ = nullptr;
 
   auto eventListener = std::make_shared<EventListener>(
       [module, getCurrentTime](const RawEvent &rawEvent) {

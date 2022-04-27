@@ -144,6 +144,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<NativeReanimatedModule> _nativeReanimatedModule;
   std::shared_ptr<Scheduler> scheduler_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations;
+  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
 
   void installJSIBindings(
       jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
@@ -173,7 +174,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime *rt,
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
-      jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations);
+      jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations,
+      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
 };
 
 } // namespace reanimated
