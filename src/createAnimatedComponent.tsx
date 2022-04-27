@@ -509,7 +509,7 @@ export default function createAnimatedComponent(
       prevProps: AnimatedComponentProps<InitialComponentProps> // eslint-disable-line @typescript-eslint/no-unused-vars
     ) {
       // this._attachProps(this.props);
-      // this._reattachNativeEvents(prevProps);
+      this._reattachNativeEvents(prevProps);
 
       this._propsAnimated &&
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
