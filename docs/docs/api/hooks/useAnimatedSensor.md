@@ -99,6 +99,6 @@ function UseAnimatedSensorExample() {
 
 :::caution
 
-On iOS, if you want to read sensor data you need to enable localization service on your device (`Settings -> Privacy -> Localization service`)
+On iOS, if you want to read sensor data you need to enable location services on your device (`Settings > Privacy > Location Services`).
 
 :::
