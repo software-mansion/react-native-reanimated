@@ -19,10 +19,9 @@ void LayoutAnimationsProxy::startObserving(
     std::shared_ptr<MutableValue> sv,
     jsi::Runtime &rt) {
   observedValues[tag] = sv;
+  this->notifyAboutProgress(tag, sv->value->toJSValue(rt).asObject(rt));
   sv->addListener(tag + idOffset, [sv, tag, this, &rt]() {
-    std::shared_ptr<FrozenObject> newValue =
-        ValueWrapper::asFrozenObject(sv->value->valueContainer);
-    this->notifyAboutProgress(tag, newValue->shallowClone(rt));
+    this->notifyAboutProgress(tag, sv->value->toJSValue(rt).asObject(rt));
   });
 }
 

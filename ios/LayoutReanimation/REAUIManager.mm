@@ -82,6 +82,12 @@
   }
 }
 
+- (void)batchDidComplete
+{
+  _proxyViewRemoval = NO;
+  [super batchDidComplete];
+}
+
 - (void)_manageChildren:(NSNumber *)containerTag
         moveFromIndices:(NSArray<NSNumber *> *)moveFromIndices
           moveToIndices:(NSArray<NSNumber *> *)moveToIndices
@@ -104,6 +110,7 @@
   // Reanimated changes /start
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   if (isUIViewRegistry) {
+    BOOL wasProxyRemovalSet = _proxyViewRemoval;
     if (!_proxyViewRemoval) {
       id<RCTComponent> container = registry[containerTag];
       NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
@@ -115,7 +122,7 @@
         }
       }
     }
-    if (_proxyViewRemoval) {
+    if (!wasProxyRemovalSet && _proxyViewRemoval) {
       // set layout animation group
       [super setNextLayoutAnimationGroup:_reactLayoutAnimationGroup];
     }
@@ -256,10 +263,7 @@
       }
 
       // Reanimated changes /start
-      REASnapshot *snapshotBefore = isNew ? nil : [_animationsManager prepareSnapshotBeforeMountForView:view];
-//      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
-//        snapshotBefore = [[REASnapshot alloc] init:view];
-//      }
+      REASnapshot *snapshotBefore = isNew ? nil : [self->_animationsManager prepareSnapshotBeforeMountForView:view];
       // Reanimated changes /end
 
       if (creatingLayoutAnimation) {
@@ -309,20 +313,11 @@
 
       // Reanimated changes /start
       [_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore];
-//      if ([_animationsManager viewDidMount:view]) {
-//        if (isNew) {
-//          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-//          [_animationsManager onViewCreate:view after:snapshot];
-//        } else {
-//          REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
-//          [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
-//        }
-//      }
+      // Reanimated changes /end
     }
     // Clean up
-    // uiManager->_layoutAnimationGroup = nil;
-    [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];
-    // Reanimated changes /end
+    // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the private field
+    [uiManager setNextLayoutAnimationGroup:nil];
   };
 }
 

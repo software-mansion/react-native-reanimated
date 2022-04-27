@@ -129,6 +129,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [view removeFromSuperview];
 }
 
+// TODO: this is a really bad name for a method that updates properties
 - (void)notifyAboutProgress:(NSDictionary *)newStyle tag:(NSNumber *)tag
 {
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
@@ -315,6 +316,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after
 {
+//  _reaUiManager.flushUiOperations();
   NSMutableDictionary *targetValues = after.values;
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
   _startAnimationForTag(view.reactTag, @"entering", preparedValues, @(0));
