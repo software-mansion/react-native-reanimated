@@ -19,9 +19,7 @@ export type AnimatedSensor = {
   sensor: SensorValue3D | SensorValueRotation | null;
   unregister: () => void;
   isAvailable: boolean;
-  config: {
-    interval: number;
-  };
+  config: SensorConfig;
 };
 
 export function useAnimatedSensor(

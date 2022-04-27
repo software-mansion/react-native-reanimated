@@ -215,8 +215,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
   // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
 
-  id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
-  auto setGestureStateFunction = [gestureHandlerStateManager](int handlerTag, int newState) {
+  id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
+  auto setGestureStateFunction = [gestureHandlerStateManager, bridge](int handlerTag, int newState) mutable {
+    if (gestureHandlerStateManager == nil) {
+      gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
+    }
+
     setGestureState(gestureHandlerStateManager, handlerTag, newState);
   };
 

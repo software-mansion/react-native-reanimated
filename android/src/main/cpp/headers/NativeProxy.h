@@ -134,6 +134,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager);
   static void registerNatives();
 
+  ~NativeProxy();
+
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;

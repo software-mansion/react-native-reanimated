@@ -498,10 +498,17 @@ declare module 'react-native-reanimated' {
     interval: number;
   };
 
+  export type AnimatedSensor = {
+    sensor: SensorValue3D | SensorValueRotation | null;
+    unregister: () => void;
+    isAvailable: boolean;
+    config: SensorConfig;
+  };
+
   export function useAnimatedSensor(
     sensorType: SensorType,
     userConfig?: SensorConfig
-  );
+  ): AnimatedSensor;
 
   export interface ExitAnimationsValues {
     currentOriginX: number;

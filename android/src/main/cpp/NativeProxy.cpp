@@ -41,6 +41,13 @@ NativeProxy::NativeProxy(
       scheduler_(scheduler),
       layoutAnimations(std::move(_layoutAnimations)) {}
 
+NativeProxy::~NativeProxy() {
+  runtime_->global().setProperty(
+      *runtime_,
+      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
+      jsi::Value::undefined());
+}
+
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
@@ -202,19 +209,23 @@ void NativeProxy::installJSIBindings(
 
   _nativeReanimatedModule = module;
 
-  this->registerEventHandler([module, getCurrentTime](
+  std::weak_ptr<NativeReanimatedModule> weakModule = module;
+  this->registerEventHandler([weakModule, getCurrentTime](
                                  std::string eventName,
                                  std::string eventAsString) {
-    // handles RCTEvents from RNGestureHandler
+    if (auto module = weakModule.lock()) {
+      // handles RCTEvents from RNGestureHandler
 
-    std::string eventJSON = eventAsString.substr(
-        13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
-    jsi::Runtime &rt = *module->runtime;
-    jsi::Value payload = jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
-    // TODO: support NaN and INF values
-    // TODO: convert event directly to jsi::Value without JSON serialization
+      std::string eventJSON = eventAsString.substr(
+          13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
+      jsi::Runtime &rt = *module->runtime;
+      jsi::Value payload =
+          jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
+      // TODO: support NaN and INF values
+      // TODO: convert event directly to jsi::Value without JSON serialization
 
-    module->handleEvent(eventName, std::move(payload), getCurrentTime());
+      module->handleEvent(eventName, std::move(payload), getCurrentTime());
+    }
   });
 
   Binding *binding = fabricUIManager->getBinding();

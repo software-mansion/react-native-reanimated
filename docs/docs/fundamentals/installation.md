@@ -30,6 +30,22 @@ Add Reanimated's babel plugin to your `babel.config.js`:
   };
 ```
 
+By default, Reanimated plugin generate source location using absolute path. You can configure to use relative path:
+
+```js {5}
+  module.exports = {
+      ...
+      plugins: [
+          ...
+          [
+              'react-native-reanimated/plugin', {
+                  relativeSourceLocation: true,
+              },
+          ]
+      ],
+  };
+```
+
 :::caution
 
 Reanimated plugin has to be listed last.
