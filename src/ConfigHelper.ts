@@ -6,14 +6,6 @@ import { configureProps as jsiConfigureProps } from './reanimated2/core';
 let UI_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   opacity: true,
   transform: true,
-  /* ios styles */
-  shadowOpacity: true,
-  shadowRadius: true,
-  /* legacy android transform properties */
-  scaleX: true,
-  scaleY: true,
-  translateX: true,
-  translateY: true,
   /* colors */
   backgroundColor: true,
   borderRightColor: true,
@@ -23,6 +15,14 @@ let UI_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   borderLeftColor: true,
   borderStartColor: true,
   borderTopColor: true,
+  /* ios styles */
+  shadowOpacity: true,
+  shadowRadius: true,
+  /* legacy android transform properties */
+  scaleX: true,
+  scaleY: true,
+  translateX: true,
+  translateY: true,
 };
 
 /**
