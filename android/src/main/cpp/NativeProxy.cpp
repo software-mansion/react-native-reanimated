@@ -35,13 +35,22 @@ NativeProxy::NativeProxy(
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
     std::shared_ptr<Scheduler> scheduler,
     jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations,
-    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager)
     : javaPart_(jni::make_global(jThis)),
       runtime_(rt),
       jsCallInvoker_(jsCallInvoker),
       scheduler_(scheduler),
       layoutAnimations(std::move(_layoutAnimations)),
-      newestShadowNodesRegistry_(newestShadowNodesRegistry) {}
+      newestShadowNodesRegistry_(
+          std::make_shared<NewestShadowNodesRegistry>()) {
+  Binding *binding = fabricUIManager->getBinding();
+  RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
+  std::shared_ptr<UIManager> uiManager =
+      binding->getScheduler()->getUIManager();
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+      *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
+}
 
 NativeProxy::~NativeProxy() {
   runtime_->global().setProperty(
@@ -62,26 +71,13 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
-
-  Binding *binding = fabricUIManager->getBinding();
-  RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
-  std::shared_ptr<UIManager> uiManager =
-      binding->getScheduler()->getUIManager();
-
-  auto newestShadowNodesRegistry =
-      std::make_shared<NewestShadowNodesRegistry>();
-
-  jsi::Runtime &jsRuntime = *((jsi::Runtime *)jsContext);
-
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      jsRuntime, runtimeExecutor, uiManager, newestShadowNodesRegistry);
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       scheduler,
       make_global(layoutAnimations),
-      newestShadowNodesRegistry);
+      fabricUIManager);
 }
 
 void NativeProxy::installJSIBindings(

@@ -175,7 +175,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations,
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+          fabricUIManager);
 };
 
 } // namespace reanimated
