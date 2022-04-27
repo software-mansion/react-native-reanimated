@@ -28,7 +28,7 @@ Properties:
 * `sensor`: [[SharedValue](../../api/hooks/useSharedValue)] contains [[3DVector](#3dvector-object)] or [[RotationVector](#rotationvector-object)] or `null`  
   contains actual sensor measurements as a shared value
 * `unregister: [function]`  
-  allows you to stop listening to sensor updated every moment
+  allows you to stop listening to sensor updates
 * `isAvailable: [boolean]`  
   the flag contains information on the availability of sensors in a device
 * `config`: [[UserConfig](#userconfig-object)]  
