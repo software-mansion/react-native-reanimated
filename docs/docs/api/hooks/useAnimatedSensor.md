@@ -71,7 +71,6 @@ Properties:
 ### Example
 ```js
 function UseAnimatedSensorExample() {
-
   const animatedSensor = useAnimatedSensor(SensorType.ROTATION, { interval: 10 }); // <- initialization
   const style = useAnimatedStyle(() => {
     const yaw = Math.abs(animatedSensor.sensor.value.yaw);
