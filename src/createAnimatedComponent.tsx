@@ -249,7 +249,6 @@ export default function createAnimatedComponent(
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
-          console.log('registers ', viewTag, key);
           prop.current.registerForEvents(viewTag as number, key);
         }
       }
@@ -621,7 +620,6 @@ export default function createAnimatedComponent(
           has('current', value) &&
           value.current instanceof WorkletEventHandler
         ) {
-          console.log('eventHAndler uuuuu');
           if (value.current.eventNames.length > 0) {
             value.current.eventNames.forEach((eventName) => {
               props[eventName] = has('listeners', value.current)
