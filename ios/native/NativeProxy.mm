@@ -377,17 +377,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
 
-    auto &rt = *module->runtime;
-
     std::string eventName = [eventNameNSString UTF8String];
+    jsi::Runtime &rt = *module->runtime;
     jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
     // TODO: check if NaN and INF values are converted properly
 
-    jsi::Object global = rt.global();
-    jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
-    global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
-    module->onEvent(eventName, std::move(payload));
-    global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+    module->handleEvent(eventName, std::move(payload), CACurrentMediaTime() * 1000);
   }];
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle

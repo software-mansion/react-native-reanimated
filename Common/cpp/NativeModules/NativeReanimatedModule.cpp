@@ -409,6 +409,13 @@ bool NativeReanimatedModule::handleRawEvent(
   std::string eventName = std::to_string(tag) + eventType;
   jsi::Value payload = payloadFactory(rt_);
 
+  return handleEvent(eventName, std::move(payload), currentTime);
+}
+
+bool NativeReanimatedModule::handleEvent(
+    const std::string &eventName,
+    jsi::Value &&payload,
+    double currentTime) {
   jsi::Object global = rt_.global();
   jsi::String eventTimestampName =
       jsi::String::createFromAscii(rt_, "_eventTimestamp");

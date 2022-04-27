@@ -207,20 +207,15 @@ void NativeProxy::installJSIBindings(
                                  std::string eventName,
                                  std::string eventAsString) {
     // handles RCTEvents from RNGestureHandler
-    jsi::Object global = module->runtime->global();
+
     std::string eventJSON = eventAsString.substr(
-        13, eventAsString.length() - 15); // remove "{ NativeMap: " and " }"
-    jsi::Value payload =
-        jsi::valueFromDynamic(*module->runtime, folly::parseJson(eventJSON));
+        13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
+    jsi::Runtime &rt = *module->runtime;
+    jsi::Value payload = jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
     // TODO: support NaN and INF values
     // TODO: convert event directly to jsi::Value without JSON serialization
-    jsi::String eventTimestampName =
-        jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-    global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
-    module->onEvent(eventName, std::move(payload));
-    global.setProperty(
-        *module->runtime, eventTimestampName, jsi::Value::undefined());
-    // TODO: use rt_ instead of *module->runtime
+
+    module->handleEvent(eventName, std::move(payload), getCurrentTime());
   });
 
   Binding *binding = fabricUIManager->getBinding();

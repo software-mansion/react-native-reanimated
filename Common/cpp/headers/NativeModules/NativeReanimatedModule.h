@@ -94,6 +94,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void maybeRequestRender();
 
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
+  bool handleEvent(
+      const std::string &eventName,
+      jsi::Value &&payload,
+      double currentTime);
 
   void updateProps(
       jsi::Runtime &rt,
