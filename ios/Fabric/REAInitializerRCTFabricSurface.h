@@ -1,7 +1,7 @@
 #import <RNReanimated/REAModule.h>
 #import <React/RCTFabricSurface.h>
 
-@interface ReaRCTFabricSurface : RCTFabricSurface
+@interface REAInitializerRCTFabricSurface : RCTFabricSurface
 
 @property REAModule *reaModule;
 
