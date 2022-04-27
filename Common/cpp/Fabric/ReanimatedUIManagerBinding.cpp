@@ -14,29 +14,29 @@ std::shared_ptr<NewestShadowNodesRegistry> getNewestShadowNodesRegistry() {
   return registry;
 }
 
-std::shared_ptr<NewestShadowNodesRegistry>
-ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
     jsi::Runtime &runtime,
     RuntimeExecutor const &runtimeExecutor,
-    std::shared_ptr<UIManager> const &uiManager) {
+    std::shared_ptr<UIManager> const &uiManager,
+    std::shared_ptr<NewestShadowNodesRegistry> const
+        &newestShadowNodesRegistry) {
   // adapted from UIManagerBinding.cpp
   auto uiManagerModuleName = "nativeFabricUIManager";
   auto uiManagerValue =
       runtime.global().getProperty(runtime, uiManagerModuleName);
-  auto uiManagerBinding =
-      std::make_shared<ReanimatedUIManagerBinding>(uiManager, runtimeExecutor);
+  auto uiManagerBinding = std::make_shared<ReanimatedUIManagerBinding>(
+      uiManager, runtimeExecutor, newestShadowNodesRegistry);
   auto object = jsi::Object::createFromHostObject(runtime, uiManagerBinding);
   runtime.global().setProperty(runtime, uiManagerModuleName, std::move(object));
-  return uiManagerBinding->newestShadowNodesRegistry_;
 }
 
 ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     std::shared_ptr<UIManager> uiManager,
-    RuntimeExecutor runtimeExecutor)
+    RuntimeExecutor runtimeExecutor,
+    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
     : UIManagerBinding(uiManager, runtimeExecutor),
       uiManager_(std::move(uiManager)),
-      newestShadowNodesRegistry_(
-          std::make_shared<NewestShadowNodesRegistry>()) {}
+      newestShadowNodesRegistry_(newestShadowNodesRegistry) {}
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
 

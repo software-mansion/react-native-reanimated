@@ -2,12 +2,12 @@
 #import <React/RCTSurfaceView.h>
 #import <memory>
 
+#import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #import <RNReanimated/REAModule.h>
-#import <RNReanimated/ReaRCTFabricSurface.h>
 
-@implementation ReaRCTFabricSurface {
+@implementation REAInitializerRCTFabricSurface {
   std::shared_ptr<facebook::react::SurfaceHandler> _surfaceHandler;
-  int _reaTag;
+  int _tag;
   RCTSurface *_surface;
   RCTSurfaceView *_view;
 }
@@ -15,26 +15,27 @@
 - (instancetype)init
 {
   if (self = [super init]) {
-    _reaTag = -1;
+    _tag = -1;
     _surface = [[RCTSurface alloc] init];
     _view = [[RCTSurfaceView alloc] initWithSurface:_surface];
-    _surfaceHandler = std::make_shared<facebook::react::SurfaceHandler>("REASurface", _reaTag);
+    _surfaceHandler = std::make_shared<facebook::react::SurfaceHandler>("REASurface", _tag);
   }
   return self;
 }
 
 - (NSNumber *)rootViewTag
 {
-  return @(_reaTag);
+  return @(_tag);
 }
 
 - (NSInteger)rootTag
 {
-  return (NSInteger)_reaTag;
+  return (NSInteger)_tag;
 }
 
 - (void)start
 {
+  // this is only needed method, the rest of them is just for prevent null pointer exceptions
   [_reaModule installUIManagerBindingAfterReload];
 }
 
@@ -46,9 +47,11 @@
 - (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize
 {
 }
+
 - (void)setMinimumSize:(CGSize)minimumSize maximumSize:(CGSize)maximumSize viewportOffset:(CGPoint)viewportOffset
 {
 }
+
 - (void)stop
 {
 }

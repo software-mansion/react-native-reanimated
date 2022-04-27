@@ -537,7 +537,7 @@ void NativeReanimatedModule::setUIManager(
   uiManager_ = uiManager;
 }
 
-void NativeReanimatedModule::setShadowNodeRegistry(
+void NativeReanimatedModule::setNewestShadowNodeRegistry(
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
   newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }

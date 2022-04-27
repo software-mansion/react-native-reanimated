@@ -8,9 +8,9 @@
 
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/NewestShadowNodesRegistry.h>
+#import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/ReaRCTFabricSurface.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 
 using namespace facebook::react;
@@ -27,7 +27,7 @@ using namespace reanimated;
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
-static __strong ReaRCTFabricSurface *reaSurface;
+static __strong REAInitializerRCTFabricSurface *reaSurface;
 
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
@@ -55,46 +55,50 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return RCTGetUIManagerQueue();
 }
 
-- (std::shared_ptr<UIManager>)getUiManager
+- (std::shared_ptr<UIManager>)getUIManager
 {
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   return scheduler.uiManager;
 }
 
-- (std::shared_ptr<NewestShadowNodesRegistry>)injectUIManagerBinding:(jsi::Runtime &)runtime
-                                                           uiManager:(std::shared_ptr<UIManager>)uiManager
+- (void)injectUIManagerBinding:(jsi::Runtime &)runtime uiManager:(std::shared_ptr<UIManager>)uiManager
 {
   RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
     callback(runtime);
   };
-  return ReanimatedUIManagerBinding::createAndInstallIfNeeded(runtime, syncRuntimeExecutor, uiManager);
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
 }
 
-- (void)setUpNativeReanimatedMdule:(std::shared_ptr<UIManager>)uiManager
+- (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     reanimatedModule->setUIManager(uiManager);
-    reanimatedModule->setShadowNodeRegistry(newestShadowNodesRegistry_);
+    reanimatedModule->setNewestShadowNodeRegistry(newestShadowNodesRegistry_);
   }
 }
 
 - (void)injectDependencies:(jsi::Runtime &)runtime
 {
-  auto uiManager = [self getUiManager];
+  auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  newestShadowNodesRegistry_ = [self injectUIManagerBinding:runtime uiManager:uiManager];
-  [self setUpNativeReanimatedMdule:uiManager];
+  newestShadowNodesRegistry_ = std::make_shared<NewestShadowNodesRegistry>();
+  [self injectUIManagerBinding:runtime uiManager:uiManager];
+  [self setUpNativeReanimatedModule:uiManager];
 }
 
 #pragma mark-- Initialize
 
 - (void)installUIManagerBindingAfterReload
 {
+  // called from REAInitializerRCTFabricSurface::start
   __weak __typeof__(self) weakSelf = self;
   _surfacePresenter = self.bridge.surfacePresenter;
   [_surfacePresenter addObserver:self];
   [_nodesManager setSurfacePresenter:_surfacePresenter];
 
+  // to avoid deadlock we can't use Executor from React Native
+  // but we can create own and use it because initialization is already synchronized
   RCTRuntimeExecutorFromBridge(self.bridge)(^(jsi::Runtime &runtime) {
     if (__typeof__(self) strongSelf = weakSelf) {
       [strongSelf injectDependencies:runtime];
@@ -114,7 +118,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _surfacePresenter = self.bridge.surfacePresenter;
 #ifdef DEBUG
   if (reaSurface == nil) {
-    reaSurface = [[ReaRCTFabricSurface alloc] init];
+    // we need only one instance because SurfacePresenter is the same during the application lifetime
+    reaSurface = [[REAInitializerRCTFabricSurface alloc] init];
     [_surfacePresenter registerSurface:reaSurface];
   }
   reaSurface.reaModule = self;
