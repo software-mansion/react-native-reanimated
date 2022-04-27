@@ -91,7 +91,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 #pragma mark-- Initialize
 
-- (void)installUIManagerBindingAfterReload
+- (void)installReanimatedUIManagerBindingAfterReload
 {
   // called from REAInitializerRCTFabricSurface::start
   __weak __typeof__(self) weakSelf = self;
@@ -154,7 +154,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 #endif
 
   if (_surfacePresenter == nil) {
-    // _surfacePresenter will be set in installUIManagerBindingAfterReload
+    // _surfacePresenter will be set in installReanimatedUIManagerBindingAfterReload
     _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:nil];
     return;
   }
@@ -183,7 +183,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
     reanimatedModule_ = reanimatedModule;
     if (_surfacePresenter != nil) {
-      // reload, uiManager is null right now, we need to wait for `installUIManagerBindingAfterReload`
+      // reload, uiManager is null right now, we need to wait for `installReanimatedUIManagerBindingAfterReload`
       [self injectDependencies:*jsiRuntime];
     }
   }

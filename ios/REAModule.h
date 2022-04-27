@@ -14,6 +14,6 @@ using namespace reanimated;
     : RCTEventEmitter <RCTBridgeModule, RCTEventDispatcherObserver, RCTUIManagerObserver, RCTSurfacePresenterObserver>
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
-- (void)installUIManagerBindingAfterReload;
+- (void)installReanimatedUIManagerBindingAfterReload;
 
 @end
