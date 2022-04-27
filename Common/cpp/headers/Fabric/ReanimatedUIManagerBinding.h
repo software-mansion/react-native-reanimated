@@ -15,8 +15,6 @@ using namespace react;
 
 namespace reanimated {
 
-std::shared_ptr<NewestShadowNodesRegistry> getNewestShadowNodesRegistry();
-
 class ReanimatedUIManagerBinding : public UIManagerBinding {
  public:
   static void createAndInstallIfNeeded(
