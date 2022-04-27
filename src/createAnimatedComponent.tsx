@@ -595,9 +595,15 @@ export default function createAnimatedComponent(
         }
       }
       if (!changed) {
-        const lastKeys = Object.keys(this._lastSentStyle);
-        const inputKeys = Object.keys(inputStyle);
-        if (lastKeys.every((k) => inputKeys.includes(k))) {
+        const inputKeys = new Set(Object.keys(inputStyle));
+        let equalKeys = true;
+        for (const key in this._lastSentStyle) {
+          if (!inputKeys.has(key)) {
+            equalKeys = false;
+            break;
+          }
+        }
+        if (equalKeys) {
           return this._lastSentStyle;
         }
       }
