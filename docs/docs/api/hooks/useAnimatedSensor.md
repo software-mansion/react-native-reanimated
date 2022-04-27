@@ -26,7 +26,7 @@ Hook `useAnimatedSensor` returns as result instance of [[AnimatedSensor](#animat
 #### `AnimatedSensor: [object]`
 Properties:
 * `sensor`: [[SharedValue](../../api/hooks/useSharedValue)] contains [[3DVector](#3dvector-object)] or [[RotationVector](#rotationvector-object)] or `null`  
-  contains actual sensor measurements stored inside shared value
+  contains actual sensor measurements as a shared value
 * `unregister: [function]`  
   allows you to stop listening to sensor updated every moment
 * `isAvailable: [boolean]`  
