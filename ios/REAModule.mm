@@ -32,7 +32,7 @@ static __strong REAInitializerRCTFabricSurface *reaSurface;
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
   __weak RCTSurfacePresenter *_surfacePresenter;
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
 }
 
@@ -60,20 +60,20 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)injectUIManagerBinding:(jsi::Runtime &)runtime uiManager:(std::shared_ptr<UIManager>)uiManager
+- (void)injectReanimatedUIManagerBinding:(jsi::Runtime &)runtime uiManager:(std::shared_ptr<UIManager>)uiManager
 {
   RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
     callback(runtime);
   };
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry_);
+      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry);
 }
 
 - (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     reanimatedModule->setUIManager(uiManager);
-    reanimatedModule->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
+    reanimatedModule->setNewestShadowNodesRegistry(newestShadowNodesRegistry);
   }
 }
 
@@ -81,8 +81,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  newestShadowNodesRegistry_ = std::make_shared<NewestShadowNodesRegistry>();
-  [self injectUIManagerBinding:runtime uiManager:uiManager];
+  newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
+  [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
   [self setUpNativeReanimatedModule:uiManager];
 }
 
