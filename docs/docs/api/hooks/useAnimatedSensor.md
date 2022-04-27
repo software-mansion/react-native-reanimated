@@ -19,7 +19,7 @@ You can select the sensor available in [[SensorType](#sensortype-enum)] enum.
 Optionally, you can pass configuration to customize the sensor behavior.
 
 ### Returns
-Hook `useAnimatedSensor` returns as result instance of [[AnimatedSensor](#animatedsensor-object)];
+Hook `useAnimatedSensor` returns an instance of [[AnimatedSensor](#animatedsensor-object)];
 
 ### Types
 
