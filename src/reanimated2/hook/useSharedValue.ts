@@ -4,7 +4,7 @@ import { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
 
 export function useSharedValue<T>(init: T): SharedValue<T> {
-  const ref = useRef<SharedValue<T>>(makeMutable(init));
+  const ref = useRef<SharedValue<T>>(null);
 
   if (ref.current === null) {
     ref.current = makeMutable(init);
