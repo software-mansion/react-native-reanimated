@@ -203,6 +203,26 @@ void NativeProxy::installJSIBindings(
 
   _nativeReanimatedModule = module;
 
+  this->registerEventHandler([module, getCurrentTime](
+                                 std::string eventName,
+                                 std::string eventAsString) {
+    // handles RCTEvents from RNGestureHandler
+    jsi::Object global = module->runtime->global();
+    std::string eventJSON = eventAsString.substr(
+        13, eventAsString.length() - 15); // remove "{ NativeMap: " and " }"
+    jsi::Value payload =
+        jsi::valueFromDynamic(*module->runtime, folly::parseJson(eventJSON));
+    // TODO: support NaN and INF values
+    // TODO: convert event directly to jsi::Value without JSON serialization
+    jsi::String eventTimestampName =
+        jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+    global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
+    module->onEvent(eventName, std::move(payload));
+    global.setProperty(
+        *module->runtime, eventTimestampName, jsi::Value::undefined());
+    // TODO: use rt_ instead of *module->runtime
+  });
+
   Binding *binding = fabricUIManager->getBinding();
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();

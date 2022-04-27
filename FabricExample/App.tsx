@@ -31,8 +31,8 @@ export default function App() {
   // return <MeasureExample />;
   // return <AnimatedSensorExample />;
   // return <AnimatedTextExample />;
-  // return <GestureHandlerExample />;
+  return <GestureHandlerExample />;
   // return <BokehExample />;
   // return <NewestShadowNodesRegistryRemoveExample />;
-  return <BubblesExample />;
+  // return <BubblesExample />;
 }
