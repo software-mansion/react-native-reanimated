@@ -83,8 +83,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction),
-      newestShadowNodesRegistry_(newestShadowNodesRegistry),
-      rt_(*rt.get()) {
+      newestShadowNodesRegistry_(newestShadowNodesRegistry) {
   react_native_assert(newestShadowNodesRegistry->empty());
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
@@ -407,7 +406,8 @@ bool NativeReanimatedModule::handleRawEvent(
     eventType = "on" + eventType.substr(3);
   }
   std::string eventName = std::to_string(tag) + eventType;
-  jsi::Value payload = payloadFactory(rt_);
+  jsi::Runtime &rt = *runtime.get();
+  jsi::Value payload = payloadFactory(rt);
 
   return handleEvent(eventName, std::move(payload), currentTime);
 }
@@ -416,12 +416,13 @@ bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
     jsi::Value &&payload,
     double currentTime) {
-  jsi::Object global = rt_.global();
+  jsi::Runtime &rt = *runtime.get();
+  jsi::Object global = rt.global();
   jsi::String eventTimestampName =
-      jsi::String::createFromAscii(rt_, "_eventTimestamp");
-  global.setProperty(rt_, eventTimestampName, currentTime);
+      jsi::String::createFromAscii(rt, "_eventTimestamp");
+  global.setProperty(rt, eventTimestampName, currentTime);
   onEvent(eventName, std::move(payload));
-  global.setProperty(rt_, eventTimestampName, jsi::Value::undefined());
+  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -465,6 +466,7 @@ void NativeReanimatedModule::performOperations() {
   auto contextContainer = getContextContainerFromUIManager(
       &*uiManager_); // TODO: use Scheduler::getContextContainer
   PropsParserContext propsParserContext{surfaceId_, *contextContainer};
+  jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
@@ -487,7 +489,7 @@ void NativeReanimatedModule::performOperations() {
               const auto newProps = source.getComponentDescriptor().cloneProps(
                   propsParserContext,
                   source.getProps(),
-                  RawProps(rt_, *pair.second));
+                  RawProps(rt, *pair.second));
 
               return source.clone({/* .props = */ newProps});
             });
