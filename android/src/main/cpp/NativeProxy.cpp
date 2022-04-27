@@ -57,6 +57,8 @@ NativeProxy::~NativeProxy() {
       *runtime_,
       jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
       jsi::Value::undefined());
+
+  reactScheduler_->removeEventListener(eventListener_);
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -230,14 +232,12 @@ void NativeProxy::installJSIBindings(
   module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
   newestShadowNodesRegistry_ = nullptr;
 
-  auto eventListener = std::make_shared<EventListener>(
+  eventListener_ = std::make_shared<EventListener>(
       [module, getCurrentTime](const RawEvent &rawEvent) {
         return module->handleRawEvent(rawEvent, getCurrentTime());
       });
-
-  std::shared_ptr<facebook::react::Scheduler> reactScheduler =
-      binding->getScheduler();
-  reactScheduler->addEventListener(eventListener);
+  reactScheduler_ = binding->getScheduler();
+  reactScheduler_->addEventListener(eventListener_);
 
   runtime_->global().setProperty(
       *runtime_,

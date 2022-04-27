@@ -145,6 +145,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<Scheduler> scheduler_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
+  std::shared_ptr<EventListener> eventListener_;
 
   void installJSIBindings(
       jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
