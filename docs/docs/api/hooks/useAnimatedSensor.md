@@ -4,7 +4,7 @@ title: useAnimatedSensor
 sidebar_label: useAnimatedSensor
 ---
 
-With the `useAnimatedSensor` hook, you can use your sensor device data e.x. gyroscope to create interactive animation in a very simple way.
+With the `useAnimatedSensor` hook, you can easily create cool interactive animations based on data from sensors in the device such as gyroscope, accelerometer etc.
 
 ```js
 useAnimatedSensor(sensorType: [SensorType], config?: [UserConfig]) -> [AnimatedSensor]
