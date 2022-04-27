@@ -50,7 +50,7 @@ Values:
 
 #### `UserConfig: [object]`
 Properties:
-* `interval: [number]` - describes interval in ms between shared value update
+* `interval: [number]` - interval in milliseconds between shared value updates
 
 #### `3DVector: [object]`
 Properties:
