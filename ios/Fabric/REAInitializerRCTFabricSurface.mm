@@ -9,7 +9,6 @@
   std::shared_ptr<facebook::react::SurfaceHandler> _surfaceHandler;
   int _tag;
   RCTSurface *_surface;
-  RCTSurfaceView *_view;
 }
 
 - (instancetype)init
@@ -17,7 +16,6 @@
   if (self = [super init]) {
     _tag = -1;
     _surface = [[RCTSurface alloc] init];
-    _view = [[RCTSurfaceView alloc] initWithSurface:_surface];
     _surfaceHandler = std::make_shared<facebook::react::SurfaceHandler>("REASurface", _tag);
   }
   return self;
@@ -64,7 +62,8 @@
 
 - (nonnull RCTSurfaceView *)view
 {
-  return _view;
+  // This method should never be called.
+  react_native_assert(false);
 }
 
 @end
