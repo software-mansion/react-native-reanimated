@@ -4,7 +4,8 @@
 #import <React/RCTUIManager.h>
 #import <React/RCTUIManagerObserverCoordinator.h>
 #import <React/RCTUIManagerUtils.h>
-#import "REANodesManager.h"
+
+#import <RNReanimated/REANodesManager.h>
 
 @interface REAModule : RCTEventEmitter <RCTBridgeModule, RCTEventDispatcherObserver, RCTUIManagerObserver>
 

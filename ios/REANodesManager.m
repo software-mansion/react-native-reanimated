@@ -1,8 +1,8 @@
-#import "REANodesManager.h"
+#import <RNReanimated/REAModule.h>
+#import <RNReanimated/REANodesManager.h>
 #import <React/RCTConvert.h>
 #import <React/RCTShadowView.h>
 #import <stdatomic.h>
-#import "REAModule.h"
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in

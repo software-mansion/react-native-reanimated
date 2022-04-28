@@ -498,10 +498,17 @@ declare module 'react-native-reanimated' {
     interval: number;
   };
 
+  export type AnimatedSensor = {
+    sensor: SensorValue3D | SensorValueRotation | null;
+    unregister: () => void;
+    isAvailable: boolean;
+    config: SensorConfig;
+  };
+
   export function useAnimatedSensor(
     sensorType: SensorType,
     userConfig?: SensorConfig
-  );
+  ): AnimatedSensor;
 
   export interface ExitAnimationsValues {
     currentOriginX: number;
@@ -614,14 +621,19 @@ declare module 'react-native-reanimated' {
     callback?: AnimationCallback
   ): number;
   export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
-  export function withDelay<T extends AnimatableValue>(delayMS: number, delayedAnimation: T): T;
+  export function withDelay<T extends AnimatableValue>(
+    delayMS: number,
+    delayedAnimation: T
+  ): T;
   export function withRepeat<T extends AnimatableValue>(
     animation: T,
     numberOfReps?: number,
     reverse?: boolean,
     callback?: AnimationCallback
   ): T;
-  export function withSequence<T extends AnimatableValue>(...animations: [T, ...T[]]): T;
+  export function withSequence<T extends AnimatableValue>(
+    ...animations: [T, ...T[]]
+  ): T;
 
   // reanimated2 functions
   export function runOnUI<A extends any[], R>(
