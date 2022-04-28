@@ -4,7 +4,7 @@ title: useAnimatedSensor
 sidebar_label: useAnimatedSensor
 ---
 
-With the `useAnimatedSensor` hook, you can use your sensor device data e.x. gyroscope to create interactive animation in a very simple way.
+With the `useAnimatedSensor` hook, you can easily create cool interactive animations based on data from sensors in the device such as gyroscope, accelerometer etc.
 
 ```js
 useAnimatedSensor(sensorType: [SensorType], config?: [UserConfig]) -> [AnimatedSensor]
@@ -19,16 +19,16 @@ You can select the sensor available in [[SensorType](#sensortype-enum)] enum.
 Optionally, you can pass configuration to customize the sensor behavior.
 
 ### Returns
-Hook `useAnimatedSensor` returns as result instance of [[AnimatedSensor](#animatedsensor-object)];
+Hook `useAnimatedSensor` returns an instance of [[AnimatedSensor](#animatedsensor-object)];
 
 ### Types
 
 #### `AnimatedSensor: [object]`
 Properties:
 * `sensor`: [[SharedValue](../../api/hooks/useSharedValue)] contains [[3DVector](#3dvector-object)] or [[RotationVector](#rotationvector-object)] or `null`  
-  contains actual sensor measurements stored inside shared value
+  contains actual sensor measurements as a shared value
 * `unregister: [function]`  
-  allows you to stop listening to sensor updated every moment
+  allows you to stop listening to sensor updates
 * `isAvailable: [boolean]`  
   the flag contains information on the availability of sensors in a device
 * `config`: [[UserConfig](#userconfig-object)]  
@@ -50,7 +50,7 @@ Values:
 
 #### `UserConfig: [object]`
 Properties:
-* `interval: [number]` - describes interval in ms between shared value update
+* `interval: [number]` - interval in milliseconds between shared value updates
 
 #### `3DVector: [object]`
 Properties:
@@ -71,7 +71,6 @@ Properties:
 ### Example
 ```js
 function UseAnimatedSensorExample() {
-
   const animatedSensor = useAnimatedSensor(SensorType.ROTATION, { interval: 10 }); // <- initialization
   const style = useAnimatedStyle(() => {
     const yaw = Math.abs(animatedSensor.sensor.value.yaw);
@@ -85,10 +84,7 @@ function UseAnimatedSensorExample() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Animated.View
-        style={[
-          { width: 20, height: 20, backgroundColor: 'black' },
-          style,
-        ]}
+        style={[{ backgroundColor: 'black' }, style]}
       />
     </View>
   );
@@ -103,6 +99,6 @@ function UseAnimatedSensorExample() {
 
 :::caution
 
-On iOS, if you want to read sensor data you need to enable localization service on your device (`Settings -> Privacy -> Localization service`)
+On iOS, if you want to read sensor data you need to enable location services on your device (`Settings > Privacy > Location Services`).
 
 :::
