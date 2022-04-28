@@ -623,6 +623,29 @@ PODS:
   - React-jsinspector (0.68.0)
   - React-logger (0.68.0):
     - glog
+  - react-native-safe-area-context (4.2.5):
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - react-native-safe-area-context/common (= 4.2.5)
+    - react-native-safe-area-context/fabric (= 4.2.5)
+    - ReactCommon/turbomodule/core
+  - react-native-safe-area-context/common (4.2.5):
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - ReactCommon/turbomodule/core
+  - react-native-safe-area-context/fabric (4.2.5):
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-Codegen
+    - react-native-safe-area-context/common
+    - React-RCTFabric
+    - ReactCommon/turbomodule/core
   - React-perflogger (0.68.0)
   - React-RCTActionSheet (0.68.0):
     - React-Core/RCTActionSheetHeaders (= 0.68.0)
@@ -702,7 +725,7 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-  - RNReanimated (2.6.0):
+  - RNReanimated (2.8.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -731,6 +754,23 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNScreens (3.13.1):
+    - RCT-Folly (= 2021.06.28.00-v2)
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-Codegen
+    - React-RCTFabric
+    - ReactCommon/turbomodule/core
+    - RNScreens/common (= 3.13.1)
+  - RNScreens/common (3.13.1):
+    - RCT-Folly (= 2021.06.28.00-v2)
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-Codegen
+    - React-RCTFabric
+    - ReactCommon/turbomodule/core
   - SocketRocket (0.6.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -786,6 +826,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
+  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -802,6 +843,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../..`)
+  - RNScreens (from `../node_modules/react-native-screens`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -866,6 +908,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
+  react-native-safe-area-context:
+    :path: "../node_modules/react-native-safe-area-context"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -898,6 +942,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../.."
+  RNScreens:
+    :path: "../node_modules/react-native-screens"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -937,6 +983,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 010a66edf644339f6da72b34208b070089680415
   React-jsinspector: 90f0bfd5d04e0b066c29216a110ffb9a6c34f23f
   React-logger: 8474fefa09d05f573a13c044cb0dfd751d4e52e3
+  react-native-safe-area-context: a9616f1fd257ff31946b518266a62f50dbcb3d5b
   React-perflogger: 15cb741d6c2379f4d3fc8f9e4d4e1110ef3020cb
   React-RCTActionSheet: ea9099db0597bd769430db1e2d011fd5fdb7fc5e
   React-RCTAnimation: 252df4749866f2654f37612f839522cac91c1165
@@ -952,11 +999,12 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 9b1304f48e344c55bb3c36e13bf11461cb4da5d8
   ReactCommon: fab89a13b52f1ac42b59a0e4b4f76f21aea9eebe
   RNGestureHandler: 8a225c1225054a526c981bbc9b0ce312f51ba35e
-  RNReanimated: bd6f80300f6e9359cfe08fd678bd599537c84782
+  RNReanimated: 2197c15701d4db791298d2080cfbb0c35754544c
+  RNScreens: 9c1dfa815b0e70f24453f6acd1fb26090ddd38cb
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 6671cf077f614314c22fd09ddf87d7abeee64e96
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
 PODFILE CHECKSUM: dc0e0410fb8052705457853a9b4bf580d8624643
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.11.3
