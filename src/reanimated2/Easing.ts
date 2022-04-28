@@ -1,10 +1,3 @@
-// spread and rest parameters can't be used in worklets right now
-/* eslint-disable prefer-rest-params */
-/* eslint-disable prefer-spread */
-
-/* global _WORKLET */ // eslint-disable-line @typescript-eslint/no-unused-vars
-
-// @ts-ignore reanimated1/Easing is JS file
 import { Bezier } from './Bezier';
 
 /**

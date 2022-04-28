@@ -8,7 +8,6 @@
 #import <React/RCTSurfacePresenter.h>
 #import <react/renderer/core/ShadowNode.h>
 #import <react/renderer/uimanager/UIManager.h>
-// #import <stdatomic.h>
 
 using namespace facebook::react;
 
@@ -242,8 +241,6 @@ using namespace facebook::react;
   //  }];
 }
 
-#pragma mark-- Graph
-
 - (void)processDirectEvent:(id<RCTEvent>)event
 {
   _processingDirectEvent = YES;
@@ -304,16 +301,6 @@ using namespace facebook::react;
 - (BOOL)isNotNativeViewFullyMounted:(NSNumber *)viewTag
 {
   return _viewRegistry[viewTag].superview == nil;
-}
-
-- (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue
-{
-  RCTAssertParam(nodeID);
-
-  // REANode *node = _nodes[nodeID];
-
-  // REAValueNode *valueNode = (REAValueNode *)node;
-  // [valueNode setValue:newValue];
 }
 
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps

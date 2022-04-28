@@ -1,19 +1,8 @@
 import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import ReanimatedEventEmitter from './ReanimatedEventEmitter';
-
-// // @ts-ignore JS file
-// import AnimatedEvent from './reanimated1/core/AnimatedEvent';
-// // @ts-ignore JS file
-// import AnimatedNode from './reanimated1/core/AnimatedNode';
-// // @ts-ignore JS file
-// import AnimatedValue from './reanimated1/core/AnimatedValue';
-// // @ts-ignore JS file
-// import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/LayoutAnimationRepository';
-
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
@@ -46,37 +35,10 @@ import {
 import { getShadowNodeWrapperFromRef } from './reanimated2/getShadowNodeWrapperFromRef';
 import { ShadowNodeWrapper } from './reanimated2/hook/commonTypes';
 
-const NODE_MAPPING = new Map();
-
-interface ListenerData {
-  viewTag: number;
-  props: StyleProps;
-}
-
-function listener(data: ListenerData) {
-  const component = NODE_MAPPING.get(data.viewTag);
-  component && component._updateFromNative(data.props);
-}
-
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
 }
-
-// function hasAnimatedNodes(value: unknown): boolean {
-//   if (value instanceof AnimatedNode) {
-//     return true;
-//   }
-//   if (Array.isArray(value)) {
-//     return value.some((item) => hasAnimatedNodes(item));
-//   }
-//   if (value && typeof value === 'object') {
-//     return Object.keys(value).some((key) =>
-//       hasAnimatedNodes((value as Record<string, unknown>)[key])
-//     );
-//   }
-//   return false;
-// }
 
 type NestedArray<T> = T | NestedArray<T>[];
 function flattenArray<T>(array: NestedArray<T>): T[] {
@@ -168,14 +130,6 @@ export interface InitialComponentProps extends Record<string, unknown> {
   collapsable?: boolean;
 }
 
-interface PropsAnimated {
-  __onEvaluate: () => StyleProps;
-  __detach: () => void;
-  __getValue: () => StyleProps;
-  update: () => void;
-  setNativeView: (view: Component) => void;
-}
-
 export default function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
@@ -190,7 +144,6 @@ export default function createAnimatedComponent(
   class AnimatedComponent extends React.Component<
     AnimatedComponentProps<InitialComponentProps>
   > {
-    _invokeAnimatedPropsCallbackOnMount = false;
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
@@ -198,7 +151,6 @@ export default function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
     sv: SharedValue<null | Record<string, unknown>> | null;
-    _propsAnimated?: PropsAnimated;
     _component: ComponentRef | null = null;
     static displayName: string;
 
@@ -211,38 +163,18 @@ export default function createAnimatedComponent(
     }
 
     componentWillUnmount() {
-      this._detachPropUpdater();
-      this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
       this._detachStyles();
       this.sv = null;
     }
 
     componentDidMount() {
-      if (this._invokeAnimatedPropsCallbackOnMount) {
-        this._invokeAnimatedPropsCallbackOnMount = false;
-        this._animatedPropsCallback();
-      }
-
-      this._propsAnimated &&
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._propsAnimated.setNativeView(this._component!);
       this._attachNativeEvents();
-      this._attachPropUpdater();
       this._attachAnimatedStyles();
     }
 
-    _getEventViewRef() {
-      // Make sure to get the scrollable node for components that implement
-      // `ScrollResponder.Mixin`.
-      return this._component?.getScrollableNode
-        ? this._component.getScrollableNode()
-        : this._component;
-    }
-
     _attachNativeEvents() {
-      const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      const viewTag = findNodeHandle(this);
       for (const key in this.props) {
         const prop = this.props[key];
         if (
@@ -291,9 +223,6 @@ export default function createAnimatedComponent(
     _reattachNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      // const node = this._getEventViewRef();
-      // const attached = new Set();
-      // const nextEvts = new Set();
       let viewTag: number | undefined;
 
       for (const key in this.props) {
@@ -353,28 +282,6 @@ export default function createAnimatedComponent(
       }
     };
 
-    // _attachProps(nextProps: StyleProps) {
-    //   const oldPropsAnimated = this._propsAnimated;
-
-    //   this._propsAnimated = createOrReusePropsNode(
-    //     nextProps,
-    //     this._animatedPropsCallback,
-    //     oldPropsAnimated
-    //   );
-    //   // If prop node has been reused we don't need to call into "__detach"
-    //   if (oldPropsAnimated !== this._propsAnimated) {
-    //     // When you call detach, it removes the element from the parent list
-    //     // of children. If it goes to 0, then the parent also detaches itself
-    //     // and so on.
-    //     // An optimization is to attach the new elements and THEN detach the old
-    //     // ones instead of detaching and THEN attaching.
-    //     // This way the intermediate state isn't to go to 0 and trigger
-    //     // this expensive recursive detaching to then re-attach everything on
-    //     // the very next operation.
-    //     oldPropsAnimated && oldPropsAnimated.__detach();
-    //   }
-    // }
-
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -382,14 +289,6 @@ export default function createAnimatedComponent(
       } else {
         // eslint-disable-next-line no-unused-expressions
         this._component?.setNativeProps?.(props);
-      }
-    }
-
-    _attachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.set(viewTag, this);
-      if (NODE_MAPPING.size === 1) {
-        ReanimatedEventEmitter.addListener('onReanimatedPropsChange', listener);
       }
     }
 
@@ -497,23 +396,10 @@ export default function createAnimatedComponent(
       }
     }
 
-    _detachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.delete(viewTag);
-      if (NODE_MAPPING.size === 0) {
-        ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
-      }
-    }
-
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps> // eslint-disable-line @typescript-eslint/no-unused-vars
     ) {
-      // this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
-
-      this._propsAnimated &&
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._propsAnimated.setNativeView(this._component!);
       this._attachAnimatedStyles();
     }
 
@@ -570,15 +456,6 @@ export default function createAnimatedComponent(
       },
     });
 
-    _filterNonAnimatedStyle(inputStyle: StyleProps) {
-      const style: StyleProps = {};
-      for (const key in inputStyle) {
-        const value = inputStyle[key];
-        style[key] = value;
-      }
-      return style;
-    }
-
     _filterNonAnimatedProps(
       inputProps: AnimatedComponentProps<InitialComponentProps>
     ): Record<string, unknown> {
@@ -603,9 +480,7 @@ export default function createAnimatedComponent(
               return style;
             }
           });
-          props[key] = this._filterNonAnimatedStyle(
-            StyleSheet.flatten(processedStyle)
-          );
+          props[key] = StyleSheet.flatten(processedStyle);
         } else if (key === 'animatedProps') {
           const animatedProp = inputProps.animatedProps as Partial<
             AnimatedComponentProps<AnimatedProps>
@@ -631,7 +506,10 @@ export default function createAnimatedComponent(
           } else {
             props[key] = dummyListener;
           }
-        } else {
+        } else if (
+          key !== 'onGestureHandlerStateChange' ||
+          !isChromeDebugger()
+        ) {
           props[key] = value;
         }
       }

@@ -1,5 +1,3 @@
-// @ts-ignore JS file
-
 export enum Extrapolation {
   IDENTITY = 'identity',
   CLAMP = 'clamp',
@@ -159,7 +157,6 @@ export function interpolate(
   }
 
   const extrapolationConfig = validateType(type);
-
   const length = input.length;
   const narrowedInput: InterpolationNarrowedInput = {
     leftEdgeInput: input[0],

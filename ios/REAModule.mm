@@ -190,15 +190,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   return nil;
 }
 
-#pragma mark-- Transitioning API
-
-RCT_EXPORT_METHOD(triggerRender)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager postRunUpdatesAfterAnimation];
-  }];
-}
-
 #pragma mark-- Batch handling
 
 - (void)addOperationBlock:(AnimatedOperation)operation
@@ -227,13 +218,6 @@ RCT_EXPORT_METHOD(triggerRender)
       [nodesManager operationsBatchDidComplete];
     });
   });
-}
-
-RCT_EXPORT_METHOD(setValue : (nonnull NSNumber *)nodeID newValue : (nonnull NSNumber *)newValue)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager setValueForNodeID:nodeID value:newValue];
-  }];
 }
 
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
@@ -277,7 +261,7 @@ RCT_EXPORT_METHOD(setValue : (nonnull NSNumber *)nodeID newValue : (nonnull NSNu
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[ @"onReanimatedCall", @"onReanimatedPropsChange" ];
+  return @[];
 }
 
 - (void)eventDispatcherWillDispatchEvent:(id<RCTEvent>)event

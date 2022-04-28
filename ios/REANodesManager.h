@@ -24,7 +24,6 @@ typedef void (^REAPerformOperations)();
                       surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
 
 - (void)invalidate;
-
 - (void)operationsBatchDidComplete;
 
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
@@ -44,13 +43,7 @@ typedef void (^REAPerformOperations)();
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
-
-// events
-
 - (void)dispatchEvent:(id<RCTEvent>)event;
-
-- (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue;
-
 - (void)maybeFlushUpdateBuffer;
 
 @end
