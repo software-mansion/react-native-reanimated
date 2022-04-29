@@ -1,0 +1,21 @@
+diff --git a/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk b/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk
+index 185709b..926b3e7 100644
+--- a/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk
++++ b/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk
+@@ -28,7 +28,7 @@ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH) $(GENERATED_SRC_DIR)/codegen/jni
+ LOCAL_SHARED_LIBRARIES := libjsi \
+     libfbjni \
+     libglog \
+-    libfolly_json \
++    libfolly_runtime \
+     libyoga \
+     libreact_nativemodule_core \
+     libturbomodulejsijni \
+@@ -36,7 +36,6 @@ LOCAL_SHARED_LIBRARIES := libjsi \
+     libreact_render_core \
+     libreact_render_graphics \
+     libfabricjni \
+-    libfolly_futures \
+     libreact_debug \
+     libreact_render_componentregistry \
+     libreact_render_debug \

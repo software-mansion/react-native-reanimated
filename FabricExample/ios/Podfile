@@ -3,7 +3,7 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 
 ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 
-platform :ios, '11.0'
+platform :ios, '12.4'
 install! 'cocoapods', :deterministic_uuids => false
 
 target 'FabricExample' do
@@ -17,8 +17,8 @@ target 'FabricExample' do
     # to enable hermes on iOS, change `false` to `true` and then install pods
     :hermes_enabled => flags[:hermes_enabled],
     :fabric_enabled => flags[:fabric_enabled],
-    # An abosolute path to your application root.
-    :app_path => "#{Dir.pwd}/.."
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
   target 'FabricExampleTests' do
