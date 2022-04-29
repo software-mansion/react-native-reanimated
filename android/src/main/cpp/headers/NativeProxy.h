@@ -160,7 +160,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void registerEventHandler(
       std::function<void(std::string, std::string)> handler);
   void setGestureState(int handlerTag, int newState);
-  std::vector<std::pair<std::string, double>> measure(int viewTag);
   int registerSensor(
       int sensorType,
       int interval,
@@ -172,6 +171,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const jsi::Value &nativeProps);
 #ifndef RCT_NEW_ARCH_ENABLED
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
+  void scrollTo(int viewTag, double x, double y, bool animated);
+  std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
 
   explicit NativeProxy(

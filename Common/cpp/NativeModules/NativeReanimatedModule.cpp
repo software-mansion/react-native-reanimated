@@ -77,8 +77,10 @@ NativeReanimatedModule::NativeReanimatedModule(
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
       propObtainer(propObtainer),
+#ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+#endif
       animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction) {
@@ -117,12 +119,14 @@ NativeReanimatedModule::NativeReanimatedModule(
       *runtime,
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
+      measure,
+      removeShadowNodeFromRegistry,
 #else
       platformDepMethodsHolder.updatePropsFunction,
+      platformDepMethodsHolder.measureFunction,
+      platformDepMethodsHolder.scrollToFunction,
 #endif
-      removeShadowNodeFromRegistry,
       dispatchCommand,
-      measure,
       requestAnimationFrame,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,

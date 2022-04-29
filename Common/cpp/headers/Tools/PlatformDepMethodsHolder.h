@@ -20,12 +20,17 @@ using UpdatePropsFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &props)>;
+using MeasureFunction = std::function<
+    jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
 #else
 using UpdatePropsFunction = std::function<void(
     jsi::Runtime &rt,
     int viewTag,
     const jsi::Value &viewName,
     const jsi::Object &object)>;
+using ScrollToFunction = std::function<void(int, double, double, bool)>;
+using MeasureFunction =
+    std::function<std::vector<std::pair<std::string, double>>(int)>;
 #endif
 using RemoveShadowNodeFromRegistryFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
@@ -34,8 +39,6 @@ using DispatchCommandFunction = std::function<void(
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
     const jsi::Value &argsValue)>;
-using MeasureFunction = std::function<
-    jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
 
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
@@ -52,10 +55,13 @@ using ConfigurePropsFunction = std::function<void(
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
-#ifndef RCT_NEW_ARCH_ENABLED
-  UpdatePropsFunction updatePropsFunction;
-#endif
+#ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+#else
+  UpdatePropsFunction updatePropsFunction;
+  ScrollToFunction scrollToFunction;
+  MeasureFunction measureFunction;
+#endif
   TimeProviderFunction getCurrentTime;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
