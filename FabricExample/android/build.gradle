@@ -8,6 +8,7 @@ buildscript {
         minSdkVersion = 21
         compileSdkVersion = 31
         targetSdkVersion = 31
+        kotlinVersion = "1.6.21" // for react-native-screens
 
         if (System.properties['os.arch'] == "aarch64") {
             // For M1 Users we need to use the NDK 24 which added support for aarch64

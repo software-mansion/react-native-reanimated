@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import React from 'react';
+import { LogBox } from 'react-native';
+
 import EmptyExample from './src/EmptyExample';
 import WorkletExample from './src/WorkletExample';
 import TransformExample from './src/TransformExample';
@@ -25,7 +27,7 @@ export default function App() {
   // return <WorkletExample />;
   // return <TransformExample />;
   // return <ColorExample />;
-  return <WidthExample />;
+  // return <WidthExample />;
   // return <ChessboardExample />;
   // return <RefExample />;
   // return <ScrollViewExample />;
@@ -38,5 +40,9 @@ export default function App() {
   // return <NewestShadowNodesRegistryRemoveExample />;
   // return <BubblesExample />;
   // return <ScreenStackExample />;
-  // return <ScreenStackHeaderConfigBackgroundColorExample />;
+  return <ScreenStackHeaderConfigBackgroundColorExample />;
 }
+
+LogBox.ignoreLogs([
+  'that calls codegenNativeComponent was not code generated at build time',
+]);

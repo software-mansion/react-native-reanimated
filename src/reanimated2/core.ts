@@ -13,6 +13,8 @@ import {
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
 
+global._IS_FABRIC = true; // TODO: inject this flag using JSI on Android as well
+
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
   global._setGlobalConsole = () => {
