@@ -138,8 +138,8 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
-        FOLLY_JSON_LIB
-        folly_json
+        FOLLY_RUNTIME_LIB
+        folly_runtime
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
@@ -241,7 +241,7 @@ if(${FOR_HERMES})
             ${HERMES_LIB}
             ${GLOG_LIB}
             ${FBJNI_LIB}
-            ${FOLLY_JSON_LIB}
+            ${FOLLY_RUNTIME_LIB}
             ${REACT_NATIVE_JNI_LIB}
             ${REACT_RENDER_UIMANAGER}
             ${REACT_RENDER_MOUNTING}

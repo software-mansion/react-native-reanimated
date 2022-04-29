@@ -25,7 +25,7 @@ export default function App() {
   // return <WorkletExample />;
   // return <TransformExample />;
   // return <ColorExample />;
-  // return <WidthExample />;
+  return <WidthExample />;
   // return <ChessboardExample />;
   // return <RefExample />;
   // return <ScrollViewExample />;
@@ -38,5 +38,5 @@ export default function App() {
   // return <NewestShadowNodesRegistryRemoveExample />;
   // return <BubblesExample />;
   // return <ScreenStackExample />;
-  return <ScreenStackHeaderConfigBackgroundColorExample />;
+  // return <ScreenStackHeaderConfigBackgroundColorExample />;
 }
