@@ -170,6 +170,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
+#ifndef RCT_NEW_ARCH_ENABLED
+  void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
+#endif
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,

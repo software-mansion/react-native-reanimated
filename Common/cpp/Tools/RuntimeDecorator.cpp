@@ -121,7 +121,7 @@ void RuntimeDecorator::decorateUIRuntime(
     const auto viewTag = args[0].asNumber();
     const jsi::Value *viewName = &args[1];
     const auto params = args[2].asObject(rt);
-    updater(rt, viewTag, *viewName, params);
+    updateProps(rt, viewTag, *viewName, params);
     return jsi::Value::undefined();
   };
 #endif
