@@ -15,10 +15,18 @@ namespace reanimated {
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Value &props)>;
 
+#ifdef RCT_NEW_ARCH_ENABLED
 using UpdatePropsFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &props)>;
+#else
+using UpdatePropsFunction = std::function<void(
+    jsi::Runtime &rt,
+    int viewTag,
+    const jsi::Value &viewName,
+    const jsi::Object &object)>;
+#endif
 using RemoveShadowNodeFromRegistryFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
 using DispatchCommandFunction = std::function<void(
@@ -44,6 +52,9 @@ using ConfigurePropsFunction = std::function<void(
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
+#ifndef RCT_NEW_ARCH_ENABLED
+  UpdatePropsFunction updatePropsFunction;
+#endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   TimeProviderFunction getCurrentTime;
   RegisterSensorFunction registerSensor;

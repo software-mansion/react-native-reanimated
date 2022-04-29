@@ -31,6 +31,11 @@ if (shouldBeUseWeb()) {
       pageY: 0,
     };
   };
+  global._scrollTo = () => {
+    console.warn(
+      "[Reanimated] You can't use `scrollTo` with Chrome Debugger or with web version"
+    );
+  };
   global._dispatchCommand = () => {
     console.warn(
       "[Reanimated] You can't use `dispatchCommand` or `scrollTo` methods with Chrome Debugger or with web version"

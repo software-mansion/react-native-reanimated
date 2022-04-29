@@ -43,23 +43,47 @@ if (shouldBeUseWeb()) {
     }
   };
 } else {
-  updatePropsByPlatform = (
-    viewDescriptors: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle,
-    _: ViewRefSet<any> | undefined
-  ): void => {
-    'worklet';
+  if (global._IS_FABRIC) {
+    updatePropsByPlatform = (
+      viewDescriptors: SharedValue<Descriptor[]>,
+      updates: StyleProps | AnimatedStyle,
+      _: ViewRefSet<any> | undefined
+    ): void => {
+      'worklet';
 
-    for (const key in updates) {
-      if (ColorProperties.indexOf(key) !== -1) {
-        updates[key] = processColor(updates[key]);
+      for (const key in updates) {
+        if (ColorProperties.indexOf(key) !== -1) {
+          updates[key] = processColor(updates[key]);
+        }
       }
-    }
 
-    viewDescriptors.value.forEach((viewDescriptor) => {
-      _updateProps(viewDescriptor.shareableNode, updates);
-    });
-  };
+      viewDescriptors.value.forEach((viewDescriptor) => {
+        _updateProps(viewDescriptor.shareableNode, updates);
+      });
+    };
+  } else {
+    updatePropsByPlatform = (
+      viewDescriptors: SharedValue<Descriptor[]>,
+      updates: StyleProps | AnimatedStyle,
+      _: ViewRefSet<any> | undefined
+    ): void => {
+      'worklet';
+
+      for (const key in updates) {
+        if (ColorProperties.indexOf(key) !== -1) {
+          updates[key] = processColor(updates[key]);
+        }
+      }
+
+      viewDescriptors.value.forEach((viewDescriptor) => {
+        _updateProps(
+          viewDescriptor.tag,
+          viewDescriptor.name || 'RCTView',
+          updates
+        );
+      });
+    };
+  }
 }
 
 export const updateProps: (

@@ -44,6 +44,12 @@ typedef void (^REAPerformOperations)();
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 - (void)dispatchEvent:(id<RCTEvent>)event;
+
+#ifndef RCT_NEW_ARCH_ENABLED
 - (void)maybeFlushUpdateBuffer;
+- (void)updateProps:(nonnull NSDictionary *)props
+      ofViewWithTag:(nonnull NSNumber *)viewTag
+           withName:(nonnull NSString *)viewName;
+#endif
 
 @end

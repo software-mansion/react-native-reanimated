@@ -85,6 +85,19 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 void NativeProxy::installJSIBindings(
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager) {
+#ifndef RCT_NEW_ARCH_ENABLED
+  auto propUpdater = [this](
+                         jsi::Runtime &rt,
+                         int viewTag,
+                         const jsi::Value &viewName,
+                         const jsi::Object &props) {
+    // viewName is for iOS only, we skip it here
+    this->updateProps(rt, viewTag, props);
+  };
+
+  // todo: measure, scrollto
+#endif
+
   auto getCurrentTime = [this]() {
     auto method =
         javaPart_->getClass()->getMethod<local_ref<JString>()>("getUptime");
@@ -188,6 +201,9 @@ void NativeProxy::installJSIBindings(
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
+#ifndef RCT_NEW_ARCH_ENABLED
+      propUpdater,
+#endif
       synchronouslyUpdateUIPropsFunction,
       getCurrentTime,
       registerSensorFunction,
@@ -361,5 +377,18 @@ void NativeProxy::configureProps(
           jsi::dynamicFromValue(rt, nativeProps))
           .get());
 }
+
+#ifndef RCT_NEW_ARCH_ENABLED
+void NativeProxy::updateProps(
+    jsi::Runtime &rt,
+    int viewTag,
+    const jsi::Object &props) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+                        "updateProps");
+  method(
+      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+}
+#endif
 
 } // namespace reanimated

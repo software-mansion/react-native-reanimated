@@ -4,6 +4,7 @@
 import { Component } from 'react';
 import { RefObjectFunction } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { findNodeHandle } from 'react-native';
 
 export interface MeasuredDimensions {
   x: number;
@@ -15,6 +16,12 @@ export interface MeasuredDimensions {
 }
 
 const isNativeIndefined = shouldBeUseWeb();
+
+export function getTag(
+  view: null | number | React.Component<any, any> | React.ComponentClass<any>
+): null | number {
+  return findNodeHandle(view);
+}
 
 export function measure(
   animatedRef: RefObjectFunction<Component>
@@ -54,14 +61,37 @@ export function dispatchCommand(
   _dispatchCommand(shadowNodeWrapper, commandName, args);
 }
 
-export function scrollTo(
+export let scrollTo: (
   animatedRef: RefObjectFunction<Component>,
   x: number,
   y: number,
   animated: boolean
-): void {
-  'worklet';
-  dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
+) => void;
+
+if (global._IS_FABRIC) {
+  scrollTo = (
+    animatedRef: RefObjectFunction<Component>,
+    x: number,
+    y: number,
+    animated: boolean
+  ) => {
+    'worklet';
+    dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
+  };
+} else {
+  scrollTo = (
+    animatedRef: RefObjectFunction<Component>,
+    x: number,
+    y: number,
+    animated: boolean
+  ) => {
+    'worklet';
+    if (!_WORKLET || isNativeIndefined) {
+      return;
+    }
+    const viewTag = animatedRef();
+    _scrollTo(viewTag, x, y, animated);
+  };
 }
 
 export function setGestureState(handlerTag: number, newState: number): void {

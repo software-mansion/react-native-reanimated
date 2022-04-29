@@ -119,6 +119,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void setUIManager(std::shared_ptr<UIManager> uiManager);
   void setNewestShadowNodesRegistry(
       std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+  UpdatePropsFunction updatePropsFunction;
 
  private:
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);

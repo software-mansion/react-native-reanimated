@@ -34,8 +34,16 @@ void Mapper::execute(jsi::Runtime &rt) {
     for (int i = 0; i < jsViewDescriptorArray.length(rt); ++i) {
       auto jsViewDescriptor =
           jsViewDescriptorArray.getValueAtIndex(rt, i).getObject(rt);
+#ifdef RCT_NEW_ARCH_ENABLED
       updateProps(
           rt, jsViewDescriptor.getProperty(rt, "shareableNode"), newStyle);
+#else
+      updateProps(
+          rt,
+          static_cast<int>(jsViewDescriptor.getProperty(rt, "tag").asNumber()),
+          jsViewDescriptor.getProperty(rt, "name"),
+          newStyle.asObject(rt));
+#endif
     }
   }
 }
@@ -49,12 +57,16 @@ void Mapper::enableFastMode(
   }
   viewDescriptors = jsViewDescriptors;
   this->optimalizationLvl = optimalizationLvl;
+#ifdef RCT_NEW_ARCH_ENABLED
   updateProps = [this](
                     jsi::Runtime &rt,
                     const jsi::Value &shadowNodeValue,
                     const jsi::Value &props) {
     this->module->updateProps(rt, shadowNodeValue, props);
   };
+#else
+  updateProps = module->updatePropsFunction;
+#endif
   jsi::Runtime &rt = *module->runtime;
   userUpdater = std::make_shared<jsi::Function>(
       updater->getValue(rt).asObject(rt).asFunction(rt));

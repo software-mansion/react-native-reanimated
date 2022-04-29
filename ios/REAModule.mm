@@ -176,6 +176,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         *jsiRuntime,
         "_WORKLET_RUNTIME",
         static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+#ifdef RCT_NEW_ARCH_ENABLED
+    jsiRuntime->global().setProperty(*jsiRuntime, "_IS_FABRIC", true);
+#else
+    jsiRuntime->global().setProperty(*jsiRuntime, "_IS_FABRIC", false);
+#endif
 
     jsiRuntime->global().setProperty(
         *jsiRuntime,
@@ -239,7 +244,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
 - (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
 {
+#ifndef RCT_NEW_ARCH_ENABLED
   [_nodesManager maybeFlushUpdateBuffer];
+#endif
   if (_operations.count == 0) {
     return;
   }

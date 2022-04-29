@@ -115,7 +115,11 @@ NativeReanimatedModule::NativeReanimatedModule(
 
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
+#ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
+#else
+      platformDepMethodsHolder.updatePropsFunction,
+#endif
       removeShadowNodeFromRegistry,
       dispatchCommand,
       measure,
@@ -129,6 +133,9 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->renderRequested = false;
     this->onRender(timestampMs);
   };
+#ifndef RCT_NEW_ARCH_ENABLED
+  updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
+#endif
 }
 
 void NativeReanimatedModule::installCoreFunctions(
