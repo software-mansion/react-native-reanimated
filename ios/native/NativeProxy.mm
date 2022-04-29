@@ -215,6 +215,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
   // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
 
+#ifndef RCT_NEW_ARCH_ENABLED
+  auto propUpdater = [reanimatedModule](
+                         jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) -> void {
+    NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
+                                              encoding:[NSString defaultCStringEncoding]];
+
+    NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
+    [reanimatedModule.nodesManager updateProps:propsDict
+                                 ofViewWithTag:[NSNumber numberWithInt:viewTag]
+                                      withName:nsViewName];
+  };
+#endif
+
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
   auto setGestureStateFunction = [gestureHandlerStateManager, bridge](int handlerTag, int newState) mutable {
     if (gestureHandlerStateManager == nil) {
@@ -354,41 +367,40 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // end sensors
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
-      requestRender,
-      synchronouslyUpdateUIPropsFunction,
-      getCurrentTime,
-      registerSensorFunction,
-      unregisterSensorFunction,
-      setGestureStateFunction,
-      configurePropsFunction};
+    requestRender,
+#ifndef RCT_NEW_ARCH_ENABLED
+    updatePropsFunction;
+#endif
+  synchronouslyUpdateUIPropsFunction, getCurrentTime, registerSensorFunction, unregisterSensorFunction,
+      setGestureStateFunction, configurePropsFunction
+};
 
-  module = std::make_shared<NativeReanimatedModule>(
-      jsInvoker,
-      scheduler,
-      animatedRuntime,
-      errorHandler,
-      propObtainer,
-      layoutAnimationsProxy,
-      platformDepMethodsHolder);
+module = std::make_shared<NativeReanimatedModule>(
+    jsInvoker,
+    scheduler,
+    animatedRuntime,
+    errorHandler,
+    propObtainer,
+    layoutAnimationsProxy,
+    platformDepMethodsHolder);
 
-  scheduler->setRuntimeManager(module);
+scheduler->setRuntimeManager(module);
 
-  [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
-    // handles RCTEvents from RNGestureHandler
+[reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
+  // handles RCTEvents from RNGestureHandler
 
-    std::string eventName = [eventNameNSString UTF8String];
-    jsi::Runtime &rt = *module->runtime;
-    jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
-    // TODO: check if NaN and INF values are converted properly
+  std::string eventName = [eventNameNSString UTF8String];
+  jsi::Runtime &rt = *module->runtime;
+  jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
+  // TODO: check if NaN and INF values are converted properly
 
-    module->handleEvent(eventName, std::move(payload), CACurrentMediaTime() * 1000);
-  }];
+  module->handleEvent(eventName, std::move(payload), CACurrentMediaTime() * 1000);
+}];
 
-  std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
-  [reanimatedModule.nodesManager registerPerformOperations:^() {
-    weakModule.lock()->performOperations();
-  }];
-  return module;
+std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
+[reanimatedModule.nodesManager registerPerformOperations:^() {
+  weakModule.lock()->performOperations();
+}];
+return module;
 }
-
 }

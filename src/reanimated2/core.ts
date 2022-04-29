@@ -98,13 +98,26 @@ export function makeShareable<T>(value: T): T {
   return NativeReanimatedModule.makeShareable(value);
 }
 
-export function getViewProp<T>(
-  _viewTag: string,
-  _propName: string
-): Promise<T> {
-  throw new Error(
-    '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
-  );
+export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
+  if (global._IS_FABRIC) {
+    throw new Error(
+      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    return NativeReanimatedModule.getViewProp(
+      viewTag,
+      propName,
+      (result: T) => {
+        if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+          reject(result);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
 }
 
 let _getTimestamp: () => number;

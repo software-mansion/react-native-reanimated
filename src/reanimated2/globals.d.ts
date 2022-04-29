@@ -5,6 +5,7 @@ import { MeasuredDimensions } from './NativeMethods';
 import { NativeReanimated } from './NativeReanimated/NativeReanimated';
 declare global {
   const _WORKLET: boolean;
+  const _IS_FABRIC: boolean;
   const _frameTimestamp: number;
   const _eventTimestamp: number;
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
@@ -20,6 +21,12 @@ declare global {
     props: StyleProps | AnimatedStyle
   ) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
+  const _scrollTo: (
+    viewTag: number,
+    x: number,
+    y: number,
+    animated: boolean
+  ) => void;
   const _dispatchCommand: (
     shadowNodeWrapper: ShadowNodeWrapper,
     commandName: string,
@@ -35,9 +42,11 @@ declare global {
       _log: (s: string) => void;
       _setGestureState: () => void;
       _WORKLET: boolean;
+      _IS_FABRIC: boolean;
       __reanimatedModuleProxy: NativeReanimated;
       _frameTimestamp: number | null;
       _measure: () => MeasuredDimensions;
+      _scrollTo: () => void;
       _dispatchCommand: () => void;
       _chronoNow: () => number;
       performance: { now: () => number };

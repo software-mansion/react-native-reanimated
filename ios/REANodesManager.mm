@@ -9,6 +9,10 @@
 #import <react/renderer/core/ShadowNode.h>
 #import <react/renderer/uimanager/UIManager.h>
 
+#ifndef RCT_NEW_ARCH_ENABLED
+#import <stdatomic.h>
+#endif
+
 using namespace facebook::react;
 
 // Interface below has been added in order to use private methods of RCTUIManager,
@@ -98,8 +102,11 @@ using namespace facebook::react;
   volatile void (^_mounting)(void);
   __weak id<RCTSurfacePresenterStub> _surfacePresenter;
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
-  //  volatile atomic_bool _shouldFlushUpdateBuffer;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
+
+#ifndef RCT_NEW_ARCH_ENABLED
+  volatile atomic_bool _shouldFlushUpdateBuffer;
+#endif
 }
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
@@ -116,7 +123,9 @@ using namespace facebook::react;
     _operationsInBatch = [NSMutableDictionary new];
     _componentUpdateBuffer = [NSMutableDictionary new];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
-    //    _shouldFlushUpdateBuffer = false;
+#ifndef RCT_NEW_ARCH_ENABLED
+    _shouldFlushUpdateBuffer = false;
+#endif
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -335,35 +344,87 @@ using namespace facebook::react;
   return result;
 }
 
+#ifndef RCT_NEW_ARCH_ENABLED
 - (void)maybeFlushUpdateBuffer
 {
-  //  RCTAssertUIManagerQueue();
-  //  //  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
-  //  //  if (!shouldFlushUpdateBuffer) {
-  //  //    return;
-  //  //  }
-  //
-  //  __weak __typeof__(self) weakSelf = self;
-  //  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *>
-  //  *viewRegistry) {
-  //    __typeof__(self) strongSelf = weakSelf;
-  //    if (strongSelf == nil) {
-  //      return;
-  //    }
-  //    //    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
-  //    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
-  //    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
-  //    for (NSNumber *tag in componentUpdateBuffer) {
-  //      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
-  //      if (componentUpdate == Nil) {
-  //        continue;
-  //      }
-  //      [strongSelf updateProps:componentUpdate.props
-  //                ofViewWithTag:componentUpdate.viewTag
-  //                     withName:componentUpdate.viewName];
-  //    }
-  //    [strongSelf performOperations];
-  //  }];
+  RCTAssertUIManagerQueue();
+  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
+  if (!shouldFlushUpdateBuffer) {
+    return;
+  }
+
+  __weak __typeof__(self) weakSelf = self;
+  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    //    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
+    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+    for (NSNumber *tag in componentUpdateBuffer) {
+      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+      if (componentUpdate == Nil) {
+        continue;
+      }
+      [strongSelf updateProps:componentUpdate.props
+                ofViewWithTag:componentUpdate.viewTag
+                     withName:componentUpdate.viewName];
+    }
+    [strongSelf performOperations];
+  }];
 }
+
+- (void)updateProps:(nonnull NSDictionary *)props
+      ofViewWithTag:(nonnull NSNumber *)viewTag
+           withName:(nonnull NSString *)viewName
+{
+  ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
+  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
+    if (lastSnapshot == nil) {
+      ComponentUpdate *propsSnapshot = [ComponentUpdate new];
+      propsSnapshot.props = [props mutableCopy];
+      propsSnapshot.viewTag = viewTag;
+      propsSnapshot.viewName = viewName;
+      _componentUpdateBuffer[viewTag] = propsSnapshot;
+      atomic_store(&_shouldFlushUpdateBuffer, true);
+    } else {
+      NSMutableDictionary *lastProps = lastSnapshot.props;
+      for (NSString *key in props) {
+        [lastProps setValue:props[key] forKey:key];
+      }
+    }
+    return;
+  }
+
+  // TODO: refactor PropsNode to also use this function
+  NSMutableDictionary *uiProps = [NSMutableDictionary new];
+  NSMutableDictionary *nativeProps = [NSMutableDictionary new];
+  NSMutableDictionary *jsProps = [NSMutableDictionary new];
+
+  void (^addBlock)(NSString *key, id obj, BOOL *stop) = ^(NSString *key, id obj, BOOL *stop) {
+    if ([self.uiProps containsObject:key]) {
+      uiProps[key] = obj;
+    } else if ([self.nativeProps containsObject:key]) {
+      nativeProps[key] = obj;
+    } else {
+      jsProps[key] = obj;
+    }
+  };
+
+  [props enumerateKeysAndObjectsUsingBlock:addBlock];
+
+  if (uiProps.count > 0) {
+    [self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
+  }
+  if (nativeProps.count > 0) {
+    [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
+  }
+  if (jsProps.count > 0) {
+    [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
+                                        body:@{@"viewTag" : viewTag, @"props" : jsProps}];
+  }
+}
+#endif
 
 @end

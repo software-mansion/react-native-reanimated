@@ -103,6 +103,7 @@ void RuntimeDecorator::decorateUIRuntime(
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
+#ifdef RCT_NEW_ARCH_ENABLED
   auto clb = [updateProps](
                  jsi::Runtime &rt,
                  const jsi::Value &thisValue,
@@ -111,6 +112,19 @@ void RuntimeDecorator::decorateUIRuntime(
     updateProps(rt, args[0], args[1]);
     return jsi::Value::undefined();
   };
+#else
+  auto clb = [updateProps](
+                 jsi::Runtime &rt,
+                 const jsi::Value &thisValue,
+                 const jsi::Value *args,
+                 const size_t count) -> jsi::Value {
+    const auto viewTag = args[0].asNumber();
+    const jsi::Value *viewName = &args[1];
+    const auto params = args[2].asObject(rt);
+    updater(rt, viewTag, *viewName, params);
+    return jsi::Value::undefined();
+  };
+#endif
   jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);
   rt.global().setProperty(rt, "_updateProps", updatePropsHostFunction);
