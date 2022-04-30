@@ -13,7 +13,8 @@ import ScrollViewExample from './src/ScrollViewExample';
 import ScrollToExample from './src/ScrollToExample';
 import MeasureExample from './src/MeasureExample';
 import AnimatedSensorExample from './src/AnimatedSensorExample';
-import AnimatedTextExample from './src/AnimatedTextExample';
+import AnimatedTextInputExample from './src/AnimatedTextInputExample';
+import AnimatedTextWidthExample from './src/AnimatedTextWidthExample';
 import GestureHandlerExample from './src/GestureHandlerExample';
 import BokehExample from './src/BokehExample';
 import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
@@ -33,11 +34,12 @@ export default function App() {
   // return <ScrollToExample />;
   // return <MeasureExample />;
   // return <AnimatedSensorExample />;
-  // return <AnimatedTextExample />;
+  // return <AnimatedTextInputExample />;
+  return <AnimatedTextWidthExample />;
   // return <GestureHandlerExample />;
   // return <BokehExample />;
   // return <NewestShadowNodesRegistryRemoveExample />;
   // return <BubblesExample />;
   // return <ScreenStackExample />;
-  return <ScreenStackHeaderConfigBackgroundColorExample />;
+  // return <ScreenStackHeaderConfigBackgroundColorExample />;
 }
