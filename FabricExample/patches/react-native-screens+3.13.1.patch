@@ -40,3 +40,16 @@ index 3b8afa2..454e4ff 100644
      libreact_debug \
      libreact_render_componentregistry \
      libreact_render_debug \
+diff --git a/node_modules/react-native-screens/ios/RNSScreenStack.mm b/node_modules/react-native-screens/ios/RNSScreenStack.mm
+index 5a0e37d..7a5ca3b 100644
+--- a/node_modules/react-native-screens/ios/RNSScreenStack.mm
++++ b/node_modules/react-native-screens/ios/RNSScreenStack.mm
+@@ -824,7 +824,7 @@ - (void)takeSnapshot
+   _snapshot = [_controller.topViewController.view snapshotViewAfterScreenUpdates:NO];
+ }
+ 
+-- (void)mountingTransactionWillMountWithMetadata:(facebook::react::MountingTransactionMetadata const &)metadata
++- (void)mountingTransactionWillMount:(facebook::react::MountingTransaction const &)transaction
+ {
+   [self takeSnapshot];
+ }
