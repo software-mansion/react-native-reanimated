@@ -54,7 +54,7 @@ function Ball() {
   );
 }
 
-export default function Example() {
+export default function GestureHandlerExample() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <Ball />
@@ -65,6 +65,8 @@ export default function Example() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ball: {
     width: 100,
