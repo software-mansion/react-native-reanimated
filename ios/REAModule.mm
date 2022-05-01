@@ -101,6 +101,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   // to avoid deadlock we can't use Executor from React Native
   // but we can create own and use it because initialization is already synchronized
+  react_native_assert(self.bridge != nil);
   RCTRuntimeExecutorFromBridge(self.bridge)(^(jsi::Runtime &runtime) {
     if (__typeof__(self) strongSelf = weakSelf) {
       [strongSelf injectDependencies:runtime];
