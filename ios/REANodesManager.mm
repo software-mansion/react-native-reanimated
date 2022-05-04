@@ -1,15 +1,15 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-#import <React/RCTComponentViewRegistry.h>
 #import <React/RCTConvert.h>
 #import <React/RCTFollyConvert.h>
+#ifdef RCT_NEW_ARCH_ENABLED
+#import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
 #import <React/RCTShadowView.h>
 #import <React/RCTSurfacePresenter.h>
 #import <react/renderer/core/ShadowNode.h>
 #import <react/renderer/uimanager/UIManager.h>
-
-#ifndef RCT_NEW_ARCH_ENABLED
+#else
 #import <stdatomic.h>
 #endif
 
@@ -314,6 +314,8 @@ using namespace facebook::react;
 
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
 {
+// TODO: mleko, implementacja dla Papera
+#ifdef RCT_NEW_ARCH_ENABLED
   // adapted from RCTPropsAnimatedNode.m
   RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ? _bridge.surfacePresenter : _surfacePresenter;
   [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
@@ -324,6 +326,7 @@ using namespace facebook::react;
   UIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+#endif
 }
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName

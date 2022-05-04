@@ -1,6 +1,10 @@
 #include "NativeReanimatedModule.h"
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#include "NewestShadowNodesRegistry.h"
+#include "ReanimatedUIManagerBinding.h"
+#endif
 #include <functional>
 #include <memory>
 #include <thread>
@@ -12,9 +16,7 @@
 #include "Mapper.h"
 #include "MapperRegistry.h"
 #include "MutableValue.h"
-#include "NewestShadowNodesRegistry.h"
 #include "ReanimatedHiddenHeaders.h"
-#include "ReanimatedUIManagerBinding.h"
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
 #include "WorkletEventHandler.h"
@@ -91,6 +93,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 
   this->layoutAnimationsProxy = layoutAnimationsProxy;
 
+#ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](
                          jsi::Runtime &rt,
                          const jsi::Value &shadowNodeValue,
@@ -114,6 +117,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
   };
+#endif
 
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
@@ -121,12 +125,12 @@ NativeReanimatedModule::NativeReanimatedModule(
       updateProps,
       measure,
       removeShadowNodeFromRegistry,
+      dispatchCommand,
 #else
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
 #endif
-      dispatchCommand,
       requestAnimationFrame,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
@@ -394,6 +398,24 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
+bool NativeReanimatedModule::handleEvent(
+    const std::string &eventName,
+    jsi::Value &&payload,
+    double currentTime) {
+  jsi::Runtime &rt = *runtime.get();
+  jsi::Object global = rt.global();
+  jsi::String eventTimestampName =
+      jsi::String::createFromAscii(rt, "_eventTimestamp");
+  global.setProperty(rt, eventTimestampName, currentTime);
+  onEvent(eventName, std::move(payload));
+  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+
+  // TODO: return true if Reanimated successfully handled the event
+  // to avoid sending it to JavaScript
+  return false;
+}
+
+#ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
@@ -418,23 +440,6 @@ bool NativeReanimatedModule::handleRawEvent(
   jsi::Value payload = payloadFactory(rt);
 
   return handleEvent(eventName, std::move(payload), currentTime);
-}
-
-bool NativeReanimatedModule::handleEvent(
-    const std::string &eventName,
-    jsi::Value &&payload,
-    double currentTime) {
-  jsi::Runtime &rt = *runtime.get();
-  jsi::Object global = rt.global();
-  jsi::String eventTimestampName =
-      jsi::String::createFromAscii(rt, "_eventTimestamp");
-  global.setProperty(rt, eventTimestampName, currentTime);
-  onEvent(eventName, std::move(payload));
-  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
-
-  // TODO: return true if Reanimated successfully handled the event
-  // to avoid sending it to JavaScript
-  return false;
 }
 
 void NativeReanimatedModule::updateProps(
@@ -598,5 +603,12 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
   newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
+#else
+
+void NativeReanimatedModule::performOperations() {
+  // TODO: mleko, implementacja dla Papera
+}
+
+#endif
 
 } // namespace reanimated

@@ -94,10 +94,10 @@ void RuntimeDecorator::decorateUIRuntime(
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
     const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
+    const DispatchCommandFunction dispatchCommand,
 #else
     const ScrollToFunction scrollTo,
 #endif
-    const DispatchCommandFunction dispatchCommand,
     const RequestFrameFunction requestFrame,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
@@ -209,6 +209,7 @@ void RuntimeDecorator::decorateUIRuntime(
       rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
   rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
 
+#ifdef RCT_NEW_ARCH_ENABLED
   auto clb3 = [dispatchCommand](
                   jsi::Runtime &rt,
                   const jsi::Value &thisValue,
@@ -221,6 +222,7 @@ void RuntimeDecorator::decorateUIRuntime(
       jsi::Function::createFromHostFunction(
           rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 3, clb3);
   rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandHostFunction);
+#endif
 
   auto clb6 = [getCurrentTime](
                   jsi::Runtime &rt,

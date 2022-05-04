@@ -9,15 +9,16 @@
 #import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
+#ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 #import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode::Shared
 #import <React-Fabric/react/renderer/uimanager/primitives.h> // shadowNodeFromValue
-#import <React/RCTFollyConvert.h>
-#import <React/RCTUIManager.h>
-
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
+#endif
+#import <React/RCTFollyConvert.h>
+#import <React/RCTUIManager.h>
 
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
@@ -282,11 +283,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }];
   };
 
+#ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction = [reanimatedModule](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
     NSNumber *viewTag = @(tag);
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
     [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
+#endif
 
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
@@ -414,6 +417,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
   [reanimatedModule.nodesManager registerPerformOperations:^() {
+    // TODO: mleko, implementacja dla Papera
     weakModule.lock()->performOperations();
   }];
   return module;

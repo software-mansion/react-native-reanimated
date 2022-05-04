@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTSurface.h>
 #import <React/RCTSurfaceView.h>
 #import <memory>
@@ -67,3 +68,4 @@
 }
 
 @end
+#endif

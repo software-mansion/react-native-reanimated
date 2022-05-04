@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/core/ShadowNode.h>
 #include <memory>
 #include <unordered_map>
@@ -36,3 +36,4 @@ class NewestShadowNodesRegistry {
 };
 
 } // namespace reanimated
+#endif

@@ -1,21 +1,24 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/core/ReactPrimitives.h>
+#endif
 
 #include <string>
 #include <utility>
 #include <vector>
 
 using namespace facebook;
+#ifdef RCT_NEW_ARCH_ENABLED
 using namespace react;
+#endif
 
 namespace reanimated {
 
+#ifdef RCT_NEW_ARCH_ENABLED
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Value &props)>;
-
-#ifdef RCT_NEW_ARCH_ENABLED
 using UpdatePropsFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,

@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include "ReanimatedUIManagerBinding.h"
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
@@ -187,3 +188,4 @@ jsi::Value ReanimatedUIManagerBinding::get(
 }
 
 } // namespace reanimated
+#endif

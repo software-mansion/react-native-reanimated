@@ -1,17 +1,23 @@
 #import <React/RCTBridge+Private.h>
+#ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
+#endif
 
 #import <RNReanimated/NativeProxy.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
+#import <RNReanimated/ReanimatedUIManagerBinding.h>
+#endif
+
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -26,25 +32,29 @@ using namespace reanimated;
 @end
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
-
+#ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
-
+#endif
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
+#ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
   std::shared_ptr<EventListener> eventListener_;
+#endif
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
+#ifdef RCT_NEW_ARCH_ENABLED
   [_surfacePresenter removeObserver:self];
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   [scheduler removeEventListener:eventListener_];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+#endif
   [_nodesManager invalidate];
   [super invalidate];
 }
@@ -56,7 +66,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   // will be called from that queue.
   return RCTGetUIManagerQueue();
 }
-
+#ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<UIManager>)getUIManager
 {
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
@@ -195,6 +205,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   }
   return nil;
 }
+#else
+RCT_EXPORT_METHOD(installTurboModule)
+{
+  // TODO: Move initialization from UIResponder+Reanimated to here
+}
+#endif
 
 #pragma mark-- Batch handling
 

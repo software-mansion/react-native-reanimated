@@ -212,11 +212,13 @@ export default function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
-        const shareableNode = getShadowNodeWrapperFromRef(this); // ShadowNodeWrapper
-        runOnUI(() => {
-          'worklet';
-          _removeShadowNodeFromRegistry(shareableNode);
-        })();
+        if (global._IS_FABRIC) {
+          const shareableNode = getShadowNodeWrapperFromRef(this); // ShadowNodeWrapper
+          runOnUI(() => {
+            'worklet';
+            _removeShadowNodeFromRegistry(shareableNode);
+          })();
+        }
       }
     }
 
@@ -304,7 +306,7 @@ export default function createAnimatedComponent(
 
       let viewTag: number | null;
       let viewName: string | null;
-      let shareableNode: ShadowNodeWrapper | null;
+      let shareableNode: ShadowNodeWrapper | null = null;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
@@ -330,7 +332,10 @@ export default function createAnimatedComponent(
         if (hasReanimated2Props && hostInstance?.viewConfig) {
           adaptViewConfig(hostInstance.viewConfig);
         }
-        shareableNode = getShadowNodeWrapperFromRef(this);
+
+        if (global._IS_FABRIC) {
+          shareableNode = getShadowNodeWrapperFromRef(this);
+        }
       }
       this._viewTag = viewTag as number;
 

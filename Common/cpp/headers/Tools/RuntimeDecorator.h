@@ -35,10 +35,10 @@ class RuntimeDecorator {
       const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
       const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
+      const DispatchCommandFunction dispatchCommand,
 #else
       const ScrollToFunction scrollTo,
 #endif
-      const DispatchCommandFunction dispatchCommand,
       const RequestFrameFunction requestFrame,
       const TimeProviderFunction getCurrentTime,
       const RegisterSensorFunction registerSensor,
