@@ -28,6 +28,8 @@
           fromContainer:(UIView *)container
           withAnimation:(RCTLayoutAnimationGroup *)animation;
 
+- (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
+
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
@@ -39,6 +41,12 @@
   NSMutableDictionary<NSNumber *, NSNumber *> *_parentMapper;
   REAAnimationsManager *_animationsManager;
   std::weak_ptr<reanimated::Scheduler> _scheduler;
+}
+
+- (void)invalidate
+{
+  [super invalidate];
+  _animationsManager = nil;
 }
 
 + (NSString *)moduleName
@@ -152,6 +160,10 @@
 // Overrided https://github.com/facebook/react-native/blob/v0.65.0/React/Modules/RCTUIManager.m#L530
 - (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView
 {
+  if (!reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
+    return [super uiBlockWithLayoutUpdateForRootView:rootShadowView];
+  }
+
   NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 

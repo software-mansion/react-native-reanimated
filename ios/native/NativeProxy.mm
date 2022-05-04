@@ -313,14 +313,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
     }
 
-    module->layoutAnimationsProxy->startLayoutAnimation(*rt,
+    layoutAnimationsProxy->startLayoutAnimation(*rt,
                                                         [tag intValue],
                                                         std::string([type UTF8String]),
                                                         yogaValues);
   }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber * _Nonnull tag, NSString * _Nonnull type) {
-    return module->layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
+    return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
   }];
 
   [animationsManager setRemovingConfigBlock:^(NSNumber *_Nonnull tag) {

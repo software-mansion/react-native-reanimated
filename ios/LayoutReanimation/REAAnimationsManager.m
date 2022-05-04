@@ -273,12 +273,18 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (BOOL)removeRecursive:(UIView*)view fromContainer:(UIView*)container;
 {
   if (view.reactTag) {
-    BOOL hasExitingChildren = NO;
-    for (UIView *subview in view.reactSubviews) {
-      hasExitingChildren = hasExitingChildren || [self removeRecursive:subview fromContainer:view];
+    BOOL hasExitAnimation  = _hasAnimationForTag(view.reactTag, @"exiting");
+    BOOL wantAnimateExit = hasExitAnimation;
+    if (!wantAnimateExit) {
+      for (UIView *subview in view.reactSubviews) {
+        if ([self removeRecursive:subview fromContainer:view]) {
+          wantAnimateExit = YES;
+          break;
+        }
+      }
     }
-    BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting");
-    if (hasExitingChildren || hasExitAnimation) {
+
+    if (wantAnimateExit) {
       REASnapshot *before;
       if (hasExitAnimation) {
         before = [[REASnapshot alloc] init:view];

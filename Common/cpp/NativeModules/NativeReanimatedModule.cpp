@@ -72,6 +72,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
       propObtainer(propObtainer),
+      layoutAnimationsProxy(layoutAnimationsProxy),
       animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction) {
@@ -79,8 +80,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     frameCallbacks.push_back(callback);
     maybeRequestRender();
   };
-
-  this->layoutAnimationsProxy = layoutAnimationsProxy;
 
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
