@@ -213,11 +213,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     std::shared_ptr<CallInvoker> jsInvoker)
 {
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
-  // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
 
 #ifndef RCT_NEW_ARCH_ENABLED
-  auto propUpdater = [reanimatedModule](
-                         jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) -> void {
+  RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
+  auto updatePropsFunction =
+      [reanimatedModule](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) -> void {
     NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
                                               encoding:[NSString defaultCStringEncoding]];
 
@@ -227,7 +227,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
                                       withName:nsViewName];
   };
 
-  // todo: measure, scrollto
+  auto measureFunction = [uiManager](int viewTag) -> std::vector<std::pair<std::string, double>> {
+    return measure(viewTag, uiManager);
+  };
+
+  auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
+    scrollTo(viewTag, uiManager, x, y, animated);
+  };
 #endif
 
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
@@ -369,40 +375,47 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // end sensors
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
-    requestRender,
-#ifndef RCT_NEW_ARCH_ENABLED
-    updatePropsFunction;
+      requestRender,
+#ifdef RCT_NEW_ARCH_ENABLED
+      synchronouslyUpdateUIPropsFunction,
+#else
+      updatePropsFunction,
+      scrollToFunction,
+      measureFunction,
 #endif
-  synchronouslyUpdateUIPropsFunction, getCurrentTime, registerSensorFunction, unregisterSensorFunction,
-      setGestureStateFunction, configurePropsFunction
-};
+      getCurrentTime,
+      registerSensorFunction,
+      unregisterSensorFunction,
+      setGestureStateFunction,
+      configurePropsFunction,
+  };
 
-module = std::make_shared<NativeReanimatedModule>(
-    jsInvoker,
-    scheduler,
-    animatedRuntime,
-    errorHandler,
-    propObtainer,
-    layoutAnimationsProxy,
-    platformDepMethodsHolder);
+  module = std::make_shared<NativeReanimatedModule>(
+      jsInvoker,
+      scheduler,
+      animatedRuntime,
+      errorHandler,
+      propObtainer,
+      layoutAnimationsProxy,
+      platformDepMethodsHolder);
 
-scheduler->setRuntimeManager(module);
+  scheduler->setRuntimeManager(module);
 
-[reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
-  // handles RCTEvents from RNGestureHandler
+  [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
+    // handles RCTEvents from RNGestureHandler
 
-  std::string eventName = [eventNameNSString UTF8String];
-  jsi::Runtime &rt = *module->runtime;
-  jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
-  // TODO: check if NaN and INF values are converted properly
+    std::string eventName = [eventNameNSString UTF8String];
+    jsi::Runtime &rt = *module->runtime;
+    jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
+    // TODO: check if NaN and INF values are converted properly
 
-  module->handleEvent(eventName, std::move(payload), CACurrentMediaTime() * 1000);
-}];
+    module->handleEvent(eventName, std::move(payload), CACurrentMediaTime() * 1000);
+  }];
 
-std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
-[reanimatedModule.nodesManager registerPerformOperations:^() {
-  weakModule.lock()->performOperations();
-}];
-return module;
+  std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
+  [reanimatedModule.nodesManager registerPerformOperations:^() {
+    weakModule.lock()->performOperations();
+  }];
+  return module;
 }
 }

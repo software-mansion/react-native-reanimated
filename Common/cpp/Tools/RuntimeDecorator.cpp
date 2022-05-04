@@ -91,9 +91,13 @@ void RuntimeDecorator::decorateRuntime(
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
     const UpdatePropsFunction updateProps,
-    const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
-    const DispatchCommandFunction dispatchCommand,
     const MeasureFunction measure,
+#ifdef RCT_NEW_ARCH_ENABLED
+    const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
+#else
+    const ScrollToFunction scrollTo,
+#endif
+    const DispatchCommandFunction dispatchCommand,
     const RequestFrameFunction requestFrame,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
@@ -104,6 +108,25 @@ void RuntimeDecorator::decorateUIRuntime(
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
 #ifdef RCT_NEW_ARCH_ENABLED
+  auto _removeShadowNodeFromRegistry = [removeShadowNodeFromRegistry](
+                                           jsi::Runtime &rt,
+                                           const jsi::Value &thisValue,
+                                           const jsi::Value *args,
+                                           const size_t count) -> jsi::Value {
+    removeShadowNodeFromRegistry(rt, args[0]);
+    return jsi::Value::undefined();
+  };
+  jsi::Value removeShadowNodeFromRegistryHostFunction =
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_removeShadowNodeFromRegistry"),
+          2,
+          _removeShadowNodeFromRegistry);
+  rt.global().setProperty(
+      rt,
+      "_removeShadowNodeFromRegistry",
+      removeShadowNodeFromRegistryHostFunction);
+
   auto clb = [updateProps](
                  jsi::Runtime &rt,
                  const jsi::Value &thisValue,
@@ -111,6 +134,14 @@ void RuntimeDecorator::decorateUIRuntime(
                  const size_t count) -> jsi::Value {
     updateProps(rt, args[0], args[1]);
     return jsi::Value::undefined();
+  };
+
+  auto _measure = [measure](
+                      jsi::Runtime &rt,
+                      const jsi::Value &thisValue,
+                      const jsi::Value *args,
+                      const size_t count) -> jsi::Value {
+    return measure(rt, args[0]);
   };
 #else
   auto clb = [updateProps](
@@ -124,29 +155,43 @@ void RuntimeDecorator::decorateUIRuntime(
     updateProps(rt, viewTag, *viewName, params);
     return jsi::Value::undefined();
   };
+
+  auto _scrollTo = [scrollTo](
+                       jsi::Runtime &rt,
+                       const jsi::Value &thisValue,
+                       const jsi::Value *args,
+                       const size_t count) -> jsi::Value {
+    int viewTag = static_cast<int>(args[0].asNumber());
+    double x = args[1].asNumber();
+    double y = args[2].asNumber();
+    bool animated = args[3].getBool();
+    scrollTo(viewTag, x, y, animated);
+    return jsi::Value::undefined();
+  };
+  jsi::Value scrollToFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_scrollTo"), 4, _scrollTo);
+  rt.global().setProperty(rt, "_scrollTo", scrollToFunction);
+
+  auto _measure = [measure](
+                      jsi::Runtime &rt,
+                      const jsi::Value &thisValue,
+                      const jsi::Value *args,
+                      const size_t count) -> jsi::Value {
+    int viewTag = static_cast<int>(args[0].asNumber());
+    auto result = measure(viewTag);
+    jsi::Object resultObject(rt);
+    for (auto &i : result) {
+      resultObject.setProperty(rt, i.first.c_str(), i.second);
+    }
+    return resultObject;
+  };
 #endif
   jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);
   rt.global().setProperty(rt, "_updateProps", updatePropsHostFunction);
-
-  auto clb1 = [removeShadowNodeFromRegistry](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    removeShadowNodeFromRegistry(rt, args[0]);
-    return jsi::Value::undefined();
-  };
-  jsi::Value removeShadowNodeFromRegistryHostFunction =
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "_removeShadowNodeFromRegistry"),
-          2,
-          clb1);
-  rt.global().setProperty(
-      rt,
-      "_removeShadowNodeFromRegistry",
-      removeShadowNodeFromRegistryHostFunction);
+  jsi::Value measureFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, _measure);
+  rt.global().setProperty(rt, "_measure", measureFunction);
 
   auto clb2 = [requestFrame](
                   jsi::Runtime &rt,
@@ -176,17 +221,6 @@ void RuntimeDecorator::decorateUIRuntime(
       jsi::Function::createFromHostFunction(
           rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 3, clb3);
   rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandHostFunction);
-
-  auto clb4 = [measure](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    return measure(rt, args[0]);
-  };
-  jsi::Value measureFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);
-  rt.global().setProperty(rt, "_measure", measureFunction);
 
   auto clb6 = [getCurrentTime](
                   jsi::Runtime &rt,

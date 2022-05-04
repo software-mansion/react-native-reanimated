@@ -50,6 +50,11 @@ NativeProxy::NativeProxy(
       binding->getScheduler()->getUIManager();
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
       *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
+#ifdef RCT_NEW_ARCH_ENABLED
+  rt->global().setProperty(*rt, "_IS_FABRIC", true);
+#else
+  rt->global().setProperty(*rt, "_IS_FABRIC", false);
+#endif
 }
 
 NativeProxy::~NativeProxy() {
@@ -86,16 +91,24 @@ void NativeProxy::installJSIBindings(
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager) {
 #ifndef RCT_NEW_ARCH_ENABLED
-  auto propUpdater = [this](
-                         jsi::Runtime &rt,
-                         int viewTag,
-                         const jsi::Value &viewName,
-                         const jsi::Object &props) {
+  auto updatePropsFunction = [this](
+                                 jsi::Runtime &rt,
+                                 int viewTag,
+                                 const jsi::Value &viewName,
+                                 const jsi::Object &props) {
     // viewName is for iOS only, we skip it here
     this->updateProps(rt, viewTag, props);
   };
 
-  // todo: measure, scrollto
+  auto measureFunction =
+      [this](int viewTag) -> std::vector<std::pair<std::string, double>> {
+    return measure(viewTag);
+  };
+
+  auto scrollToFunction =
+      [this](int viewTag, double x, double y, bool animated) -> void {
+    scrollTo(viewTag, x, y, animated);
+  };
 #endif
 
   auto getCurrentTime = [this]() {
@@ -201,10 +214,13 @@ void NativeProxy::installJSIBindings(
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
-#ifndef RCT_NEW_ARCH_ENABLED
-      propUpdater,
-#endif
+#ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction,
+#else
+      updatePropsFunction,
+      scrollToFunction,
+      measureFunction,
+#endif
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
@@ -317,26 +333,6 @@ void NativeProxy::synchronouslyUpdateUIProps(
   method(javaPart_.get(), tag, uiProps);
 }
 
-std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
-  auto method =
-      javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>("measure");
-  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
-  size_t size = output->size();
-  auto elements = output->getRegion(0, size);
-  std::vector<std::pair<std::string, double>> result;
-
-  result.push_back({"x", elements[0]});
-  result.push_back({"y", elements[1]});
-
-  result.push_back({"pageX", elements[2]});
-  result.push_back({"pageY", elements[3]});
-
-  result.push_back({"width", elements[4]});
-  result.push_back({"height", elements[5]});
-
-  return result;
-}
-
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
@@ -388,6 +384,33 @@ void NativeProxy::updateProps(
                         "updateProps");
   method(
       javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+}
+
+void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
+  auto method =
+      javaPart_->getClass()->getMethod<void(int, double, double, bool)>(
+          "scrollTo");
+  method(javaPart_.get(), viewTag, x, y, animated);
+}
+
+std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
+  auto method =
+      javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>("measure");
+  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
+  size_t size = output->size();
+  auto elements = output->getRegion(0, size);
+  std::vector<std::pair<std::string, double>> result;
+
+  result.push_back({"x", elements[0]});
+  result.push_back({"y", elements[1]});
+
+  result.push_back({"pageX", elements[2]});
+  result.push_back({"pageY", elements[3]});
+
+  result.push_back({"width", elements[4]});
+  result.push_back({"height", elements[5]});
+
+  return result;
 }
 #endif
 
