@@ -12,9 +12,10 @@ import Animated, {
 import { StyleSheet, View } from 'react-native';
 import {
   Gesture,
-  GestureEvent,
   GestureDetector,
   GestureHandlerRootView,
+  PanGestureChangeEventPayload,
+  GestureUpdateEvent,
 } from 'react-native-gesture-handler';
 import { useJSThreadKiller } from './useJSThreadKiller';
 
@@ -37,7 +38,7 @@ export default function EverythingExample() {
       'worklet';
       isPressed.value = true;
     })
-    .onChange((e: GestureEvent) => {
+    .onChange((e: GestureUpdateEvent<PanGestureChangeEventPayload>) => {
       'worklet';
       offset.value = {
         x: e.changeX + offset.value.x,

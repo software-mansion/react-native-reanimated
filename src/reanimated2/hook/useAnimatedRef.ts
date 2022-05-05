@@ -14,7 +14,7 @@ export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
       // enters when ref is set by attaching to a component
       if (component) {
         tag.value = isFabric
-          ? component._internalInstanceHandle.stateNode.node
+          ? (component as any)._internalInstanceHandle.stateNode.node
           : getTag(component);
         fun.current = component;
       }

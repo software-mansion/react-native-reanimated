@@ -4,6 +4,10 @@ import {
   GestureDetector,
   Gesture,
   GestureHandlerRootView,
+  GestureUpdateEvent,
+  GestureTouchEvent,
+  GestureStateManager,
+  PanGestureChangeEventPayload,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -32,7 +36,7 @@ function Ball() {
       'worklet';
       isPressed.value = true;
     })
-    .onChange((e) => {
+    .onChange((e: GestureUpdateEvent<PanGestureChangeEventPayload>) => {
       'worklet';
       offset.value = {
         x: e.changeX + offset.value.x,
@@ -43,7 +47,7 @@ function Ball() {
       'worklet';
       isPressed.value = false;
     })
-    .onTouchesMove((e, state) => {
+    .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
       state.activate();
     });
 

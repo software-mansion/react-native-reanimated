@@ -44,6 +44,7 @@ if (shouldBeUseWeb()) {
   };
 } else {
   if (global._IS_FABRIC) {
+    // TODO: rename to updatePropsByArch
     updatePropsByPlatform = (
       viewDescriptors: SharedValue<Descriptor[]>,
       updates: StyleProps | AnimatedStyle,
@@ -79,6 +80,7 @@ if (shouldBeUseWeb()) {
         _updateProps(
           viewDescriptor.tag,
           viewDescriptor.name || 'RCTView',
+          // @ts-ignore TODO: _updatePropsFabric and _updatePropsPaper
           updates
         );
       });
