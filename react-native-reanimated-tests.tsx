@@ -769,7 +769,7 @@ function updatePropsTest() {
 // test partial animated props
 function testPartialAnimatedProps() {
   const ap = useAnimatedProps<ImageProps>(() => ({
-    height: 100,
+    borderRadius: 100,
   }));
   const aps = useAnimatedProps<ImageProps>(() => ({
     source: { uri: 'whatever' },

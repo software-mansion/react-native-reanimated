@@ -103,7 +103,8 @@
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.14.2",
     "@types/jest": "^27.4.0",
-    "@types/react-native": "^0.66.15",
+    "@types/react": "^18.0.0",
+    "@types/react-native": "^0.67.6",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "babel-eslint": "^10.1.0",
@@ -126,7 +127,7 @@
     "react": "17.0.2",
     "react-native": "0.68.0",
     "react-native-codegen": "^0.0.7",
-    "react-native-gesture-handler": "^1.6.1",
+    "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",
     "release-it": "^13.7.2",
     "typescript": "^4.1.3"
