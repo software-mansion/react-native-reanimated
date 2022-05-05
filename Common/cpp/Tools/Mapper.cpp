@@ -25,7 +25,11 @@ void Mapper::execute(jsi::Runtime &rt) {
   if (optimalizationLvl == 0) {
     mapper->callWithThis(rt, *mapper); // call styleUpdater
   } else {
+#ifdef RCT_NEW_ARCH_ENABLED
+    jsi::Value newStyle = userUpdater->call(rt).asObject(rt);
+#else
     jsi::Value newStyle = userUpdater->call(rt);
+#endif
     auto jsViewDescriptorArray = viewDescriptors->getValue(rt)
                                      .getObject(rt)
                                      .getProperty(rt, "value")
@@ -42,7 +46,7 @@ void Mapper::execute(jsi::Runtime &rt) {
           rt,
           static_cast<int>(jsViewDescriptor.getProperty(rt, "tag").asNumber()),
           jsViewDescriptor.getProperty(rt, "name"),
-          newStyle.asObject(rt));
+          newStyle);
 #endif
     }
   }
