@@ -1,4 +1,4 @@
-/* global _WORKLET _measure _dispatchCommand _setGestureState */
+/* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Component } from 'react';
