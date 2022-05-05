@@ -72,16 +72,16 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <ScreenStack>
+      <ScreenStack style={styles.container}>
         <Screen>
           <AnimatedScreenStackHeaderConfig animatedProps={animatedProps} />
+          <View style={styles.container}>
+            <GestureDetector gesture={gesture}>
+              <Animated.View style={[styles.ball, animatedStyles]} />
+            </GestureDetector>
+          </View>
         </Screen>
       </ScreenStack>
-      <View style={styles.container}>
-        <GestureDetector gesture={gesture}>
-          <Animated.View style={[styles.ball, animatedStyles]} />
-        </GestureDetector>
-      </View>
     </GestureHandlerRootView>
   );
 }
