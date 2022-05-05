@@ -27,7 +27,7 @@ const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   ScreenStackHeaderConfig
 );
 
-export default function EverythingExample() {
+export default function ScreenStackHeaderConfigBackgroundColorExample() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
 

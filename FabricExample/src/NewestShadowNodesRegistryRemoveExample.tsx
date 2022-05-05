@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-export default function EmptyExample() {
+export default function NewestShadowNodesRegistryRemoveExample() {
   const [show, setShow] = React.useState(true);
 
   const ref = React.useRef(0);

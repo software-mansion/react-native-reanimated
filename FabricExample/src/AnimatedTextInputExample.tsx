@@ -18,7 +18,7 @@ Animated.addWhitelistedNativeProps({ text: true });
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
-export default function ChessboardExample() {
+export default function AnimatedTextInputExample() {
   const ref = React.useRef(0);
 
   const sv = useSharedValue(0);
