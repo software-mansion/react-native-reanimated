@@ -15,8 +15,6 @@ void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
         &newestShadowNodesRegistry) {
   // adapted from UIManagerBinding.cpp
   auto uiManagerModuleName = "nativeFabricUIManager";
-  auto uiManagerValue =
-      runtime.global().getProperty(runtime, uiManagerModuleName);
   auto uiManagerBinding = std::make_shared<ReanimatedUIManagerBinding>(
       uiManager, runtimeExecutor, newestShadowNodesRegistry);
   auto object = jsi::Object::createFromHostObject(runtime, uiManagerBinding);
