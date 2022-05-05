@@ -126,6 +126,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
               // event listener called on the JS thread, let's ignore this event
               // as we cannot safely access worklet runtime here
               // and also we don't care about topLayout events
+              return false;
             }
             return reanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           });
