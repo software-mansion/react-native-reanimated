@@ -1,4 +1,4 @@
-/* global _updateProps */
+/* global _updatePropsPaper _updatePropsFabric */
 import { MutableRefObject } from 'react';
 import { processColor } from './Colors';
 import { AnimatedStyle, SharedValue, StyleProps } from './commonTypes';
@@ -44,7 +44,6 @@ if (shouldBeUseWeb()) {
   };
 } else {
   if (global._IS_FABRIC) {
-    // TODO: rename to updatePropsByArch
     updatePropsByPlatform = (
       viewDescriptors: SharedValue<Descriptor[]>,
       updates: StyleProps | AnimatedStyle,
@@ -59,7 +58,7 @@ if (shouldBeUseWeb()) {
       }
 
       viewDescriptors.value.forEach((viewDescriptor) => {
-        _updateProps(viewDescriptor.shareableNode, updates);
+        _updatePropsFabric(viewDescriptor.shareableNode, updates);
       });
     };
   } else {
@@ -77,10 +76,9 @@ if (shouldBeUseWeb()) {
       }
 
       viewDescriptors.value.forEach((viewDescriptor) => {
-        _updateProps(
+        _updatePropsPaper(
           viewDescriptor.tag,
           viewDescriptor.name || 'RCTView',
-          // @ts-ignore TODO: _updatePropsFabric and _updatePropsPaper
           updates
         );
       });

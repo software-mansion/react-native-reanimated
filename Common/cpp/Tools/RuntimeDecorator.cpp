@@ -135,6 +135,9 @@ void RuntimeDecorator::decorateUIRuntime(
     updateProps(rt, args[0], args[1]);
     return jsi::Value::undefined();
   };
+  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_updatePropsFabric"), 2, clb);
+  rt.global().setProperty(rt, "_updatePropsFabric", updatePropsHostFunction);
 
   auto _measure = [measure](
                       jsi::Runtime &rt,
@@ -155,6 +158,9 @@ void RuntimeDecorator::decorateUIRuntime(
     updateProps(rt, viewTag, *viewName, params);
     return jsi::Value::undefined();
   };
+  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_updatePropsPaper"), 3, clb);
+  rt.global().setProperty(rt, "_updatePropsPaper", updatePropsHostFunction);
 
   auto _scrollTo = [scrollTo](
                        jsi::Runtime &rt,
@@ -186,9 +192,7 @@ void RuntimeDecorator::decorateUIRuntime(
     return resultObject;
   };
 #endif
-  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);
-  rt.global().setProperty(rt, "_updateProps", updatePropsHostFunction);
+
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, _measure);
   rt.global().setProperty(rt, "_measure", measureFunction);

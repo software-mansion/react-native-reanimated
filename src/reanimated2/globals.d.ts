@@ -16,7 +16,12 @@ declare global {
     flag: { value: boolean; _value: boolean }
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
-  const _updateProps: (
+  const _updatePropsPaper: (
+    tag: number,
+    name: string,
+    updates: StyleProps | AnimatedStyle
+  ) => void;
+  const _updatePropsFabric: (
     shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
   ) => void;
