@@ -61,6 +61,12 @@ static inline ShadowNode::Shared cloneNode(
 jsi::Value ReanimatedUIManagerBinding::get(
     jsi::Runtime &runtime,
     jsi::PropNameID const &name) {
+  // Currently, we need to overwrite all variants of `cloneNode` as well as
+  // `appendChild` to prevent React from overwriting layout props animated using
+  // Reanimated. However, this may degrade performance due to using locks.
+  // We already have an idea how this can be done better without locks
+  // (i.e. by overwriting `completeRoot` and using UIManagerCommitHooks).
+
   // based on implementation from UIManagerBinding.cpp
   auto methodName = name.utf8(runtime);
   UIManager *uiManager = uiManager_.get();
