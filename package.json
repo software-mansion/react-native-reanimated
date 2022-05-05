@@ -157,14 +157,5 @@
       "commonjs",
       "module"
     ]
-  },
-  "codegenConfig": {
-    "libraries": [
-      {
-        "name": "RNColoredViewSpec",
-        "type": "components",
-        "jsSrcsDir": "src"
-      }
-    ]
   }
 }
