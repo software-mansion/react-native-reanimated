@@ -315,7 +315,7 @@ using namespace facebook::react;
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
 {
   // adapted from RCTPropsAnimatedNode.m
-  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ? _bridge.surfacePresenter : _surfacePresenter;
+  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ?: _surfacePresenter;
   [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
 
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
