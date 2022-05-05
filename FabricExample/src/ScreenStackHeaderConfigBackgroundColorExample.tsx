@@ -16,6 +16,7 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import { useJSThreadKiller } from './useJSThreadKiller';
 
 declare const performance: {
   now: () => number;
@@ -28,6 +29,8 @@ const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
 export default function EverythingExample() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
+
+  useJSThreadKiller();
 
   const gesture = Gesture.Pan()
     .onBegin(() => {
