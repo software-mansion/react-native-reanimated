@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
 #include <ReactCommon/RuntimeExecutor.h>
 #include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -41,3 +43,5 @@ class ReanimatedUIManagerBinding : public UIManagerBinding {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
 #ifdef ANDROID
 #include <Binding.h>
 #include <fbjni/fbjni.h>
@@ -73,3 +75,5 @@ void UIManager_appendChild(
     const ShadowNode::Shared &childShadowNode);
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED
