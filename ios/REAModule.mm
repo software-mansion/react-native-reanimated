@@ -122,6 +122,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
       self->eventListener_ =
           std::make_shared<facebook::react::EventListener>([reanimatedModule](const RawEvent &rawEvent) {
+            if (!RCTIsMainQueue()) {
+              // event listener called on the JS thread, let's ignore this event
+              // as we cannot safely access worklet runtime here
+              // and also we don't care about topLayout events
+            }
             return reanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           });
       [scheduler addEventListener:self->eventListener_];
