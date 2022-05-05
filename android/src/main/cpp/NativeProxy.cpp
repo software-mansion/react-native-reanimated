@@ -184,6 +184,11 @@ void NativeProxy::installJSIBindings(
       "_WORKLET_RUNTIME",
       static_cast<double>(
           reinterpret_cast<std::uintptr_t>(animatedRuntime.get())));
+#ifdef RCT_NEW_ARCH_ENABLED
+  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", true);
+#else
+  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
+#endif
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
