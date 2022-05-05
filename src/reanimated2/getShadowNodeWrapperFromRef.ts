@@ -17,10 +17,15 @@ try {
   // do nothing
 }
 
+export function getShadowNodeWrapperFromHostInstance(
+  hostInstance: unknown
+): ShadowNodeWrapper {
+  // @ts-ignore Fabric
+  return hostInstance._internalInstanceHandle.stateNode.node;
+}
+
 export function getShadowNodeWrapperFromRef(
   ref: React.Component
 ): ShadowNodeWrapper {
-  // @ts-ignore Fabric
-  return findHostInstance_DEPRECATED(ref)._internalInstanceHandle.stateNode
-    .node;
+  return getShadowNodeWrapperFromHostInstance(findHostInstance_DEPRECATED(ref));
 }

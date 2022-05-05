@@ -1,10 +1,11 @@
 import { Component, useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import { RefObjectFunction } from './commonTypes';
+import { RefObjectFunction, ShadowNodeWrapper } from './commonTypes';
 import { getTag } from '../NativeMethods';
+import { getShadowNodeWrapperFromHostInstance } from '../getShadowNodeWrapperFromRef';
 
 export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
-  const tag = useSharedValue<number | null>(-1);
+  const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const ref = useRef<RefObjectFunction<T>>();
   const isFabric = global._IS_FABRIC;
 
@@ -14,7 +15,7 @@ export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
       // enters when ref is set by attaching to a component
       if (component) {
         tag.value = isFabric
-          ? (component as any)._internalInstanceHandle.stateNode.node
+          ? getShadowNodeWrapperFromHostInstance(component)
           : getTag(component);
         fun.current = component;
       }
