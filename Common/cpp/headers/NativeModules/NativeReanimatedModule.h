@@ -86,6 +86,14 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void maybeRequestRender();
 
+  jsi::Value registerSensor(
+      jsi::Runtime &rt,
+      const jsi::Value &sensorType,
+      const jsi::Value &interval,
+      const jsi::Value &sensorDataContainer) override;
+  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+
+#ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
   bool handleEvent(
       const std::string &eventName,
@@ -110,19 +118,17 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
-  jsi::Value registerSensor(
-      jsi::Runtime &rt,
-      const jsi::Value &sensorType,
-      const jsi::Value &interval,
-      const jsi::Value &sensorDataContainer) override;
-  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
   void setUIManager(std::shared_ptr<UIManager> uiManager);
   void setNewestShadowNodesRegistry(
       std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+#endif // RCT_NEW_ARCH_ENABLED
+
   UpdatePropsFunction updatePropsFunction;
 
  private:
+#ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
+#endif // RCT_NEW_ARCH_ENABLED
 
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
@@ -138,6 +144,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
 
+#ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<UIManager> uiManager_;
 
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
@@ -152,6 +159,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
 
   std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
+#endif // RCT_NEW_ARCH_ENABLED
 };
 
 } // namespace reanimated

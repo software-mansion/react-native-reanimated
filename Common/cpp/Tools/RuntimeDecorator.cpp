@@ -91,13 +91,15 @@ void RuntimeDecorator::decorateRuntime(
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
     const UpdatePropsFunction updateProps,
-    const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
     const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
+#endif
+    const MeasureFunction measure,
+#ifdef RCT_NEW_ARCH_ENABLED
+    const DispatchCommandFunction dispatchCommand,
 #else
     const ScrollToFunction scrollTo,
 #endif
-    const DispatchCommandFunction dispatchCommand,
     const RequestFrameFunction requestFrame,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
@@ -204,7 +206,7 @@ void RuntimeDecorator::decorateUIRuntime(
     }
     return resultObject;
   };
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, _measure);

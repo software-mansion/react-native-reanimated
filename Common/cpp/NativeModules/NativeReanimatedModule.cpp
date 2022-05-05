@@ -91,6 +91,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 
   this->layoutAnimationsProxy = layoutAnimationsProxy;
 
+#ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](
                          jsi::Runtime &rt,
                          const jsi::Value &shadowNodeValue,
@@ -103,6 +104,10 @@ NativeReanimatedModule::NativeReanimatedModule(
         this->removeShadowNodeFromRegistry(rt, shadowNodeValue);
       };
 
+  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+    return this->measure(rt, shadowNodeValue);
+  };
+
   auto dispatchCommand = [this](
                              jsi::Runtime &rt,
                              const jsi::Value &shadowNodeValue,
@@ -110,23 +115,20 @@ NativeReanimatedModule::NativeReanimatedModule(
                              const jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
-
-  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
-    return this->measure(rt, shadowNodeValue);
-  };
+#endif
 
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
-      measure,
       removeShadowNodeFromRegistry,
+      measure,
+      dispatchCommand,
 #else
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
 #endif
-      dispatchCommand,
       requestAnimationFrame,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
@@ -378,6 +380,8 @@ void NativeReanimatedModule::unregisterSensor(
   animatedSensorModule.unregisterSensor(sensorId);
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
 bool NativeReanimatedModule::isThereAnyLayoutProp(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -598,5 +602,7 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
   newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated
