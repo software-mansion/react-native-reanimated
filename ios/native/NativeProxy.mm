@@ -414,7 +414,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     std::string eventName = [eventNameNSString UTF8String];
     jsi::Runtime &rt = *module->runtime;
     jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
-    // TODO: check if NaN and INF values are converted properly
 
     module->handleEvent(eventName, std::move(payload), CACurrentMediaTime() * 1000);
   }];
