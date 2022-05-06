@@ -43,12 +43,14 @@ if rnVersion.to_i >= 64
   folly_prefix = "RCT-"
 end
 
-folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
+folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DRNVERSION=' + rnVersion
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 folly_version = '2021.06.28.00-v2'
 boost_compiler_flags = '-Wno-documentation'
-
-
+fabric_flags = ''
+if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+  fabric_flags = '-DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED'
+end
 
 Pod::Spec.new do |s|
   s.name         = "RNReanimated"
@@ -82,13 +84,15 @@ Pod::Spec.new do |s|
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
   s.xcconfig               = {
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
-                               "OTHER_CFLAGS" => "$(inherited) -DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED" + " " + folly_flags  }
+                               "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
 
   s.requires_arc = true
 
   s.dependency "React-Core"
-  s.dependency "React-RCTFabric"
-  s.dependency "React-Codegen"
+  if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+    s.dependency "React-RCTFabric"
+    s.dependency "React-Codegen"
+  end
   s.dependency "RCT-Folly", folly_version
   s.dependency "RCTRequired"
   s.dependency "RCTTypeSafety"

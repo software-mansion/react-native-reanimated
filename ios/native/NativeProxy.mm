@@ -19,6 +19,9 @@
 #endif
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
+#ifndef RCT_NEW_ARCH_ENABLED
+#import <folly/json.h>
+#endif
 
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
@@ -275,7 +278,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
-      jsi::Object global = rt.global(); // TODO: fix crash on reload
+      jsi::Object global = rt.global();
       jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
       global.setProperty(rt, frameTimestampName, frameTimestamp);
       onRender(frameTimestamp);
@@ -404,6 +407,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   scheduler->setRuntimeManager(module);
 
+#ifdef RCT_NEW_ARCH_ENABLED
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
 
@@ -414,6 +418,27 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
     module->handleEvent(eventName, std::move(payload), CACurrentMediaTime() * 1000);
   }];
+#else
+  [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
+    std::string eventNameString([eventName UTF8String]);
+
+    std::string eventAsString;
+    try {
+      eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
+    } catch (std::exception &) {
+      // Events from other libraries may contain NaN or INF values which cannot be represented in JSON.
+      // See https://github.com/software-mansion/react-native-reanimated/issues/1776 for details.
+      return;
+    }
+
+    eventAsString = "{ NativeMap:" + eventAsString + "}";
+    jsi::Object global = module->runtime->global();
+    jsi::String eventTimestampName = jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+    global.setProperty(*module->runtime, eventTimestampName, CACurrentMediaTime() * 1000);
+    module->onEvent(eventNameString, eventAsString);
+    global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
+  }];
+#endif
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
   [reanimatedModule.nodesManager registerPerformOperations:^() {

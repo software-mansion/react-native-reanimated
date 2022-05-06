@@ -95,7 +95,11 @@ using namespace facebook::react;
   BOOL _wantRunUpdates;
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
+#ifdef RCT_NEW_ARCH_ENABLED
   NSMutableDictionary<NSNumber *, NSMutableDictionary *> *_operationsInBatch;
+#else
+  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
+#endif
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
@@ -109,6 +113,7 @@ using namespace facebook::react;
 #endif
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                                 bridge:(RCTBridge *)bridge
                       surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
@@ -123,9 +128,6 @@ using namespace facebook::react;
     _operationsInBatch = [NSMutableDictionary new];
     _componentUpdateBuffer = [NSMutableDictionary new];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
-#ifndef RCT_NEW_ARCH_ENABLED
-    _shouldFlushUpdateBuffer = false;
-#endif
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -134,6 +136,27 @@ using namespace facebook::react;
   [_displayLink setPaused:true];
   return self;
 }
+#else
+- (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
+{
+  if ((self = [super init])) {
+    _reanimatedModule = reanimatedModule;
+    _uiManager = uiManager;
+    _wantRunUpdates = NO;
+    _onAnimationCallbacks = [NSMutableArray new];
+    _operationsInBatch = [NSMutableArray new];
+    _componentUpdateBuffer = [NSMutableDictionary new];
+    _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
+    _shouldFlushUpdateBuffer = false;
+  }
+
+  _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+  _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+  [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  [_displayLink setPaused:true];
+  return self;
+}
+#endif
 
 - (void)invalidate
 {
@@ -231,23 +254,71 @@ using namespace facebook::react;
   return YES;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (void)performOperations
 {
   _performOperations(); // calls NativeReanimatedModule::performOperations
   _wantRunUpdates = NO;
 }
+#else
+- (void)performOperations
+{
+  if (_operationsInBatch.count != 0) {
+    NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
+    _operationsInBatch = [NSMutableArray new];
+
+    BOOL trySynchronously = _tryRunBatchUpdatesSynchronously;
+    _tryRunBatchUpdatesSynchronously = NO;
+
+    __weak __typeof__(self) weakSelf = self;
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    RCTExecuteOnUIManagerQueue(^{
+      __typeof__(self) strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        return;
+      }
+      BOOL canUpdateSynchronously = trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands];
+
+      if (!canUpdateSynchronously) {
+        dispatch_semaphore_signal(semaphore);
+      }
+
+      for (int i = 0; i < copiedOperationsQueue.count; i++) {
+        copiedOperationsQueue[i](strongSelf.uiManager);
+      }
+
+      if (canUpdateSynchronously) {
+        [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
+        dispatch_semaphore_signal(semaphore);
+      }
+      // In case canUpdateSynchronously=true we still have to send uiManagerWillPerformMounting event
+      // to observers because some components (e.g. TextInput) update their UIViews only on that event.
+      [strongSelf.uiManager setNeedsLayout];
+    });
+    if (trySynchronously) {
+      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    }
+
+    if (_mounting) {
+      _mounting();
+      _mounting = nil;
+    }
+  }
+  _wantRunUpdates = NO;
+}
+#endif
 
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync
 {
-  //  if (trySync) {
-  //    _tryRunBatchUpdatesSynchronously = YES;
-  //  }
-  //  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
-  //    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
-  //  }];
+  if (trySync) {
+    _tryRunBatchUpdatesSynchronously = YES;
+  }
+  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
+    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
+  }];
 }
 
 - (void)processDirectEvent:(id<RCTEvent>)event

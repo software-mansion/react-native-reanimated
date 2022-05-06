@@ -206,9 +206,20 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   return nil;
 }
 #else
+
 RCT_EXPORT_METHOD(installTurboModule)
 {
   // TODO: Move initialization from UIResponder+Reanimated to here
+}
+
+- (void)setBridge:(RCTBridge *)bridge
+{
+  [super setBridge:bridge];
+
+  _nodesManager = [[REANodesManager alloc] initWithModule:self uiManager:self.bridge.uiManager];
+  _operations = [NSMutableArray new];
+
+  [bridge.uiManager.observerCoordinator addObserver:self];
 }
 #endif
 

@@ -19,10 +19,13 @@ typedef void (^REAPerformOperations)();
 @property (nonatomic, nullable) NSSet<NSString *> *uiProps;
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                                 bridge:(RCTBridge *)bridge
                       surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
-
+#else
+- (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager;
+#endif
 - (void)invalidate;
 - (void)operationsBatchDidComplete;
 

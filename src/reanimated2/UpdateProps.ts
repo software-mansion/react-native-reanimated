@@ -74,7 +74,7 @@ if (shouldBeUseWeb()) {
           updates[key] = processColor(updates[key]);
         }
       }
-
+      console.log('mleko');
       viewDescriptors.value.forEach((viewDescriptor) => {
         _updateProps(
           viewDescriptor.tag,
