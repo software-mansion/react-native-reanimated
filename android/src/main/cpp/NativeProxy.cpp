@@ -62,8 +62,8 @@ NativeProxy::~NativeProxy() {
       *runtime_,
       jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
       jsi::Value::undefined());
-
-  reactScheduler_->removeEventListener(eventListener_);
+  // removed temporary, new event listener mechanism need fix on the RN side
+  // reactScheduler_->removeEventListener(eventListener_);
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -268,13 +268,13 @@ void NativeProxy::installJSIBindings(
   module->setUIManager(uiManager);
   module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
   newestShadowNodesRegistry_ = nullptr;
-
-  eventListener_ = std::make_shared<EventListener>(
-      [module, getCurrentTime](const RawEvent &rawEvent) {
-        return module->handleRawEvent(rawEvent, getCurrentTime());
-      });
-  reactScheduler_ = binding->getScheduler();
-  reactScheduler_->addEventListener(eventListener_);
+  //  removed temporary, new event listener mechanism need fix on the RN side
+  //  eventListener_ = std::make_shared<EventListener>(
+  //      [module, getCurrentTime](const RawEvent &rawEvent) {
+  //        return module->handleRawEvent(rawEvent, getCurrentTime());
+  //      });
+  //  reactScheduler_ = binding->getScheduler();
+  //  reactScheduler_->addEventListener(eventListener_);
 
   runtime_->global().setProperty(
       *runtime_,
