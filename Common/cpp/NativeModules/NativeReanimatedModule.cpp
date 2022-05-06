@@ -391,7 +391,6 @@ void NativeReanimatedModule::unregisterSensor(
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-
 bool NativeReanimatedModule::isThereAnyLayoutProp(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -408,7 +407,6 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
     jsi::Value &&payload,
@@ -617,8 +615,6 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 void NativeReanimatedModule::performOperations() {
   // TODO: mleko, implementacja dla Papera
 }
-
-#endif
 
 #endif // RCT_NEW_ARCH_ENABLED
 
