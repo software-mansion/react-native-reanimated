@@ -1,17 +1,18 @@
-name: Test TypeScript and Lint
+name: Test FabricExample App TypeScript and Lint
 on:
   pull_request:
     paths:
-      - 'src/**'
-      - '*'
+      - 'FabricExample/**'
   push:
     branches:
       - main
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      WORKING_DIRECTORY: FabricExample
     concurrency:
-      group: static-root-${{ github.ref }}
+      group: static-fabric-example-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout
@@ -21,15 +22,14 @@ jobs:
         with:
           node-version: 14
           cache: 'yarn'
-      - name: Install node dependencies
+      - name: Install root node dependencies
+        run: yarn
+      - name: Install FabricExample app node dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
       - name: Check types
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn tsc --noEmit
-      - name: Check type:generate
-        run: yarn run type:generate
       - name: Lint
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn lint:js
-      - name: Finding circular dependencies
-        run: yarn circular_dependency_check
-      - name: Jest test:unit
-        run: yarn test:unit

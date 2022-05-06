@@ -1,15 +1,12 @@
 name: Test Android build
 on:
   pull_request:
-    branches:
-      - main
     paths:
       - 'android/**'
       - 'Common/**'
   push:
     branches:
       - main
-      - fabric
 jobs:
   build:
     runs-on: ubuntu-latest
