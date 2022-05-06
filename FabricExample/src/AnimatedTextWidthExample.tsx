@@ -9,7 +9,7 @@ import { StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export default function AnimatedTextInputExample() {
+export default function AnimatedTextWidthExample() {
   const sv = useSharedValue(0);
 
   React.useEffect(() => {

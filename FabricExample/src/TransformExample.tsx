@@ -7,7 +7,7 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 
 import React from 'react';
 
-export default function UIPropsExample() {
+export default function TransformExample() {
   const [count, setCount] = React.useState(0);
 
   const ref = React.useRef(0);
