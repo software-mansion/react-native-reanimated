@@ -70,6 +70,10 @@ yarn add react-native@"${versions[0]}" --dev
 cp -R android/build build_output
 cd android && ./gradlew clean && cd ..
 yarn run type:generate
+if [ $1 = "nightly" ];
+then
+  node scripts/set-nightly-version.js
+fi
 npm pack
 
 rm -rf ./lib

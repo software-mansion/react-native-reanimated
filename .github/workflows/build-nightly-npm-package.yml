@@ -1,0 +1,13 @@
+name: Build nightly npm package
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 */1 * *'
+
+jobs:
+  call-build-workflow:
+    uses: .github/workflows/build-npm-package.yml
+    with:
+      version: nightly
+

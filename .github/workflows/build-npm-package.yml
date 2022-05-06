@@ -1,9 +1,11 @@
 name: Build npm package
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 12 */1 * *'
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -27,7 +29,7 @@ jobs:
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
-          ./createNPMPackage.sh
+          ./createNPMPackage.sh ${{ inputs.version }}
 
       - run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
       
