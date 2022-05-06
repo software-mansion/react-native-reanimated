@@ -38,6 +38,8 @@ end
 
 rnVersion = reactVersion.split('.')[1]
 
+fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+
 folly_prefix = ""
 if rnVersion.to_i >= 64
   folly_prefix = "RCT-"
@@ -48,7 +50,7 @@ folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 folly_version = '2021.06.28.00-v2'
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = ''
-if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+if fabric_enabled
   fabric_flags = '-DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED'
 end
 
@@ -89,7 +91,7 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.dependency "React-Core"
-  if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+  if fabric_enabled
     s.dependency "React-RCTFabric"
     s.dependency "React-Codegen"
   end
