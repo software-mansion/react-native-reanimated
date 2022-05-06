@@ -1,9 +1,9 @@
 name: Build nightly npm package
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: '0 12 */1 * *'
+  workflow_dispatch:
 
 jobs:
   call-build-workflow:
