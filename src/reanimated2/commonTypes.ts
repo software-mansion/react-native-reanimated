@@ -145,3 +145,5 @@ export type ValueRotation = {
 };
 
 export type SensorValueRotation = SharedValue<ValueRotation>;
+
+export type ShadowNodeWrapper = object;

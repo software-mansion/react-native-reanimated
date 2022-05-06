@@ -38,7 +38,7 @@ if (shouldBeUseWeb()) {
   };
   global._dispatchCommand = () => {
     console.warn(
-      "[Reanimated] You can't use `dispatchCommand` or `scrollTo` methods with Chrome Debugger or with web version"
+      "[Reanimated] You can't use `scrollTo` or `dispatchCommand` methods with Chrome Debugger or with web version"
     );
   };
   global._setGestureState = () => {

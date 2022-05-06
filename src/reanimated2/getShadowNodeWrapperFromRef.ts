@@ -1,11 +1,7 @@
 /* eslint-disable camelcase */
 
-import { ShadowNodeWrapper } from './hook/commonTypes';
+import { ShadowNodeWrapper } from './commonTypes';
 
-// Used by GestureDetector (unsupported on web at the moment) to check whether the
-// attached view may get flattened on Fabric. This implementation causes errors
-// on web due to the static resolution of `require` statements by webpack breaking
-// the conditional importing. Solved by making .web file.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let findHostInstance_DEPRECATED = (_ref: React.Component) => null;
 

@@ -28,7 +28,7 @@ void Mapper::execute(jsi::Runtime &rt) {
 #ifdef RCT_NEW_ARCH_ENABLED
     jsi::Value newStyle = userUpdater->call(rt).asObject(rt);
 #else
-    jsi::Value newStyle = userUpdater->call(rt);
+    jsi::Object newStyle = userUpdater->call(rt).asObject(rt);
 #endif
     auto jsViewDescriptorArray = viewDescriptors->getValue(rt)
                                      .getObject(rt)
