@@ -7,7 +7,7 @@ on:
 
 jobs:
   call-build-workflow:
-    uses: software-mansion/react-native-reanimated/.github/workflows/build-npm-package.yml@@graszka22/nightly-workflow
+    uses: software-mansion/react-native-reanimated/.github/workflows/build-npm-package.yml@graszka22/nightly-workflow
     with:
       version: nightly
 
