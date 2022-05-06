@@ -108,6 +108,18 @@ void RuntimeDecorator::decorateUIRuntime(
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
 #ifdef RCT_NEW_ARCH_ENABLED
+  auto clb = [updateProps](
+                 jsi::Runtime &rt,
+                 const jsi::Value &thisValue,
+                 const jsi::Value *args,
+                 const size_t count) -> jsi::Value {
+    updateProps(rt, args[0], args[1]);
+    return jsi::Value::undefined();
+  };
+  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_updatePropsFabric"), 2, clb);
+  rt.global().setProperty(rt, "_updatePropsFabric", updatePropsHostFunction);
+
   auto _removeShadowNodeFromRegistry = [removeShadowNodeFromRegistry](
                                            jsi::Runtime &rt,
                                            const jsi::Value &thisValue,
@@ -127,14 +139,18 @@ void RuntimeDecorator::decorateUIRuntime(
       "_removeShadowNodeFromRegistry",
       removeShadowNodeFromRegistryHostFunction);
 
-  auto clb = [updateProps](
-                 jsi::Runtime &rt,
-                 const jsi::Value &thisValue,
-                 const jsi::Value *args,
-                 const size_t count) -> jsi::Value {
-    updateProps(rt, args[0], args[1]);
+  auto clb3 = [dispatchCommand](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    dispatchCommand(rt, args[0], args[1], args[2]);
     return jsi::Value::undefined();
   };
+  jsi::Value dispatchCommandHostFunction =
+      jsi::Function::createFromHostFunction(
+          rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 3, clb3);
+  rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandHostFunction);
 
   auto _measure = [measure](
                       jsi::Runtime &rt,
@@ -155,6 +171,9 @@ void RuntimeDecorator::decorateUIRuntime(
     updateProps(rt, viewTag, *viewName, params);
     return jsi::Value::undefined();
   };
+  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_updatePropsPaper"), 3, clb);
+  rt.global().setProperty(rt, "_updatePropsPaper", updatePropsHostFunction);
 
   auto _scrollTo = [scrollTo](
                        jsi::Runtime &rt,
@@ -185,10 +204,8 @@ void RuntimeDecorator::decorateUIRuntime(
     }
     return resultObject;
   };
-#endif
-  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);
-  rt.global().setProperty(rt, "_updateProps", updatePropsHostFunction);
+#endif // RCT_NEW_ARCH_ENABLED
+
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, _measure);
   rt.global().setProperty(rt, "_measure", measureFunction);
@@ -208,21 +225,6 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
   rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-  auto clb3 = [dispatchCommand](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    dispatchCommand(rt, args[0], args[1], args[2]);
-    return jsi::Value::undefined();
-  };
-  jsi::Value dispatchCommandHostFunction =
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 3, clb3);
-  rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandHostFunction);
-#endif
 
   auto clb6 = [getCurrentTime](
                   jsi::Runtime &rt,

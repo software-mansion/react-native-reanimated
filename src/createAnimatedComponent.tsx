@@ -18,7 +18,7 @@ import {
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
 import {
   isJest,
-  // isChromeDebugger,
+  isChromeDebugger,
   shouldBeUseWeb,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
@@ -263,27 +263,6 @@ export default function createAnimatedComponent(
       }
     }
 
-    // The system is best designed when setNativeProps is implemented. It is
-    // able to avoid re-rendering and directly set the attributes that changed.
-    // However, setNativeProps can only be implemented on native components
-    // If you want to animate a composite component, you need to re-render it.
-    // In this case, we have a fallback that uses forceUpdate.
-    _animatedPropsCallback = () => {
-      if (this._component == null) {
-        // AnimatedProps is created in will-mount because it's used in render.
-        // But this callback may be invoked before mount in async mode,
-        // In which case we should defer the setNativeProps() call.
-        // React may throw away uncommitted work in async mode,
-        // So a deferred call won't always be invoked.
-        this._invokeAnimatedPropsCallbackOnMount = true;
-      } else if (typeof this._component.setNativeProps !== 'function') {
-        this.forceUpdate();
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._component.setNativeProps(this._propsAnimated!.__getValue());
-      }
-    };
-
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -396,7 +375,8 @@ export default function createAnimatedComponent(
           tag: viewTag!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
-          shareableNode,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          shareableNode: shareableNode!,
         });
       }
     }

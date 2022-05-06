@@ -12,10 +12,12 @@ import Animated, {
 import { StyleSheet, View } from 'react-native';
 import {
   Gesture,
-  GestureEvent,
   GestureDetector,
   GestureHandlerRootView,
+  PanGestureChangeEventPayload,
+  GestureUpdateEvent,
 } from 'react-native-gesture-handler';
+import { useJSThreadKiller } from './useJSThreadKiller';
 
 declare const performance: {
   now: () => number;
@@ -25,16 +27,18 @@ const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   ScreenStackHeaderConfig
 );
 
-export default function EverythingExample() {
+export default function ScreenStackHeaderConfigBackgroundColorExample() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
+
+  useJSThreadKiller();
 
   const gesture = Gesture.Pan()
     .onBegin(() => {
       'worklet';
       isPressed.value = true;
     })
-    .onChange((e: GestureEvent) => {
+    .onChange((e: GestureUpdateEvent<PanGestureChangeEventPayload>) => {
       'worklet';
       offset.value = {
         x: e.changeX + offset.value.x,
@@ -68,16 +72,16 @@ export default function EverythingExample() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <ScreenStack>
+      <ScreenStack style={styles.container}>
         <Screen>
           <AnimatedScreenStackHeaderConfig animatedProps={animatedProps} />
+          <View style={styles.container}>
+            <GestureDetector gesture={gesture}>
+              <Animated.View style={[styles.ball, animatedStyles]} />
+            </GestureDetector>
+          </View>
         </Screen>
       </ScreenStack>
-      <View style={styles.container}>
-        <GestureDetector gesture={gesture}>
-          <Animated.View style={[styles.ball, animatedStyles]} />
-        </GestureDetector>
-      </View>
     </GestureHandlerRootView>
   );
 }

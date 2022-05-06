@@ -106,16 +106,16 @@ NativeReanimatedModule::NativeReanimatedModule(
         this->removeShadowNodeFromRegistry(rt, shadowNodeValue);
       };
 
+  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+    return this->measure(rt, shadowNodeValue);
+  };
+
   auto dispatchCommand = [this](
                              jsi::Runtime &rt,
                              const jsi::Value &shadowNodeValue,
                              const jsi::Value &commandNameValue,
                              const jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
-  };
-
-  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
-    return this->measure(rt, shadowNodeValue);
   };
 #endif
 
@@ -390,6 +390,8 @@ void NativeReanimatedModule::unregisterSensor(
   animatedSensorModule.unregisterSensor(sensorId);
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
 bool NativeReanimatedModule::isThereAnyLayoutProp(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -481,8 +483,7 @@ void NativeReanimatedModule::performOperations() {
   auto copiedTagsToRemove = std::move(tagsToRemove_);
   tagsToRemove_ = std::vector<Tag>();
 
-  react_native_assert(
-      uiManager_ != nullptr); // TODO: call setUIManager on Android
+  react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
   auto contextContainer = getContextContainerFromUIManager(
       &*uiManager_); // TODO: use Scheduler::getContextContainer
@@ -618,5 +619,7 @@ void NativeReanimatedModule::performOperations() {
 }
 
 #endif
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated

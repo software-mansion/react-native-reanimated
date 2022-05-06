@@ -133,7 +133,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   UpdatePropsFunction updatePropsFunction;
 
  private:
+#ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
+#endif // RCT_NEW_ARCH_ENABLED
 
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;

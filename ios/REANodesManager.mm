@@ -388,7 +388,7 @@ using namespace facebook::react;
 // TODO: mleko, implementacja dla Papera
 #ifdef RCT_NEW_ARCH_ENABLED
   // adapted from RCTPropsAnimatedNode.m
-  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ? _bridge.surfacePresenter : _surfacePresenter;
+  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ?: _surfacePresenter;
   [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
 
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.

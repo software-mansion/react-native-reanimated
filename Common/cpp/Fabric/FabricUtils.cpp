@@ -1,5 +1,6 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
+
 #include "FabricUtils.h"
 
 #include <react/renderer/uimanager/UIManagerBinding.h>
@@ -124,4 +125,5 @@ void UIManager_appendChild(
 }
 
 } // namespace reanimated
-#endif
+
+#endif // RCT_NEW_ARCH_ENABLED

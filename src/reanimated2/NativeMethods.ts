@@ -1,10 +1,16 @@
-/* global _WORKLET _measure _dispatchCommand _setGestureState */
+/* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Component } from 'react';
+import { findNodeHandle } from 'react-native';
 import { RefObjectFunction } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { findNodeHandle } from 'react-native';
+
+export function getTag(
+  view: null | number | React.Component<any, any> | React.ComponentClass<any>
+): null | number {
+  return findNodeHandle(view);
+}
 
 export interface MeasuredDimensions {
   x: number;
@@ -16,12 +22,6 @@ export interface MeasuredDimensions {
 }
 
 const isNativeIndefined = shouldBeUseWeb();
-
-export function getTag(
-  view: null | number | React.Component<any, any> | React.ComponentClass<any>
-): null | number {
-  return findNodeHandle(view);
-}
 
 export function measure(
   animatedRef: RefObjectFunction<Component>

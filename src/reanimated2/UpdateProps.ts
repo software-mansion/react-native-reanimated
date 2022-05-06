@@ -1,4 +1,4 @@
-/* global _updateProps */
+/* global _updatePropsPaper _updatePropsFabric */
 import { MutableRefObject } from 'react';
 import { processColor } from './Colors';
 import { AnimatedStyle, SharedValue, StyleProps } from './commonTypes';
@@ -58,7 +58,7 @@ if (shouldBeUseWeb()) {
       }
 
       viewDescriptors.value.forEach((viewDescriptor) => {
-        _updateProps(viewDescriptor.shareableNode, updates);
+        _updatePropsFabric(viewDescriptor.shareableNode, updates);
       });
     };
   } else {
@@ -76,7 +76,7 @@ if (shouldBeUseWeb()) {
       }
       console.log('mleko');
       viewDescriptors.value.forEach((viewDescriptor) => {
-        _updateProps(
+        _updatePropsPaper(
           viewDescriptor.tag,
           viewDescriptor.name || 'RCTView',
           updates

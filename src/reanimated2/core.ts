@@ -1,4 +1,4 @@
-/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
+/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
@@ -12,8 +12,6 @@ import {
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
-
-// global._IS_FABRIC = true; // TODO: inject this flag using JSI on Android as well
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
