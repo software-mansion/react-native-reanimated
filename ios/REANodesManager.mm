@@ -313,12 +313,14 @@ using namespace facebook::react;
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync
 {
+#ifndef RCT_NEW_ARCH_ENABLED
   if (trySync) {
     _tryRunBatchUpdatesSynchronously = YES;
   }
   [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
+#endif
 }
 
 - (void)processDirectEvent:(id<RCTEvent>)event
