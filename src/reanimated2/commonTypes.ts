@@ -15,7 +15,6 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Context } from './hook/commonTypes';
 
 export type TransformProperty =
   | PerpectiveTransform
@@ -46,6 +45,8 @@ export interface AnimatedStyle
 export interface SharedValue<T> {
   value: T;
 }
+
+export type Context = Record<string, unknown>;
 
 export interface WorkletFunction {
   _closure?: Context;

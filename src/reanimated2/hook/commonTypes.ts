@@ -1,8 +1,6 @@
-import { ShadowNodeWrapper } from '../commonTypes';
+import { Context, ShadowNodeWrapper } from '../commonTypes';
 
 export type DependencyList = Array<unknown> | undefined;
-
-export type Context = Record<string, unknown>;
 
 export interface ContextWithDependencies<TContext extends Context> {
   context: TContext;
