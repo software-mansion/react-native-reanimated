@@ -3,9 +3,6 @@ name: Build nightly npm package
 on:
   schedule:
     - cron: '0 12 */1 * *'
-  push:
-    branches:
-      - graszka22/nightly-workflow
   workflow_dispatch:
 
 jobs:
