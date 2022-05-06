@@ -1,6 +1,7 @@
 import { Component, useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import { RefObjectFunction, ShadowNodeWrapper } from './commonTypes';
+import { RefObjectFunction } from './commonTypes';
+import { ShadowNodeWrapper } from '../commonTypes';
 import { getTag } from '../NativeMethods';
 import { getShadowNodeWrapperFromHostInstance } from '../getShadowNodeWrapperFromRef';
 

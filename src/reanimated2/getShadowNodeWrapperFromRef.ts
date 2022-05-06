@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 
-import { ShadowNodeWrapper } from './hook/commonTypes';
+import { ShadowNodeWrapper } from './commonTypes';
 
 // Used by GestureDetector (unsupported on web at the moment) to check whether the
 // attached view may get flattened on Fabric. This implementation causes errors

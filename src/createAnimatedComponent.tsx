@@ -27,13 +27,16 @@ import {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
 } from './reanimated2/layoutReanimation';
-import { SharedValue, StyleProps } from './reanimated2/commonTypes';
+import {
+  SharedValue,
+  StyleProps,
+  ShadowNodeWrapper,
+} from './reanimated2/commonTypes';
 import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/getShadowNodeWrapperFromRef';
-import { ShadowNodeWrapper } from './reanimated2/hook/commonTypes';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
