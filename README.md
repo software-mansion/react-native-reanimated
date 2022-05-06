@@ -1,5 +1,11 @@
 <img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
 
+# Important notice
+
+We are currently revising LayoutAnimation and **strongly recommend** to refrain from using it until we are finished with the new version. Usage can cause very unexpected side effects that are difficult to identify and can ultimately crash the app. See the following ticket https://github.com/software-mansion/react-native-reanimated/issues/3124
+
+--
+
 ### React Native's Animated library reimplemented
 
 > Reanimated 2 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
