@@ -18,7 +18,7 @@ To be sure, check if your `jest.config.js` file contains:
 ```js
 ...
 preset: 'react-native',
-setupFiles: ['./jest-setup.js'],
+setupFilesAfterEnv: ['./jest-setup.js'],
 ...
 ```
 
