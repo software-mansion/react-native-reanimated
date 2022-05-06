@@ -10,7 +10,7 @@ on:
 
 jobs:
   call-build-workflow:
-    uses: .github/workflows/build-npm-package.yml
+    uses: ./.github/workflows/build-npm-package.yml
     with:
       version: nightly
 
