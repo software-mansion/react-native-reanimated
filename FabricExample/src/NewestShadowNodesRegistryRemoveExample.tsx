@@ -34,8 +34,7 @@ export default function NewestShadowNodesRegistryRemoveExample() {
     <View
       style={styles.container}
       onTouchStart={handleToggle}
-      collapsable={false}
-    >
+      collapsable={false}>
       <Animated.View
         style={[styles.left, animatedStyle]}
         onTouchStart={handleAnimate}

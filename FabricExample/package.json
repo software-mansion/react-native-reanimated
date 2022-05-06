@@ -7,7 +7,9 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint .",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "ts-check": "yarn tsc --noEmit",
+    "lint-check": "yarn eslint src/ && yarn prettier --check src/",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -24,18 +26,24 @@
     "@babel/core": "^7.17.5",
     "@babel/preset-env": "^7.1.6",
     "@babel/runtime": "^7.17.2",
-    "@react-native-community/eslint-config": "^2.0.0",
+    "@react-native-community/eslint-config": "^3.0.0",
     "@types/jest": "^27.4.1",
     "@types/react": "^18.0.0",
     "@types/react-native": "^0.67.1",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^26.6.3",
-    "eslint": "^7.32.0",
+    "eslint": "^8.12.0",
     "jest": "^26.6.3",
     "metro-react-native-babel-preset": "^0.70.1",
     "patch-package": "^6.4.7",
+    "prettier": "^2.6.1",
     "react-test-renderer": "18.0.0",
     "typescript": "^4.6.2"
+  },
+  "resolutions": {
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "eslint-plugin-react-native": "^4.0.0"
   },
   "jest": {
     "preset": "react-native"

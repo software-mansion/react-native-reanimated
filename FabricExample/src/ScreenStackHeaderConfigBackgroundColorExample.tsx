@@ -19,10 +19,6 @@ import {
 } from 'react-native-gesture-handler';
 import { useJSThreadKiller } from './useJSThreadKiller';
 
-declare const performance: {
-  now: () => number;
-};
-
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   ScreenStackHeaderConfig
 );
