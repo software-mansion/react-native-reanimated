@@ -209,41 +209,71 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             PATHS ${LIBRN_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
-endif()
-find_library(
-        FOLLY_RUNTIME_LIB
-        folly_runtime
-        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        REACT_NATIVE_JNI_LIB
-        reactnativejni
-        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        GLOG_LIB
-        glog
-        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        FBJNI_LIB
-        fbjni
-        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-
-if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
-    set (JSI_LIB "")
-else()
+    find_library(
+            FOLLY_RUNTIME_LIB
+            folly_runtime
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            REACT_NATIVE_JNI_LIB
+            reactnativejni
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            GLOG_LIB
+            glog
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            FBJNI_LIB
+            fbjni
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
     find_library(
             JSI_LIB
             jsi
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+else()
+    find_library(
+            FOLLY_RUNTIME_LIB
+            folly_runtime
             PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
             NO_CMAKE_FIND_ROOT_PATH
     )
+    find_library(
+            REACT_NATIVE_JNI_LIB
+            reactnativejni
+            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            GLOG_LIB
+            glog
+            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            FBJNI_LIB
+            fbjni
+            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+        set (JSI_LIB "")
+    else()
+        find_library(
+                JSI_LIB
+                jsi
+                PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+    endif()
 endif()
 
 # build shared lib
