@@ -12,7 +12,6 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
@@ -78,13 +77,13 @@ public class NodesManager implements EventDispatcherListener {
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
   private ReactApplicationContext mReactApplicationContext;
-  private FabricUIManager fabricUIManager;
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   public double currentFrameTimeMs;
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
+  private ReaCompatibility compatibility;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -111,13 +110,8 @@ public class NodesManager implements EventDispatcherListener {
     mReactApplicationContext = reactApplicationContext;
     mNativeProxy = new NativeProxy(reactApplicationContext);
     mAnimationManager.setScheduler(getNativeProxy().getScheduler());
-
-    fabricUIManager =
-        (FabricUIManager)
-            UIManagerHelper.getUIManager(mReactApplicationContext, UIManagerType.FABRIC);
-    if (fabricUIManager != null) {
-      fabricUIManager.getEventDispatcher().addListener(this);
-    }
+    compatibility = new ReaCompatibility(reactApplicationContext);
+    compatibility.registerFabricEventListener(this);
   }
 
   private final class NativeUpdateOperation {
@@ -373,10 +367,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    FabricUIManager fabricUIManager =
-        (FabricUIManager)
-            UIManagerHelper.getUIManager(mReactApplicationContext, UIManagerType.FABRIC);
-    fabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, uiProps);
+    compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
   public String obtainProp(int viewTag, String propName) {

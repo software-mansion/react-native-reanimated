@@ -440,6 +440,19 @@ android {
         // are only allowed to specify exlude patterns)
         exclude "**/libreact_render*.so"
     }
+    sourceSets.main {
+        java {
+            if (isNewArchitectureEnabled()) {
+                srcDirs += [
+                        "src/fabric/java",
+                ]
+            } else {
+                srcDirs += [
+                        "src/paper/java",
+                ]
+            }
+        }
+    }
 }
 
 task cleanCmakeCache() {

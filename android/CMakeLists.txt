@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 3.5.1)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_FLAGS "-DRCT_NEW_ARCH_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED} -DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DRCT_NEW_ARCH_ENABLED -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
+set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
+if(${IS_NEW_ARCHITECTURE_ENABLED})
+    set (ALL_FLAGS "${DEFAULT_FLAGS} -DRCT_NEW_ARCH_ENABLED")
+else()
+    set (ALL_FLAGS ${DEFAULT_FLAGS})
+endif()
+set (CMAKE_CXX_FLAGS ${ALL_FLAGS})
 
 if(${NATIVE_DEBUG})
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
@@ -33,10 +39,10 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../FabricExample/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
     endif()
 else()
+    set (REACT_ANDROID_JNI_PREBUILT_LIBS "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/prebuilt/lib/${ANDROID_ABI}")
     set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
-    set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
+    set (FBJNI_HEADERS_DIR "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
 endif()
-
 # reanimated shared
 
 file(GLOB sources_tools  "${COMMON_SRC_DIR}/cpp/Tools/*.cpp")
@@ -46,14 +52,25 @@ file(GLOB sources_registries  "${COMMON_SRC_DIR}/cpp/Registries/*.cpp")
 file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
-        set (
-                INCLUDE_JSI_CPP
-                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
-        )
-        set (
-                INCLUDE_JSIDYNAMIC_CPP
-                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
-        )
+    set (
+            INCLUDE_JSI_CPP
+            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+    )
+    set (
+            INCLUDE_JSIDYNAMIC_CPP
+            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
+    )
+endif()
+
+if(${IS_NEW_ARCHITECTURE_ENABLED})
+    set(
+            FabricUtils_cpp
+            "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
+    )
+    set(
+            ReanimatedUIManagerBinding_cpp
+            "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
+    )
 endif()
 
 add_library(
@@ -74,8 +91,8 @@ add_library(
         "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor/AnimatedSensorModule.cpp"
-        "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
-        "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
+        ${FabricUtils_cpp}
+        ${ReanimatedUIManagerBinding_cpp}
 )
 
 # includes
@@ -137,96 +154,96 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+if(${IS_NEW_ARCHITECTURE_ENABLED})
+    find_library(
+            REACT_RENDER_UIMANAGER
+            react_render_uimanager
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            REACT_RENDER_MOUNTING
+            react_render_mounting
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            REACT_RENDER_COMPONENTREGISTRY
+            react_render_componentregistry
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            REACT_RENDER_CORE
+            react_render_core
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            REACT_DEBUG
+            react_debug
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            REACT_RENDER_DEBUG
+            react_render_debug
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            RRC_ROOT
+            rrc_root
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            REACT_RENDER_SCHEDULER
+            react_render_scheduler
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
+            FABRICJNI
+            fabricjni
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+endif()
 find_library(
         FOLLY_RUNTIME_LIB
         folly_runtime
-        PATHS ${LIBRN_DIR}
+        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
         REACT_NATIVE_JNI_LIB
         reactnativejni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        REACT_RENDER_UIMANAGER
-        react_render_uimanager
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        REACT_RENDER_MOUNTING
-        react_render_mounting
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        REACT_RENDER_COMPONENTREGISTRY
-        react_render_componentregistry
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        REACT_RENDER_CORE
-        react_render_core
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        REACT_DEBUG
-        react_debug
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        REACT_RENDER_DEBUG
-        react_render_debug
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        RRC_ROOT
-        rrc_root
-        PATHS ${LIBRN_DIR}
+        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
         GLOG_LIB
         glog
-        PATHS ${LIBRN_DIR}
+        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
 find_library(
         FBJNI_LIB
         fbjni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        FABRICJNI
-        fabricjni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-
-find_library(
-        REACT_RENDER_SCHEDULER
-        react_render_scheduler
-        PATHS ${LIBRN_DIR}
+        PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
         NO_CMAKE_FIND_ROOT_PATH
 )
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
-        set (JSI_LIB "")
+    set (JSI_LIB "")
 else()
-        find_library(
-                JSI_LIB
-                jsi
-                PATHS ${LIBRN_DIR}
-                NO_CMAKE_FIND_ROOT_PATH
-        )
+    find_library(
+            JSI_LIB
+            jsi
+            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
 endif()
 
 # build shared lib

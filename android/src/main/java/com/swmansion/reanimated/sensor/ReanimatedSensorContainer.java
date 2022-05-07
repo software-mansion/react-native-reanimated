@@ -3,6 +3,7 @@ package com.swmansion.reanimated.sensor;
 import android.util.Log;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.swmansion.reanimated.NativeProxy;
+
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
