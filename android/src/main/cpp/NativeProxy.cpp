@@ -1,4 +1,3 @@
-#include <JFabricUIManager.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
@@ -17,12 +16,16 @@
 #include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
-#include "FabricUtils.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
-#include "NewestShadowNodesRegistry.h"
 #include "PlatformDepMethodsHolder.h"
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <JFabricUIManager.h>
+#include "FabricUtils.h"
+#include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
+#endif
 
 namespace reanimated {
 
@@ -34,23 +37,30 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rt,
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
     std::shared_ptr<Scheduler> scheduler,
-    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations,
+    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
+#ifdef RCT_NEW_ARCH_ENABLED
+    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager)
+        fabricUIManager
+#endif
+    )
     : javaPart_(jni::make_global(jThis)),
       runtime_(rt),
       jsCallInvoker_(jsCallInvoker),
-      scheduler_(scheduler),
       layoutAnimations(std::move(_layoutAnimations)),
-      newestShadowNodesRegistry_(
-          std::make_shared<NewestShadowNodesRegistry>()) {
+      scheduler_(scheduler)
+#ifdef RCT_NEW_ARCH_ENABLED
+      ,
+      newestShadowNodesRegistry_(std::make_shared<NewestShadowNodesRegistry>())
+#endif
+{
+#ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
       *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
-#ifdef RCT_NEW_ARCH_ENABLED
   rt->global().setProperty(*rt, "_IS_FABRIC", true);
 #else
   rt->global().setProperty(*rt, "_IS_FABRIC", false);
@@ -72,9 +82,13 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
-    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+#ifdef RCT_NEW_ARCH_ENABLED
+    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager) {
+        fabricUIManager
+#endif
+) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
@@ -83,13 +97,21 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       scheduler,
-      make_global(layoutAnimations),
-      fabricUIManager);
+      make_global(layoutAnimations)
+#ifdef RCT_NEW_ARCH_ENABLED
+          ,
+      fabricUIManager
+#endif
+  );
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::installJSIBindings(
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager) {
+#else
+void NativeProxy::installJSIBindings() {
+#endif
 #ifndef RCT_NEW_ARCH_ENABLED
   auto updatePropsFunction = [this](
                                  jsi::Runtime &rt,
@@ -138,10 +160,12 @@ void NativeProxy::installJSIBindings(
     this->requestRender(std::move(wrappedOnRender));
   };
 
+#ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction =
       [this](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
         this->synchronouslyUpdateUIProps(rt, tag, props);
       };
+#endif
 
   auto propObtainer = [this](
                           jsi::Runtime &rt,
@@ -244,6 +268,7 @@ void NativeProxy::installJSIBindings(
   _nativeReanimatedModule = module;
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
+#ifdef RCT_NEW_ARCH_ENABLED
   this->registerEventHandler([weakModule, getCurrentTime](
                                  std::string eventName,
                                  std::string eventAsString) {
@@ -261,13 +286,31 @@ void NativeProxy::installJSIBindings(
       module->handleEvent(eventName, std::move(payload), getCurrentTime());
     }
   });
+#else
+  this->registerEventHandler(
+      [weakModule, getCurrentTime](
+          std::string eventName, std::string eventAsString) {
+        if (auto module = weakModule.lock()) {
+          jsi::Object global = module->runtime->global();
+          jsi::String eventTimestampName =
+              jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+          global.setProperty(
+              *module->runtime, eventTimestampName, getCurrentTime());
+          module->onEvent(eventName, eventAsString);
+          global.setProperty(
+              *module->runtime, eventTimestampName, jsi::Value::undefined());
+        }
+      });
+#endif
 
+#ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
   module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
   newestShadowNodesRegistry_ = nullptr;
+#endif
   //  removed temporary, new event listener mechanism need fix on the RN side
   //  eventListener_ = std::make_shared<EventListener>(
   //      [module, getCurrentTime](const RawEvent &rawEvent) {
@@ -325,6 +368,7 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
   return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::synchronouslyUpdateUIProps(
     jsi::Runtime &rt,
     Tag tag,
@@ -337,6 +381,7 @@ void NativeProxy::synchronouslyUpdateUIProps(
       ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
   method(javaPart_.get(), tag, uiProps);
 }
+#endif
 
 int NativeProxy::registerSensor(
     int sensorType,

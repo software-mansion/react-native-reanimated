@@ -1,6 +1,8 @@
 #pragma once
 
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <JFabricUIManager.h>
+#endif
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
@@ -129,9 +131,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
       jni::alias_ref<AndroidScheduler::javaobject> scheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+#ifdef RCT_NEW_ARCH_ENABLED
+      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+          fabricUIManager
+#endif
+  );
   static void registerNatives();
 
   ~NativeProxy();
@@ -142,20 +148,26 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jsi::Runtime *runtime_;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> _nativeReanimatedModule;
-  std::shared_ptr<Scheduler> scheduler_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations;
+  std::shared_ptr<Scheduler> scheduler_;
+#ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
-  // removed temporary, new event listener mechanism need fix on the RN side
-  // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
-  std::shared_ptr<EventListener> eventListener_;
 
+// removed temporary, new event listener mechanism need fix on the RN side
+// std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
+// std::shared_ptr<EventListener> eventListener_;
+#endif
+#ifdef RCT_NEW_ARCH_ENABLED
   void installJSIBindings(
       jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
-  bool isAnyHandlerWaitingForEvent(std::string);
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,
       const jsi::Value &uiProps);
+#else
+  void installJSIBindings();
+#endif
+  bool isAnyHandlerWaitingForEvent(std::string);
   void performOperations();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler(
@@ -181,9 +193,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime *rt,
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
-      jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations,
+      jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
+#ifdef RCT_NEW_ARCH_ENABLED
+      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+          fabricUIManager
+#endif
+  );
 };
 
 } // namespace reanimated
