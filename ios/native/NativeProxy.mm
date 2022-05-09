@@ -284,6 +284,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
     [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
+
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
+      std::make_shared<LayoutAnimationsProxy>([](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled) {});
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
@@ -310,13 +313,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     if (animationsManager) {
       [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
     }
-  };
-
-  auto configurePropsFunction = [reanimatedModule](
-                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
-    NSSet *uiPropsSet = convertProps(rt, uiProps);
-    NSSet *nativePropsSet = convertProps(rt, nativeProps);
-    [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
@@ -364,6 +360,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // Layout Animations end
 #endif
+
+  auto configurePropsFunction = [reanimatedModule](
+                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
+    NSSet *uiPropsSet = convertProps(rt, uiProps);
+    NSSet *nativePropsSet = convertProps(rt, nativeProps);
+    [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
+  };
 
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 

@@ -254,15 +254,12 @@ using namespace facebook::react;
   return YES;
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 - (void)performOperations
 {
+#ifdef RCT_NEW_ARCH_ENABLED
   _performOperations(); // calls NativeReanimatedModule::performOperations
   _wantRunUpdates = NO;
-}
 #else
-- (void)performOperations
-{
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
@@ -305,8 +302,8 @@ using namespace facebook::react;
     }
   }
   _wantRunUpdates = NO;
-}
 #endif
+}
 
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName

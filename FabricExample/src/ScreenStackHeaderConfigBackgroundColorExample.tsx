@@ -17,7 +17,7 @@ import {
   PanGestureChangeEventPayload,
   GestureUpdateEvent,
 } from 'react-native-gesture-handler';
-import { useJSThreadKiller } from './useJSThreadKiller';
+// import { useJSThreadKiller } from './useJSThreadKiller';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   ScreenStackHeaderConfig
@@ -27,7 +27,7 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
 
-  useJSThreadKiller();
+  // useJSThreadKiller();
 
   const gesture = Gesture.Pan()
     .onBegin(() => {

@@ -35,11 +35,11 @@ export default function App() {
   // return <MeasureExample />;
   // return <AnimatedSensorExample />;
   // return <AnimatedTextInputExample />;
-  return <AnimatedTextWidthExample />;
+  // return <AnimatedTextWidthExample />;
   // return <GestureHandlerExample />;
   // return <BokehExample />;
   // return <NewestShadowNodesRegistryRemoveExample />;
   // return <BubblesExample />;
   // return <ScreenStackExample />;
-  // return <ScreenStackHeaderConfigBackgroundColorExample />;
+  return <ScreenStackHeaderConfigBackgroundColorExample />;
 }
