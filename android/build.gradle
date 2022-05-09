@@ -1,3 +1,5 @@
+import com.android.Version
+
 import java.nio.file.Paths
 import org.apache.tools.ant.filters.ReplaceTokens
 
@@ -89,7 +91,7 @@ def isNewArchitectureEnabled() {
 
 def resolveReactNativeDirectory() {
     if (isDeveloperMode()) {
-        return file("$projectDir/../node_modules/react-native")
+        return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
     }
     return file("$projectDir/../../react-native")
 }
@@ -138,38 +140,6 @@ abstract class replaceSoTask extends DefaultTask {
     }
 }
 
-def detectAAR(minor, engine) {
-    def rnMinorVersionCopy = Integer.parseInt(minor)
-    def aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
-
-    if (aar.exists()) {
-        println "AAR for react-native-reanimated has been found\n$aar"
-        return aar
-    } else {
-        while (!aar.exists() && rnMinorVersionCopy >= 63) {
-            rnMinorVersionCopy -= 1
-            aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
-        }
-
-        if (rnMinorVersionCopy < 63) {
-            println "No AAR for react-native-reanimated found. Attempting to build from source."
-        } else { // aar exists, but was build for lower react-native version
-            println "\n\n\n"
-            println "****************************************************************************************"
-            println "\n\n\n"
-            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $rnMinorVersion found."
-            println "Falling back to AAR for react-native version $rnMinorVersionCopy."
-            println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
-            println "Please post a pull request to implement support for react-native version $rnMinorVersion to the reanimated repo."
-            println "Thanks!"
-            println "\n\n\n"
-            println "****************************************************************************************"
-
-            return aar
-        }
-    }
-    return null
-}
 
 def detectJsRuntime() {
     def runtimeType = "jsc"
@@ -183,7 +153,7 @@ def detectJsRuntime() {
     return runtimeType
 }
 
-def detectReanimatedConfig() {
+def detectReanimatedConfig() { // only for the development
     def buildFromSourceConf = false
     rootProject.getSubprojects().forEach({project ->
         if (project.plugins.hasPlugin("com.android.application")) {
@@ -198,21 +168,16 @@ def detectReanimatedConfig() {
     return buildFromSourceConf
 }
 
-def shouldBuildFromSource(aar) {
-    if (isDeveloperMode()) {
-        // Example app
-        return true
-    }
-    else if (detectReanimatedConfig()) {
-        // on user demand
-        return true
-    }
-    else if (aar != null) {
-        // when binary exist
-        return false
-    }
-    // when binary is not found
-    return true
+def getPlaygroundAppName() { // only for the development
+    String playgroundAppName = ""
+    rootProject.getSubprojects().forEach({project ->
+        if (project.plugins.hasPlugin("com.android.application")) {
+            var projectCatalogAbsolutePath = project.projectDir.toString().replace("/android/app", "")
+            var slashPosition = projectCatalogAbsolutePath.lastIndexOf("/")
+            playgroundAppName = projectCatalogAbsolutePath.substring(slashPosition + 1)
+        }
+    })
+    return playgroundAppName
 }
 
 boolean CLIENT_SIDE_BUILD = resolveBuildType()
@@ -224,10 +189,8 @@ def reactNativeManifest = file("$reactNative/package.json")
 def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.text)
 def reactNativeVersion = reactNativeManifestAsJson.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
-def rnMinorVersion = Integer.parseInt(minor)
+def RN_MINOR_VERSION = Integer.parseInt(minor)
 def engine = detectJsRuntime()
-def aar = detectAAR(minor, engine)
-boolean BUILD_FROM_SOURCE = shouldBuildFromSource(aar)
 
 def getTaskByPath(project, String appName, String secondPart, String flavorString, String lastPart) {
     String pathName = "${appName}:${secondPart}${flavorString}${lastPart}"
@@ -238,57 +201,6 @@ def getTaskByPath(project, String appName, String secondPart, String flavorStrin
     pathName = "${appName}:${secondPart}${flavorString.capitalize()}${lastPart}"
     return project.getTasks().findByPath(pathName)
 }
-
-if (!BUILD_FROM_SOURCE) {
-    if (rnMinorVersion < 65) {
-        tasks.register("replaceSoTaskDebug", replaceSoTask)
-        tasks.register("replaceSoTaskRelease", replaceSoTask)
-        Task replaceSoTaskDebug = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskDebug")
-        Task replaceSoTaskRelease = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskRelease")
-
-        if (replaceSoTaskDebug != null && replaceSoTaskRelease != null) {
-            rootProject.getSubprojects().forEach({project ->
-                if (project.plugins.hasPlugin("com.android.application") && project.getProperties().get("android")) {
-                    def projectProperties = project.getProperties()
-                    def flavorString = getCurrentFlavor()
-                    def reanimatedConf = projectProperties.get("reanimated")
-
-                    if (
-                        flavorString != "NOT-FOUND"
-                        && (!reanimatedConf || (reanimatedConf && !reanimatedConf.get("enablePackagingOptions")))
-                    ) {
-                        replaceSoTask.appName = projectProperties.path
-                        replaceSoTask.buildDir = projectProperties.buildDir
-                        def appName = projectProperties.path
-
-                        Task debugNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "DebugNativeLibs")
-                        Task debugDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "DebugDebugSymbols")
-                        Task releaseNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "ReleaseNativeLibs")
-                        Task releaseDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "ReleaseDebugSymbols")
-                        Task debugTask = getTaskByPath(project, appName, "package", flavorString, "Debug")
-                        Task releaseTask = getTaskByPath(project, appName, "package", flavorString, "Release")
-
-                        if (
-                            debugNativeLibsTask != null && debugDebugSymbolsTask != null
-                            && releaseNativeLibsTask != null && releaseDebugSymbolsTask != null
-                            && debugTask != null && releaseTask != null
-                        ) {
-                            replaceSoTaskDebug.dependsOn(debugNativeLibsTask, debugDebugSymbolsTask)
-                            debugTask.dependsOn(replaceSoTaskDebug)
-                            replaceSoTaskRelease.dependsOn(releaseNativeLibsTask, releaseDebugSymbolsTask)
-                            releaseTask.dependsOn(replaceSoTaskRelease)
-                        }
-                    }
-                }
-            })
-        }
-    }
-
-    artifacts.add("default", aar)
-}
-
-// end if already loaded aar
-if (!BUILD_FROM_SOURCE) return
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
@@ -390,7 +302,8 @@ android {
                         "-DBOOST_VERSION=${BOOST_VERSION}",
                         "-DFOR_HERMES=${FOR_HERMES}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
-                        "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}"
+                        "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
+                        "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
@@ -463,7 +376,7 @@ task cleanCmakeCache() {
 }
 
 task printVersions {
-    println "Android gradle plugin: ${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}"
+    println "Android gradle plugin: ${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
     println "Gradle: ${project.gradle.gradleVersion}"
 }
 
@@ -472,7 +385,7 @@ task Log {
 }
 
 task applyJavaPatches(type: Copy) {
-    def patchDirectory = file("${projectDir}/rnVersionPatch/${rnMinorVersion}")
+    def patchDirectory = file("${projectDir}/rnVersionPatch/${RN_MINOR_VERSION}")
     if (patchDirectory.exists()) {
         from ("${patchDirectory}") {
             include "**/*.java"
@@ -487,7 +400,12 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
 }
 
 task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
-    src("https://github.com/react-native-community/boost-for-react-native/releases/download/v${BOOST_VERSION.replace("_", ".")}-0/boost_${BOOST_VERSION}.tar.gz")
+    var transformedVersion = BOOST_VERSION.replace("_", ".")
+    var srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
+    if (RN_MINOR_VERSION < 69) {
+        srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
+    }
+    src(srcUrl)
     onlyIfNewer(true)
     overwrite(false)
     dest(new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz"))
@@ -700,8 +618,18 @@ dependencies {
     implementation "androidx.transition:transition:1.1.0"
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
     extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+    def buildType = "debug"
+    tasks.all({ task ->
+        if (task.name == "buildCMakeRelease") {
+            buildType = "release"
+        }
+    })
 
-    def rnAAR = fileTree("$reactNative/android").matching({ it.include "**/**/*.aar" }).singleFile
+    def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
+    if (RN_MINOR_VERSION < 69) {
+        rnAarMatcher = "**/**/*.aar"
+    }
+    def rnAAR = fileTree("$reactNative/android").matching({ it.include rnAarMatcher }).singleFile
     def jscAAR = fileTree("$reactNative/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
     extractSO(files(rnAAR, jscAAR))
 }

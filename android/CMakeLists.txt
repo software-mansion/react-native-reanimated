@@ -26,7 +26,7 @@ if(${CLIENT_SIDE_BUILD})
     set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
     set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 else()
-    set (NODE_MODULES_DIR "../FabricExample/node_modules")
+    set (NODE_MODULES_DIR "../${PLAYGROUND_APP_NAME}/node_modules")
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
 
@@ -35,15 +35,16 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
         set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../../react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
     else()
-        set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../FabricExample/android/app/build/react-ndk/exported")
-        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../FabricExample/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+        set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/android/app/build/react-ndk/exported")
+        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
     endif()
 else()
-    set (REACT_ANDROID_JNI_PREBUILT_LIBS "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/prebuilt/lib/${ANDROID_ABI}")
     set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
     set (FBJNI_HEADERS_DIR "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
 endif()
-# reanimated shared
+
+file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
+file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
 file(GLOB sources_tools  "${COMMON_SRC_DIR}/cpp/Tools/*.cpp")
 file(GLOB sources_native_modules  "${COMMON_SRC_DIR}/cpp/NativeModules/*.cpp")
@@ -133,11 +134,6 @@ target_include_directories(
         "${SRC_DIR}/main/cpp/headers"
 )
 
-# find libraries
-
-file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
-file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
-
 find_library(
         LOG_LIB
         log
@@ -154,6 +150,52 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+find_library(
+        REACT_NATIVE_JNI_LIB
+        reactnativejni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        GLOG_LIB
+        glog
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        FBJNI_LIB
+        fbjni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+
+if(${REACT_NATIVE_TARGET_VERSION} LESS 68)
+    find_library(
+            FOLLY_RUNTIME_LIB
+            folly_json
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+else()
+    find_library(
+            FOLLY_RUNTIME_LIB
+            folly_runtime
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+endif()
+
+if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+    set (JSI_LIB "")
+else()
+    find_library(
+            JSI_LIB
+            jsi
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+endif()
+
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     find_library(
             REACT_RENDER_UIMANAGER
@@ -209,71 +251,6 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             PATHS ${LIBRN_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
-    find_library(
-            FOLLY_RUNTIME_LIB
-            folly_runtime
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            REACT_NATIVE_JNI_LIB
-            reactnativejni
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            GLOG_LIB
-            glog
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            FBJNI_LIB
-            fbjni
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            JSI_LIB
-            jsi
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-else()
-    find_library(
-            FOLLY_RUNTIME_LIB
-            folly_runtime
-            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            REACT_NATIVE_JNI_LIB
-            reactnativejni
-            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            GLOG_LIB
-            glog
-            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            FBJNI_LIB
-            fbjni
-            PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
-        set (JSI_LIB "")
-    else()
-        find_library(
-                JSI_LIB
-                jsi
-                PATHS ${REACT_ANDROID_JNI_PREBUILT_LIBS}
-                NO_CMAKE_FIND_ROOT_PATH
-        )
-    endif()
 endif()
 
 # build shared lib
