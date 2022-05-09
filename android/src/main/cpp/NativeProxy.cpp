@@ -97,12 +97,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       scheduler,
+      make_global(layoutAnimations)
 #ifdef RCT_NEW_ARCH_ENABLED
-      make_global(layoutAnimations),
-      fabricUIManager);
-#else
-      make_global(layoutAnimations));
+          ,
+      fabricUIManager
 #endif
+      /**/);
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
