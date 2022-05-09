@@ -663,7 +663,7 @@ afterEvaluate {
 
 if (CLIENT_SIDE_BUILD) {
     def aarDir = "${buildDir}/outputs"
-    aar = file("${aarDir}/android-debug.aar")
+    var aar = file("${aarDir}/android-debug.aar")
     if (aar == null) {
         throw GradleScriptException("AAR build failed. No AAR found in ${aarDir}.")
     }
