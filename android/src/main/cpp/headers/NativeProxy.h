@@ -137,7 +137,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager
 #endif
-  );
+      /**/);
   static void registerNatives();
 
   ~NativeProxy();
@@ -199,7 +199,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager
 #endif
-  );
+      /**/);
 };
 
 } // namespace reanimated

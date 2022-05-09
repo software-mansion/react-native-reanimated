@@ -102,7 +102,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
           ,
       fabricUIManager
 #endif
-  );
+      /**/);
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
