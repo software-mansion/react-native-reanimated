@@ -283,6 +283,7 @@ else()
             ${PACKAGE_NAME}
             ${LOG_LIB}
             ${JSI_LIB}
+            ${FOLLY_RUNTIME_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
             ${FBJNI_LIB}
