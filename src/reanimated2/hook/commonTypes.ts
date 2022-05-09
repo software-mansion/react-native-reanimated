@@ -10,7 +10,7 @@ export interface ContextWithDependencies<TContext extends Context> {
 export interface Descriptor {
   tag: number;
   name: string;
-  shareableNode: ShadowNodeWrapper;
+  shadowNodeWrapper: ShadowNodeWrapper;
 }
 
 export interface RefObjectFunction<T> {
