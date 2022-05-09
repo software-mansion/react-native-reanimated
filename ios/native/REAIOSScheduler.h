@@ -1,8 +1,6 @@
 #import <RNReanimated/Scheduler.h>
 #import <React/RCTUIManager.h>
 #import <ReactCommon/CallInvoker.h>
-
-#include <RNReanimated/Scheduler.h>
 #include <stdio.h>
 #include <memory>
 
