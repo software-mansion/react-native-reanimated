@@ -3,7 +3,6 @@ package com.swmansion.reanimated.sensor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-
 import com.swmansion.reanimated.NativeProxy;
 
 public class ReanimatedSensorListener implements SensorEventListener {
