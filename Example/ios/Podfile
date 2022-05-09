@@ -16,7 +16,6 @@ use_react_native!(
 )
 
 def pods()
-  pod 'RNReanimated', :path => '../../'
   pod 'ReactCommon/turbomodule/samples', :path => '../node_modules/react-native/ReactCommon'
 
   # Additional Pods which aren't included in the default Podfile

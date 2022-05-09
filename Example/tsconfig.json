@@ -1,10 +1,7 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "react-native-reanimated": ["../react-native-reanimated.d.ts"]
-    }
+    "baseUrl": "."
   },
   "include": ["index.js", "src/**/*", "reanimated1/**/*", "test/**/*"]
 }
