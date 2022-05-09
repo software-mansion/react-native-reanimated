@@ -36,7 +36,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
-import { getShadowNodeWrapperFromRef } from './reanimated2/getShadowNodeWrapperFromRef';
+import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
