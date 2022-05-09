@@ -267,14 +267,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
   std::shared_ptr<NativeReanimatedModule> module;
 
-  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
-  // ((REAUIManager *)uiManager).flushUiOperations = ^void() {
-  //   std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
-  //   if (scheduler != nullptr) {
-  //     scheduler->triggerUI();
-  //   }
-  // };
-
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
@@ -292,27 +284,32 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
     [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
-#endif
-
-  auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
-
+#else
   // Layout Animations start
-  // REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
-  // RCTUIManager *reaUiManager = reaUiManagerNoCast;
-  // REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
-  // [reaUiManagerNoCast setUp:animationsManager];
+  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
+  ((REAUIManager *)uiManager).flushUiOperations = ^void() {
+    std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
+    if (scheduler != nullptr) {
+      scheduler->triggerUI();
+    }
+  };
+
+  REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
+  RCTUIManager *reaUiManager = reaUiManagerNoCast;
+  REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
+  [reaUiManagerNoCast setUp:animationsManager];
 
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
-    // if (animationsManager) {
-    //   NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
-    //   [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
-    // }
+    if (animationsManager) {
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
+      [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
+    }
   };
 
   auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-    // if (animationsManager) {
-    //   [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
-    // }
+    if (animationsManager) {
+      [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
+    }
   };
 
   auto configurePropsFunction = [reanimatedModule](
@@ -325,7 +322,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  /*[animationsManager setAnimationStartingBlock:^(
+  [animationsManager setAnimationStartingBlock:^(
                          NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
     if (wrt.expired()) {
@@ -363,9 +360,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
           layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
       removeConfig.call(*rt, jsi::Value([tag intValue]));
     }
-  }];*/
+  }];
 
   // Layout Animations end
+#endif
+
+  auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
   // sensors
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
@@ -441,7 +441,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
   [reanimatedModule.nodesManager registerPerformOperations:^() {
-    // TODO: mleko, implementacja dla Papera
     weakModule.lock()->performOperations();
   }];
   return module;
