@@ -1,14 +1,20 @@
 #include "NativeReanimatedModule.h"
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#endif
+
+#include <functional>
+#include <memory>
+#include <thread>
+
+#ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
-#include <functional>
-#include <memory>
-#include <thread>
+
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "FrozenObject.h"
@@ -320,10 +326,11 @@ jsi::Value NativeReanimatedModule::configureProps(
 void NativeReanimatedModule::onEvent(
     std::string eventName,
 #ifdef RCT_NEW_ARCH_ENABLED
-    jsi::Value &&payload) {
+    jsi::Value &&payload
 #else
-    std::string eventAsString) {
+    std::string eventAsString
 #endif
+    /**/) {
   try {
 #ifdef RCT_NEW_ARCH_ENABLED
     eventHandlerRegistry->processEvent(*runtime, eventName, payload);
