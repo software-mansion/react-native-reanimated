@@ -292,7 +292,7 @@ export default function createAnimatedComponent(
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
-        shadowNodeWrapper = null; // TODO: web
+        shadowNodeWrapper = null;
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
