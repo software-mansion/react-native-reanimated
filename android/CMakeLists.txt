@@ -169,16 +169,16 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 68)
+if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
     find_library(
-            FOLLY_RUNTIME_LIB
+            FOLLY_LIB
             folly_json
             PATHS ${LIBRN_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
 else()
     find_library(
-            FOLLY_RUNTIME_LIB
+            FOLLY_LIB
             folly_runtime
             PATHS ${LIBRN_DIR}
             NO_CMAKE_FIND_ROOT_PATH
@@ -265,7 +265,7 @@ if(${FOR_HERMES})
             ${HERMES_LIB}
             ${GLOG_LIB}
             ${FBJNI_LIB}
-            ${FOLLY_RUNTIME_LIB}
+            ${FOLLY_LIB}
             ${REACT_NATIVE_JNI_LIB}
             ${REACT_RENDER_UIMANAGER}
             ${REACT_RENDER_MOUNTING}
@@ -283,7 +283,7 @@ else()
             ${PACKAGE_NAME}
             ${LOG_LIB}
             ${JSI_LIB}
-            ${FOLLY_RUNTIME_LIB}
+            ${FOLLY_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
             ${FBJNI_LIB}
