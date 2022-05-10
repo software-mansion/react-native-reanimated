@@ -94,8 +94,10 @@ Pod::Spec.new do |s|
   if fabric_enabled
     s.dependency "React-RCTFabric"
     s.dependency "React-Codegen"
+    s.dependency "RCT-Folly", folly_version
+  else
+    s.dependency "#{folly_prefix}Folly"
   end
-  s.dependency "RCT-Folly", folly_version
   s.dependency "RCTRequired"
   s.dependency "RCTTypeSafety"
   s.dependency "ReactCommon/turbomodule/core"
