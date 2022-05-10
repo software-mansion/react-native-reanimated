@@ -2,11 +2,7 @@ import com.android.Version
 
 import java.nio.file.Paths
 import org.apache.tools.ant.filters.ReplaceTokens
-
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import groovy.json.JsonSlurper
-import java.util.zip.ZipFile
 
 /**
  * Finds the path of the installed npm package with the given name using Node's
@@ -47,18 +43,6 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
-def getCurrentFlavor() {
-    String taskRequestName = getGradle().getStartParameter().getTaskRequests().toString()
-    Pattern pattern = Pattern.compile("(assemble|bundle|install|generate)(\\w*)(Release|Debug)")
-    Matcher matcher = pattern.matcher(taskRequestName)
-
-    if (matcher.find()) {
-        return matcher.group(2)
-    }
-
-    return "NOT-FOUND"
-}
-
 def resolveBuildType() {
     def buildType = System.getenv("CLIENT_SIDE_BUILD")
     if (buildType != null) {
@@ -96,78 +80,6 @@ def resolveReactNativeDirectory() {
     return file("$projectDir/../../react-native")
 }
 
-abstract class replaceSoTask extends org.gradle.api.DefaultTask {
-    public static String appName = ":app"
-    public static String buildDir = "../../../android/app/build"
-    public static String fbjniVersion = "0.3.0"
-
-    @org.gradle.api.tasks.TaskAction
-    def run() {
-        def libSoDir = new File("${buildDir}/tmp/libSo")
-        if (!libSoDir.exists()) {
-            libSoDir.mkdirs()
-            def fbjniUrl = "https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/${fbjniVersion}/fbjni-${fbjniVersion}.aar"
-            def aarFile = new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar")
-            aarFile.createNewFile()
-            aarFile.withOutputStream { out ->
-                def url = new URL(fbjniUrl).openConnection()
-                out << url.inputStream
-            }
-            if (!aarFile.exists()) {
-                println("Unable to find ${libSoDir.path}/fbjni-${fbjniVersion}.aar")
-                return
-            }
-            def zipFile = new ZipFile(new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar"))
-            zipFile.entries().each {
-                def zipIt = it
-                if (zipIt.name.contains("libfbjni.so")) {
-                    new File("${libSoDir.path}/" + zipIt.name.replace("/libfbjni.so", "")).mkdirs()
-                    new File("${libSoDir.path}/" + zipIt.name).withOutputStream{
-                        it << zipFile.getInputStream(zipIt)
-                    }
-                }
-            }
-        }
-        for(def abiVersion in ["x86", "x86_64", "armeabi-v7a", "arm64-v8a"]) {
-            ant.sequential {
-                copy(
-                        tofile: "${buildDir}/intermediates/merged_native_libs/debug/out/lib/${abiVersion}/libfbjni.so",
-                        file: "${buildDir}/tmp/libSo/jni/${abiVersion}/libfbjni.so",
-                        overwrite: true
-                )
-            }
-        }
-    }
-}
-
-
-def detectJsRuntime() {
-    def runtimeType = "jsc"
-    rootProject.getSubprojects().forEach({project ->
-        if (project.plugins.hasPlugin("com.android.application")) {
-            if (project.ext.react.enableHermes) {
-                runtimeType = "hermes"
-            }
-        }
-    })
-    return runtimeType
-}
-
-def detectReanimatedConfig() { // only for the development
-    def buildFromSourceConf = false
-    rootProject.getSubprojects().forEach({project ->
-        if (project.plugins.hasPlugin("com.android.application")) {
-            if (
-            project.ext.has("reanimated")
-                    && project.ext.reanimated.buildFromSource
-            ) {
-                buildFromSourceConf = true
-            }
-        }
-    })
-    return buildFromSourceConf
-}
-
 def getPlaygroundAppName() { // only for the development
     String playgroundAppName = ""
     rootProject.getSubprojects().forEach({project ->
@@ -190,17 +102,6 @@ def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.
 def reactNativeVersion = reactNativeManifestAsJson.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 def RN_MINOR_VERSION = Integer.parseInt(minor)
-def engine = detectJsRuntime()
-
-def getTaskByPath(project, String appName, String secondPart, String flavorString, String lastPart) {
-    String pathName = "${appName}:${secondPart}${flavorString}${lastPart}"
-    org.gradle.api.Task task = project.getTasks().findByPath(pathName)
-    if (task != null) {
-        return task
-    }
-    pathName = "${appName}:${secondPart}${flavorString.capitalize()}${lastPart}"
-    return project.getTasks().findByPath(pathName)
-}
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
@@ -232,9 +133,9 @@ def _stackProtectorFlag = true
 def FOR_HERMES = ""
 
 if (findProject(":app")) {
-    FOR_HERMES = project(":app").ext.react.enableHermes;
+    FOR_HERMES = project(":app").ext.react.enableHermes
 } else {
-    FOR_HERMES = System.getenv("FOR_HERMES") == "True";
+    FOR_HERMES = System.getenv("FOR_HERMES") == "True"
 }
 
 def reactNativeArchitectures() {
@@ -384,7 +285,7 @@ task Log {
     println("building Reanimated2")
 }
 
-task applyJavaPatches(type: org.gradle.api.tasks.Copy) {
+task applyJavaPatches(type: Copy) {
     def patchDirectory = file("${projectDir}/rnVersionPatch/${RN_MINOR_VERSION}")
     if (patchDirectory.exists()) {
         from ("${patchDirectory}") {
@@ -411,7 +312,7 @@ task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
     dest(new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz"))
 }
 
-task prepareBoost(dependsOn: boostPath ? [] : [downloadBoost], type: org.gradle.api.tasks.Copy) {
+task prepareBoost(dependsOn: boostPath ? [] : [downloadBoost], type: Copy) {
     from(boostPath ?: tarTree(resources.gzip(downloadBoost.dest)))
     from("$reactNativeThirdParty/boost/Android.mk")
     include("Android.mk", "boost_${BOOST_VERSION}/boost/**/*.hpp", "boost/boost/**/*.hpp")
@@ -429,7 +330,7 @@ task downloadDoubleConversion(dependsOn: createNativeDepsDirectories, type: Down
     dest(new File(downloadsDir, "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz"))
 }
 
-task prepareDoubleConversion(dependsOn: dependenciesPath ? [] : [downloadDoubleConversion], type: org.gradle.api.tasks.Copy) {
+task prepareDoubleConversion(dependsOn: dependenciesPath ? [] : [downloadDoubleConversion], type: Copy) {
     from(dependenciesPath ?: tarTree(downloadDoubleConversion.dest))
     from("$reactNativeThirdParty/double-conversion/Android.mk")
     include("double-conversion-${DOUBLE_CONVERSION_VERSION}/src/**/*", "Android.mk")
@@ -445,7 +346,7 @@ task downloadFolly(dependsOn: createNativeDepsDirectories, type: Download) {
     dest(new File(downloadsDir, "folly-${FOLLY_VERSION}.tar.gz"))
 }
 
-task prepareFolly(dependsOn: dependenciesPath ? [] : [downloadFolly], type: org.gradle.api.tasks.Copy) {
+task prepareFolly(dependsOn: dependenciesPath ? [] : [downloadFolly], type: Copy) {
     from(dependenciesPath ?: tarTree(downloadFolly.dest))
     from("$reactNativeThirdParty/folly/Android.mk")
     include("folly-${FOLLY_VERSION}/folly/**/*", "Android.mk")
@@ -466,7 +367,7 @@ task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
 
 // Prepare glog sources to be compiled, this task will perform steps that normally should've been
 // executed by automake. This way we can avoid dependencies on make/automake
-task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: org.gradle.api.tasks.Copy) {
+task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) {
     duplicatesStrategy = "include"
     from(dependenciesPath ?: tarTree(downloadGlog.dest))
     from("$reactNativeThirdParty/glog/")
@@ -506,12 +407,12 @@ task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: org.gr
 task prepareHermes() {
     def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
     if (!hermesPackagePath) {
-        throw new org.gradle.api.GradleScriptException("Could not find the hermes-engine npm package", null)
+        throw new GradleScriptException("Could not find the hermes-engine npm package", null)
     }
 
     def hermesAAR = file("$hermesPackagePath/android/hermes-debug.aar")
     if (!hermesAAR.exists()) {
-        throw new org.gradle.api.GradleScriptException("The hermes-engine npm package is missing \"android/hermes-debug.aar\"", null)
+        throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-debug.aar\"", null)
     }
 
     def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
@@ -527,12 +428,12 @@ task prepareJSC {
     doLast {
         def jscPackagePath = findNodeModulePath(projectDir, "jsc-android")
         if (!jscPackagePath) {
-            throw new org.gradle.api.GradleScriptException("Could not find the jsc-android npm package", null)
+            throw new GradleScriptException("Could not find the jsc-android npm package", null)
         }
 
         def jscDist = file("$jscPackagePath/dist")
         if (!jscDist.exists()) {
-            throw new org.gradle.api.GradleScriptException("The jsc-android npm package is missing its \"dist\" directory", null)
+            throw new GradleScriptException("The jsc-android npm package is missing its \"dist\" directory", null)
         }
 
         def jscAAR = fileTree(jscDist).matching({ it.include "**/android-jsc/**/*.aar" }).singleFile
@@ -581,7 +482,7 @@ task extractSOFiles {
     }
 }
 
-task packageNdkLibs(type: org.gradle.api.tasks.Copy) {
+task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
     include("**/libreanimated.so")
     if(REACT_VERSION < 64) {
@@ -607,13 +508,7 @@ repositories {
 dependencies {
     // noinspection GradleDynamicVersion
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
-    if (isDeveloperMode()) {
-        implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION
-        // resolves error "Duplicate class com.facebook.jni.CppException" when building FabricExample
-    }
-    else {
-        implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION
-    }
+    implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION
     implementation "com.facebook.react:react-native:+" // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
