@@ -32,19 +32,20 @@ using namespace reanimated;
 - (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
 
-typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
-
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
+#else
+typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #endif
 
 @implementation REAModule {
-  NSMutableArray<AnimatedOperation> *_operations;
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
   std::shared_ptr<EventListener> eventListener_;
+#else
+  NSMutableArray<AnimatedOperation> *_operations;
 #endif
 }
 
@@ -157,7 +158,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
                                                name:RCTJavaScriptDidLoadNotification
                                              object:nil];
 
-  _operations = [NSMutableArray new];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
   [bridge.uiManager.observerCoordinator addObserver:self];
 
@@ -237,8 +237,6 @@ RCT_EXPORT_METHOD(installTurboModule)
   [bridge.uiManager.observerCoordinator addObserver:self];
 }
 
-#endif
-
 #pragma mark-- Batch handling
 
 - (void)addOperationBlock:(AnimatedOperation)operation
@@ -250,11 +248,7 @@ RCT_EXPORT_METHOD(installTurboModule)
 
 - (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
 {
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
   [_nodesManager maybeFlushUpdateBuffer];
-#endif
   if (_operations.count == 0) {
     return;
   }
@@ -271,6 +265,8 @@ RCT_EXPORT_METHOD(installTurboModule)
     [nodesManager operationsBatchDidComplete];
   }];
 }
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 #pragma mark-- Events
 
