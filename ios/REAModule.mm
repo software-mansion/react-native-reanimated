@@ -1,4 +1,5 @@
 #import <React/RCTBridge+Private.h>
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
@@ -32,9 +33,11 @@ using namespace reanimated;
 @end
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
+
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #endif
+
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -65,7 +68,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   // will be called from that queue.
   return RCTGetUIManagerQueue();
 }
+
 #ifdef RCT_NEW_ARCH_ENABLED
+
 - (std::shared_ptr<UIManager>)getUIManager
 {
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
@@ -200,11 +205,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-#ifdef RCT_NEW_ARCH_ENABLED
     runtime.global().setProperty(runtime, "_IS_FABRIC", true);
-#else
-    runtime.global().setProperty(runtime, "_IS_FABRIC", false);
-#endif
 
     runtime.global().setProperty(
         runtime,
@@ -218,6 +219,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   }
   return nil;
 }
+
 #else
 
 RCT_EXPORT_METHOD(installTurboModule)
@@ -234,6 +236,7 @@ RCT_EXPORT_METHOD(installTurboModule)
 
   [bridge.uiManager.observerCoordinator addObserver:self];
 }
+
 #endif
 
 #pragma mark-- Batch handling
