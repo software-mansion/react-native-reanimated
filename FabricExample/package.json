@@ -9,7 +9,7 @@
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "ts-check": "yarn tsc --noEmit",
-    "lint-check": "yarn eslint src/ && yarn prettier --check src/",
+    "lint:js": "yarn eslint src/ && yarn prettier --check src/",
     "postinstall": "patch-package"
   },
   "dependencies": {
