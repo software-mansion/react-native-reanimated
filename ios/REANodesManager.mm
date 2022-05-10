@@ -96,15 +96,15 @@ using namespace facebook::react;
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
 #ifdef RCT_NEW_ARCH_ENABLED
+  REAPerformOperations _performOperations;
+  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
   NSMutableDictionary<NSNumber *, NSMutableDictionary *> *_operationsInBatch;
 #else
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
 #endif
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
-  REAPerformOperations _performOperations;
   volatile void (^_mounting)(void);
-  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
 
@@ -166,10 +166,12 @@ using namespace facebook::react;
   [_displayLink invalidate];
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   _surfacePresenter = surfacePresenter;
 }
+#endif
 
 - (void)operationsBatchDidComplete
 {
@@ -204,10 +206,12 @@ using namespace facebook::react;
   _eventHandler = eventHandler;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (void)registerPerformOperations:(REAPerformOperations)performOperations
 {
   _performOperations = performOperations;
 }
+#endif
 
 - (void)startUpdatingOnAnimationFrame
 {
@@ -386,9 +390,9 @@ using namespace facebook::react;
   return _viewRegistry[viewTag].superview == nil;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
 {
-#ifdef RCT_NEW_ARCH_ENABLED
   // adapted from RCTPropsAnimatedNode.m
   RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ?: _surfacePresenter;
   [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
@@ -399,8 +403,8 @@ using namespace facebook::react;
   UIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
-#endif
 }
+#endif
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
 {

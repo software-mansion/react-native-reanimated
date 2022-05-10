@@ -1,14 +1,19 @@
-#import <Foundation/Foundation.h>
 #import <React/RCTBridgeModule.h>
-#import <React/RCTSurfacePresenterStub.h>
 #import <React/RCTUIManager.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#import <React/RCTSurfacePresenterStub.h>
+#endif
 
 @class REAModule;
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
+
+#ifdef RCT_NEW_ARCH_ENABLED
 typedef void (^REAPerformOperations)();
+#endif
 
 @interface REANodesManager : NSObject
 
@@ -29,12 +34,9 @@ typedef void (^REAPerformOperations)();
 - (void)invalidate;
 - (void)operationsBatchDidComplete;
 
-- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
-
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
 - (void)postRunUpdatesAfterAnimation;
 - (void)registerEventHandler:(REAEventHandler)eventHandler;
-- (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName
                             nativeProps:(NSMutableDictionary *)nativeProps
@@ -43,13 +45,13 @@ typedef void (^REAPerformOperations)();
 - (void)configureUiProps:(nonnull NSSet<NSString *> *)uiPropsSet
           andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet;
 
-- (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
-
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 - (void)dispatchEvent:(id<RCTEvent>)event;
 
 #ifdef RCT_NEW_ARCH_ENABLED
-// nothing
+- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
+- (void)registerPerformOperations:(REAPerformOperations)performOperations;
+- (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
 #else
 - (void)maybeFlushUpdateBuffer;
 - (void)updateProps:(nonnull NSDictionary *)props
