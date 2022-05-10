@@ -381,6 +381,48 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
+void NativeProxy::updateProps(
+    jsi::Runtime &rt,
+    int viewTag,
+    const jsi::Object &props) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+                        "updateProps");
+  method(
+      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+}
+
+void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
+  auto method =
+      javaPart_->getClass()->getMethod<void(int, double, double, bool)>(
+          "scrollTo");
+  method(javaPart_.get(), viewTag, x, y, animated);
+}
+
+std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
+  auto method =
+      javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>("measure");
+  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
+  size_t size = output->size();
+  auto elements = output->getRegion(0, size);
+  std::vector<std::pair<std::string, double>> result;
+
+  result.push_back({"x", elements[0]});
+  result.push_back({"y", elements[1]});
+
+  result.push_back({"pageX", elements[2]});
+  result.push_back({"pageY", elements[3]});
+
+  result.push_back({"width", elements[4]});
+  result.push_back({"height", elements[5]});
+
+  return result;
+}
+#endif // RCT_NEW_ARCH_ENABLED
+
+#ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::synchronouslyUpdateUIProps(
     jsi::Runtime &rt,
     Tag tag,
@@ -435,47 +477,5 @@ void NativeProxy::configureProps(
           jsi::dynamicFromValue(rt, nativeProps))
           .get());
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-void NativeProxy::updateProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Object &props) {
-  auto method = javaPart_->getClass()
-                    ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-                        "updateProps");
-  method(
-      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
-}
-
-void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
-  auto method =
-      javaPart_->getClass()->getMethod<void(int, double, double, bool)>(
-          "scrollTo");
-  method(javaPart_.get(), viewTag, x, y, animated);
-}
-
-std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
-  auto method =
-      javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>("measure");
-  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
-  size_t size = output->size();
-  auto elements = output->getRegion(0, size);
-  std::vector<std::pair<std::string, double>> result;
-
-  result.push_back({"x", elements[0]});
-  result.push_back({"y", elements[1]});
-
-  result.push_back({"pageX", elements[2]});
-  result.push_back({"pageY", elements[3]});
-
-  result.push_back({"width", elements[4]});
-  result.push_back({"height", elements[5]});
-
-  return result;
-}
-#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated
