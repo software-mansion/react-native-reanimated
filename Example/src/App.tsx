@@ -35,8 +35,6 @@ import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
-import LaggyScrollExample from './LaggyScrollExample';
-import VerticalSliderExample from './VerticalSliderExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
@@ -63,14 +61,6 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
-  LaggyScrollExample: {
-    screen: LaggyScrollExample,
-    title: 'Laggy scroll view',
-  },
-  VerticalSliderExample: {
-    screen: VerticalSliderExample,
-    title: 'Vertical slider',
-  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
