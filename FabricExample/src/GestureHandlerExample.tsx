@@ -26,7 +26,7 @@ function Ball() {
         { translateY: offset.value.y },
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
-      backgroundColor: isPressed.value ? 'yellow' : 'blue',
+      backgroundColor: isPressed.value ? 'blue' : 'navy',
     };
   });
 

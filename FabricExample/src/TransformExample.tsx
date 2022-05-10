@@ -17,9 +17,10 @@ export default function TransformExample() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
-        { rotate: `${sv.value * 180}deg` },
-        { rotateY: `${sv.value * 360}deg` },
+        { rotate: `${sv.value * 360}deg` },
+        // { rotateY: `${sv.value * 360}deg` },
         { scaleX: 1 + sv.value },
+        { scaleY: 1 / (1 + sv.value) },
         { perspective: 500 },
       ],
     };
@@ -27,7 +28,7 @@ export default function TransformExample() {
 
   const handleToggle = () => {
     ref.current = 1 - ref.current;
-    sv.value = withTiming(ref.current, { duration: 2000 });
+    sv.value = withTiming(ref.current, { duration: 1500 });
   };
 
   const handleIncrement = () => {

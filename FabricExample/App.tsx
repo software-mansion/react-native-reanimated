@@ -137,8 +137,8 @@ const EXAMPLES = [
   },
   {
     name: 'NewestShadowNodesRegistryRemoveExample',
-    icon: '🤷‍♂️',
-    title: 'NewestShadowNodesRegistryRemoveExample',
+    icon: '☯️',
+    title: 'Conditional',
     component: NewestShadowNodesRegistryRemoveExample,
   },
   {
