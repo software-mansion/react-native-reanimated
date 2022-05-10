@@ -50,7 +50,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)invalidate
 {
 #ifdef RCT_NEW_ARCH_ENABLED
-  [_surfacePresenter removeObserver:self];
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   [scheduler removeEventListener:eventListener_];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -106,7 +105,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   // called from REAInitializerRCTFabricSurface::start
   __weak __typeof__(self) weakSelf = self;
   _surfacePresenter = self.bridge.surfacePresenter;
-  [_surfacePresenter addObserver:self];
   [_nodesManager setSurfacePresenter:_surfacePresenter];
 
   // to avoid deadlock we can't use Executor from React Native
@@ -176,7 +174,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     return;
   }
 
-  [_surfacePresenter addObserver:self];
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
 }
 
@@ -244,44 +241,6 @@ RCT_EXPORT_METHOD(installTurboModule)
 - (void)addOperationBlock:(AnimatedOperation)operation
 {
   [_operations addObject:operation];
-}
-
-#pragma mark - RCTSurfacePresenterObserver
-
-- (void)willMountComponentsWithRootTag:(NSInteger)rootTag
-{
-  RCTAssertMainQueue();
-
-  RCTExecuteOnUIManagerQueue(^{
-    if (_operations.count == 0) {
-      return;
-    }
-    NSArray<AnimatedOperation> *operations = _operations;
-    _operations = [NSMutableArray new];
-    REANodesManager *nodesManager = _nodesManager;
-
-    RCTExecuteOnMainQueue(^{
-      for (AnimatedOperation operation in operations) {
-        operation(nodesManager);
-      }
-      [nodesManager operationsBatchDidComplete];
-    });
-  });
-}
-
-- (void)didMountComponentsWithRootTag:(NSInteger)rootTag
-{
-  RCTAssertMainQueue();
-  RCTExecuteOnUIManagerQueue(^{
-    /*NSArray<AnimatedOperation> *operations = self->_operations;
-    self->_operations = [NSMutableArray new];*/
-
-    RCTExecuteOnMainQueue(^{
-        /*for (AnimatedOperation operation in operations) {
-          operation(self->_nodesManager);
-        }*/
-    });
-  });
 }
 
 #pragma mark - RCTUIManagerObserver

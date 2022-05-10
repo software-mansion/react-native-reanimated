@@ -447,12 +447,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 #endif
 
+#ifdef RCT_NEW_ARCH_ENABLED
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
   [reanimatedModule.nodesManager registerPerformOperations:^() {
     if (auto module = weakModule.lock()) {
       module->performOperations();
     }
   }];
+#endif
   return module;
 }
 

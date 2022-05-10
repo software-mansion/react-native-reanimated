@@ -11,12 +11,7 @@
 #import <React/RCTUIManagerObserverCoordinator.h>
 #import <React/RCTUIManagerUtils.h>
 
-#ifdef RCT_NEW_ARCH_ENABLED
-using namespace reanimated;
-#endif
-
-@interface REAModule
-    : RCTEventEmitter <RCTBridgeModule, RCTEventDispatcherObserver, RCTUIManagerObserver, RCTSurfacePresenterObserver>
+@interface REAModule : RCTEventEmitter <RCTBridgeModule, RCTEventDispatcherObserver, RCTUIManagerObserver>
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 
