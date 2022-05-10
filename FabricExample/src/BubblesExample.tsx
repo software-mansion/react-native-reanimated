@@ -26,8 +26,8 @@ function Bubble({ row, col }: BubbleProps) {
   const width = useSharedValue(0);
 
   React.useEffect(() => {
-    const delay = 100 + Math.random() * 1000;
-    width.value = withDelay(delay, withSpring(42, { damping: 1e6 }));
+    const delay = 400 + Math.random() * row * 10 + Math.random() * 1000;
+    width.value = withDelay(delay, withSpring(40, { damping: 1e6 }));
   }, [width, row, col]);
 
   const animatedStyle = useAnimatedStyle(() => {

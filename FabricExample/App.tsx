@@ -31,6 +31,7 @@ import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegis
 import BubblesExample from './src/BubblesExample';
 import ScreenStackExample from './src/ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './src/ScreenStackHeaderConfigBackgroundColorExample';
+import BouncingBoxExample from './src/BouncingBoxExample';
 
 const EXAMPLES = [
   {
@@ -47,7 +48,7 @@ const EXAMPLES = [
   },
   {
     name: 'BokehExample',
-    icon: '📷',
+    icon: '✨',
     title: 'Bokeh',
     component: BokehExample,
   },
@@ -64,22 +65,28 @@ const EXAMPLES = [
     component: ColorExample,
   },
   {
-    name: 'ChessboardExample',
-    icon: '♟️',
-    title: 'Chessboard',
-    component: ChessboardExample,
-  },
-  {
     name: 'ScreenStackHeaderConfigBackgroundColorExample',
     icon: '🎨',
     title: 'Screen header background color',
     component: ScreenStackHeaderConfigBackgroundColorExample,
   },
   {
+    name: 'ScreenStackExample',
+    icon: '🥞',
+    title: 'Screen stack',
+    component: ScreenStackExample,
+  },
+  {
     name: 'GestureHandlerExample',
     icon: '👌',
-    title: 'Gesture Handler',
+    title: 'Draggable circle',
     component: GestureHandlerExample,
+  },
+  {
+    name: 'BouncingBoxExample',
+    icon: '📦',
+    title: 'Bouncing box',
+    component: BouncingBoxExample,
   },
   {
     name: 'AnimatedSensorExample',
@@ -119,7 +126,7 @@ const EXAMPLES = [
   },
   {
     name: 'WidthExample',
-    icon: '🗜️',
+    icon: '🌲',
     title: 'Layout props',
     component: WidthExample,
   },
@@ -130,14 +137,14 @@ const EXAMPLES = [
     component: RefExample,
   },
   {
-    name: 'ScreenStackExample',
-    icon: '🥞',
-    title: 'Screen stack',
-    component: ScreenStackExample,
+    name: 'ChessboardExample',
+    icon: '♟️',
+    title: 'Chessboard',
+    component: ChessboardExample,
   },
   {
     name: 'NewestShadowNodesRegistryRemoveExample',
-    icon: '☯️',
+    icon: '🌓',
     title: 'Conditional',
     component: NewestShadowNodesRegistryRemoveExample,
   },
@@ -205,6 +212,7 @@ export default function App() {
         />
         {EXAMPLES.map(({ name, title, component }) => (
           <Stack.Screen
+            key={name}
             name={name}
             component={component}
             options={{ headerTitle: title }}
