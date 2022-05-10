@@ -101,7 +101,7 @@ def reactNativeManifest = file("$reactNative/package.json")
 def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.text)
 def reactNativeVersion = reactNativeManifestAsJson.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
-def RN_MINOR_VERSION = Integer.parseInt(minor)
+def rnMinorVersion = Integer.parseInt(minor)
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
@@ -247,13 +247,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    packagingOptions {
-        // For some reason gradle only complains about the duplicated version of libreact_render libraries
-        // while there are more libraries copied in intermediates folder of the lib build directory, we exlude
-        // only the ones that make the build fail (ideally we should only include librnscreens_modules but we
-        // are only allowed to specify exlude patterns)
-        exclude "**/libreact_render*.so"
-    }
+    // packagingOptions {
+    //     // For some reason gradle only complains about the duplicated version of libreact_render libraries
+    //     // while there are more libraries copied in intermediates folder of the lib build directory, we exlude
+    //     // only the ones that make the build fail (ideally we should only include librnscreens_modules but we
+    //     // are only allowed to specify exlude patterns)
+    //     exclude "**/libreact_render*.so"
+    // }
     sourceSets.main {
         java {
             if (isNewArchitectureEnabled()) {
@@ -286,7 +286,7 @@ task Log {
 }
 
 task applyJavaPatches(type: Copy) {
-    def patchDirectory = file("${projectDir}/rnVersionPatch/${RN_MINOR_VERSION}")
+    def patchDirectory = file("${projectDir}/rnVersionPatch/${rnMinorVersion}")
     if (patchDirectory.exists()) {
         from ("${patchDirectory}") {
             include "**/*.java"
@@ -303,7 +303,7 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
 task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
     var transformedVersion = BOOST_VERSION.replace("_", ".")
     var srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
-    if (RN_MINOR_VERSION < 69) {
+    if (rnMinorVersion < 69) {
         srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
     }
     src(srcUrl)
@@ -531,7 +531,7 @@ task unpackReactNativeAAR {
         }
     })
     def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
-    if (RN_MINOR_VERSION < 69) {
+    if (rnMinorVersion < 69) {
         rnAarMatcher = "**/**/*.aar"
     }
     def rnAAR = fileTree("$reactNative/android").matching({ it.include rnAarMatcher }).singleFile
