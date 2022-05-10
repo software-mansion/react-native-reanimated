@@ -5,7 +5,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
-#import <React/RCTShadowView.h>
 #import <React/RCTSurfacePresenter.h>
 #import <react/renderer/core/ShadowNode.h>
 #import <react/renderer/uimanager/UIManager.h>
@@ -91,28 +90,22 @@ using namespace facebook::react;
 @end
 
 @implementation REANodesManager {
-  __weak RCTBridge *_bridge;
-  NSMutableArray<id<RCTEvent>> *_eventQueue;
   CADisplayLink *_displayLink;
   BOOL _wantRunUpdates;
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
-#ifdef RCT_NEW_ARCH_ENABLED
-  REAPerformOperations _performOperations;
-  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
-  NSMutableDictionary<NSNumber *, NSMutableDictionary *> *_operationsInBatch;
-#else
-  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
-#endif
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
-
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+  __weak RCTBridge *_bridge;
+  REAPerformOperations _performOperations;
+  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
+  NSMutableDictionary<NSNumber *, NSMutableDictionary *> *_operationsInBatch;
 #else
+  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
   volatile atomic_bool _shouldFlushUpdateBuffer;
 #endif
 }
@@ -126,7 +119,6 @@ using namespace facebook::react;
     _bridge = bridge;
     _surfacePresenter = surfacePresenter;
     _reanimatedModule = reanimatedModule;
-    _eventQueue = [NSMutableArray new];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableDictionary new];
@@ -443,7 +435,7 @@ using namespace facebook::react;
     if (strongSelf == nil) {
       return;
     }
-    //    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
+    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
     NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
     strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
     for (NSNumber *tag in componentUpdateBuffer) {
