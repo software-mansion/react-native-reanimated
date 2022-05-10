@@ -373,6 +373,7 @@ using namespace facebook::react;
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
+
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
 {
   // adapted from RCTPropsAnimatedNode.m
@@ -386,58 +387,8 @@ using namespace facebook::react;
       [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
-#endif
 
-- (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
-{
-  UIView *view = [self.uiManager viewForReactTag:viewTag];
-
-  NSString *result =
-      [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
-
-  if ([propName isEqualToString:@"opacity"]) {
-    CGFloat alpha = view.alpha;
-    result = [@(alpha) stringValue];
-  } else if ([propName isEqualToString:@"zIndex"]) {
-    NSInteger zIndex = view.reactZIndex;
-    result = [@(zIndex) stringValue];
-  }
-
-  return result;
-}
-
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
 #else
-- (void)maybeFlushUpdateBuffer
-{
-  RCTAssertUIManagerQueue();
-  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
-  if (!shouldFlushUpdateBuffer) {
-    return;
-  }
-
-  __weak __typeof__(self) weakSelf = self;
-  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    __typeof__(self) strongSelf = weakSelf;
-    if (strongSelf == nil) {
-      return;
-    }
-    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
-    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
-    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
-    for (NSNumber *tag in componentUpdateBuffer) {
-      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
-      if (componentUpdate == Nil) {
-        continue;
-      }
-      [strongSelf updateProps:componentUpdate.props
-                ofViewWithTag:componentUpdate.viewTag
-                     withName:componentUpdate.viewName];
-    }
-    [strongSelf performOperations];
-  }];
-}
 
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
@@ -489,6 +440,55 @@ using namespace facebook::react;
                                         body:@{@"viewTag" : viewTag, @"props" : jsProps}];
   }
 }
-#endif
+
+- (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
+{
+  UIView *view = [self.uiManager viewForReactTag:viewTag];
+
+  NSString *result =
+      [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
+
+  if ([propName isEqualToString:@"opacity"]) {
+    CGFloat alpha = view.alpha;
+    result = [@(alpha) stringValue];
+  } else if ([propName isEqualToString:@"zIndex"]) {
+    NSInteger zIndex = view.reactZIndex;
+    result = [@(zIndex) stringValue];
+  }
+
+  return result;
+}
+
+- (void)maybeFlushUpdateBuffer
+{
+  RCTAssertUIManagerQueue();
+  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
+  if (!shouldFlushUpdateBuffer) {
+    return;
+  }
+
+  __weak __typeof__(self) weakSelf = self;
+  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
+    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+    for (NSNumber *tag in componentUpdateBuffer) {
+      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+      if (componentUpdate == Nil) {
+        continue;
+      }
+      [strongSelf updateProps:componentUpdate.props
+                ofViewWithTag:componentUpdate.viewTag
+                     withName:componentUpdate.viewName];
+    }
+    [strongSelf performOperations];
+  }];
+}
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end
