@@ -91,12 +91,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
+  UpdatePropsFunction updatePropsFunction;
+
   bool handleEvent(
       const std::string &eventName,
       jsi::Value &&payload,
       double currentTime);
-
-  void performOperations();
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
@@ -109,6 +109,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void removeShadowNodeFromRegistry(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue);
+
+  void performOperations();
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -130,7 +132,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
-  UpdatePropsFunction updatePropsFunction;
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
