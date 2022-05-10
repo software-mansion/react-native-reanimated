@@ -444,8 +444,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
   [reanimatedModule.nodesManager registerPerformOperations:^() {
-    weakModule.lock()->performOperations();
+    if (auto module = weakModule.lock()) {
+      module->performOperations();
+    }
   }];
   return module;
 }
+
 }

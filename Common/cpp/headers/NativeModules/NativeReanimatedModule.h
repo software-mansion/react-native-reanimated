@@ -152,13 +152,18 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+
   std::shared_ptr<UIManager> uiManager_;
+
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
   // We can store surfaceId of the most recent ShadowNode as a workaround.
   SurfaceId surfaceId_ = -1;
+
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
+
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+
   std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
 #endif
 

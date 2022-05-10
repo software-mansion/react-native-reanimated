@@ -58,7 +58,7 @@ if (shouldBeUseWeb()) {
       }
 
       viewDescriptors.value.forEach((viewDescriptor) => {
-        _updatePropsFabric(viewDescriptor.shareableNode, updates);
+        _updatePropsFabric(viewDescriptor.shadowNodeWrapper, updates);
       });
     };
   } else {

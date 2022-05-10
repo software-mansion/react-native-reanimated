@@ -3,7 +3,7 @@ import { useSharedValue } from './useSharedValue';
 import { RefObjectFunction } from './commonTypes';
 import { ShadowNodeWrapper } from '../commonTypes';
 import { getTag } from '../NativeMethods';
-import { getShadowNodeWrapperFromHostInstance } from '../getShadowNodeWrapperFromRef';
+import { getShadowNodeWrapperFromHostInstance } from '../fabricUtils';
 
 export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);

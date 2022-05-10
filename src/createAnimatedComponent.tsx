@@ -36,7 +36,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
-import { getShadowNodeWrapperFromRef } from './reanimated2/getShadowNodeWrapperFromRef';
+import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -216,10 +216,10 @@ export default function createAnimatedComponent(
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (global._IS_FABRIC) {
-          const shareableNode = getShadowNodeWrapperFromRef(this); // ShadowNodeWrapper
+          const shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
           runOnUI(() => {
             'worklet';
-            _removeShadowNodeFromRegistry(shareableNode);
+            _removeShadowNodeFromRegistry(shadowNodeWrapper);
           })();
         }
       }
@@ -288,11 +288,11 @@ export default function createAnimatedComponent(
 
       let viewTag: number | null;
       let viewName: string | null;
-      let shareableNode: ShadowNodeWrapper | null = null;
+      let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
-        shareableNode = null; // TODO: web
+        shadowNodeWrapper = null; // TODO: web
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
@@ -316,7 +316,7 @@ export default function createAnimatedComponent(
         }
 
         if (global._IS_FABRIC) {
-          shareableNode = getShadowNodeWrapperFromRef(this);
+          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
       this._viewTag = viewTag as number;
@@ -346,7 +346,7 @@ export default function createAnimatedComponent(
         style.viewDescriptors.add({
           tag: viewTag,
           name: viewName,
-          shareableNode,
+          shadowNodeWrapper,
         });
         if (isJest()) {
           /**
@@ -379,7 +379,7 @@ export default function createAnimatedComponent(
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          shareableNode: shareableNode!,
+          shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
     }
