@@ -53,24 +53,24 @@ file(GLOB sources_registries  "${COMMON_SRC_DIR}/cpp/Registries/*.cpp")
 file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
-    set (
-            INCLUDE_JSI_CPP
-            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
-    )
-    set (
-            INCLUDE_JSIDYNAMIC_CPP
-            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
-    )
+        set (
+                INCLUDE_JSI_CPP
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+        )
+        set (
+                INCLUDE_JSIDYNAMIC_CPP
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
+        )
 endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     set(
-            FabricUtils_cpp
-            "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
+        FABRIC_UTILS_CPP
+        "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
     )
     set(
-            ReanimatedUIManagerBinding_cpp
-            "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
+        REANIMATED_UI_MANAGER_BINDING_CPP
+        "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
     )
 endif()
 
@@ -92,8 +92,8 @@ add_library(
         "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor/AnimatedSensorModule.cpp"
-        ${FabricUtils_cpp}
-        ${ReanimatedUIManagerBinding_cpp}
+        ${FABRIC_UTILS_CPP}
+        ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
 
 # includes
@@ -267,15 +267,6 @@ if(${FOR_HERMES})
             ${FBJNI_LIB}
             ${FOLLY_LIB}
             ${REACT_NATIVE_JNI_LIB}
-            ${REACT_RENDER_UIMANAGER}
-            ${REACT_RENDER_MOUNTING}
-            ${REACT_RENDER_COMPONENTREGISTRY}
-            ${REACT_RENDER_CORE}
-            ${REACT_DEBUG}
-            ${REACT_RENDER_DEBUG}
-            ${RRC_ROOT}
-            ${FABRICJNI}
-            ${REACT_RENDER_SCHEDULER}
             android
     )
 else()
@@ -289,6 +280,13 @@ else()
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
+            android
+    )
+endif()
+
+if(${IS_NEW_ARCHITECTURE_ENABLED})
+    target_link_libraries(
+            ${PACKAGE_NAME}
             ${REACT_RENDER_UIMANAGER}
             ${REACT_RENDER_MOUNTING}
             ${REACT_RENDER_COMPONENTREGISTRY}
@@ -298,7 +296,6 @@ else()
             ${RRC_ROOT}
             ${FABRICJNI}
             ${REACT_RENDER_SCHEDULER}
-            android
     )
 endif()
 
