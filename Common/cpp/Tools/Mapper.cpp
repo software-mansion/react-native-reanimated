@@ -40,7 +40,7 @@ void Mapper::execute(jsi::Runtime &rt) {
           jsViewDescriptorArray.getValueAtIndex(rt, i).getObject(rt);
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps(
-          rt, jsViewDescriptor.getProperty(rt, "shareableNode"), newStyle);
+          rt, jsViewDescriptor.getProperty(rt, "shadowNodeWrapper"), newStyle);
 #else
       updateProps(
           rt,

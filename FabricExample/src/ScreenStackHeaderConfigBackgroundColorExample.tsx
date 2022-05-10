@@ -30,6 +30,7 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
   // useJSThreadKiller();
 
   const gesture = Gesture.Pan()
+    .minDistance(0)
     .onBegin(() => {
       'worklet';
       isPressed.value = true;
