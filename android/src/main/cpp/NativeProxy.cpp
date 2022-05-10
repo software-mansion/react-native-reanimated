@@ -340,7 +340,9 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
 }
 
 void NativeProxy::performOperations() {
+#ifdef RCT_NEW_ARCH_ENABLED
   _nativeReanimatedModule->performOperations();
+#endif
 }
 
 void NativeProxy::registerNatives() {
