@@ -58,8 +58,8 @@ function BubbleRow({ row }: BubbleRowProps) {
 export default function BubblesExample() {
   return (
     <View style={styles.container}>
-      {[...Array(ROWS)].map((_, i) => (
-        <BubbleRow row={i} key={i} />
+      {[...Array(ROWS)].map((_, row) => (
+        <BubbleRow row={row} key={row} />
       ))}
     </View>
   );

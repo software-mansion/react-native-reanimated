@@ -136,6 +136,7 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 /**
  * All static helper functions are ObjC++ specific.
  */
@@ -201,6 +202,7 @@ static jsi::Value convertObjCObjectToJSIValue(jsi::Runtime &runtime, id value)
   return jsi::Value::undefined();
 }
 // COPIED FROM RCTTurboModule.mm END
+#endif // RCT_NEW_ARCH_ENABLED
 
 static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 {

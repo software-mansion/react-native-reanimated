@@ -54,8 +54,7 @@ export default function AnimatedTextInputExample() {
 
 const styles = StyleSheet.create({
   buttons: {
-    marginTop: 100,
-    marginBottom: 50,
+    marginVertical: 50,
   },
   text: {
     fontSize: 100,

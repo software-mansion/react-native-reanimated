@@ -69,8 +69,7 @@ export default function ChessboardExample() {
 
 const styles = StyleSheet.create({
   buttons: {
-    marginTop: 100,
-    marginBottom: 50,
+    marginVertical: 50,
   },
   chessboard: {
     alignItems: 'flex-start',
