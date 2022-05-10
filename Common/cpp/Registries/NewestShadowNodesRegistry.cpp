@@ -1,4 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
+
 #include "NewestShadowNodesRegistry.h"
 
 #include <react/renderer/core/ComponentDescriptor.h>
@@ -63,4 +64,5 @@ std::lock_guard<std::mutex> NewestShadowNodesRegistry::createLock() const {
 }
 
 } // namespace reanimated
+
 #endif
