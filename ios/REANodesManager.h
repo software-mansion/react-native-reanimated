@@ -37,11 +37,6 @@ typedef void (^REAPerformOperations)();
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
 - (void)postRunUpdatesAfterAnimation;
 - (void)registerEventHandler:(REAEventHandler)eventHandler;
-- (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
-                               viewName:(NSString *)viewName
-                            nativeProps:(NSMutableDictionary *)nativeProps
-                       trySynchronously:(BOOL)trySync;
-- (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 - (void)dispatchEvent:(id<RCTEvent>)event;
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -55,6 +50,11 @@ typedef void (^REAPerformOperations)();
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName;
 - (void)maybeFlushUpdateBuffer;
+- (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
+                               viewName:(NSString *)viewName
+                            nativeProps:(NSMutableDictionary *)nativeProps
+                       trySynchronously:(BOOL)trySync;
+- (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 #endif
 
 @end

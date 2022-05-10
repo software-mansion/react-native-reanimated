@@ -296,22 +296,22 @@ using namespace facebook::react;
 #endif
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync
 {
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
   if (trySync) {
     _tryRunBatchUpdatesSynchronously = YES;
   }
   [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
-#endif
 }
+#endif
 
 - (BOOL)isDirectEvent:(id<RCTEvent>)event
 {
