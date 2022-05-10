@@ -256,12 +256,12 @@ void NativeProxy::installJSIBindings(
       updatePropsFunction,
       scrollToFunction,
       measureFunction,
+      configurePropsFunction,
 #endif
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
-      setGestureStateFunction,
-      configurePropsFunction};
+      setGestureStateFunction};
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,

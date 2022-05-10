@@ -70,12 +70,12 @@ struct PlatformDepMethodsHolder {
   UpdatePropsFunction updatePropsFunction;
   ScrollToFunction scrollToFunction;
   MeasureFunction measureFunction;
+  ConfigurePropsFunction configurePropsFunction;
 #endif
   TimeProviderFunction getCurrentTime;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
-  ConfigurePropsFunction configurePropsFunction;
 };
 
 } // namespace reanimated

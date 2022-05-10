@@ -86,12 +86,12 @@ NativeReanimatedModule::NativeReanimatedModule(
       requestRender(platformDepMethodsHolder.requestRender),
       propObtainer(propObtainer),
       animatedSensorModule(platformDepMethodsHolder, this),
-      configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction)
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
+#else
+      configurePropsPlatformFunction(
+          platformDepMethodsHolder.configurePropsFunction)
 #endif
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {

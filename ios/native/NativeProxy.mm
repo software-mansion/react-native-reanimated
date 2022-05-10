@@ -320,6 +320,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
+  auto configurePropsFunction = [reanimatedModule](
+                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
+    NSSet *uiPropsSet = convertProps(rt, uiProps);
+    NSSet *nativePropsSet = convertProps(rt, nativeProps);
+    [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
+  };
+
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
@@ -366,13 +373,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // Layout Animations end
 #endif
 
-  auto configurePropsFunction = [reanimatedModule](
-                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
-    NSSet *uiPropsSet = convertProps(rt, uiProps);
-    NSSet *nativePropsSet = convertProps(rt, nativeProps);
-    [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
-  };
-
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
   // sensors
@@ -396,12 +396,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       updatePropsFunction,
       scrollToFunction,
       measureFunction,
+      configurePropsFunction,
 #endif
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
-      configurePropsFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(

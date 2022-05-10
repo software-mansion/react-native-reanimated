@@ -356,12 +356,16 @@ using namespace facebook::react;
   }
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 - (void)configureUiProps:(nonnull NSSet<NSString *> *)uiPropsSet
           andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet
 {
   _uiProps = uiPropsSet;
   _nativeProps = nativePropsSet;
 }
+#endif
 
 - (BOOL)isNotNativeViewFullyMounted:(NSNumber *)viewTag
 {

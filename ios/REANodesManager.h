@@ -41,10 +41,6 @@ typedef void (^REAPerformOperations)();
                                viewName:(NSString *)viewName
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync;
-
-- (void)configureUiProps:(nonnull NSSet<NSString *> *)uiPropsSet
-          andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet;
-
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 - (void)dispatchEvent:(id<RCTEvent>)event;
 
@@ -53,10 +49,12 @@ typedef void (^REAPerformOperations)();
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
 #else
-- (void)maybeFlushUpdateBuffer;
+- (void)configureUiProps:(nonnull NSSet<NSString *> *)uiPropsSet
+          andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet;
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName;
+- (void)maybeFlushUpdateBuffer;
 #endif
 
 @end
