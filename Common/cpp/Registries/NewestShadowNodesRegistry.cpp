@@ -65,4 +65,4 @@ std::lock_guard<std::mutex> NewestShadowNodesRegistry::createLock() const {
 
 } // namespace reanimated
 
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
