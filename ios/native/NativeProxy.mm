@@ -19,7 +19,10 @@
 #endif
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
-#ifndef RCT_NEW_ARCH_ENABLED
+
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 #import <folly/json.h>
 #endif
 
@@ -218,7 +221,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 {
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
-#ifndef RCT_NEW_ARCH_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
   auto updatePropsFunction =
       [reanimatedModule](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) -> void {

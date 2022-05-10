@@ -182,7 +182,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
-#ifndef RCT_NEW_ARCH_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
   void scrollTo(int viewTag, double x, double y, bool animated);
   std::vector<std::pair<std::string, double>> measure(int viewTag);

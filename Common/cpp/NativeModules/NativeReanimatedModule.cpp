@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
+#include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
@@ -9,7 +10,6 @@
 #include <memory>
 #include <thread>
 #include "EventHandlerRegistry.h"
-#include "FabricUtils.h"
 #include "FeaturesConfig.h"
 #include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
@@ -79,7 +79,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
       propObtainer(propObtainer),
-
       animatedSensorModule(platformDepMethodsHolder, this),
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction)
@@ -144,7 +143,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->renderRequested = false;
     this->onRender(timestampMs);
   };
-#ifndef RCT_NEW_ARCH_ENABLED
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
 #endif
 }
@@ -613,12 +615,6 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
   newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
-#else
-
-void NativeReanimatedModule::performOperations() {
-  // TODO: mleko, implementacja dla Papera
-}
-
 #endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated

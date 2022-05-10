@@ -288,7 +288,9 @@ RCT_EXPORT_METHOD(installTurboModule)
 
 - (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
 {
-#ifndef RCT_NEW_ARCH_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   [_nodesManager maybeFlushUpdateBuffer];
 #endif
   if (_operations.count == 0) {

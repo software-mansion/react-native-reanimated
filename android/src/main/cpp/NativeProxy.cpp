@@ -105,14 +105,15 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       /**/);
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::installJSIBindings(
+#ifdef RCT_NEW_ARCH_ENABLED
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager) {
-#else
-void NativeProxy::installJSIBindings() {
+        fabricUIManager
 #endif
-#ifndef RCT_NEW_ARCH_ENABLED
+    /**/) {
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   auto updatePropsFunction = [this](
                                  jsi::Runtime &rt,
                                  int viewTag,
@@ -433,7 +434,9 @@ void NativeProxy::configureProps(
           .get());
 }
 
-#ifndef RCT_NEW_ARCH_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 void NativeProxy::updateProps(
     jsi::Runtime &rt,
     int viewTag,
@@ -471,6 +474,6 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
 
   return result;
 }
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated

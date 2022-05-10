@@ -108,7 +108,9 @@ using namespace facebook::react;
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
 
-#ifndef RCT_NEW_ARCH_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   volatile atomic_bool _shouldFlushUpdateBuffer;
 #endif
 }
@@ -310,7 +312,9 @@ using namespace facebook::react;
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync
 {
-#ifndef RCT_NEW_ARCH_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   if (trySync) {
     _tryRunBatchUpdatesSynchronously = YES;
   }
@@ -384,7 +388,6 @@ using namespace facebook::react;
 
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
 {
-// TODO: mleko, implementacja dla Papera
 #ifdef RCT_NEW_ARCH_ENABLED
   // adapted from RCTPropsAnimatedNode.m
   RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ?: _surfacePresenter;
@@ -417,7 +420,9 @@ using namespace facebook::react;
   return result;
 }
 
-#ifndef RCT_NEW_ARCH_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 - (void)maybeFlushUpdateBuffer
 {
   RCTAssertUIManagerQueue();

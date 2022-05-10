@@ -69,6 +69,7 @@ void Mapper::enableFastMode(
     this->module->updateProps(rt, shadowNodeValue, props);
   };
 #else
+  // TODO: don't get public field, instead call this->module->updateProps
   updateProps = module->updatePropsFunction;
 #endif
   jsi::Runtime &rt = *module->runtime;
