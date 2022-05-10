@@ -179,14 +179,14 @@ function Item({ title, onPress }) {
   if (Platform.OS === 'ios') {
     return (
       <RectButton style={styles.button} onPress={onPress}>
-        <Text style={styles.buttonText}>{title}</Text>
+        <Text style={styles.title}>{title}</Text>
       </RectButton>
     );
   } else {
     return (
       <TouchableNativeFeedback onPress={onPress}>
         <View style={styles.button}>
-          <Text style={styles.buttonText}>{title}</Text>
+          <Text style={styles.title}>{title}</Text>
         </View>
       </TouchableNativeFeedback>
     );
@@ -231,10 +231,6 @@ export const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#DBDBE0',
   },
-  buttonText: {
-    fontSize: 16,
-    backgroundColor: 'transparent',
-  },
   button: {
     flex: 1,
     height: 60,
@@ -242,5 +238,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
+  },
+  title: {
+    fontSize: 16,
+    backgroundColor: 'transparent',
   },
 });
