@@ -26,10 +26,11 @@ void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
     std::string eventName,
 #ifdef RCT_NEW_ARCH_ENABLED
-    jsi::Value &eventPayload) {
+    jsi::Value &eventPayload
 #else
-    std::string eventPayload) {
+    std::string eventPayload
 #endif
+    /**/) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);
