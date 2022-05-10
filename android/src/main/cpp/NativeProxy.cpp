@@ -375,11 +375,6 @@ void NativeProxy::registerEventHandler(
       EventHandler::newObjectCxxArgs(std::move(handler)).get());
 }
 
-inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
-    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
-  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
-}
-
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -423,6 +418,11 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
+inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
+    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
+  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
+}
+
 void NativeProxy::synchronouslyUpdateUIProps(
     jsi::Runtime &rt,
     Tag tag,
