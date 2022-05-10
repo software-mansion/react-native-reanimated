@@ -9,22 +9,20 @@
 #import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
-#import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode::Shared
-#import <React-Fabric/react/renderer/uimanager/primitives.h> // shadowNodeFromValue
+#import <React-Fabric/react/renderer/core/ShadowNode.h>
+#import <React-Fabric/react/renderer/uimanager/primitives.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
-#endif
-#import <React/RCTFollyConvert.h>
-#import <React/RCTUIManager.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
 #else
 #import <folly/json.h>
 #endif
+
+#import <React/RCTFollyConvert.h>
+#import <React/RCTUIManager.h>
 
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
