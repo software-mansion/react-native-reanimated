@@ -92,7 +92,6 @@ using namespace facebook::react;
 @implementation REANodesManager {
   CADisplayLink *_displayLink;
   BOOL _wantRunUpdates;
-  BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
@@ -185,14 +184,6 @@ using namespace facebook::react;
 {
   [_onAnimationCallbacks addObject:clb];
   [self startUpdatingOnAnimationFrame];
-}
-
-- (void)postRunUpdatesAfterAnimation
-{
-  _wantRunUpdates = YES;
-  if (!_processingDirectEvent) {
-    [self startUpdatingOnAnimationFrame];
-  }
 }
 
 - (void)registerEventHandler:(REAEventHandler)eventHandler
@@ -320,13 +311,6 @@ using namespace facebook::react;
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
 #endif
-}
-
-- (void)processDirectEvent:(id<RCTEvent>)event
-{
-  _processingDirectEvent = YES;
-  [self performOperations];
-  _processingDirectEvent = NO;
 }
 
 - (BOOL)isDirectEvent:(id<RCTEvent>)event
