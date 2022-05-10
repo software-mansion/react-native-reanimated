@@ -16,6 +16,8 @@
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 
+#ifdef RCT_NEW_ARCH_ENABLED
 - (void)installReanimatedUIManagerBindingAfterReload;
+#endif
 
 @end
