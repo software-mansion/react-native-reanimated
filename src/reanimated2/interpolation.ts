@@ -4,10 +4,6 @@ export enum Extrapolation {
   EXTEND = 'extend',
 }
 
-export interface InterpolatedNode {
-  __nodeId: number;
-}
-
 interface InterpolationNarrowedInput {
   leftEdgeInput: number;
   rightEdgeInput: number;
