@@ -1,3 +1,7 @@
 {
-  "extends": "../tsconfig.json"
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "include": ["react-native-reanimated-tests.tsx"]
 }

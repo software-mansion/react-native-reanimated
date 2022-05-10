@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState, useCallback, forwardRef } from 'react';
 import {
   Text,
@@ -54,7 +55,6 @@ import Animated, {
   SequenceAnimation,
   StyleLayoutAnimation,
   Animation,
-  // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 
 class Path extends React.Component<{ fill?: string }> {
