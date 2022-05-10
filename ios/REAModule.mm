@@ -188,25 +188,35 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   if (jsiRuntime) {
     // Reanimated
+    jsi::Runtime &runtime = *jsiRuntime;
+
     auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
-    jsiRuntime->global().setProperty(
-        *jsiRuntime,
-        "_WORKLET_RUNTIME",
-        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+
+    auto workletRuntimeValue = runtime.global()
+                                   .getProperty(runtime, "ArrayBuffer")
+                                   .asObject(runtime)
+                                   .asFunction(runtime)
+                                   .callAsConstructor(runtime, {static_cast<double>(sizeof(void *))});
+    uintptr_t *workletRuntimeData =
+        reinterpret_cast<uintptr_t *>(workletRuntimeValue.getObject(runtime).getArrayBuffer(runtime).data(runtime));
+    workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedModule->runtime.get());
+
+    runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
+
 #ifdef RCT_NEW_ARCH_ENABLED
-    jsiRuntime->global().setProperty(*jsiRuntime, "_IS_FABRIC", true);
+    runtime.global().setProperty(runtime, "_IS_FABRIC", true);
 #else
-    jsiRuntime->global().setProperty(*jsiRuntime, "_IS_FABRIC", false);
+    runtime.global().setProperty(runtime, "_IS_FABRIC", false);
 #endif
 
-    jsiRuntime->global().setProperty(
-        *jsiRuntime,
-        jsi::PropNameID::forAscii(*jsiRuntime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(*jsiRuntime, reanimatedModule));
+    runtime.global().setProperty(
+        runtime,
+        jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(runtime, reanimatedModule));
     reanimatedModule_ = reanimatedModule;
     if (_surfacePresenter != nil) {
       // reload, uiManager is null right now, we need to wait for `installReanimatedUIManagerBindingAfterReload`
-      [self injectDependencies:*jsiRuntime];
+      [self injectDependencies:runtime];
     }
   }
   return nil;
