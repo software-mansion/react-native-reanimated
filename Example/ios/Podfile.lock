@@ -311,7 +311,7 @@ PODS:
     - FBLazyVector
     - FBReactNativeSpec
     - glog
-    - RCT-Folly (= 2021.06.28.00-v2)
+    - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
     - React-callinvoker
@@ -509,7 +509,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
   RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
   RNGestureHandler: 5e58135436aacc1c5d29b75547d3d2b9430d052c
-  RNReanimated: 4fbb35ce41c405053a8b7c8e12525078ab14d311
+  RNReanimated: 7cac105edf3b9013b128159c19af49739f0c2d7e
   RNScreens: eb0dfb2d6b21d2d7f980ad46b14eb306d2f1062e
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   Yoga: 6671cf077f614314c22fd09ddf87d7abeee64e96
