@@ -61,9 +61,6 @@ NativeProxy::NativeProxy(
       binding->getScheduler()->getUIManager();
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
       *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
-  rt->global().setProperty(*rt, "_IS_FABRIC", true);
-#else
-  rt->global().setProperty(*rt, "_IS_FABRIC", false);
 #endif
 }
 
