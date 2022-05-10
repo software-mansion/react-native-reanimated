@@ -75,8 +75,12 @@ NativeReanimatedModule::NativeReanimatedModule(
     std::shared_ptr<Scheduler> scheduler,
     std::shared_ptr<jsi::Runtime> rt,
     std::shared_ptr<ErrorHandler> errorHandler,
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
         propObtainer,
+#endif
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
@@ -84,7 +88,11 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
       propObtainer(propObtainer),
+#endif
       animatedSensorModule(platformDepMethodsHolder, this),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(

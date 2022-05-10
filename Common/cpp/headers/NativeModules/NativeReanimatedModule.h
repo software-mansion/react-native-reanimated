@@ -40,8 +40,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       std::shared_ptr<Scheduler> scheduler,
       std::shared_ptr<jsi::Runtime> rt,
       std::shared_ptr<ErrorHandler> errorHandler,
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
       std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
           propObtainer,
+#endif
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
       PlatformDepMethodsHolder platformDepMethodsHolder);
 

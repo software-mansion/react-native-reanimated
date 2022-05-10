@@ -254,11 +254,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     setGestureState(gestureHandlerStateManager, handlerTag, newState);
   };
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
   auto propObtainer = [reanimatedModule](
                           jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
-    // TODO: support propObtainer on Fabric?
-    return jsi::Value::undefined();
+    NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
+    std::string resultStr = std::string([[reanimatedModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
+                                                                          propName:propNameConverted] UTF8String]);
+    jsi::Value val = jsi::String::createFromUtf8(rt, resultStr);
+    return val;
   };
+#endif
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
@@ -409,7 +416,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       scheduler,
       animatedRuntime,
       errorHandler,
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
       propObtainer,
+#endif
       layoutAnimationsProxy,
       platformDepMethodsHolder);
 

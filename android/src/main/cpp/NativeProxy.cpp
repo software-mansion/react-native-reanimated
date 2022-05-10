@@ -163,8 +163,7 @@ void NativeProxy::installJSIBindings(
       [this](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
         this->synchronouslyUpdateUIProps(rt, tag, props);
       };
-#endif
-
+#else
   auto propObtainer = [this](
                           jsi::Runtime &rt,
                           const int viewTag,
@@ -179,6 +178,7 @@ void NativeProxy::installJSIBindings(
     std::string str = result->toStdString();
     return jsi::Value(rt, jsi::String::createFromAscii(rt, str.c_str()));
   };
+#endif
 
   auto registerSensorFunction =
       [this](int sensorType, int interval, std::function<void(double[])> setter)
@@ -268,7 +268,11 @@ void NativeProxy::installJSIBindings(
       scheduler_,
       animatedRuntime,
       errorHandler,
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
       propObtainer,
+#endif
       layoutAnimationsProxy,
       platformDepMethodsHolder);
 
