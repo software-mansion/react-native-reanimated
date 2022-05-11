@@ -82,13 +82,17 @@ def resolveReactNativeDirectory() {
 
 def getPlaygroundAppName() { // only for the development
     String playgroundAppName = ""
-    rootProject.getSubprojects().forEach({project ->
-        if (project.plugins.hasPlugin("com.android.application")) {
-            var projectCatalogAbsolutePath = project.projectDir.toString().replace("/android/app", "")
-            var slashPosition = projectCatalogAbsolutePath.lastIndexOf("/")
-            playgroundAppName = projectCatalogAbsolutePath.substring(slashPosition + 1)
-        }
-    })
+    try {
+        rootProject.getSubprojects().forEach({project ->
+            if (project.plugins.hasPlugin("com.android.application")) {
+                var projectCatalogAbsolutePath = project.projectDir.toString().replace("/android/app", "")
+                var slashPosition = projectCatalogAbsolutePath.lastIndexOf("/")
+                playgroundAppName = projectCatalogAbsolutePath.substring(slashPosition + 1)
+            }
+        })
+    } catch(_) {
+        return "NOT_FOUND"
+    }
     return playgroundAppName
 }
 
@@ -301,8 +305,8 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
 }
 
 task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
-    var transformedVersion = BOOST_VERSION.replace("_", ".")
-    var srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
+    def transformedVersion = BOOST_VERSION.replace("_", ".")
+    def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
     if (rnMinorVersion < 69) {
         srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
     }
@@ -569,11 +573,17 @@ afterEvaluate {
     nativeBuildDependsOn(prepareThirdPartyNdkHeaders)
     nativeBuildDependsOn(extractAARHeaders)
     nativeBuildDependsOn(extractSOFiles)
+
+    tasks.forEach({ task ->
+        if (task.name.contains("JniLibFolders")) {
+            task.dependsOn(packageNdkLibs)
+        }
+    })
 }
 
 if (CLIENT_SIDE_BUILD) {
     def aarDir = "${buildDir}/outputs"
-    var aar = file("${aarDir}/android-debug.aar")
+    def aar = file("${aarDir}/android-debug.aar")
     if (aar == null) {
         throw GradleScriptException("AAR build failed. No AAR found in ${aarDir}.")
     }
