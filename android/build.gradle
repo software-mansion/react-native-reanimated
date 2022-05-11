@@ -573,6 +573,12 @@ afterEvaluate {
     nativeBuildDependsOn(prepareThirdPartyNdkHeaders)
     nativeBuildDependsOn(extractAARHeaders)
     nativeBuildDependsOn(extractSOFiles)
+
+    tasks.forEach({ task ->
+        if (task.name.contains("JniLibFolders")) {
+            task.dependsOn(packageNdkLibs)
+        }
+    })
 }
 
 if (CLIENT_SIDE_BUILD) {
