@@ -40,6 +40,7 @@ export function useEvent<T extends NativeEvent<T>>(
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
   }
+
   return initRef;
 }
 
