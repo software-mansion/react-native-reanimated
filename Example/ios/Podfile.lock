@@ -380,7 +380,7 @@ DEPENDENCIES:
   - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
   - "RNCPicker (from `../node_modules/@react-native-community/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
-  - RNReanimated (from `../..`)
+  - RNReanimated (from `../../`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -463,7 +463,7 @@ EXTERNAL SOURCES:
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
-    :path: "../.."
+    :path: "../../"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNSVG:
@@ -514,6 +514,6 @@ SPEC CHECKSUMS:
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   Yoga: 6671cf077f614314c22fd09ddf87d7abeee64e96
 
-PODFILE CHECKSUM: 8ca9f55ead6f2e75f7fd33339f42dde46cbf21cf
+PODFILE CHECKSUM: fa0d7532df10069310b893ce22140d558ba12fdc
 
 COCOAPODS: 1.11.3

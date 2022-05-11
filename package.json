@@ -83,12 +83,9 @@
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-native": "*",
     "@babel/core": "^7.0.0-0",
-    "@types/react": "*",
-    "@types/react-native": "*",
-    "@testing-library/react-hooks": "*"
+    "react": "*",
+    "react-native": "*"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.6",
@@ -99,12 +96,14 @@
     "@react-native-community/bob": "^0.17.1",
     "@react-native-community/eslint-config": "^0.0.5",
     "@testing-library/jest-native": "^4.0.4",
+    "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
     "@types/babel-types": "^7.0.11",
     "@types/babel__core": "^7.1.18",
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.14.2",
     "@types/jest": "^27.4.0",
+    "@types/react-native": "^0.66.0",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "babel-eslint": "^10.1.0",
