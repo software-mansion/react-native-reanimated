@@ -44,12 +44,6 @@ export function useEvent<T extends NativeEvent<T>>(
     initRef.current.updateWorklet(handler);
   }
 
-  useEffect(() => {
-    return () => {
-      initRef.current = null;
-    };
-  }, []);
-
   return initRef;
 }
 
