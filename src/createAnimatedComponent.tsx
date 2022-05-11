@@ -385,7 +385,7 @@ export default function createAnimatedComponent(
     }
 
     componentDidUpdate(
-      prevProps: AnimatedComponentProps<InitialComponentProps> // eslint-disable-line @typescript-eslint/no-unused-vars
+      prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
