@@ -35,7 +35,6 @@ typedef void (^REAPerformOperations)();
 - (void)operationsBatchDidComplete;
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
-- (void)postRunUpdatesAfterAnimation;
 - (void)registerEventHandler:(REAEventHandler)eventHandler;
 - (void)dispatchEvent:(id<RCTEvent>)event;
 
