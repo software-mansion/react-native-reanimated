@@ -1,8 +1,20 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <React/RCTConvert.h>
-#import <React/RCTShadowView.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
+#import <React/RCTSurfacePresenter.h>
+#import <react/renderer/core/ShadowNode.h>
+#import <react/renderer/uimanager/UIManager.h>
+#else
 #import <stdatomic.h>
+#endif
+
+#ifdef RCT_NEW_ARCH_ENABLED
+using namespace facebook::react;
+#endif
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -81,15 +93,45 @@
   CADisplayLink *_displayLink;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
-  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
-  volatile atomic_bool _shouldFlushUpdateBuffer;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
+#ifdef RCT_NEW_ARCH_ENABLED
+  __weak RCTBridge *_bridge;
+  REAPerformOperations _performOperations;
+  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
+  NSMutableDictionary<NSNumber *, NSMutableDictionary *> *_operationsInBatch;
+#else
+  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
+  volatile atomic_bool _shouldFlushUpdateBuffer;
+#endif
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+- (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
+                                bridge:(RCTBridge *)bridge
+                      surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
+{
+  if ((self = [super init])) {
+    _bridge = bridge;
+    _surfacePresenter = surfacePresenter;
+    _reanimatedModule = reanimatedModule;
+    _wantRunUpdates = NO;
+    _onAnimationCallbacks = [NSMutableArray new];
+    _operationsInBatch = [NSMutableDictionary new];
+    _componentUpdateBuffer = [NSMutableDictionary new];
+    _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
+  }
+
+  _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+  _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+  [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  [_displayLink setPaused:true];
+  return self;
+}
+#else
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
 {
   if ((self = [super init])) {
@@ -109,12 +151,20 @@
   [_displayLink setPaused:true];
   return self;
 }
+#endif
 
 - (void)invalidate
 {
   _eventHandler = nil;
   [_displayLink invalidate];
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
+{
+  _surfacePresenter = surfacePresenter;
+}
+#endif
 
 - (void)operationsBatchDidComplete
 {
@@ -140,6 +190,13 @@
 {
   _eventHandler = eventHandler;
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (void)registerPerformOperations:(REAPerformOperations)performOperations
+{
+  _performOperations = performOperations;
+}
+#endif
 
 - (void)startUpdatingOnAnimationFrame
 {
@@ -190,6 +247,10 @@
 
 - (void)performOperations
 {
+#ifdef RCT_NEW_ARCH_ENABLED
+  _performOperations(); // calls NativeReanimatedModule::performOperations
+  _wantRunUpdates = NO;
+#else
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
@@ -197,7 +258,7 @@
     BOOL trySynchronously = _tryRunBatchUpdatesSynchronously;
     _tryRunBatchUpdatesSynchronously = NO;
 
-    __weak typeof(self) weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     RCTExecuteOnUIManagerQueue(^{
       __typeof__(self) strongSelf = weakSelf;
@@ -232,8 +293,12 @@
     }
   }
   _wantRunUpdates = NO;
+#endif
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName
                             nativeProps:(NSMutableDictionary *)nativeProps
@@ -246,6 +311,7 @@
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
 }
+#endif
 
 - (BOOL)isDirectEvent:(id<RCTEvent>)event
 {
@@ -273,7 +339,7 @@
 
   if (_eventHandler != nil) {
     __weak REAEventHandler eventHandler = _eventHandler;
-    __weak typeof(self) weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     RCTExecuteOnMainQueue(^void() {
       __typeof__(self) strongSelf = weakSelf;
       if (strongSelf == nil) {
@@ -290,17 +356,39 @@
   }
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 - (void)configureUiProps:(nonnull NSSet<NSString *> *)uiPropsSet
           andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet
 {
   _uiProps = uiPropsSet;
   _nativeProps = nativePropsSet;
 }
+#endif
 
 - (BOOL)isNotNativeViewFullyMounted:(NSNumber *)viewTag
 {
   return _viewRegistry[viewTag].superview == nil;
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+- (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
+{
+  // adapted from RCTPropsAnimatedNode.m
+  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ?: _surfacePresenter;
+  [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+
+  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
+  // so that's why we need to call `finalizeUpdates` here.
+  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+  UIView<RCTComponentViewProtocol> *componentView =
+      [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
+  [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+}
+
+#else
 
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
@@ -379,7 +467,7 @@
     return;
   }
 
-  __weak typeof(self) weakSelf = self;
+  __weak __typeof__(self) weakSelf = self;
   [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
     __typeof__(self) strongSelf = weakSelf;
     if (strongSelf == nil) {
@@ -400,5 +488,7 @@
     [strongSelf performOperations];
   }];
 }
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end

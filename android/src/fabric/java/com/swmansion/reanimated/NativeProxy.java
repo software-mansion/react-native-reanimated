@@ -8,13 +8,18 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
+import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
@@ -31,7 +36,7 @@ import java.util.Set;
 public class NativeProxy {
 
   static {
-    System.loadLibrary("reanimated");
+    SoLoader.loadLibrary("reanimated");
   }
 
   @DoNotStrip
@@ -104,9 +109,16 @@ public class NativeProxy {
         (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
     mScheduler = new Scheduler(context);
+    FabricUIManager fabricUIManager =
+        (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
+
     mHybridData =
         initHybrid(
-            context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
+            context.getJavaScriptContextHolder().get(),
+            holder,
+            mScheduler,
+            LayoutAnimations,
+            fabricUIManager);
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
@@ -129,11 +141,14 @@ public class NativeProxy {
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
       Scheduler scheduler,
-      LayoutAnimations LayoutAnimations);
+      LayoutAnimations LayoutAnimations,
+      FabricUIManager fabricUIManager);
 
-  private native void installJSIBindings();
+  private native void installJSIBindings(FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
+
+  public native void performOperations();
 
   public Scheduler getScheduler() {
     return mScheduler;
@@ -168,6 +183,11 @@ public class NativeProxy {
   @DoNotStrip
   private void updateProps(int viewTag, Map<String, Object> props) {
     mNodesManager.updateProps(viewTag, props);
+  }
+
+  @DoNotStrip
+  private void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
+    mNodesManager.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
   @DoNotStrip
@@ -248,7 +268,9 @@ public class NativeProxy {
       return;
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
-    installJSIBindings();
+    FabricUIManager fabricUIManager =
+        (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
+    installJSIBindings(fabricUIManager);
     AnimationsManager animationsManager =
         mContext
             .get()

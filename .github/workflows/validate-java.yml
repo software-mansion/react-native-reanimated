@@ -1,8 +1,6 @@
 name: Java Lint
 on:
   pull_request:
-    branches:
-      - main
     paths:
       - 'android/src/main/java/**'
   push:

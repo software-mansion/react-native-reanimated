@@ -2,6 +2,7 @@ import { MutableRefObject, useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
 import {
   AnimatedStyle,
+  Context,
   NativeEvent,
   NestedObjectValues,
   StyleProps,
@@ -12,11 +13,7 @@ import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import {
-  Context,
-  ContextWithDependencies,
-  DependencyList,
-} from './commonTypes';
+import { ContextWithDependencies, DependencyList } from './commonTypes';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext): void;

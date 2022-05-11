@@ -74,12 +74,14 @@ public class NodesManager implements EventDispatcherListener {
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
+  private ReactApplicationContext mReactApplicationContext;
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   public double currentFrameTimeMs;
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
+  private ReaCompatibility compatibility;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -103,8 +105,11 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
+    mReactApplicationContext = reactApplicationContext;
     mNativeProxy = new NativeProxy(reactApplicationContext);
     mAnimationManager.setScheduler(getNativeProxy().getScheduler());
+    compatibility = new ReaCompatibility(reactApplicationContext);
+    compatibility.registerFabricEventListener(this);
   }
 
   private final class NativeUpdateOperation {
@@ -177,7 +182,9 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void performOperations() {
-    if (!mOperationsInBatch.isEmpty()) {
+    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+      mNativeProxy.performOperations();
+    } else if (!mOperationsInBatch.isEmpty()) {
       final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
       mOperationsInBatch = new LinkedList<>();
       final boolean trySynchronously = mTryRunBatchUpdatesSynchronously;
@@ -355,6 +362,10 @@ public class NodesManager implements EventDispatcherListener {
         sendEvent("onReanimatedPropsChange", evt);
       }
     }
+  }
+
+  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
+    compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
   public String obtainProp(int viewTag, String propName) {

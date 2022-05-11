@@ -20,6 +20,13 @@
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <JFabricUIManager.h>
+#include "FabricUtils.h"
+#include "NewestShadowNodesRegistry.h"
+#include "ReanimatedUIManagerBinding.h"
+#endif
+
 namespace reanimated {
 
 using namespace facebook;
@@ -30,18 +37,40 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rt,
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
     std::shared_ptr<Scheduler> scheduler,
-    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations)
+    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
+#ifdef RCT_NEW_ARCH_ENABLED
+    ,
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager
+#endif
+    )
     : javaPart_(jni::make_global(jThis)),
       runtime_(rt),
       jsCallInvoker_(jsCallInvoker),
-      scheduler_(scheduler),
-      layoutAnimations(std::move(_layoutAnimations)) {}
+      layoutAnimations(std::move(_layoutAnimations)),
+      scheduler_(scheduler)
+#ifdef RCT_NEW_ARCH_ENABLED
+      ,
+      newestShadowNodesRegistry_(std::make_shared<NewestShadowNodesRegistry>())
+#endif
+{
+#ifdef RCT_NEW_ARCH_ENABLED
+  Binding *binding = fabricUIManager->getBinding();
+  RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
+  std::shared_ptr<UIManager> uiManager =
+      binding->getScheduler()->getUIManager();
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
+      *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
+#endif
+}
 
 NativeProxy::~NativeProxy() {
   runtime_->global().setProperty(
       *runtime_,
       jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
       jsi::Value::undefined());
+  // removed temporary, new event listener mechanism need fix on the RN side
+  // reactScheduler_->removeEventListener(eventListener_);
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -50,7 +79,13 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
-    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations) {
+    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+#ifdef RCT_NEW_ARCH_ENABLED
+    ,
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager
+#endif
+) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
@@ -59,18 +94,42 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       scheduler,
-      make_global(layoutAnimations));
+      make_global(layoutAnimations)
+#ifdef RCT_NEW_ARCH_ENABLED
+          ,
+      fabricUIManager
+#endif
+      /**/);
 }
 
-void NativeProxy::installJSIBindings() {
-  auto propUpdater = [this](
-                         jsi::Runtime &rt,
-                         int viewTag,
-                         const jsi::Value &viewName,
-                         const jsi::Object &props) {
+void NativeProxy::installJSIBindings(
+#ifdef RCT_NEW_ARCH_ENABLED
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager
+#endif
+    /**/) {
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
+  auto updatePropsFunction = [this](
+                                 jsi::Runtime &rt,
+                                 int viewTag,
+                                 const jsi::Value &viewName,
+                                 const jsi::Object &props) {
     // viewName is for iOS only, we skip it here
     this->updateProps(rt, viewTag, props);
   };
+
+  auto measureFunction =
+      [this](int viewTag) -> std::vector<std::pair<std::string, double>> {
+    return measure(viewTag);
+  };
+
+  auto scrollToFunction =
+      [this](int viewTag, double x, double y, bool animated) -> void {
+    scrollTo(viewTag, x, y, animated);
+  };
+#endif
 
   auto getCurrentTime = [this]() {
     auto method =
@@ -99,6 +158,12 @@ void NativeProxy::installJSIBindings() {
     this->requestRender(std::move(wrappedOnRender));
   };
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  auto synchronouslyUpdateUIPropsFunction =
+      [this](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
+        this->synchronouslyUpdateUIProps(rt, tag, props);
+      };
+#else
   auto propObtainer = [this](
                           jsi::Runtime &rt,
                           const int viewTag,
@@ -113,16 +178,7 @@ void NativeProxy::installJSIBindings() {
     std::string str = result->toStdString();
     return jsi::Value(rt, jsi::String::createFromAscii(rt, str.c_str()));
   };
-
-  auto measuringFunction =
-      [this](int viewTag) -> std::vector<std::pair<std::string, double>> {
-    return measure(viewTag);
-  };
-
-  auto scrollToFunction =
-      [this](int viewTag, double x, double y, bool animated) -> void {
-    scrollTo(viewTag, x, y, animated);
-  };
+#endif
 
   auto registerSensorFunction =
       [this](int sensorType, int interval, std::function<void(double[])> setter)
@@ -145,22 +201,25 @@ void NativeProxy::installJSIBindings() {
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::jsc::makeJSCRuntime();
 #endif
-  auto workletRuntimeValue = runtime_->global()
-    .getProperty(*runtime_, "ArrayBuffer")
-    .asObject(*runtime_)
-    .asFunction(*runtime_)
-    .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void*))});
-  uintptr_t* workletRuntimeData = reinterpret_cast<uintptr_t*>(
-    workletRuntimeValue
-      .getObject(*runtime_)
-      .getArrayBuffer(*runtime_)
-      .data(*runtime_));
+  auto workletRuntimeValue =
+      runtime_->global()
+          .getProperty(*runtime_, "ArrayBuffer")
+          .asObject(*runtime_)
+          .asFunction(*runtime_)
+          .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void *))});
+  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
+      workletRuntimeValue.getObject(*runtime_).getArrayBuffer(*runtime_).data(
+          *runtime_));
   workletRuntimeData[0] = reinterpret_cast<uintptr_t>(animatedRuntime.get());
 
   runtime_->global().setProperty(
-      *runtime_,
-      "_WORKLET_RUNTIME",
-      workletRuntimeValue);
+      *runtime_, "_WORKLET_RUNTIME", workletRuntimeValue);
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", true);
+#else
+  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
+#endif
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
@@ -191,26 +250,54 @@ void NativeProxy::installJSIBindings() {
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
-      propUpdater,
+#ifdef RCT_NEW_ARCH_ENABLED
+      synchronouslyUpdateUIPropsFunction,
+#else
+      updatePropsFunction,
       scrollToFunction,
-      measuringFunction,
+      measureFunction,
+      configurePropsFunction,
+#endif
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
-      setGestureStateFunction,
-      configurePropsFunction};
+      setGestureStateFunction};
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
       animatedRuntime,
       errorHandler,
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
       propObtainer,
+#endif
       layoutAnimationsProxy,
       platformDepMethodsHolder);
 
   _nativeReanimatedModule = module;
+
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
+#ifdef RCT_NEW_ARCH_ENABLED
+  this->registerEventHandler([weakModule, getCurrentTime](
+                                 std::string eventName,
+                                 std::string eventAsString) {
+    if (auto module = weakModule.lock()) {
+      // handles RCTEvents from RNGestureHandler
+
+      std::string eventJSON = eventAsString.substr(
+          13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
+      jsi::Runtime &rt = *module->runtime;
+      jsi::Value payload =
+          jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
+      // TODO: support NaN and INF values
+      // TODO: convert event directly to jsi::Value without JSON serialization
+
+      module->handleEvent(eventName, std::move(payload), getCurrentTime());
+    }
+  });
+#else
   this->registerEventHandler(
       [weakModule, getCurrentTime](
           std::string eventName, std::string eventAsString) {
@@ -225,6 +312,23 @@ void NativeProxy::installJSIBindings() {
               *module->runtime, eventTimestampName, jsi::Value::undefined());
         }
       });
+#endif
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  Binding *binding = fabricUIManager->getBinding();
+  std::shared_ptr<UIManager> uiManager =
+      binding->getScheduler()->getUIManager();
+  module->setUIManager(uiManager);
+  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
+  newestShadowNodesRegistry_ = nullptr;
+#endif
+  //  removed temporary, new event listener mechanism need fix on the RN side
+  //  eventListener_ = std::make_shared<EventListener>(
+  //      [module, getCurrentTime](const RawEvent &rawEvent) {
+  //        return module->handleRawEvent(rawEvent, getCurrentTime());
+  //      });
+  //  reactScheduler_ = binding->getScheduler();
+  //  reactScheduler_->addEventListener(eventListener_);
 
   runtime_->global().setProperty(
       *runtime_,
@@ -236,13 +340,20 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
   return _nativeReanimatedModule->isAnyHandlerWaitingForEvent(s);
 }
 
+void NativeProxy::performOperations() {
+#ifdef RCT_NEW_ARCH_ENABLED
+  _nativeReanimatedModule->performOperations();
+#endif
+}
+
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
-           NativeProxy::isAnyHandlerWaitingForEvent)});
+           NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("performOperations", NativeProxy::performOperations)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
@@ -265,6 +376,9 @@ void NativeProxy::registerEventHandler(
       EventHandler::newObjectCxxArgs(std::move(handler)).get());
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
 void NativeProxy::updateProps(
     jsi::Runtime &rt,
     int viewTag,
@@ -302,6 +416,27 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
 
   return result;
 }
+#endif // RCT_NEW_ARCH_ENABLED
+
+#ifdef RCT_NEW_ARCH_ENABLED
+inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
+    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
+  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
+}
+
+void NativeProxy::synchronouslyUpdateUIProps(
+    jsi::Runtime &rt,
+    Tag tag,
+    const jsi::Value &props) {
+  static const auto method =
+      javaPart_->getClass()
+          ->getMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
+              "synchronouslyUpdateUIProps");
+  jni::local_ref<ReadableMap::javaobject> uiProps = castReadableMap(
+      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
+  method(javaPart_.get(), tag, uiProps);
+}
+#endif
 
 int NativeProxy::registerSensor(
     int sensorType,
@@ -337,11 +472,10 @@ void NativeProxy::configureProps(
                         ReadableNativeArray::javaobject)>("configureProps");
   method(
       javaPart_.get(),
-      ReadableNativeArray::newObjectCxxArgs(
-          std::move(jsi::dynamicFromValue(rt, uiProps)))
+      ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps))
           .get(),
       ReadableNativeArray::newObjectCxxArgs(
-          std::move(jsi::dynamicFromValue(rt, nativeProps)))
+          jsi::dynamicFromValue(rt, nativeProps))
           .get());
 }
 

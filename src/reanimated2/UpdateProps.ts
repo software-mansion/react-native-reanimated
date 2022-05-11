@@ -1,4 +1,4 @@
-/* global _updateProps */
+/* global _updatePropsPaper _updatePropsFabric */
 import { MutableRefObject } from 'react';
 import { processColor } from './Colors';
 import { AnimatedStyle, SharedValue, StyleProps } from './commonTypes';
@@ -43,27 +43,46 @@ if (shouldBeUseWeb()) {
     }
   };
 } else {
-  updatePropsByPlatform = (
-    viewDescriptors: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle,
-    _: ViewRefSet<any> | undefined
-  ): void => {
-    'worklet';
+  if (global._IS_FABRIC) {
+    updatePropsByPlatform = (
+      viewDescriptors: SharedValue<Descriptor[]>,
+      updates: StyleProps | AnimatedStyle,
+      _: ViewRefSet<any> | undefined
+    ): void => {
+      'worklet';
 
-    for (const key in updates) {
-      if (ColorProperties.indexOf(key) !== -1) {
-        updates[key] = processColor(updates[key]);
+      for (const key in updates) {
+        if (ColorProperties.indexOf(key) !== -1) {
+          updates[key] = processColor(updates[key]);
+        }
       }
-    }
 
-    viewDescriptors.value.forEach((viewDescriptor) => {
-      _updateProps(
-        viewDescriptor.tag,
-        viewDescriptor.name || 'RCTView',
-        updates
-      );
-    });
-  };
+      viewDescriptors.value.forEach((viewDescriptor) => {
+        _updatePropsFabric(viewDescriptor.shadowNodeWrapper, updates);
+      });
+    };
+  } else {
+    updatePropsByPlatform = (
+      viewDescriptors: SharedValue<Descriptor[]>,
+      updates: StyleProps | AnimatedStyle,
+      _: ViewRefSet<any> | undefined
+    ): void => {
+      'worklet';
+
+      for (const key in updates) {
+        if (ColorProperties.indexOf(key) !== -1) {
+          updates[key] = processColor(updates[key]);
+        }
+      }
+      viewDescriptors.value.forEach((viewDescriptor) => {
+        _updatePropsPaper(
+          viewDescriptor.tag,
+          viewDescriptor.name || 'RCTView',
+          updates
+        );
+      });
+    };
+  }
 }
 
 export const updateProps: (

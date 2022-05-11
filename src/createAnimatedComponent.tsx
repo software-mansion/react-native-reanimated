@@ -27,11 +27,16 @@ import {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
 } from './reanimated2/layoutReanimation';
-import { SharedValue, StyleProps } from './reanimated2/commonTypes';
+import {
+  SharedValue,
+  StyleProps,
+  ShadowNodeWrapper,
+} from './reanimated2/commonTypes';
 import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
+import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -210,6 +215,13 @@ export default function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
+        if (global._IS_FABRIC) {
+          const shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+          runOnUI(() => {
+            'worklet';
+            _removeShadowNodeFromRegistry(shadowNodeWrapper);
+          })();
+        }
       }
     }
 
@@ -276,9 +288,11 @@ export default function createAnimatedComponent(
 
       let viewTag: number | null;
       let viewName: string | null;
+      let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
+        shadowNodeWrapper = null;
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
@@ -299,6 +313,10 @@ export default function createAnimatedComponent(
           this.props.animatedProps?.viewDescriptors || styles.length;
         if (hasReanimated2Props && hostInstance?.viewConfig) {
           adaptViewConfig(hostInstance.viewConfig);
+        }
+
+        if (global._IS_FABRIC) {
+          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
       this._viewTag = viewTag as number;
@@ -325,7 +343,11 @@ export default function createAnimatedComponent(
       }
 
       styles.forEach((style) => {
-        style.viewDescriptors.add({ tag: viewTag, name: viewName });
+        style.viewDescriptors.add({
+          tag: viewTag,
+          name: viewName,
+          shadowNodeWrapper,
+        });
         if (isJest()) {
           /**
            * We need to connect Jest's TestObject instance whose contains just props object
@@ -356,6 +378,8 @@ export default function createAnimatedComponent(
           tag: viewTag!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
     }

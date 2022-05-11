@@ -1,18 +1,18 @@
-name: Test Example App TypeScript and Lint
+name: Test TypeScript and Lint
 on:
   pull_request:
-    branches:
-      - main
     paths:
       - 'Example/**'
+      - 'FabricExample/**'
   push:
     branches:
       - main
 jobs:
   check:
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIRECTORY: Example
+    strategy:
+      matrix:
+        working-directory: [Example, FabricExample]
     concurrency:
       group: static-example-${{ github.ref }}
       cancel-in-progress: true
@@ -26,12 +26,12 @@ jobs:
           cache: 'yarn'
       - name: Install root node dependencies
         run: yarn
-      - name: Install example app node dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+      - name: Install ${{ matrix.working-directory }} app node dependencies
+        working-directory: ${{ matrix.working-directory }}
         run: yarn
       - name: Check types
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: ${{ matrix.working-directory }}
         run: yarn tsc --noEmit
       - name: Lint
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: ${{ matrix.working-directory }}
         run: yarn lint:js
