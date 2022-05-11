@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   FlatList,
   Platform,
@@ -9,29 +8,30 @@ import {
   View,
 } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { RectButton } from 'react-native-gesture-handler';
 
-import EmptyExample from './src/EmptyExample';
-import WorkletExample from './src/WorkletExample';
-import TransformExample from './src/TransformExample';
-import ColorExample from './src/ColorExample';
-import WidthExample from './src/WidthExample';
-import ChessboardExample from './src/ChessboardExample';
-import RefExample from './src/RefExample';
-import ScrollViewExample from './src/ScrollViewExample';
-import ScrollToExample from './src/ScrollToExample';
-import MeasureExample from './src/MeasureExample';
 import AnimatedSensorExample from './src/AnimatedSensorExample';
 import AnimatedTextInputExample from './src/AnimatedTextInputExample';
 import AnimatedTextWidthExample from './src/AnimatedTextWidthExample';
-import GestureHandlerExample from './src/GestureHandlerExample';
 import BokehExample from './src/BokehExample';
-import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
+import BouncingBoxExample from './src/BouncingBoxExample';
 import BubblesExample from './src/BubblesExample';
+import ChessboardExample from './src/ChessboardExample';
+import ColorExample from './src/ColorExample';
+import EmptyExample from './src/EmptyExample';
+import GestureHandlerExample from './src/GestureHandlerExample';
+import MeasureExample from './src/MeasureExample';
+import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
+import React from 'react';
+import { RectButton } from 'react-native-gesture-handler';
+import RefExample from './src/RefExample';
 import ScreenStackExample from './src/ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './src/ScreenStackHeaderConfigBackgroundColorExample';
-import BouncingBoxExample from './src/BouncingBoxExample';
+import ScrollToExample from './src/ScrollToExample';
+import ScrollViewExample from './src/ScrollViewExample';
+import TransformExample from './src/TransformExample';
+import WidthExample from './src/WidthExample';
+import WorkletExample from './src/WorkletExample';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const EXAMPLES = [
   {
@@ -176,19 +176,21 @@ function HomeScreen() {
 }
 
 function Item({ title, onPress }) {
-  if (Platform.OS === 'ios') {
-    return (
-      <RectButton style={styles.button} onPress={onPress}>
-        <Text style={styles.title}>{title}</Text>
-      </RectButton>
-    );
-  } else {
+  if (Platform.OS === 'android') {
+    // RectButton doesn't work quite well on Android yet,
+    // so let's temporarily use React Native's TouchableNativeFeedback.
     return (
       <TouchableNativeFeedback onPress={onPress}>
         <View style={styles.button}>
           <Text style={styles.title}>{title}</Text>
         </View>
       </TouchableNativeFeedback>
+    );
+  } else {
+    return (
+      <RectButton style={styles.button} onPress={onPress}>
+        <Text style={styles.title}>{title}</Text>
+      </RectButton>
     );
   }
 }
