@@ -17,8 +17,7 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
     return (
       <WrappedComponents.View
         layout={itemLayoutAnimation}
-        onLayout={props.onLayout}
-      >
+        onLayout={props.onLayout}>
         {props.children}
       </WrappedComponents.View>
     );
