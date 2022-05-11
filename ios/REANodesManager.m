@@ -80,7 +80,6 @@
 @implementation REANodesManager {
   CADisplayLink *_displayLink;
   BOOL _wantRunUpdates;
-  BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
   BOOL _tryRunBatchUpdatesSynchronously;
@@ -135,14 +134,6 @@
 {
   [_onAnimationCallbacks addObject:clb];
   [self startUpdatingOnAnimationFrame];
-}
-
-- (void)postRunUpdatesAfterAnimation
-{
-  _wantRunUpdates = YES;
-  if (!_processingDirectEvent) {
-    [self startUpdatingOnAnimationFrame];
-  }
 }
 
 - (void)registerEventHandler:(REAEventHandler)eventHandler

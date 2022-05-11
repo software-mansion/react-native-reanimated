@@ -20,7 +20,6 @@ typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 - (void)invalidate;
 - (void)operationsBatchDidComplete;
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
-- (void)postRunUpdatesAfterAnimation;
 - (void)registerEventHandler:(REAEventHandler)eventHandler;
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *)viewName
