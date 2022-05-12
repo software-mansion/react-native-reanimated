@@ -3,13 +3,14 @@ package com.swmansion.reanimated.layoutReanimation;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.ReanimatedModule;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 
 public class LayoutAnimations {
   static {
-    System.loadLibrary("reanimated");
+    SoLoader.loadLibrary("reanimated");
   }
 
   @DoNotStrip

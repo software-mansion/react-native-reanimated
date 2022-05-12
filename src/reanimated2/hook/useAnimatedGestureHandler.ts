@@ -1,7 +1,7 @@
 import { MutableRefObject } from 'react';
-import { WorkletFunction } from '../commonTypes';
+import { Context, WorkletFunction } from '../commonTypes';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { Context, DependencyList } from './commonTypes';
+import { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {

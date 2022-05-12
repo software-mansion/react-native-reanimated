@@ -1,0 +1,55 @@
+diff --git a/node_modules/react-native-screens/android/src/main/jni/Android.mk b/node_modules/react-native-screens/android/src/main/jni/Android.mk
+index 914607f..7684d3b 100644
+--- a/node_modules/react-native-screens/android/src/main/jni/Android.mk
++++ b/node_modules/react-native-screens/android/src/main/jni/Android.mk
+@@ -20,7 +20,7 @@ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH) $(GENERATED_SRC_DIR)/codegen/jni
+ LOCAL_SHARED_LIBRARIES := libjsi \
+     libfbjni \
+     libglog \
+-    libfolly_json \
++    libfolly_runtime \
+     libyoga \
+     libreact_nativemodule_core \
+     libturbomodulejsijni \
+@@ -28,7 +28,6 @@ LOCAL_SHARED_LIBRARIES := libjsi \
+     libreact_render_core \
+     libreact_render_graphics \
+     libfabricjni \
+-    libfolly_futures \
+     libreact_debug \
+     libreact_render_componentregistry \
+     libreact_render_debug \
+diff --git a/node_modules/react-native-screens/common/cpp/Android.mk b/node_modules/react-native-screens/common/cpp/Android.mk
+index 3b8afa2..454e4ff 100644
+--- a/node_modules/react-native-screens/common/cpp/Android.mk
++++ b/node_modules/react-native-screens/common/cpp/Android.mk
+@@ -15,7 +15,7 @@ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH) $(GENERATED_SRC_DIR)/codegen/jni
+ LOCAL_SHARED_LIBRARIES := libjsi \
+     libfbjni \
+     libglog \
+-    libfolly_json \
++    libfolly_runtime \
+     libyoga \
+     libreact_nativemodule_core \
+     libturbomodulejsijni \
+@@ -23,7 +23,6 @@ LOCAL_SHARED_LIBRARIES := libjsi \
+     libreact_render_core \
+     libreact_render_graphics \
+     libfabricjni \
+-    libfolly_futures \
+     libreact_debug \
+     libreact_render_componentregistry \
+     libreact_render_debug \
+diff --git a/node_modules/react-native-screens/ios/RNSScreenStack.mm b/node_modules/react-native-screens/ios/RNSScreenStack.mm
+index 5a0e37d..7a5ca3b 100644
+--- a/node_modules/react-native-screens/ios/RNSScreenStack.mm
++++ b/node_modules/react-native-screens/ios/RNSScreenStack.mm
+@@ -824,7 +824,7 @@ - (void)takeSnapshot
+   _snapshot = [_controller.topViewController.view snapshotViewAfterScreenUpdates:NO];
+ }
+ 
+-- (void)mountingTransactionWillMountWithMetadata:(facebook::react::MountingTransactionMetadata const &)metadata
++- (void)mountingTransactionWillMount:(facebook::react::MountingTransaction const &)transaction
+ {
+   [self takeSnapshot];
+ }

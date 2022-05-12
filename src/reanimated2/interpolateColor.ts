@@ -10,10 +10,14 @@ import {
 } from './Colors';
 import { makeMutable } from './core';
 import { interpolate } from './interpolation';
-// @ts-ignore JS file
-import { Extrapolate } from '../reanimated1/derived';
 import { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
+
+export const Extrapolate = {
+  EXTEND: 'extend',
+  CLAMP: 'clamp',
+  IDENTITY: 'identity',
+};
 
 const interpolateColorsHSV = (
   value: number,

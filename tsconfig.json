@@ -1,9 +1,5 @@
 {
   "compilerOptions": {
-    // for react-native-reanimated-tests.tsx
-    "paths": {
-      "react-native-reanimated": ["./react-native-reanimated.d.ts"]
-    },
     // change to true after we transition to TS
     "declaration": false,
     "preserveSymlinks": true,
@@ -21,7 +17,6 @@
   "include": [
     "lib/**/*.ts",
     "lib/**/*.tsx",
-    "react-native-reanimated.d.ts",
-    "react-native-reanimated-tests.tsx"
+    "react-native-reanimated.d.ts"
   ]
 }
