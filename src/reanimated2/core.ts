@@ -333,11 +333,6 @@ if (!isWeb() && isConfigured()) {
       info: runOnJS(capturableConsole.info),
     };
     _setGlobalConsole(console);
-    if (global.performance == null) {
-      global.performance = {
-        now: global._chronoNow,
-      } as any; // due to conflict with lib.dom.d.ts -> Performance
-    }
   })();
 }
 
