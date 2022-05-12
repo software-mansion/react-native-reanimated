@@ -1,56 +1,56 @@
 {
-  "version-2.3.0/docs": [
+  "version-2.3.x/docs": [
     {
       "type": "category",
       "label": "Fundamentals",
       "items": [
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/about"
+          "id": "version-2.3.x/fundamentals/about"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/installation"
+          "id": "version-2.3.x/fundamentals/installation"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/worklets"
+          "id": "version-2.3.x/fundamentals/worklets"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/shared-values"
+          "id": "version-2.3.x/fundamentals/shared-values"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/animations"
+          "id": "version-2.3.x/fundamentals/animations"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/events"
+          "id": "version-2.3.x/fundamentals/events"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/custom_events"
+          "id": "version-2.3.x/fundamentals/custom_events"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/layout_animations"
+          "id": "version-2.3.x/fundamentals/layout_animations"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/architecture"
+          "id": "version-2.3.x/fundamentals/architecture"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/migration"
+          "id": "version-2.3.x/fundamentals/migration"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/web-support"
+          "id": "version-2.3.x/fundamentals/web-support"
         },
         {
           "type": "doc",
-          "id": "version-2.3.0/fundamentals/troubleshooting"
+          "id": "version-2.3.x/fundamentals/troubleshooting"
         }
       ],
       "collapsible": true,
@@ -68,43 +68,43 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useSharedValue"
+              "id": "version-2.3.x/api/hooks/useSharedValue"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useAnimatedStyle"
+              "id": "version-2.3.x/api/hooks/useAnimatedStyle"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useDerivedValue"
+              "id": "version-2.3.x/api/hooks/useDerivedValue"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useAnimatedScrollHandler"
+              "id": "version-2.3.x/api/hooks/useAnimatedScrollHandler"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useAnimatedGestureHandler"
+              "id": "version-2.3.x/api/hooks/useAnimatedGestureHandler"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useAnimatedRef"
+              "id": "version-2.3.x/api/hooks/useAnimatedRef"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useAnimatedReaction"
+              "id": "version-2.3.x/api/hooks/useAnimatedReaction"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useAnimatedProps"
+              "id": "version-2.3.x/api/hooks/useAnimatedProps"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useHandler"
+              "id": "version-2.3.x/api/hooks/useHandler"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/hooks/useEvent"
+              "id": "version-2.3.x/api/hooks/useEvent"
             }
           ]
         },
@@ -116,31 +116,31 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.3.0/api/animations/withTiming"
+              "id": "version-2.3.x/api/animations/withTiming"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/animations/withSpring"
+              "id": "version-2.3.x/api/animations/withSpring"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/animations/withDecay"
+              "id": "version-2.3.x/api/animations/withDecay"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/animations/cancelAnimation"
+              "id": "version-2.3.x/api/animations/cancelAnimation"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/animations/withDelay"
+              "id": "version-2.3.x/api/animations/withDelay"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/animations/withSequence"
+              "id": "version-2.3.x/api/animations/withSequence"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/animations/withRepeat"
+              "id": "version-2.3.x/api/animations/withRepeat"
             }
           ]
         },
@@ -152,11 +152,11 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.3.0/api/nativeMethods/measure"
+              "id": "version-2.3.x/api/nativeMethods/measure"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/nativeMethods/scrollTo"
+              "id": "version-2.3.x/api/nativeMethods/scrollTo"
             }
           ]
         },
@@ -168,23 +168,23 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.3.0/api/LayoutAnimations/customAnimations"
+              "id": "version-2.3.x/api/LayoutAnimations/customAnimations"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/LayoutAnimations/entryAnimations"
+              "id": "version-2.3.x/api/LayoutAnimations/entryAnimations"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/LayoutAnimations/exitAnimations"
+              "id": "version-2.3.x/api/LayoutAnimations/exitAnimations"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/LayoutAnimations/keyframeAnimations"
+              "id": "version-2.3.x/api/LayoutAnimations/keyframeAnimations"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/LayoutAnimations/layoutTransitions"
+              "id": "version-2.3.x/api/LayoutAnimations/layoutTransitions"
             }
           ]
         },
@@ -196,19 +196,19 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.3.0/api/miscellaneous/runOnJS"
+              "id": "version-2.3.x/api/miscellaneous/runOnJS"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/miscellaneous/runOnUI"
+              "id": "version-2.3.x/api/miscellaneous/runOnUI"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/miscellaneous/interpolate"
+              "id": "version-2.3.x/api/miscellaneous/interpolate"
             },
             {
               "type": "doc",
-              "id": "version-2.3.0/api/miscellaneous/getRelativeCoords"
+              "id": "version-2.3.x/api/miscellaneous/getRelativeCoords"
             }
           ]
         }
@@ -222,7 +222,7 @@
       "items": [
         {
           "type": "doc",
-          "id": "version-2.3.0/guide/testing"
+          "id": "version-2.3.x/guide/testing"
         }
       ],
       "collapsible": true,
@@ -234,7 +234,7 @@
       "items": [
         {
           "type": "doc",
-          "id": "version-2.3.0/tutorials/LayoutAnimations/layoutAnimations"
+          "id": "version-2.3.x/tutorials/LayoutAnimations/layoutAnimations"
         }
       ],
       "collapsible": true,
@@ -242,7 +242,7 @@
     },
     {
       "type": "doc",
-      "id": "version-2.3.0/community"
+      "id": "version-2.3.x/community"
     }
   ]
 }
