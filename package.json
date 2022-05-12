@@ -50,6 +50,8 @@
     "ios/",
     "!ios/build/",
     "!android/build/",
+    "!android/.cxx/",
+    "!android/.gradle/",
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",
