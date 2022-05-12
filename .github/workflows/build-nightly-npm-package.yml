@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 12 */1 * *'
   workflow_dispatch:
+  push:
+    branches:
+      - graszka22/nightly-workflow
 
 jobs:
   call-build-workflow-rea-v3:
