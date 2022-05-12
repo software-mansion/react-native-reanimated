@@ -1,5 +1,5 @@
 {
-  "version-2.1.0/docs": [
+  "version-2.2.x/docs": [
     {
       "collapsed": true,
       "type": "category",
@@ -7,43 +7,43 @@
       "items": [
         {
           "type": "doc",
-          "id": "version-2.1.0/about"
+          "id": "version-2.2.x/about"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/installation"
+          "id": "version-2.2.x/installation"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/worklets"
+          "id": "version-2.2.x/worklets"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/shared-values"
+          "id": "version-2.2.x/shared-values"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/animations"
+          "id": "version-2.2.x/animations"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/events"
+          "id": "version-2.2.x/events"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/architecture"
+          "id": "version-2.2.x/architecture"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/migration"
+          "id": "version-2.2.x/migration"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/web-support"
+          "id": "version-2.2.x/web-support"
         },
         {
           "type": "doc",
-          "id": "version-2.1.0/troubleshooting"
+          "id": "version-2.2.x/troubleshooting"
         }
       ]
     },
@@ -59,35 +59,35 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useSharedValue"
+              "id": "version-2.2.x/api/useSharedValue"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useAnimatedStyle"
+              "id": "version-2.2.x/api/useAnimatedStyle"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useDerivedValue"
+              "id": "version-2.2.x/api/useDerivedValue"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useAnimatedScrollHandler"
+              "id": "version-2.2.x/api/useAnimatedScrollHandler"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useAnimatedGestureHandler"
+              "id": "version-2.2.x/api/useAnimatedGestureHandler"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useAnimatedRef"
+              "id": "version-2.2.x/api/useAnimatedRef"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useAnimatedReaction"
+              "id": "version-2.2.x/api/useAnimatedReaction"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/useAnimatedProps"
+              "id": "version-2.2.x/api/useAnimatedProps"
             }
           ]
         },
@@ -98,31 +98,31 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.1.0/api/withTiming"
+              "id": "version-2.2.x/api/withTiming"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/withSpring"
+              "id": "version-2.2.x/api/withSpring"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/withDecay"
+              "id": "version-2.2.x/api/withDecay"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/cancelAnimation"
+              "id": "version-2.2.x/api/cancelAnimation"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/withDelay"
+              "id": "version-2.2.x/api/withDelay"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/withSequence"
+              "id": "version-2.2.x/api/withSequence"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/withRepeat"
+              "id": "version-2.2.x/api/withRepeat"
             }
           ]
         },
@@ -133,11 +133,11 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.1.0/api/nativeMethods/measure"
+              "id": "version-2.2.x/api/nativeMethods/measure"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/nativeMethods/scrollTo"
+              "id": "version-2.2.x/api/nativeMethods/scrollTo"
             }
           ]
         },
@@ -148,15 +148,15 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.1.0/api/miscellaneous/runOnJS"
+              "id": "version-2.2.x/api/miscellaneous/runOnJS"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/miscellaneous/runOnUI"
+              "id": "version-2.2.x/api/miscellaneous/runOnUI"
             },
             {
               "type": "doc",
-              "id": "version-2.1.0/api/miscellaneous/interpolate"
+              "id": "version-2.2.x/api/miscellaneous/interpolate"
             }
           ]
         }
@@ -169,7 +169,7 @@
       "items": [
         {
           "type": "doc",
-          "id": "version-2.1.0/testing"
+          "id": "version-2.2.x/testing"
         }
       ]
     }
