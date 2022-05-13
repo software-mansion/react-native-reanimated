@@ -44,6 +44,13 @@ jobs:
       - name: Install example app node dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn
+      - name: Cache hermes build
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-hermes
+        with:
+          path: ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles(${{ matrix.working-directory }}/node_modules/react-native/package.json') }}
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
         run: ./gradlew assembleDebug --console=plain -PreactNativeArchitectures=arm64-v8a
