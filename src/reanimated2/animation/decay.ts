@@ -20,6 +20,8 @@ interface DefaultDecayConfig {
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
+  clampWithSpring?: boolean;
+  clampSpringFactor?: number;
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
@@ -48,6 +50,7 @@ export function withDecay(
       deceleration: 0.998,
       velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
       velocity: 0,
+      clampSpringFactor: 0.6,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach(
@@ -59,40 +62,80 @@ export function withDecay(
     const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
-    function decay(animation: InnerDecayAnimation, now: number): boolean {
-      const {
-        lastTimestamp,
-        startTimestamp,
-        initialVelocity,
-        current,
-        velocity,
-      } = animation;
+    let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
-      const deltaTime = Math.min(now - lastTimestamp, 64);
-      const v =
-        velocity *
-        Math.exp(
-          -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
-        );
-      animation.current =
-        current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
-      animation.velocity = v;
-      animation.lastTimestamp = now;
+    if (config.clampWithSpring) {
+      decay = (animation: InnerDecayAnimation, now: number): boolean => {
+        const {
+          lastTimestamp,
+          startTimestamp,
+          current,
+          initialVelocity,
+          velocity,
+        } = animation;
 
-      if (config.clamp) {
-        if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
-          animation.current = config.clamp[0];
-          return true;
-        } else if (
-          initialVelocity > 0 &&
-          animation.current >= config.clamp[1]
-        ) {
-          animation.current = config.clamp[1];
+        const deltaTime = Math.min(now - lastTimestamp, 64);
+        const clampIndex = initialVelocity > 0 ? 1 : 0;
+        let deriveration = 0;
+        if (current < config.clamp[0] || current > config.clamp[1]) {
+          deriveration = current - config.clamp[clampIndex];
+        }
+
+        if (deriveration !== 0) {
+          animation.springActive = true;
+        } else if (deriveration === 0 && animation.springActive) {
+          animation.current = config.clamp[clampIndex];
           return true;
         }
-      }
 
-      return Math.abs(v) < VELOCITY_EPS;
+        const v =
+          velocity *
+            Math.exp(
+              -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
+            ) -
+          deriveration * 0.6;
+
+        animation.current =
+          current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
+        animation.velocity = v;
+        animation.lastTimestamp = now;
+      };
+    } else {
+      decay = (animation: InnerDecayAnimation, now: number): boolean => {
+        const {
+          lastTimestamp,
+          startTimestamp,
+          initialVelocity,
+          current,
+          velocity,
+        } = animation;
+
+        const deltaTime = Math.min(now - lastTimestamp, 64);
+        const v =
+          velocity *
+          Math.exp(
+            -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
+          );
+        animation.current =
+          current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
+        animation.velocity = v;
+        animation.lastTimestamp = now;
+
+        if (config.clamp) {
+          if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
+            animation.current = config.clamp[0];
+            return true;
+          } else if (
+            initialVelocity > 0 &&
+            animation.current >= config.clamp[1]
+          ) {
+            animation.current = config.clamp[1];
+            return true;
+          }
+        }
+
+        return Math.abs(v) < VELOCITY_EPS;
+      };
     }
 
     function validateConfig(): void {
