@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - main
+  push:
+    branches:
+      - '@graszka22/ci-fabric-example-speedup'
 jobs:
   build:
     runs-on: ubuntu-latest
