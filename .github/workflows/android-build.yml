@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - main
-      - '@graszka22/ci-fabric-example-speedup'
     
 jobs:
   build:
