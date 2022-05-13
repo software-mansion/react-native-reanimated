@@ -49,7 +49,7 @@ jobs:
         env:
           cache-name: cache-hermes
         with:
-          path: ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine
+          path: ${{ matrix.working-directory }}/node_modules/react-native
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/node_modules/react-native/package.json') }}
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
