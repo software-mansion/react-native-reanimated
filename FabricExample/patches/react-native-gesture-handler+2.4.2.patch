@@ -1,3 +1,29 @@
+diff --git a/node_modules/react-native-gesture-handler/android/build.gradle b/node_modules/react-native-gesture-handler/android/build.gradle
+index ad5845e..84d5163 100644
+--- a/node_modules/react-native-gesture-handler/android/build.gradle
++++ b/node_modules/react-native-gesture-handler/android/build.gradle
+@@ -63,6 +63,11 @@ repositories {
+     mavenCentral()
+ }
+ 
++def reactNativeArchitectures() {
++    def value = project.getProperties().get("reactNativeArchitectures")
++    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
++}
++
+ android {
+     compileSdkVersion safeExtGet("compileSdkVersion", 28)
+ 
+@@ -97,6 +102,9 @@ android {
+                     targets "rngesturehandler_modules"
+                 }
+             }
++            ndk {
++                abiFilters (*reactNativeArchitectures())
++            }
+         }
+     }
+ 
 diff --git a/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk b/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk
 index 185709b..926b3e7 100644
 --- a/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk

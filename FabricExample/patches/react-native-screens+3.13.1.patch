@@ -1,3 +1,29 @@
+diff --git a/node_modules/react-native-screens/android/build.gradle b/node_modules/react-native-screens/android/build.gradle
+index 7ceb834..13544e8 100644
+--- a/node_modules/react-native-screens/android/build.gradle
++++ b/node_modules/react-native-screens/android/build.gradle
+@@ -32,6 +32,11 @@ if (isNewArchitectureEnabled()) {
+ apply plugin: 'com.android.library'
+ apply plugin: 'kotlin-android'
+ 
++def reactNativeArchitectures() {
++    def value = project.getProperties().get("reactNativeArchitectures")
++    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
++}
++
+ android {
+     compileSdkVersion safeExtGet('compileSdkVersion', 28)
+ 
+@@ -66,6 +71,9 @@ android {
+                     targets "rnscreens_modules"
+                 }
+             }
++            ndk {
++                abiFilters (*reactNativeArchitectures())
++            }
+         }
+     }
+     lintOptions {
 diff --git a/node_modules/react-native-screens/android/src/main/jni/Android.mk b/node_modules/react-native-screens/android/src/main/jni/Android.mk
 index 914607f..7684d3b 100644
 --- a/node_modules/react-native-screens/android/src/main/jni/Android.mk
