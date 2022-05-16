@@ -1,3 +1,29 @@
+diff --git a/node_modules/react-native-safe-area-context/android/build.gradle b/node_modules/react-native-safe-area-context/android/build.gradle
+index dac783d..104e85a 100644
+--- a/node_modules/react-native-safe-area-context/android/build.gradle
++++ b/node_modules/react-native-safe-area-context/android/build.gradle
+@@ -29,6 +29,11 @@ if (isNewArchitectureEnabled()) {
+     apply plugin: "com.facebook.react"
+ }
+ 
++def reactNativeArchitectures() {
++    def value = project.getProperties().get("reactNativeArchitectures")
++    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
++}
++
+ android {
+     compileSdkVersion getExtOrDefault('compileSdkVersion', 30)
+ 
+@@ -64,6 +69,9 @@ android {
+                     targets "safeareacontext_modules"
+                 }
+             }
++            ndk {
++                abiFilters (*reactNativeArchitectures())
++            }
+         }
+     }
+ 
 diff --git a/node_modules/react-native-safe-area-context/android/src/main/jni/Android.mk b/node_modules/react-native-safe-area-context/android/src/main/jni/Android.mk
 index 6166527..33a7e73 100644
 --- a/node_modules/react-native-safe-area-context/android/src/main/jni/Android.mk

@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+    
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,4 +45,4 @@ jobs:
         run: yarn
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
-        run: ./gradlew assembleDebug --console=plain
+        run: ./gradlew assembleDebug --console=plain -PreactNativeArchitectures=arm64-v8a
