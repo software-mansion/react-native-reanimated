@@ -64,7 +64,7 @@ export function withDecay(
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
-    if (config.softClamp && config.clamp) {
+    if (config.softClamp) {
       decay = (animation: InnerDecayAnimation, now: number): boolean => {
         const {
           lastTimestamp,
