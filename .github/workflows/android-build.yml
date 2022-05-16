@@ -47,7 +47,7 @@ jobs:
       - name: Cache hermes build
         uses: actions/cache@v3
         env:
-          cache-name: cache-hermes-engine
+          cache-name: cache-rn-hermes-engine
         with:
           path: ${{ matrix.working-directory }}/node_modules/react-native
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/node_modules/react-native/package.json') }}
