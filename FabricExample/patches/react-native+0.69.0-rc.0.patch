@@ -1,40 +1,43 @@
+diff --git a/node_modules/react-native/ReactAndroid/build.gradle b/node_modules/react-native/ReactAndroid/build.gradle
+index b2d44d1..08caaaa 100644
+--- a/node_modules/react-native/ReactAndroid/build.gradle
++++ b/node_modules/react-native/ReactAndroid/build.gradle
+@@ -431,6 +431,12 @@ afterEvaluate {
+     configureCMakeDebug.dependsOn(preBuild)
+     configureCMakeRelWithDebInfo.dependsOn(preBuild)
+ 
++    if(file("$reactNativeRootDir/ReactAndroid/build/outputs/aar/ReactAndroid-debug.aar").exists()) {
++        tasks.findByName("configureCMakeDebug[arm64-v8a]")?.enabled = false
++        tasks.findByName("buildCMakeDebug[arm64-v8a][fabricjni,hermes-executor-debug,etc]")?.enabled = false
++        tasks.findByName("externalNativeBuildDebug")?.enabled = false
++    }
++
+     publishing {
+         publications {
+             release(MavenPublication) {
 diff --git a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
-index 30a4d5e..a23fec1 100644
+index 30a4d5e..19cfa98 100644
 --- a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
 +++ b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
-@@ -71,17 +71,24 @@ task installArchives {
-     dependsOn("publishAllPublicationsToNpmRepository")
- }
+@@ -244,6 +244,18 @@ afterEvaluate {
+     configureCMakeRelease.dependsOn(preBuild)
+     configureCMakeMinSizeRel.dependsOn(preBuild)
  
--task unzipHermes(dependsOn: downloadHermes, type: Copy) {
--    from(tarTree(downloadHermes.dest)) {
--        eachFile { file ->
--            // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
--            // folder at the top level.
--            if (file.relativePath.segments.size() > 1) {
--                file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
-+task unzipHermes {
-+  dependsOn("downloadHermes")
-+  doLast {
-+    if (!file(hermesDir).exists()) {
-+      copy {
-+        from(tarTree(downloadHermes.dest)) {
-+            eachFile { file ->
-+                // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
-+                // folder at the top level.
-+                if (file.relativePath.segments.size() > 1) {
-+                    file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
-+                }
-             }
-         }
-+        into(hermesDir)
-+      }
-     }
--    into(hermesDir)
-+  }
- }
- 
- task configureBuildForHermes(type: Exec) {
++    if(file("$reactNativeRootDir/ReactAndroid/hermes-engine/build/outputs/aar/hermes-engine-debug.aar").exists()) {
++        tasks.findByName("downloadHermes")?.enabled = false
++        tasks.findByName("unzipHermes")?.enabled = false
++        tasks.findByName("configureBuildForHermes")?.enabled = false
++        tasks.findByName("buildHermes")?.enabled = false
++        reactNativeArchitectures().each { architecture ->
++            tasks.findByName("configureCMakeRelease[${architecture}]")?.enabled = false
++        }
++        tasks.findByName("buildCMakeRelease[arm64-v8a][libhermes]")?.enabled = false
++        tasks.findByName("externalNativeBuildDebug")?.enabled = false
++    }
++
+     publishing {
+         publications {
+             release(MavenPublication) {
 diff --git a/node_modules/react-native/sdks/.hermesversion b/node_modules/react-native/sdks/.hermesversion
 new file mode 100644
 index 0000000..0bd8b2a
