@@ -1,0 +1,44 @@
+diff --git a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
+index 30a4d5e..a23fec1 100644
+--- a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
++++ b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
+@@ -71,17 +71,24 @@ task installArchives {
+     dependsOn("publishAllPublicationsToNpmRepository")
+ }
+ 
+-task unzipHermes(dependsOn: downloadHermes, type: Copy) {
+-    from(tarTree(downloadHermes.dest)) {
+-        eachFile { file ->
+-            // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
+-            // folder at the top level.
+-            if (file.relativePath.segments.size() > 1) {
+-                file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
++task unzipHermes {
++  dependsOn("downloadHermes")
++  doLast {
++    if (!file(hermesDir).exists()) {
++      copy {
++        from(tarTree(downloadHermes.dest)) {
++            eachFile { file ->
++                // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
++                // folder at the top level.
++                if (file.relativePath.segments.size() > 1) {
++                    file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
++                }
+             }
+         }
++        into(hermesDir)
++      }
+     }
+-    into(hermesDir)
++  }
+ }
+ 
+ task configureBuildForHermes(type: Exec) {
+diff --git a/node_modules/react-native/sdks/.hermesversion b/node_modules/react-native/sdks/.hermesversion
+new file mode 100644
+index 0000000..0bd8b2a
+--- /dev/null
++++ b/node_modules/react-native/sdks/.hermesversion
+@@ -0,0 +1 @@
++73fa47c9c033e2f1bf10ebab9ac58f02c94ffff9
