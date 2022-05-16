@@ -4,6 +4,7 @@
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REAIOSErrorHandler.h>
 #import <RNReanimated/REAIOSScheduler.h>
+#import <RNReanimated/REAJSIUtils.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIManager.h>
@@ -135,74 +136,6 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
 
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-/**
- * All static helper functions are ObjC++ specific.
- */
-static jsi::Value convertNSNumberToJSIBoolean(jsi::Runtime &runtime, NSNumber *value)
-{
-  return jsi::Value((bool)[value boolValue]);
-}
-
-static jsi::Value convertNSNumberToJSINumber(jsi::Runtime &runtime, NSNumber *value)
-{
-  return jsi::Value([value doubleValue]);
-}
-
-static jsi::String convertNSStringToJSIString(jsi::Runtime &runtime, NSString *value)
-{
-  return jsi::String::createFromUtf8(runtime, [value UTF8String] ?: "");
-}
-
-static jsi::Value convertObjCObjectToJSIValue(jsi::Runtime &runtime, id value);
-static jsi::Object convertNSDictionaryToJSIObject(jsi::Runtime &runtime, NSDictionary *value)
-{
-  jsi::Object result = jsi::Object(runtime);
-  for (NSString *k in value) {
-    result.setProperty(runtime, [k UTF8String], convertObjCObjectToJSIValue(runtime, value[k]));
-  }
-  return result;
-}
-
-static jsi::Array convertNSArrayToJSIArray(jsi::Runtime &runtime, NSArray *value)
-{
-  jsi::Array result = jsi::Array(runtime, value.count);
-  for (size_t i = 0; i < value.count; i++) {
-    result.setValueAtIndex(runtime, i, convertObjCObjectToJSIValue(runtime, value[i]));
-  }
-  return result;
-}
-
-static std::vector<jsi::Value> convertNSArrayToStdVector(jsi::Runtime &runtime, NSArray *value)
-{
-  std::vector<jsi::Value> result;
-  for (size_t i = 0; i < value.count; i++) {
-    result.emplace_back(convertObjCObjectToJSIValue(runtime, value[i]));
-  }
-  return result;
-}
-
-static jsi::Value convertObjCObjectToJSIValue(jsi::Runtime &runtime, id value)
-{
-  if ([value isKindOfClass:[NSString class]]) {
-    return convertNSStringToJSIString(runtime, (NSString *)value);
-  } else if ([value isKindOfClass:[NSNumber class]]) {
-    if ([value isKindOfClass:[@YES class]]) {
-      return convertNSNumberToJSIBoolean(runtime, (NSNumber *)value);
-    }
-    return convertNSNumberToJSINumber(runtime, (NSNumber *)value);
-  } else if ([value isKindOfClass:[NSDictionary class]]) {
-    return convertNSDictionaryToJSIObject(runtime, (NSDictionary *)value);
-  } else if ([value isKindOfClass:[NSArray class]]) {
-    return convertNSArrayToJSIArray(runtime, (NSArray *)value);
-  } else if (value == (id)kCFNull) {
-    return jsi::Value::null();
-  }
-  return jsi::Value::undefined();
-}
-// COPIED FROM RCTTurboModule.mm END
-#endif // RCT_NEW_ARCH_ENABLED
 
 static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 {
