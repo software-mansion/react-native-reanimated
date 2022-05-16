@@ -596,8 +596,8 @@ declare module 'react-native-reanimated' {
     velocity?: number;
     clamp?: [number, number];
     velocityFactor?: number;
-    clampWithSpring?: boolean;
-    clampSpringFactor?: number;
+    softClamp?: boolean;
+    softClampFactor?: number;
   }
   export interface WithSpringConfig {
     damping?: number;

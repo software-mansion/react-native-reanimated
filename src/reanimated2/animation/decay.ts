@@ -20,8 +20,8 @@ interface DefaultDecayConfig {
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
-  clampWithSpring?: boolean;
-  clampSpringFactor?: number;
+  softClamp?: boolean;
+  softClampFactor?: number;
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
@@ -50,7 +50,7 @@ export function withDecay(
       deceleration: 0.998,
       velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
       velocity: 0,
-      clampSpringFactor: 0.6,
+      softClampFactor: 0.6,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach(
@@ -64,7 +64,7 @@ export function withDecay(
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
-    if (config.clampWithSpring) {
+    if (config.softClamp && config.clamp) {
       decay = (animation: InnerDecayAnimation, now: number): boolean => {
         const {
           lastTimestamp,
@@ -77,14 +77,14 @@ export function withDecay(
         const deltaTime = Math.min(now - lastTimestamp, 64);
         const clampIndex = initialVelocity > 0 ? 1 : 0;
         let deriveration = 0;
-        if (current < config.clamp[0] || current > config.clamp[1]) {
-          deriveration = current - config.clamp[clampIndex];
+        if (current < config.clamp![0] || current > config.clamp![1]) {
+          deriveration = current - config.clamp![clampIndex];
         }
 
         if (deriveration !== 0) {
           animation.springActive = true;
         } else if (deriveration === 0 && animation.springActive) {
-          animation.current = config.clamp[clampIndex];
+          animation.current = config.clamp![clampIndex];
           return true;
         }
 
@@ -99,6 +99,7 @@ export function withDecay(
           current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
         animation.velocity = v;
         animation.lastTimestamp = now;
+        return false;
       };
     } else {
       decay = (animation: InnerDecayAnimation, now: number): boolean => {
@@ -155,6 +156,9 @@ export function withDecay(
         throw Error(
           `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
         );
+      }
+      if (config.softClamp && !config.clamp) {
+        throw Error(`softClamp requires clamp array`);
       }
     }
 
