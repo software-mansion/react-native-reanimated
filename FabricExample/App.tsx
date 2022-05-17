@@ -1,12 +1,4 @@
-import {
-  FlatList,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableNativeFeedback,
-  View,
-} from 'react-native';
+import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 
 import AnimatedSensorExample from './src/AnimatedSensorExample';
@@ -22,7 +14,10 @@ import GestureHandlerExample from './src/GestureHandlerExample';
 import MeasureExample from './src/MeasureExample';
 import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
 import React from 'react';
-import { RectButton } from 'react-native-gesture-handler';
+import {
+  GestureHandlerRootView,
+  RectButton,
+} from 'react-native-gesture-handler';
 import RefExample from './src/RefExample';
 import ScreenStackExample from './src/ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './src/ScreenStackHeaderConfigBackgroundColorExample';
@@ -176,23 +171,11 @@ function HomeScreen() {
 }
 
 function Item({ title, onPress }) {
-  if (Platform.OS === 'android') {
-    // RectButton doesn't work quite well on Android yet,
-    // so let's temporarily use React Native's TouchableNativeFeedback.
-    return (
-      <TouchableNativeFeedback onPress={onPress}>
-        <View style={styles.button}>
-          <Text style={styles.title}>{title}</Text>
-        </View>
-      </TouchableNativeFeedback>
-    );
-  } else {
-    return (
-      <RectButton style={styles.button} onPress={onPress}>
-        <Text style={styles.title}>{title}</Text>
-      </RectButton>
-    );
-  }
+  return (
+    <RectButton style={styles.button} onPress={onPress}>
+      <Text style={styles.title}>{title}</Text>
+    </RectButton>
+  );
 }
 
 function ItemSeparator() {
@@ -202,30 +185,33 @@ function ItemSeparator() {
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  // return <ScreenStackHeaderConfigBackgroundColorExample />;
-
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerTitle: 'Reanimated & Fabric examples' }}
-        />
-        {EXAMPLES.map(({ name, title, component }) => (
+    <GestureHandlerRootView style={styles.container}>
+      <NavigationContainer>
+        <Stack.Navigator>
           <Stack.Screen
-            key={name}
-            name={name}
-            component={component}
-            options={{ headerTitle: title }}
+            name="Home"
+            component={HomeScreen}
+            options={{ headerTitle: 'Reanimated & Fabric examples' }}
           />
-        ))}
-      </Stack.Navigator>
-    </NavigationContainer>
+          {EXAMPLES.map(({ name, title, component }) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              component={component}
+              options={{ headerTitle: title }}
+            />
+          ))}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 
 export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   list: {
     backgroundColor: '#EFEFF4',
   },
