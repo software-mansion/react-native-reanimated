@@ -47,8 +47,8 @@ endif()
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
-file(GLOB_RECURSE sources_android CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
+file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
+file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (
@@ -75,8 +75,8 @@ endif()
 add_library(
         ${PACKAGE_NAME}
         SHARED
-        ${sources}
-        ${sources_android}
+        ${SOURCES_COMMON}
+        ${SOURCES_ANDROID}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
         ${FABRIC_UTILS_CPP}
