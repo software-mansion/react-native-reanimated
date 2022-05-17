@@ -20,8 +20,8 @@ interface DefaultDecayConfig {
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
-  softClamp?: boolean;
-  softClampFactor?: number;
+  rubberBandEffect?: boolean;
+  rubberBandFactor?: number;
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
@@ -50,7 +50,7 @@ export function withDecay(
       deceleration: 0.998,
       velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
       velocity: 0,
-      softClampFactor: 0.6,
+      rubberBandFactor: 0.6,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach(
@@ -64,7 +64,7 @@ export function withDecay(
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
-    if (config.softClamp) {
+    if (config.rubberBandEffect) {
       decay = (animation: InnerDecayAnimation, now: number): boolean => {
         const {
           lastTimestamp,
@@ -76,14 +76,14 @@ export function withDecay(
 
         const deltaTime = Math.min(now - lastTimestamp, 64);
         const clampIndex = initialVelocity > 0 ? 1 : 0;
-        let deriveration = 0;
+        let derivative = 0;
         if (current < config.clamp![0] || current > config.clamp![1]) {
-          deriveration = current - config.clamp![clampIndex];
+          derivative = current - config.clamp![clampIndex];
         }
 
-        if (deriveration !== 0) {
+        if (derivative !== 0) {
           animation.springActive = true;
-        } else if (deriveration === 0 && animation.springActive) {
+        } else if (derivative === 0 && animation.springActive) {
           animation.current = config.clamp![clampIndex];
           return true;
         }
@@ -93,10 +93,10 @@ export function withDecay(
             Math.exp(
               -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
             ) -
-          deriveration * 0.6;
+          derivative * config.rubberBandFactor;
 
         animation.current =
-          current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
+          current + (v * config.velocityFactor * deltaTime) / 1000;
         animation.velocity = v;
         animation.lastTimestamp = now;
         return false;
@@ -118,7 +118,7 @@ export function withDecay(
             -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
           );
         animation.current =
-          current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
+          current + (v * config.velocityFactor * deltaTime) / 1000;
         animation.velocity = v;
         animation.lastTimestamp = now;
 
@@ -157,8 +157,10 @@ export function withDecay(
           `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
         );
       }
-      if (config.softClamp && !config.clamp) {
-        throw Error(`softClamp requires clamp array`);
+      if (config.rubberBandEffect && !config.clamp) {
+        throw Error(
+          `you need to set clamp property when you want to use the rubberBandEffect`
+        );
       }
     }
 
