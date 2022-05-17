@@ -21,7 +21,7 @@ interface DefaultDecayConfig {
   clamp?: number[];
   velocity: number;
   rubberBandEffect?: boolean;
-  rubberBandFactor?: number;
+  rubberBandFactor: number;
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
