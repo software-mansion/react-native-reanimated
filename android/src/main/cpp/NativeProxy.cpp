@@ -178,6 +178,12 @@ void NativeProxy::installJSIBindings(
     std::string str = result->toStdString();
     return jsi::Value(rt, jsi::String::createFromAscii(rt, str.c_str()));
   };
+
+  auto configurePropsFunction = [=](jsi::Runtime &rt,
+                                    const jsi::Value &uiProps,
+                                    const jsi::Value &nativeProps) {
+    this->configureProps(rt, uiProps, nativeProps);
+  };
 #endif
 
   auto registerSensorFunction =
@@ -232,12 +238,6 @@ void NativeProxy::installJSIBindings(
 
   auto notifyAboutEnd = [=](int tag, bool isCancelled) {
     this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
-  };
-
-  auto configurePropsFunction = [=](jsi::Runtime &rt,
-                                    const jsi::Value &uiProps,
-                                    const jsi::Value &nativeProps) {
-    this->configureProps(rt, uiProps, nativeProps);
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =

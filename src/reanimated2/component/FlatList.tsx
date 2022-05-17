@@ -26,11 +26,11 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
   return cellRenderer;
 };
 
-export interface ReanimatedFlatlistProps<ItemT> extends FlatListProps<ItemT> {
+export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
-type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatlistProps<T>>;
+type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatListProps<T>>;
 
 const ReanimatedFlatlist: ReanimatedFlatListFC = ({
   itemLayoutAnimation,
