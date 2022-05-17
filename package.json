@@ -26,7 +26,7 @@
     "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.js:from-src": "find ./src/reanimated2 -type f -name \"*.js\" -delete",
-    "prepare": "husky install",
+    "prepare": "bob build && husky install",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
     "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
     "clean": "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
@@ -38,7 +38,7 @@
   "module": "lib/Animated",
   "react-native": "src/Animated",
   "source": "src/Animated",
-  "types": "react-native-reanimated.d.ts",
+  "types": "lib/typescript/index.d.ts",
   "files": [
     "Common/",
     "src/",
@@ -54,7 +54,6 @@
     "!android/.gradle/",
     "RNReanimated.podspec",
     "README.md",
-    "react-native-reanimated.d.ts",
     "mock.js",
     "plugin.js",
     "!__snapshots__",
@@ -127,6 +126,7 @@
     "prettier": "^2.5.1",
     "react": "17.0.2",
     "react-native": "0.68.0",
+    "react-native-builder-bob": "^0.18.2",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",
@@ -157,6 +157,20 @@
     "targets": [
       "commonjs",
       "module"
+    ]
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
     ]
   }
 }
