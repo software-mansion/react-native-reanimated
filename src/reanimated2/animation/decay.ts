@@ -159,7 +159,7 @@ export function withDecay(
       }
       if (config.rubberBandEffect && !config.clamp) {
         throw Error(
-          `you need to set clamp property when you want to use the rubberBandEffect`
+          'You need to set `clamp` property when using `rubberBandEffect`.'
         );
       }
     }
