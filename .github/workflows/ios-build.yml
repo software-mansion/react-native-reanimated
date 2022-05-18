@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - "@graszka22/ios-ci-cache"
+
 jobs:
   build:
     # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
