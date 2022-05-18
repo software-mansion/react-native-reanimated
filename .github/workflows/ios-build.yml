@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - main
-      - "@graszka22/ios-ci-speedup"
+      - "@graszka22/ios-ci-cache"
 jobs:
   build:
     # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
@@ -31,6 +31,13 @@ jobs:
       - name: Install node dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn
+      - name: Cache hermes build ios
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-ios-hermes-engine
+        with:
+          path: ${{ matrix.working-directory }}/node_modules/react-native/sdks/hermes
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('**/react-native/package.json', '**/patches/react-native+**') }}
       - name: Install pods
         working-directory: ${{ matrix.working-directory }}/ios
         run: RN_ARCHITECTURES="iphonesimulator_x86_64" pod install
