@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.5.1)
+project(Reanimated)
+cmake_minimum_required(VERSION 3.12.0)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
@@ -46,11 +47,8 @@ endif()
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
-file(GLOB sources_tools  "${COMMON_SRC_DIR}/cpp/Tools/*.cpp")
-file(GLOB sources_native_modules  "${COMMON_SRC_DIR}/cpp/NativeModules/*.cpp")
-file(GLOB sources_shared_items  "${COMMON_SRC_DIR}/cpp/SharedItems/*.cpp")
-file(GLOB sources_registries  "${COMMON_SRC_DIR}/cpp/Registries/*.cpp")
-file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
+file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
+file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (
@@ -77,21 +75,10 @@ endif()
 add_library(
         ${PACKAGE_NAME}
         SHARED
-        ${sources_native_modules}
-        ${sources_shared_items}
-        ${sources_registries}
-        ${sources_android}
-        ${source_tools}
+        ${SOURCES_COMMON}
+        ${SOURCES_ANDROID}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
-        "${COMMON_SRC_DIR}/cpp/Tools/JSIStoreValueUser.cpp"
-        "${COMMON_SRC_DIR}/cpp/Tools/Mapper.cpp"
-        "${COMMON_SRC_DIR}/cpp/Tools/RuntimeDecorator.cpp"
-        "${COMMON_SRC_DIR}/cpp/Tools/Scheduler.cpp"
-        "${COMMON_SRC_DIR}/cpp/Tools/WorkletEventHandler.cpp"
-        "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
-        "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
-        "${COMMON_SRC_DIR}/cpp/AnimatedSensor/AnimatedSensorModule.cpp"
         ${FABRIC_UTILS_CPP}
         ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
