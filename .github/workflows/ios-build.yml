@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - main
-      - "@graszka22/ios-ci-speedup"
+
 jobs:
   build:
     # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
