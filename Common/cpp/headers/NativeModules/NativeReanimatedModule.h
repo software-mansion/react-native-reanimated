@@ -136,6 +136,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+  void subscribeForKeyboardEvents(
+      jsi::Runtime &rt,
+      const jsi::Value &keyboardEventContainer) override;
+  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt) override;
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -173,6 +177,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
+
+  KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
+  KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 };
 
 } // namespace reanimated

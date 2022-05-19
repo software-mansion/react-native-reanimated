@@ -24,3 +24,4 @@ export {
 } from './useAnimatedScrollHandler';
 export { useDerivedValue, DerivedValue } from './useDerivedValue';
 export { useAnimatedSensor, SensorType } from './useAnimatedSensor';
+export { useAnimatedKeyboard } from './useAnimatedKeyboard';
