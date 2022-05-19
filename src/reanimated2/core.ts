@@ -1,4 +1,4 @@
-/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
+/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
@@ -99,6 +99,12 @@ export function makeShareable<T>(value: T): T {
 }
 
 export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
+  if (global._IS_FABRIC) {
+    throw new Error(
+      '[react-native-reanimated] `getViewProp` is not supported on Fabric yet'
+    );
+  }
+
   return new Promise((resolve, reject) => {
     return NativeReanimatedModule.getViewProp(
       viewTag,
@@ -333,11 +339,6 @@ if (!isWeb() && isConfigured()) {
       info: runOnJS(capturableConsole.info),
     };
     _setGlobalConsole(console);
-    if (global.performance == null) {
-      global.performance = {
-        now: global._chronoNow,
-      } as any; // due to conflict with lib.dom.d.ts -> Performance
-    }
   })();
 }
 

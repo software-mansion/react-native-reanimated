@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.8.0",
+  "version": "3.0.0-rc.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -50,6 +50,8 @@
     "ios/",
     "!ios/build/",
     "!android/build/",
+    "!android/.cxx/",
+    "!android/.gradle/",
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",
@@ -83,25 +85,27 @@
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
+    "@babel/core": "^7.0.0-0",
     "react": "*",
-    "react-native": "*",
-    "@babel/core": "^7.0.0-0"
+    "react-native": "*"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.2",
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.5",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
+    "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "@babel/preset-env": "^7.16.11",
     "@react-native-community/bob": "^0.17.1",
     "@react-native-community/eslint-config": "^0.0.5",
     "@testing-library/jest-native": "^4.0.4",
-    "@testing-library/react-hooks": "^5.0.3",
+    "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
     "@types/babel-types": "^7.0.11",
     "@types/babel__core": "^7.1.18",
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.14.2",
     "@types/jest": "^27.4.0",
-    "@types/react-native": "^0.66.15",
+    "@types/react-native": "^0.66.0",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "babel-eslint": "^10.1.0",
@@ -124,7 +128,7 @@
     "react": "17.0.2",
     "react-native": "0.68.0",
     "react-native-codegen": "^0.0.7",
-    "react-native-gesture-handler": "^1.6.1",
+    "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",
     "release-it": "^13.7.2",
     "typescript": "^4.1.3"

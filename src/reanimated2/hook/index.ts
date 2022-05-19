@@ -1,4 +1,4 @@
-export { DependencyList, Context } from './commonTypes';
+export { DependencyList } from './commonTypes';
 export {
   useAnimatedProps,
   useEvent,

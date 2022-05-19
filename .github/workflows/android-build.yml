@@ -1,19 +1,19 @@
 name: Test Android build
 on:
   pull_request:
-    branches:
-      - main
     paths:
       - 'android/**'
       - 'Common/**'
   push:
     branches:
       - main
+    
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIRECTORY: Example
+    strategy:
+      matrix:
+        working-directory: [Example, FabricExample]
     concurrency:
       group: android-${{ github.ref }}
       cancel-in-progress: true
@@ -41,8 +41,8 @@ jobs:
       - name: Install root node dependencies
         run: yarn
       - name: Install example app node dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: ${{ matrix.working-directory }}
         run: yarn
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}/android
-        run: ./gradlew assembleDebug --console=plain
+        working-directory: ${{ matrix.working-directory }}/android
+        run: ./gradlew assembleDebug --console=plain -PreactNativeArchitectures=arm64-v8a

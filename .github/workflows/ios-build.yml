@@ -1,8 +1,6 @@
 name: Test iOS build
 on:
   pull_request:
-    branches:
-      - main
     paths:
       - 'ios/**'
       - 'Common/**'
@@ -13,8 +11,9 @@ jobs:
   build:
     # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
     runs-on: macos-11
-    env:
-      WORKING_DIRECTORY: Example
+    strategy:
+      matrix:
+        working-directory: [Example, FabricExample]
     concurrency:
       group: ios-${{ github.ref }}
       cancel-in-progress: true
@@ -29,11 +28,11 @@ jobs:
       - name: Install Reanimated node dependencies
         run: yarn
       - name: Install node dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: ${{ matrix.working-directory }}
         run: yarn
       - name: Install pods
-        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        working-directory: ${{ matrix.working-directory }}/ios
         run: pod install
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: ${{ matrix.working-directory }}
         run: npx react-native run-ios
