@@ -18,8 +18,8 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const style = useAnimatedStyle(() => {
     return {
-      backgroundColor: keyboard.isShown.value ? 'red' : 'blue',
-      borderRadius: keyboard.isAnimating.value ? BOX_SIZE / 2 : 0,
+      //backgroundColor: keyboard.isShown.value ? 'red' : 'blue',
+      //borderRadius: keyboard.isAnimating.value ? BOX_SIZE / 2 : 0,
     };
   });
   const translateStyle = useAnimatedStyle(() => {

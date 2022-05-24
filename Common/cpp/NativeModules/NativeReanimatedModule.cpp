@@ -474,6 +474,32 @@ bool NativeReanimatedModule::handleRawEvent(
   return handleEvent(eventName, std::move(payload), currentTime);
 }
 
+std::string kindToString(const jsi::Value &v, jsi::Runtime *rt = nullptr) {
+  if (v.isUndefined()) {
+    return "undefined";
+  } else if (v.isNull()) {
+    return "null";
+  } else if (v.isBool()) {
+    return v.getBool() ? "true" : "false";
+  } else if (v.isNumber()) {
+    return "a number";
+  } else if (v.isString()) {
+    return "a string";
+  } else if (v.isSymbol()) {
+    return "a symbol";
+  } else {
+    assert(v.isObject() && "Expecting object.");
+    return rt != nullptr && v.getObject(*rt).isFunction(*rt) ? "a function"
+                                                             : "an object";
+  }
+}
+
+std::string vtostr(const jsi::Value &v, jsi::Runtime *rt = nullptr) {
+  if (!v.isObject())
+    return "not an object";
+  return "ok";
+}
+
 void NativeReanimatedModule::updateProps(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,

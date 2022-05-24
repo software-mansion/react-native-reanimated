@@ -1,5 +1,5 @@
 /* global _frameTimestamp */
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { MutableRefObject, useEffect, useRef, useLayoutEffect } from 'react';
 
 import {
   startMapper,
@@ -451,7 +451,9 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
-  useEffect(() => {
+  console.log('HAHA', dependencies);
+
+  useLayoutEffect(() => {
     let fun;
     let updaterFn = updater as BasicWorkletFunctionOptional<T>;
     let optimalization = updater.__optimalization;

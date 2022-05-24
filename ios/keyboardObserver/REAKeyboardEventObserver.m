@@ -7,6 +7,7 @@
   CADisplayLink *displayLink;
   CGFloat prevKeyboardTopPosition;
   int _windowsCount;
+  int counter;
 }
 
 // copied from
@@ -62,6 +63,7 @@
 {
   NSDictionary *userInfo = notification.userInfo;
   CGRect frameEnd = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+
   self->listener(true, false, frameEnd.size.height);
 }
 
@@ -88,7 +90,10 @@
   }
 
   prevKeyboardTopPosition = keyboardTopPosition;
+  counter = counter + 1;
+  // if(counter % 2 == 0) {
   self->listener(true, true, keyboardTopPosition);
+  //}
 }
 
 - (void)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
@@ -96,6 +101,7 @@
   self->listener = listener;
   prevKeyboardTopPosition = 0;
   _windowsCount = 0;
+  counter = 0;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
   [notificationCenter addObserver:self

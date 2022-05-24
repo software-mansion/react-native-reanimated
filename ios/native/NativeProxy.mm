@@ -228,6 +228,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto synchronouslyUpdateUIPropsFunction = [reanimatedModule](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
     NSNumber *viewTag = @(tag);
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
+
+    double now = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
+    NSLog(@"UPDATE PROP height: %lf, now: %lf", [uiProps[@"transform"][0][@"translateY"] doubleValue], now);
     [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
@@ -335,7 +338,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto subscribeForKeyboardEventsFunction =
       [](std::function<void(bool isShown, bool isAnimating, int height)> keyboardEventDataUpdater) {
         [kbObserver subscribeForKeyboardEvents:^(bool isShown, bool isAnimating, int height) {
-          NSLog(@"isShown: %d, isAnimating: %d, height: %d", isShown, isAnimating, height);
+          // NSLog(@"isShown: %d, isAnimating: %d, height: %d", isShown, isAnimating, height);
+          double now = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
+          NSLog(@"OBSERVER: height: %d, now: %lf", height, now);
           keyboardEventDataUpdater(isShown, isAnimating, height);
         }];
       };
