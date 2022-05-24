@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12.0)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
+set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     set (ALL_FLAGS "${DEFAULT_FLAGS} -DRCT_NEW_ARCH_ENABLED")
 else()
@@ -23,11 +23,11 @@ set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
+set (ignoreMe "${PLAYGROUND_APP_NAME}")
+
 if(${CLIENT_SIDE_BUILD})
-    set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
     set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 else()
-    set (NODE_MODULES_DIR "../${PLAYGROUND_APP_NAME}/node_modules")
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
 
@@ -45,7 +45,6 @@ else()
 endif()
 
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
-file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
@@ -108,7 +107,6 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/yoga"
-        "${NODE_MODULES_DIR}/hermes-engine/android/include/"
         "${COMMON_SRC_DIR}/cpp/headers/Tools"
         "${COMMON_SRC_DIR}/cpp/headers/SpecTools"
         "${COMMON_SRC_DIR}/cpp/headers/NativeModules"
@@ -124,18 +122,6 @@ target_include_directories(
 find_library(
         LOG_LIB
         log
-)
-find_library(
-        HERMES_LIB
-        hermes
-        PATHS ${HERMES_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        JSEXECUTOR_LIB
-        jscexecutor
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
         REACT_NATIVE_JNI_LIB
@@ -244,7 +230,20 @@ endif()
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-if(${FOR_HERMES})
+if(${JS_RUNTIME} STREQUAL "hermes")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
+    target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/android/include"
+    )
+    file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
+    find_library(
+            HERMES_LIB
+            hermes
+            PATHS ${HERMES_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
@@ -256,7 +255,40 @@ if(${FOR_HERMES})
             ${REACT_NATIVE_JNI_LIB}
             android
     )
+elseif(${JS_RUNTIME} STREQUAL "v8")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
+    target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/src"
+    )
+    file (GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/*/jni/${ANDROID_ABI}")
+    find_library(
+            V8EXECUTOR_LIB
+            v8executor
+            PATHS ${V8_SO_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    target_link_libraries(
+            ${PACKAGE_NAME}
+            ${LOG_LIB}
+            ${JSI_LIB}
+            ${FOLLY_LIB}
+            ${V8EXECUTOR_LIB}
+            ${GLOG_LIB}
+            ${FBJNI_LIB}
+            ${REACT_NATIVE_JNI_LIB}
+            android
+    )
 else()
+    set (ignoreMe "${JS_RUNTIME_DIR}")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
+    find_library(
+            JSEXECUTOR_LIB
+            jscexecutor
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
@@ -265,7 +297,6 @@ else()
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
             ${FBJNI_LIB}
-            ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
     )

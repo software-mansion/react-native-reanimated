@@ -134,13 +134,36 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
 
 def _stackProtectorFlag = true
-def FOR_HERMES = ""
 
-if (findProject(":app")) {
-    FOR_HERMES = project(":app").ext.react.enableHermes
-} else {
-    FOR_HERMES = System.getenv("FOR_HERMES") == "True"
-}
+def CMAKE_NODE_MODULES_DIR = CLIENT_SIDE_BUILD
+    ? project.getProjectDir().getParentFile().getParent()
+    : Paths.get(project.getProjectDir().getParent(), getPlaygroundAppName(), "node_modules").toString()
+
+def JS_RUNTIME = {
+    // Returns the js runtime explicitly requested in the environment variable
+    if (System.getenv("JS_RUNTIME")) {
+        return System.getenv("JS_RUNTIME")
+    }
+
+    // Detect js runtime from project setup
+    def defaultRuntimeType = "jsc";
+    def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
+    if (v8Project != null) {
+        return "v8"
+    }
+    def appProject = findProject(":app") ? project(":app") : null
+    return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
+}.call()
+
+def jsRuntimeDir = {
+    if (JS_RUNTIME == "hermes") {
+        return Paths.get(CMAKE_NODE_MODULES_DIR, "hermes-engine")
+    } else if (JS_RUNTIME == "v8") {
+        return findProject(":react-native-v8").getProjectDir().getParent()
+    } else {
+        return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "ReactCommon", "jsi")
+    }
+}.call()
 
 def reactNativeArchitectures() {
     def value = project.getProperties().get("reactNativeArchitectures")
@@ -205,7 +228,9 @@ android {
                         "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
-                        "-DFOR_HERMES=${FOR_HERMES}",
+                        "-DNODE_MODULES_DIR=${CMAKE_NODE_MODULES_DIR}",
+                        "-DJS_RUNTIME=${JS_RUNTIME}",
+                        "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}"
@@ -238,6 +263,7 @@ android {
                 "**/libhermes.so",
                 "**/libreactnativejni.so",
                 "**/libjscexecutor.so",
+                "**/libv8executor.so",
         ]
     }
     tasks.withType(JavaCompile) {
@@ -411,22 +437,24 @@ task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) 
 }
 
 task prepareHermes() {
-    def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
-    if (!hermesPackagePath) {
-        throw new GradleScriptException("Could not find the hermes-engine npm package", null)
-    }
+    doLast {
+        def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
+        if (!hermesPackagePath) {
+            throw new GradleScriptException("Could not find the hermes-engine npm package", null)
+        }
 
-    def hermesAAR = file("$hermesPackagePath/android/hermes-debug.aar")
-    if (!hermesAAR.exists()) {
-        throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-debug.aar\"", null)
-    }
+        def hermesAAR = file("$hermesPackagePath/android/hermes-debug.aar")
+        if (!hermesAAR.exists()) {
+            throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-debug.aar\"", null)
+        }
 
-    def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
+        def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
 
-    copy {
-        from soFiles
-        from "$reactNative/ReactAndroid/src/main/jni/first-party/hermes/Android.mk"
-        into "$thirdPartyNdkDir/hermes"
+        copy {
+            from soFiles
+            from "$reactNative/ReactAndroid/src/main/jni/first-party/hermes/Android.mk"
+            into "$thirdPartyNdkDir/hermes"
+        }
     }
 }
 
@@ -581,6 +609,18 @@ afterEvaluate {
             task.dependsOn(packageNdkLibs)
         }
     })
+
+    if (JS_RUNTIME == "hermes") {
+      extractAARHeaders.dependsOn(prepareHermes)
+      extractSOFiles.dependsOn(prepareHermes)
+    } else if (JS_RUNTIME == "v8") {
+        def buildTasks = tasks.findAll({ task ->
+            !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake") || task.name.startsWith("generateJsonModel")) })
+        buildTasks.forEach { task ->
+            def buildType = task.name.endsWith('Debug') ? 'Debug' : 'Release'
+            task.dependsOn(":react-native-v8:copy${buildType}JniLibsProjectOnly")
+        }
+    }
 }
 
 if (CLIENT_SIDE_BUILD) {
