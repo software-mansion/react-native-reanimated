@@ -4,7 +4,7 @@ title: Installation
 sidebar_label: Installation
 ---
 
-Installing Reanimated requires a couple of additional steps compared to installing most of the popular react-naitve packages.
+Installing Reanimated requires a couple of additional steps compared to installing most of the popular react-native packages.
 Specifically on Android the setup consist of adding additional code to the main application class.
 The steps needed to get reanimated properly configured are listed in the below paragraphs.
 
