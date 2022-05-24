@@ -1,7 +1,6 @@
 import Animated, {
   useAnimatedStyle,
   useAnimatedKeyboard,
-  withTiming,
 } from 'react-native-reanimated';
 import {
   Button,
@@ -9,6 +8,7 @@ import {
   StyleSheet,
   Keyboard,
   ScrollView,
+  Platform,
 } from 'react-native';
 import React from 'react';
 
@@ -17,17 +17,18 @@ const BOX_SIZE = 50;
 function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const style = useAnimatedStyle(() => {
-    const isTransitioning =
-      keyboard.isAnimating.value === keyboard.isShown.value;
     return {
       backgroundColor: keyboard.isShown.value ? 'red' : 'blue',
-      borderRadius: withTiming(isTransitioning ? BOX_SIZE / 2 : 0),
+      borderRadius: keyboard.isAnimating.value ? BOX_SIZE / 2 : 0,
     };
   });
   const translateStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: -keyboard.height.value }],
-    };
+    if (Platform.OS === 'ios' || Platform.Version >= 30) {
+      return {
+        transform: [{ translateY: -keyboard.height.value }],
+      };
+    }
+    return {};
   });
 
   return (
@@ -53,15 +54,15 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginVertical: 50,
+    justifyContent: 'space-between',
+    paddingVertical: 70,
   },
-  box: { width: BOX_SIZE, height: BOX_SIZE, marginBottom: 200 },
+  box: { width: BOX_SIZE, height: BOX_SIZE, marginBottom: 100 },
   textInput: {
     borderColor: 'blue',
     borderStyle: 'solid',
     borderWidth: 2,
-    height: 30,
+    height: 60,
     width: 200,
   },
 });
