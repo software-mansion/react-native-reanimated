@@ -67,7 +67,7 @@
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-  self->listener(false, true, 0);
+  self->listener(true, true, 0);
 
   displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
   [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
