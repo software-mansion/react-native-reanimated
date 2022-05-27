@@ -8,12 +8,12 @@
 #if TARGET_OS_TV
 - (void)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
 {
-    NSLog(@"Keyboard handling is not supported on tvOS");
+  NSLog(@"Keyboard handling is not supported on tvOS");
 }
 
 - (void)unsubscribeFromKeyboardEvents
 {
-    NSLog(@"Keyboard handling is not supported on tvOS");
+  NSLog(@"Keyboard handling is not supported on tvOS");
 }
 #else
 - (void)keyboardDidHide:(NSNotification *)notification
@@ -31,7 +31,6 @@
   NSDictionary *userInfo = notification.userInfo;
   CGRect frameEnd = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
   self->listener(true, false, frameEnd.size.height);
-    
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification

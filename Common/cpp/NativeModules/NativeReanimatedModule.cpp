@@ -665,7 +665,6 @@ void NativeReanimatedModule::subscribeForKeyboardEvents(
         heightMutableValue->setValue(rt, jsi::Value(height));
 
         this->mapperRegistry->execute(*this->runtime);
-        
       };
 
   subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
