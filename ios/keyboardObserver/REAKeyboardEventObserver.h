@@ -8,8 +8,6 @@ typedef void (^KeyboardEventListenerBlock)(bool isShown, bool isAnimating, int h
 
 @interface REAKeyboardEventObserver : NSObject
 
-@property (nonatomic, assign) UIView *keyboardView;
-
 - (void)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener;
 - (void)unsubscribeFromKeyboardEvents;
 
