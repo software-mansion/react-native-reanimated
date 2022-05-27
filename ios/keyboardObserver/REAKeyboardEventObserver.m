@@ -5,7 +5,17 @@
 @implementation REAKeyboardEventObserver {
   KeyboardEventListenerBlock listener;
 }
+#if TARGET_OS_TV
+- (void)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
+{
+    NSLog(@"Keyboard handling is not supported on tvOS");
+}
 
+- (void)unsubscribeFromKeyboardEvents
+{
+    NSLog(@"Keyboard handling is not supported on tvOS");
+}
+#else
 - (void)keyboardDidHide:(NSNotification *)notification
 {
   self->listener(false, false, 0);
@@ -61,5 +71,6 @@
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
+#endif
 
 @end
