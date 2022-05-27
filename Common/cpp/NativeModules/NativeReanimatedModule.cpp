@@ -650,7 +650,7 @@ void NativeReanimatedModule::subscribeForKeyboardEvents(
       rt, keyboardEventObj.getProperty(rt, "height"), this);
 
   auto keyboardEventDataUpdater =
-      [&rt, isShownShared, isAnimatingShared, heightShared](
+      [this, &rt, isShownShared, isAnimatingShared, heightShared](
           bool isShown, bool isAnimating, int height) {
         auto &isShownMutableValue =
             ValueWrapper::asMutableValue(isShownShared->valueContainer);
@@ -663,6 +663,9 @@ void NativeReanimatedModule::subscribeForKeyboardEvents(
         auto &heightMutableValue =
             ValueWrapper::asMutableValue(heightShared->valueContainer);
         heightMutableValue->setValue(rt, jsi::Value(height));
+
+        this->mapperRegistry->execute(*this->runtime);
+        
       };
 
   subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
