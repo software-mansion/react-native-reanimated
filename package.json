@@ -158,5 +158,10 @@
       "commonjs",
       "module"
     ]
-  }
+  },
+  "sideEffects": [
+    "./src/reanimated2/core.ts",
+    "./src/reanimated2/js-reanimated",
+    "./src/reanimated2/jestUtils.ts"
+  ]
 }

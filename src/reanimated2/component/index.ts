@@ -1,9 +1,5 @@
-import ReanimatedFlatlist from './FlatList';
-import WrappedComponents from './WrappedComponents';
-
-const ReanimatedComponents = {
-  ...WrappedComponents,
-  FlatList: ReanimatedFlatlist,
-};
-
-export default ReanimatedComponents;
+export { View } from './View';
+export { Image } from './Image';
+export { Text } from './Text';
+export { ScrollView } from './ScrollView';
+export { FlatList } from './FlatList';

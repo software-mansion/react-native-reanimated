@@ -1,10 +1,14 @@
 import React from 'react';
-import { FlatList, FlatListProps, LayoutChangeEvent } from 'react-native';
-import WrappedComponents from './WrappedComponents';
+import {
+  FlatList as RNFlatList,
+  FlatListProps,
+  LayoutChangeEvent,
+} from 'react-native';
+import { View } from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 
-const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
+const AnimatedFlatList = createAnimatedComponent(RNFlatList as any) as any;
 
 interface AnimatedFlatListProps {
   onLayout: (event: LayoutChangeEvent) => void;
@@ -15,11 +19,9 @@ interface AnimatedFlatListProps {
 const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
   const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
-      <WrappedComponents.View
-        layout={itemLayoutAnimation}
-        onLayout={props.onLayout}>
+      <View layout={itemLayoutAnimation} onLayout={props.onLayout}>
         {props.children}
-      </WrappedComponents.View>
+      </View>
     );
   };
 
@@ -32,7 +34,7 @@ export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
 
 type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatListProps<T>>;
 
-const ReanimatedFlatlist: ReanimatedFlatListFC = ({
+export const FlatList: ReanimatedFlatListFC = ({
   itemLayoutAnimation,
   ...restProps
 }) => {
@@ -44,5 +46,3 @@ const ReanimatedFlatlist: ReanimatedFlatListFC = ({
     <AnimatedFlatList {...restProps} CellRendererComponent={cellRenderer} />
   );
 };
-
-export default ReanimatedFlatlist;
