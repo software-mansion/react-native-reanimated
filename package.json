@@ -161,6 +161,6 @@
   },
   "sideEffects": [
     "./lib/reanimated2/core",
-    "./lib/reanimated2/js-reanimated"
+    "./lib/reanimated2/js-reanimated/global"
   ]
 }
