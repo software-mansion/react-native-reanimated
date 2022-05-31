@@ -1,6 +1,6 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
-import Animated, { useSharedValue } from '../src/Animated';
+import Animated, { useSharedValue } from '../src';
 
 jest.mock('../src/ReanimatedEventEmitter');
 jest.mock('../src/ReanimatedModule');
