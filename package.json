@@ -34,10 +34,10 @@
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep && yarn setup"
   },
-  "main": "lib/Animated.js",
-  "module": "lib/Animated",
-  "react-native": "src/Animated",
-  "source": "src/Animated",
+  "main": "lib/index.js",
+  "module": "lib/index",
+  "react-native": "src/index",
+  "source": "src/index",
   "types": "react-native-reanimated.d.ts",
   "files": [
     "Common/",
@@ -158,5 +158,9 @@
       "commonjs",
       "module"
     ]
-  }
+  },
+  "sideEffects": [
+    "./lib/reanimated2/core.ts",
+    "./lib/reanimated2/js-reanimated"
+  ]
 }
