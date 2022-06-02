@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Keyboard,
   ScrollView,
-  Platform,
 } from 'react-native';
 import React from 'react';
 
@@ -23,12 +22,9 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
     };
   });
   const translateStyle = useAnimatedStyle(() => {
-    if (Platform.OS === 'ios' || Platform.Version >= 30) {
-      return {
-        transform: [{ translateY: -keyboard.height.value }],
-      };
-    }
-    return {};
+    return {
+      transform: [{ translateY: -keyboard.height.value }],
+    };
   });
 
   return (

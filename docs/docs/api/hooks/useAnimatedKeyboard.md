@@ -4,7 +4,6 @@ title: useAnimatedKeyboard
 sidebar_label: useAnimatedKeyboard
 ---
 With the `useAnimatedKeyboard` hook, you can create animations based on current kayboard position.
-On iOS and Android 11 and later you can get info about keyboard animation. On lower versions of Android you can only check whether the keyboard is up or not and its height when it's fully up.
 
 ```js
 useAnimatedKeyboard() -> [AnimatedKeyboardInfo]
@@ -29,12 +28,9 @@ Properties:
 function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const translateStyle = useAnimatedStyle(() => {
-    if (Platform.OS === 'ios' || Platform.Version >= 30) {
-      return {
-        transform: [{ translateY: -keyboard.height.value }],
-      };
-    }
-    return {};
+    return {
+      transform: [{ translateY: -keyboard.height.value }],
+    };
   });
 
   return (
@@ -51,7 +47,6 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
 
 :::caution
 
-On Android, set `android:windowSoftInputMode` in your `AndroidMainfest.xml` according to your use case. On Androids < 11 set it to `adjustResize` or `adjustPan` to get info about keyboard and layout the app correctly. On Androids >= 11 you can also use `adjustNothing` and layout the app yourself based on `useAnimatedKeyboard` data.
-You can set `android:windowSoftInputMode` programatically by using for example [this](https://github.com/zubricky/react-native-android-keyboard-adjust) package.
+On Android, make sure to set `android:windowSoftInputMode` in your `AndroidMainfest.xml` to `adjustResize`.
 
 :::
