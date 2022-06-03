@@ -5,7 +5,7 @@ import { AnimatedKeyboardInfo } from '../commonTypes';
 
 export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
   const ref = useRef<AnimatedKeyboardInfo | null>(null);
-  const listenerId = useRef<number | null>(null);
+  const listenerId = useRef<number>(-1);
   const isSubscribed = useRef<boolean>(false);
 
   if (ref.current === null) {
