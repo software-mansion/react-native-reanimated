@@ -201,12 +201,12 @@ void NativeProxy::installJSIBindings(
 
   auto subscribeForKeyboardEventsFunction =
       [this](std::function<void(bool, bool, int)> keyboardEventDataUpdater)
-      -> void {
-    subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
+      -> int {
+    return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
   };
 
-  auto unsubscribeFromKeyboardEventsFunction = [this]() -> void {
-    unsubscribeFromKeyboardEvents();
+  auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
+    unsubscribeFromKeyboardEvents(listenerId);
   };
 
 #if FOR_HERMES
@@ -493,22 +493,22 @@ void NativeProxy::configureProps(
           .get());
 }
 
-void NativeProxy::subscribeForKeyboardEvents(
+int NativeProxy::subscribeForKeyboardEvents(
     std::function<void(bool, bool, int)> keyboardEventDataUpdater) {
   auto method = javaPart_->getClass()
-                    ->getMethod<void(KeyboardEventDataUpdater::javaobject)>(
+                    ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
                         "subscribeForKeyboardEvents");
-  method(
+  return method(
       javaPart_.get(),
       KeyboardEventDataUpdater::newObjectCxxArgs(
           std::move(keyboardEventDataUpdater))
           .get());
 }
 
-void NativeProxy::unsubscribeFromKeyboardEvents() {
-  auto method =
-      javaPart_->getClass()->getMethod<void()>("unsubscribeFromKeyboardEvents");
-  method(javaPart_.get());
+void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>(
+      "unsubscribeFromKeyboardEvents");
+  method(javaPart_.get(), listenerId);
 }
 
 } // namespace reanimated

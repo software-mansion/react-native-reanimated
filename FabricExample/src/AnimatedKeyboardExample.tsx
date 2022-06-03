@@ -3,6 +3,7 @@ import Animated, {
   useAnimatedKeyboard,
 } from 'react-native-reanimated';
 import {
+  View,
   Button,
   TextInput,
   StyleSheet,
@@ -12,6 +13,11 @@ import {
 import React from 'react';
 
 const BOX_SIZE = 50;
+
+function NestedView(): React.ReactElement {
+  useAnimatedKeyboard();
+  return <View style={styles.nestedView} />;
+}
 
 function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
@@ -26,6 +32,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       transform: [{ translateY: -keyboard.height.value }],
     };
   });
+  const [shouldShowNestedView, setShouldShowNestedView] = React.useState(false);
 
   return (
     <ScrollView
@@ -33,6 +40,13 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       keyboardDismissMode="interactive"
       scrollEnabled={false}>
       <Animated.View style={[styles.box, style]} />
+      <Button
+        title="Toggle nested view"
+        onPress={() => {
+          setShouldShowNestedView(!shouldShowNestedView);
+        }}
+      />
+      {shouldShowNestedView ? <NestedView /> : null}
       <Animated.View style={translateStyle}>
         <Button
           title="Dismiss"
@@ -45,6 +59,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -60,6 +75,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     height: 60,
     width: 200,
+  },
+  nestedView: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#ffff00',
   },
 });
 

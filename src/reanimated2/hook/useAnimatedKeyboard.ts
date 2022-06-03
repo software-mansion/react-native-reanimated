@@ -5,6 +5,7 @@ import { AnimatedKeyboardInfo } from '../commonTypes';
 
 export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
   const ref = useRef<AnimatedKeyboardInfo | null>(null);
+  const listenerId = useRef<number | null>(null);
   const isSubscribed = useRef<boolean>(false);
 
   if (ref.current === null) {
@@ -13,7 +14,8 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
       isAnimating: makeMutable(false),
       height: makeMutable(0),
     };
-    NativeReanimated.subscribeForKeyboardEvents(keyboardEventData);
+    listenerId.current =
+      NativeReanimated.subscribeForKeyboardEvents(keyboardEventData);
     ref.current = keyboardEventData;
     isSubscribed.current = true;
   }
@@ -24,7 +26,7 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
       isSubscribed.current = true;
     }
     return () => {
-      NativeReanimated.unsubscribeFromKeyboardEvents();
+      NativeReanimated.unsubscribeFromKeyboardEvents(listenerId.current);
       isSubscribed.current = false;
     };
   }, []);

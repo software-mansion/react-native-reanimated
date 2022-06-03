@@ -266,13 +266,13 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private void subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater) {
-    reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater);
+  private int subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater) {
+    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater);
   }
 
   @DoNotStrip
-  private void unsubscribeFromKeyboardEvents() {
-    reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents();
+  private void unsubscribeFromKeyboardEvents(int listenerId) {
+    reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
   }
 
   public void onCatalystInstanceDestroy() {

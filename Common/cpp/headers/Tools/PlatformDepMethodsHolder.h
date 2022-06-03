@@ -62,8 +62,8 @@ using ConfigurePropsFunction = std::function<void(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps)>;
 using KeyboardEventSubscribeFunction =
-    std::function<void(std::function<void(bool, bool, int)>)>;
-using KeyboardEventUnsubscribeFunction = std::function<void()>;
+    std::function<int(std::function<void(bool, bool, int)>)>;
+using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;

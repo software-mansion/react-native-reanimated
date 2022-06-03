@@ -5,6 +5,9 @@ sidebar_label: useAnimatedKeyboard
 ---
 With the `useAnimatedKeyboard` hook, you can create animations based on current kayboard position.
 
+On Android, make sure to set `android:windowSoftInputMode` in your `AndroidMainfest.xml` to `adjustResize`. Then, using the `useAnimatedKeyboard` hook disables
+the default Android behavior (resizing the view to accomodate keyboard) in the whole app. Using values from `useAnimatedKeyboard` hook you can handle the keyboard yourself. Unmounting all components that use `useAnimatedKeyboard` hook brings back the default Android behavior.
+
 ```js
 useAnimatedKeyboard() -> [AnimatedKeyboardInfo]
 ```
@@ -25,7 +28,7 @@ Properties:
 
 ### Example
 ```js
-function AnimatedStyleUpdateExample(): React.ReactElement {
+function AnimatedKeyboardExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const translateStyle = useAnimatedStyle(() => {
     return {
@@ -42,11 +45,3 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
   );
 }
 ```
-
-### Tips
-
-:::caution
-
-On Android, make sure to set `android:windowSoftInputMode` in your `AndroidMainfest.xml` to `adjustResize`.
-
-:::

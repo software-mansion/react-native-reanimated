@@ -70,10 +70,12 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &sensorId) = 0;
 
   // keyboard
-  virtual void subscribeForKeyboardEvents(
+  virtual jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer) = 0;
-  virtual void unsubscribeFromKeyboardEvents(jsi::Runtime &rt) = 0;
+  virtual void unsubscribeFromKeyboardEvents(
+      jsi::Runtime &rt,
+      const jsi::Value &listenerId) = 0;
 
   // other
   virtual jsi::Value enableLayoutAnimations(

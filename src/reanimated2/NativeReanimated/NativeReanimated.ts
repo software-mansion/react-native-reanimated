@@ -103,7 +103,7 @@ export class NativeReanimated {
     return this.InnerNativeModule.subscribeForKeyboardEvents(keyboardEventData);
   }
 
-  unsubscribeFromKeyboardEvents() {
-    this.InnerNativeModule.unsubscribeFromKeyboardEvents();
+  unsubscribeFromKeyboardEvents(listenerId: number) {
+    this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 }

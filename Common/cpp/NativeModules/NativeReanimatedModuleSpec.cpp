@@ -143,9 +143,8 @@ static jsi::Value SPEC_PREFIX(subscribeForKeyboardEvents)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->subscribeForKeyboardEvents(rt, std::move(args[0]));
-  return jsi::Value::undefined();
 }
 
 static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
@@ -154,7 +153,7 @@ static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->unsubscribeFromKeyboardEvents(rt);
+      ->unsubscribeFromKeyboardEvents(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -186,6 +185,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["subscribeForKeyboardEvents"] =
       MethodMetadata{1, SPEC_PREFIX(subscribeForKeyboardEvents)};
   methodMap_["unsubscribeFromKeyboardEvents"] =
-      MethodMetadata{0, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
+      MethodMetadata{1, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
 }
 } // namespace reanimated

@@ -210,9 +210,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
-  void subscribeForKeyboardEvents(
+  int subscribeForKeyboardEvents(
       std::function<void(bool, bool, int)> keyboardEventDataUpdater);
-  void unsubscribeFromKeyboardEvents();
+  void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else

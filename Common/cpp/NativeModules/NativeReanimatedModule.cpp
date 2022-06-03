@@ -636,7 +636,7 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
-void NativeReanimatedModule::subscribeForKeyboardEvents(
+jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &keyboardEventContainer) {
   jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
@@ -667,11 +667,13 @@ void NativeReanimatedModule::subscribeForKeyboardEvents(
         this->mapperRegistry->execute(*this->runtime);
       };
 
-  subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
 }
 
-void NativeReanimatedModule::unsubscribeFromKeyboardEvents(jsi::Runtime &rt) {
-  unsubscribeFromKeyboardEventsFunction();
+void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &listenerId) {
+  unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
 }
 
 } // namespace reanimated

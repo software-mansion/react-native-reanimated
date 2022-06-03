@@ -11,12 +11,15 @@ import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.PixelUtil;
-import com.swmansion.reanimated.NativeProxy;
+import com.swmansion.reanimated.NativeProxy.KeyboardEventDataUpdater;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.List;
 
 public class ReanimatedKeyboardEventListener {
   private final WeakReference<ReactApplicationContext> reactContext;
+  private int nextListenerId = 0;
+  private final HashMap<Integer, KeyboardEventDataUpdater> listeners = new HashMap<>();
 
   public ReanimatedKeyboardEventListener(WeakReference<ReactApplicationContext> reactContext) {
     this.reactContext = reactContext;
@@ -26,93 +29,117 @@ public class ReanimatedKeyboardEventListener {
     return reactContext.get().getCurrentActivity().getWindow().getDecorView();
   }
 
-  public void subscribeForKeyboardEvents(NativeProxy.KeyboardEventDataUpdater updater) {
-    View rootView = getRootView();
+  private void setupWindowInsets() {
+      View rootView = getRootView();
+      WindowCompat.setDecorFitsSystemWindows(
+              reactContext.get().getCurrentActivity().getWindow(), false);
+      ViewCompat.setOnApplyWindowInsetsListener(
+              rootView,
+              (v, insets) -> {
+                  int paddingBottom =
+                          insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+                  int paddingTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+                  View content =
+                          rootView
+                                  .getRootView()
+                                  .findViewById(com.swmansion.reanimated.R.id.action_bar_root);
 
-    new Handler(Looper.getMainLooper())
-        .post(
-            () -> {
-              WindowCompat.setDecorFitsSystemWindows(
-                  reactContext.get().getCurrentActivity().getWindow(), false);
-              ViewCompat.setOnApplyWindowInsetsListener(
-                  rootView,
-                  (v, insets) -> {
-                    int paddingBottom =
-                        insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
-                    int paddingTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
-                    View content =
-                        rootView
-                            .getRootView()
-                            .findViewById(com.swmansion.reanimated.R.id.action_bar_root);
+                  FrameLayout.LayoutParams params =
+                          new FrameLayout.LayoutParams(
+                                  FrameLayout.LayoutParams.MATCH_PARENT,
+                                  FrameLayout.LayoutParams.MATCH_PARENT);
+                  params.setMargins(0, paddingTop, 0, paddingBottom);
+                  content.setLayoutParams(params);
+                  return insets;
+              });
+  }
 
-                    FrameLayout.LayoutParams params =
-                        new FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.MATCH_PARENT);
-                    params.setMargins(0, paddingTop, 0, paddingBottom);
-                    content.setLayoutParams(params);
+  private void updateKeyboard(boolean isShown, boolean isAnimating, int keyboardHeight) {
+      for(KeyboardEventDataUpdater listener : listeners.values()) {
+          listener.keyboardEventDataUpdater(isShown, isAnimating, keyboardHeight);
+      }
+  }
 
-                    return insets;
-                  });
-            });
+  private class WindowInsetsCallback extends WindowInsetsAnimationCompat.Callback {
+      private int keyboardHeight = 0;
+      public WindowInsetsCallback() {
+          super(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE);
+      }
 
-    WindowInsetsAnimationCompat.Callback cb =
-        new WindowInsetsAnimationCompat.Callback(
-            WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
-          int keyboardHeight = 0;
-
-          @NonNull
-          @Override
-          public WindowInsetsAnimationCompat.BoundsCompat onStart(
+      @NonNull
+      @Override
+      public WindowInsetsAnimationCompat.BoundsCompat onStart(
               @NonNull WindowInsetsAnimationCompat animation,
               @NonNull WindowInsetsAnimationCompat.BoundsCompat bounds) {
-            updater.keyboardEventDataUpdater(true, true, keyboardHeight);
-            return super.onStart(animation, bounds);
-          }
+          updateKeyboard(true, true, keyboardHeight);
+          return super.onStart(animation, bounds);
+      }
 
-          @NonNull
-          @Override
-          public WindowInsetsCompat onProgress(
+      @NonNull
+      @Override
+      public WindowInsetsCompat onProgress(
               @NonNull WindowInsetsCompat insets,
               @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
 
-            keyboardHeight =
-                (int)
-                    PixelUtil.toDIPFromPixel(
-                        Math.max(
-                            0,
-                            insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-                                - insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom));
-            updater.keyboardEventDataUpdater(true, true, keyboardHeight);
-            return insets;
-          }
+          keyboardHeight =
+                  (int)
+                          PixelUtil.toDIPFromPixel(
+                                  Math.max(
+                                          0,
+                                          insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+                                                  - insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom));
+          updateKeyboard(true, true, keyboardHeight);
+          return insets;
+      }
 
-          @Override
-          public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-            updater.keyboardEventDataUpdater(keyboardHeight > 0, false, keyboardHeight);
-          }
-        };
-    ViewCompat.setWindowInsetsAnimationCallback(rootView, cb);
+      @Override
+      public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
+          updateKeyboard(keyboardHeight > 0, false, keyboardHeight);
+      }
   }
 
-  public void unsubscribeFromKeyboardEvents() {
-    new Handler(Looper.getMainLooper())
-        .post(
-            () -> {
-              WindowCompat.setDecorFitsSystemWindows(
-                  reactContext.get().getCurrentActivity().getWindow(), true);
-              ViewCompat.setOnApplyWindowInsetsListener(getRootView(), null);
-              ViewCompat.setWindowInsetsAnimationCallback(getRootView(), null);
-              View content =
-                  getRootView()
+  private void setUpCallbacks() {
+      View rootView = getRootView();
+      new Handler(Looper.getMainLooper()).post(this::setupWindowInsets);
+      ViewCompat.setWindowInsetsAnimationCallback(rootView, new WindowInsetsCallback());
+  }
+
+  public int subscribeForKeyboardEvents(KeyboardEventDataUpdater updater) {
+    int listenerId = nextListenerId++;
+    if(listeners.isEmpty()) {
+        setUpCallbacks();
+    }
+    listeners.put(listenerId, updater);
+    return listenerId;
+  }
+
+  private void bringBackWindowInsets() {
+      WindowCompat.setDecorFitsSystemWindows(
+              reactContext.get().getCurrentActivity().getWindow(), true);
+      ViewCompat.setOnApplyWindowInsetsListener(getRootView(), null);
+      ViewCompat.setWindowInsetsAnimationCallback(getRootView(), null);
+      View content =
+              getRootView()
                       .getRootView()
                       .findViewById(com.swmansion.reanimated.R.id.action_bar_root);
 
-              FrameLayout.LayoutParams params =
-                  new FrameLayout.LayoutParams(
+      FrameLayout.LayoutParams params =
+              new FrameLayout.LayoutParams(
                       FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-              params.setMargins(0, 0, 0, 0);
-              content.setLayoutParams(params);
-            });
+      params.setMargins(0, 0, 0, 0);
+      content.setLayoutParams(params);
+  }
+
+  private void removeCallbacks() {
+      View rootView = getRootView();
+      new Handler(Looper.getMainLooper()).post(this::bringBackWindowInsets);
+      ViewCompat.setWindowInsetsAnimationCallback(rootView, null);
+  }
+
+  public void unsubscribeFromKeyboardEvents(int listenerId) {
+      listeners.remove(listenerId);
+      if(listeners.isEmpty()) {
+          removeCallbacks();
+      }
   }
 }
