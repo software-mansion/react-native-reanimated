@@ -14,7 +14,6 @@ const functionArgsToWorkletize = new Map([
   ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
   ['useWorkletCallback', [0]],
-  ['createWorklet', [0]],
   // animations' callbacks
   ['withTiming', [2]],
   ['withSpring', [2]],
