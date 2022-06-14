@@ -596,6 +596,8 @@ declare module 'react-native-reanimated' {
     velocity?: number;
     clamp?: [number, number];
     velocityFactor?: number;
+    rubberBandEffect?: boolean;
+    rubberBandFactor?: number;
   }
   export interface WithSpringConfig {
     damping?: number;
@@ -650,9 +652,6 @@ declare module 'react-native-reanimated' {
   ): PropsAdapterFunction;
 
   export function processColor(color: number | string): number;
-  export function createWorklet<A extends any[], R>(
-    fn: (...args: A) => R
-  ): (...args: Parameters<typeof fn>) => R;
 
   export function interpolateColor<T extends string | number>(
     value: number,

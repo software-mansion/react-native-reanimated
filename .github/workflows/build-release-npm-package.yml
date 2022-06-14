@@ -1,0 +1,11 @@
+name: Build release npm package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-build-workflow:
+    uses: ./.github/workflows/build-npm-package.yml
+    with:
+      version: release
+

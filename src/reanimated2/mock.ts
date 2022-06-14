@@ -65,6 +65,11 @@ const ReanimatedV2 = {
     out: ID,
     inOut: ID,
   },
+  Extrapolation: {
+    EXTEND: 'extend',
+    CLAMP: 'clamp',
+    IDENTITY: 'identity',
+  },
 
   runOnJS: (fn) => fn,
 };

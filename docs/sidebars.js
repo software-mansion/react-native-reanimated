@@ -28,6 +28,7 @@ module.exports = {
             'api/hooks/useAnimatedStyle',
             'api/hooks/useDerivedValue',
             'api/hooks/useAnimatedScrollHandler',
+            'api/hooks/useAnimatedSensor',
             'api/hooks/useAnimatedGestureHandler',
             'api/hooks/useAnimatedRef',
             'api/hooks/useAnimatedReaction',

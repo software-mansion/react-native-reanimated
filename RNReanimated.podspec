@@ -38,16 +38,21 @@ end
 
 rnVersion = reactVersion.split('.')[1]
 
+fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+
 folly_prefix = ""
 if rnVersion.to_i >= 64
   folly_prefix = "RCT-"
 end
 
-
-folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=' + rnVersion
+folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DRNVERSION=' + rnVersion
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
-folly_version = '2021.04.26.00'
+folly_version = '2021.06.28.00-v2'
 boost_compiler_flags = '-Wno-documentation'
+fabric_flags = ''
+if fabric_enabled
+  fabric_flags = '-DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED'
+end
 
 Pod::Spec.new do |s|
   s.name         = "RNReanimated"
@@ -75,21 +80,29 @@ Pod::Spec.new do |s|
 
   s.pod_target_xcconfig    = {
     "USE_HEADERMAP" => "YES",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\"",
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
   s.xcconfig               = {
-    "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
-                               "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags  }
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
+                               "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
 
   s.requires_arc = true
 
   s.dependency "React-Core"
+  if fabric_enabled
+    s.dependency "React-RCTFabric"
+    s.dependency "React-Codegen"
+    s.dependency "RCT-Folly", folly_version
+  else
+    s.dependency "#{folly_prefix}Folly"
+  end
+  s.dependency "RCTRequired"
+  s.dependency "RCTTypeSafety"
+  s.dependency "ReactCommon/turbomodule/core"
   s.dependency 'FBLazyVector'
   s.dependency 'FBReactNativeSpec'
-  s.dependency 'RCTRequired'
-  s.dependency 'RCTTypeSafety'
   s.dependency 'React-Core'
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
@@ -108,7 +121,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsi'
   s.dependency 'React-jsiexecutor'
   s.dependency 'React-jsinspector'
-  s.dependency 'ReactCommon/turbomodule/core'
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
@@ -119,7 +131,6 @@ Pod::Spec.new do |s|
     s.dependency 'React-callinvoker'
   end
 
-  s.dependency "#{folly_prefix}Folly"
 
 end
 

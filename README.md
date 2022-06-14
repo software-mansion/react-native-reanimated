@@ -13,6 +13,10 @@ comes to gesture based interactions.
 
 Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) section of our docs for the detailed installation instructions.
 
+## Fabric
+
+To learn how to use `react-native-reanimated` with Fabric architecture, head over to [Fabric README](README-Fabric.md). Instructions on how to run Fabric Example within this repo can be found in the [FabricExample README](FabricExample/README.md).
+
 ## Documentation
 
 Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-reanimated/docs/](https://docs.swmansion.com/react-native-reanimated/docs/)
