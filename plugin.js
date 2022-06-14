@@ -760,6 +760,16 @@ function isPossibleOptimization(fun) {
   return flags;
 }
 
+const pluginProposalExportNamespaceFrom =
+  require('@babel/plugin-proposal-export-namespace-from').default;
+const apiMock = {
+  assertVersion: () => {
+    // do nothing.
+  },
+};
+const ExportNamedDeclarationFn =
+  pluginProposalExportNamespaceFrom(apiMock).visitor.ExportNamedDeclaration;
+
 module.exports = function ({ types: t }) {
   return {
     pre() {
@@ -782,6 +792,7 @@ module.exports = function ({ types: t }) {
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
         },
       },
+      ExportNamedDeclaration: ExportNamedDeclarationFn,
     },
   };
 };
