@@ -117,6 +117,11 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
   // Reanimated changes /start
   if (isUIViewRegistry) {
     NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
+    NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *toBeRemovedRegisterCopy =
+        [NSMutableDictionary dictionaryWithDictionary:_toBeRemovedRegister];
+    for (NSNumber *key in _toBeRemovedRegister) {
+      toBeRemovedRegisterCopy[key] = [NSMutableSet setWithSet:_toBeRemovedRegister[key]];
+    }
     for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
       NSInteger lastIndex = [container reactSubviews].count - 1;
       if (lastIndex < 0) {
@@ -129,7 +134,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       ) {
         // we don't want layout animations when removing modals or Screens of native-stack since it brings buggy
         // behavior
-        [_toBeRemovedRegister[container.reactTag] removeObject:toRemoveChild];
+        [toBeRemovedRegisterCopy[container.reactTag] removeObject:toRemoveChild];
         [permanentlyRemovedChildren removeObject:toRemoveChild];
 
       } else {
@@ -137,6 +142,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         viewRegistry[toRemoveChild.reactTag] = toRemoveChild;
       }
     }
+    _toBeRemovedRegister = toBeRemovedRegisterCopy;
 
     for (UIView *removedChild in permanentlyRemovedChildren) {
       [self callAnimationForTree:removedChild parentTag:containerTag];
