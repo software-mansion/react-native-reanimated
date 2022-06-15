@@ -29,7 +29,7 @@ const keyframe = new Keyframe({
     100: {
       transform: [{ rotate: '45deg' }],
     },
-  }
+  })
 ```
 
 Instead of using `0` and `100`, you can define edge points using `from` and `to` keywords. The result will be the same.
@@ -44,7 +44,7 @@ const keyframe = new Keyframe({
     to: {
       transform: [{ rotate: '45deg' }],
     },
-  }
+  })
 ```
 
 Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate. 
@@ -70,7 +70,7 @@ const keyframe = new Keyframe({
     100: {
       transform: [{ rotate: '45deg' }],
     },
-  }
+  })
 ```
 
 ### 4. Customize transitions using an easing function
@@ -91,7 +91,7 @@ const keyframe = new Keyframe({
     100: {
       transform: [{ rotate: '45deg' }],
     },
-  }
+  })
 ```
 
 ## How to use keyframe animations?
