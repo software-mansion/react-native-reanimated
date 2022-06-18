@@ -435,10 +435,11 @@ using namespace facebook::react;
   if (nativeProps.count > 0) {
     [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
   }
-  if (jsProps.count > 0) {
+  // TODO: commented because of conflict @react-navigation/drawer v6
+  /*if (jsProps.count > 0) {
     [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
                                         body:@{@"viewTag" : viewTag, @"props" : jsProps}];
-  }
+  }*/
 }
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName
