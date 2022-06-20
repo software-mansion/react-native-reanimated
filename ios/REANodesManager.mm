@@ -403,12 +403,17 @@ using namespace facebook::react;
       propsSnapshot.viewName = viewName;
       _componentUpdateBuffer[viewTag] = propsSnapshot;
       atomic_store(&_shouldFlushUpdateBuffer, true);
+      return;
     } else {
       NSMutableDictionary *lastProps = lastSnapshot.props;
       for (NSString *key in props) {
         [lastProps setValue:props[key] forKey:key];
       }
     }
+  }
+  if (lastSnapshot != nil) {
+    [_componentUpdateBuffer removeObjectForKey:viewTag];
+    [self updateProps:lastSnapshot.props ofViewWithTag:viewTag withName:viewName];
     return;
   }
 
