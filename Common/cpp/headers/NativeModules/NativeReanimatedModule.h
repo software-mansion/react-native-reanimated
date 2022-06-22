@@ -137,6 +137,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
 
+  jsi::Value registerTransitioinTag(
+      jsi::Runtime &rt,
+      const jsi::Value &transitionTag,
+      const jsi::Value &viewTag) override;
+  jsi::Value unregisterTransitioinTag(
+      jsi::Runtime &rt,
+      const jsi::Value &transitionTag,
+      const jsi::Value &viewTag) override;
+
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);

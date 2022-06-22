@@ -138,6 +138,26 @@ static jsi::Value SPEC_PREFIX(configureProps)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(registerTransitioinTag)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->registerTransitioinTag(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value SPEC_PREFIX(unregisterTransitioinTag)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->unregisterTransitioinTag(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -163,5 +183,10 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};
   methodMap_["configureProps"] = MethodMetadata{2, SPEC_PREFIX(configureProps)};
+
+  methodMap_["registerTransitioinTag"] =
+      MethodMetadata{2, SPEC_PREFIX(registerTransitioinTag)};
+  methodMap_["unregisterTransitioinTag"] =
+      MethodMetadata{2, SPEC_PREFIX(unregisterTransitioinTag)};
 }
 } // namespace reanimated

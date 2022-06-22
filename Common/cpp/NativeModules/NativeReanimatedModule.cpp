@@ -632,4 +632,18 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
+jsi::Value NativeReanimatedModule::registerTransitioinTag(
+    jsi::Runtime &rt,
+    const jsi::Value &transitionTag,
+    const jsi::Value &viewTag) {
+  return jsi::Value::undefined();
+}
+
+jsi::Value NativeReanimatedModule::unregisterTransitioinTag(
+    jsi::Runtime &rt,
+    const jsi::Value &transitionTag,
+    const jsi::Value &viewTag) {
+  return jsi::Value::undefined();
+}
+
 } // namespace reanimated
