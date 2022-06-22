@@ -126,4 +126,16 @@ export default class JSReanimated extends NativeReanimated {
       throw Error('This method can be only use in Jest testing.');
     }
   }
+
+  registerTransitioinTag(_: string, __: number): void {
+    console.warn(
+      '[Reanimated] shared element transition is not available on web yet.'
+    );
+  }
+
+  unregisterTransitioinTag(_: string, __: number): void {
+    console.warn(
+      '[Reanimated] shared element transition is not available on web yet.'
+    );
+  }
 }

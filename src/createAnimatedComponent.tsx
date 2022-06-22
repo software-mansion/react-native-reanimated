@@ -10,6 +10,8 @@ import {
   makeMutable,
   runOnUI,
   enableLayoutAnimations,
+  registerTransitioinTag,
+  unregisterTransitioinTag,
 } from './reanimated2/core';
 import {
   DefaultEntering,
@@ -159,6 +161,7 @@ export default function createAnimatedComponent(
     sv: SharedValue<null | Record<string, unknown>> | null;
     _component: ComponentRef | null = null;
     static displayName: string;
+    _sharedTransitionTag: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -224,6 +227,9 @@ export default function createAnimatedComponent(
             'worklet';
             _removeShadowNodeFromRegistry(shadowNodeWrapper);
           })();
+        }
+        if (this._sharedTransitionTag) {
+          unregisterTransitioinTag(this._sharedTransitionTag, this._viewTag);
         }
       }
     }
@@ -441,6 +447,10 @@ export default function createAnimatedComponent(
 
           if (has('build', sharedElementTransition)) {
             sharedElementTransition = sharedElementTransition.build();
+          }
+          if (this.props.sharedTransitionTag) {
+            this._sharedTransitionTag = this.props.sharedTransitionTag;
+            registerTransitioinTag(this._sharedTransitionTag, tag);
           }
 
           if (has('build', reappearing)) {

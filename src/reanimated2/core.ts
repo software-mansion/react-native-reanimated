@@ -380,3 +380,17 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
 export function jestResetJsReanimatedModule() {
   (NativeReanimatedModule as JSReanimated).jestResetModule();
 }
+
+export function registerTransitioinTag(
+  transitionTag: string,
+  viewTag: number
+): void {
+  NativeReanimatedModule.registerTransitioinTag(transitionTag, viewTag);
+}
+
+export function unregisterTransitioinTag(
+  transitionTag: string,
+  viewTag: number
+): void {
+  NativeReanimatedModule.unregisterTransitioinTag(transitionTag, viewTag);
+}

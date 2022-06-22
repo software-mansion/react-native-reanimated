@@ -97,4 +97,12 @@ export class NativeReanimated {
   configureProps(uiProps: string[], nativeProps: string[]): void {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
+
+  registerTransitioinTag(transitionTag: string, viewTag: number): void {
+    this.InnerNativeModule.registerTransitioinTag(transitionTag, viewTag);
+  }
+
+  unregisterTransitioinTag(transitionTag: string, viewTag: number): void {
+    this.InnerNativeModule.unregisterTransitioinTag(transitionTag, viewTag);
+  }
 }
