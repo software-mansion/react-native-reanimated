@@ -24,6 +24,7 @@ import {
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
+  DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
 } from './reanimated2/layoutReanimation';
@@ -117,6 +118,8 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
     | Keyframe;
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: any; // todo
 };
 
 type Options<P> = {
@@ -403,7 +406,7 @@ export default function createAnimatedComponent(
           (this.props.layout ||
             this.props.entering ||
             this.props.exiting ||
-            this.props.sharedElementTransition ||
+            this.props.sharedTransitionTag ||
             this.props.reappearing ||
             this.props.hiding) &&
           tag != null
@@ -420,7 +423,7 @@ export default function createAnimatedComponent(
             : DefaultExiting;
 
           let sharedElementTransition =
-            this.props.sharedElementTransition ?? DefaultLayout;
+            this.props.sharedTransitionStyle ?? DefaultSharedTransition;
           let reappearing = this.props.reappearing ?? DefaultEntering;
           let hiding = this.props.hiding ?? DefaultExiting;
 

@@ -12,15 +12,15 @@ runOnUI(() => {
 
   global.LayoutAnimationRepository = {
     configs,
-    registerConfig(tag, config) {
+    registerConfig(tag: number, config): void {
       configs[tag] = config;
       enteringAnimationForTag[tag] = null;
     },
-    removeConfig(tag) {
+    removeConfig(tag: number): void {
       delete configs[tag];
       delete enteringAnimationForTag[tag];
     },
-    startAnimationForTag(tag, type, yogaValues) {
+    startAnimationForTag(tag: number, type: string, yogaValues): void {
       if (configs[tag] == null) {
         return; // :(
       }

@@ -175,6 +175,8 @@ declare module 'react-native-reanimated' {
         | typeof BaseAnimationBuilder
         | EntryExitAnimationFunction
         | Keyframe;
+        sharedTransitionTag?: string;
+        sharedTransitionStyle?: any; //todo
     };
 
     export interface PhysicsAnimationState extends AnimationState {
