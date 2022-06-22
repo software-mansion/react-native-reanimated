@@ -37,31 +37,9 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
+#import <RNReanimated/ScreensTransitionDelegate.h>
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSSharedElementAnimator.h>
-
-@interface ScreensTransitionDelegate : NSObject <RNSSharedElementTransitionsDelegate>
-@property REAAnimationsManager *animationsManager;
-@end
-
-@implementation ScreensTransitionDelegate
-- (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
-                                         fromView:(UIView *)fromView
-                                fromViewConverter:(UIView *)startingViewConverter
-                                           toView:(UIView *)toView
-                                  toViewConverter:(UIView *)toViewConverter
-                                   transitionType:(NSString *)transitionType
-{
-  REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
-  if ([transitionType isEqualToString:@"sharedElementTransition"]) {
-    REASnapshot *after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
-    [_animationsManager onViewTransition:toView before:before after:after];
-  } else {
-    [_animationsManager onScreenTransition:fromView finish:before transitionType:transitionType];
-  }
-}
-
-@end
 
 namespace reanimated {
 
@@ -354,6 +332,20 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
   // end sensors
 
+  ScreensTransitionDelegate *delegate = [ScreensTransitionDelegate new];
+  [delegate setAnimationsManager:animationsManager];
+  [RNSSharedElementAnimator setDelegate:delegate];
+  auto registerTransitioinTag = [&](jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {
+    auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
+    auto viewTagNS = @(viewTag.asNumber());
+    [delegate registerTransitioinTag:transitionTagNS viewTag:viewTagNS];
+  };
+  auto unregisterTransitioinTag = [&](jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {
+    auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
+    auto viewTagNS = @(viewTag.asNumber());
+    [delegate unregisterTransitioinTag:transitionTagNS viewTag:viewTagNS];
+  };
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -368,6 +360,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
+      registerTransitioinTag,
+      unregisterTransitioinTag,
   };
 
   module = std::make_shared<NativeReanimatedModule>(
@@ -416,10 +410,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
   }];
 #endif
-
-  ScreensTransitionDelegate *delegate = [ScreensTransitionDelegate new];
-  [delegate setAnimationsManager:animationsManager];
-  [RNSSharedElementAnimator setDelegate:delegate];
 
 #ifdef RCT_NEW_ARCH_ENABLED
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle

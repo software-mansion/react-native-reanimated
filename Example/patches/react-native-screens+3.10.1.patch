@@ -1,0 +1,25 @@
+diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
+index 6f1d46c..eaed2e4 100644
+--- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
++++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
+@@ -1,5 +1,7 @@
+ @protocol RNSSharedElementTransitionsDelegate <NSObject>
+ 
++@property NSMutableDictionary<NSString *, NSMutableArray<NSNumber *>*> * sharedTransitionsItems;
++
+ - (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
+                                          fromView:(UIView *)fromView
+                                 fromViewConverter:(UIView *)startingViewConverter
+diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
+index 4c82bf4..5a66e80 100644
+--- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
++++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
+@@ -24,6 +24,8 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+   NSArray<__kindof UIViewController *> *viewControllers = vc.navigationController.viewControllers;
+   RNSScreenView *screenView = (RNSScreenView *)vc.view;
+ 
++  // todo: get from delegate
++  // _delegate.sharedTransitionsItems;
+   for (NSDictionary *sharedElementDict in screenView.sharedElements) {
+     UIView *fromView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"fromID"]
+                                                           withRootTag:[screenView rootTag]];

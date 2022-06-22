@@ -61,6 +61,10 @@ using ConfigurePropsFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps)>;
+using TransitioinTagFunction = std::function<void(
+    jsi::Runtime &rt,
+    const jsi::Value &transitionTag,
+    const jsi::Value &viewTag)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
@@ -76,6 +80,8 @@ struct PlatformDepMethodsHolder {
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
+  TransitioinTagFunction registerTransitioinTag;
+  TransitioinTagFunction unregisterTransitioinTag;
 };
 
 } // namespace reanimated
