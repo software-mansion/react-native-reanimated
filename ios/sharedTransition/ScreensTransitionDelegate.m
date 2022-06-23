@@ -29,12 +29,18 @@
 
 - (void)registerTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
+  if (!sharedTransitionsItems[transitionTag]) {
+    sharedTransitionsItems[transitionTag] = [NSMutableArray<NSNumber *> new];
+  }
   [sharedTransitionsItems[transitionTag] addObject:viewTag];
 }
 
 - (void)unregisterTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
   [sharedTransitionsItems[transitionTag] removeObject:viewTag];
+  if ([sharedTransitionsItems[transitionTag] count] == 0) {
+    sharedTransitionsItems[transitionTag] = Nil;
+  }
 }
 
 @end

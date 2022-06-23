@@ -11,15 +11,73 @@ index 6f1d46c..eaed2e4 100644
                                           fromView:(UIView *)fromView
                                  fromViewConverter:(UIView *)startingViewConverter
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-index 4c82bf4..5a66e80 100644
+index 4c82bf4..2024e76 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-@@ -24,6 +24,8 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+@@ -24,14 +24,18 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
    NSArray<__kindof UIViewController *> *viewControllers = vc.navigationController.viewControllers;
    RNSScreenView *screenView = (RNSScreenView *)vc.view;
  
-+  // todo: get from delegate
-+  // _delegate.sharedTransitionsItems;
-   for (NSDictionary *sharedElementDict in screenView.sharedElements) {
-     UIView *fromView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"fromID"]
-                                                           withRootTag:[screenView rootTag]];
+-  for (NSDictionary *sharedElementDict in screenView.sharedElements) {
+-    UIView *fromView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"fromID"]
+-                                                          withRootTag:[screenView rootTag]];
+-    UIView *toView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"toID"]
+-                                                        withRootTag:[screenView rootTag]];
++  RCTUIManager *uiManager = [screenView bridge].uiManager;
++  NSNumber *rootTag = [screenView rootTag];
++  for (NSString *key in _delegate.sharedTransitionsItems) {
++    // todo: handle more than 2 tags
++    NSArray *tags = _delegate.sharedTransitionsItems[key];
++    UIView *fromView = [uiManager viewForReactTag:tags[0]];
++    UIView *toView = [uiManager viewForReactTag:tags[1]];
+     
+-    if (fromView == nil || toView == nil) {
+-      break;
++    BOOL isAnyNull = fromView == nil || toView == nil;
++    BOOL hasCorrectRootTag = [fromView rootTag] == rootTag && [toView rootTag] == rootTag;
++    if (isAnyNull || !hasCorrectRootTag) {
++      continue;
+     }
+     
+     UIView *start;
+@@ -58,6 +62,40 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+     }
+   }
+   
++//  for (NSDictionary *sharedElementDict in screenView.sharedElements) {
++//    UIView *fromView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"fromID"]
++//                                                          withRootTag:[screenView rootTag]];
++//    UIView *toView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"toID"]
++//                                                        withRootTag:[screenView rootTag]];
++//
++//    if (fromView == nil || toView == nil) {
++//      break;
++//    }
++//
++//    UIView *start;
++//    UIView *end;
++//    if ([viewControllers containsObject:vc]) {
++//      // we are in previous vc and going forward
++//      start = fromView;
++//      end = toView;
++//    } else {
++//      // we are in next vc and going back
++//      start = toView;
++//      end = fromView;
++//    }
++//
++//    // we reparent starting view and animate it, then reparent it back after the transition
++//    UIView *endContainer = end.reactSuperview;
++//    int endIndex = (int)[[endContainer reactSubviews] indexOfObject:end];
++//    CGRect endFrame = end.frame;
++//    [end removeFromSuperview];
++//
++//    start.hidden = YES;
++//    if (start != nil && end != nil) {
++//      [sharedElementsArray addObject:@[ start, end, endContainer, @(endIndex), @(endFrame) ]];
++//    }
++//  }
++
+   return sharedElementsArray;
+ }
+ 
