@@ -60,7 +60,7 @@ export const Comp = () => {
       <TouchableOpacity
         onPress={() => {
           scroll.value =
-            scroll.value + increment > 0 ? scroll.value + increment : ITEM_COUNT - 2 + increment
+            scroll.value + increment > 0 ? scroll.value + increment : ITEM_COUNT - 1 + increment
 
           if (scroll.value >= ITEM_COUNT - 2) scroll.value = 0
         }}>
