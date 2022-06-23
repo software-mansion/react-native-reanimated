@@ -81,3 +81,23 @@ index 4c82bf4..2024e76 100644
    return sharedElementsArray;
  }
  
+diff --git a/node_modules/react-native-screens/src/native-stack/views/NativeStackView.tsx b/node_modules/react-native-screens/src/native-stack/views/NativeStackView.tsx
+index d0aa06b..1606d86 100644
+--- a/node_modules/react-native-screens/src/native-stack/views/NativeStackView.tsx
++++ b/node_modules/react-native-screens/src/native-stack/views/NativeStackView.tsx
+@@ -157,7 +157,6 @@ const RouteView = ({
+     nativeBackButtonDismissalEnabled = false,
+     replaceAnimation = 'pop',
+     screenOrientation,
+-    sharedElements,
+     stackAnimation,
+     statusBarAnimation,
+     statusBarColor,
+@@ -209,7 +208,6 @@ const RouteView = ({
+       nativeBackButtonDismissalEnabled={nativeBackButtonDismissalEnabled}
+       replaceAnimation={replaceAnimation}
+       screenOrientation={screenOrientation}
+-      sharedElements={sharedElements}
+       stackAnimation={stackAnimation}
+       stackPresentation={stackPresentation}
+       statusBarAnimation={statusBarAnimation}

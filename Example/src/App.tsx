@@ -15,10 +15,6 @@ import Animated, {
 
 const Stack = createNativeStackNavigator();
 
-const sharedElements = [
-  { fromID: 'mleko', toID: 'mlekoDest' },
-];
-
 type SimpleStackParams = {
   First: undefined;
   Second: undefined;
@@ -40,7 +36,6 @@ function First({ navigation }: {
     <Animated.ScrollView style={{ flex: 1 }}>
       <Animated.View
         style={{ width: '100%', height: 100, backgroundColor: 'green' }}
-        nativeID="mleko"
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
@@ -57,7 +52,6 @@ function Second({ navigation }: {
     <View style={{ flex: 1 }}>
       <Animated.View
         style={{ width: '100%', height: 200, backgroundColor: 'green' }}
-        nativeID="mlekoDest"
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
@@ -79,12 +73,12 @@ export default function App(): JSX.Element {
         <Stack.Screen
           name="First"
           component={First}
-          options={{ sharedElements, headerShown: false }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Second"
           component={Second}
-          options={{ headerShown: true, sharedElements }}
+          options={{ headerShown: true }}
         />
       </Stack.Navigator>
     </NavigationContainer>
