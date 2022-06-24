@@ -1,5 +1,33 @@
+diff --git a/node_modules/react-native-screens/ios/RNSScreen.m b/node_modules/react-native-screens/ios/RNSScreen.m
+index e0dd2ba..3b21ae7 100644
+--- a/node_modules/react-native-screens/ios/RNSScreen.m
++++ b/node_modules/react-native-screens/ios/RNSScreen.m
+@@ -749,7 +749,13 @@ - (void)setupProgressNotification
+     _fakeView.alpha = 0.0;
+     NSMutableArray<NSArray *> *sharedElements = nil;
+     if (_closing) {
+-      sharedElements = [RNSSharedElementAnimator prepareSharedElementsArrayForVC:self];
++      if (self == [self.transitionCoordinator viewControllerForKey:UITransitionContextToViewControllerKey]) {
++        UIViewController *anotherVC = [self.transitionCoordinator viewControllerForKey:UITransitionContextFromViewControllerKey];
++        sharedElements = [RNSSharedElementAnimator prepareSharedElementsArrayForVC:self anotherVC:anotherVC];
++      } else {
++        UIViewController *anotherVC = [self.transitionCoordinator viewControllerForKey:UITransitionContextToViewControllerKey];
++        sharedElements = [RNSSharedElementAnimator prepareSharedElementsArrayForVC:self anotherVC:anotherVC];
++      }
+     }
+ 
+     [self.transitionCoordinator
+@@ -846,7 +852,7 @@ - (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<NSArray *> *)sh
+     UIView *endingContainer = sharedElement[2];
+     int index = [sharedElement[3] intValue];
+     [endingContainer insertSubview:endingView atIndex:index];
+-    endingView.frame = [sharedElement[4] CGRectValue];
++//    endingView.frame = [sharedElement[4] CGRectValue];
+     UIView *startingView = sharedElement[0];
+     startingView.hidden = NO;
+   }
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
-index 6f1d46c..eaed2e4 100644
+index 6f1d46c..5a30963 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 @@ -1,5 +1,7 @@
@@ -10,13 +38,31 @@ index 6f1d46c..eaed2e4 100644
  - (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
                                           fromView:(UIView *)fromView
                                  fromViewConverter:(UIView *)startingViewConverter
+@@ -13,6 +15,6 @@
+ 
+ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate;
+ + (NSObject<RNSSharedElementTransitionsDelegate> *)getDelegate;
+-+ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)vc;
+++ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)vc anotherVC:(UIViewController *)anotherVC;
+ 
+ @end
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-index 4c82bf4..2024e76 100644
+index 4c82bf4..9aae320 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-@@ -24,14 +24,18 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
-   NSArray<__kindof UIViewController *> *viewControllers = vc.navigationController.viewControllers;
-   RNSScreenView *screenView = (RNSScreenView *)vc.view;
+@@ -17,26 +17,44 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+   return _delegate;
+ }
+ 
+-+ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)vc
+++ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)viewController anotherVC:(UIViewController *)anotherViewController
+ {
+   NSMutableArray<NSArray *> *sharedElementsArray = [NSMutableArray new];
+ 
+-  NSArray<__kindof UIViewController *> *viewControllers = vc.navigationController.viewControllers;
+-  RNSScreenView *screenView = (RNSScreenView *)vc.view;
++  NSArray<__kindof UIViewController *> *viewControllers = viewController.navigationController.viewControllers;
++  RNSScreenView *screenView = (RNSScreenView *)viewController.view;
  
 -  for (NSDictionary *sharedElementDict in screenView.sharedElements) {
 -    UIView *fromView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"fromID"]
@@ -26,11 +72,25 @@ index 4c82bf4..2024e76 100644
 +  RCTUIManager *uiManager = [screenView bridge].uiManager;
 +  NSNumber *rootTag = [screenView rootTag];
 +  for (NSString *key in _delegate.sharedTransitionsItems) {
-+    // todo: handle more than 2 tags
 +    NSArray *tags = _delegate.sharedTransitionsItems[key];
-+    UIView *fromView = [uiManager viewForReactTag:tags[0]];
-+    UIView *toView = [uiManager viewForReactTag:tags[1]];
-     
++    if ([tags count] < 2) {
++      continue;
++    }
++    UIView *fromView, *toView;
++    for (NSNumber *tag in tags) {
++      UIView *view = [uiManager viewForReactTag:tag];
++      UIViewController *viewConstroller = [view reactViewController];
++      BOOL isUnderViewController = (viewConstroller == viewController || viewConstroller == anotherViewController);
++      if (fromView == nil && isUnderViewController) {
++        fromView = view;
++        continue;
++      }
++      if (fromView != nil && isUnderViewController) {
++        toView = view;
++        break;
++      }
++    }
+ 
 -    if (fromView == nil || toView == nil) {
 -      break;
 +    BOOL isAnyNull = fromView == nil || toView == nil;
@@ -40,7 +100,13 @@ index 4c82bf4..2024e76 100644
      }
      
      UIView *start;
-@@ -58,6 +62,40 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+     UIView *end;
+-    if ([viewControllers containsObject:vc]) {
++    if ([viewControllers containsObject:viewController]) {
+       // we are in previous vc and going forward
+       start = fromView;
+       end = toView;
+@@ -58,6 +76,40 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
      }
    }
    

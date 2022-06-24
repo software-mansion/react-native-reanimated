@@ -39,7 +39,7 @@
 {
   [sharedTransitionsItems[transitionTag] removeObject:viewTag];
   if ([sharedTransitionsItems[transitionTag] count] == 0) {
-    sharedTransitionsItems[transitionTag] = Nil;
+    sharedTransitionsItems[transitionTag] = nil;
   }
 }
 

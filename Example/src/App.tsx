@@ -10,7 +10,8 @@ import {
 } from 'react-native-screens/native-stack';
 import Animated, {
   withTiming,
-  SharedTransition
+  SharedTransition,
+  withSpring
 } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
@@ -20,18 +21,23 @@ type SimpleStackParams = {
   Second: undefined;
 };
 
-const transition = SharedTransition.custom((values: any) => {
-  'worklet';
-  return {
-    height: withTiming(values.targetHeight),
-    originY: withTiming(values.targetOriginY),
-  }
-});
+// const transition = SharedTransition.custom((values: any) => {
+//   'worklet';
+//   return {
+//     height: withTiming(values.targetHeight),
+//     originY: withTiming(values.targetOriginY),
+//   }
+// });
 
-function First({ navigation }: {
-  navigation: NativeStackNavigationProp<SimpleStackParams, 'First'>;
-}) {
+// const transition = SharedTransition.custom((values: any) => {
+//   'worklet';
+//   return {
+//     height: withSpring(values.targetHeight),
+//     originY: withSpring(values.targetOriginY),
+//   }
+// });
 
+function Screen1({ navigation }) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <Animated.View
@@ -39,14 +45,12 @@ function First({ navigation }: {
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
-      <Button onPress={() => navigation.navigate('Second')} title="Click" />
+      <Button onPress={() => navigation.navigate('Screen2')} title="Click" />
     </Animated.ScrollView>
   );
 }
 
-function Second({ navigation }: {
-  navigation: NativeStackNavigationProp<SimpleStackParams, 'Second'>;
-}) {
+function Screen2({ navigation }) {
 
   return (
     <View style={{ flex: 1 }}>
@@ -55,29 +59,77 @@ function Second({ navigation }: {
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
+            <Button
+        title="go to 3"
+        onPress={() => navigation.navigate('Screen3')}
+      />
       <Button
-        title="Tap me for first screen"
-        onPress={() => navigation.navigate('First')}
+        title="go back"
+        onPress={() => navigation.navigate('Screen1')}
       />
     </View>
   );
 }
 
-export default function App(): JSX.Element {
+function Screen3({ navigation }) {
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{ width: '50%', height: 100, backgroundColor: 'red', opacity: 0.5 }}
+        sharedTransitionTag="mleko123"
+        // sharedTransitionStyle={transition}
+      />
+      <Button
+        title="Click"
+        onPress={() => navigation.navigate('Screen4')}
+      />
+    </View>
+  );
+}
+
+function Screen4({ navigation }) {
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{ width: '50%', height: 200, backgroundColor: 'red', opacity: 0.5 }}
+        sharedTransitionTag="mleko123"
+        // sharedTransitionStyle={transition}
+      />
+      <Button
+        title="Click"
+        onPress={() => navigation.navigate('Screen1')}
+      />
+    </View>
+  );
+}
+
+export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'fade',
+          stackAnimation: 'none',
         }}>
         <Stack.Screen
-          name="First"
-          component={First}
+          name="Screen1"
+          component={Screen1}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="Second"
-          component={Second}
+          name="Screen2"
+          component={Screen2}
+          options={{ headerShown: true }}
+        />
+        <Stack.Screen
+          name="Screen3"
+          component={Screen3}
+          options={{ headerShown: true }}
+        />
+        <Stack.Screen
+          name="Screen4"
+          component={Screen4}
           options={{ headerShown: true }}
         />
       </Stack.Navigator>
