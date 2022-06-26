@@ -1,3 +1,4 @@
+project(Reanimated)
 cmake_minimum_required(VERSION 3.5.1)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
@@ -13,6 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 set (PACKAGE_NAME "reanimated")
+set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
 if(${CLIENT_SIDE_BUILD})
@@ -120,31 +122,39 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
-        FOLLY_JSON_LIB
-        folly_json
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
         REACT_NATIVE_JNI_LIB
         reactnativejni
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
 find_library(
         GLOG_LIB
         glog
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
 find_library(
         FBJNI_LIB
         fbjni
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+
+if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+    find_library(
+            FOLLY_LIB
+            folly_json
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+else()
+    find_library(
+            FOLLY_LIB
+            folly_runtime
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+endif()
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (JSI_LIB "")
@@ -169,7 +179,7 @@ if(${FOR_HERMES})
             ${HERMES_LIB}
             ${GLOG_LIB}
             ${FBJNI_LIB}
-            ${FOLLY_JSON_LIB}
+            ${FOLLY_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
     )
