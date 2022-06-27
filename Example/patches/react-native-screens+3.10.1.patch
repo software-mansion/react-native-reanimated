@@ -47,10 +47,10 @@ index 6f1d46c..5a30963 100644
  
  @end
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-index 4c82bf4..9aae320 100644
+index 4c82bf4..2dfe281 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-@@ -17,26 +17,44 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+@@ -17,26 +17,41 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
    return _delegate;
  }
  
@@ -73,9 +73,6 @@ index 4c82bf4..9aae320 100644
 +  NSNumber *rootTag = [screenView rootTag];
 +  for (NSString *key in _delegate.sharedTransitionsItems) {
 +    NSArray *tags = _delegate.sharedTransitionsItems[key];
-+    if ([tags count] < 2) {
-+      continue;
-+    }
 +    UIView *fromView, *toView;
 +    for (NSNumber *tag in tags) {
 +      UIView *view = [uiManager viewForReactTag:tag];
@@ -106,10 +103,11 @@ index 4c82bf4..9aae320 100644
        // we are in previous vc and going forward
        start = fromView;
        end = toView;
-@@ -58,6 +76,40 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+@@ -57,6 +72,40 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+       [sharedElementsArray addObject:@[ start, end, endContainer, @(endIndex), @(endFrame) ]];
      }
    }
-   
++//  [[screenView bridge].uiManager viewForNativeID:"screen1" withRootTag:[screenView rootTag]];
 +//  for (NSDictionary *sharedElementDict in screenView.sharedElements) {
 +//    UIView *fromView = [[screenView bridge].uiManager viewForNativeID:sharedElementDict[@"fromID"]
 +//                                                          withRootTag:[screenView rootTag]];
@@ -143,10 +141,9 @@ index 4c82bf4..9aae320 100644
 +//      [sharedElementsArray addObject:@[ start, end, endContainer, @(endIndex), @(endFrame) ]];
 +//    }
 +//  }
-+
+ 
    return sharedElementsArray;
  }
- 
 diff --git a/node_modules/react-native-screens/src/native-stack/views/NativeStackView.tsx b/node_modules/react-native-screens/src/native-stack/views/NativeStackView.tsx
 index d0aa06b..1606d86 100644
 --- a/node_modules/react-native-screens/src/native-stack/views/NativeStackView.tsx
