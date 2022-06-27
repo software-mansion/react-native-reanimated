@@ -9,8 +9,6 @@
 
 #include <memory>
 
-#include "NewestShadowNodesRegistry.h"
-
 using namespace facebook;
 using namespace react;
 
@@ -21,14 +19,11 @@ class ReanimatedUIManagerBinding : public UIManagerBinding {
   static void createAndInstallIfNeeded(
       jsi::Runtime &runtime,
       RuntimeExecutor const &runtimeExecutor,
-      std::shared_ptr<UIManager> const &uiManager,
-      std::shared_ptr<NewestShadowNodesRegistry> const
-          &newestShadowNodesRegistry);
+      std::shared_ptr<UIManager> const &uiManager);
 
   ReanimatedUIManagerBinding(
       std::shared_ptr<UIManager> uiManager,
-      RuntimeExecutor runtimeExecutor,
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+      RuntimeExecutor runtimeExecutor);
 
   ~ReanimatedUIManagerBinding();
 
@@ -38,7 +33,6 @@ class ReanimatedUIManagerBinding : public UIManagerBinding {
 
  private:
   std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
 };
 
 } // namespace reanimated

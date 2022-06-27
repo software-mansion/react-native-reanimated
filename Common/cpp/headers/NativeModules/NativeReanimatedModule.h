@@ -2,7 +2,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
-#include "NewestShadowNodesRegistry.h"
+#include "PropsRegistry.h"
 #endif
 
 #include <memory>
@@ -126,8 +126,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void setUIManager(std::shared_ptr<UIManager> uiManager);
 
-  void setNewestShadowNodesRegistry(
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+  void setPropsRegistry(std::shared_ptr<PropsRegistry> propsRegistry);
 #endif
 
   jsi::Value registerSensor(
@@ -164,12 +163,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   // We can store surfaceId of the most recent ShadowNode as a workaround.
   SurfaceId surfaceId_ = -1;
 
-  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
+  std::vector<std::pair<ShadowNode::Shared, std::shared_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
 
-  std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
+  std::vector<Tag> tagsToRemove_; // from propsRegistry_
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps

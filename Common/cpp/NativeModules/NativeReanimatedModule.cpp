@@ -11,7 +11,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
 
@@ -481,7 +480,7 @@ void NativeReanimatedModule::updateProps(
 
   if (isThereAnyLayoutProp(rt, props)) {
     operationsInBatch_.emplace_back(
-        shadowNode, std::make_unique<jsi::Value>(rt, props));
+        shadowNode, std::make_shared<jsi::Value>(rt, props));
   } else {
     // TODO: batch with layout props changes?
     Tag tag = shadowNode->getTag();
@@ -496,7 +495,7 @@ void NativeReanimatedModule::performOperations() {
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
-      std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
+      std::vector<std::pair<ShadowNode::Shared, std::shared_ptr<jsi::Value>>>();
 
   auto copiedTagsToRemove = std::move(tagsToRemove_);
   tagsToRemove_ = std::vector<Tag>();
@@ -511,7 +510,7 @@ void NativeReanimatedModule::performOperations() {
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       // lock once due to performance reasons
-      auto lock = newestShadowNodesRegistry_->createLock();
+      auto lock = propsRegistry_->createLock();
 
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
@@ -521,17 +520,17 @@ void NativeReanimatedModule::performOperations() {
 
         auto newRootNode =
             rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto newest =
-                  newestShadowNodesRegistry_->get(oldShadowNode.getTag());
+              const auto newProps =
+                  oldShadowNode.getComponentDescriptor().cloneProps(
+                      propsParserContext,
+                      oldShadowNode.getProps(),
+                      RawProps(rt, *pair.second));
 
-              const auto &source = newest == nullptr ? oldShadowNode : *newest;
+              auto clone = oldShadowNode.clone({/* .props = */ newProps});
 
-              const auto newProps = source.getComponentDescriptor().cloneProps(
-                  propsParserContext,
-                  source.getProps(),
-                  RawProps(rt, *pair.second));
+              propsRegistry_->set(clone, pair.second);
 
-              return source.clone({/* .props = */ newProps});
+              return clone;
             });
 
         if (newRootNode == nullptr) {
@@ -545,14 +544,10 @@ void NativeReanimatedModule::performOperations() {
         for (const auto &pair : ancestors) {
           const auto &parent = pair.first.get();
           const auto &child = parent.getChildren().at(pair.second);
-          newestShadowNodesRegistry_->set(child, parent.getTag());
         }
       }
 
-      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-      for (auto tag : copiedTagsToRemove) {
-        newestShadowNodesRegistry_->remove(tag);
-      }
+      // TODO: remove from propsRegistry_
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });
@@ -626,9 +621,9 @@ void NativeReanimatedModule::setUIManager(
   uiManager_ = uiManager;
 }
 
-void NativeReanimatedModule::setNewestShadowNodesRegistry(
-    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
-  newestShadowNodesRegistry_ = newestShadowNodesRegistry;
+void NativeReanimatedModule::setPropsRegistry(
+    std::shared_ptr<PropsRegistry> propsRegistry) {
+  propsRegistry_ = propsRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

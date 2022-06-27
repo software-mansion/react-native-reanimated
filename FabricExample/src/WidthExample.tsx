@@ -1,4 +1,4 @@
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View, Text } from 'react-native';
 
 import React from 'react';
 import Animated, {
@@ -28,6 +28,7 @@ export default function WidthExample() {
   const childStyle = useAnimatedStyle(() => {
     return {
       width: 80 + 230 * sv.value,
+      borderWidth: 4 + sv.value * 30,
     };
   }, []);
 
@@ -40,7 +41,9 @@ export default function WidthExample() {
       </View>
       <View style={[styles.parent, { paddingVertical: padding }]}>
         <View collapsable={false} style={styles.middle}>
-          <Animated.View style={[styles.left, { height }, childStyle]} />
+          <Animated.View style={[styles.left, { height }, childStyle]}>
+            <Text style={styles.text}>42</Text>
+          </Animated.View>
           <View style={styles.right} />
         </View>
       </View>
@@ -68,5 +71,9 @@ const styles = StyleSheet.create({
   right: {
     backgroundColor: 'lime',
     flex: 1,
+  },
+  text: {
+    fontSize: 40,
+    color: 'white',
   },
 });

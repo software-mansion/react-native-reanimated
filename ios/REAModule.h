@@ -1,5 +1,4 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 #endif
 

@@ -12,8 +12,9 @@
 #import <RNReanimated/NativeProxy.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/NewestShadowNodesRegistry.h>
+#import <RNReanimated/PropsRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
+#import <RNReanimated/ReanimatedCommitHook.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 #endif
 
@@ -41,7 +42,8 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
   std::shared_ptr<EventListener> eventListener_;
 #else
@@ -83,15 +85,14 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
     callback(runtime);
   };
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry);
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(runtime, syncRuntimeExecutor, uiManager);
 }
 
 - (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     reanimatedModule->setUIManager(uiManager);
-    reanimatedModule->setNewestShadowNodesRegistry(newestShadowNodesRegistry);
+    reanimatedModule->setPropsRegistry(propsRegistry_);
   }
 }
 
@@ -99,7 +100,10 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
+  propsRegistry_ = std::make_shared<PropsRegistry>();
+  jsi::Runtime &rt = *reanimatedModule_.lock()->runtime.get();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager, rt);
+  uiManager->registerCommitHook(*commitHook_);
   [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
   [self setUpNativeReanimatedModule:uiManager];
 }
