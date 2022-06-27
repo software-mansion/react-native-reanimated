@@ -45,7 +45,7 @@ function Screen1({ navigation }) {
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
-      <Button onPress={() => navigation.navigate('Screen2')} title="Click" />
+      <Button onPress={() => navigation.navigate('Screen2')} title="go to screen2" />
     </Animated.ScrollView>
   );
 }
@@ -55,12 +55,12 @@ function Screen2({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Animated.View
-        style={{ width: '100%', height: 200, backgroundColor: 'green' }}
+        style={{ width: '100%', height: 200, backgroundColor: 'green', marginTop: 100 }}
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
             <Button
-        title="go to 3"
+        title="go to screen3"
         onPress={() => navigation.navigate('Screen3')}
       />
       <Button
@@ -81,8 +81,12 @@ function Screen3({ navigation }) {
         // sharedTransitionStyle={transition}
       />
       <Button
-        title="Click"
+        title="go to screen4"
         onPress={() => navigation.navigate('Screen4')}
+      />
+      <Button
+        title="go back"
+        onPress={() => navigation.navigate('Screen2')}
       />
     </View>
   );
@@ -98,7 +102,7 @@ function Screen4({ navigation }) {
         // sharedTransitionStyle={transition}
       />
       <Button
-        title="Click"
+        title="go back to screen1"
         onPress={() => navigation.navigate('Screen1')}
       />
     </View>
@@ -120,7 +124,7 @@ export default function App() {
         <Stack.Screen
           name="Screen2"
           component={Screen2}
-          options={{ headerShown: true }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Screen3"

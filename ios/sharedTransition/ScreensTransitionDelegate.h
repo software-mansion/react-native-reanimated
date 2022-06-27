@@ -8,5 +8,6 @@
 
 - (void)registerTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
 - (void)unregisterTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
+- (void)setUIManager:(RCTUIManager *)uiManager;
 
 @end
