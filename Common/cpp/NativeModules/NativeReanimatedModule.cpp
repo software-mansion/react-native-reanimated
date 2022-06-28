@@ -546,7 +546,11 @@ void NativeReanimatedModule::performOperations() {
         // TODO: remove from propsRegistry_
       }
 
-      return std::static_pointer_cast<RootShadowNode>(rootNode);
+      auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
+
+      propsRegistry_->setLastReanimatedRoot(newRoot);
+
+      return newRoot;
     });
   });
 }

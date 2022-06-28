@@ -11,6 +11,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &shadowTree,
     RootShadowNode::Shared const &oldRootShadowNode,
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
+  if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
+    // ShadowTree commited by Reanimated, no need to apply updates from
+    // PropsRegistry or re-calculate layout
+    return newRootShadowNode;
+  }
+
   auto contextContainer = getContextContainerFromUIManager(&*uiManager_);
   auto surfaceId = newRootShadowNode->getSurfaceId();
   PropsParserContext propsParserContext{surfaceId, *contextContainer};

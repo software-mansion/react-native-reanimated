@@ -1,7 +1,9 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <react/renderer/components/root/RootShadowNode.h>
 #include <react/renderer/core/ShadowNode.h>
+
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -23,10 +25,22 @@ class PropsRegistry {
                     ShadowNodeFamily const &family,
                     const folly::dynamic &dynProps)> callback);
 
+  void setLastReanimatedRoot(
+      RootShadowNode::Shared const &lastReanimatedRoot) noexcept {
+    lastReanimatedRoot_ = &*lastReanimatedRoot;
+  }
+
+  bool isLastReanimatedRoot(
+      RootShadowNode::Shared const &newRootShadowNode) const noexcept {
+    return &*newRootShadowNode == lastReanimatedRoot_;
+  }
+
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
 
   mutable std::mutex mutex_; // Protects `map_`.
+
+  const RootShadowNode *lastReanimatedRoot_ = nullptr;
 };
 
 } // namespace reanimated
