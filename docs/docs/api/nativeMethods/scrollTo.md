@@ -38,7 +38,8 @@ void
 ### Example
 
 ```js
-import { TouchableOpacity, View, Text } from 'react-native'
+import React from 'react'
+import { TouchableOpacity, View, Text, ScrollView } from 'react-native'
 import { useAnimatedRef, useDerivedValue, useSharedValue, scrollTo } from 'react-native-reanimated'
 
 const ITEM_COUNT = 10
