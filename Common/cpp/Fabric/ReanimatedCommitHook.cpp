@@ -17,29 +17,32 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
-  auto lock = propsRegistry_->createLock();
+  {
+    auto lock = propsRegistry_->createLock();
 
-  propsRegistry_->for_each(
-      [&](ShadowNodeFamily const &family, std::shared_ptr<jsi::Value> props) {
-        auto newRootNode =
-            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto newProps =
-                  oldShadowNode.getComponentDescriptor().cloneProps(
-                      propsParserContext,
-                      oldShadowNode.getProps(),
-                      RawProps(rt_, *props));
+    propsRegistry_->for_each(
+        [&](ShadowNodeFamily const &family, std::shared_ptr<jsi::Value> props) {
+          auto newRootNode =
+              rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
+                const auto newProps =
+                    oldShadowNode.getComponentDescriptor().cloneProps(
+                        propsParserContext,
+                        oldShadowNode.getProps(),
+                        RawProps(rt_, *props));
 
-              return oldShadowNode.clone({/* .props = */ newProps});
-            });
+                return oldShadowNode.clone({/* .props = */ newProps});
+              });
 
-        if (newRootNode == nullptr) {
-          // this happens when React removed the component but Reanimated still
-          // tries to animate it, let's skip update for this specific component
-          return;
-        }
+          if (newRootNode == nullptr) {
+            // this happens when React removed the component but Reanimated
+            // still tries to animate it, let's skip update for this specific
+            // component
+            return;
+          }
 
-        rootNode = newRootNode;
-      });
+          rootNode = newRootNode;
+        });
+  }
 
   auto newRootShadowNode2 = std::static_pointer_cast<RootShadowNode>(rootNode);
 

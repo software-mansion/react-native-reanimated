@@ -509,45 +509,48 @@ void NativeReanimatedModule::performOperations() {
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
-      // lock once due to performance reasons
-      auto lock = propsRegistry_->createLock();
-
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-      for (const auto &pair : copiedOperationsQueue) {
-        const ShadowNodeFamily &family = pair.first->getFamily();
-        react_native_assert(family.getSurfaceId() == surfaceId_);
+      {
+        // lock once due to performance reasons
+        auto lock = propsRegistry_->createLock();
 
-        auto newRootNode =
-            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto newProps =
-                  oldShadowNode.getComponentDescriptor().cloneProps(
-                      propsParserContext,
-                      oldShadowNode.getProps(),
-                      RawProps(rt, *pair.second));
+        for (const auto &pair : copiedOperationsQueue) {
+          const ShadowNodeFamily &family = pair.first->getFamily();
+          react_native_assert(family.getSurfaceId() == surfaceId_);
 
-              auto clone = oldShadowNode.clone({/* .props = */ newProps});
+          auto newRootNode =
+              rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
+                const auto newProps =
+                    oldShadowNode.getComponentDescriptor().cloneProps(
+                        propsParserContext,
+                        oldShadowNode.getProps(),
+                        RawProps(rt, *pair.second));
 
-              propsRegistry_->set(clone, pair.second);
+                auto clone = oldShadowNode.clone({/* .props = */ newProps});
 
-              return clone;
-            });
+                propsRegistry_->set(clone, pair.second);
 
-        if (newRootNode == nullptr) {
-          // this happens when React removed the component but Reanimated still
-          // tries to animate it, let's skip update for this specific component
-          continue;
+                return clone;
+              });
+
+          if (newRootNode == nullptr) {
+            // this happens when React removed the component but Reanimated
+            // still tries to animate it, let's skip update for this specific
+            // component
+            continue;
+          }
+          rootNode = newRootNode;
+
+          auto ancestors = family.getAncestors(*rootNode);
+          for (const auto &pair : ancestors) {
+            const auto &parent = pair.first.get();
+            const auto &child = parent.getChildren().at(pair.second);
+          }
         }
-        rootNode = newRootNode;
 
-        auto ancestors = family.getAncestors(*rootNode);
-        for (const auto &pair : ancestors) {
-          const auto &parent = pair.first.get();
-          const auto &child = parent.getChildren().at(pair.second);
-        }
+        // TODO: remove from propsRegistry_
       }
-
-      // TODO: remove from propsRegistry_
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });
