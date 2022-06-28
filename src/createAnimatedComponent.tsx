@@ -63,7 +63,6 @@ function dummyListener() {
 
 function maybeBuild(layoutAnimationOrBuilder) {
   if (typeof layoutAnimationOrBuilder.build == 'function') {
-    console.log('BUIDL ANIMATION');
     return layoutAnimationOrBuilder.build();
   }
   return layoutAnimationOrBuilder;
@@ -570,36 +569,6 @@ export default function createAnimatedComponent(
               this.sv
             );
           }
-          //   let layout = this.props.layout ? this.props.layout : DefaultLayout;
-          //   let entering = this.props.entering
-          //     ? this.props.entering
-          //     : DefaultEntering;
-          //   let exiting = this.props.exiting
-          //     ? this.props.exiting
-          //     : DefaultExiting;
-
-          //   if (has('build', layout)) {
-          //     layout = layout.build();
-          //   }
-
-          //   if (has('build', entering)) {
-          //     entering = entering.build() as EntryExitAnimationFunction;
-          //   }
-
-          //   if (has('build', exiting)) {
-          //     exiting = exiting.build() as EntryExitAnimationFunction;
-          //   }
-
-          //   const config = {
-          //     layout,
-          //     entering,
-          //     exiting,
-          //     sv: this.sv,
-          //   };
-          //   runOnUI(() => {
-          //     'worklet';
-          //     global.LayoutAnimationRepository.registerConfig(tag, config);
-          //   })();
         }
 
         if (ref !== this._component) {

@@ -57,7 +57,10 @@
 - (void)setBridge:(RCTBridge *)bridge
 {
   RCTLayoutAnimation *deletingAnimation = [[RCTLayoutAnimation alloc] initWithDuration:0.5 config:@{}];
-  _reactLayoutAnimationGroup = [[RCTLayoutAnimationGroup alloc] initWithCreatingLayoutAnimation:nil updatingLayoutAnimation:nil deletingLayoutAnimation:deletingAnimation callback:nil];
+  _reactLayoutAnimationGroup = [[RCTLayoutAnimationGroup alloc] initWithCreatingLayoutAnimation:nil
+                                                                        updatingLayoutAnimation:nil
+                                                                        deletingLayoutAnimation:deletingAnimation
+                                                                                       callback:nil];
   if (!_blockSetter) {
     _blockSetter = true;
 
@@ -328,7 +331,8 @@
       // Reanimated changes /end
     }
     // Clean up
-    // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the private field
+    // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the
+    // private field
     [uiManager setNextLayoutAnimationGroup:nil];
   };
 }

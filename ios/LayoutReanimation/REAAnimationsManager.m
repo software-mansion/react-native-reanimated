@@ -80,7 +80,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _currentKeys = nil;
 }
 
-- (void)setAnimationStartingBlock:(REAAnimationStartingBlock )startAnimation
+- (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation
 {
   _startAnimationForTag = startAnimation;
 }
@@ -112,7 +112,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   });
 }
 
-- (UIView*)viewForTag:(NSNumber *)tag
+- (UIView *)viewForTag:(NSNumber *)tag
 {
   UIView *view = [_reaUiManager viewForReactTag:tag];
   if (view == nil) {
@@ -121,7 +121,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return view;
 }
 
-- (void)notifyAboutEnd:(NSNumber *)tag cancelled:(BOOL)cancelled
+- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled
 {
   UIView *view = [_exitingViews objectForKey:tag];
   [_exitingViews removeObjectForKey:tag];
@@ -129,8 +129,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [view removeFromSuperview];
 }
 
-// TODO: this is a really bad name for a method that updates properties
-- (void)notifyAboutProgress:(NSDictionary *)newStyle tag:(NSNumber *)tag
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag
 {
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
@@ -233,11 +232,12 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (BOOL)wantsHandleRemovalOfView:(UIView *)view
 {
   return REANodeFind(view, ^(id<RCTComponent> view) {
-    return [self->_ancestorsOfExitingViews objectForKey:view.reactTag] != nil || self->_hasAnimationForTag(view.reactTag, @"exiting");
+    return [self->_ancestorsOfExitingViews objectForKey:view.reactTag] != nil ||
+        self->_hasAnimationForTag(view.reactTag, @"exiting");
   });
 }
 
-- (void)registerExitingAncestors:(UIView*)child
+- (void)registerExitingAncestors:(UIView *)child
 {
   UIView *parent = child.superview;
   while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
@@ -248,7 +248,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (void)maybeDropAncestors:(UIView*)child
+- (void)maybeDropAncestors:(UIView *)child
 {
   UIView *parent = child.superview;
   while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
@@ -266,14 +266,13 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
         _ancestorsOfExitingViews[parent.reactTag] = @(trackingCount);
       }
     }
-
   }
 }
 
-- (BOOL)removeRecursive:(UIView*)view fromContainer:(UIView*)container;
+- (BOOL)removeRecursive:(UIView *)view fromContainer:(UIView *)container;
 {
   if (view.reactTag) {
-    BOOL hasExitAnimation  = _hasAnimationForTag(view.reactTag, @"exiting");
+    BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting");
     BOOL wantAnimateExit = hasExitAnimation;
     if (!wantAnimateExit) {
       for (UIView *subview in view.reactSubviews) {
@@ -322,7 +321,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after
 {
-//  _reaUiManager.flushUiOperations();
+  //  _reaUiManager.flushUiOperations();
   NSMutableDictionary *targetValues = after.values;
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
   _startAnimationForTag(view.reactTag, @"entering", preparedValues, @(0));
@@ -335,18 +334,18 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary *currentValues = before.values;
 
   // TODO: maybe restore the below code?
-//  if (state == Appearing) {
-//    BOOL doNotStartLayout = true;
-//    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
-//      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
-//          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
-//        doNotStartLayout = false;
-//      }
-//    }
-//    if (doNotStartLayout) {
-//      return;
-//    }
-//  }
+  //  if (state == Appearing) {
+  //    BOOL doNotStartLayout = true;
+  //    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
+  //      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
+  //          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
+  //        doNotStartLayout = false;
+  //      }
+  //    }
+  //    if (doNotStartLayout) {
+  //      return;
+  //    }
+  //  }
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
 }

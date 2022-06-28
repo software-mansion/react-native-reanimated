@@ -9,19 +9,19 @@ namespace reanimated {
 const long long idOffset = 1e9;
 
 LayoutAnimationsProxy::LayoutAnimationsProxy(
-    std::function<void(int, jsi::Object newProps)> _notifyAboutProgress,
-    std::function<void(int, bool)> _notifyAboutEnd)
-    : notifyAboutProgress(std::move(_notifyAboutProgress)),
-      notifyAboutEnd(std::move(_notifyAboutEnd)) {}
+    std::function<void(int, jsi::Object newProps)> progressHandler,
+    std::function<void(int, bool)> endHandler)
+    : progressHandler(std::move(progressHandler)),
+      endHandler(std::move(endHandler)) {}
 
 void LayoutAnimationsProxy::startObserving(
     int tag,
     std::shared_ptr<MutableValue> sv,
     jsi::Runtime &rt) {
   observedValues[tag] = sv;
-  this->notifyAboutProgress(tag, sv->value->toJSValue(rt).asObject(rt));
+  this->progressHandler(tag, sv->value->toJSValue(rt).asObject(rt));
   sv->addListener(tag + idOffset, [sv, tag, this, &rt]() {
-    this->notifyAboutProgress(tag, sv->value->toJSValue(rt).asObject(rt));
+    this->progressHandler(tag, sv->value->toJSValue(rt).asObject(rt));
   });
 }
 
@@ -32,11 +32,11 @@ void LayoutAnimationsProxy::stopObserving(int tag, bool finished) {
   std::shared_ptr<MutableValue> sv = observedValues[tag];
   sv->removeListener(tag + idOffset);
   observedValues.erase(tag);
-  this->notifyAboutEnd(tag, !finished);
+  this->endHandler(tag, !finished);
 }
 
 void LayoutAnimationsProxy::notifyAboutCancellation(int tag) {
-  this->notifyAboutEnd(tag, false);
+  this->endHandler(tag, false);
 }
 
 void LayoutAnimationsProxy::configureAnimation(int tag, const std::string &type, std::shared_ptr<ShareableValue> config, std::shared_ptr<ShareableValue> viewSharedValue) {
