@@ -13,6 +13,7 @@
     "postinstall": "patch-package && echo 73fa47c9c033e2f1bf10ebab9ac58f02c94ffff9 > ./node_modules/react-native/sdks/.hermesversion"
   },
   "dependencies": {
+    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
     "react": "18.0.0",
