@@ -12,17 +12,17 @@ std::lock_guard<std::mutex> PropsRegistry::createLock() const {
 
 void PropsRegistry::set(
     ShadowNode::Shared shadowNode,
-    std::shared_ptr<jsi::Value> props) {
-  map_[shadowNode->getTag()] = std::make_pair(shadowNode, props);
+    folly::dynamic &&dynProps) {
+  map_[shadowNode->getTag()] = std::make_pair(shadowNode, dynProps);
 }
 
 void PropsRegistry::for_each(std::function<void(
                                  ShadowNodeFamily const &family,
-                                 std::shared_ptr<jsi::Value> props)> callback) {
+                                 const folly::dynamic &dynProps)> callback) {
   for (const auto &pair : map_) {
     const ShadowNodeFamily &family = pair.second.first->getFamily();
-    std::shared_ptr<jsi::Value> props = pair.second.second;
-    callback(family, props);
+    const folly::dynamic &dynProps = pair.second.second;
+    callback(family, dynProps);
   }
 }
 

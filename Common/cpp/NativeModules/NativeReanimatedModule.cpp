@@ -529,7 +529,7 @@ void NativeReanimatedModule::performOperations() {
 
                 auto clone = oldShadowNode.clone({/* .props = */ newProps});
 
-                propsRegistry_->set(clone, pair.second);
+                propsRegistry_->set(clone, dynamicFromValue(rt, *pair.second));
 
                 return clone;
               });

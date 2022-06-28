@@ -21,14 +21,14 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     auto lock = propsRegistry_->createLock();
 
     propsRegistry_->for_each(
-        [&](ShadowNodeFamily const &family, std::shared_ptr<jsi::Value> props) {
+        [&](ShadowNodeFamily const &family, const folly::dynamic &dynProps) {
           auto newRootNode =
               rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
                 const auto newProps =
                     oldShadowNode.getComponentDescriptor().cloneProps(
                         propsParserContext,
                         oldShadowNode.getProps(),
-                        RawProps(rt_, *props));
+                        RawProps(dynProps));
 
                 return oldShadowNode.clone({/* .props = */ newProps});
               });
