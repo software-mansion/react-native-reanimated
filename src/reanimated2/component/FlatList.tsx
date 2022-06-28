@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, FlatListProps, LayoutChangeEvent } from 'react-native';
-import WrappedComponents from './WrappedComponents';
+import ReanimatedView from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 
@@ -11,12 +11,9 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
     onLayout: (event: LayoutChangeEvent) => void;
   }> = (props) => {
     return (
-      <WrappedComponents.View
-        layout={itemLayoutAnimation}
-        onLayout={props.onLayout}
-      >
+      <ReanimatedView layout={itemLayoutAnimation} onLayout={props.onLayout}>
         {props.children}
-      </WrappedComponents.View>
+      </ReanimatedView>
     );
   };
 
