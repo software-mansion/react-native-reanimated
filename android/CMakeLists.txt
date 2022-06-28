@@ -191,7 +191,7 @@ else()
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
             ${FBJNI_LIB}
-            ${FOLLY_JSON_LIB}
+            ${FOLLY_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
     )
