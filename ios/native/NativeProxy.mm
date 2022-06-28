@@ -219,7 +219,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
   [reaUiManagerNoCast setUp:animationsManager];
 
+  __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
+    REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
       NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
       [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
@@ -227,6 +229,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   auto notifyAboutEnd = [=](int tag, bool isCancelled) {
+    REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
       [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
     }
@@ -313,13 +316,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
     }
 
-    layoutAnimationsProxy->startLayoutAnimation(*rt,
-                                                        [tag intValue],
-                                                        std::string([type UTF8String]),
-                                                        yogaValues);
+    layoutAnimationsProxy->startLayoutAnimation(*rt, [tag intValue], std::string([type UTF8String]), yogaValues);
   }];
 
-  [animationsManager setHasAnimationBlock:^(NSNumber * _Nonnull tag, NSString * _Nonnull type) {
+  [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
     return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
   }];
 
