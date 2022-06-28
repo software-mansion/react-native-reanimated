@@ -362,11 +362,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
-
-  // we dispatch it asynchronously so it does not mess up with native animiation of transitioning screens
-  dispatch_async(dispatch_get_main_queue(), ^{
-    self->_startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
-  });
+  self->_startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }
 
 - (void)onScreenTransition:(UIView *)screen finish:(REASnapshot *)finish transitionType:(NSString *)transitionType

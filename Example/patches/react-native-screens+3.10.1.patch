@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-native-screens/ios/RNSScreen.m b/node_modules/react-native-screens/ios/RNSScreen.m
-index e0dd2ba..3b21ae7 100644
+index e0dd2ba..5d32d19 100644
 --- a/node_modules/react-native-screens/ios/RNSScreen.m
 +++ b/node_modules/react-native-screens/ios/RNSScreen.m
-@@ -749,7 +749,13 @@ - (void)setupProgressNotification
+@@ -749,7 +749,19 @@ - (void)setupProgressNotification
      _fakeView.alpha = 0.0;
      NSMutableArray<NSArray *> *sharedElements = nil;
      if (_closing) {
@@ -14,10 +14,35 @@ index e0dd2ba..3b21ae7 100644
 +        UIViewController *anotherVC = [self.transitionCoordinator viewControllerForKey:UITransitionContextToViewControllerKey];
 +        sharedElements = [RNSSharedElementAnimator prepareSharedElementsArrayForVC:self anotherVC:anotherVC];
 +      }
++    }
++
++    if (self->_closing) {
++      [RNSScreen asignEndingValuesWithTransitionContext:self.transitionCoordinator
++                                         sharedElements:sharedElements
++                                           goingForward:self->_goingForward];
      }
  
      [self.transitionCoordinator
-@@ -846,7 +852,7 @@ - (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<NSArray *> *)sh
+@@ -762,9 +774,6 @@ - (void)setupProgressNotification
+               // we add all views immediately, otherwise it won't work correctly
+               [[context containerView] addSubview:endingView];
+             }
+-            [RNSScreen asignEndingValuesWithTransitionContext:context
+-                                               sharedElements:sharedElements
+-                                                 goingForward:self->_goingForward];
+           }
+ 
+           self->_animationTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleAnimation)];
+@@ -792,7 +801,7 @@ - (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingFor
+   [((RNSScreenView *)self.view) notifyTransitionProgress:progress closing:closing goingForward:goingForward];
+ }
+ 
+-+ (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoordinatorContext> _Nonnull)context
+++ (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoordinator> _Nonnull)context
+                                 sharedElements:(NSMutableArray<NSArray *> *)sharedElements
+                                   goingForward:(BOOL)goingForward
+ {
+@@ -846,7 +855,7 @@ - (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<NSArray *> *)sh
      UIView *endingContainer = sharedElement[2];
      int index = [sharedElement[3] intValue];
      [endingContainer insertSubview:endingView atIndex:index];

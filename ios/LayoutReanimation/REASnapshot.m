@@ -36,8 +36,16 @@ NS_ASSUME_NONNULL_BEGIN
   // these values are the same as `globalOriginX` and `globalOriginY` because they are not used in JS fro some reason
   _values[@"originX"] = [NSNumber numberWithDouble:originFromRootPerspective.x - view.bounds.size.width / 2.0];
   _values[@"originY"] = [NSNumber numberWithDouble:originFromRootPerspective.y - view.bounds.size.height / 2.0];
+  
+  
+//  UIView *windowView = UIApplication.sharedApplication.keyWindow;
+//  CGPoint originFromRootPerspective123 = [parent convertPoint:view.center toView:windowView];
+//  _values[@"globalOriginX"] = [NSNumber numberWithDouble:originFromRootPerspective123.x - view.bounds.size.width / 2.0];
+//  _values[@"globalOriginY"] = [NSNumber numberWithDouble:originFromRootPerspective123.y - view.bounds.size.height / 2.0];
+  
   _values[@"globalOriginX"] = [NSNumber numberWithDouble:originFromRootPerspective.x - view.bounds.size.width / 2.0];
   _values[@"globalOriginY"] = [NSNumber numberWithDouble:originFromRootPerspective.y - view.bounds.size.height / 2.0];
+  
   _values[@"windowWidth"] = [NSNumber numberWithDouble:converter.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:converter.bounds.size.height];
   return self;

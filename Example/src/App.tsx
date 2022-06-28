@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   Button,
   View,
+  Image
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import {
@@ -13,6 +14,7 @@ import Animated, {
   SharedTransition,
   withSpring
 } from 'react-native-reanimated';
+import photo from './sea.jpg'
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +47,12 @@ function Screen1({ navigation }) {
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
+      {/* <Animated.View sharedTransitionTag="mleko">
+        <Image 
+          source={photo} 
+          style={{width: '100%', height: 300}}
+        /> 
+      </Animated.View> */}
       <Button onPress={() => navigation.navigate('Screen2')} title="go to screen2" />
     </Animated.ScrollView>
   );
@@ -59,7 +67,13 @@ function Screen2({ navigation }) {
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       />
-            <Button
+      {/* <Animated.View sharedTransitionTag="mleko">
+        <Image 
+          source={photo} 
+          style={{width: '100%', height: 500}}
+        /> 
+      </Animated.View> */}
+      <Button
         title="go to screen3"
         onPress={() => navigation.navigate('Screen3')}
       />
@@ -114,7 +128,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'none',
+          // stackAnimation: 'none',
         }}>
         <Stack.Screen
           name="Screen1"
@@ -124,7 +138,7 @@ export default function App() {
         <Stack.Screen
           name="Screen2"
           component={Screen2}
-          options={{ headerShown: false }}
+          options={{ headerShown: true }}
         />
         <Stack.Screen
           name="Screen3"

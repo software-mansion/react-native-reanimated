@@ -11,6 +11,8 @@ const supportedProps = [
   'height',
   'originX',
   'originY',
+  // 'globalOriginX',
+  // 'globalOriginY',
 ]
 
 type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
@@ -55,6 +57,7 @@ export class SharedTransition implements ILayoutAnimationBuilder {
           animations[propName] = withTiming(values[keyToTargetValue], { duration: 1000 });
         }
       }
+      // animations['backgroundColor'] = 'olive'
 
       for (const propName in animations) {
         const keyToCurrentValue = 'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
