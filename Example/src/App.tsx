@@ -1,156 +1,293 @@
-import * as React from 'react';
+import React from 'react';
 import {
-  Button,
+  FlatList,
+  StyleSheet,
+  Text,
   View,
-  Image
+  LogBox,
+  Platform,
+  UIManager,
+  ScrollView,
 } from 'react-native';
+import { RectButton } from 'react-native-gesture-handler';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
-  createNativeStackNavigator,
-  NativeStackNavigationProp,
-} from 'react-native-screens/native-stack';
-import Animated, {
-  withTiming,
-  SharedTransition,
-  withSpring
-} from 'react-native-reanimated';
-import photo from './sea.jpg'
+  Carousel,
+  CustomLayoutAnimationScreen,
+  DefaultAnimations,
+  Modal,
+  ModalNewAPI,
+  MountingUnmounting,
+  SpringLayoutAnimation,
+  SwipeableList,
+  NativeModals,
+} from './LayoutReanimation';
 
-const Stack = createNativeStackNavigator();
+import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import AnimatedTabBarExample from './AnimatedTabBarExample';
+import ChatHeadsExample from './ChatHeadsExample';
+import { PagerExample } from './CustomHandler';
+import DragAndSnapExample from './DragAndSnapExample';
+import ExtrapolationExample from './ExtrapolationExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import LightboxExample from './LightboxExample';
+import LiquidSwipe from './LiquidSwipe';
+import MeasureExample from './MeasureExample';
+import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import { ReactionsCounterExample } from './ReactionsCounterExample';
+import ScrollEventExample from './ScrollEventExample';
+import ScrollExample from './AnimatedScrollExample';
+import ScrollToExample from './ScrollToExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SwipeableListExample from './SwipeableListExample';
+import WobbleExample from './WobbleExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 
-type SimpleStackParams = {
-  First: undefined;
-  Second: undefined;
+import SimpleSharedElementTransition from './SharedElementTransition/Simple';
+import ImageSET from './SharedElementTransition/Image';
+
+LogBox.ignoreLogs(['Calling `getNode()`']);
+
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
+
+type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
+
+const SCREENS: Screens = {
+  SimpleSharedElementTransition: {
+    screen: SimpleSharedElementTransition,
+    title: '🆕 Shared Element Transition 1',
+  },
+  ImageSET: {
+    screen: ImageSET,
+    title: '🆕 Shared Element Transition 2',
+  },
+  DefaultAnimations: {
+    screen: DefaultAnimations,
+    title: '🆕 Default layout animations',
+  },
+  AnimatedSensor: {
+    screen: AnimatedSensorExample,
+    title: '🆕 Use Animated Sensor',
+  },
+  DefaultTransistions: {
+    screen: WaterfallGridExample,
+    title: '🆕 Default layout transitions',
+  },
+  KeyframeAnimation: {
+    screen: KeyframeAnimation,
+    title: '🆕 Keyframe animation',
+  },
+  ParticipantList: {
+    screen: AnimatedListExample,
+    title: '🆕 Participant List',
+  },
+  OlympicAnimation: {
+    screen: OlympicAnimation,
+    title: '🆕 Olympic animation',
+  },
+  CustomLayoutAnimation: {
+    screen: CustomLayoutAnimationScreen,
+    title: '🆕 Custom layout animation',
+  },
+  ModalNewAPI: {
+    title: '🆕 ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    title: '🆕 Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    title: '🆕 Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  ReactionsCounterExample: {
+    screen: ReactionsCounterExample,
+    title: '🆕 Reactions counter',
+  },
+  SwipeableList: {
+    title: '🆕 Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    title: '🆕 Modal',
+    screen: Modal,
+  },
+  NativeModals: {
+    title: '🆕 Native modals (RN and Screens)',
+    screen: NativeModals,
+  },
+  Carousel: {
+    title: 'Carousel',
+    screen: Carousel,
+  },
+  PagerExample: {
+    screen: PagerExample,
+    title: 'Custom Handler Example - Pager',
+  },
+  AnimatedStyleUpdate: {
+    screen: AnimatedStyleUpdateExample,
+    title: 'Animated Style Update',
+  },
+  AnimatedSharedStyle: {
+    screen: AnimatedSharedStyleExample,
+    title: 'Animated Shared Style',
+  },
+  WobbleExample: {
+    screen: WobbleExample,
+    title: 'Animation Modifiers (Wobble Effect)',
+  },
+  DragAndSnapExample: {
+    screen: DragAndSnapExample,
+    title: 'Drag and Snap',
+  },
+  MeasureExample: {
+    screen: MeasureExample,
+    title: 'Synchronous Measure',
+  },
+  ScrollEventExample: {
+    screen: ScrollEventExample,
+    title: 'Scroll Events',
+  },
+  ChatHeadsExample: {
+    screen: ChatHeadsExample,
+    title: 'Chat Heads',
+  },
+  ScrollableToExample: {
+    screen: ScrollToExample,
+    title: 'scrollTo',
+  },
+  SwipeableListExample: {
+    screen: SwipeableListExample,
+    title: '(advanced) Swipeable List',
+  },
+  LightboxExample: {
+    screen: LightboxExample,
+    title: '(advanced) Lightbox',
+  },
+  ScrollableViewExample: {
+    screen: ScrollableViewExample,
+    title: '(advanced) ScrollView imitation',
+  },
+  AnimatedTabBarExample: {
+    screen: AnimatedTabBarExample,
+    title: '(advanced) Tab Bar Example',
+  },
+  LiquidSwipe: {
+    screen: LiquidSwipe,
+    title: 'Liquid Swipe Example',
+  },
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: 'Extrapolation Example',
+  },
+  ScrollExample: {
+    screen: ScrollExample,
+    title: 'Scroll Example',
+  },
 };
 
-// const transition = SharedTransition.custom((values: any) => {
-//   'worklet';
-//   return {
-//     height: withTiming(values.targetHeight),
-//     originY: withTiming(values.targetOriginY),
-//   }
-// });
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
+};
 
-// const transition = SharedTransition.custom((values: any) => {
-//   'worklet';
-//   return {
-//     height: withSpring(values.targetHeight),
-//     originY: withSpring(values.targetOriginY),
-//   }
-// });
-
-function Screen1({ navigation }) {
+function MainScreen({ navigation }: MainScreenProps) {
+  const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
-    <Animated.ScrollView style={{ flex: 1 }}>
-      <Animated.View
-        style={{ width: '100%', height: 100, backgroundColor: 'green' }}
-        sharedTransitionTag="mleko"
-        // sharedTransitionStyle={transition}
-      />
-      {/* <Animated.View sharedTransitionTag="mleko">
-        <Image 
-          source={photo} 
-          style={{width: '100%', height: 300}}
-        /> 
-      </Animated.View> */}
-      <Button onPress={() => navigation.navigate('Screen2')} title="go to screen2" />
-    </Animated.ScrollView>
-  );
-}
-
-function Screen2({ navigation }) {
-
-  return (
-    <View style={{ flex: 1 }}>
-      <Animated.View
-        style={{ width: '100%', height: 200, backgroundColor: 'green', marginTop: 100 }}
-        sharedTransitionTag="mleko"
-        // sharedTransitionStyle={transition}
-      />
-      {/* <Animated.View sharedTransitionTag="mleko">
-        <Image 
-          source={photo} 
-          style={{width: '100%', height: 500}}
-        /> 
-      </Animated.View> */}
-      <Button
-        title="go to screen3"
-        onPress={() => navigation.navigate('Screen3')}
-      />
-      <Button
-        title="go back"
-        onPress={() => navigation.navigate('Screen1')}
-      />
-    </View>
-  );
-}
-
-function Screen3({ navigation }) {
-
-  return (
-    <View style={{ flex: 1 }}>
-      <Animated.View
-        style={{ width: '50%', height: 100, backgroundColor: 'red', opacity: 0.5 }}
-        sharedTransitionTag="mleko123"
-        // sharedTransitionStyle={transition}
-      />
-      <Button
-        title="go to screen4"
-        onPress={() => navigation.navigate('Screen4')}
-      />
-      <Button
-        title="go back"
-        onPress={() => navigation.navigate('Screen2')}
-      />
-    </View>
-  );
-}
-
-function Screen4({ navigation }) {
-
-  return (
-    <View style={{ flex: 1 }}>
-      <Animated.View
-        style={{ width: '50%', height: 200, backgroundColor: 'red', opacity: 0.5 }}
-        sharedTransitionTag="mleko123"
-        // sharedTransitionStyle={transition}
-      />
-      <Button
-        title="go back to screen1"
-        onPress={() => navigation.navigate('Screen1')}
-      />
-    </View>
-  );
-}
-
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          // stackAnimation: 'none',
-        }}>
-        <Stack.Screen
-          name="Screen1"
-          component={Screen1}
-          options={{ headerShown: false }}
+    <FlatList
+      style={styles.list}
+      data={data}
+      ItemSeparatorComponent={ItemSeparator}
+      renderItem={(props) => (
+        <MainScreenItem
+          {...props}
+          screens={SCREENS}
+          onPressItem={({ key }) => navigation.navigate(key)}
         />
-        <Stack.Screen
-          name="Screen2"
-          component={Screen2}
-          options={{ headerShown: true }}
-        />
-        <Stack.Screen
-          name="Screen3"
-          component={Screen3}
-          options={{ headerShown: true }}
-        />
-        <Stack.Screen
-          name="Screen4"
-          component={Screen4}
-          options={{ headerShown: true }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+      )}
+      renderScrollComponent={(props) => <ScrollView {...props} />}
+    />
   );
 }
+
+export function ItemSeparator(): React.ReactElement {
+  return <View style={styles.separator} />;
+}
+
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export function MainScreenItem({
+  item,
+  onPressItem,
+  screens,
+}: MainScreenItemProps): React.ReactElement {
+  const { key } = item;
+  return (
+    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+      <Text style={styles.buttonText}>{screens[key].title || key}</Text>
+    </RectButton>
+  );
+}
+
+const Stack = createStackNavigator();
+
+const Reanimated2 = () => (
+  <Stack.Navigator detachInactiveScreens={false}>
+    <Stack.Screen
+      name="Home"
+      options={{ title: '🎬 Reanimated 2.x Examples' }}
+      children={(props) => <MainScreen {...props} />}
+    />
+    {Object.keys(SCREENS).map((name) => (
+      <Stack.Screen
+        key={name}
+        name={name}
+        getComponent={() => SCREENS[name].screen}
+        options={{ title: SCREENS[name].title || name }}
+      />
+    ))}
+  </Stack.Navigator>
+);
+
+function App(): React.ReactElement {
+  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
+}
+
+export const styles = StyleSheet.create({
+  list: {
+    backgroundColor: '#EFEFF4',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#DBDBE0',
+  },
+  buttonText: {
+    backgroundColor: 'transparent',
+  },
+  button: {
+    flex: 1,
+    height: 60,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+});
+
+export default ImageSET;
