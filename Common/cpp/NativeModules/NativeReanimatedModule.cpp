@@ -541,12 +541,6 @@ void NativeReanimatedModule::performOperations() {
             continue;
           }
           rootNode = newRootNode;
-
-          auto ancestors = family.getAncestors(*rootNode);
-          for (const auto &pair : ancestors) {
-            const auto &parent = pair.first.get();
-            const auto &child = parent.getChildren().at(pair.second);
-          }
         }
 
         // TODO: remove from propsRegistry_
