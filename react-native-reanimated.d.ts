@@ -495,7 +495,7 @@ declare module 'react-native-reanimated' {
   }
 
   export type SensorConfig = {
-    interval: number;
+    interval: number | 'auto';
   };
 
   export type Value3D = {

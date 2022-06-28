@@ -7,7 +7,11 @@
 {
   self = [super init];
   _sensorType = sensorType;
-  _interval = interval / 1000; // in seconds
+  if (interval == -1) {
+    _interval = 1.0 / UIScreen.mainScreen.maximumFramesPerSecond;
+  } else {
+    _interval = interval / 1000.0; // in seconds
+  }
   _setter = setter;
   _motionManager = [[CMMotionManager alloc] init];
   return self;
@@ -134,7 +138,7 @@
   [_motionManager setDeviceMotionUpdateInterval:_interval];
 
   [_motionManager setShowsDeviceMovementDisplay:YES];
-  [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:CMAttitudeReferenceFrameXTrueNorthZVertical
+  [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:CMAttitudeReferenceFrameXArbitraryZVertical
                                                       toQueue:[NSOperationQueue mainQueue]
                                                   withHandler:^(CMDeviceMotion *sensorData, NSError *error) {
                                                     double currentTime = [[NSProcessInfo processInfo] systemUptime];
