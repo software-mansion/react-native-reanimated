@@ -85,7 +85,6 @@ or other.
 
 :::
 
-
 ## Android
 
 1. Turn on Hermes engine by editing `android/app/build.gradle`
