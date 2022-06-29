@@ -10,14 +10,14 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "ts-check": "yarn tsc --noEmit",
     "lint:js": "yarn eslint src/ && yarn prettier --check src/",
-    "postinstall": "patch-package && echo 73fa47c9c033e2f1bf10ebab9ac58f02c94ffff9 > ./node_modules/react-native/sdks/.hermesversion"
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
     "react": "18.0.0",
-    "react-native": "0.69.0-rc.0",
+    "react-native": "0.69.0",
     "react-native-gesture-handler": "^2.4.2",
     "react-native-reanimated": "link:../",
     "react-native-safe-area-context": "^4.2.5",
@@ -35,7 +35,7 @@
     "babel-jest": "^26.6.3",
     "eslint": "^8.12.0",
     "jest": "^26.6.3",
-    "metro-react-native-babel-preset": "^0.70.1",
+    "metro-react-native-babel-preset": "^0.70.3",
     "patch-package": "^6.4.7",
     "prettier": "^2.6.1",
     "react-test-renderer": "18.0.0",
