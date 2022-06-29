@@ -63,11 +63,6 @@ export function withSequence(
         now: Timestamp,
         previousAnimation: SequenceAnimation
       ): void {
-        if (animations.length === 1) {
-          throw Error(
-            'withSequence() animation require more than one animation as argument'
-          );
-        }
         animation.animationIndex = 0;
         if (previousAnimation === undefined) {
           previousAnimation = animations[
