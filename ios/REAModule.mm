@@ -272,7 +272,7 @@ RCT_EXPORT_METHOD(installTurboModule)
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[];
+  return @[ @"onReanimatedCall", @"onReanimatedPropsChange" ];
 }
 
 - (void)eventDispatcherWillDispatchEvent:(id<RCTEvent>)event

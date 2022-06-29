@@ -10,7 +10,7 @@ The steps needed to get reanimated properly configured are listed in the below p
 
 ## Installing the package
 
-First step is to install `react-native-reanimated` alpha as a dependency in your project:
+First step is to install `react-native-reanimated` as a dependency in your project:
 
 ```bash
 yarn add react-native-reanimated
@@ -33,6 +33,18 @@ Add Reanimated's babel plugin to your `babel.config.js`:
 :::caution
 
 Reanimated plugin has to be listed last.
+
+:::
+
+:::info
+
+After adding the `react-native-reanimated/plugin` to your project you may encounter a false-positive "Reanimated 2 failed to create a worklet" error. In most cases, this can be fixed by cleaning the application's cache. Depending on your workflow or favourite package manager that could be done by:
+
+- `yarn start --reset-cache`
+- `npm start -- --reset-cache`
+- `expo start -c`
+
+or other.
 
 :::
 

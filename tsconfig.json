@@ -4,7 +4,7 @@
     "declaration": false,
     "preserveSymlinks": true,
     "target": "es6",
-    "module": "es6",
+    "module": "ESNext",
     "jsx": "react-native",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
@@ -12,11 +12,7 @@
     "lib": ["es6", "dom"],
     "esModuleInterop": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "lib/**/*.ts",
-    "lib/**/*.tsx",
-    "react-native-reanimated.d.ts"
-  ]
+  "include": ["lib/**/*.ts", "lib/**/*.tsx", "react-native-reanimated.d.ts"]
 }
