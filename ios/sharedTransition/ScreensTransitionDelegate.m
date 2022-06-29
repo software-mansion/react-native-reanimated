@@ -72,7 +72,7 @@
 }
 
 - (void)unregisterTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
-{  
+{
   for (SharedViewConfig *config in sharedTransitionsItems[transitionTag]) {
     NSNumber *currentViewTag = config.viewTag;
     if (currentViewTag == viewTag) {
