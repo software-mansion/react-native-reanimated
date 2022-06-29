@@ -72,6 +72,7 @@ const ReanimatedV2 = {
   },
 
   runOnJS: (fn) => fn,
+  runOnUI: (fn) => fn,
 };
 
 module.exports = {
