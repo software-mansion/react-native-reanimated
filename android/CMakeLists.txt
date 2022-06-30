@@ -172,29 +172,26 @@ endif()
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+target_link_libraries(
+    ${PACKAGE_NAME}
+    ${LOG_LIB}
+    ${JSI_LIB}
+    ${GLOG_LIB}
+    ${FBJNI_LIB}
+    ${FOLLY_LIB}
+    ${REACT_NATIVE_JNI_LIB}
+    android
+)
+
 if(${FOR_HERMES})
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${LOG_LIB}
-            ${JSI_LIB}
             ${HERMES_LIB}
-            ${GLOG_LIB}
-            ${FBJNI_LIB}
-            ${FOLLY_LIB}
-            ${REACT_NATIVE_JNI_LIB}
-            android
     )
 else()
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${LOG_LIB}
-            ${JSI_LIB}
             ${JSEXECUTOR_LIB}
-            ${GLOG_LIB}
-            ${FBJNI_LIB}
-            ${FOLLY_LIB}
-            ${REACT_NATIVE_JNI_LIB}
-            android
     )
 endif()
 
