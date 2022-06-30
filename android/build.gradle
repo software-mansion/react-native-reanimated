@@ -132,10 +132,6 @@ abstract class replaceSoTask extends DefaultTask {
 
 def detectAAR(minor, engine) {
     def rnMinorVersionCopy = Integer.parseInt(minor)
-    if (rnMinorVersionCopy >= 69) {
-        return null
-    }
-    
     def aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
 
     if (aar.exists()) {
