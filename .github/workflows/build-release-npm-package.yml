@@ -4,8 +4,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  call-build-workflow:
+  call-build-workflow-rea-v3:
     uses: ./.github/workflows/build-npm-package.yml
     with:
       version: release
-
+  call-build-workflow-rea-v2:
+    uses: ./.github/workflows/build-npm-package.yml
+    with:
+      version: release
+      ref: Reanimated2
