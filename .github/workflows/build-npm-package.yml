@@ -30,6 +30,11 @@ jobs:
         with:
           ndk-version: r21d
 
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
       - name: Build package
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
