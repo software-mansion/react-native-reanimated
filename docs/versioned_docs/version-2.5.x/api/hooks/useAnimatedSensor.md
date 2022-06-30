@@ -38,19 +38,19 @@ Properties:
 `SensorType` is an enum that contains possibly supported sensors.
 Values:
 * `ACCELEROMETER`  
-  measurements output as [[3DVector](#3dvector-object)]
+  measurements output as [[3DVector](#3dvector-object)]. Measured in m/s², excluding gravity.
 * `GYROSCOPE`  
-  measurements output as [[3DVector](#3dvector-object)]
+  measurements output as [[3DVector](#3dvector-object)]. Measured in rad/s.
 * `GRAVITY`  
-  measurements output as [[3DVector](#3dvector-object)]
+  measurements output as [[3DVector](#3dvector-object)]. Measured in m/s².
 * `MAGNETIC_FIELD`  
-  measurements output as [[3DVector](#3dvector-object)]
+  measurements output as [[3DVector](#3dvector-object)]. Measured in μT.
 * `ROTATION`  
-  measurements output as [[RotationVector](#rotationvector-object)]
+  measurements output as [[RotationVector](#rotationvector-object)]. [qx, qy, qz, qw] is a normalized quaternion. [yaw, pitch, roll] are rotations measured in radians along respective axes.
 
 #### `UserConfig: [object]`
 Properties:
-* `interval: [number]` - interval in milliseconds between shared value updates
+* `interval: [number | auto]` - interval in milliseconds between shared value updates. Pass `'auto'` to select interval based on device frame rate. Default: `'auto'`.
 
 #### `3DVector: [object]`
 Properties:
