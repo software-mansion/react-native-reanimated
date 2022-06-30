@@ -8,15 +8,13 @@ import Animated, {
 import { View, Button, StyleSheet } from 'react-native';
 
 export default function AnimatedStyleUpdateExample() {
-  const animatedSensor = useAnimatedSensor(SensorType.ROTATION, {
-    interval: 10,
-  });
+  const animatedSensor = useAnimatedSensor(SensorType.ROTATION);
   const style = useAnimatedStyle(() => {
-    const yaw = Math.abs(animatedSensor.sensor.value.yaw);
     const pitch = Math.abs(animatedSensor.sensor.value.pitch);
+    const roll = Math.abs(animatedSensor.sensor.value.roll);
     return {
-      height: withTiming(yaw * 200 + 20, { duration: 100 }),
-      width: withTiming(pitch * 200 + 20, { duration: 100 }),
+      height: withTiming(pitch * 200 + 20, { duration: 100 }),
+      width: withTiming(roll * 200 + 20, { duration: 100 }),
     };
   });
 

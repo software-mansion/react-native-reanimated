@@ -1,6 +1,9 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/core/ShadowNode.h>
+#endif
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,6 +11,8 @@
 #include "JSIStoreValueUser.h"
 #include "SharedParent.h"
 #include "WorkletsCache.h"
+
+using namespace facebook::react;
 
 namespace reanimated {
 
@@ -42,6 +47,10 @@ class ValueWrapper {
       const std::unique_ptr<ValueWrapper> &valueContainer);
   static inline const std::shared_ptr<MutableValue> &asMutableValue(
       const std::unique_ptr<ValueWrapper> &valueContainer);
+#ifdef RCT_NEW_ARCH_ENABLED
+  static inline const ShadowNode::Shared &asShadowNode(
+      const std::unique_ptr<ValueWrapper> &valueContainer);
+#endif
 
   static const HostFunctionWrapper *asHostFunctionWrapper(
       const std::unique_ptr<ValueWrapper> &valueContainer);
@@ -109,6 +118,15 @@ class MutableValueWrapper : public ValueWrapper {
   std::shared_ptr<MutableValue> value;
 };
 
+#ifdef RCT_NEW_ARCH_ENABLED
+class ShadowNodeValueWrapper : public ValueWrapper {
+ public:
+  explicit ShadowNodeValueWrapper(const ShadowNode::Shared &_value)
+      : ValueWrapper(ValueType::ShadowNodeType), value(_value) {}
+  ShadowNode::Shared value;
+};
+#endif
+
 inline bool ValueWrapper::asBoolean(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<BooleanValueWrapper *>(valueContainer.get())->value;
@@ -149,6 +167,13 @@ inline const std::shared_ptr<MutableValue> &ValueWrapper::asMutableValue(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<MutableValueWrapper *>(valueContainer.get())->value;
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+inline const ShadowNode::Shared &ValueWrapper::asShadowNode(
+    const std::unique_ptr<ValueWrapper> &valueContainer) {
+  return static_cast<ShadowNodeValueWrapper *>(valueContainer.get())->value;
+}
+#endif
 
 inline const HostFunctionWrapper *ValueWrapper::asHostFunctionWrapper(
     const std::unique_ptr<ValueWrapper> &valueContainer) {

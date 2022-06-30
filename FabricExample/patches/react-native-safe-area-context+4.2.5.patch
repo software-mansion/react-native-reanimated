@@ -1,0 +1,60 @@
+diff --git a/node_modules/react-native-safe-area-context/android/build.gradle b/node_modules/react-native-safe-area-context/android/build.gradle
+index dac783d..104e85a 100644
+--- a/node_modules/react-native-safe-area-context/android/build.gradle
++++ b/node_modules/react-native-safe-area-context/android/build.gradle
+@@ -29,6 +29,11 @@ if (isNewArchitectureEnabled()) {
+     apply plugin: "com.facebook.react"
+ }
+ 
++def reactNativeArchitectures() {
++    def value = project.getProperties().get("reactNativeArchitectures")
++    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
++}
++
+ android {
+     compileSdkVersion getExtOrDefault('compileSdkVersion', 30)
+ 
+@@ -64,6 +69,9 @@ android {
+                     targets "safeareacontext_modules"
+                 }
+             }
++            ndk {
++                abiFilters (*reactNativeArchitectures())
++            }
+         }
+     }
+ 
+diff --git a/node_modules/react-native-safe-area-context/android/src/main/jni/Android.mk b/node_modules/react-native-safe-area-context/android/src/main/jni/Android.mk
+index 6166527..33a7e73 100644
+--- a/node_modules/react-native-safe-area-context/android/src/main/jni/Android.mk
++++ b/node_modules/react-native-safe-area-context/android/src/main/jni/Android.mk
+@@ -20,7 +20,7 @@ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH) $(GENERATED_SRC_DIR)/codegen/jni
+ LOCAL_SHARED_LIBRARIES := libjsi \
+     libfbjni \
+     libglog \
+-    libfolly_json \
++    libfolly_runtime \
+     libyoga \
+     libreact_nativemodule_core \
+     libturbomodulejsijni \
+@@ -28,7 +28,6 @@ LOCAL_SHARED_LIBRARIES := libjsi \
+     libreact_render_core \
+     libreact_render_graphics \
+     libfabricjni \
+-    libfolly_futures \
+     libreact_debug \
+     libreact_render_componentregistry \
+     libreact_render_debug \
+diff --git a/node_modules/react-native-safe-area-context/common/cpp/Android.mk b/node_modules/react-native-safe-area-context/common/cpp/Android.mk
+index a7680a6..69d86d6 100644
+--- a/node_modules/react-native-safe-area-context/common/cpp/Android.mk
++++ b/node_modules/react-native-safe-area-context/common/cpp/Android.mk
+@@ -15,7 +15,7 @@ LOCAL_SRC_FILES := $(wildcard $(LOCAL_PATH)/*.cpp) $(wildcard $(LOCAL_PATH)/reac
+ 
+ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/react/renderer/components/safeareacontext
+ 
+-LOCAL_SHARED_LIBRARIES := libjsi libglog libfolly_json libyoga libreact_nativemodule_core librrc_view libreact_render_core libreact_render_graphics libfbjni libturbomodulejsijni libreact_codegen_rncore libreact_debug libreact_render_debug libreact_render_mapbuffer libreact_codegen_safeareacontext
++LOCAL_SHARED_LIBRARIES := libjsi libglog libfolly_runtime libyoga libreact_nativemodule_core librrc_view libreact_render_core libreact_render_graphics libfbjni libturbomodulejsijni libreact_codegen_rncore libreact_debug libreact_render_debug libreact_render_mapbuffer libreact_codegen_safeareacontext
+ 
+ LOCAL_CFLAGS := \
+   -DLOG_TAG=\"ReactNative\"

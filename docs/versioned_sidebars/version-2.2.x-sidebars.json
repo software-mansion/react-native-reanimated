@@ -1,0 +1,177 @@
+{
+  "version-2.2.x/docs": [
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "Fundamentals",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-2.2.x/about"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/installation"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/worklets"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/shared-values"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/animations"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/events"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/architecture"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/migration"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/web-support"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.2.x/troubleshooting"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "API Reference",
+      "items": [
+        {
+          "collapsed": true,
+          "type": "category",
+          "label": "Hooks",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useSharedValue"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useAnimatedStyle"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useDerivedValue"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useAnimatedScrollHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useAnimatedGestureHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useAnimatedRef"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useAnimatedReaction"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/useAnimatedProps"
+            }
+          ]
+        },
+        {
+          "collapsed": true,
+          "type": "category",
+          "label": "Animations",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/withTiming"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/withSpring"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/withDecay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/cancelAnimation"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/withDelay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/withSequence"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/withRepeat"
+            }
+          ]
+        },
+        {
+          "collapsed": true,
+          "type": "category",
+          "label": "Native methods",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/nativeMethods/measure"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/nativeMethods/scrollTo"
+            }
+          ]
+        },
+        {
+          "collapsed": true,
+          "type": "category",
+          "label": "Miscellaneous",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/miscellaneous/runOnJS"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/miscellaneous/runOnUI"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.2.x/api/miscellaneous/interpolate"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "Guides",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-2.2.x/testing"
+        }
+      ]
+    }
+  ]
+}

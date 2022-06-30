@@ -2,8 +2,6 @@ name: Test docs build
 
 on:
   pull_request:
-    branches:
-      - main
     paths:
       - 'docs/**'
 
