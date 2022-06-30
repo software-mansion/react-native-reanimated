@@ -29,7 +29,7 @@
     "prepublishOnly": "npm-run-all test && npm run build:plugin -- --release",
     "build:all": "npm-run-all build:customtransform build:plugin",
     "build:customtransform": "napi build --platform --cargo-cwd ./spec/swc-reanimated-custom-transform",
-    "build:plugin": "cargo build -p swc-plugin-reanimated --target wasm32-wasi --release",
+    "build:plugin": "cargo build -p swc-plugin-reanimated --target wasm32-wasi",
     "test": "npm-run-all build:all && jest",
     "test:debug": "npm-run-all build:customtransform && jest --testMatch=\"**/?(*.)+(debug).[tj]s?(x)\"",
     "test:debug:plugin": "npm-run-all build:plugin && jest --testMatch=\"**/?(*.)+(debug).[tj]s?(x)\""
