@@ -230,6 +230,18 @@ endif()
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+
+target_link_libraries(
+    ${PACKAGE_NAME}
+    ${LOG_LIB}
+    ${JSI_LIB}
+    ${GLOG_LIB}
+    ${FBJNI_LIB}
+    ${FOLLY_LIB}
+    ${REACT_NATIVE_JNI_LIB}
+    android
+)
+
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
     target_include_directories(
@@ -246,14 +258,7 @@ if(${JS_RUNTIME} STREQUAL "hermes")
     )
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${LOG_LIB}
-            ${JSI_LIB}
             ${HERMES_LIB}
-            ${GLOG_LIB}
-            ${FBJNI_LIB}
-            ${FOLLY_LIB}
-            ${REACT_NATIVE_JNI_LIB}
-            android
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
@@ -271,14 +276,7 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
     )
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${LOG_LIB}
-            ${JSI_LIB}
-            ${FOLLY_LIB}
             ${V8EXECUTOR_LIB}
-            ${GLOG_LIB}
-            ${FBJNI_LIB}
-            ${REACT_NATIVE_JNI_LIB}
-            android
     )
 else()
     set (ignoreMe "${JS_RUNTIME_DIR}")
@@ -291,14 +289,7 @@ else()
     )
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${LOG_LIB}
-            ${JSI_LIB}
-            ${FOLLY_LIB}
             ${JSEXECUTOR_LIB}
-            ${GLOG_LIB}
-            ${FBJNI_LIB}
-            ${REACT_NATIVE_JNI_LIB}
-            android
     )
 endif()
 
