@@ -1,0 +1,19 @@
+[package]
+name = "swc-reanimated-worklets-visitor"
+version = "0.0.1"
+edition = "2021"
+authors = ["OJ Kwon <kwon.ohjoong@gmail.com>"]
+description = ""
+license = "MIT"
+repository = "https://github.com/kwonoj/swc-plugin-react-native-reanimated"
+
+[dependencies]
+hash32 = "0.3.0"
+once_cell = "1.12.0"
+indexmap = "1.6.1"
+ahash = "0.7.4"
+swc_common = { version = "0.18.8", features = ["concurrent", "sourcemap"] }
+swc_ecma_codegen = "0.109.1"
+swc_ecma_transforms_compat = "0.102.0"
+swc_ecmascript = { version = "0.160.0", features = ["utils", "visit"] }
+swc_visit = "0.3.0"

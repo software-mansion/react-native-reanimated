@@ -1,0 +1,10 @@
+/target
+Cargo.lock
+node_modules/
+.swc/
+*.log
+*.node
+index.d.ts
+index.js
+spec/swc-reanimated-custom-transform/target/
+swc-plugin-react-native-reanimated-*.tgz

@@ -1,0 +1,75 @@
+{
+  "name": "swc-plugin-react-native-reanimated",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./target/wasm32-wasi/release/swc_plugin_reanimated.wasm",
+  "napi": {
+    "name": "reanimated-plugin-custom-transform",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-unknown-linux-musl",
+        "x86_64-unknown-freebsd",
+        "i686-pc-windows-msvc",
+        "aarch64-unknown-linux-gnu",
+        "armv7-unknown-linux-gnueabihf",
+        "aarch64-apple-darwin",
+        "aarch64-linux-android",
+        "aarch64-unknown-linux-musl",
+        "aarch64-pc-windows-msvc",
+        "armv7-linux-androideabi"
+      ]
+    }
+  },
+  "files": [
+    "package.json",
+    "target/wasm32-wasi/release/swc_plugin_reanimated.wasm"
+  ],
+  "scripts": {
+    "prepublishOnly": "npm-run-all test && npm run build:plugin -- --release",
+    "build:all": "npm-run-all build:customtransform build:plugin",
+    "build:customtransform": "napi build --platform --cargo-cwd ./spec/swc-reanimated-custom-transform",
+    "build:plugin": "cargo build -p swc-plugin-reanimated --target wasm32-wasi --release",
+    "test": "npm-run-all build:all && jest",
+    "test:debug": "npm-run-all build:customtransform && jest --testMatch=\"**/?(*.)+(debug).[tj]s?(x)\"",
+    "test:debug:plugin": "npm-run-all build:plugin && jest --testMatch=\"**/?(*.)+(debug).[tj]s?(x)\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kwonoj/swc-plugin-react-native-reanimated.git"
+  },
+  "keywords": [
+    "SWC",
+    "plugin",
+    "react-native",
+    "reanimated"
+  ],
+  "author": "OJ Kwon <kwon.ohjoong@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kwonoj/swc-plugin-react-native-reanimated/issues"
+  },
+  "homepage": "https://github.com/kwonoj/swc-plugin-react-native-reanimated#readme",
+  "devDependencies": {
+    "@napi-rs/cli": "^2.7.0",
+    "@swc/core": "1.2.197",
+    "@swc/jest": "^0.2.21",
+    "@taplo/cli": "^0.3.2",
+    "@types/jest": "^27.5.1",
+    "@types/node": "^17.0.23",
+    "jest": "^28.1.0",
+    "lint-staged": "^12.3.7",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.6.0",
+    "typescript": "^4.6.2"
+  },
+  "lint-staged": {
+    "*.{js,ts,css,md}": "prettier --write",
+    "*.toml": [
+      "taplo format"
+    ],
+    "*.rs": [
+      "cargo fmt --"
+    ]
+  }
+}
