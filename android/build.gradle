@@ -351,8 +351,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.2.2"
-        classpath "de.undercouch:gradle-download-task:4.1.2"
+        classpath "com.android.tools.build:gradle:7.1.1"
+        classpath "de.undercouch:gradle-download-task:5.0.1"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
 }
@@ -381,8 +381,7 @@ android {
                         "-DBOOST_VERSION=${BOOST_VERSION}",
                         "-DBUILD_DIR=${buildDir}",
                         "-DFOR_HERMES=${FOR_HERMES}",
-                        "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
-                        "--clean-first"
+                        "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
@@ -459,7 +458,12 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
 }
 
 task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
-    src("https://github.com/react-native-community/boost-for-react-native/releases/download/v${BOOST_VERSION.replace("_", ".")}-0/boost_${BOOST_VERSION}.tar.gz")
+    def transformedVersion = BOOST_VERSION.replace("_", ".")
+    def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
+    if (rnMinorVersion < 69) {
+        srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
+    }
+    src(srcUrl)
     onlyIfNewer(true)
     overwrite(false)
     dest(new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz"))
@@ -672,7 +676,17 @@ dependencies {
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
     extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
-    def rnAAR = fileTree("$reactNative/android").matching({ it.include "**/**/*.aar" }).singleFile
+    def buildType = "debug"
+    tasks.all({ task ->
+        if (task.name == "buildCMakeRelease") {
+            buildType = "release"
+        }
+    })
+    def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
+    if (rnMinorVersion < 69) {
+        rnAarMatcher = "**/**/*.aar"
+    }
+    def rnAAR = fileTree("$reactNative/android").matching({ it.include rnAarMatcher }).singleFile
     def jscAAR = fileTree("$reactNative/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
     extractSO(files(rnAAR, jscAAR))
 }
