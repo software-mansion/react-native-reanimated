@@ -132,6 +132,10 @@ abstract class replaceSoTask extends DefaultTask {
 
 def detectAAR(minor, engine) {
     def rnMinorVersionCopy = Integer.parseInt(minor)
+    if (rnMinorVersionCopy >= 69) {
+        return null
+    }
+    
     def aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
 
     if (aar.exists()) {
@@ -351,8 +355,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.2.2"
-        classpath "de.undercouch:gradle-download-task:4.1.2"
+        classpath "com.android.tools.build:gradle:7.1.1"
+        classpath "de.undercouch:gradle-download-task:5.0.1"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
 }
