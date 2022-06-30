@@ -233,7 +233,8 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
-                        "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}"
+                        "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
+                        "-DRNVERSION=${rnMinorVersion}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
