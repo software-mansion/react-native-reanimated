@@ -99,11 +99,11 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  subscribeForKeyboardEvents(keyboardEventData: AnimatedKeyboardInfo) {
+  subscribeForKeyboardEvents(keyboardEventData: AnimatedKeyboardInfo): number {
     return this.InnerNativeModule.subscribeForKeyboardEvents(keyboardEventData);
   }
 
-  unsubscribeFromKeyboardEvents(listenerId: number) {
+  unsubscribeFromKeyboardEvents(listenerId: number): void {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 }
