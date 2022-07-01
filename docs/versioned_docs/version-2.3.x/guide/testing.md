@@ -24,7 +24,7 @@ setupFilesAfterEnv: ['./jest-setup.js'],
 
 :::caution
 
-If you use Jest in a version **older than 28**, then you should set `setupFiles` property instead of `setupFilesAfterEnv`
+If you use Jest in a version **older than 28**, you should set `setupFiles` property instead of `setupFilesAfterEnv`
 
 :::
 
