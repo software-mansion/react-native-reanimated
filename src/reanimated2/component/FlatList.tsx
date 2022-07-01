@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ForwardedRef, forwardRef } from 'react';
 import { FlatList, FlatListProps, LayoutChangeEvent } from 'react-native';
 import ReanimatedView from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
@@ -26,17 +26,23 @@ export interface ReanimatedFlatlistProps<ItemT> extends FlatListProps<ItemT> {
 
 type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatlistProps<T>>;
 
-const ReanimatedFlatlist: ReanimatedFlatListFC = ({
-  itemLayoutAnimation,
-  ...restProps
-}) => {
-  const cellRenderer = React.useMemo(
-    () => createCellRenderer(itemLayoutAnimation),
-    []
-  );
-  return (
-    <AnimatedFlatList {...restProps} CellRendererComponent={cellRenderer} />
-  );
-};
+const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
+  (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
+    const { itemLayoutAnimation, ...restProps } = props;
+
+    const cellRenderer = React.useMemo(
+      () => createCellRenderer(itemLayoutAnimation),
+      []
+    );
+
+    return (
+      <AnimatedFlatList
+        ref={ref}
+        {...restProps}
+        CellRendererComponent={cellRenderer}
+      />
+    );
+  }
+);
 
 export default ReanimatedFlatlist;
