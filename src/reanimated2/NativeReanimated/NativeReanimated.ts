@@ -11,7 +11,7 @@ export class NativeReanimated {
   private InnerNativeModule: any;
 
   constructor(native = true) {
-    if (global.__reanimatedModuleProxy === undefined) {
+    if (global.__reanimatedModuleProxy === undefined && native) {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
     }

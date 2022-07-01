@@ -4,7 +4,7 @@ title: Installation
 sidebar_label: Installation
 ---
 
-Installing Reanimated requires a couple of additional steps compared to installing most of the popular react-naitve packages.
+Installing Reanimated requires a couple of additional steps compared to installing most of the popular react-native packages.
 Specifically on Android the setup consist of adding additional code to the main application class.
 The steps needed to get reanimated properly configured are listed in the below paragraphs.
 
@@ -52,6 +52,18 @@ Reanimated plugin has to be listed last.
 
 :::
 
+:::info
+
+After adding the `react-native-reanimated/plugin` to your project you may encounter a false-positive "Reanimated 2 failed to create a worklet" error. In most cases, this can be fixed by cleaning the application's cache. Depending on your workflow or favourite package manager that could be done by:
+
+- `yarn start --reset-cache`
+- `npm start -- --reset-cache`
+- `expo start -c`
+
+or other.
+
+:::
+
 ## Android
 
 No additional steps are necessary.
@@ -67,7 +79,7 @@ If you're using Proguard, make sure to add rule preventing it from optimizing Tu
 
 ## iOS
 
-As reanimated is setup to configure and install automatically, the only thing you have to do is to run `pod install` in the `ios/` directory. Note that the auto-installation setup works for the standard React Naitve apps, if you have problems setting it up with a custom setup (e.g. brownfield) please start a new issue where we can find a way to guide you through that process.
+As reanimated is setup to configure and install automatically, the only thing you have to do is to run `pod install` in the `ios/` directory. Note that the auto-installation setup works for the standard React Native apps, if you have problems setting it up with a custom setup (e.g. brownfield) please start a new issue where we can find a way to guide you through that process.
 
 ## Sample React-Native project configured with Reanimated
 

@@ -1,8 +1,14 @@
 #pragma once
 
-#include <unistd.h>
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/uimanager/UIManager.h>
+#include "NewestShadowNodesRegistry.h"
+#endif
+
 #include <memory>
 #include <string>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "AnimatedSensorModule.h"
@@ -34,8 +40,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       std::shared_ptr<Scheduler> scheduler,
       std::shared_ptr<jsi::Runtime> rt,
       std::shared_ptr<ErrorHandler> errorHandler,
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
       std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
           propObtainer,
+#endif
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
@@ -77,11 +87,48 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &nativeProps) override;
 
   void onRender(double timestampMs);
+#ifdef RCT_NEW_ARCH_ENABLED
+  void onEvent(std::string eventName, jsi::Value &&eventAsString);
+#else
   void onEvent(std::string eventName, std::string eventAsString);
+#endif
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
-  UpdaterFunction updaterFunction;
+  UpdatePropsFunction updatePropsFunction;
+
+  bool handleEvent(
+      const std::string &eventName,
+      jsi::Value &&payload,
+      double currentTime);
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
+
+  void updateProps(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeValue,
+      const jsi::Value &props);
+
+  void removeShadowNodeFromRegistry(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeValue);
+
+  void performOperations();
+
+  void dispatchCommand(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeValue,
+      const jsi::Value &commandNameValue,
+      const jsi::Value &argsValue);
+
+  jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
+
+  void setUIManager(std::shared_ptr<UIManager> uiManager);
+
+  void setNewestShadowNodesRegistry(
+      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+#endif
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
@@ -91,6 +138,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
 
  private:
+#ifdef RCT_NEW_ARCH_ENABLED
+  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
+#endif // RCT_NEW_ARCH_ENABLED
+
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
   std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
@@ -103,6 +154,25 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+
+  std::shared_ptr<UIManager> uiManager_;
+
+  // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
+  // We can store surfaceId of the most recent ShadowNode as a workaround.
+  SurfaceId surfaceId_ = -1;
+
+  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
+      operationsInBatch_; // TODO: refactor std::pair to custom struct
+
+  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+
+  std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
+#endif
+
+  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
 };
 
 } // namespace reanimated

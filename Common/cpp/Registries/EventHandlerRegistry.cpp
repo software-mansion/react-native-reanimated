@@ -25,7 +25,12 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
     std::string eventName,
-    std::string eventPayload) {
+#ifdef RCT_NEW_ARCH_ENABLED
+    jsi::Value &eventPayload
+#else
+    std::string eventPayload
+#endif
+    /**/) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);
@@ -36,6 +41,13 @@ void EventHandlerRegistry::processEvent(
       }
     }
   }
+#ifdef RCT_NEW_ARCH_ENABLED
+  eventPayload.asObject(rt).setProperty(
+      rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
+  for (auto handler : handlersForEvent) {
+    handler->process(rt, eventPayload);
+  }
+#else
   // We receive here a JS Map with JSON as a value of NativeMap key
   // { NativeMap: { "jsonProp": "json value" } }
   // So we need to extract only JSON part
@@ -57,6 +69,7 @@ void EventHandlerRegistry::processEvent(
   for (auto handler : handlersForEvent) {
     handler->process(rt, eventObject);
   }
+#endif
 }
 
 bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(std::string eventName) {

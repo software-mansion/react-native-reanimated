@@ -1,4 +1,4 @@
-/* global _WORKLET _measure _scrollTo _setGestureState */
+/* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Component } from 'react';
@@ -48,18 +48,50 @@ export function measure(
   return result;
 }
 
-export function scrollTo(
+export function dispatchCommand(
   animatedRef: RefObjectFunction<Component>,
-  x: number,
-  y: number,
-  animated: boolean
+  commandName: string,
+  args: Array<unknown>
 ): void {
   'worklet';
   if (!_WORKLET || isNativeIndefined) {
     return;
   }
-  const viewTag = animatedRef();
-  _scrollTo(viewTag, x, y, animated);
+  const shadowNodeWrapper = animatedRef();
+  _dispatchCommand(shadowNodeWrapper, commandName, args);
+}
+
+export let scrollTo: (
+  animatedRef: RefObjectFunction<Component>,
+  x: number,
+  y: number,
+  animated: boolean
+) => void;
+
+if (global._IS_FABRIC) {
+  scrollTo = (
+    animatedRef: RefObjectFunction<Component>,
+    x: number,
+    y: number,
+    animated: boolean
+  ) => {
+    'worklet';
+    dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
+  };
+} else {
+  scrollTo = (
+    animatedRef: RefObjectFunction<Component>,
+    x: number,
+    y: number,
+    animated: boolean
+  ) => {
+    'worklet';
+    if (!_WORKLET || isNativeIndefined) {
+      return;
+    }
+    const viewTag = animatedRef();
+    _scrollTo(viewTag, x, y, animated);
+  };
 }
 
 export function setGestureState(handlerTag: number, newState: number): void {

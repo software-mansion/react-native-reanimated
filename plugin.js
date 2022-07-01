@@ -14,7 +14,6 @@ const functionArgsToWorkletize = new Map([
   ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
   ['useWorkletCallback', [0]],
-  ['createWorklet', [0]],
   // animations' callbacks
   ['withTiming', [2]],
   ['withSpring', [2]],
@@ -65,12 +64,15 @@ const globals = new Set([
   'Map',
   'Set',
   '_log',
-  '_updateProps',
+  '_updatePropsPaper',
+  '_updatePropsFabric',
+  '_removeShadowNodeFromRegistry',
   'RegExp',
   'Error',
   'global',
   '_measure',
   '_scrollTo',
+  '_dispatchCommand',
   '_setGestureState',
   '_getCurrentTime',
   '_eventTimestamp',
@@ -757,6 +759,16 @@ function isPossibleOptimization(fun) {
   return flags;
 }
 
+const pluginProposalExportNamespaceFrom =
+  require('@babel/plugin-proposal-export-namespace-from').default;
+const apiMock = {
+  assertVersion: () => {
+    // do nothing.
+  },
+};
+const ExportNamedDeclarationFn =
+  pluginProposalExportNamespaceFrom(apiMock).visitor.ExportNamedDeclaration;
+
 module.exports = function ({ types: t }) {
   return {
     pre() {
@@ -779,6 +791,7 @@ module.exports = function ({ types: t }) {
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
         },
       },
+      ExportNamedDeclaration: ExportNamedDeclarationFn,
     },
   };
 };

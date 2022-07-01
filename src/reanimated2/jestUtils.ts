@@ -188,7 +188,14 @@ export const advanceAnimationByFrame = (count) => {
 };
 
 export const setUpTests = (userConfig = {}) => {
-  const { expect } = require('@jest/globals');
+  let expect;
+  try {
+    expect = require('expect');
+  } catch (_) {
+    const { expect: expectModule } = require('@jest/globals');
+    expect = expectModule;
+  }
+
   require('setimmediate');
   frameTime = Math.round(1000 / config.fps);
 
