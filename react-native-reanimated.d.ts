@@ -156,7 +156,7 @@ declare module 'react-native-reanimated' {
       : Record<string, unknown>;
 
     export type AnimateProps<P extends object> = {
-      [K in keyof P]: P[K] | AnimatedNode<P[K]>;
+      [K in keyof Omit<P, 'style'>]: P[K] | AnimatedNode<P[K]>;
     } & {
       style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
@@ -495,20 +495,48 @@ declare module 'react-native-reanimated' {
   }
 
   export type SensorConfig = {
-    interval: number;
+    interval: number | 'auto';
   };
 
-  export type AnimatedSensor = {
-    sensor: SensorValue3D | SensorValueRotation | null;
+  export type Value3D = {
+    x: number;
+    y: number;
+    z: number;
+  };
+
+  export type SensorValue3D = SharedValue<Value3D>;
+
+  export type ValueRotation = {
+    qw: number;
+    qx: number;
+    qy: number;
+    qz: number;
+    yaw: number;
+    pitch: number;
+    roll: number;
+  };
+
+  export type SensorValueRotation = SharedValue<ValueRotation>;
+
+  export type AnimatedSensor<SensorValueType> = {
+    sensor: SensorValueType;
     unregister: () => void;
     isAvailable: boolean;
     config: SensorConfig;
   };
 
   export function useAnimatedSensor(
+    sensorType: SensorType.ROTATION,
+    userConfig?: SensorConfig
+  ): AnimatedSensor<SensorValueRotation>;
+  export function useAnimatedSensor(
+    sensorType: Exclude<SensorType, SensorType.ROTATION>,
+    userConfig?: SensorConfig
+  ): AnimatedSensor<SensorValue3D>;
+  export function useAnimatedSensor(
     sensorType: SensorType,
     userConfig?: SensorConfig
-  ): AnimatedSensor;
+  ): AnimatedSensor<any>;
 
   export interface ExitAnimationsValues {
     currentOriginX: number;
@@ -652,9 +680,6 @@ declare module 'react-native-reanimated' {
   ): PropsAdapterFunction;
 
   export function processColor(color: number | string): number;
-  export function createWorklet<A extends any[], R>(
-    fn: (...args: A) => R
-  ): (...args: Parameters<typeof fn>) => R;
 
   export function interpolateColor<T extends string | number>(
     value: number,

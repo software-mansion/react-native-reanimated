@@ -23,7 +23,7 @@ module.exports = (api) => {
             'module-resolver',
             {
               alias: {
-                'react-native-reanimated': '../src/Animated',
+                'react-native-reanimated': '../src/index',
                 react: './node_modules/react',
                 'react-native': './node_modules/react-native',
                 '@babel': './node_modules/@babel',

@@ -34,10 +34,10 @@
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep && yarn setup"
   },
-  "main": "lib/Animated.js",
-  "module": "lib/Animated",
-  "react-native": "src/Animated",
-  "source": "src/Animated",
+  "main": "lib/index.js",
+  "module": "lib/index",
+  "react-native": "src/index",
+  "source": "src/index",
   "types": "react-native-reanimated.d.ts",
   "files": [
     "Common/",
@@ -76,6 +76,7 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
+    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
     "@types/invariant": "^2.2.35",
@@ -158,5 +159,10 @@
       "commonjs",
       "module"
     ]
-  }
+  },
+  "sideEffects": [
+    "./lib/reanimated2/core",
+    "./lib/reanimated2/js-reanimated/global",
+    "./lib/index"
+  ]
 }
