@@ -192,6 +192,7 @@ export const setUpTests = (userConfig = {}) => {
   try {
     expect = require('expect');
   } catch (_) {
+    // for Jest in version 28+
     const { expect: expectModule } = require('@jest/globals');
     expect = expectModule;
   }
