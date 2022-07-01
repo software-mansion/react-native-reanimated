@@ -22,6 +22,12 @@ setupFilesAfterEnv: ['./jest-setup.js'],
 ...
 ```
 
+:::caution
+
+If you use Jest in a version **older than 28**, then you should set `setupFiles` property instead of `setupFilesAfterEnv`
+
+:::
+
 If you have custom babel configuration for testing, make sure that Reanimated's babel plugin is enabled for that environment.
 
 ## API
