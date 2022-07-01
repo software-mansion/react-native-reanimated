@@ -41,10 +41,6 @@ jsi::Value ReanimatedUIManagerBinding::get(
   // We already have an idea how this can be done better without locks
   // (i.e. by overwriting `completeRoot` and using UIManagerCommitHooks).
 
-  // based on implementation from UIManagerBinding.cpp
-  auto methodName = name.utf8(runtime);
-  UIManager *uiManager = uiManager_.get();
-
   // Methods like "findNodeAtPoint", "getRelativeLayoutMetrics", "measure" etc.
   // use `UIManager::getNewestCloneOfShadowNode` or
   // `ShadowTree::getCurrentRevision` under the hood,

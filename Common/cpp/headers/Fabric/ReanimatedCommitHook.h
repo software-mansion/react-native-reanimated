@@ -14,9 +14,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
       std::shared_ptr<PropsRegistry> propsRegistry,
-      std::shared_ptr<UIManager> uiManager,
-      jsi::Runtime &rt)
-      : propsRegistry_(propsRegistry), uiManager_(uiManager), rt_(rt) {}
+      std::shared_ptr<UIManager> uiManager)
+      : propsRegistry_(propsRegistry), uiManager_(uiManager) {}
 
   void commitHookWasRegistered(
       UIManager const &uiManager) const noexcept override {}
@@ -36,8 +35,6 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<PropsRegistry> propsRegistry_;
 
   std::shared_ptr<UIManager> uiManager_;
-
-  jsi::Runtime &rt_;
 };
 
 } // namespace reanimated
