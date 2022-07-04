@@ -20,7 +20,7 @@
     "react-native-gesture-handler": "^2.4.2",
     "react-native-reanimated": "link:../",
     "react-native-safe-area-context": "^4.2.5",
-    "react-native-screens": "software-mansion/react-native-screens#24393d3c1f9f2c5fdffd0f4ad3c8df9e221dc03f"
+    "react-native-screens": "software-mansion/react-native-screens#9b2e3f8460229eb64bdbeb45685343a993fdd27b"
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",
