@@ -50,18 +50,18 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
         });
   }
 
-  assert(rootNode->getChildren().size() > 0);
-  auto oldChild = rootNode->getChildren()[0];
-  auto newChild = oldChild->clone({});
-  rootNode->replaceChild(*oldChild, newChild, 0);
+  // assert(rootNode->getChildren().size() > 0);
+  // auto oldChild = rootNode->getChildren()[0];
+  // auto newChild = oldChild->clone({});
+  // rootNode->replaceChild(*oldChild, newChild, 0);
 
   // rootNode = rootNode->cloneTree(newChild->getFamily(), [&](ShadowNode const
   // &oldShadowNode) {
   //   return oldShadowNode.clone({});
   // });
 
-  std::static_pointer_cast<YogaLayoutableShadowNode>(rootNode)
-      ->updateYogaChildren();
+  // std::static_pointer_cast<YogaLayoutableShadowNode>(rootNode)
+  //     ->updateYogaChildren();
 
   auto newRootShadowNode2 = std::static_pointer_cast<RootShadowNode>(rootNode);
 
