@@ -520,6 +520,18 @@ static inline ShadowNode::Unshared cloneTree(
     auto children = parentNode.getChildren();
     react_native_assert(
         ShadowNode::sameFamily(*children.at(childIndex), *childNode));
+
+    auto isSealed = parentNode.getSealed();
+    if (!isSealed) {
+      // optimization
+      auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
+      parentNodeNonConst.replaceChild(
+          *children.at(childIndex), childNode, childIndex);
+      static_cast<YogaLayoutableShadowNode &>(parentNodeNonConst)
+          .updateYogaChildren();
+      return std::const_pointer_cast<ShadowNode>(oldRootNode);
+    }
+
     children[childIndex] = childNode;
 
     childNode = parentNode.clone({
