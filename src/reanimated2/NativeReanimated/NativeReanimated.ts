@@ -91,7 +91,6 @@ export class NativeReanimated {
   }
 
   configureLayoutAnimation(viewTag: number, type: string, config: any, viewSharedValue: any) {
-    console.log("VSV", viewSharedValue);
     this.InnerNativeModule.configureLayoutAnimation(viewTag, type, config, viewSharedValue);
   }
 

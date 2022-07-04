@@ -321,7 +321,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after
 {
-  //  _reaUiManager.flushUiOperations();
   NSMutableDictionary *targetValues = after.values;
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
   _startAnimationForTag(view.reactTag, @"entering", preparedValues, @(0));
@@ -333,19 +332,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
 
-  // TODO: maybe restore the below code?
-  //  if (state == Appearing) {
-  //    BOOL doNotStartLayout = true;
-  //    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
-  //      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
-  //          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
-  //        doNotStartLayout = false;
-  //      }
-  //    }
-  //    if (doNotStartLayout) {
-  //      return;
-  //    }
-  //  }
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
 }

@@ -22,7 +22,6 @@ class LayoutAnimationsProxy {
   void
   startObserving(int tag, std::shared_ptr<MutableValue> sv, jsi::Runtime &rt);
   void stopObserving(int tag, bool finished);
-  void notifyAboutCancellation(int tag);
   void configureAnimation(
       int tag,
       const std::string &type,

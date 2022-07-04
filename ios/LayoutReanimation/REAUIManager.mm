@@ -327,7 +327,9 @@
       }
 
       // Reanimated changes /start
-      [_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore];
+      if (isNew || snapshotBefore != nil) {
+        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore];
+      }
       // Reanimated changes /end
     }
     // Clean up

@@ -35,10 +35,6 @@ void LayoutAnimationsProxy::stopObserving(int tag, bool finished) {
   this->endHandler(tag, !finished);
 }
 
-void LayoutAnimationsProxy::notifyAboutCancellation(int tag) {
-  this->endHandler(tag, false);
-}
-
 void LayoutAnimationsProxy::configureAnimation(int tag, const std::string &type, std::shared_ptr<ShareableValue> config, std::shared_ptr<ShareableValue> viewSharedValue) {
   if (type == "entering") {
     enteringAnimations[tag] = config;

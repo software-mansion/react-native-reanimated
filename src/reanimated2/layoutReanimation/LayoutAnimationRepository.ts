@@ -6,15 +6,32 @@ import { processColor } from '../Colors';
 
 runOnUI(() => {
   'worklet';
-  const configs: Record<string, any> = {};
+
+  const enteringAnimationForTag: Record<string, any> = {};
 
   global.LayoutAnimationRepository = {
-    configs,
     startAnimationForTag(tag, type, yogaValues, config, viewSharedValue) {
       const style = config(yogaValues);
       let currentAnimation = style.animations;
+      let shouldStartNewAnimation = true;
 
-      _stopObservingProgress(tag, false);
+      if (type === 'entering') {
+        enteringAnimationForTag[tag] = currentAnimation;
+      } else if (type === 'layout') {
+        // When layout animaiton is requested, but entering is still running, we merge
+        // new layout animation targets into the ongoing animation
+        const enteringAnimation = enteringAnimationForTag[tag];
+        if (enteringAnimation) {
+          console.log('MERGING', style.animations);
+          currentAnimation = { ...enteringAnimation, ...style.animations };
+          shouldStartNewAnimation = true;
+        }
+      }
+
+      if (shouldStartNewAnimation) {
+        // we first need to intercept the previous one
+        _stopObservingProgress(tag, false);
+      }
 
       const backupColor: Record<string, string> = {};
       for (const key in style.initialValues) {
@@ -25,23 +42,30 @@ runOnUI(() => {
         }
       }
 
-      viewSharedValue.value = Object.assign({}, viewSharedValue._value, style.initialValues);
+      viewSharedValue.value = Object.assign(
+        {},
+        viewSharedValue._value,
+        style.initialValues
+      );
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
+        delete enteringAnimationForTag[tag];
         if (finished) {
           _stopObservingProgress(tag, finished);
         }
         style.callback && style.callback(finished);
       };
 
-      // TODO: not sure why this one is here? need to check bg colors
+      // TODO: fix color animations
       // if (backupColor) {
-      //   configs[tag].sv._value = { ...configs[tag].sv.value, ...backupColor };
+      //   viewSharedValue._value = { ...viewSharedValue.value, ...backupColor };
       // }
 
       viewSharedValue.value = animation;
-      _startObservingProgress(tag, viewSharedValue);
+      if (shouldStartNewAnimation) {
+        _startObservingProgress(tag, viewSharedValue);
+      }
     },
   };
 })();
