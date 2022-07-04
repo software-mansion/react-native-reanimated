@@ -488,6 +488,49 @@ void NativeReanimatedModule::updateProps(
   }
 }
 
+static inline ShadowNode::Unshared cloneTree(
+    ShadowNode::Shared oldRootNode,
+    const ShadowNodeFamily &family,
+    std::shared_ptr<jsi::Value> jsProps,
+    jsi::Runtime &rt,
+    const PropsParserContext &propsParserContext,
+    const std::shared_ptr<PropsRegistry> propsRegistry) {
+  auto ancestors = family.getAncestors(*oldRootNode);
+
+  if (ancestors.empty()) {
+    return ShadowNode::Unshared{nullptr};
+  }
+
+  auto &parent = ancestors.back();
+  auto &oldShadowNode = parent.first.get().getChildren().at(parent.second);
+
+  const auto props = oldShadowNode->getComponentDescriptor().cloneProps(
+      propsParserContext, oldShadowNode->getProps(), RawProps(rt, *jsProps));
+
+  auto newShadowNode = oldShadowNode->clone({/* .props = */ props});
+
+  propsRegistry->set(newShadowNode, dynamicFromValue(rt, *jsProps));
+
+  auto childNode = newShadowNode;
+
+  for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
+    auto &parentNode = it->first.get();
+    auto childIndex = it->second;
+
+    auto children = parentNode.getChildren();
+    react_native_assert(
+        ShadowNode::sameFamily(*children.at(childIndex), *childNode));
+    children[childIndex] = childNode;
+
+    childNode = parentNode.clone({
+        ShadowNodeFragment::propsPlaceholder(),
+        std::make_shared<SharedShadowNodeList>(children),
+    });
+  }
+
+  return std::const_pointer_cast<ShadowNode>(childNode);
+}
+
 void NativeReanimatedModule::performOperations() {
   if (operationsInBatch_.empty()) {
     return;
@@ -519,20 +562,13 @@ void NativeReanimatedModule::performOperations() {
           const ShadowNodeFamily &family = pair.first->getFamily();
           react_native_assert(family.getSurfaceId() == surfaceId_);
 
-          auto newRootNode =
-              rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-                const auto newProps =
-                    oldShadowNode.getComponentDescriptor().cloneProps(
-                        propsParserContext,
-                        oldShadowNode.getProps(),
-                        RawProps(rt, *pair.second));
-
-                auto clone = oldShadowNode.clone({/* .props = */ newProps});
-
-                propsRegistry_->set(clone, dynamicFromValue(rt, *pair.second));
-
-                return clone;
-              });
+          auto newRootNode = cloneTree(
+              rootNode,
+              family,
+              pair.second,
+              rt,
+              propsParserContext,
+              propsRegistry_);
 
           if (newRootNode == nullptr) {
             // this happens when React removed the component but Reanimated
