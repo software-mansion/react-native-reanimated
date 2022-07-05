@@ -23,11 +23,6 @@ import {
   enableLayoutAnimations,
 } from './reanimated2/core';
 import {
-  DefaultEntering,
-  DefaultExiting,
-  DefaultLayout,
-} from './reanimated2/layoutReanimation/defaultAnimations/Default';
-import {
   isJest,
   isChromeDebugger,
   shouldBeUseWeb,
@@ -62,7 +57,7 @@ function dummyListener() {
 }
 
 function maybeBuild(layoutAnimationOrBuilder) {
-  if (typeof layoutAnimationOrBuilder.build == 'function') {
+  if (typeof layoutAnimationOrBuilder.build === 'function') {
     return layoutAnimationOrBuilder.build();
   }
   return layoutAnimationOrBuilder;

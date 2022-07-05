@@ -90,8 +90,18 @@ export class NativeReanimated {
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
-  configureLayoutAnimation(viewTag: number, type: string, config: any, viewSharedValue: any) {
-    this.InnerNativeModule.configureLayoutAnimation(viewTag, type, config, viewSharedValue);
+  configureLayoutAnimation(
+    viewTag: number,
+    type: string,
+    config: any,
+    viewSharedValue: any
+  ) {
+    this.InnerNativeModule.configureLayoutAnimation(
+      viewTag,
+      type,
+      config,
+      viewSharedValue
+    );
   }
 
   enableLayoutAnimations(flag: boolean): void {

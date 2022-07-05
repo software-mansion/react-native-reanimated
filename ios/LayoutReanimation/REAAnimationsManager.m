@@ -328,7 +328,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
 {
-  NSNumber *tag = view.reactTag;
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
 

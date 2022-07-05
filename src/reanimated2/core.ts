@@ -376,7 +376,12 @@ export function configureLayoutAnimations(
   config: any,
   viewSharedValue: any
 ): void {
-  NativeReanimatedModule.configureLayoutAnimation(viewTag, type, config, viewSharedValue);
+  NativeReanimatedModule.configureLayoutAnimation(
+    viewTag,
+    type,
+    config,
+    viewSharedValue
+  );
 }
 
 export function configureProps(uiProps: string[], nativeProps: string[]): void {
