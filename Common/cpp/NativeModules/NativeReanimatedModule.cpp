@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <memory>
+#include <set>
 #include <thread>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -494,7 +495,8 @@ static inline ShadowNode::Unshared cloneTree(
     std::shared_ptr<jsi::Value> jsProps,
     jsi::Runtime &rt,
     const PropsParserContext &propsParserContext,
-    const std::shared_ptr<PropsRegistry> propsRegistry) {
+    const std::shared_ptr<PropsRegistry> propsRegistry,
+    std::set<ShadowNode *> &yogaChildrenUpdates) {
   auto ancestors = family.getAncestors(*oldRootNode);
 
   if (ancestors.empty()) {
@@ -527,8 +529,7 @@ static inline ShadowNode::Unshared cloneTree(
       auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
       parentNodeNonConst.replaceChild(
           *children.at(childIndex), childNode, childIndex);
-      static_cast<YogaLayoutableShadowNode &>(parentNodeNonConst)
-          .updateYogaChildren();
+      yogaChildrenUpdates.insert(&parentNodeNonConst);
       return std::const_pointer_cast<ShadowNode>(oldRootNode);
     }
 
@@ -568,6 +569,8 @@ void NativeReanimatedModule::performOperations() {
 
       rootNode->sealRecursive();
 
+      std::set<ShadowNode *> yogaChildrenUpdates;
+
       {
         // lock once due to performance reasons
         auto lock = propsRegistry_->createLock();
@@ -582,7 +585,8 @@ void NativeReanimatedModule::performOperations() {
               pair.second,
               rt,
               propsParserContext,
-              propsRegistry_);
+              propsRegistry_,
+              yogaChildrenUpdates);
 
           if (newRootNode == nullptr) {
             // this happens when React removed the component but Reanimated
@@ -594,6 +598,11 @@ void NativeReanimatedModule::performOperations() {
         }
 
         // TODO: remove from propsRegistry_
+      }
+
+      for (ShadowNode *shadowNode : yogaChildrenUpdates) {
+        static_cast<YogaLayoutableShadowNode *>(shadowNode)
+            ->updateYogaChildren();
       }
 
       // assert(rootNode->getChildren().size() > 0);

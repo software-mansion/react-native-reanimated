@@ -1,5 +1,7 @@
 #include <react/renderer/core/ComponentDescriptor.h>
 
+#include <set>
+
 #include "FabricUtils.h"
 #include "ReanimatedCommitHook.h"
 
@@ -12,7 +14,8 @@ static inline ShadowNode::Unshared cloneTree(
     const ShadowNodeFamily &family,
     const folly::dynamic &dynProps,
     const PropsParserContext &propsParserContext,
-    const std::shared_ptr<PropsRegistry> propsRegistry) {
+    const std::shared_ptr<PropsRegistry> propsRegistry,
+    std::set<ShadowNode *> &yogaChildrenUpdates) {
   auto ancestors = family.getAncestors(*oldRootNode);
 
   if (ancestors.empty()) {
@@ -43,8 +46,7 @@ static inline ShadowNode::Unshared cloneTree(
       auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
       parentNodeNonConst.replaceChild(
           *children.at(childIndex), childNode, childIndex);
-      static_cast<YogaLayoutableShadowNode &>(parentNodeNonConst)
-          .updateYogaChildren();
+      yogaChildrenUpdates.insert(&parentNodeNonConst);
       return std::const_pointer_cast<ShadowNode>(oldRootNode);
     }
 
@@ -77,13 +79,20 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   rootNode->sealRecursive(); // is this necessary?
 
+  std::set<ShadowNode *> yogaChildrenUpdates;
+
   {
     auto lock = propsRegistry_->createLock();
 
     propsRegistry_->for_each(
         [&](ShadowNodeFamily const &family, const folly::dynamic &dynProps) {
           auto newRootNode = cloneTree(
-              rootNode, family, dynProps, propsParserContext, propsRegistry_);
+              rootNode,
+              family,
+              dynProps,
+              propsParserContext,
+              propsRegistry_,
+              yogaChildrenUpdates);
 
           if (newRootNode == nullptr) {
             // this happens when React removed the component but Reanimated
@@ -94,6 +103,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
           rootNode = newRootNode;
         });
+  }
+
+  for (ShadowNode *shadowNode : yogaChildrenUpdates) {
+    static_cast<YogaLayoutableShadowNode *>(shadowNode)->updateYogaChildren();
   }
 
   // assert(rootNode->getChildren().size() > 0);
