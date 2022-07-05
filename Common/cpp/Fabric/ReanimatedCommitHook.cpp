@@ -75,6 +75,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
+  rootNode->sealRecursive(); // is this necessary?
+
   {
     auto lock = propsRegistry_->createLock();
 
