@@ -566,6 +566,8 @@ void NativeReanimatedModule::performOperations() {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
+      rootNode->sealRecursive();
+
       {
         // lock once due to performance reasons
         auto lock = propsRegistry_->createLock();
