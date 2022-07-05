@@ -225,6 +225,12 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             NO_CMAKE_FIND_ROOT_PATH
     )
     find_library(
+            RRC_VIEW
+            rrc_view
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
             REACT_RENDER_SCHEDULER
             react_render_scheduler
             PATHS ${LIBRN_DIR}
@@ -279,6 +285,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             ${REACT_DEBUG}
             ${REACT_RENDER_DEBUG}
             ${RRC_ROOT}
+            ${RRC_VIEW}
             ${FABRICJNI}
             ${REACT_RENDER_SCHEDULER}
     )
