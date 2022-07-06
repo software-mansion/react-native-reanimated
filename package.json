@@ -29,12 +29,10 @@
   },
   "main": "lib/Animated.js",
   "module": "lib/Animated",
-  "react-native": "src/Animated",
-  "source": "src/Animated",
+  "react-native": "lib/Animated",
   "types": "react-native-reanimated.d.ts",
   "files": [
     "Common/",
-    "src/",
     "lib/",
     "libSo/",
     "android/src/main/AndroidManifest.xml",
