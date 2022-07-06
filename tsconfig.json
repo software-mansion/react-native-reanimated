@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "react-native-reanimated": ["./src/Animated"]
-    },
+    "baseUrl": ".",
     "declaration": true,
     "preserveSymlinks": true,
     "target": "es6",

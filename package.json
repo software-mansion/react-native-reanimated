@@ -35,6 +35,9 @@
     "Common/",
     "src/",
     "lib/",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
@@ -87,7 +90,6 @@
     "@babel/plugin-proposal-class-properties": "^7.16.7",
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "@babel/preset-env": "^7.16.11",
-    "@react-native-community/bob": "^0.17.1",
     "@react-native-community/eslint-config": "^0.0.5",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
@@ -143,14 +145,6 @@
         "# check if version corresponds to changes in native files  \n  if git diff --name-only ${latestVersion} HEAD | egrep '(android/.*)|(ios/.*)' -q ; then egrep '\\.0$' -q <<< ${version} ; else true ; fi ;"
       ]
     }
-  },
-  "@react-native-community/bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module"
-    ]
   },
   "react-native-builder-bob": {
     "source": "src",
