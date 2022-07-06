@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <memory>
+#include <set>
 #include <thread>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -489,6 +490,57 @@ void NativeReanimatedModule::updateProps(
   }
 }
 
+static inline ShadowNode::Unshared cloneTree(
+    const ShadowNode::Shared &oldRootNode,
+    const ShadowNodeFamily &family,
+    RawProps &&rawProps,
+    const PropsParserContext &propsParserContext,
+    const std::shared_ptr<NewestShadowNodesRegistry> &newestShadowNodesRegistry,
+    std::set<ShadowNode *> &yogaChildrenUpdates) {
+  // adapted from ShadowNode::cloneTree
+
+  auto ancestors = family.getAncestors(*oldRootNode);
+
+  if (ancestors.empty()) {
+    return ShadowNode::Unshared{nullptr};
+  }
+
+  auto &parent = ancestors.back();
+  auto &oldShadowNode = parent.first.get().getChildren().at(parent.second);
+
+  const auto props = oldShadowNode->getComponentDescriptor().cloneProps(
+      propsParserContext, oldShadowNode->getProps(), rawProps);
+
+  auto newChildNode = oldShadowNode->clone({/* .props = */ props});
+
+  for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
+    auto &parentNode = it->first.get();
+    auto childIndex = it->second;
+
+    auto children = parentNode.getChildren();
+    const auto &oldChildNode = *children.at(childIndex);
+    react_native_assert(ShadowNode::sameFamily(oldChildNode, *newChildNode));
+
+    if (!parentNode.getSealed()) {
+      // Optimization: if a ShadowNode is unsealed, we can directly update its
+      // children instead of cloning the whole path to the root node.
+      auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
+      parentNodeNonConst.replaceChild(oldChildNode, newChildNode, childIndex);
+      yogaChildrenUpdates.insert(&parentNodeNonConst);
+      return std::const_pointer_cast<ShadowNode>(oldRootNode);
+    }
+
+    children[childIndex] = newChildNode;
+
+    newChildNode = parentNode.clone({
+        ShadowNodeFragment::propsPlaceholder(),
+        std::make_shared<SharedShadowNodeList>(children),
+    });
+  }
+
+  return std::const_pointer_cast<ShadowNode>(newChildNode);
+}
+
 void NativeReanimatedModule::performOperations() {
   if (operationsInBatch_.empty()) {
     return;
@@ -515,24 +567,20 @@ void NativeReanimatedModule::performOperations() {
 
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
+      std::set<ShadowNode *> yogaChildrenUpdates;
+
       for (const auto &pair : copiedOperationsQueue) {
         const ShadowNodeFamily &family = pair.first->getFamily();
         react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        auto newRootNode =
-            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto newest =
-                  newestShadowNodesRegistry_->get(oldShadowNode.getTag());
-
-              const auto &source = newest == nullptr ? oldShadowNode : *newest;
-
-              const auto newProps = source.getComponentDescriptor().cloneProps(
-                  propsParserContext,
-                  source.getProps(),
-                  RawProps(rt, *pair.second));
-
-              return source.clone({/* .props = */ newProps});
-            });
+        // TODO: implement as class method
+        auto newRootNode = cloneTree(
+            rootNode,
+            family,
+            RawProps(rt, *pair.second),
+            propsParserContext,
+            newestShadowNodesRegistry_,
+            yogaChildrenUpdates);
 
         if (newRootNode == nullptr) {
           // this happens when React removed the component but Reanimated still
@@ -541,6 +589,7 @@ void NativeReanimatedModule::performOperations() {
         }
         rootNode = newRootNode;
 
+        // TODO: move to `cloneTree`
         auto ancestors = family.getAncestors(*rootNode);
         for (const auto &pair : ancestors) {
           const auto &parent = pair.first.get();
@@ -552,6 +601,13 @@ void NativeReanimatedModule::performOperations() {
       // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
       for (auto tag : copiedTagsToRemove) {
         newestShadowNodesRegistry_->remove(tag);
+      }
+
+      // Unfortunately, `replaceChild` does not update Yoga nodes, so we need to
+      // update them manually here.
+      for (ShadowNode *shadowNode : yogaChildrenUpdates) {
+        static_cast<YogaLayoutableShadowNode *>(shadowNode)
+            ->updateYogaChildren();
       }
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
