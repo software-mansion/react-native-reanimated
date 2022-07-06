@@ -521,6 +521,8 @@ static inline ShadowNode::Unshared cloneTree(
     const auto &oldChildNode = *children.at(childIndex);
     react_native_assert(ShadowNode::sameFamily(oldChildNode, *newChildNode));
 
+    newestShadowNodesRegistry->set(newChildNode, parentNode.getTag());
+
     if (!parentNode.getSealed()) {
       // Optimization: if a ShadowNode is unsealed, we can directly update its
       // children instead of cloning the whole path to the root node.
@@ -588,14 +590,6 @@ void NativeReanimatedModule::performOperations() {
           continue;
         }
         rootNode = newRootNode;
-
-        // TODO: move to `cloneTree`
-        auto ancestors = family.getAncestors(*rootNode);
-        for (const auto &pair : ancestors) {
-          const auto &parent = pair.first.get();
-          const auto &child = parent.getChildren().at(pair.second);
-          newestShadowNodesRegistry_->set(child, parent.getTag());
-        }
       }
 
       // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
