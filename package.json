@@ -26,11 +26,11 @@
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep && yarn setup"
   },
-  "main": "lib/module/index.js",
+  "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
-  "types": "lib/typescript/index.d.ts",
+  "types": "lib/typescript/index",
   "files": [
     "Common/",
     "src/",
