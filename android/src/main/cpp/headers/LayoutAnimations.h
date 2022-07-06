@@ -22,13 +22,12 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       int tag,
       alias_ref<JString> type,
       alias_ref<JMap<jstring, jstring>> values);
-  void removeConfigForTag(int tag);
   bool isLayoutAnimationEnabled();
 
   void setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt);
 
-  void notifyAboutProgress(const jsi::Value &progress, int tag);
-  void notifyAboutEnd(int tag, int cancelled);
+  void progressLayoutAnimation(int tag, const jsi::Value &progress);
+  void endLayoutAnimation(int tag, bool cancelled);
 
  private:
   friend HybridBase;

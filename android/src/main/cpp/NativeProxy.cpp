@@ -149,12 +149,13 @@ void NativeProxy::installJSIBindings() {
 
   // Layout Animations Start
 
-  auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
+  auto progressLayoutAnimation = [=](int tag, jsi::Value progress) {
+    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
   };
 
-  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-    this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
+  auto endLayoutAnimation = [=](int tag, bool isCancelled) {
+    this->layoutAnimations->cthis()->endLayoutAnimation(
+        tag, (isCancelled) ? 1 : 0);
   };
 
   auto configurePropsFunction = [=](jsi::Runtime &rt,
@@ -165,7 +166,7 @@ void NativeProxy::installJSIBindings() {
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(
-          notifyAboutProgress, notifyAboutEnd);
+          progressLayoutAnimation, endLayoutAnimation);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   layoutAnimations->cthis()->setWeakUIRuntime(wrt);
 

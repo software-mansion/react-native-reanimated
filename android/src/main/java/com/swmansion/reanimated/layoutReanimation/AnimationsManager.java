@@ -199,7 +199,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
   }
 
-  public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
+  public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
     ViewState state = mStates.get(tag);
     if (state == ViewState.Inactive) {
       mStates.put(tag, ViewState.Appearing);
@@ -213,7 +213,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         mParent.get(tag).getId());
   }
 
-  public void notifyAboutEnd(int tag, boolean cancelled) {
+  public void endLayoutAnimation(int tag, boolean cancelled) {
     if (!cancelled) {
       ViewState state = mStates.get(tag);
       if (state == ViewState.Appearing) {
@@ -350,7 +350,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mViewManager.remove(curView.getId());
       mParentViewManager.remove(curView.getId());
       mParent.remove(curView.getId());
-      mNativeMethodsHolder.removeConfigForTag(curView.getId());
       mToRemove.remove(view.getId());
     }
     return cannotStripe;
