@@ -43,12 +43,6 @@
   std::weak_ptr<reanimated::Scheduler> _scheduler;
 }
 
-- (void)invalidate
-{
-  [super invalidate];
-  _animationsManager = nil;
-}
-
 + (NSString *)moduleName
 {
   return NSStringFromClass([RCTUIManager class]);

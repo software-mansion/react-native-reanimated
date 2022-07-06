@@ -23,7 +23,6 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 @interface REAAnimationsManager : NSObject
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
-- (void)setRemovingConfigBlock:(REAAnimationRemovingBlock)block;
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag;

@@ -34,7 +34,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   BOOL _cleaningScheduled;
   REAAnimationStartingBlock _startAnimationForTag;
   REAHasAnimationBlock _hasAnimationForTag;
-  REAAnimationRemovingBlock _removeConfigForTag;
 }
 
 + (NSArray *)layoutKeys
@@ -72,7 +71,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   // TODO: perhaps want to unmount
   _startAnimationForTag = nil;
   _hasAnimationForTag = nil;
-  _removeConfigForTag = nil;
   _uiManager = nil;
   _exitingViews = nil;
   _cleaningScheduled = false;
@@ -88,11 +86,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation
 {
   _hasAnimationForTag = hasAnimation;
-}
-
-- (void)setRemovingConfigBlock:(REAAnimationRemovingBlock)block
-{
-  _removeConfigForTag = block;
 }
 
 - (void)scheduleCleaning

@@ -43,8 +43,6 @@ declare global {
       _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationRepository: {
-        registerConfig(tag: number, config: Record<string, unknown>): void;
-        removeConfig(tag: number): void;
         startAnimationForTag(
           tag: number,
           type: string,

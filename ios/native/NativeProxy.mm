@@ -323,20 +323,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
   }];
 
-  [animationsManager setRemovingConfigBlock:^(NSNumber *_Nonnull tag) {
-    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-    if (wrt.expired()) {
-      return;
-    }
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function removeConfig =
-          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
-      removeConfig.call(*rt, jsi::Value([tag intValue]));
-    }
-  }];
-
   return module;
 }
 
