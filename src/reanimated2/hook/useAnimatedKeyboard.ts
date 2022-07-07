@@ -22,7 +22,9 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
   useEffect(() => {
     if (isSubscribed.current === false && ref.current !== null) {
       // subscribe again after Fast Refresh
-      NativeReanimated.subscribeForKeyboardEvents(ref.current);
+      listenerId.current = NativeReanimated.subscribeForKeyboardEvents(
+        ref.current
+      );
       isSubscribed.current = true;
     }
     return () => {

@@ -331,17 +331,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // keyboard events
 
-  static REAKeyboardEventObserver *kbObserver = [[REAKeyboardEventObserver alloc] init];
+  static REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
   auto subscribeForKeyboardEventsFunction =
       [](std::function<void(bool isShown, bool isAnimating, int height)> keyboardEventDataUpdater) {
-        return [kbObserver subscribeForKeyboardEvents:^(bool isShown, bool isAnimating, int height) {
-          NSLog(@"isShown: %d, isAnimating: %d, height: %d", isShown, isAnimating, height);
+        return [keyboardObserver subscribeForKeyboardEvents:^(bool isShown, bool isAnimating, int height) {
           keyboardEventDataUpdater(isShown, isAnimating, height);
         }];
       };
 
   auto unsubscribeFromKeyboardEventsFunction = [](int listenerId) {
-    [kbObserver unsubscribeFromKeyboardEvents:listenerId];
+    [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
   };
   // end keyboard events
 

@@ -6,10 +6,7 @@
 
 typedef void (^KeyboardEventListenerBlock)(bool isShown, bool isAnimating, int height);
 
-@interface REAKeyboardEventObserver : NSObject {
-  NSNumber *_nextListenerId;
-  NSMutableDictionary *_listeners;
-}
+@interface REAKeyboardEventObserver : NSObject
 
 - (instancetype)init;
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener;
