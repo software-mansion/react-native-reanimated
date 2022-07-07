@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    // change to true after we transition to TS
-    "declaration": false,
+    "baseUrl": ".",
+    "declaration": true,
     "preserveSymlinks": true,
     "target": "es6",
     "module": "ESNext",
@@ -12,7 +12,7 @@
     "lib": ["es6", "dom"],
     "esModuleInterop": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
   },
-  "include": ["lib/**/*.ts", "lib/**/*.tsx", "react-native-reanimated.d.ts"]
+  "exclude": ["Example", "FabricExample", "TVOSExample"]
 }
