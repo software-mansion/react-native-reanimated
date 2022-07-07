@@ -14,6 +14,7 @@
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
+#include "ShadowTreeCloner.h"
 #endif
 
 #include "EventHandlerRegistry.h"
@@ -490,63 +491,6 @@ void NativeReanimatedModule::updateProps(
   }
 }
 
-static inline ShadowNode::Unshared cloneTree(
-    const ShadowNode::Shared &oldRootNode,
-    const ShadowNodeFamily &family,
-    RawProps &&rawProps,
-    const PropsParserContext &propsParserContext,
-    const std::shared_ptr<NewestShadowNodesRegistry> &newestShadowNodesRegistry,
-    std::set<ShadowNode *> &yogaChildrenUpdates) {
-  // adapted from ShadowNode::cloneTree
-
-  auto ancestors = family.getAncestors(*oldRootNode);
-
-  if (ancestors.empty()) {
-    return ShadowNode::Unshared{nullptr};
-  }
-
-  auto &parent = ancestors.back();
-  auto &oldShadowNode = parent.first.get().getChildren().at(parent.second);
-
-  const auto newest = newestShadowNodesRegistry->get(oldShadowNode->getTag());
-
-  const auto &source = newest == nullptr ? oldShadowNode : newest;
-
-  const auto props = source->getComponentDescriptor().cloneProps(
-      propsParserContext, source->getProps(), rawProps);
-
-  auto newChildNode = source->clone({/* .props = */ props});
-
-  for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
-    auto &parentNode = it->first.get();
-    auto childIndex = it->second;
-
-    auto children = parentNode.getChildren();
-    const auto &oldChildNode = *children.at(childIndex);
-    react_native_assert(ShadowNode::sameFamily(oldChildNode, *newChildNode));
-
-    newestShadowNodesRegistry->set(newChildNode, parentNode.getTag());
-
-    if (!parentNode.getSealed()) {
-      // Optimization: if a ShadowNode is unsealed, we can directly update its
-      // children instead of cloning the whole path to the root node.
-      auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
-      parentNodeNonConst.replaceChild(oldChildNode, newChildNode, childIndex);
-      yogaChildrenUpdates.insert(&parentNodeNonConst);
-      return std::const_pointer_cast<ShadowNode>(oldRootNode);
-    }
-
-    children[childIndex] = newChildNode;
-
-    newChildNode = parentNode.clone({
-        ShadowNodeFragment::propsPlaceholder(),
-        std::make_shared<SharedShadowNodeList>(children),
-    });
-  }
-
-  return std::const_pointer_cast<ShadowNode>(newChildNode);
-}
-
 void NativeReanimatedModule::performOperations() {
   if (operationsInBatch_.empty()) {
     return;
@@ -568,45 +512,38 @@ void NativeReanimatedModule::performOperations() {
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
-      // lock once due to performance reasons
-      auto lock = newestShadowNodesRegistry_->createLock();
-
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-      std::set<ShadowNode *> yogaChildrenUpdates;
+      ShadowTreeCloner shadowTreeCloner{
+          propsParserContext, newestShadowNodesRegistry_, uiManager_};
 
-      for (const auto &pair : copiedOperationsQueue) {
-        const ShadowNodeFamily &family = pair.first->getFamily();
-        react_native_assert(family.getSurfaceId() == surfaceId_);
+      {
+        // lock once due to performance reasons
+        auto lock = newestShadowNodesRegistry_->createLock();
 
-        // TODO: implement as class method
-        auto newRootNode = cloneTree(
-            rootNode,
-            family,
-            RawProps(rt, *pair.second),
-            propsParserContext,
-            newestShadowNodesRegistry_,
-            yogaChildrenUpdates);
+        for (const auto &pair : copiedOperationsQueue) {
+          const ShadowNodeFamily &family = pair.first->getFamily();
+          react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        if (newRootNode == nullptr) {
-          // this happens when React removed the component but Reanimated still
-          // tries to animate it, let's skip update for this specific component
-          continue;
+          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+              rootNode, family, RawProps(rt, *pair.second));
+
+          if (newRootNode == nullptr) {
+            // this happens when React removed the component but Reanimated
+            // still tries to animate it, let's skip update for this specific
+            // component
+            continue;
+          }
+          rootNode = newRootNode;
         }
-        rootNode = newRootNode;
+
+        // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+        for (auto tag : copiedTagsToRemove) {
+          newestShadowNodesRegistry_->remove(tag);
+        }
       }
 
-      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-      for (auto tag : copiedTagsToRemove) {
-        newestShadowNodesRegistry_->remove(tag);
-      }
-
-      // Unfortunately, `replaceChild` does not update Yoga nodes, so we need to
-      // update them manually here.
-      for (ShadowNode *shadowNode : yogaChildrenUpdates) {
-        static_cast<YogaLayoutableShadowNode *>(shadowNode)
-            ->updateYogaChildren();
-      }
+      shadowTreeCloner.updateYogaChildren();
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });
