@@ -16,7 +16,7 @@ index b2d44d1..08caaaa 100644
          publications {
              release(MavenPublication) {
 diff --git a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
-index 30a4d5e..19cfa98 100644
+index 30a4d5e..0337efb 100644
 --- a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
 +++ b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
 @@ -244,6 +244,18 @@ afterEvaluate {
@@ -39,9 +39,10 @@ index 30a4d5e..19cfa98 100644
          publications {
              release(MavenPublication) {
 diff --git a/node_modules/react-native/sdks/.hermesversion b/node_modules/react-native/sdks/.hermesversion
-new file mode 100644
-index 0000000..0bd8b2a
---- /dev/null
+index 3002737..0bd8b2a 100644
+--- a/node_modules/react-native/sdks/.hermesversion
 +++ b/node_modules/react-native/sdks/.hermesversion
-@@ -0,0 +1 @@
+@@ -1 +1 @@
+-hermes-2022-05-20-RNv0.69.0-ee8941b8874132b8f83e4486b63ed5c19fc3f111
+\ No newline at end of file
 +73fa47c9c033e2f1bf10ebab9ac58f02c94ffff9
