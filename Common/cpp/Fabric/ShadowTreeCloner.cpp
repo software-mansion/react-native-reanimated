@@ -1,16 +1,18 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include "ShadowTreeCloner.h"
+#include "FabricUtils.h"
 
 namespace reanimated {
 
 ShadowTreeCloner::ShadowTreeCloner(
-    PropsParserContext &propsParserContext,
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
-    std::shared_ptr<UIManager> uiManager)
-    : propsParserContext_(propsParserContext),
-      newestShadowNodesRegistry_(newestShadowNodesRegistry),
-      uiManager_(uiManager) {}
+    std::shared_ptr<UIManager> uiManager,
+    SurfaceId surfaceId)
+    : newestShadowNodesRegistry_{newestShadowNodesRegistry},
+      propsParserContext_{
+          surfaceId,
+          *getContextContainerFromUIManager(&*uiManager)} {}
 
 ShadowTreeCloner::~ShadowTreeCloner() {
 #ifdef DEBUG

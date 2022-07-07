@@ -17,9 +17,9 @@ namespace reanimated {
 class ShadowTreeCloner {
  public:
   ShadowTreeCloner(
-      PropsParserContext &propsParserContext,
       std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
-      std::shared_ptr<UIManager> uiManager);
+      std::shared_ptr<UIManager> uiManager,
+      SurfaceId surfaceId);
 
   ~ShadowTreeCloner();
 
@@ -31,9 +31,8 @@ class ShadowTreeCloner {
   void updateYogaChildren();
 
  private:
-  PropsParserContext &propsParserContext_;
+  PropsParserContext propsParserContext_;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
-  std::shared_ptr<UIManager> uiManager_;
   std::set<ShadowNode *> yogaChildrenUpdates_;
 };
 

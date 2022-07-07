@@ -505,9 +505,6 @@ void NativeReanimatedModule::performOperations() {
 
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  auto contextContainer = getContextContainerFromUIManager(
-      &*uiManager_); // TODO: use Scheduler::getContextContainer
-  PropsParserContext propsParserContext{surfaceId_, *contextContainer};
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
@@ -515,7 +512,7 @@ void NativeReanimatedModule::performOperations() {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
       ShadowTreeCloner shadowTreeCloner{
-          propsParserContext, newestShadowNodesRegistry_, uiManager_};
+          newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
       {
         // lock once due to performance reasons
