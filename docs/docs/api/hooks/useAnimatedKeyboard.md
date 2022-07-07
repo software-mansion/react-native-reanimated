@@ -28,7 +28,7 @@ Properties:
 
 ### Example
 ```js
-function AnimatedKeyboardExample(): React.ReactElement {
+function AnimatedKeyboardExample() {
   const keyboard = useAnimatedKeyboard();
   const translateStyle = useAnimatedStyle(() => {
     return {

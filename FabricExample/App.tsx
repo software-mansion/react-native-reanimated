@@ -32,7 +32,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 const EXAMPLES = [
   {
     name: 'AnimatedKeyboardExample',
-    icon: '🆕',
+    icon: '⌨️',
     title: 'Animated keyboard example',
     component: AnimatedKeyboardExample,
   },
