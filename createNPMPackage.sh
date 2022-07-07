@@ -1,12 +1,10 @@
 #!/bin/bash
 
-yarn run type:generate
+yarn bob build
 if [ $1 = "nightly" ];
 then
   node scripts/set-nightly-version.js
 fi
 npm pack
-
-rm -rf ./lib
 
 echo "Done!"

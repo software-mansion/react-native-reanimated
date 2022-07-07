@@ -1,0 +1,48 @@
+diff --git a/node_modules/react-native/ReactAndroid/build.gradle b/node_modules/react-native/ReactAndroid/build.gradle
+index b2d44d1..08caaaa 100644
+--- a/node_modules/react-native/ReactAndroid/build.gradle
++++ b/node_modules/react-native/ReactAndroid/build.gradle
+@@ -431,6 +431,12 @@ afterEvaluate {
+     configureCMakeDebug.dependsOn(preBuild)
+     configureCMakeRelWithDebInfo.dependsOn(preBuild)
+ 
++    if(file("$reactNativeRootDir/ReactAndroid/build/outputs/aar/ReactAndroid-debug.aar").exists()) {
++        tasks.findByName("configureCMakeDebug[arm64-v8a]")?.enabled = false
++        tasks.findByName("buildCMakeDebug[arm64-v8a][fabricjni,hermes-executor-debug,etc]")?.enabled = false
++        tasks.findByName("externalNativeBuildDebug")?.enabled = false
++    }
++
+     publishing {
+         publications {
+             release(MavenPublication) {
+diff --git a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
+index 30a4d5e..0337efb 100644
+--- a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
++++ b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle
+@@ -244,6 +244,18 @@ afterEvaluate {
+     configureCMakeRelease.dependsOn(preBuild)
+     configureCMakeMinSizeRel.dependsOn(preBuild)
+ 
++    if(file("$reactNativeRootDir/ReactAndroid/hermes-engine/build/outputs/aar/hermes-engine-debug.aar").exists()) {
++        tasks.findByName("downloadHermes")?.enabled = false
++        tasks.findByName("unzipHermes")?.enabled = false
++        tasks.findByName("configureBuildForHermes")?.enabled = false
++        tasks.findByName("buildHermes")?.enabled = false
++        reactNativeArchitectures().each { architecture ->
++            tasks.findByName("configureCMakeRelease[${architecture}]")?.enabled = false
++        }
++        tasks.findByName("buildCMakeRelease[arm64-v8a][libhermes]")?.enabled = false
++        tasks.findByName("externalNativeBuildDebug")?.enabled = false
++    }
++
+     publishing {
+         publications {
+             release(MavenPublication) {
+diff --git a/node_modules/react-native/sdks/.hermesversion b/node_modules/react-native/sdks/.hermesversion
+index 3002737..0bd8b2a 100644
+--- a/node_modules/react-native/sdks/.hermesversion
++++ b/node_modules/react-native/sdks/.hermesversion
+@@ -1 +1 @@
+-hermes-2022-05-20-RNv0.69.0-ee8941b8874132b8f83e4486b63ed5c19fc3f111
+\ No newline at end of file
++73fa47c9c033e2f1bf10ebab9ac58f02c94ffff9
