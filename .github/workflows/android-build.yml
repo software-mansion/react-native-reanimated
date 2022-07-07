@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - main
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -43,6 +43,20 @@ jobs:
       - name: Install example app node dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn
+      - name: Cache hermes build
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-rn-hermes-engine
+        with:
+          path: ${{ matrix.working-directory }}/node_modules/react-native
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('**/react-native/package.json', '**/patches/react-native+**') }}
+      - name: Cache android libraries
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-rn
+        with:
+          path: ${{ matrix.working-directory }}/android/app/build/react-ndk
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('**/react-native/package.json', '**/patches/react-native+**') }}
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
         run: ./gradlew assembleDebug --console=plain -PreactNativeArchitectures=arm64-v8a
