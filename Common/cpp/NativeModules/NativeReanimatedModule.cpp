@@ -7,7 +7,6 @@
 
 #include <functional>
 #include <memory>
-#include <set>
 #include <thread>
 
 #ifdef RCT_NEW_ARCH_ENABLED
