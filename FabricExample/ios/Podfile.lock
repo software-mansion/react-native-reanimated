@@ -1007,7 +1007,7 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 7ad268dee53d001697e13264c6bc8e95a902352e
   ReactCommon: 74a3b8ee497c6d50ce86ef57e15c4c5bf654b83d
   RNGestureHandler: ac67226292cd5e67e7203d682a7e39f85d7b88a9
-  RNReanimated: 0302eab362af3c4068c3cb5663bede53b7299881
+  RNReanimated: 94d4e56073c2989550dba1ce29d41a5fe9d74e7f
   RNScreens: 592316e0744de3b640e90c335a45aad13088381a
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 4935173923cabaa830e195be3e8e4cac045a8f90
