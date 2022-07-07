@@ -35,7 +35,6 @@ import Animated, {
   withSequence,
   withDecay,
   useWorkletCallback,
-  createWorklet,
   runOnUI,
   useAnimatedReaction,
   interpolateColor,
@@ -640,21 +639,6 @@ function UseWorkletCallbackTest() {
   const workletCallback = useWorkletCallback((a: number, b: number) => {
     return a + b;
   }, []);
-
-  runOnUI(() => {
-    const res = workletCallback(1, 1);
-
-    console.log(res);
-  })();
-
-  return <Animated.View style={styles.container} />;
-}
-
-// createWorklet
-function CreateWorkletTest() {
-  const workletCallback = createWorklet((a: number, b: number) => {
-    return a + b;
-  });
 
   runOnUI(() => {
     const res = workletCallback(1, 1);
