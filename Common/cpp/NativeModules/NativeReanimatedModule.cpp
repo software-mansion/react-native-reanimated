@@ -508,10 +508,14 @@ static inline ShadowNode::Unshared cloneTree(
   auto &parent = ancestors.back();
   auto &oldShadowNode = parent.first.get().getChildren().at(parent.second);
 
-  const auto props = oldShadowNode->getComponentDescriptor().cloneProps(
-      propsParserContext, oldShadowNode->getProps(), rawProps);
+  const auto newest = newestShadowNodesRegistry->get(oldShadowNode->getTag());
 
-  auto newChildNode = oldShadowNode->clone({/* .props = */ props});
+  const auto &source = newest == nullptr ? oldShadowNode : newest;
+
+  const auto props = source->getComponentDescriptor().cloneProps(
+      propsParserContext, source->getProps(), rawProps);
+
+  auto newChildNode = source->clone({/* .props = */ props});
 
   for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
     auto &parentNode = it->first.get();
