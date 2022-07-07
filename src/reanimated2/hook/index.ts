@@ -20,5 +20,4 @@ export { useAnimatedScrollHandler } from './useAnimatedScrollHandler';
 export type { ScrollHandler, ScrollHandlers } from './useAnimatedScrollHandler';
 export { useDerivedValue } from './useDerivedValue';
 export type { DerivedValue } from './useDerivedValue';
-export { useAnimatedSensor } from './useAnimatedSensor';
-export type { SensorType } from './useAnimatedSensor';
+export { useAnimatedSensor, SensorType } from './useAnimatedSensor';
