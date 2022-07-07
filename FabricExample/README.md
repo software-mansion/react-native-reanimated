@@ -16,6 +16,4 @@ Then you can run this application by `yarn android` or from Android Studio.
 
 To run on iOS first go to `FabricExample/ios` and run `pod install`. This will install pods for Fabric architecture.
 
-Add `RN_ARCHITECTURES="iphonesimulator_x86_64"` (`iphonesimulator_arm64`/`iphoneos_arm64`) env variable when running `pod install` to install hermes just for simulator or iphone. That can speed up your build.
-
 Then in `FabricExample` run `yarn ios` or run application from Xcode.
