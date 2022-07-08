@@ -5,7 +5,8 @@
     "paths": {
       "react-native-reanimated": ["../"],
       "react": ["./node_modules/@types/react"],
-    }
+    },
   },
-  "include": ["index.js", "src/**/*", "reanimated1/**/*", "test/**/*"]
+  "exclude": [],
+  "include": ["index.js", "src/", "test/**/*"]
 }

@@ -30,7 +30,7 @@
   "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
-  "types": "lib/typescript/index",
+  "types": "react-native-reanimated.d.ts",
   "files": [
     "Common/",
     "src/",
