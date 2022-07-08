@@ -4,6 +4,7 @@
 
 #include "FabricUtils.h"
 #include "ReanimatedCommitHook.h"
+#include "ShadowTreeCloner.h"
 
 using namespace facebook::react;
 
@@ -71,28 +72,21 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     return newRootShadowNode;
   }
 
-  auto contextContainer = getContextContainerFromUIManager(&*uiManager_);
   auto surfaceId = newRootShadowNode->getSurfaceId();
-  PropsParserContext propsParserContext{surfaceId, *contextContainer};
+
+  ShadowTreeCloner shadowTreeCloner{propsRegistry_, uiManager_, surfaceId};
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
-  rootNode->sealRecursive(); // is this necessary?
-
-  std::set<ShadowNode *> yogaChildrenUpdates;
+  // rootNode->sealRecursive(); // is this necessary?
 
   {
     auto lock = propsRegistry_->createLock();
 
     propsRegistry_->for_each(
         [&](ShadowNodeFamily const &family, const folly::dynamic &dynProps) {
-          auto newRootNode = cloneTree(
-              rootNode,
-              family,
-              dynProps,
-              propsParserContext,
-              propsRegistry_,
-              yogaChildrenUpdates);
+          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+              rootNode, family, RawProps(dynProps));
 
           if (newRootNode == nullptr) {
             // this happens when React removed the component but Reanimated
@@ -100,14 +94,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
             // component
             return;
           }
-
           rootNode = newRootNode;
         });
   }
 
-  for (ShadowNode *shadowNode : yogaChildrenUpdates) {
-    static_cast<YogaLayoutableShadowNode *>(shadowNode)->updateYogaChildren();
-  }
+  shadowTreeCloner.updateYogaChildren();
 
   // assert(rootNode->getChildren().size() > 0);
   // auto oldChild = rootNode->getChildren()[0];
