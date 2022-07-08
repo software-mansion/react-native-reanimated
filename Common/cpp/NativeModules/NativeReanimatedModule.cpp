@@ -410,6 +410,26 @@ void NativeReanimatedModule::unregisterSensor(
   animatedSensorModule.unregisterSensor(sensorId);
 }
 
+jsi::Value NativeReanimatedModule::registerFrameCallback(
+    jsi::Runtime &rt,
+    const jsi::Value &callback) {
+  // todo
+  return jsi::Value::null();
+}
+
+void NativeReanimatedModule::unregisterFrameCallback(
+    jsi::Runtime &rt,
+    const jsi::Value &frameCallbackId) {
+  // todo
+}
+
+void NativeReanimatedModule::manageStateFrameCallback(
+    jsi::Runtime &rt,
+    const jsi::Value &frameCallbackId,
+    const jsi::Value &state) {
+  // todo
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::isThereAnyLayoutProp(
     jsi::Runtime &rt,
