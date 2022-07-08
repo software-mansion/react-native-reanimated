@@ -13,6 +13,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "ReanimatedUIManagerBinding.h"
+#include "ShadowTreeCloner.h"
 #endif
 
 #include "EventHandlerRegistry.h"
@@ -489,61 +490,6 @@ void NativeReanimatedModule::updateProps(
   }
 }
 
-static inline ShadowNode::Unshared cloneTree(
-    ShadowNode::Shared oldRootNode,
-    const ShadowNodeFamily &family,
-    std::shared_ptr<jsi::Value> jsProps,
-    jsi::Runtime &rt,
-    const PropsParserContext &propsParserContext,
-    const std::shared_ptr<PropsRegistry> propsRegistry,
-    std::set<ShadowNode *> &yogaChildrenUpdates) {
-  auto ancestors = family.getAncestors(*oldRootNode);
-
-  if (ancestors.empty()) {
-    return ShadowNode::Unshared{nullptr};
-  }
-
-  auto &parent = ancestors.back();
-  auto &oldShadowNode = parent.first.get().getChildren().at(parent.second);
-
-  const auto props = oldShadowNode->getComponentDescriptor().cloneProps(
-      propsParserContext, oldShadowNode->getProps(), RawProps(rt, *jsProps));
-
-  auto newShadowNode = oldShadowNode->clone({/* .props = */ props});
-
-  propsRegistry->set(newShadowNode, dynamicFromValue(rt, *jsProps));
-
-  auto childNode = newShadowNode;
-
-  for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
-    auto &parentNode = it->first.get();
-    auto childIndex = it->second;
-
-    auto children = parentNode.getChildren();
-    react_native_assert(
-        ShadowNode::sameFamily(*children.at(childIndex), *childNode));
-
-    auto isSealed = parentNode.getSealed();
-    if (!isSealed) {
-      // optimization
-      auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
-      parentNodeNonConst.replaceChild(
-          *children.at(childIndex), childNode, childIndex);
-      yogaChildrenUpdates.insert(&parentNodeNonConst);
-      return std::const_pointer_cast<ShadowNode>(oldRootNode);
-    }
-
-    children[childIndex] = childNode;
-
-    childNode = parentNode.clone({
-        ShadowNodeFragment::propsPlaceholder(),
-        std::make_shared<SharedShadowNodeList>(children),
-    });
-  }
-
-  return std::const_pointer_cast<ShadowNode>(childNode);
-}
-
 void NativeReanimatedModule::performOperations() {
   if (operationsInBatch_.empty()) {
     return;
@@ -558,9 +504,6 @@ void NativeReanimatedModule::performOperations() {
 
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  auto contextContainer = getContextContainerFromUIManager(
-      &*uiManager_); // TODO: use Scheduler::getContextContainer
-  PropsParserContext propsParserContext{surfaceId_, *contextContainer};
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
@@ -569,7 +512,7 @@ void NativeReanimatedModule::performOperations() {
 
       rootNode->sealRecursive();
 
-      std::set<ShadowNode *> yogaChildrenUpdates;
+      ShadowTreeCloner shadowTreeCloner{propsRegistry_, uiManager_, surfaceId_};
 
       {
         // lock once due to performance reasons
@@ -579,14 +522,8 @@ void NativeReanimatedModule::performOperations() {
           const ShadowNodeFamily &family = pair.first->getFamily();
           react_native_assert(family.getSurfaceId() == surfaceId_);
 
-          auto newRootNode = cloneTree(
-              rootNode,
-              family,
-              pair.second,
-              rt,
-              propsParserContext,
-              propsRegistry_,
-              yogaChildrenUpdates);
+          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+              rootNode, family, RawProps(rt, *pair.second));
 
           if (newRootNode == nullptr) {
             // this happens when React removed the component but Reanimated
@@ -595,15 +532,14 @@ void NativeReanimatedModule::performOperations() {
             continue;
           }
           rootNode = newRootNode;
+
+          propsRegistry_->set(pair.first, dynamicFromValue(rt, *pair.second));
         }
 
         // TODO: remove from propsRegistry_
       }
 
-      for (ShadowNode *shadowNode : yogaChildrenUpdates) {
-        static_cast<YogaLayoutableShadowNode *>(shadowNode)
-            ->updateYogaChildren();
-      }
+      shadowTreeCloner.updateYogaChildren();
 
       // assert(rootNode->getChildren().size() > 0);
       // auto oldChild = rootNode->getChildren()[0];
@@ -618,7 +554,8 @@ void NativeReanimatedModule::performOperations() {
       // affectedLayoutableNodes.reserve(1024);
       // newRoot->layoutIfNeeded(&affectedLayoutableNodes);
 
-      propsRegistry_->setLastReanimatedRoot(newRoot);
+      propsRegistry_->setLastReanimatedRoot(
+          newRoot); // TODO: synchronize access?
 
       return newRoot;
     });
