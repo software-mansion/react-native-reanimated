@@ -481,7 +481,7 @@ void NativeReanimatedModule::updateProps(
 
   if (isThereAnyLayoutProp(rt, props)) {
     operationsInBatch_.emplace_back(
-        shadowNode, std::make_shared<jsi::Value>(rt, props));
+        shadowNode, std::make_unique<jsi::Value>(rt, props));
   } else {
     // TODO: batch with layout props changes?
     Tag tag = shadowNode->getTag();
@@ -496,7 +496,7 @@ void NativeReanimatedModule::performOperations() {
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
-      std::vector<std::pair<ShadowNode::Shared, std::shared_ptr<jsi::Value>>>();
+      std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
   auto copiedTagsToRemove = std::move(tagsToRemove_);
   tagsToRemove_ = std::vector<Tag>();
