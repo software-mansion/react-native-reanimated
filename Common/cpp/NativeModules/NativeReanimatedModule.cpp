@@ -7,7 +7,6 @@
 
 #include <functional>
 #include <memory>
-#include <set>
 #include <thread>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -546,6 +545,7 @@ void NativeReanimatedModule::performOperations() {
 
       auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
 
+      // skip ReanimatedCommitHook for this ShadowTree
       propsRegistry_->setLastReanimatedRoot(newRoot);
 
       return newRoot;

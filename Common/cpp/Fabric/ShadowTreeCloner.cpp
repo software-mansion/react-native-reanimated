@@ -52,8 +52,6 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
     const auto &oldChildNode = *children.at(childIndex);
     react_native_assert(ShadowNode::sameFamily(oldChildNode, *newChildNode));
 
-    // newestShadowNodesRegistry_->set(newChildNode, parentNode.getTag());
-
     if (!parentNode.getSealed()) {
       // Optimization: if a ShadowNode is unsealed, we can directly update its
       // children instead of cloning the whole path to the root node.
