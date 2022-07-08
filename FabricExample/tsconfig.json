@@ -3,5 +3,6 @@
   "compilerOptions": {
     "baseUrl": "."
   },
+  "exclude": [],
   "include": ["react-native-reanimated-tests.tsx"]
 }
