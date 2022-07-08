@@ -29,12 +29,12 @@ class PropsRegistry {
 
   void setLastReanimatedRoot(
       RootShadowNode::Shared const &lastReanimatedRoot) noexcept {
-    lastReanimatedRoot_ = &*lastReanimatedRoot;
+    lastReanimatedRoot_ = lastReanimatedRoot;
   }
 
   bool isLastReanimatedRoot(
       RootShadowNode::Shared const &newRootShadowNode) const noexcept {
-    return &*newRootShadowNode == lastReanimatedRoot_;
+    return newRootShadowNode == lastReanimatedRoot_;
   }
 
  private:
@@ -42,7 +42,7 @@ class PropsRegistry {
 
   mutable std::mutex mutex_; // Protects `map_`.
 
-  const RootShadowNode *lastReanimatedRoot_ = nullptr;
+  RootShadowNode::Shared lastReanimatedRoot_;
 };
 
 } // namespace reanimated

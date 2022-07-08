@@ -546,8 +546,7 @@ void NativeReanimatedModule::performOperations() {
 
       auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
 
-      propsRegistry_->setLastReanimatedRoot(
-          newRoot); // TODO: synchronize access?
+      propsRegistry_->setLastReanimatedRoot(newRoot);
 
       return newRoot;
     });
