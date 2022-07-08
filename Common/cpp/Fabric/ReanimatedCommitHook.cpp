@@ -117,9 +117,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   // trigger layout here (commit hooks are executed after RN calls
   // layoutIfNeeded!)
-  std::vector<LayoutableShadowNode const *> affectedLayoutableNodes{};
-  affectedLayoutableNodes.reserve(1024);
-  newRootShadowNode2->layoutIfNeeded(&affectedLayoutableNodes);
+  newRootShadowNode2->layoutIfNeeded();
 
   return newRootShadowNode2;
 }
