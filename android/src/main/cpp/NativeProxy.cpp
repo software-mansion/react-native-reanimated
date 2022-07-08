@@ -66,7 +66,7 @@ NativeProxy::NativeProxy(
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
   uiManager->registerCommitHook(*commitHook_);
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      *rt, runtimeExecutor, uiManager);
+      *rt, runtimeExecutor, uiManager, propsRegistry_);
 #endif
 }
 
