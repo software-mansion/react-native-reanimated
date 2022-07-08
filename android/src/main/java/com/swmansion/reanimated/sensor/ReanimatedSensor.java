@@ -23,7 +23,11 @@ public class ReanimatedSensor {
     sensorManager =
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
     this.sensorType = sensorType;
-    this.interval = interval;
+    if (interval == -1) {
+      this.interval = SensorManager.SENSOR_DELAY_UI;
+    } else {
+      this.interval = interval;
+    }
   }
 
   boolean initialize() {

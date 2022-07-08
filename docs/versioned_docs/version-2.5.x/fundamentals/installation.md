@@ -10,7 +10,7 @@ The steps needed to get reanimated properly configured are listed in the below p
 
 ## Installing the package
 
-First step is to install `react-native-reanimated` alpha as a dependency in your project:
+First step is to install `react-native-reanimated` as a dependency in your project:
 
 ```bash
 yarn add react-native-reanimated
@@ -36,6 +36,18 @@ Reanimated plugin has to be listed last.
 
 :::
 
+:::info
+
+After adding the `react-native-reanimated/plugin` to your project you may encounter a false-positive "Reanimated 2 failed to create a worklet" error. In most cases, this can be fixed by cleaning the application's cache. Depending on your workflow or favourite package manager that could be done by:
+
+- `yarn start --reset-cache`
+- `npm start -- --reset-cache`
+- `expo start -c`
+
+or other.
+
+:::
+
 ## Android
 
 No additional steps are necessary.
@@ -56,4 +68,8 @@ As reanimated is setup to configure and install automatically, the only thing yo
 ## Sample React-Native project configured with Reanimated
 
 If you have troubles configuring Reanimated in your project, or just want to try the library without the need of setting it up ion a fresh project we recommend checking our [Reanimated Playground](https://github.com/software-mansion-labs/reanimated-2-playground) repo, which is essentially a fresh React-Native app with Reanimated library installed and configured properly.
-[Visit the Playground repo here] or copy the command below to do a git clone:
+[Visit the Playground repo here](https://github.com/software-mansion-labs/reanimated-2-playground) or copy the command below to do a git clone:
+
+```
+git clone https://github.com/software-mansion-labs/reanimated-2-playground.git
+```
