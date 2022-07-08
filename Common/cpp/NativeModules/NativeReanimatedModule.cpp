@@ -541,18 +541,7 @@ void NativeReanimatedModule::performOperations() {
 
       shadowTreeCloner.updateYogaChildren();
 
-      // assert(rootNode->getChildren().size() > 0);
-      // auto oldChild = rootNode->getChildren()[0];
-      // auto newChild = oldChild->clone({});
-      // rootNode->replaceChild(*oldChild, newChild, 0);
-
       auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
-
-      // newRoot->layoutIfNeeded();
-
-      // std::vector<LayoutableShadowNode const *> affectedLayoutableNodes{};
-      // affectedLayoutableNodes.reserve(1024);
-      // newRoot->layoutIfNeeded(&affectedLayoutableNodes);
 
       propsRegistry_->setLastReanimatedRoot(
           newRoot); // TODO: synchronize access?
