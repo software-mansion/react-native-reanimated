@@ -25,6 +25,8 @@ class PropsRegistry {
                     ShadowNodeFamily const &family,
                     const folly::dynamic &dynProps)> callback);
 
+  void remove(const Tag tag);
+
   void setLastReanimatedRoot(
       RootShadowNode::Shared const &lastReanimatedRoot) noexcept {
     lastReanimatedRoot_ = &*lastReanimatedRoot;

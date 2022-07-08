@@ -26,6 +26,10 @@ void PropsRegistry::for_each(std::function<void(
   }
 }
 
+void PropsRegistry::remove(const Tag tag) {
+  map_.erase(tag);
+}
+
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

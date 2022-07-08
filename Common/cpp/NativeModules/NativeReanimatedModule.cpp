@@ -536,7 +536,10 @@ void NativeReanimatedModule::performOperations() {
           propsRegistry_->set(pair.first, dynamicFromValue(rt, *pair.second));
         }
 
-        // TODO: remove from propsRegistry_
+        // remove from PropsRegistry
+        for (auto tag : copiedTagsToRemove) {
+          propsRegistry_->remove(tag);
+        }
       }
 
       shadowTreeCloner.updateYogaChildren();
