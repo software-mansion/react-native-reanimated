@@ -1,5 +1,6 @@
 #include <react/renderer/core/ComponentDescriptor.h>
 
+#include <iostream>
 #include <set>
 
 #include "FabricUtils.h"
@@ -17,6 +18,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry or re-calculate layout
+    std::cout << "ReanimatedCommitHook: skipped" << std::endl;
     return newRootShadowNode;
   }
 
@@ -28,6 +30,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   {
     auto lock = propsRegistry_->createLock();
+
+    static int i = 0;
+    std::cout << "[" << i++
+              << "] ReanimatedCommitHook: " << propsRegistry_->size()
+              << " changes" << std::endl;
 
     propsRegistry_->for_each(
         [&](ShadowNodeFamily const &family, const folly::dynamic &dynProps) {

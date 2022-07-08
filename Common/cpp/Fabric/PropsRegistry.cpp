@@ -16,6 +16,20 @@ void PropsRegistry::set(
   map_[shadowNode->getTag()] = std::make_pair(shadowNode, dynProps);
 }
 
+bool PropsRegistry::has(const Tag tag) const {
+  return map_.find(tag) != map_.cend();
+}
+
+folly::dynamic PropsRegistry::get(const Tag tag) const {
+  const auto it = map_.find(tag);
+  react_native_assert(it != map_.cend());
+  return it->second.second;
+}
+
+size_t PropsRegistry::size() const {
+  return map_.size();
+}
+
 void PropsRegistry::for_each(std::function<void(
                                  ShadowNodeFamily const &family,
                                  const folly::dynamic &dynProps)> callback) {

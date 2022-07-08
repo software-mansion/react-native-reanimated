@@ -21,11 +21,17 @@ class PropsRegistry {
 
   void set(ShadowNode::Shared shadowNode, folly::dynamic &&dynProps);
 
+  bool has(const Tag tag) const;
+
+  folly::dynamic get(const Tag tag) const;
+
   void for_each(std::function<void(
                     ShadowNodeFamily const &family,
                     const folly::dynamic &dynProps)> callback);
 
   void remove(const Tag tag);
+
+  size_t size() const;
 
   void setLastReanimatedRoot(
       RootShadowNode::Shared const &lastReanimatedRoot) noexcept {

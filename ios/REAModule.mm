@@ -85,7 +85,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
     callback(runtime);
   };
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(runtime, syncRuntimeExecutor, uiManager);
+  ReanimatedUIManagerBinding::createAndInstallIfNeeded(runtime, syncRuntimeExecutor, uiManager, propsRegistry_);
 }
 
 - (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
