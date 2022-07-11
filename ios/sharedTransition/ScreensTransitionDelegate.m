@@ -56,6 +56,7 @@
   REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
   if ([transitionType isEqualToString:@"sharedElementTransition"]) {
     REASnapshot *after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
+    [_animationsManager onViewTransition:fromView before:before after:after];
     [_animationsManager onViewTransition:toView before:before after:after];
   } else {
     [_animationsManager onScreenTransition:fromView finish:before transitionType:transitionType];
