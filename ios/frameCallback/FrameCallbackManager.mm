@@ -26,22 +26,26 @@
 - (void)frameCallback
 {
   // todo
+  // execute callbacks _frameCallbackRegistry
 }
 
 - (NSNumber *)registerFrameCallback:(void (^)())callback
 {
   // todo
+  // add to _frameCallbackRegistry
   return @0;
 }
 
 - (void)unregisterFrameCallback:(NSNumber *)frameCallbackId
 {
   // todo
+  // remove from _frameCallbackRegistry
 }
 
 - (void)manageStateFrameCallback:(NSNumber *)frameCallbackId state:(bool)state
 {
   // todo
+  // implement stop / start
 }
 
 @end

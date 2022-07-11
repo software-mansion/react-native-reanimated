@@ -88,6 +88,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
+      platformDepMethodsHolder_(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -413,21 +414,23 @@ void NativeReanimatedModule::unregisterSensor(
 jsi::Value NativeReanimatedModule::registerFrameCallback(
     jsi::Runtime &rt,
     const jsi::Value &callback) {
-  // todo
-  return jsi::Value::null();
+  return platformDepMethodsHolder_.registerFrameCallbackFunction(
+      [&]() { callback.asObject(rt).asFunction(rt).call(rt); });
 }
 
 void NativeReanimatedModule::unregisterFrameCallback(
     jsi::Runtime &rt,
     const jsi::Value &frameCallbackId) {
-  // todo
+  platformDepMethodsHolder_.unregisterFrameCallbackSensorFunction(
+      frameCallbackId.asNumber());
 }
 
 void NativeReanimatedModule::manageStateFrameCallback(
     jsi::Runtime &rt,
     const jsi::Value &frameCallbackId,
     const jsi::Value &state) {
-  // todo
+  platformDepMethodsHolder_.frameCallbackManageStateFunction(
+      frameCallbackId.asNumber(), state.asBool());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

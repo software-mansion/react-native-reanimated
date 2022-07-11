@@ -1,3 +1,4 @@
+#import <RNReanimated/FrameCallbackManager.h>
 #import <RNReanimated/LayoutAnimationsProxy.h>
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
@@ -328,6 +329,21 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
   // end sensors
 
+  // frameCallback
+  FrameCallbackManager *framecallbackManager = [[FrameCallbackManager alloc] init];
+  auto registerFrameCallbackFunction = [=](std::function<void()> callback) -> int {
+    return [[framecallbackManager registerFrameCallback:^() {
+      callback();
+    }] intValue];
+  };
+  auto unregisterFrameCallbackFunction = [=](int frameCallbackId) -> void {
+    [framecallbackManager unregisterFrameCallback:[NSNumber numberWithInt:frameCallbackId]];
+  };
+  auto manageStateFrameCallbackFunction = [=](int frameCallbackId, bool state) -> void {
+    [framecallbackManager manageStateFrameCallback:[NSNumber numberWithInt:frameCallbackId] state:state];
+  };
+  // end frameCallback
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -342,6 +358,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
+      registerFrameCallbackFunction,
+      unregisterFrameCallbackFunction,
+      manageStateFrameCallbackFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(

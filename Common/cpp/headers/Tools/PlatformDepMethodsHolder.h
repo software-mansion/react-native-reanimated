@@ -79,6 +79,9 @@ struct PlatformDepMethodsHolder {
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
+  RegisterFrameCallbackFunction registerFrameCallbackFunction;
+  UnregisterFrameCallbackSensorFunction unregisterFrameCallbackSensorFunction;
+  FrameCallbackManageStateFunction frameCallbackManageStateFunction;
 };
 
 } // namespace reanimated
