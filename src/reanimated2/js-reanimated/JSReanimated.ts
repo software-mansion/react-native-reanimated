@@ -126,4 +126,17 @@ export default class JSReanimated extends NativeReanimated {
       throw Error('This method can be only use in Jest testing.');
     }
   }
+
+  registerFrameCallback(callback: () => void): number {
+    // todo
+    return -1;
+  }
+
+  unregisterFrameCallback(frameCallbackId: number): void {
+    // todo
+  }
+
+  manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
+    // todo
+  }
 }

@@ -2,6 +2,7 @@ import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 
 import AnimatedSensorExample from './src/AnimatedSensorExample';
+import FrameCallbackExample from './src/FrameCallbackExample';
 import AnimatedTextInputExample from './src/AnimatedTextInputExample';
 import AnimatedTextWidthExample from './src/AnimatedTextWidthExample';
 import BokehExample from './src/BokehExample';
@@ -88,6 +89,12 @@ const EXAMPLES = [
     icon: '📡',
     title: 'useAnimatedSensor',
     component: AnimatedSensorExample,
+  },
+  {
+    name: 'FrameCallbackExample',
+    icon: '🗣',
+    title: 'useFrameCallback',
+    component: FrameCallbackExample,
   },
   {
     name: 'ScrollViewExample',

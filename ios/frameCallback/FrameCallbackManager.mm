@@ -33,6 +33,7 @@
 {
   // todo
   // add to _frameCallbackRegistry
+  callback(); // just for test
   return @0;
 }
 

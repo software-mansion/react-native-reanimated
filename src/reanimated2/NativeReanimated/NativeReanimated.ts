@@ -97,4 +97,16 @@ export class NativeReanimated {
   configureProps(uiProps: string[], nativeProps: string[]): void {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
+
+  registerFrameCallback(callback: () => void): number {
+    return this.InnerNativeModule.registerFrameCallback(callback);
+  }
+
+  unregisterFrameCallback(frameCallbackId: number): void {
+    this.InnerNativeModule.unregisterFrameCallback(frameCallbackId);
+  }
+
+  manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
+    this.InnerNativeModule.manageStateFrameCallback(frameCallbackId, state);
+  }
 }
