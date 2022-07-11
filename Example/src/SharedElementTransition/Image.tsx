@@ -129,7 +129,7 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'none',
+          // stackAnimation: 'none',
         }}>
         <Stack.Screen
           name="Screen1"

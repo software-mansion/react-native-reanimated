@@ -30,6 +30,7 @@
 
 @implementation ScreensTransitionDelegate {
   RCTUIManager *_uiManager;
+  NSMutableDictionary *_initialValuesSnapshotBackup;
 }
 
 @synthesize sharedTransitionsItems;
@@ -38,6 +39,7 @@
 {
   self = [super init];
   sharedTransitionsItems = [NSMutableDictionary<NSString *, NSMutableArray<SharedViewConfig *> *> new];
+  _initialValuesSnapshotBackup = [NSMutableDictionary new];
   return self;
 }
 
@@ -54,8 +56,15 @@
                                    transitionType:(NSString *)transitionType
 {
   REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
+  _initialValuesSnapshotBackup[fromView.reactTag] = before;
   if ([transitionType isEqualToString:@"sharedElementTransition"]) {
-    REASnapshot *after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
+    REASnapshot *after = _initialValuesSnapshotBackup[toView.reactTag];
+    if (after != nil) {
+      [_initialValuesSnapshotBackup removeObjectForKey:toView.reactTag];
+    }
+    else {
+      after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
+    }
     [_animationsManager onViewTransition:fromView before:before after:after];
     [_animationsManager onViewTransition:toView before:before after:after];
   } else {

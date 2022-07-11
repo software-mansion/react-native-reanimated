@@ -90,7 +90,7 @@ index e0dd2ba..d75709b 100644
  
    [self->_animationTimer setPaused:YES];
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
-index 6f1d46c..8fd4286 100644
+index 6f1d46c..204bd49 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 @@ -1,5 +1,18 @@
@@ -107,8 +107,8 @@ index 6f1d46c..8fd4286 100644
  @protocol RNSSharedElementTransitionsDelegate <NSObject>
  
 +@property NSMutableDictionary<NSString *, NSMutableArray<SharedViewConfig *>*> * sharedTransitionsItems;
-+- (void)afterPreparingCallback;
 +
++- (void)afterPreparingCallback;
  - (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
                                           fromView:(UIView *)fromView
                                  fromViewConverter:(UIView *)startingViewConverter
