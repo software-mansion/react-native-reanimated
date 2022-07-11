@@ -13,7 +13,14 @@ std::lock_guard<std::mutex> PropsRegistry::createLock() const {
 void PropsRegistry::set(
     ShadowNode::Shared shadowNode,
     folly::dynamic &&dynProps) {
-  map_[shadowNode->getTag()] = std::make_pair(shadowNode, dynProps);
+  const auto tag = shadowNode->getTag();
+  const auto it = map_.find(tag);
+  if (it == map_.cend()) {
+    map_[tag] = std::make_pair(shadowNode, dynProps);
+  } else {
+    // it->second.first = shadowNode;
+    it->second.second.update(dynProps);
+  }
 }
 
 bool PropsRegistry::has(const Tag tag) const {
