@@ -27,6 +27,7 @@ import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import CoreAnimationSpringExample from './src/CoreAnimationSpringExample';
 
 const EXAMPLES = [
   {
@@ -185,6 +186,10 @@ function ItemSeparator() {
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  if (true) {
+    return <CoreAnimationSpringExample />;
+  }
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <NavigationContainer>
