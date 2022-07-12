@@ -52,6 +52,7 @@ using MeasureFunction =
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using TimeProviderFunction = std::function<double(void)>;
+using CreateSpringAnimationFunction = std::function<double(void)>;
 
 using RegisterSensorFunction =
     std::function<int(int, int, std::function<void(double[])>)>;
@@ -73,6 +74,7 @@ struct PlatformDepMethodsHolder {
   ConfigurePropsFunction configurePropsFunction;
 #endif
   TimeProviderFunction getCurrentTime;
+  CreateSpringAnimationFunction createSpringAnimation;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;

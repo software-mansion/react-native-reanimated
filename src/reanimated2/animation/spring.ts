@@ -1,3 +1,4 @@
+/* global _createSpringAnimation */
 import { defineAnimation } from './util';
 import {
   Animation,
@@ -57,6 +58,9 @@ export function withSpring(
           ((config as any)[key] = userConfig[key as keyof typeof userConfig])
       );
     }
+
+    const springId = _createSpringAnimation();
+    console.log(springId);
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
       const { toValue, lastTimestamp, current, velocity } = animation;

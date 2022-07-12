@@ -81,6 +81,7 @@ const globals = new Set([
   'LayoutAnimationRepository',
   '_stopObservingProgress',
   '_startObservingProgress',
+  '_createSpringAnimation',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist

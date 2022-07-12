@@ -315,6 +315,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
+  auto createSpringAnimation = []() { return 42; };
+
   // sensors
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
   auto registerSensorFunction = [=](int sensorType, int interval, std::function<void(double[])> setter) -> int {
@@ -339,6 +341,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      createSpringAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
