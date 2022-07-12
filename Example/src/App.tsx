@@ -34,6 +34,7 @@ import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import FrameCallbackExample from './FrameCallbackExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
@@ -184,6 +185,10 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
+  },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: 'Frame callback example',
   },
 };
 
