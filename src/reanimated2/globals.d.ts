@@ -10,7 +10,7 @@ declare global {
   const _eventTimestamp: number;
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const _getCurrentTime: () => number;
-  const _createSpringAnimation: () => number;
+  const _createSpringAnimation: () => () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _startObservingProgress: (
     tag: number,

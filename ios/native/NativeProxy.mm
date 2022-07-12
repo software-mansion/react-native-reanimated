@@ -2,6 +2,7 @@
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
+#import <RNReanimated/REACoreAnimationManager.h>
 #import <RNReanimated/REAIOSErrorHandler.h>
 #import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
@@ -315,7 +316,20 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
-  auto createSpringAnimation = []() { return 42; };
+  // CoreAnimation
+  REACoreAnimationManager *coreAnimationManager = [[REACoreAnimationManager alloc] init];
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  auto createSpringAnimation = [coreAnimationManager, wrt]() {
+    [coreAnimationManager start];
+    jsi::Runtime &rt = *wrt.lock();
+    return jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "getSpringValue"),
+        0,
+        [coreAnimationManager](
+            jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept
+        -> jsi::Value { return coreAnimationManager.progress; });
+  };
 
   // sensors
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];

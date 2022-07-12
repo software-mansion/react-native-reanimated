@@ -18,7 +18,7 @@ export default function CoreAnimationSpringExample() {
 
   const handlePress = () => {
     sv.value = withSpring(100, {}, () => {
-      sv.value = withSpring(0);
+      // sv.value = withSpring(0);
     });
   };
 
@@ -37,8 +37,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   box: {
-    width: 150,
-    height: 150,
+    width: 130,
+    height: 130,
     marginVertical: 30,
     backgroundColor: 'navy',
   },
