@@ -4,6 +4,7 @@ import MutableValue from './MutableValue';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { Timestamp, NestedObjectValues } from '../commonTypes';
 import { isJest } from '../PlatformChecker';
+import FrameCallbackRegistry from './FrameCallbackRegistry';
 
 export default class JSReanimated extends NativeReanimated {
   _valueSetter?: <T>(value: T) => void = undefined;
@@ -12,6 +13,8 @@ export default class JSReanimated extends NativeReanimated {
   _mapperRegistry: MapperRegistry<any> = new MapperRegistry(this);
   _frames: ((timestamp: Timestamp) => void)[] = [];
   timeProvider: { now: () => number };
+
+  frameCallbackRegistry = new FrameCallbackRegistry();
 
   constructor() {
     super(false);
@@ -127,16 +130,15 @@ export default class JSReanimated extends NativeReanimated {
     }
   }
 
-  registerFrameCallback(_callback: () => void): number {
-    // todo
-    return -1;
+  registerFrameCallback(callback: () => void): number {
+    return this.frameCallbackRegistry.registerFrameCallback(callback);
   }
 
-  unregisterFrameCallback(_frameCallbackId: number): void {
-    // todo
+  unregisterFrameCallback(frameCallbackId: number): void {
+    this.frameCallbackRegistry.unregisterFrameCallback(frameCallbackId);
   }
 
-  manageStateFrameCallback(_frameCallbackId: number, _state: boolean): void {
-    // todo
+  manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
+    this.frameCallbackRegistry.manageStateFrameCallback(frameCallbackId, state);
   }
 }

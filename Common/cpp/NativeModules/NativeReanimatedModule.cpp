@@ -436,7 +436,7 @@ void NativeReanimatedModule::manageStateFrameCallback(
     const jsi::Value &frameCallbackId,
     const jsi::Value &state) {
   platformDepMethodsHolder_.frameCallbackManageStateFunction(
-      frameCallbackId.asNumber(), state.asBool());
+      frameCallbackId.asNumber(), state.getBool());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
