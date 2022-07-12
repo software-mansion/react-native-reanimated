@@ -15,9 +15,11 @@ export function useFrameCallback(
   const ref = useRef<FrameCallback>({
     start: () => {
       NativeReanimated.manageStateFrameCallback(ref.current.callbackId, true);
+      ref.current.state = true;
     },
     stop: () => {
       NativeReanimated.manageStateFrameCallback(ref.current.callbackId, false);
+      ref.current.state = false;
     },
     state: false,
     callbackId: -1,
@@ -26,13 +28,12 @@ export function useFrameCallback(
   if (ref.current.callbackId === -1) {
     ref.current.callbackId = NativeReanimated.registerFrameCallback(callback);
 
-    if (autostart) ref.current.start.apply({});
+    if (autostart) {
+      ref.current.start();
+    }
   }
 
   useEffect(() => {
-    if (ref.current.callbackId === -1)
-      ref.current.callbackId = NativeReanimated.registerFrameCallback(callback);
-
     return () => {
       NativeReanimated.unregisterFrameCallback(ref.current.callbackId);
       ref.current.state = false;
