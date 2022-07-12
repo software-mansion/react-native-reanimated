@@ -8,11 +8,13 @@ import React from 'react';
 
 export default function FrameCallbackExample() {
   const frameCallback = useFrameCallback(() => {
-    console.log("callback");
-  });
+    console.log('callback');
+  }, false);
+
+  frameCallback.start();
 
   const animatedStyle = useAnimatedStyle(() => {
-    return { };
+    return {};
   });
 
   return (

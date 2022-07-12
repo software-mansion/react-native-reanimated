@@ -127,16 +127,16 @@ export default class JSReanimated extends NativeReanimated {
     }
   }
 
-  registerFrameCallback(callback: () => void): number {
+  registerFrameCallback(_callback: () => void): number {
     // todo
     return -1;
   }
 
-  unregisterFrameCallback(frameCallbackId: number): void {
+  unregisterFrameCallback(_frameCallbackId: number): void {
     // todo
   }
 
-  manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
+  manageStateFrameCallback(_frameCallbackId: number, _state: boolean): void {
     // todo
   }
 }
