@@ -3,8 +3,9 @@
 @implementation FrameCallbackManager {
   NSNumber *_nextCallbackId;
   CADisplayLink *displayLink;
-  NSMutableDictionary *_frameCallbackRegistry;
+  NSMutableDictionary<NSNumber *, void (^)()> *_frameCallbackRegistry;
   NSMutableSet<NSNumber *> *_frameCallbackActive;
+  Boolean isAnimationRunning;
 }
 
 - (instancetype)init
@@ -13,19 +14,26 @@
   _frameCallbackRegistry = [[NSMutableDictionary<NSNumber *, void (^)()> alloc] init];
   _frameCallbackActive = [NSMutableSet set];
   _nextCallbackId = @0;
+  isAnimationRunning = false;
   return self;
 }
 
 - (void)runAnimation
 {
-  displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(frameCallback)];
-  [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  if (!isAnimationRunning) {
+    displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(frameCallback)];
+    [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  }
+
+  isAnimationRunning = true;
 }
 
 - (void)stopAnimation
 {
   [displayLink invalidate];
   displayLink = nil;
+
+  isAnimationRunning = false;
 }
 
 - (void)frameCallback
@@ -41,7 +49,7 @@
   NSNumber *callbackId = [_nextCallbackId copy];
   _nextCallbackId = [NSNumber numberWithInt:[_nextCallbackId intValue] + 1];
 
-  [_frameCallbackRegistry setObject:callback forKey:callbackId];
+  _frameCallbackRegistry[callbackId] = callback;
 
   return callbackId;
 }
@@ -49,24 +57,20 @@
 - (void)unregisterFrameCallback:(NSNumber *)frameCallbackId
 {
   [self manageStateFrameCallback:frameCallbackId state:false];
-
   [_frameCallbackRegistry removeObjectForKey:frameCallbackId];
-  [_frameCallbackActive removeObject:frameCallbackId];
-
-  if ([_frameCallbackActive count] == 0)
-    [self stopAnimation];
 }
 
 - (void)manageStateFrameCallback:(NSNumber *)frameCallbackId state:(bool)state
 {
   if (state) {
     [_frameCallbackActive addObject:frameCallbackId];
-    if ([_frameCallbackActive count] == 1)
-      [self runAnimation];
+    [self runAnimation];
   } else {
     [_frameCallbackActive removeObject:frameCallbackId];
-    if ([_frameCallbackActive count] == 0)
+
+    if ([_frameCallbackActive count] == 0) {
       [self stopAnimation];
+    }
   }
 }
 
