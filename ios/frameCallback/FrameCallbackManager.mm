@@ -1,13 +1,18 @@
 #include <RNReanimated/FrameCallbackManager.h>
 
 @implementation FrameCallbackManager {
+  NSNumber *_nextCallbackId;
   CADisplayLink *displayLink;
-  NSDictionary *_frameCallbackRegistry;
+  NSMutableDictionary *_frameCallbackRegistry;
+  NSMutableSet<NSNumber *> *_frameCallbackActive;
 }
 
 - (instancetype)init
 {
   self = [super init];
+  _frameCallbackRegistry = [[NSMutableDictionary<NSNumber *, void (^)()> alloc] init];
+  _frameCallbackActive = [NSMutableSet set];
+  _nextCallbackId = @0;
   return self;
 }
 
@@ -25,28 +30,44 @@
 
 - (void)frameCallback
 {
-  // todo
-  // execute callbacks _frameCallbackRegistry
+  for (NSNumber *key in _frameCallbackActive) {
+    auto callback = _frameCallbackRegistry[key];
+    [callback invoke];
+  }
 }
 
 - (NSNumber *)registerFrameCallback:(void (^)())callback
 {
-  // todo
-  // add to _frameCallbackRegistry
-  callback(); // just for test
-  return @0;
+  NSNumber *callbackId = [_nextCallbackId copy];
+  _nextCallbackId = [NSNumber numberWithInt:[_nextCallbackId intValue] + 1];
+
+  [_frameCallbackRegistry setObject:callback forKey:callbackId];
+
+  return callbackId;
 }
 
 - (void)unregisterFrameCallback:(NSNumber *)frameCallbackId
 {
-  // todo
-  // remove from _frameCallbackRegistry
+  [self manageStateFrameCallback:frameCallbackId state:false];
+
+  [_frameCallbackRegistry removeObjectForKey:frameCallbackId];
+  [_frameCallbackActive removeObject:frameCallbackId];
+
+  if ([_frameCallbackActive count] == 0)
+    [self stopAnimation];
 }
 
 - (void)manageStateFrameCallback:(NSNumber *)frameCallbackId state:(bool)state
 {
-  // todo
-  // implement stop / start
+  if (state) {
+    [_frameCallbackActive addObject:frameCallbackId];
+    if ([_frameCallbackActive count] == 1)
+      [self runAnimation];
+  } else {
+    [_frameCallbackActive removeObject:frameCallbackId];
+    if ([_frameCallbackActive count] == 0)
+      [self stopAnimation];
+  }
 }
 
 @end

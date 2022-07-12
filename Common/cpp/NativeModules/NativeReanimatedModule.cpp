@@ -414,8 +414,14 @@ void NativeReanimatedModule::unregisterSensor(
 jsi::Value NativeReanimatedModule::registerFrameCallback(
     jsi::Runtime &rt,
     const jsi::Value &callback) {
+  auto callbackSV = ShareableValue::adapt(rt, callback, this);
   return platformDepMethodsHolder_.registerFrameCallbackFunction(
-      [&]() { callback.asObject(rt).asFunction(rt).call(rt); });
+      [this, callbackSV]() {
+        callbackSV->getValue(*runtime)
+            .asObject(*runtime)
+            .asFunction(*runtime)
+            .call(*runtime);
+      });
 }
 
 void NativeReanimatedModule::unregisterFrameCallback(
