@@ -7,6 +7,7 @@ const { transformSync } = require('@babel/core');
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
 const functionArgsToWorkletize = new Map([
+  ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
   ['createAnimatedPropAdapter', [0]],
