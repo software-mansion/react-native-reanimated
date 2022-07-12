@@ -34,6 +34,10 @@ export function useFrameCallback(
   }
 
   useEffect(() => {
+    if (ref.current.callbackId === -1) {
+      ref.current.callbackId = NativeReanimated.registerFrameCallback(callback);
+    }
+
     return () => {
       NativeReanimated.unregisterFrameCallback(ref.current.callbackId);
       ref.current.state = false;
