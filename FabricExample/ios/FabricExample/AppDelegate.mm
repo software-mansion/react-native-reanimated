@@ -18,7 +18,60 @@
 
 static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
-@interface AppDelegate () <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate> {
+// source: https://newbedev.com/core-animation-progress-callback
+
+@protocol TAProgressLayerProtocol <NSObject>
+
+- (void)progressUpdatedTo:(CGFloat)progress;
+
+@end
+
+@interface TAProgressLayer : CALayer
+
+@property CGFloat progress;
+@property (weak) id<TAProgressLayerProtocol> delegate;
+
+@end
+
+@implementation TAProgressLayer
+
+// We must copy across our custom properties since Core Animation makes a copy
+// of the layer that it's animating.
+
+- (id)initWithLayer:(id)layer
+{
+    self = [super initWithLayer:layer];
+    if (self) {
+        TAProgressLayer *otherLayer = (TAProgressLayer *)layer;
+        self.progress = otherLayer.progress;
+        self.delegate = otherLayer.delegate;
+    }
+    return self;
+}
+
+// Override needsDisplayForKey so that we can define progress as being animatable.
+
++ (BOOL)needsDisplayForKey:(NSString*)key {
+    if ([key isEqualToString:@"progress"]) {
+        return YES;
+    } else {
+        return [super needsDisplayForKey:key];
+    }
+}
+
+// Call our callback
+
+- (void)drawInContext:(CGContextRef)ctx
+{
+    if (self.delegate)
+    {
+        [self.delegate progressUpdatedTo:self.progress];
+    }
+}
+
+@end
+
+@interface AppDelegate () <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate, TAProgressLayerProtocol> {
   RCTTurboModuleManager *_turboModuleManager;
   RCTSurfacePresenterBridgeAdapter *_bridgeAdapter;
   std::shared_ptr<const facebook::react::ReactNativeConfig> _reactNativeConfig;
@@ -57,7 +110,26 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
+
+  TAProgressLayer *progressLayer = [TAProgressLayer layer];
+  progressLayer.frame = CGRectMake(0, -1, 1, 1);
+  progressLayer.delegate = self;
+  [self.window.layer addSublayer:progressLayer];
+
+  CASpringAnimation *animation = [CASpringAnimation animationWithKeyPath:@"progress"];
+  animation.duration = animation.settlingDuration;
+  animation.fromValue = @0;
+  animation.toValue = @1;
+  animation.fillMode = kCAFillModeForwards; // fixes zero progress issue for some number of final frames
+
+  [progressLayer addAnimation:animation forKey:@"progress"];
+
   return YES;
+}
+
+- (void)progressUpdatedTo:(CGFloat)progress
+{
+    NSLog(@"%f", progress);
 }
 
 /// This method controls whether the `concurrentRoot`feature of React18 is turned on or off.
