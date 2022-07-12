@@ -208,6 +208,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
@@ -270,7 +271,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   [animationsManager setAnimationStartingBlock:^(
                          NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
@@ -318,7 +318,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // CoreAnimation
   REACoreAnimationManager *coreAnimationManager = [[REACoreAnimationManager alloc] init];
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   auto createSpringAnimation = [coreAnimationManager, wrt]() {
     [coreAnimationManager start];
     jsi::Runtime &rt = *wrt.lock();

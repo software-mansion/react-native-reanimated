@@ -256,6 +256,18 @@ void NativeProxy::installJSIBindings(
 
   // Layout Animations End
 
+  auto createSpringAnimationFunction = [wrt]() {
+    jsi::Runtime &rt = *wrt.lock();
+    return jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "getSpringValue"),
+        0,
+        [](jsi::Runtime &runtime,
+           jsi::Value const &thisValue,
+           jsi::Value const *arguments,
+           size_t count) noexcept -> jsi::Value { return 42; });
+  };
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -267,6 +279,7 @@ void NativeProxy::installJSIBindings(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      createSpringAnimationFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction};
