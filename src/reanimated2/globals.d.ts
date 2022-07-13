@@ -12,7 +12,8 @@ declare global {
   const _getCurrentTime: () => number;
   const _createSpringAnimation: (
     fromValue: number,
-    toValue: number
+    toValue: number,
+    initialVelocity: number
   ) => () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _startObservingProgress: (

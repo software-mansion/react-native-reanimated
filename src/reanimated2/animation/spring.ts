@@ -66,7 +66,10 @@ export function withSpring(
         return true;
       }
 
+      animation.velocity =
+        (current - animation.current) / (_now - animation.lastTimestamp);
       animation.current = current;
+      animation.lastTimestamp = _now;
 
       return false;
     }
@@ -77,9 +80,12 @@ export function withSpring(
       now: Timestamp,
       previousAnimation: SpringAnimation
     ): void {
+      const initialVelocity =
+        previousAnimation?.velocity || animation.velocity || 0;
       animation.nativeSpringInstance = _createSpringAnimation(
         value,
-        toValue as number // TODO: support other types
+        toValue as number, // TODO: support other types
+        initialVelocity
       );
       animation.current = value;
       if (previousAnimation) {

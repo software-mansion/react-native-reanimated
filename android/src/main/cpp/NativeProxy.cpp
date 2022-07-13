@@ -256,19 +256,20 @@ void NativeProxy::installJSIBindings(
 
   // Layout Animations End
 
-  auto createSpringAnimationFunction = [wrt](float fromValue, float toValue) {
-    jsi::Runtime &rt = *wrt.lock();
-    return jsi::Function::createFromHostFunction(
-        rt,
-        jsi::PropNameID::forAscii(rt, "getSpringValue"),
-        0,
-        [](jsi::Runtime &runtime,
-           jsi::Value const &thisValue,
-           jsi::Value const *arguments,
-           size_t count) noexcept -> jsi::Value {
-          return jsi::Array::createWithElements(runtime, 42, true);
-        });
-  };
+  auto createSpringAnimationFunction =
+      [wrt](float fromValue, float toValue, float initialVelocity) {
+        jsi::Runtime &rt = *wrt.lock();
+        return jsi::Function::createFromHostFunction(
+            rt,
+            jsi::PropNameID::forAscii(rt, "getSpringValue"),
+            0,
+            [](jsi::Runtime &runtime,
+               jsi::Value const &thisValue,
+               jsi::Value const *arguments,
+               size_t count) noexcept -> jsi::Value {
+              return jsi::Array::createWithElements(runtime, 42, true);
+            });
+      };
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,

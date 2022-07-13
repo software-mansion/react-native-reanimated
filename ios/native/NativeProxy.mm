@@ -317,11 +317,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
   // CoreAnimation
-  auto createSpringAnimation = [wrt](float fromValue, float toValue) {
+  auto createSpringAnimation = [wrt](float fromValue, float toValue, float initialVelocity) {
     CASpringAnimation *animation = [[CASpringAnimation alloc] init];
     animation.duration = animation.settlingDuration;
     animation.fromValue = @(fromValue);
     animation.toValue = @(toValue);
+    animation.initialVelocity = initialVelocity;
 
     REACoreAnimationWrapper *wrapper = [[REACoreAnimationWrapper alloc] initWithAnimation:animation];
     jsi::Runtime &rt = *wrt.lock();
