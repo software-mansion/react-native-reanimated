@@ -17,9 +17,7 @@ export default function CoreAnimationSpringExample() {
   });
 
   const handlePress = () => {
-    sv.value = withSpring(100, {}, () => {
-      // sv.value = withSpring(0);
-    });
+    sv.value = withSpring(-100 + Math.random() * 200);
   };
 
   return (

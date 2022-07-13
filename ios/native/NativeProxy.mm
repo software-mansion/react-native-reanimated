@@ -318,8 +318,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // CoreAnimation
   REACoreAnimationManager *coreAnimationManager = [[REACoreAnimationManager alloc] init];
-  auto createSpringAnimation = [coreAnimationManager, wrt]() {
-    [coreAnimationManager start];
+  auto createSpringAnimation = [coreAnimationManager, wrt](float fromValue, float toValue) {
+    [coreAnimationManager startFromValue:fromValue toValue:toValue];
     jsi::Runtime &rt = *wrt.lock();
     return jsi::Function::createFromHostFunction(
         rt,

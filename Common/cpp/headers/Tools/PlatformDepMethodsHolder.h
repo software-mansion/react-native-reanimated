@@ -52,7 +52,8 @@ using MeasureFunction =
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using TimeProviderFunction = std::function<double(void)>;
-using CreateSpringAnimationFunction = std::function<jsi::Function(void)>;
+using CreateSpringAnimationFunction =
+    std::function<jsi::Function(float, float)>;
 
 using RegisterSensorFunction =
     std::function<int(int, int, std::function<void(double[])>)>;

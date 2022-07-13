@@ -59,10 +59,8 @@ export function withSpring(
       );
     }
 
-    const getSpringValue = _createSpringAnimation();
-
     function spring(animation: InnerSpringAnimation, _now: Timestamp): boolean {
-      animation.current = getSpringValue();
+      animation.current = animation.spring();
       return false;
     }
 
@@ -72,6 +70,7 @@ export function withSpring(
       now: Timestamp,
       previousAnimation: SpringAnimation
     ): void {
+      animation.spring = _createSpringAnimation(value, toValue as number);
       animation.current = value;
       if (previousAnimation) {
         animation.velocity =

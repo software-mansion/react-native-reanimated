@@ -22,6 +22,6 @@
 @property (nonatomic) BOOL active;
 
 - (instancetype)init;
-- (void)start;
+- (void)startFromValue:(float)fromValue toValue:(float)toValue;
 
 @end

@@ -304,13 +304,15 @@ void RuntimeDecorator::decorateUIRuntime(
                                          const jsi::Value &thisValue,
                                          const jsi::Value *args,
                                          const size_t count) -> jsi::Value {
-    return createSpringAnimation();
+    float fromValue = args[0].asNumber();
+    float toValue = args[1].asNumber();
+    return createSpringAnimation(fromValue, toValue);
   };
   jsi::Value createSpringAnimationHostFunction =
       jsi::Function::createFromHostFunction(
           rt,
           jsi::PropNameID::forAscii(rt, "_createSpringAnimation"),
-          0,
+          2,
           createSpringAnimationLambda);
   rt.global().setProperty(
       rt, "_createSpringAnimation", createSpringAnimationHostFunction);

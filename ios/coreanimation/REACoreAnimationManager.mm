@@ -54,7 +54,7 @@
   return self;
 }
 
-- (void)start
+- (void)startFromValue:(float)fromValue toValue:(float)toValue
 {
   if (_active) {
     return;
@@ -69,13 +69,13 @@
 
   CASpringAnimation *animation = [CASpringAnimation animationWithKeyPath:@"progress"];
   animation.duration = animation.settlingDuration;
-  animation.fromValue = @0;
-  animation.toValue = @90;
+  animation.fromValue = @(fromValue);
+  animation.toValue = @(toValue);
   animation.removedOnCompletion = YES;
   animation.delegate = self;
 
   [_progressLayer addAnimation:animation forKey:@"progress"];
-  _progressLayer.progress = 90; // fixes zero progress issue for some number of final frames
+  _progressLayer.progress = toValue; // fixes zero progress issue for some number of final frames
 }
 
 - (void)progressUpdatedTo:(CGFloat)progress
