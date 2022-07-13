@@ -28,10 +28,10 @@ function SpringBox({ offset, backgroundColor }) {
 const COLORS = ['tomato', 'gold', 'lime', 'deepskyblue', 'violet'];
 
 export default function CoreAnimationSpringExample() {
-  const [state, setState] = React.useState(1);
+  const [state, setState] = React.useState(0);
 
   const handlePress = () => {
-    setState((s) => s * -1);
+    setState((s) => (s === 1 ? -1 : 1));
   };
 
   return (

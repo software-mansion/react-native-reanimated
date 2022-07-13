@@ -9,6 +9,7 @@ import BouncingBoxExample from './src/BouncingBoxExample';
 import BubblesExample from './src/BubblesExample';
 import ChessboardExample from './src/ChessboardExample';
 import ColorExample from './src/ColorExample';
+import CoreAnimationSpringExample from './src/CoreAnimationSpringExample';
 import EmptyExample from './src/EmptyExample';
 import GestureHandlerExample from './src/GestureHandlerExample';
 import MeasureExample from './src/MeasureExample';
@@ -23,11 +24,11 @@ import ScreenStackExample from './src/ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './src/ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollToExample from './src/ScrollToExample';
 import ScrollViewExample from './src/ScrollViewExample';
+import SpringExample from './src/SpringExample';
 import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import CoreAnimationSpringExample from './src/CoreAnimationSpringExample';
 
 const EXAMPLES = [
   {
@@ -145,6 +146,18 @@ const EXAMPLES = [
     component: NewestShadowNodesRegistryRemoveExample,
   },
   {
+    name: 'SpringExample',
+    icon: '🎛️',
+    title: 'withSpring',
+    component: SpringExample,
+  },
+  {
+    name: 'CoreAnimationSpringExample',
+    icon: '🍎',
+    title: 'CoreAnimation',
+    component: CoreAnimationSpringExample,
+  },
+  {
     name: 'EmptyExample',
     icon: '👻',
     title: 'Empty',
@@ -186,9 +199,9 @@ function ItemSeparator() {
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  if (true) {
-    return <CoreAnimationSpringExample />;
-  }
+  // if (true) {
+  //   return <CoreAnimationSpringExample />;
+  // }
 
   return (
     <GestureHandlerRootView style={styles.container}>
