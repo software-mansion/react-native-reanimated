@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import <RNReanimated/REACoreAnimationSpring.h>
+#import <RNReanimated/REACoreAnimation.h>
 
 // CoreAnimation progress callback start
 // source: https://newbedev.com/core-animation-progress-callback
@@ -44,7 +44,7 @@
 
 // CoreAnimation progress callback end
 
-@implementation REACoreAnimationSpring {
+@implementation REACoreAnimation {
   TAProgressLayer *_progressLayer;
 }
 

@@ -16,7 +16,7 @@
 
 // CoreAnimation progress callback end
 
-@interface REACoreAnimationSpring : NSObject <TAProgressLayerProtocol, CAAnimationDelegate>
+@interface REACoreAnimation : NSObject <TAProgressLayerProtocol, CAAnimationDelegate>
 
 @property (nonatomic) CGFloat progress;
 @property (nonatomic) BOOL running;

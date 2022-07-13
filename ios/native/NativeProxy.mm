@@ -2,7 +2,7 @@
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REACoreAnimationSpring.h>
+#import <RNReanimated/REACoreAnimation.h>
 #import <RNReanimated/REAIOSErrorHandler.h>
 #import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
@@ -318,17 +318,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // CoreAnimation
   auto createSpringAnimation = [wrt](float fromValue, float toValue) {
-    REACoreAnimationSpring *nativeSpring = [[REACoreAnimationSpring alloc] initWithFromValue:fromValue toValue:toValue];
+    REACoreAnimation *animation = [[REACoreAnimation alloc] initWithFromValue:fromValue toValue:toValue];
     jsi::Runtime &rt = *wrt.lock();
     return jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "getSpringValue"),
         0,
-        [nativeSpring](
+        [animation](
             jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept
-        -> jsi::Value {
-          return jsi::Array::createWithElements(runtime, [nativeSpring progress], [nativeSpring running]);
-        });
+        -> jsi::Value { return jsi::Array::createWithElements(runtime, [animation progress], [animation running]); });
   };
 
   // sensors
