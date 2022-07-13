@@ -85,6 +85,9 @@ export function withSpring(
       animation.getCoreAnimationState = _createSpringAnimation(
         value,
         toValue as number, // TODO: support other types
+        config.mass,
+        config.stiffness,
+        config.damping,
         initialVelocity
       );
       animation.current = value;

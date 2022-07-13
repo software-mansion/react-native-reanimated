@@ -317,23 +317,27 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
   // CoreAnimation
-  auto createSpringAnimation = [wrt](float fromValue, float toValue, float initialVelocity) {
-    CASpringAnimation *animation = [[CASpringAnimation alloc] init];
-    animation.duration = animation.settlingDuration;
-    animation.fromValue = @(fromValue);
-    animation.toValue = @(toValue);
-    animation.initialVelocity = initialVelocity;
+  auto createSpringAnimation =
+      [wrt](float fromValue, float toValue, float mass, float stiffness, float damping, float initialVelocity) {
+        CASpringAnimation *animation = [[CASpringAnimation alloc] init];
+        animation.fromValue = @(fromValue);
+        animation.toValue = @(toValue);
+        animation.mass = mass;
+        animation.stiffness = stiffness;
+        animation.damping = damping;
+        animation.initialVelocity = initialVelocity;
+        animation.duration = animation.settlingDuration;
 
-    REACoreAnimationWrapper *wrapper = [[REACoreAnimationWrapper alloc] initWithAnimation:animation];
-    jsi::Runtime &rt = *wrt.lock();
-    return jsi::Function::createFromHostFunction(
-        rt,
-        jsi::PropNameID::forAscii(rt, "getCoreAnimationState"),
-        0,
-        [wrapper](
-            jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept
-        -> jsi::Value { return jsi::Array::createWithElements(runtime, [wrapper value], [wrapper running]); });
-  };
+        REACoreAnimationWrapper *wrapper = [[REACoreAnimationWrapper alloc] initWithAnimation:animation];
+        jsi::Runtime &rt = *wrt.lock();
+        return jsi::Function::createFromHostFunction(
+            rt,
+            jsi::PropNameID::forAscii(rt, "getCoreAnimationState"),
+            0,
+            [wrapper](
+                jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept
+            -> jsi::Value { return jsi::Array::createWithElements(runtime, [wrapper value], [wrapper running]); });
+      };
 
   // sensors
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];

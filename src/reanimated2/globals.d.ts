@@ -13,6 +13,9 @@ declare global {
   const _createSpringAnimation: (
     fromValue: number,
     toValue: number,
+    mass: number,
+    stiffness: number,
+    damping: number,
     initialVelocity: number
   ) => () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;

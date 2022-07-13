@@ -11,7 +11,7 @@ function SpringBox({ offset, backgroundColor }) {
   const sv = useSharedValue(0);
 
   React.useEffect(() => {
-    sv.value = withSpring(offset);
+    sv.value = withSpring(offset, { stiffness: 300, damping: 5 });
   }, [sv, offset]);
 
   const animatedStyle = useAnimatedStyle(() => {
