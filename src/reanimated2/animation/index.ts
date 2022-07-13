@@ -13,6 +13,8 @@ export { withSpring } from './spring';
 export type { SpringAnimation } from './spring';
 export { withDecay } from './decay';
 export type { DecayAnimation } from './decay';
+export { withKeyframe } from './keyframe';
+export type { KeyframeAnimation } from './keyframe';
 export { withDelay } from './delay';
 export { withRepeat } from './repeat';
 export { withSequence } from './sequence';

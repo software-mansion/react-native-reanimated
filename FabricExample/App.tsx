@@ -9,6 +9,7 @@ import BouncingBoxExample from './src/BouncingBoxExample';
 import BubblesExample from './src/BubblesExample';
 import ChessboardExample from './src/ChessboardExample';
 import ColorExample from './src/ColorExample';
+import CoreAnimationKeyframeExample from './src/CoreAnimationKeyframeExample';
 import CoreAnimationSpringExample from './src/CoreAnimationSpringExample';
 import EmptyExample from './src/EmptyExample';
 import GestureHandlerExample from './src/GestureHandlerExample';
@@ -202,6 +203,10 @@ export default function App() {
   // if (true) {
   //   return <CoreAnimationSpringExample />;
   // }
+
+  if (true) {
+    return <CoreAnimationKeyframeExample />;
+  }
 
   return (
     <GestureHandlerRootView style={styles.container}>
