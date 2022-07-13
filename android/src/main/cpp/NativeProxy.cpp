@@ -256,7 +256,7 @@ void NativeProxy::installJSIBindings(
 
   // Layout Animations End
 
-  auto createSpringAnimationFunction = [wrt]() {
+  auto createSpringAnimationFunction = [wrt](float fromValue, float toValue) {
     jsi::Runtime &rt = *wrt.lock();
     return jsi::Function::createFromHostFunction(
         rt,
@@ -265,7 +265,9 @@ void NativeProxy::installJSIBindings(
         [](jsi::Runtime &runtime,
            jsi::Value const &thisValue,
            jsi::Value const *arguments,
-           size_t count) noexcept -> jsi::Value { return 42; });
+           size_t count) noexcept -> jsi::Value {
+          return jsi::Array::createWithElements(runtime, 42, true);
+        });
   };
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
