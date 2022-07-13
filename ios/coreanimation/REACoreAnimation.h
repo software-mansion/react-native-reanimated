@@ -1,24 +1,24 @@
 // CoreAnimation progress callback start
 // source: https://newbedev.com/core-animation-progress-callback
 
-@protocol TAProgressLayerProtocol <NSObject>
+@protocol REACoreAnimationLayerProtocol <NSObject>
 
-- (void)progressUpdatedTo:(CGFloat)progress;
+- (void)valueDidChange:(CGFloat)value;
 
 @end
 
-@interface TAProgressLayer : CALayer
+@interface REACoreAnimationLayer : CALayer
 
-@property CGFloat progress;
-@property (weak) id<TAProgressLayerProtocol> delegate;
+@property CGFloat value;
+@property (weak) id<REACoreAnimationLayerProtocol> delegate;
 
 @end
 
 // CoreAnimation progress callback end
 
-@interface REACoreAnimation : NSObject <TAProgressLayerProtocol, CAAnimationDelegate>
+@interface REACoreAnimation : NSObject <REACoreAnimationLayerProtocol, CAAnimationDelegate>
 
-@property (nonatomic) CGFloat progress;
+@property (nonatomic) CGFloat value;
 @property (nonatomic) BOOL running;
 
 - (instancetype)initWithFromValue:(float)fromValue toValue:(float)toValue;

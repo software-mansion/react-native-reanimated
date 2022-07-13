@@ -1,10 +1,9 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/REACoreAnimation.h>
 
-// CoreAnimation progress callback start
-// source: https://newbedev.com/core-animation-progress-callback
+// Adapted from https://newbedev.com/core-animation-progress-callback
 
-@implementation TAProgressLayer
+@implementation REACoreAnimationLayer
 
 // We must copy across our custom properties since Core Animation makes a copy
 // of the layer that it's animating.
@@ -13,8 +12,8 @@
 {
   self = [super initWithLayer:layer];
   if (self) {
-    TAProgressLayer *otherLayer = (TAProgressLayer *)layer;
-    self.progress = otherLayer.progress;
+    REACoreAnimationLayer *otherLayer = (REACoreAnimationLayer *)layer;
+    self.value = otherLayer.value;
     self.delegate = otherLayer.delegate;
   }
   return self;
@@ -24,7 +23,7 @@
 
 + (BOOL)needsDisplayForKey:(NSString *)key
 {
-  if ([key isEqualToString:@"progress"]) {
+  if ([key isEqualToString:@"value"]) {
     return YES;
   } else {
     return [super needsDisplayForKey:key];
@@ -36,7 +35,7 @@
 - (void)drawInContext:(CGContextRef)ctx
 {
   if (self.delegate) {
-    [self.delegate progressUpdatedTo:self.progress];
+    [self.delegate valueDidChange:self.value];
   }
 }
 
@@ -45,45 +44,45 @@
 // CoreAnimation progress callback end
 
 @implementation REACoreAnimation {
-  TAProgressLayer *_progressLayer;
+  REACoreAnimationLayer *_layer;
 }
 
 - (instancetype)initWithFromValue:(float)fromValue toValue:(float)toValue
 {
   self = [super init];
 
-  _progress = fromValue;
+  _value = fromValue;
   _running = YES;
 
-  _progressLayer = [TAProgressLayer layer];
-  _progressLayer.frame = CGRectMake(0, -1, 1, 1);
-  _progressLayer.delegate = self;
+  _layer = [REACoreAnimationLayer layer];
+  _layer.frame = CGRectMake(0, -1, 1, 1);
+  _layer.delegate = self;
 
   UIWindow *keyWindow = [[[UIApplication sharedApplication] delegate] window];
-  [keyWindow.layer addSublayer:_progressLayer];
+  [keyWindow.layer addSublayer:_layer];
 
-  CASpringAnimation *animation = [CASpringAnimation animationWithKeyPath:@"progress"];
+  CASpringAnimation *animation = [CASpringAnimation animationWithKeyPath:@"value"];
   animation.duration = animation.settlingDuration;
   animation.fromValue = @(fromValue);
   animation.toValue = @(toValue);
   // animation.removedOnCompletion = YES;
   animation.delegate = self;
 
-  [_progressLayer addAnimation:animation forKey:@"progress"];
-  _progressLayer.progress = toValue; // fixes zero progress issue for some number of final frames
+  [_layer addAnimation:animation forKey:@"value"];
+  _layer.value = toValue; // fixes zero progress issue for some number of final frames
 
   return self;
 }
 
 - (void)dealloc
 {
-  [_progressLayer removeAnimationForKey:@"progress"];
-  [_progressLayer removeFromSuperlayer];
+  [_layer removeAnimationForKey:@"value"];
+  [_layer removeFromSuperlayer];
 }
 
-- (void)progressUpdatedTo:(CGFloat)progress
+- (void)valueDidUpdate:(CGFloat)value
 {
-  _progress = progress;
+  _value = value;
 }
 
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
