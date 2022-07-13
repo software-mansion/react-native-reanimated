@@ -59,7 +59,10 @@ export function withSpring(
       );
     }
 
-    function spring(animation: InnerSpringAnimation, _now: Timestamp): boolean {
+    function onFrame(
+      animation: InnerSpringAnimation,
+      _now: Timestamp
+    ): boolean {
       const [current, running] = animation.getCoreAnimationState();
 
       if (!running) {
@@ -101,7 +104,7 @@ export function withSpring(
     }
 
     return {
-      onFrame: spring,
+      onFrame,
       onStart,
       toValue,
       velocity: config.velocity || 0,
