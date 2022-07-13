@@ -5,6 +5,8 @@
 @property (nonatomic) CGFloat value;
 @property (nonatomic) BOOL running;
 
-- (instancetype)initWithAnimation:(nonnull CABasicAnimation *)animation;
+- (instancetype)initWithAnimation:(nonnull CAPropertyAnimation *)animation
+                        fromValue:(CGFloat)fromValue
+                          toValue:(CGFloat)toValue;
 
 @end

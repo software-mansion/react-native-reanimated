@@ -54,6 +54,11 @@ using RequestRender =
 using TimeProviderFunction = std::function<double(void)>;
 using CreateSpringAnimationFunction =
     std::function<jsi::Function(float, float, float, float, float, float)>;
+using CreateKeyframeAnimationFunction = std::function<jsi::Function(
+    jsi::Runtime &rt,
+    const jsi::Array &keys,
+    const jsi::Array &values,
+    float duration)>;
 
 using RegisterSensorFunction =
     std::function<int(int, int, std::function<void(double[])>)>;
@@ -76,6 +81,7 @@ struct PlatformDepMethodsHolder {
 #endif
   TimeProviderFunction getCurrentTime;
   CreateSpringAnimationFunction createSpringAnimation;
+  CreateKeyframeAnimationFunction createKeyframeAnimation;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;

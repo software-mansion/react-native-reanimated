@@ -328,7 +328,45 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
         animation.initialVelocity = initialVelocity;
         animation.duration = animation.settlingDuration;
 
-        REACoreAnimationWrapper *wrapper = [[REACoreAnimationWrapper alloc] initWithAnimation:animation];
+        REACoreAnimationWrapper *wrapper = [[REACoreAnimationWrapper alloc] initWithAnimation:animation
+                                                                                    fromValue:fromValue
+                                                                                      toValue:toValue];
+        jsi::Runtime &rt = *wrt.lock();
+        return jsi::Function::createFromHostFunction(
+            rt,
+            jsi::PropNameID::forAscii(rt, "getCoreAnimationState"),
+            0,
+            [wrapper](
+                jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept
+            -> jsi::Value { return jsi::Array::createWithElements(runtime, [wrapper value], [wrapper running]); });
+      };
+
+  auto createKeyframeAnimation =
+      [wrt](jsi::Runtime &runtime, const jsi::Array &jsiKeys, const jsi::Array &jsiValues, float duration) {
+        CAKeyframeAnimation *animation = [[CAKeyframeAnimation alloc] init];
+
+        NSMutableArray<NSNumber *> *keyTimes = [NSMutableArray new];
+        for (size_t i = 0; i < jsiKeys.size(runtime); i++) {
+          float key = jsiKeys.getValueAtIndex(runtime, i).asNumber();
+          [keyTimes addObject:@(key)];
+        }
+
+        NSMutableArray<NSNumber *> *values = [NSMutableArray new];
+        for (size_t i = 0; i < jsiValues.size(runtime); i++) {
+          float value = jsiValues.getValueAtIndex(runtime, i).asNumber();
+          [values addObject:@(value)];
+        }
+
+        animation.keyTimes = keyTimes;
+        animation.values = values;
+        animation.duration = duration;
+
+        CGFloat fromValue = [[values firstObject] floatValue];
+        CGFloat toValue = [[values lastObject] floatValue];
+
+        REACoreAnimationWrapper *wrapper = [[REACoreAnimationWrapper alloc] initWithAnimation:animation
+                                                                                    fromValue:fromValue
+                                                                                      toValue:toValue];
         jsi::Runtime &rt = *wrt.lock();
         return jsi::Function::createFromHostFunction(
             rt,
@@ -364,6 +402,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       getCurrentTime,
       createSpringAnimation,
+      createKeyframeAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,

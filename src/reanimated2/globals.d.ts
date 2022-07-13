@@ -18,6 +18,11 @@ declare global {
     damping: number,
     initialVelocity: number
   ) => () => [number, boolean];
+  const _createKeyframeAnimation: (
+    keys: number[],
+    values: number[],
+    duration: number
+  ) => () => [number, boolean];
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _startObservingProgress: (
     tag: number,

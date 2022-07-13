@@ -6,11 +6,13 @@
   REACoreAnimationLayer *_layer;
 }
 
-- (instancetype)initWithAnimation:(nonnull CABasicAnimation *)animation
+- (instancetype)initWithAnimation:(nonnull CAPropertyAnimation *)animation
+                        fromValue:(CGFloat)fromValue
+                          toValue:(CGFloat)toValue
 {
   self = [super init];
 
-  _value = [animation.fromValue floatValue];
+  _value = fromValue;
   _running = YES;
 
   animation.keyPath = @"value";
@@ -19,7 +21,7 @@
 
   _layer = [REACoreAnimationLayer layer];
   _layer.frame = CGRectMake(0, -1, 1, 1);
-  _layer.value = [animation.toValue floatValue]; // fixes zero progress issue for some number of final frames
+  _layer.value = toValue; // fixes zero progress issue for some number of final frames
   _layer.delegate = self;
 
   [_layer addAnimation:animation forKey:@"value"];

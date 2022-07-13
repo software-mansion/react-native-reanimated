@@ -82,6 +82,7 @@ const globals = new Set([
   '_stopObservingProgress',
   '_startObservingProgress',
   '_createSpringAnimation',
+  '_createKeyframeAnimation',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist

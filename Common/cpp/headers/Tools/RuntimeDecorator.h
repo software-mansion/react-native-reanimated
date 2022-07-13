@@ -42,6 +42,7 @@ class RuntimeDecorator {
       const RequestFrameFunction requestFrame,
       const TimeProviderFunction getCurrentTime,
       const CreateSpringAnimationFunction createSpringAnimation,
+      const CreateKeyframeAnimationFunction createKeyframeAnimation,
       const RegisterSensorFunction registerSensor,
       const UnregisterSensorFunction unregisterSensor,
       const SetGestureStateFunction setGestureState,

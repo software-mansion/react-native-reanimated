@@ -150,6 +150,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       requestAnimationFrame,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.createSpringAnimation,
+      platformDepMethodsHolder.createKeyframeAnimation,
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,

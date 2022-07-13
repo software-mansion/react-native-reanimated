@@ -107,6 +107,7 @@ void RuntimeDecorator::decorateUIRuntime(
     const RequestFrameFunction requestFrame,
     const TimeProviderFunction getCurrentTime,
     const CreateSpringAnimationFunction createSpringAnimation,
+    const CreateKeyframeAnimationFunction createKeyframeAnimation,
     const RegisterSensorFunction registerSensor,
     const UnregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
@@ -321,6 +322,25 @@ void RuntimeDecorator::decorateUIRuntime(
           createSpringAnimationLambda);
   rt.global().setProperty(
       rt, "_createSpringAnimation", createSpringAnimationHostFunction);
+
+  auto createKeyframeAnimationLambda = [createKeyframeAnimation](
+                                           jsi::Runtime &rt,
+                                           const jsi::Value &thisValue,
+                                           const jsi::Value *args,
+                                           const size_t count) -> jsi::Value {
+    jsi::Array keys = args[0].asObject(rt).asArray(rt);
+    jsi::Array values = args[1].asObject(rt).asArray(rt);
+    float duration = args[2].asNumber();
+    return createKeyframeAnimation(rt, keys, values, duration);
+  };
+  jsi::Value createKeyframeAnimationHostFunction =
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_createKeyframeAnimation"),
+          0,
+          createKeyframeAnimationLambda);
+  rt.global().setProperty(
+      rt, "_createKeyframeAnimation", createKeyframeAnimationHostFunction);
 }
 
 } // namespace reanimated

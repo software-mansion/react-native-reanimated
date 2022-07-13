@@ -276,6 +276,24 @@ void NativeProxy::installJSIBindings(
         });
   };
 
+  auto createKeyframeAnimationFunction = [wrt](
+                                             jsi::Runtime &runtime,
+                                             const jsi::Array &keys,
+                                             const jsi::Array &values,
+                                             float duration) {
+    jsi::Runtime &rt = *wrt.lock();
+    return jsi::Function::createFromHostFunction(
+        rt,
+        jsi::PropNameID::forAscii(rt, "getCoreAnimationState"),
+        0,
+        [](jsi::Runtime &runtime,
+           jsi::Value const &thisValue,
+           jsi::Value const *arguments,
+           size_t count) noexcept -> jsi::Value {
+          return jsi::Array::createWithElements(runtime, 42, true);
+        });
+  };
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -288,6 +306,7 @@ void NativeProxy::installJSIBindings(
 #endif
       getCurrentTime,
       createSpringAnimationFunction,
+      createKeyframeAnimationFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction};

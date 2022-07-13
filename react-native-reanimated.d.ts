@@ -636,6 +636,9 @@ declare module 'react-native-reanimated' {
     restDisplacementThreshold?: number;
     velocity?: number;
   }
+  export interface WithKeyframeConfig {
+    duration?: number;
+  }
   export function withTiming<T extends AnimatableValue>(
     toValue: T,
     userConfig?: WithTimingConfig,
@@ -649,6 +652,7 @@ declare module 'react-native-reanimated' {
   export function withKeyframe<T extends AnimatableValue>(
     keys: number[],
     values: number[],
+    userConfig?: WithKeyframeConfig,
     callback?: AnimationCallback
   ): T;
   export function withDecay(
