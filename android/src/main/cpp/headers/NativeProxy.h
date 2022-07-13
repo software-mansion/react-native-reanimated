@@ -122,6 +122,30 @@ class SensorSetter : public HybridClass<SensorSetter> {
   std::function<void(double[])> callback_;
 };
 
+class FrameCallbackHook : public HybridClass<FrameCallbackHook> {
+  public:
+    static auto constexpr kJavaDescriptor =
+        "Lcom/swmansion/reanimated/NativeProxy$FrameCallbackHook;";
+
+    void frameCallback() {
+      callback_();
+    }
+
+    static void registerNatives() {
+      javaClassStatic()->registerNatives({
+         makeNativeMethod("frameCallback", FrameCallbackHook::frameCallback),
+     });
+    }
+
+  private:
+    friend HybridBase;
+
+    explicit FrameCallbackHook(std::function<void()> callback)
+        : callback_(std::move(callback)) {}
+
+    std::function<void()> callback_;
+};
+
 class NativeProxy : public jni::HybridClass<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
@@ -183,6 +207,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
+  int registerFrameCallback(std::function<void()> callback);
+  void unregisterFrameCallback(const int frameCallbackId);
+  void manageStateFrameCallback(
+      const int frameCallbackId,
+      const bool state);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else

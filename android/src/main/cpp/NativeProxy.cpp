@@ -200,6 +200,20 @@ void NativeProxy::installJSIBindings(
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
+
+  auto registerFrameCallbackFunction =
+      [this](std::function<void()> callback) -> int {
+    return this->registerFrameCallback(callback);
+  };
+
+  auto unregisterFrameCallbackFunction = [this](int callbackId) -> void {
+    unregisterFrameCallback(callbackId);
+  };
+
+  auto manageStateFrameCallbackFunction = [this](int callbackId, bool state) -> void {
+    manageStateFrameCallback(callbackId, state);
+  };
+
 #if JS_RUNTIME_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
@@ -269,7 +283,10 @@ void NativeProxy::installJSIBindings(
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
-      setGestureStateFunction};
+      setGestureStateFunction,
+      registerFrameCallbackFunction,
+      unregisterFrameCallbackFunction,
+      manageStateFrameCallbackFunction};
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -485,6 +502,30 @@ void NativeProxy::configureProps(
       ReadableNativeArray::newObjectCxxArgs(
           jsi::dynamicFromValue(rt, nativeProps))
           .get());
+}
+
+// TODO: Work in progress below this line
+
+int NativeProxy::registerFrameCallback(
+    std::function<void()> callback) {
+  auto method = javaPart_->getClass()
+                  ->getMethod<int(FrameCallbackHook::javaobject)>("registerFrameCallback");
+  return method(javaPart_.get(), FrameCallbackHook::newObjectCxxArgs(std::move(callback)).get());
+}
+
+void NativeProxy::unregisterFrameCallback(
+    const int frameCallbackId) {
+  auto method = javaPart_->getClass()
+                  ->getMethod<void(int)>("unregisterFrameCallback");
+  method(javaPart_.get(), frameCallbackId);
+}
+
+void NativeProxy::manageStateFrameCallback(
+    const int frameCallbackId,
+    const bool state) {
+  auto method = javaPart_->getClass()
+                  ->getMethod<void(int, bool)>("manageStateFrameCallback");
+  method(javaPart_.get(), frameCallbackId, state);
 }
 
 } // namespace reanimated

@@ -25,20 +25,24 @@ export function useFrameCallback(
     callbackId: -1,
   });
 
-  if (ref.current.callbackId === -1) {
-    ref.current.callbackId = NativeReanimated.registerFrameCallback(callback);
+  function register() {
+    if (ref.current.callbackId === -1) {
+      ref.current.callbackId = NativeReanimated.registerFrameCallback(callback);
+    }
 
     if (autostart) {
       ref.current.start();
     }
   }
 
+  register();
+
   useEffect(() => {
-    if (ref.current.callbackId === -1) {
-      ref.current.callbackId = NativeReanimated.registerFrameCallback(callback);
-    }
+    register();
 
     return () => {
+      console.log('TS: Unregistering callback!');
+
       NativeReanimated.unregisterFrameCallback(ref.current.callbackId);
       ref.current.state = false;
       ref.current.callbackId = -1;
