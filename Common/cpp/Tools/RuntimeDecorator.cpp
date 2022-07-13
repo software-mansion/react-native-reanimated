@@ -317,7 +317,7 @@ void RuntimeDecorator::decorateUIRuntime(
       jsi::Function::createFromHostFunction(
           rt,
           jsi::PropNameID::forAscii(rt, "_createSpringAnimation"),
-          3,
+          6,
           createSpringAnimationLambda);
   rt.global().setProperty(
       rt, "_createSpringAnimation", createSpringAnimationHostFunction);
