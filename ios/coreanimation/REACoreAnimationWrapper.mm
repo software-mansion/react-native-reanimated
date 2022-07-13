@@ -11,6 +11,7 @@
   self = [super init];
 
   _value = [animation.fromValue floatValue];
+  _running = YES;
 
   animation.keyPath = @"value";
   animation.delegate = self;
@@ -38,11 +39,6 @@
 - (void)valueDidChange:(CGFloat)value
 {
   _value = value;
-}
-
-- (void)animationDidStart:(CAAnimation *)anim
-{
-  _running = YES;
 }
 
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
