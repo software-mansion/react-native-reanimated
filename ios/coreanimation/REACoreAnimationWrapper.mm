@@ -1,8 +1,8 @@
 #import <Foundation/Foundation.h>
-#import <RNReanimated/REACoreAnimation.h>
 #import <RNReanimated/REACoreAnimationLayer.h>
+#import <RNReanimated/REACoreAnimationWrapper.h>
 
-@implementation REACoreAnimation {
+@implementation REACoreAnimationWrapper {
   REACoreAnimationLayer *_layer;
 }
 

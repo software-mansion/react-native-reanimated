@@ -2,7 +2,7 @@
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REACoreAnimation.h>
+#import <RNReanimated/REACoreAnimationWrapper.h>
 #import <RNReanimated/REAIOSErrorHandler.h>
 #import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
@@ -323,7 +323,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     animation.fromValue = @(fromValue);
     animation.toValue = @(toValue);
 
-    REACoreAnimation *wrapper = [[REACoreAnimation alloc] initWithAnimation:animation];
+    REACoreAnimationWrapper *wrapper = [[REACoreAnimationWrapper alloc] initWithAnimation:animation];
     jsi::Runtime &rt = *wrt.lock();
     return jsi::Function::createFromHostFunction(
         rt,
