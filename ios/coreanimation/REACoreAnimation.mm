@@ -6,29 +6,25 @@
   REACoreAnimationLayer *_layer;
 }
 
-- (instancetype)initWithFromValue:(float)fromValue toValue:(float)toValue
+- (instancetype)initWithAnimation:(nonnull CABasicAnimation *)animation
 {
   self = [super init];
 
-  _value = fromValue;
-  _running = YES;
+  _value = [animation.fromValue floatValue];
+
+  animation.keyPath = @"value";
+  animation.delegate = self;
+  // animation.removedOnCompletion = YES;
 
   _layer = [REACoreAnimationLayer layer];
   _layer.frame = CGRectMake(0, -1, 1, 1);
+  _layer.value = [animation.toValue floatValue]; // fixes zero progress issue for some number of final frames
   _layer.delegate = self;
+
+  [_layer addAnimation:animation forKey:@"value"];
 
   UIWindow *keyWindow = [[[UIApplication sharedApplication] delegate] window];
   [keyWindow.layer addSublayer:_layer];
-
-  CASpringAnimation *animation = [CASpringAnimation animationWithKeyPath:@"value"];
-  animation.duration = animation.settlingDuration;
-  animation.fromValue = @(fromValue);
-  animation.toValue = @(toValue);
-  // animation.removedOnCompletion = YES;
-  animation.delegate = self;
-
-  [_layer addAnimation:animation forKey:@"value"];
-  _layer.value = toValue; // fixes zero progress issue for some number of final frames
 
   return self;
 }
@@ -42,6 +38,11 @@
 - (void)valueDidChange:(CGFloat)value
 {
   _value = value;
+}
+
+- (void)animationDidStart:(CAAnimation *)anim
+{
+  _running = YES;
 }
 
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag

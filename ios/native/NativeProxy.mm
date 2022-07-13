@@ -318,15 +318,20 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // CoreAnimation
   auto createSpringAnimation = [wrt](float fromValue, float toValue) {
-    REACoreAnimation *animation = [[REACoreAnimation alloc] initWithFromValue:fromValue toValue:toValue];
+    CASpringAnimation *animation = [[CASpringAnimation alloc] init];
+    animation.duration = animation.settlingDuration;
+    animation.fromValue = @(fromValue);
+    animation.toValue = @(toValue);
+
+    REACoreAnimation *wrapper = [[REACoreAnimation alloc] initWithAnimation:animation];
     jsi::Runtime &rt = *wrt.lock();
     return jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "getSpringValue"),
         0,
-        [animation](
+        [wrapper](
             jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept
-        -> jsi::Value { return jsi::Array::createWithElements(runtime, [animation value], [animation running]); });
+        -> jsi::Value { return jsi::Array::createWithElements(runtime, [wrapper value], [wrapper running]); });
   };
 
   // sensors
