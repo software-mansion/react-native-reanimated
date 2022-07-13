@@ -2,7 +2,6 @@ package com.swmansion.reanimated.frameCallback;
 
 import android.util.Log;
 import android.view.Choreographer;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
