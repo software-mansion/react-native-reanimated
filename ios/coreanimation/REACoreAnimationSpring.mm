@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import <RNReanimated/REACoreAnimationManager.h>
+#import <RNReanimated/REACoreAnimationSpring.h>
 
 // CoreAnimation progress callback start
 // source: https://newbedev.com/core-animation-progress-callback
@@ -44,26 +44,21 @@
 
 // CoreAnimation progress callback end
 
-@implementation REACoreAnimationManager {
+@implementation REACoreAnimationSpring {
   TAProgressLayer *_progressLayer;
 }
 
-- (instancetype)init
+- (instancetype)initWithFromValue:(float)fromValue toValue:(float)toValue
 {
   self = [super init];
-  return self;
-}
 
-- (void)startFromValue:(float)fromValue toValue:(float)toValue
-{
-  if (_running) {
-    return;
-  }
-  _running = true;
+  _progress = fromValue;
+  _running = YES;
 
   _progressLayer = [TAProgressLayer layer];
   _progressLayer.frame = CGRectMake(0, -1, 1, 1);
   _progressLayer.delegate = self;
+
   UIWindow *keyWindow = [[[UIApplication sharedApplication] delegate] window];
   [keyWindow.layer addSublayer:_progressLayer];
 
@@ -71,11 +66,19 @@
   animation.duration = animation.settlingDuration;
   animation.fromValue = @(fromValue);
   animation.toValue = @(toValue);
-  animation.removedOnCompletion = YES;
+  // animation.removedOnCompletion = YES;
   animation.delegate = self;
 
   [_progressLayer addAnimation:animation forKey:@"progress"];
   _progressLayer.progress = toValue; // fixes zero progress issue for some number of final frames
+
+  return self;
+}
+
+- (void)dealloc
+{
+  [_progressLayer removeAnimationForKey:@"progress"];
+  [_progressLayer removeFromSuperlayer];
 }
 
 - (void)progressUpdatedTo:(CGFloat)progress
@@ -85,8 +88,6 @@
 
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
 {
-  [_progressLayer removeAnimationForKey:@"progress"];
-  [_progressLayer removeFromSuperlayer];
   _running = false;
 }
 

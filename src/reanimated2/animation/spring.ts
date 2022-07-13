@@ -61,8 +61,14 @@ export function withSpring(
 
     function spring(animation: InnerSpringAnimation, _now: Timestamp): boolean {
       const [current, running] = animation.nativeSpringInstance();
+
+      if (!running) {
+        return true;
+      }
+
       animation.current = current;
-      return !running;
+
+      return false;
     }
 
     function onStart(
@@ -73,7 +79,7 @@ export function withSpring(
     ): void {
       animation.nativeSpringInstance = _createSpringAnimation(
         value,
-        toValue as number
+        toValue as number // TODO: support other types
       );
       animation.current = value;
       if (previousAnimation) {
