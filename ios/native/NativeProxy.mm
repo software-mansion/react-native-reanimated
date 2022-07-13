@@ -328,7 +328,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     jsi::Runtime &rt = *wrt.lock();
     return jsi::Function::createFromHostFunction(
         rt,
-        jsi::PropNameID::forAscii(rt, "getSpringValue"),
+        jsi::PropNameID::forAscii(rt, "getCoreAnimationState"),
         0,
         [wrapper](
             jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept

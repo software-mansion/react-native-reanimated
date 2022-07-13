@@ -60,7 +60,7 @@ export function withSpring(
     }
 
     function spring(animation: InnerSpringAnimation, _now: Timestamp): boolean {
-      const [current, running] = animation.nativeSpringInstance();
+      const [current, running] = animation.getCoreAnimationState();
 
       if (!running) {
         return true;
@@ -82,7 +82,7 @@ export function withSpring(
     ): void {
       const initialVelocity =
         previousAnimation?.velocity || animation.velocity || 0;
-      animation.nativeSpringInstance = _createSpringAnimation(
+      animation.getCoreAnimationState = _createSpringAnimation(
         value,
         toValue as number, // TODO: support other types
         initialVelocity

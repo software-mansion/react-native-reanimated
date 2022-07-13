@@ -261,7 +261,7 @@ void NativeProxy::installJSIBindings(
         jsi::Runtime &rt = *wrt.lock();
         return jsi::Function::createFromHostFunction(
             rt,
-            jsi::PropNameID::forAscii(rt, "getSpringValue"),
+            jsi::PropNameID::forAscii(rt, "getCoreAnimationState"),
             0,
             [](jsi::Runtime &runtime,
                jsi::Value const &thisValue,
