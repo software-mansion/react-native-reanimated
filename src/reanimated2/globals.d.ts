@@ -17,7 +17,7 @@ declare global {
     stiffness: number,
     damping: number,
     initialVelocity: number
-  ) => () => number;
+  ) => () => [number, boolean];
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _startObservingProgress: (
     tag: number,
