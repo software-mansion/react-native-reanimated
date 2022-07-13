@@ -7,12 +7,17 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-function SpringBox({ offset, backgroundColor }) {
+function SpringBox({ backgroundColor, i, state }) {
   const sv = useSharedValue(0);
 
   React.useEffect(() => {
-    sv.value = withSpring(offset, { stiffness: 300, damping: 5 });
-  }, [sv, offset]);
+    setTimeout(() => {
+      sv.value = withSpring(state * (50 + i * 10), {
+        stiffness: 400,
+        damping: 8,
+      });
+    }, i * 50);
+  }, [sv, i, state]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -42,7 +47,8 @@ export default function CoreAnimationSpringExample() {
         <SpringBox
           key={backgroundColor}
           backgroundColor={backgroundColor}
-          offset={state * (40 + i * 15)}
+          i={i}
+          state={state}
         />
       ))}
     </View>
