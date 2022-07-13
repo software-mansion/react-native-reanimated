@@ -19,7 +19,7 @@
 @interface REACoreAnimationManager : NSObject <TAProgressLayerProtocol, CAAnimationDelegate>
 
 @property (nonatomic) CGFloat progress;
-@property (nonatomic) BOOL active;
+@property (nonatomic) BOOL running;
 
 - (instancetype)init;
 - (void)startFromValue:(float)fromValue toValue:(float)toValue;

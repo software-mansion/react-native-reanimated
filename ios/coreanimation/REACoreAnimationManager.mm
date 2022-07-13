@@ -56,10 +56,10 @@
 
 - (void)startFromValue:(float)fromValue toValue:(float)toValue
 {
-  if (_active) {
+  if (_running) {
     return;
   }
-  _active = true;
+  _running = true;
 
   _progressLayer = [TAProgressLayer layer];
   _progressLayer.frame = CGRectMake(0, -1, 1, 1);
@@ -86,7 +86,8 @@
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
 {
   [_progressLayer removeAnimationForKey:@"progress"];
-  _active = false;
+  [_progressLayer removeFromSuperlayer];
+  _running = false;
 }
 
 @end

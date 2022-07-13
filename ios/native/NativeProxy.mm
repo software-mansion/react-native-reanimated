@@ -327,7 +327,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
         0,
         [coreAnimationManager](
             jsi::Runtime &runtime, jsi::Value const &thisValue, jsi::Value const *arguments, size_t count) noexcept
-        -> jsi::Value { return coreAnimationManager.progress; });
+        -> jsi::Value {
+          return jsi::Array::createWithElements(runtime, coreAnimationManager.progress, coreAnimationManager.running);
+        });
   };
 
   // sensors
