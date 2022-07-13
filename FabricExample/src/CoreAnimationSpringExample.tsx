@@ -10,6 +10,8 @@ import Animated, {
 export default function CoreAnimationSpringExample() {
   const sv = useSharedValue(0);
 
+  const ref = React.useRef(1);
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: sv.value }],
@@ -17,7 +19,8 @@ export default function CoreAnimationSpringExample() {
   });
 
   const handlePress = () => {
-    sv.value = withSpring(-100 + Math.random() * 200);
+    sv.value = withSpring(ref.current * 90);
+    ref.current = -ref.current;
   };
 
   return (
