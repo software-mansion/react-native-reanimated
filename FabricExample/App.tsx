@@ -155,8 +155,14 @@ const EXAMPLES = [
   {
     name: 'CoreAnimationSpringExample',
     icon: '🍎',
-    title: 'CoreAnimation',
+    title: 'withSpring + CoreAnimation',
     component: CoreAnimationSpringExample,
+  },
+  {
+    name: 'CoreAnimationKeyframeExample',
+    icon: '🔑',
+    title: 'withKeyframe + CoreAnimation',
+    component: CoreAnimationKeyframeExample,
   },
   {
     name: 'EmptyExample',
@@ -204,9 +210,9 @@ export default function App() {
   //   return <CoreAnimationSpringExample />;
   // }
 
-  if (true) {
-    return <CoreAnimationKeyframeExample />;
-  }
+  // if (true) {
+  //   return <CoreAnimationKeyframeExample />;
+  // }
 
   return (
     <GestureHandlerRootView style={styles.container}>
