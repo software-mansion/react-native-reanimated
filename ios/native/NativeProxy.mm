@@ -38,6 +38,9 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
+#include <chrono>
+#include <iostream>
+
 namespace reanimated {
 
 using namespace facebook;
@@ -216,12 +219,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
+      auto begin = std::chrono::high_resolution_clock::now();
+
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
       jsi::Object global = rt.global();
       jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
       global.setProperty(rt, frameTimestampName, frameTimestamp);
       onRender(frameTimestamp);
       global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
+
+      auto end = std::chrono::high_resolution_clock::now();
+      std::cout << ">>> " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() << " ns"
+                << std::endl;
     }];
   };
 

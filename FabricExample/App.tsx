@@ -11,6 +11,7 @@ import ChessboardExample from './src/ChessboardExample';
 import ColorExample from './src/ColorExample';
 import CoreAnimationKeyframeExample from './src/CoreAnimationKeyframeExample';
 import CoreAnimationSpringExample from './src/CoreAnimationSpringExample';
+import CoreAnimationSpringPerformanceExample from './src/CoreAnimationSpringPerformanceExample';
 import EmptyExample from './src/EmptyExample';
 import GestureHandlerExample from './src/GestureHandlerExample';
 import MeasureExample from './src/MeasureExample';
@@ -213,6 +214,10 @@ export default function App() {
   // if (true) {
   //   return <CoreAnimationKeyframeExample />;
   // }
+
+  if (true) {
+    return <CoreAnimationSpringPerformanceExample />;
+  }
 
   return (
     <GestureHandlerRootView style={styles.container}>
