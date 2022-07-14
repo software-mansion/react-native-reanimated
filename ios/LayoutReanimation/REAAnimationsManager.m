@@ -27,6 +27,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
+  REANodesManager * _nodeManager;
+  NSMutableSet<NSNumber *> *_sharedTransitionWithLayout;
 }
 
 + (NSArray *)layoutKeys
@@ -55,6 +57,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
       [_targetKeys addObject:[NSString stringWithFormat:@"target%@", [key capitalizedString]]];
       [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
     }
+    _sharedTransitionWithLayout = [NSMutableSet<NSNumber *> new];
   }
   return self;
 }
@@ -177,6 +180,9 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
       }
       [self scheduleCleaning];
     }
+    if ([_sharedTransitionWithLayout containsObject:tag]) {
+      [_sharedTransitionWithLayout removeObject:tag];
+    }
   }
 }
 
@@ -208,6 +214,10 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
               forView:(UIView *)view
     withComponentData:(RCTComponentData *)componentData
 {
+  if ([_sharedTransitionWithLayout containsObject:view.reactTag]) {
+    [_nodeManager updateProps:newProps ofViewWithTag:view.reactTag withName:@"RCTView"];
+    return;
+  }
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
     double oldHeight = view.bounds.size.height;
@@ -357,11 +367,14 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
 }
 
-- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
+- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after needsLayout:(BOOL)needsLayout
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
+  if (needsLayout) {
+    [_sharedTransitionWithLayout addObject:view.reactTag];
+  }
   self->_startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }
 
@@ -379,6 +392,11 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   dispatch_async(dispatch_get_main_queue(), ^{
     self->_startAnimationForTag(screen.reactTag, transitionType, preparedValues, @(0));
   });
+}
+
+- (void)setNodeManager:(REANodesManager *)nodeManager
+{
+  _nodeManager = nodeManager;
 }
 
 @end

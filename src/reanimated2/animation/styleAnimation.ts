@@ -76,7 +76,6 @@ export function withStyleAnimation(
       animation: StyleLayoutAnimation,
       now: Timestamp
     ): boolean => {
-      // return false;
       let stillGoing = false;
       const entriesToCheck: NestedObjectEntry<AnimationObject>[] = [
         { value: animation.styleAnimations, path: [] },

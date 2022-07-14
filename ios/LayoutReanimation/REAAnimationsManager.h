@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/REASnapshot.h>
 #import <React/RCTUIManager.h>
+#import <RNReanimated/REANodesManager.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,6 +16,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
 @interface REAAnimationsManager : NSObject
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
+- (void)setNodeManager:(REANodesManager *)nodeManager;
 - (void)setRemovingConfigBlock:(void (^)(NSNumber *tag))block;
 - (void)setAnimationStartingBlock:
     (void (^)(NSNumber *tag, NSString *type, NSDictionary *target, NSNumber *depth))startAnimation;
@@ -24,7 +26,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
 - (void)onViewRemoval:(UIView *)view before:(REASnapshot *)before;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
-- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
+- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after needsLayout:(BOOL)needsLayout;
 - (void)onScreenTransition:(UIView *)screen finish:(REASnapshot *)finish transitionType:(NSString *)transitionType;
 - (void)setToBeRemovedRegistry:(NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *)toBeRemovedRegister;
 - (void)removeLeftovers;

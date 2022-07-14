@@ -249,6 +249,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
   RCTUIManager *reaUiManager = reaUiManagerNoCast;
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
+  [animationsManager setNodeManager:reanimatedModule.nodesManager];
   [reaUiManagerNoCast setUp:animationsManager];
 
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {

@@ -2,7 +2,8 @@ import * as React from 'react';
 import {
   Button,
   View,
-  Image
+  Image,
+  Text
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import {
@@ -12,12 +13,14 @@ import {
 import Animated, {
   withTiming,
   SharedTransition,
-  withSpring
+  withSpring,
+  FadeIn,
+  FadeInDown,
 } from 'react-native-reanimated';
 import photo from './image.jpg'
 
 const Stack = createNativeStackNavigator();
-
+const AnimatedButton = Animated.createAnimatedComponent(Button);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 // const transition = SharedTransition.custom((values: any) => {
@@ -44,12 +47,39 @@ function Screen1({ navigation }) {
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       /> */}
-     <AnimatedImage 
+      {/* <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}> */}
+        {/* <AnimatedImage 
+          sharedTransitionTag="mleko"
+          source={photo} 
+          style={{width: 150, height: 150, margin: 20}}
+        /> */}
+        {/* <AnimatedImage 
+          sharedTransitionTag="mleko"
+          source={photo} 
+          style={{width: 150, height: 150, margin: 20}}
+        />
+        <AnimatedImage 
+          sharedTransitionTag="mleko"
+          source={photo} 
+          style={{width: 150, height: 150, margin: 20}}
+        />
+        <AnimatedImage 
+          sharedTransitionTag="mleko"
+          source={photo} 
+          style={{width: 150, height: 150, margin: 20}}
+        />
+        <AnimatedImage 
+          sharedTransitionTag="mleko"
+          source={photo} 
+          style={{width: 150, height: 150, margin: 20}}
+        /> */}
+      {/* </View> */}
+      <AnimatedImage 
         sharedTransitionTag="mleko"
         source={photo} 
         style={{width: '100%', height: 300}}
       />
-      <Button onPress={() => navigation.navigate('Screen2')} title="go to screen2" />
+      <Button onPress={() => navigation.navigate('Screen2')} title="Show more" />
     </Animated.ScrollView>
   );
 }
@@ -69,16 +99,21 @@ function Screen2({ navigation }) {
           style={{width: '100%', height: 500}}
         /> 
       </Animated.View> */}
-      <AnimatedImage 
+      <AnimatedImage
         sharedTransitionTag="mleko"
         source={photo} 
         style={{width: '100%', height: 500}}
       />
-      <Button
+      {/* <Animated.Text entering={FadeInDown.delay(1000).duration(500)} style={{margin: 10, textAlign: 'justify'}}>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id egestas nunc. Fusce molestie, libero a lacinia mollis, nisi nisi porttitor tortor, eget vestibulum lectus mauris id mi. Aenean imperdiet tempor est eu auctor. Praesent vitae mi at risus dapibus vulputate ac quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et. Maecenas at fermentum eros, sed accumsan enim. Nam diam est, dapibus malesuada volutpat non, vehicula at mauris. Curabitur vehicula commodo ligula. Maecenas tincidunt nibh et nulla fermentum efficitur. Donec id fermentum leo, in luctus dui. Nam nec nisi quam. In eu lobortis turpis. Quisque lacinia mi non hendrerit dictum.
+      </Animated.Text> */}
+      <AnimatedButton
+        // entering={FadeInDown.delay(1000).duration(500)}
         title="go to screen3"
         onPress={() => navigation.navigate('Screen3')}
       />
-      <Button
+      <AnimatedButton
+        // entering={FadeInDown.delay(1000).duration(500)}
         title="go back"
         onPress={() => navigation.navigate('Screen1')}
       />
