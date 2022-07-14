@@ -4,7 +4,7 @@ import React from 'react';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withSpringCoreAnimation,
 } from 'react-native-reanimated';
 
 function SpringBox({ backgroundColor, i, state }) {
@@ -12,7 +12,7 @@ function SpringBox({ backgroundColor, i, state }) {
 
   React.useEffect(() => {
     setTimeout(() => {
-      sv.value = withSpring(state * (50 + i * 10), {
+      sv.value = withSpringCoreAnimation(state * (50 + i * 10), {
         stiffness: 400,
         damping: 8,
       });

@@ -649,6 +649,11 @@ declare module 'react-native-reanimated' {
     userConfig?: WithSpringConfig,
     callback?: AnimationCallback
   ): T;
+  export function withSpringCoreAnimation<T extends AnimatableValue>(
+    toValue: T,
+    userConfig?: WithSpringConfig,
+    callback?: AnimationCallback
+  ): T;
   export function withKeyframe<T extends AnimatableValue>(
     keys: number[],
     values: number[],

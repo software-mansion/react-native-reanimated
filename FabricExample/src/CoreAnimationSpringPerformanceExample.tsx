@@ -4,7 +4,9 @@ import React from 'react';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   withSpring,
+  withSpringCoreAnimation,
 } from 'react-native-reanimated';
 
 const N = 1500;
@@ -19,7 +21,8 @@ export default function CoreAnimationSpringPerformanceExample() {
 
   const handlePress = () => {
     for (let i = 0; i < N; i++) {
-      svs[i].value = withSpring(150);
+      // svs[i].value = withSpring(150);
+      svs[i].value = withSpringCoreAnimation(150);
     }
     console.log('OK');
   };

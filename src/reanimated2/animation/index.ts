@@ -10,6 +10,7 @@ export { cancelAnimation, defineAnimation, initialUpdaterRun } from './util';
 export { withTiming } from './timing';
 export type { TimingAnimation } from './timing';
 export { withSpring } from './spring';
+export { withSpringCoreAnimation } from './spring2';
 export type { SpringAnimation } from './spring';
 export { withDecay } from './decay';
 export type { DecayAnimation } from './decay';
