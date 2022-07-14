@@ -18,25 +18,15 @@ export default function KeyframeExample() {
   });
 
   const handlePress = () => {
-    x.value = withKeyframe(
-      [0, 0.25, 0.5, 0.75, 1],
-      [0, 100, 100, 0, 0],
-      { duration: 1.5 },
-      () => {
-        'worklet';
-        console.log('finished');
-      }
-    );
+    const keys = [0, 0.25, 0.5, 0.75, 1];
+    const config = { duration: 1.5 };
+    const callback = () => {
+      'worklet';
+      console.log('finished');
+    };
 
-    y.value = withKeyframe(
-      [0, 0.25, 0.5, 0.75, 1],
-      [0, 0, 100, 100, 0],
-      { duration: 1.5 },
-      () => {
-        'worklet';
-        console.log('finished');
-      }
-    );
+    x.value = withKeyframe(keys, [0, 100, 100, 0, 0], config, callback);
+    y.value = withKeyframe(keys, [0, 0, 100, 100, 0], config, callback);
   };
 
   return (
