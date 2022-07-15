@@ -122,6 +122,33 @@ class SensorSetter : public HybridClass<SensorSetter> {
   std::function<void(double[])> callback_;
 };
 
+class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
+ public:
+  static auto constexpr kJavaDescriptor =
+      "Lcom/swmansion/reanimated/NativeProxy$KeyboardEventDataUpdater;";
+
+  void keyboardEventDataUpdater(bool isShown, bool isAnimating, int height) {
+    callback_(isShown, isAnimating, height);
+  }
+
+  static void registerNatives() {
+    javaClassStatic()->registerNatives({
+        makeNativeMethod(
+            "keyboardEventDataUpdater",
+            KeyboardEventDataUpdater::keyboardEventDataUpdater),
+    });
+  }
+
+ private:
+  friend HybridBase;
+
+  explicit KeyboardEventDataUpdater(
+      std::function<void(bool, bool, int)> callback)
+      : callback_(std::move(callback)) {}
+
+  std::function<void(bool, bool, int)> callback_;
+};
+
 class NativeProxy : public jni::HybridClass<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
@@ -183,6 +210,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
+  int subscribeForKeyboardEvents(
+      std::function<void(bool, bool, int)> keyboardEventDataUpdater);
+  void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else

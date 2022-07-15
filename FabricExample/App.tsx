@@ -1,6 +1,7 @@
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 
+import AnimatedKeyboardExample from './src/AnimatedKeyboardExample';
 import AnimatedSensorExample from './src/AnimatedSensorExample';
 import AnimatedTextInputExample from './src/AnimatedTextInputExample';
 import AnimatedTextWidthExample from './src/AnimatedTextWidthExample';
@@ -29,6 +30,12 @@ import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const EXAMPLES = [
+  {
+    name: 'AnimatedKeyboardExample',
+    icon: '⌨️',
+    title: 'Animated keyboard example',
+    component: AnimatedKeyboardExample,
+  },
   {
     name: 'AnimatedTextInputExample',
     icon: '🎰',

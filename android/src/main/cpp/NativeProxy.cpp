@@ -200,6 +200,17 @@ void NativeProxy::installJSIBindings(
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
+
+  auto subscribeForKeyboardEventsFunction =
+      [this](std::function<void(bool, bool, int)> keyboardEventDataUpdater)
+      -> int {
+    return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
+  };
+
+  auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
+    unsubscribeFromKeyboardEvents(listenerId);
+  };
+
 #if JS_RUNTIME_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
@@ -269,7 +280,10 @@ void NativeProxy::installJSIBindings(
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
-      setGestureStateFunction};
+      setGestureStateFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
+  };
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -485,6 +499,24 @@ void NativeProxy::configureProps(
       ReadableNativeArray::newObjectCxxArgs(
           jsi::dynamicFromValue(rt, nativeProps))
           .get());
+}
+
+int NativeProxy::subscribeForKeyboardEvents(
+    std::function<void(bool, bool, int)> keyboardEventDataUpdater) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
+                        "subscribeForKeyboardEvents");
+  return method(
+      javaPart_.get(),
+      KeyboardEventDataUpdater::newObjectCxxArgs(
+          std::move(keyboardEventDataUpdater))
+          .get());
+}
+
+void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>(
+      "unsubscribeFromKeyboardEvents");
+  method(javaPart_.get(), listenerId);
 }
 
 } // namespace reanimated
