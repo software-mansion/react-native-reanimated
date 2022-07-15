@@ -6,6 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property NSMutableDictionary *values;
 
+- (instancetype)init;
 - (instancetype)init:(UIView *)view;
 - (instancetype)init:(UIView *)view withConverter:(UIView *)converter withParent:(UIView *)parent;
 

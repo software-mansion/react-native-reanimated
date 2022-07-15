@@ -16,6 +16,7 @@ import Animated, {
   withSpring,
   FadeIn,
   FadeInDown,
+  Layout,
 } from 'react-native-reanimated';
 import photo from './image.jpg'
 
@@ -47,16 +48,16 @@ function Screen1({ navigation }) {
         sharedTransitionTag="mleko"
         // sharedTransitionStyle={transition}
       /> */}
-      {/* <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}> */}
+      <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
+        <AnimatedImage 
+          sharedTransitionTag="mleko"
+          source={photo} 
+          style={{width: 150, height: 150, margin: 70 }}
+        />
         {/* <AnimatedImage 
           sharedTransitionTag="mleko"
           source={photo} 
           style={{width: 150, height: 150, margin: 20}}
-        /> */}
-        {/* <AnimatedImage 
-          sharedTransitionTag="mleko"
-          source={photo} 
-          style={{width: 150, height: 150, margin: 20}}
         />
         <AnimatedImage 
           sharedTransitionTag="mleko"
@@ -73,12 +74,12 @@ function Screen1({ navigation }) {
           source={photo} 
           style={{width: 150, height: 150, margin: 20}}
         /> */}
-      {/* </View> */}
-      <AnimatedImage 
+      </View>
+      {/* <AnimatedImage 
         sharedTransitionTag="mleko"
         source={photo} 
         style={{width: '100%', height: 300}}
-      />
+      /> */}
       <Button onPress={() => navigation.navigate('Screen2')} title="Show more" />
     </Animated.ScrollView>
   );

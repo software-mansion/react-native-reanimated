@@ -55,9 +55,8 @@
                                   toViewConverter:(UIView *)toViewConverter
                                    transitionType:(NSString *)transitionType
 {
-  REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
-  _initialValuesSnapshotBackup[fromView.reactTag] = before;
   if ([transitionType isEqualToString:@"sharedElementTransition"]) {
+    REASnapshot *fromViewSnapshotBefore = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
     REASnapshot *after = _initialValuesSnapshotBackup[toView.reactTag];
     if (after != nil) {
       [_initialValuesSnapshotBackup removeObjectForKey:toView.reactTag];
@@ -65,10 +64,14 @@
     else {
       after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
     }
-    [_animationsManager onViewTransition:fromView before:before after:after needsLayout:false];
-    [_animationsManager onViewTransition:toView before:before after:after needsLayout:true];
+    _initialValuesSnapshotBackup[fromView.reactTag] = fromViewSnapshotBefore;
+    
+    [_animationsManager onViewTransition:fromView before:fromViewSnapshotBefore after:after needsLayout:false];
+    [_animationsManager onViewTransition:toView before:fromViewSnapshotBefore after:after needsLayout:true];
   } else {
-    [_animationsManager onScreenTransition:fromView finish:before transitionType:transitionType];
+    // TODO
+    REASnapshot *toViewSnapshot = [[REASnapshot alloc] init:toView withConverter:converter withParent:startingViewConverter];
+    [_animationsManager onScreenTransition:fromView finish:toViewSnapshot transitionType:transitionType];
   }
 }
 

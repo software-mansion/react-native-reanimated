@@ -275,7 +275,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   }
 }
 
-- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
+- (NSDictionary<NSString *, NSNumber *> *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues
 {
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
@@ -295,6 +295,27 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
     @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
   };
+  return preparedData;
+}
+
+- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary<NSString *, NSNumber *> *)currentValues
+                                          targetValues:(NSMutableDictionary<NSString *, NSNumber *> *)targetValues
+                                             forTargetElement:(BOOL)forTargetElement
+{
+  NSMutableDictionary<NSString *, NSNumber *> *preparedData = [[self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues] mutableCopy];
+  NSNumber *translateX = @([targetValues[@"originX"] doubleValue] - [currentValues[@"originX"] doubleValue]);
+  NSNumber *translateY = @([targetValues[@"originY"] doubleValue] - [currentValues[@"originY"] doubleValue]);
+  if (forTargetElement) {
+    preparedData[@"currentTranslateX"] = @(-[translateX doubleValue]);
+    preparedData[@"targetTranslateX"] = @0;
+    preparedData[@"currentTranslateY"] = @(-[translateY doubleValue]);
+    preparedData[@"targetTranslateY"] = @0;
+  } else {
+    preparedData[@"currentTranslateX"] = @0;
+    preparedData[@"targetTranslateX"] = translateX;
+    preparedData[@"currentTranslateY"] = @0;
+    preparedData[@"targetTranslateY"] = translateY;
+  }
   return preparedData;
 }
 
@@ -367,11 +388,11 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
 }
 
-- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after needsLayout:(BOOL)needsLayout
+- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after needsLayout:(BOOL)needsLayout;
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
-  NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
+  NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues forTargetElement:needsLayout];
   if (needsLayout) {
     [_sharedTransitionWithLayout addObject:view.reactTag];
   }

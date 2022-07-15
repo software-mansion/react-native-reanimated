@@ -1,16 +1,17 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/REASnapshot.h>
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation REASnapshot
 
-@implementation REASnapshot {
-  UIView *_view;
+- (instancetype)init
+{
+  self = [super init];
+  return self;
 }
 
 - (instancetype)init:(UIView *)view
 {
   self = [super init];
-  _view = view;
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
   CGPoint originFromRootPerspective = [[view superview] convertPoint:view.center toView:windowView];
   _values = [NSMutableDictionary new];
@@ -27,7 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init:(UIView *)view withConverter:(UIView *)converter withParent:(UIView *)parent
 {
   self = [super init];
-  _view = view;
   CGPoint originFromRootPerspective = [parent convertPoint:view.center toView:converter];
 
   _values = [NSMutableDictionary new];
@@ -52,5 +52,3 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @end
-
-NS_ASSUME_NONNULL_END

@@ -57,12 +57,21 @@ export class SharedTransition implements ILayoutAnimationBuilder {
           animations[propName] = withTiming(values[keyToTargetValue], { duration: 1000 });
         }
       }
-      // animations['backgroundColor'] = 'olive'
+
+      animations['transform'] = [
+        { translateX: withTiming(values['targetTranslateX'], { duration: 1000 }) },
+        { translateY: withTiming(values['targetTranslateY'], { duration: 1000 }) },
+      ];
 
       for (const propName in animations) {
         const keyToCurrentValue = 'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
         initialValues[propName] = values[keyToCurrentValue];
       }
+
+      initialValues['transform'] = [
+        { translateX: values['currentTranslateX'] },
+        { translateY: values['currentTranslateY'] },
+      ];
 
       return { initialValues, animations };
     };

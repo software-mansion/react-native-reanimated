@@ -436,8 +436,8 @@ using namespace facebook::react;
     [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
   }
   if (jsProps.count > 0) {
-    [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
-                                        body:@{@"viewTag" : viewTag, @"props" : jsProps}];
+//    [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
+//                                        body:@{@"viewTag" : viewTag, @"props" : jsProps}];
   }
 }
 
