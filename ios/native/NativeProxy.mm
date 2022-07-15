@@ -3,7 +3,7 @@
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REAIOSErrorHandler.h>
-#import <RNReanimated/REAIOSScheduler.h>
+#import <RNReanimated/REAKeyboardEventObserver.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIManager.h>
@@ -297,6 +297,21 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
   // end sensors
 
+  // keyboard events
+
+  static REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
+  auto subscribeForKeyboardEventsFunction =
+      [](std::function<void(bool isShown, bool isAnimating, int height)> keyboardEventDataUpdater) {
+        return [keyboardObserver subscribeForKeyboardEvents:^(bool isShown, bool isAnimating, int height) {
+          keyboardEventDataUpdater(isShown, isAnimating, height);
+        }];
+      };
+
+  auto unsubscribeFromKeyboardEventsFunction = [](int listenerId) {
+    [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
+  };
+  // end keyboard events
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       propUpdater,
@@ -306,7 +321,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
-      configurePropsFunction};
+      configurePropsFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
+  };
 
   module = std::make_shared<NativeReanimatedModule>(
       jsInvoker,

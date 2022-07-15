@@ -98,6 +98,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->onRender(timestampMs);
   };
   updaterFunction = platformDepMethodsHolder.updaterFunction;
+  subscribeForKeyboardEventsFunction =
+      platformDepMethodsHolder.subscribeForKeyboardEvents;
+  unsubscribeFromKeyboardEventsFunction =
+      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -325,6 +329,46 @@ void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
+}
+
+jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &keyboardEventContainer) {
+  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
+  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
+      sharedProperties;
+  std::shared_ptr<ShareableValue> isShownShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "isShown"), this);
+  std::shared_ptr<ShareableValue> isAnimatingShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "isAnimating"), this);
+  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "height"), this);
+
+  auto keyboardEventDataUpdater =
+      [this, &rt, isShownShared, isAnimatingShared, heightShared](
+          bool isShown, bool isAnimating, int height) {
+        auto &isShownMutableValue =
+            ValueWrapper::asMutableValue(isShownShared->valueContainer);
+        isShownMutableValue->setValue(rt, jsi::Value(isShown));
+
+        auto &isAnimatingMutableValue =
+            ValueWrapper::asMutableValue(isAnimatingShared->valueContainer);
+        isAnimatingMutableValue->setValue(rt, jsi::Value(isAnimating));
+
+        auto &heightMutableValue =
+            ValueWrapper::asMutableValue(heightShared->valueContainer);
+        heightMutableValue->setValue(rt, jsi::Value(height));
+
+        this->mapperRegistry->execute(*this->runtime);
+      };
+
+  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+}
+
+void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &listenerId) {
+  unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
 }
 
 } // namespace reanimated

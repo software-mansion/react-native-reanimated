@@ -136,6 +136,17 @@ void NativeProxy::installJSIBindings() {
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
+
+  auto subscribeForKeyboardEventsFunction =
+      [this](std::function<void(bool, bool, int)> keyboardEventDataUpdater)
+      -> int {
+    return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
+  };
+
+  auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
+    unsubscribeFromKeyboardEvents(listenerId);
+  };
+
 #if FOR_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
@@ -145,22 +156,19 @@ void NativeProxy::installJSIBindings() {
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::jsc::makeJSCRuntime();
 #endif
-  auto workletRuntimeValue = runtime_->global()
-    .getProperty(*runtime_, "ArrayBuffer")
-    .asObject(*runtime_)
-    .asFunction(*runtime_)
-    .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void*))});
-  uintptr_t* workletRuntimeData = reinterpret_cast<uintptr_t*>(
-    workletRuntimeValue
-      .getObject(*runtime_)
-      .getArrayBuffer(*runtime_)
-      .data(*runtime_));
+  auto workletRuntimeValue =
+      runtime_->global()
+          .getProperty(*runtime_, "ArrayBuffer")
+          .asObject(*runtime_)
+          .asFunction(*runtime_)
+          .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void *))});
+  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
+      workletRuntimeValue.getObject(*runtime_).getArrayBuffer(*runtime_).data(
+          *runtime_));
   workletRuntimeData[0] = reinterpret_cast<uintptr_t>(animatedRuntime.get());
 
   runtime_->global().setProperty(
-      *runtime_,
-      "_WORKLET_RUNTIME",
-      workletRuntimeValue);
+      *runtime_, "_WORKLET_RUNTIME", workletRuntimeValue);
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
@@ -198,7 +206,10 @@ void NativeProxy::installJSIBindings() {
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
-      configurePropsFunction};
+      configurePropsFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
+  };
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -343,6 +354,24 @@ void NativeProxy::configureProps(
       ReadableNativeArray::newObjectCxxArgs(
           std::move(jsi::dynamicFromValue(rt, nativeProps)))
           .get());
+}
+
+int NativeProxy::subscribeForKeyboardEvents(
+    std::function<void(bool, bool, int)> keyboardEventDataUpdater) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
+                        "subscribeForKeyboardEvents");
+  return method(
+      javaPart_.get(),
+      KeyboardEventDataUpdater::newObjectCxxArgs(
+          std::move(keyboardEventDataUpdater))
+          .get());
+}
+
+void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>(
+      "unsubscribeFromKeyboardEvents");
+  method(javaPart_.get(), listenerId);
 }
 
 } // namespace reanimated

@@ -51,6 +51,7 @@ import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -66,6 +67,10 @@ const SCREENS: Screens = {
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
+  },
+  AnimatedKeyboard: {
+    screen: AnimatedKeyboardExample,
+    title: '🆕 Use Animated Keyboard',
   },
   AnimatedSensor: {
     screen: AnimatedSensorExample,

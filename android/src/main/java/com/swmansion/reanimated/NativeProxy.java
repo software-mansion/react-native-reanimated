@@ -16,6 +16,7 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.common.GestureHandlerStateManager;
+import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
@@ -88,6 +89,18 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  public static class KeyboardEventDataUpdater {
+    @DoNotStrip private final HybridData mHybridData;
+
+    @DoNotStrip
+    private KeyboardEventDataUpdater(HybridData hybridData) {
+      mHybridData = hybridData;
+    }
+
+    public native void keyboardEventDataUpdater(boolean isShown, boolean isAnimating, int height);
+  }
+
+  @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
@@ -96,6 +109,7 @@ public class NativeProxy {
   private Scheduler mScheduler = null;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
+  private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
 
@@ -110,6 +124,7 @@ public class NativeProxy {
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
+    reanimatedKeyboardEventListener = new ReanimatedKeyboardEventListener(mContext);
     addDevMenuOption();
 
     GestureHandlerStateManager tempHandlerStateManager;
@@ -235,6 +250,16 @@ public class NativeProxy {
   @DoNotStrip
   private void unregisterSensor(int sensorId) {
     reanimatedSensorContainer.unregisterSensor(sensorId);
+  }
+
+  @DoNotStrip
+  private int subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater) {
+    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater);
+  }
+
+  @DoNotStrip
+  private void unsubscribeFromKeyboardEvents(int listenerId) {
+    reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
   }
 
   public void onCatalystInstanceDestroy() {
