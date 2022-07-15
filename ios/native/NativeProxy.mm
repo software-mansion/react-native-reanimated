@@ -3,6 +3,7 @@
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REAIOSErrorHandler.h>
+#import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>

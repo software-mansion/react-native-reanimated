@@ -153,8 +153,7 @@
                                                         attitude.quaternion.w,
                                                         attitude.yaw,
                                                         attitude.pitch,
-                                                        attitude.roll
-                                                    };
+                                                        attitude.roll};
                                                     self->_setter(data);
                                                     self->_lastTimestamp = currentTime;
                                                   }];
