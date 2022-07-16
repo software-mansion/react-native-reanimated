@@ -7,8 +7,10 @@
 #include <memory>
 #include <string>
 
-#if FOR_HERMES
+#if JS_RUNTIME_HERMES
 #include <hermes/hermes.h>
+#elif JS_RUNTIME_V8
+#include <v8runtime/V8RuntimeFactory.h>
 #else
 #include <jsi/JSCRuntime.h>
 #endif
@@ -136,31 +138,34 @@ void NativeProxy::installJSIBindings() {
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
-#if FOR_HERMES
+#if JS_RUNTIME_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::hermes::makeHermesRuntime(config.build());
+#elif JS_RUNTIME_V8
+  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
+  config->enableInspector = false;
+  config->appName = "reanimated";
+  std::shared_ptr<jsi::Runtime> animatedRuntime =
+      rnv8::createSharedV8Runtime(runtime_, std::move(config));
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::jsc::makeJSCRuntime();
 #endif
-  auto workletRuntimeValue = runtime_->global()
-    .getProperty(*runtime_, "ArrayBuffer")
-    .asObject(*runtime_)
-    .asFunction(*runtime_)
-    .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void*))});
-  uintptr_t* workletRuntimeData = reinterpret_cast<uintptr_t*>(
-    workletRuntimeValue
-      .getObject(*runtime_)
-      .getArrayBuffer(*runtime_)
-      .data(*runtime_));
+  auto workletRuntimeValue =
+      runtime_->global()
+          .getProperty(*runtime_, "ArrayBuffer")
+          .asObject(*runtime_)
+          .asFunction(*runtime_)
+          .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void *))});
+  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
+      workletRuntimeValue.getObject(*runtime_).getArrayBuffer(*runtime_).data(
+          *runtime_));
   workletRuntimeData[0] = reinterpret_cast<uintptr_t>(animatedRuntime.get());
 
   runtime_->global().setProperty(
-      *runtime_,
-      "_WORKLET_RUNTIME",
-      workletRuntimeValue);
+      *runtime_, "_WORKLET_RUNTIME", workletRuntimeValue);
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);

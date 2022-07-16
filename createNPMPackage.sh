@@ -12,13 +12,9 @@ version_name=("69" "68" "67" "66" "65")
 for index in {0..4}
 do
   yarn add react-native@"${versions[$index]}"
-  for for_hermes in "True" "False"
+  for js_runtime in "hermes" "jsc"
   do
-    engine="jsc"
-    if [ "$for_hermes" == "True" ]; then
-      engine="hermes"
-    fi
-    echo "engine=${engine}"
+    echo "js_runtime=${js_runtime}"
 
     cd android 
 
@@ -43,7 +39,7 @@ do
 
     ./gradlew clean
 
-    CLIENT_SIDE_BUILD="False" FOR_HERMES=${for_hermes} ./gradlew :assembleDebug --no-build-cache --rerun-tasks
+    CLIENT_SIDE_BUILD="False" JS_RUNTIME=${js_runtime} ./gradlew :assembleDebug --no-build-cache --rerun-tasks
 
     cd ./rnVersionPatch/$versionNumber
     if [ $(find . | grep 'java') ];
@@ -60,8 +56,8 @@ do
 
     cd $ROOT
 
-    rm -rf android/react-native-reanimated-"${version_name[$index]}-${engine}".aar
-    cp android/build/outputs/aar/*.aar android/react-native-reanimated-"${version_name[$index]}-${engine}".aar
+    rm -rf android/react-native-reanimated-"${version_name[$index]}-${js_runtime}".aar
+    cp android/build/outputs/aar/*.aar android/react-native-reanimated-"${version_name[$index]}-${js_runtime}".aar
   done
 done
 
