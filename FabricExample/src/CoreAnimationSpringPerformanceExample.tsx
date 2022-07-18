@@ -1,26 +1,28 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { StyleSheet, View, Button } from 'react-native';
 
 import React from 'react';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   withSpring,
   withSpringCoreAnimation,
+  withTiming,
 } from 'react-native-reanimated';
 
-const N = 1500;
+const N = 1000;
 
 export default function CoreAnimationSpringPerformanceExample() {
   const svs = new Array(N);
 
   for (let i = 0; i < N; i++) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    svs[i] = useSharedValue(i);
+    svs[i] = useSharedValue(-150 + i * 0.01);
   }
 
   const handlePress = () => {
     for (let i = 0; i < N; i++) {
+      // svs[i].value = withTiming(150, { duration: 2500 });
       // svs[i].value = withSpring(150);
       svs[i].value = withSpringCoreAnimation(150);
     }
