@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import NativeReanimated from '../NativeReanimated';
+import FrameCallbackRegistry from '../frameCallback/FrameCallbackRegistry';
 
 export type FrameCallback = {
   start: () => void;
@@ -7,6 +7,7 @@ export type FrameCallback = {
   state: boolean;
   callbackId: number;
 };
+const frameCallbackRegistry = new FrameCallbackRegistry();
 
 export function useFrameCallback(
   callback: () => void,
@@ -14,11 +15,17 @@ export function useFrameCallback(
 ): FrameCallback {
   const ref = useRef<FrameCallback>({
     start: () => {
-      NativeReanimated.manageStateFrameCallback(ref.current.callbackId, true);
+      frameCallbackRegistry.manageStateFrameCallback(
+        ref.current.callbackId,
+        true
+      );
       ref.current.state = true;
     },
     stop: () => {
-      NativeReanimated.manageStateFrameCallback(ref.current.callbackId, false);
+      frameCallbackRegistry.manageStateFrameCallback(
+        ref.current.callbackId,
+        false
+      );
       ref.current.state = false;
     },
     state: false,
@@ -27,7 +34,8 @@ export function useFrameCallback(
 
   function register() {
     if (ref.current.callbackId === -1) {
-      ref.current.callbackId = NativeReanimated.registerFrameCallback(callback);
+      ref.current.callbackId =
+        frameCallbackRegistry.registerFrameCallback(callback);
     }
 
     if (autostart) {
@@ -41,7 +49,7 @@ export function useFrameCallback(
     register();
 
     return () => {
-      NativeReanimated.unregisterFrameCallback(ref.current.callbackId);
+      frameCallbackRegistry.unregisterFrameCallback(ref.current.callbackId);
       ref.current.state = false;
       ref.current.callbackId = -1;
     };

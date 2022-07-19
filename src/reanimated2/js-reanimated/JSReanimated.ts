@@ -4,7 +4,7 @@ import MutableValue from './MutableValue';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { Timestamp, NestedObjectValues } from '../commonTypes';
 import { isJest } from '../PlatformChecker';
-import FrameCallbackRegistry from './FrameCallbackRegistry';
+import FrameCallbackRegistry from '../frameCallback/FrameCallbackRegistry';
 
 export default class JSReanimated extends NativeReanimated {
   _valueSetter?: <T>(value: T) => void = undefined;
@@ -128,17 +128,5 @@ export default class JSReanimated extends NativeReanimated {
     } else {
       throw Error('This method can be only use in Jest testing.');
     }
-  }
-
-  registerFrameCallback(callback: () => void): number {
-    return this.frameCallbackRegistry.registerFrameCallback(callback);
-  }
-
-  unregisterFrameCallback(frameCallbackId: number): void {
-    this.frameCallbackRegistry.unregisterFrameCallback(frameCallbackId);
-  }
-
-  manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
-    this.frameCallbackRegistry.manageStateFrameCallback(frameCallbackId, state);
   }
 }

@@ -5,10 +5,11 @@ import {
   SensorValueRotation,
 } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
-
+import FrameCallbackRegistry from '../frameCallback/FrameCallbackRegistry';
 export class NativeReanimated {
   native: boolean;
   private InnerNativeModule: any;
+  frameCallbackRegistry = new FrameCallbackRegistry();
 
   constructor(native = true) {
     if (global.__reanimatedModuleProxy === undefined && native) {
@@ -96,17 +97,5 @@ export class NativeReanimated {
 
   configureProps(uiProps: string[], nativeProps: string[]): void {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
-  }
-
-  registerFrameCallback(callback: () => void): number {
-    return this.InnerNativeModule.registerFrameCallback(callback);
-  }
-
-  unregisterFrameCallback(frameCallbackId: number): void {
-    this.InnerNativeModule.unregisterFrameCallback(frameCallbackId);
-  }
-
-  manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
-    this.InnerNativeModule.manageStateFrameCallback(frameCallbackId, state);
   }
 }
