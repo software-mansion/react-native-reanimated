@@ -8,9 +8,7 @@ export default class FrameCallbackRegistry {
     const loop = () => {
       this.frameCallbackActive.forEach((key) => {
         const callback = this.frameCallbackRegistry.get(key);
-        if (callback !== undefined) {
-          callback();
-        }
+        callback!();
       });
 
       if (this.frameCallbackActive.size > 0) {
@@ -27,9 +25,11 @@ export default class FrameCallbackRegistry {
   }
 
   registerFrameCallback(callback: () => void): number {
+    if (!callback) {
+      return -1;
+    }
     const callbackId = this.nextCallbackId;
     this.nextCallbackId++;
-
     this.frameCallbackRegistry.set(callbackId, callback);
 
     return callbackId;
@@ -41,6 +41,9 @@ export default class FrameCallbackRegistry {
   }
 
   manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
+    if (frameCallbackId === -1) {
+      return;
+    }
     if (state) {
       this.frameCallbackActive.add(frameCallbackId);
       this.runAnimation();
