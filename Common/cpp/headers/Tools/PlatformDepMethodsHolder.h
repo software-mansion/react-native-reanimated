@@ -61,9 +61,6 @@ using ConfigurePropsFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps)>;
-using RegisterFrameCallbackFunction = std::function<int(std::function<void()>)>;
-using UnregisterFrameCallbackSensorFunction = std::function<void(int)>;
-using FrameCallbackManageStateFunction = std::function<void(int, bool)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
@@ -79,9 +76,6 @@ struct PlatformDepMethodsHolder {
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
-  RegisterFrameCallbackFunction registerFrameCallbackFunction;
-  UnregisterFrameCallbackSensorFunction unregisterFrameCallbackSensorFunction;
-  FrameCallbackManageStateFunction frameCallbackManageStateFunction;
 };
 
 } // namespace reanimated

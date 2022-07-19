@@ -14,14 +14,14 @@ export default class FrameCallbackRegistry {
       });
 
       if (this.frameCallbackActive.size > 0) {
-        window.requestAnimationFrame(loop);
+        requestAnimationFrame(loop);
       } else {
         this.isFrameCallbackRunning = false;
       }
     };
 
     if (!this.isFrameCallbackRunning) {
-      window.requestAnimationFrame(loop);
+      requestAnimationFrame(loop);
       this.isFrameCallbackRunning = true;
     }
   }

@@ -77,18 +77,6 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) = 0;
-
-  // frame callback
-  virtual jsi::Value registerFrameCallback(
-      jsi::Runtime &rt,
-      const jsi::Value &callback) = 0;
-  virtual void unregisterFrameCallback(
-      jsi::Runtime &rt,
-      const jsi::Value &frameCallbackId) = 0;
-  virtual void manageStateFrameCallback(
-      jsi::Runtime &rt,
-      const jsi::Value &frameCallbackId,
-      const jsi::Value &state) = 0;
 };
 
 } // namespace reanimated

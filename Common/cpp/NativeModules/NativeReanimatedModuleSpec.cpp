@@ -128,35 +128,6 @@ static jsi::Value SPEC_PREFIX(unregisterSensor)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value SPEC_PREFIX(registerFrameCallback)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->registerFrameCallback(rt, std::move(args[0]));
-}
-
-static jsi::Value SPEC_PREFIX(unregisterFrameCallback)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->unregisterFrameCallback(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value SPEC_PREFIX(manageStateFrameCallback)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->manageStateFrameCallback(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
 static jsi::Value SPEC_PREFIX(configureProps)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -192,12 +163,5 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};
   methodMap_["configureProps"] = MethodMetadata{2, SPEC_PREFIX(configureProps)};
-
-  methodMap_["registerFrameCallback"] =
-      MethodMetadata{1, SPEC_PREFIX(registerFrameCallback)};
-  methodMap_["unregisterFrameCallback"] =
-      MethodMetadata{1, SPEC_PREFIX(unregisterFrameCallback)};
-  methodMap_["manageStateFrameCallback"] =
-      MethodMetadata{2, SPEC_PREFIX(manageStateFrameCallback)};
 }
 } // namespace reanimated

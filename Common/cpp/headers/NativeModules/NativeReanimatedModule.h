@@ -137,16 +137,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
 
-  jsi::Value registerFrameCallback(jsi::Runtime &rt, const jsi::Value &callback)
-      override;
-  void unregisterFrameCallback(
-      jsi::Runtime &rt,
-      const jsi::Value &frameCallbackId) override;
-  void manageStateFrameCallback(
-      jsi::Runtime &rt,
-      const jsi::Value &frameCallbackId,
-      const jsi::Value &state) override;
-
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
