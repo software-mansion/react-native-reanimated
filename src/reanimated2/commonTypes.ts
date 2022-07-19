@@ -148,3 +148,9 @@ export type ValueRotation = {
 export type SensorValueRotation = SharedValue<ValueRotation>;
 
 export type ShadowNodeWrapper = object;
+
+export type AnimatedKeyboardInfo = {
+  isShown: SharedValue<boolean>;
+  isAnimating: SharedValue<boolean>;
+  height: SharedValue<number>;
+};

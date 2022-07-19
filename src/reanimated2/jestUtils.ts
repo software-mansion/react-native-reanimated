@@ -167,9 +167,9 @@ const tickTravel = () => {
   jest.advanceTimersByTime(frameTime);
 };
 
-export const withReanimatedTimer = (animatonTest) => {
+export const withReanimatedTimer = (animationTest) => {
   beforeTest();
-  animatonTest();
+  animationTest();
   afterTest();
 };
 
