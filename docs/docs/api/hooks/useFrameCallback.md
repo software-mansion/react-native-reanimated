@@ -68,10 +68,8 @@ export default function FrameCallbackExample() {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.container}>
-        <Animated.View style={[styles.box, animatedStyle1]} />
-      </View>
+    <View>
+      <Animated.View style={[styles.box, animatedStyle1]} />
       <Button title={'Start/stop'} onPress={() => {
         if (frameCallback.state) {
           frameCallback.stop();
