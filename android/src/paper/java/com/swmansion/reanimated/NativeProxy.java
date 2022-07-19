@@ -18,7 +18,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
-import com.swmansion.reanimated.frameCallback.FrameCallbackContainer;
+import com.swmansion.reanimated.frameCallback.FrameCallbackManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
@@ -98,7 +98,7 @@ public class NativeProxy {
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
   private ReanimatedSensorContainer reanimatedSensorContainer;
-  private FrameCallbackContainer frameCallbackContainer;
+  private FrameCallbackManager frameCallbackManager;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
@@ -118,7 +118,7 @@ public class NativeProxy {
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
-    frameCallbackContainer = new FrameCallbackContainer();
+    frameCallbackManager = new FrameCallbackManager();
     addDevMenuOption();
 
     GestureHandlerStateManager tempHandlerStateManager;
@@ -302,8 +302,6 @@ public class NativeProxy {
         });
   }
 
-  // TODO: Work in progress below this line
-
   @DoNotStrip
   public static class FrameCallbackHook {
 
@@ -319,16 +317,16 @@ public class NativeProxy {
 
   @DoNotStrip
   private int registerFrameCallback(FrameCallbackHook frameCallback) {
-    return frameCallbackContainer.registerFrameCallback(frameCallback::frameCallback);
+    return frameCallbackManager.registerFrameCallback(frameCallback);
   }
 
   @DoNotStrip
   private void unregisterFrameCallback(int callbackId) {
-    frameCallbackContainer.unregisterFrameCallback(callbackId);
+    frameCallbackManager.unregisterFrameCallback(callbackId);
   }
 
   @DoNotStrip
   private void manageStateFrameCallback(int callbackId, boolean state) {
-    frameCallbackContainer.manageStateFrameCallback(callbackId, state);
+    frameCallbackManager.manageStateFrameCallback(callbackId, state);
   }
 }

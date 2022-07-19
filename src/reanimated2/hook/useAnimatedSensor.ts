@@ -81,8 +81,6 @@ export function useAnimatedSensor(
     }
 
     return () => {
-      console.log('useAnimatedSensor unregister');
-
       ref.current.unregister();
     };
   }, [sensorType, userConfig]);

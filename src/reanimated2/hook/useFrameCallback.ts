@@ -41,13 +41,11 @@ export function useFrameCallback(
     register();
 
     return () => {
-      console.log('TS: Unregistering callback!');
-
       NativeReanimated.unregisterFrameCallback(ref.current.callbackId);
       ref.current.state = false;
       ref.current.callbackId = -1;
     };
-  });
+  }, [callback, autostart]);
 
   return ref.current;
 }

@@ -415,12 +415,13 @@ jsi::Value NativeReanimatedModule::registerFrameCallback(
     jsi::Runtime &rt,
     const jsi::Value &callback) {
   auto callbackSV = ShareableValue::adapt(rt, callback, this);
+  auto &runtimeRef = *this->runtime;
   return platformDepMethodsHolder_.registerFrameCallbackFunction(
-      [this, callbackSV]() {
-        callbackSV->getValue(*runtime)
-            .asObject(*runtime)
-            .asFunction(*runtime)
-            .call(*runtime);
+      [&runtimeRef, callbackSV]() {
+        callbackSV->getValue(runtimeRef)
+            .asObject(runtimeRef)
+            .asFunction(runtimeRef)
+            .call(runtimeRef);
       });
 }
 

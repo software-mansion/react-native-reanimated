@@ -80,7 +80,7 @@ export default function FrameCallbackExample() {
       </View>
       <View style={styles.buttonContainer}>
         <Button
-          title={'Start/stop square1 animation'}
+          title="Start/stop square1 animation"
           onPress={() => {
             if (frameCallback1.state) {
               frameCallback1.stop();
@@ -90,7 +90,7 @@ export default function FrameCallbackExample() {
           }}
         />
         <Button
-          title={'Start/stop square2 animation'}
+          title="Start/stop square2 animation"
           onPress={() => {
             if (frameCallback2.state) {
               frameCallback2.stop();

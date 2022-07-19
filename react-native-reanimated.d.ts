@@ -538,7 +538,16 @@ declare module 'react-native-reanimated' {
     userConfig?: SensorConfig
   ): AnimatedSensor<any>;
 
-  export function useFrameCallback(callback: () => void, autostart?: boolean);
+  export type FrameCallback = {
+    start: () => void;
+    stop: () => void;
+    state: boolean;
+    callbackId: number;
+  };
+  export function useFrameCallback(
+    callback: () => void,
+    autostart?: boolean
+  ): FrameCallback;
 
   export interface ExitAnimationsValues {
     currentOriginX: number;
