@@ -4,7 +4,6 @@ import MutableValue from './MutableValue';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { Timestamp, NestedObjectValues } from '../commonTypes';
 import { isJest } from '../PlatformChecker';
-import FrameCallbackRegistry from '../frameCallback/FrameCallbackRegistry';
 
 export default class JSReanimated extends NativeReanimated {
   _valueSetter?: <T>(value: T) => void = undefined;
@@ -13,8 +12,6 @@ export default class JSReanimated extends NativeReanimated {
   _mapperRegistry: MapperRegistry<any> = new MapperRegistry(this);
   _frames: ((timestamp: Timestamp) => void)[] = [];
   timeProvider: { now: () => number };
-
-  frameCallbackRegistry = new FrameCallbackRegistry();
 
   constructor() {
     super(false);
