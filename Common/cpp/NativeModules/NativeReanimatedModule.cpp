@@ -640,28 +640,18 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &keyboardEventContainer) {
   jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
-  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
-      sharedProperties;
-  std::shared_ptr<ShareableValue> isShownShared = ShareableValue::adapt(
-      rt, keyboardEventObj.getProperty(rt, "isShown"), this);
-  std::shared_ptr<ShareableValue> isAnimatingShared = ShareableValue::adapt(
-      rt, keyboardEventObj.getProperty(rt, "isAnimating"), this);
+  std::unordered_map<std::string, std::shared_ptr<ShareableValue>> sharedProperties;
+  std::shared_ptr<ShareableValue> stateShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "state"), this);
   std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
       rt, keyboardEventObj.getProperty(rt, "height"), this);
 
   auto keyboardEventDataUpdater =
-      [this, &rt, isShownShared, isAnimatingShared, heightShared](
-          bool isShown, bool isAnimating, int height) {
-        auto &isShownMutableValue =
-            ValueWrapper::asMutableValue(isShownShared->valueContainer);
-        isShownMutableValue->setValue(rt, jsi::Value(isShown));
+      [this, &rt, stateShared, heightShared](int keyboardState, int height) {
+        auto &keyboardStateValue = ValueWrapper::asMutableValue(stateShared->valueContainer);
+        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
 
-        auto &isAnimatingMutableValue =
-            ValueWrapper::asMutableValue(isAnimatingShared->valueContainer);
-        isAnimatingMutableValue->setValue(rt, jsi::Value(isAnimating));
-
-        auto &heightMutableValue =
-            ValueWrapper::asMutableValue(heightShared->valueContainer);
+        auto &heightMutableValue = ValueWrapper::asMutableValue(heightShared->valueContainer);
         heightMutableValue->setValue(rt, jsi::Value(height));
 
         this->mapperRegistry->execute(*this->runtime);

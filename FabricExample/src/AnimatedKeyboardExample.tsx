@@ -1,6 +1,7 @@
 import Animated, {
   useAnimatedStyle,
   useAnimatedKeyboard,
+  KeyboardState,
 } from 'react-native-reanimated';
 import {
   View,
@@ -22,12 +23,13 @@ function NestedView(): React.ReactElement {
 function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const style = useAnimatedStyle(() => {
+    const color = keyboard.state.value === KeyboardState.OPENING ? 'red' : 'blue';
     return {
-      backgroundColor: keyboard.isShown.value ? 'red' : 'blue',
-      borderRadius: keyboard.isAnimating.value ? BOX_SIZE / 2 : 0,
+      backgroundColor: color,
     };
   });
   const translateStyle = useAnimatedStyle(() => {
+    // console.log(keyboard)
     return {
       transform: [{ translateY: -keyboard.height.value }],
     };

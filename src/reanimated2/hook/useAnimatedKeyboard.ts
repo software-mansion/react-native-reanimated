@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import NativeReanimated from '../NativeReanimated';
 import { makeMutable } from '../core';
-import { AnimatedKeyboardInfo } from '../commonTypes';
+import { AnimatedKeyboardInfo, KeyboardState } from '../commonTypes';
 
 export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
   const ref = useRef<AnimatedKeyboardInfo | null>(null);
@@ -10,8 +10,7 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
 
   if (ref.current === null) {
     const keyboardEventData: AnimatedKeyboardInfo = {
-      isShown: makeMutable(false),
-      isAnimating: makeMutable(false),
+      state: makeMutable(KeyboardState.UNKNOWN),
       height: makeMutable(0),
     };
     listenerId.current =

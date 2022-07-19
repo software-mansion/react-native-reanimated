@@ -538,10 +538,16 @@ declare module 'react-native-reanimated' {
     userConfig?: SensorConfig
   ): AnimatedSensor<any>;
 
+  export enum KeyboardState {
+    UNKNOWN = 0,
+    OPENING = 1,
+    OPEN = 2,
+    CLOSING = 3,
+    CLOSE = 4,
+  }
   export type AnimatedKeyboardInfo = {
-    isShown: SharedValue<boolean>;
-    isAnimating: SharedValue<boolean>;
     height: SharedValue<number>;
+    state: SharedValue<KeyboardState>;
   };
   export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
 
