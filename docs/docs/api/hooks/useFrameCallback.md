@@ -37,7 +37,7 @@ Properties:
                     or not (`false`)
 * `callbackId: number`: a unique identifier of the callback function
 
-### Example
+## Example
 
 ```js {13-16}
 import Animated, {
