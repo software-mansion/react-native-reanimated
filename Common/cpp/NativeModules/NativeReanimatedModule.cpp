@@ -88,7 +88,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      platformDepMethodsHolder_(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else

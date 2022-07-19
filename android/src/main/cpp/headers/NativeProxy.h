@@ -183,9 +183,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
-  int registerFrameCallback(std::function<void()> callback);
-  void unregisterFrameCallback(const int frameCallbackId);
-  void manageStateFrameCallback(const int frameCallbackId, const bool state);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
