@@ -70,6 +70,10 @@ const SCREENS: Screens = {
     screen: AnimatedSensorExample,
     title: '🆕 Use Animated Sensor',
   },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: '🆕 Frame callback example',
+  },
   DefaultTransistions: {
     screen: WaterfallGridExample,
     title: '🆕 Default layout transitions',
@@ -185,10 +189,6 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
-  },
-  FrameCallbackExample: {
-    screen: FrameCallbackExample,
-    title: 'Frame callback example',
   },
 };
 
