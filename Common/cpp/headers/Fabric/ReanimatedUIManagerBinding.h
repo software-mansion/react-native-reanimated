@@ -28,7 +28,7 @@ class ReanimatedUIManagerBinding : public UIManagerBinding {
   ReanimatedUIManagerBinding(
       std::shared_ptr<UIManager> uiManager,
       RuntimeExecutor runtimeExecutor,
-      std::shared_ptr<UIManagerBinding> uiManagerBinding,
+      std::unique_ptr<EventHandler const> eventHandler,
       std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
 
   ~ReanimatedUIManagerBinding();
