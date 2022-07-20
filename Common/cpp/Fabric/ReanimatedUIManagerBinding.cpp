@@ -42,7 +42,18 @@ ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     : UIManagerBinding(uiManager, runtimeExecutor),
       uiManager_(std::move(uiManager)),
       uiManagerBinding_(uiManagerBinding),
-      newestShadowNodesRegistry_(newestShadowNodesRegistry) {}
+      newestShadowNodesRegistry_(newestShadowNodesRegistry) {
+  auto thisBinding = static_cast<UIManagerBinding *>(this);
+  auto thisBindingPublic =
+      reinterpret_cast<UIManagerBindingPublic *>(thisBinding);
+
+  auto otherBinding = static_cast<UIManagerBinding *>(&*uiManagerBinding);
+  auto otherBindingPublic =
+      reinterpret_cast<UIManagerBindingPublic *>(otherBinding);
+
+  thisBindingPublic->eventHandler_ =
+      std::move(otherBindingPublic->eventHandler_);
+}
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
 
@@ -56,7 +67,7 @@ void ReanimatedUIManagerBinding::dispatchEvent(
     std::string const &type,
     ReactEventPriority priority,
     ValueFactory const &payloadFactory) const {
-  uiManagerBinding_->dispatchEvent(
+  UIManagerBinding::dispatchEvent(
       runtime, eventTarget, type, priority, payloadFactory);
 }
 
@@ -212,7 +223,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
   // `ShadowTree::getCurrentRevision` under the hood,
   // so there's no need to overwrite them.
 
-  return uiManagerBinding_->get(runtime, name);
+  return UIManagerBinding::get(runtime, name);
 }
 
 } // namespace reanimated

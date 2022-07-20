@@ -17,6 +17,7 @@ namespace reanimated {
 struct UIManagerBindingPublic {
   void *vtable;
   std::shared_ptr<UIManager> uiManager_;
+  std::unique_ptr<EventHandler const> eventHandler_;
 };
 
 struct UIManagerPublic {
