@@ -17,27 +17,17 @@ void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
         &newestShadowNodesRegistry) {
   // adapted from UIManagerBinding.cpp
   auto uiManagerModuleName = "nativeFabricUIManager";
-
-  auto eventHandler = [&]() -> std::unique_ptr<EventHandler const> {
-    auto uiManagerValue =
-        runtime.global().getProperty(runtime, uiManagerModuleName);
-    if (uiManagerValue.isUndefined()) {
-      return nullptr;
-    }
-
-    auto uiManagerBinding =
-        uiManagerValue.asObject(runtime).asHostObject<UIManagerBinding>(
+  auto uiManagerValue =
+      runtime.global().getProperty(runtime, uiManagerModuleName);
+  auto uiManagerBinding = uiManagerValue.isUndefined()
+      ? std::make_shared<UIManagerBinding>(uiManager, runtimeExecutor)
+      : uiManagerValue.asObject(runtime).asHostObject<UIManagerBinding>(
             runtime);
-    auto uiManagerBindingPublic =
-        reinterpret_cast<UIManagerBindingPublic *>(&*uiManagerBinding);
-    return std::move(uiManagerBindingPublic->eventHandler_);
-  }();
-
   auto reanimatedUiManagerBinding =
       std::make_shared<ReanimatedUIManagerBinding>(
           uiManager,
           runtimeExecutor,
-          std::move(eventHandler),
+          uiManagerBinding,
           newestShadowNodesRegistry);
   auto object =
       jsi::Object::createFromHostObject(runtime, reanimatedUiManagerBinding);
@@ -47,15 +37,21 @@ void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
 ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     std::shared_ptr<UIManager> uiManager,
     RuntimeExecutor runtimeExecutor,
-    std::unique_ptr<EventHandler const> eventHandler,
+    std::shared_ptr<UIManagerBinding> uiManagerBinding,
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
     : UIManagerBinding(uiManager, runtimeExecutor),
       uiManager_(std::move(uiManager)),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {
-  if (eventHandler != nullptr) {
-    reinterpret_cast<UIManagerBindingPublic *>(this)->eventHandler_ =
-        std::move(eventHandler);
-  }
+  auto thisBinding = static_cast<UIManagerBinding *>(this);
+  auto thisBindingPublic =
+      reinterpret_cast<UIManagerBindingPublic *>(thisBinding);
+
+  auto otherBinding = static_cast<UIManagerBinding *>(&*uiManagerBinding);
+  auto otherBindingPublic =
+      reinterpret_cast<UIManagerBindingPublic *>(otherBinding);
+
+  thisBindingPublic->eventHandler_ =
+      std::move(otherBindingPublic->eventHandler_);
 }
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
