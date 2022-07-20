@@ -8,6 +8,7 @@
 #include <react/renderer/uimanager/primitives.h>
 
 #include <memory>
+#include <string>
 
 #include "NewestShadowNodesRegistry.h"
 
@@ -28,16 +29,25 @@ class ReanimatedUIManagerBinding : public UIManagerBinding {
   ReanimatedUIManagerBinding(
       std::shared_ptr<UIManager> uiManager,
       RuntimeExecutor runtimeExecutor,
+      std::shared_ptr<UIManagerBinding> uiManagerBinding,
       std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
 
   ~ReanimatedUIManagerBinding();
 
   void invalidate() const;
 
+  void dispatchEvent(
+      jsi::Runtime &runtime,
+      EventTarget const *eventTarget,
+      std::string const &type,
+      ReactEventPriority priority,
+      ValueFactory const &payloadFactory) const;
+
   jsi::Value get(jsi::Runtime &runtime, jsi::PropNameID const &name) override;
 
  private:
   std::shared_ptr<UIManager> uiManager_;
+  std::shared_ptr<UIManagerBinding> uiManagerBinding_;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
 };
 

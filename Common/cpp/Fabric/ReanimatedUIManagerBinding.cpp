@@ -17,24 +17,47 @@ void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
         &newestShadowNodesRegistry) {
   // adapted from UIManagerBinding.cpp
   auto uiManagerModuleName = "nativeFabricUIManager";
-  auto uiManagerBinding = std::make_shared<ReanimatedUIManagerBinding>(
-      uiManager, runtimeExecutor, newestShadowNodesRegistry);
-  auto object = jsi::Object::createFromHostObject(runtime, uiManagerBinding);
+  auto uiManagerValue =
+      runtime.global().getProperty(runtime, uiManagerModuleName);
+  auto uiManagerBinding = uiManagerValue.isUndefined()
+      ? std::make_shared<UIManagerBinding>(uiManager, runtimeExecutor)
+      : uiManagerValue.asObject(runtime).asHostObject<UIManagerBinding>(
+            runtime);
+  auto reanimatedUiManagerBinding =
+      std::make_shared<ReanimatedUIManagerBinding>(
+          uiManager,
+          runtimeExecutor,
+          uiManagerBinding,
+          newestShadowNodesRegistry);
+  auto object =
+      jsi::Object::createFromHostObject(runtime, reanimatedUiManagerBinding);
   runtime.global().setProperty(runtime, uiManagerModuleName, std::move(object));
 }
 
 ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     std::shared_ptr<UIManager> uiManager,
     RuntimeExecutor runtimeExecutor,
+    std::shared_ptr<UIManagerBinding> uiManagerBinding,
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
     : UIManagerBinding(uiManager, runtimeExecutor),
       uiManager_(std::move(uiManager)),
+      uiManagerBinding_(uiManagerBinding),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {}
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
 
 void ReanimatedUIManagerBinding::invalidate() const {
-  uiManager_->setDelegate(nullptr);
+  uiManagerBinding_->invalidate();
+}
+
+void ReanimatedUIManagerBinding::dispatchEvent(
+    jsi::Runtime &runtime,
+    EventTarget const *eventTarget,
+    std::string const &type,
+    ReactEventPriority priority,
+    ValueFactory const &payloadFactory) const {
+  uiManagerBinding_->dispatchEvent(
+      runtime, eventTarget, type, priority, payloadFactory);
 }
 
 static inline ShadowNode::Shared cloneNode(
@@ -189,7 +212,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
   // `ShadowTree::getCurrentRevision` under the hood,
   // so there's no need to overwrite them.
 
-  return UIManagerBinding::get(runtime, name);
+  return uiManagerBinding_->get(runtime, name);
 }
 
 } // namespace reanimated
