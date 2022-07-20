@@ -7,7 +7,7 @@ sidebar_label: useFrameCallback
 This hook allows you to run a piece of code on every frame update.
 
 ```js
-useFrameCallback(updater: () => void, autostart?: boolean) => [FrameCallback]
+useFrameCallback(updater: () => void, autostart: boolean = true) => [FrameCallback]
 ```
 
 ### Arguments
@@ -31,9 +31,8 @@ callback state.
 #### `FrameCallback: [object]`
 
 Properties:
-* `start: () => void`: begins listening for frame updates
-* `stop: () => void`: stops listening for frame updates
-* `state: boolean`: indicates whether the callback is active (`true`)
+* `setActive: (isActive: boolean) => void`: begins / stops listening for frame updates
+* `isActive: boolean`: indicates whether the callback is active (`true`)
                     or not (`false`)
 * `callbackId: number`: a unique identifier of the callback function
 
@@ -70,13 +69,7 @@ export default function FrameCallbackExample() {
   return (
     <View>
       <Animated.View style={[styles.box, animatedStyle1]} />
-      <Button title={'Start/stop'} onPress={() => {
-        if (frameCallback.state) {
-          frameCallback.stop();
-        } else {
-          frameCallback.start();
-        }
-      }}>
+      <Button title={'Start/stop'} onPress={() => frameCallback.setActive(!frameCallback.isActive)}>
     </View>
   );
 }

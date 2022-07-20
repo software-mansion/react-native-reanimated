@@ -539,9 +539,8 @@ declare module 'react-native-reanimated' {
   ): AnimatedSensor<any>;
 
   export type FrameCallback = {
-    start: () => void;
-    stop: () => void;
-    state: boolean;
+    setActive: (isActive: boolean) => void;
+    isActive: boolean;
     callbackId: number;
   };
   export function useFrameCallback(

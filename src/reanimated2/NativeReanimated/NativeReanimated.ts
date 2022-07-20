@@ -6,6 +6,7 @@ import {
   AnimatedKeyboardInfo,
 } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
+
 export class NativeReanimated {
   native: boolean;
   private InnerNativeModule: any;
