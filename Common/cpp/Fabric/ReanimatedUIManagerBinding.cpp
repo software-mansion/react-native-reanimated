@@ -42,16 +42,9 @@ ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     : UIManagerBinding(uiManager, runtimeExecutor),
       uiManager_(std::move(uiManager)),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {
-  auto thisBinding = static_cast<UIManagerBinding *>(this);
-  auto thisBindingPublic =
-      reinterpret_cast<UIManagerBindingPublic *>(thisBinding);
-
-  auto otherBinding = static_cast<UIManagerBinding *>(&*uiManagerBinding);
-  auto otherBindingPublic =
-      reinterpret_cast<UIManagerBindingPublic *>(otherBinding);
-
-  thisBindingPublic->eventHandler_ =
-      std::move(otherBindingPublic->eventHandler_);
+  reinterpret_cast<UIManagerBindingPublic *>(this)->eventHandler_ =
+      std::move(reinterpret_cast<UIManagerBindingPublic *>(&*uiManagerBinding)
+                    ->eventHandler_);
 }
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
