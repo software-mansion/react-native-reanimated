@@ -41,7 +41,6 @@ ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
     : UIManagerBinding(uiManager, runtimeExecutor),
       uiManager_(std::move(uiManager)),
-      uiManagerBinding_(uiManagerBinding),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {
   auto thisBinding = static_cast<UIManagerBinding *>(this);
   auto thisBindingPublic =
@@ -56,20 +55,6 @@ ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
 }
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
-
-void ReanimatedUIManagerBinding::invalidate() const {
-  uiManagerBinding_->invalidate();
-}
-
-void ReanimatedUIManagerBinding::dispatchEvent(
-    jsi::Runtime &runtime,
-    EventTarget const *eventTarget,
-    std::string const &type,
-    ReactEventPriority priority,
-    ValueFactory const &payloadFactory) const {
-  UIManagerBinding::dispatchEvent(
-      runtime, eventTarget, type, priority, payloadFactory);
-}
 
 static inline ShadowNode::Shared cloneNode(
     UIManager *uiManager,
