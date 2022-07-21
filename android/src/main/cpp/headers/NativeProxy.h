@@ -160,7 +160,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
   void installJSIBindings(
-      jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
+      jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,

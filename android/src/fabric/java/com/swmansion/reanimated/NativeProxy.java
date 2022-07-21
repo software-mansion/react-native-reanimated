@@ -7,6 +7,10 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.queue.MessageQueueThread;
+import com.facebook.react.bridge.queue.QueueThreadExceptionHandler;
+import com.facebook.react.bridge.queue.ReactQueueConfigurationImpl;
+import com.facebook.react.bridge.queue.ReactQueueConfigurationSpec;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
@@ -144,7 +148,9 @@ public class NativeProxy {
       LayoutAnimations LayoutAnimations,
       FabricUIManager fabricUIManager);
 
-  private native void installJSIBindings(FabricUIManager fabricUIManager);
+  private native void installJSIBindings(
+    FabricUIManager fabricUIManager,
+    MessageQueueThread messageQueueThread);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
@@ -270,7 +276,16 @@ public class NativeProxy {
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
-    installJSIBindings(fabricUIManager);
+    ReactQueueConfigurationImpl queueHolder = ReactQueueConfigurationImpl.create(
+        ReactQueueConfigurationSpec.createDefault(),
+        new QueueThreadExceptionHandler() {
+          @Override
+          public void handleException(Exception e) {
+            throw new RuntimeException(e);
+          }
+        }
+    );
+    installJSIBindings(fabricUIManager, queueHolder.getUIQueueThread());
     AnimationsManager animationsManager =
         mContext
             .get()

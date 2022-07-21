@@ -457,6 +457,18 @@ task prepareHermes() {
             from "$reactNative/ReactAndroid/src/main/jni/first-party/hermes/Android.mk"
             into "$thirdPartyNdkDir/hermes"
         }
+
+        // Hermes inspector and dependencies
+        copy {
+            include "**/*.so"
+            from "../hermes-inspector"
+            into "../FabricExample/android/app/build/intermediates/merged_native_libs/debug/out/lib"
+        }
+        copy {
+            include "**/*.so"
+            from "../hermes-inspector"
+            into "../FabricExample/android/app/build/intermediates/stripped_native_libs/debug/out/lib"
+        }
     }
 }
 

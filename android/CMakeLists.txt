@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12.0)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DRNVERSION=${RNVERSION} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
+set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DRNVERSION=${RNVERSION} -DHERMES_ENABLE_DEBUGGER=1 -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     set (ALL_FLAGS "${DEFAULT_FLAGS} -DRCT_NEW_ARCH_ENABLED")
 else()
@@ -11,10 +11,10 @@ else()
 endif()
 set (CMAKE_CXX_FLAGS ${ALL_FLAGS})
 
-if(${NATIVE_DEBUG})
+#if(${NATIVE_DEBUG})
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-endif()
+#endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
@@ -82,6 +82,37 @@ add_library(
         ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
 
+# build hermes-inspector
+#[[
+file(
+        GLOB_RECURSE
+        HERMES_INSPECTOR_SOURCES_CPP
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/hermes/inspector/*.cpp"
+)
+add_library(
+        hermes-inspector
+        SHARED
+        ${HERMES_INSPECTOR_SOURCES_CPP}
+)
+target_include_directories(
+        hermes-inspector
+        PUBLIC
+        "${NODE_MODULES_DIR}/react-native/sdks/hermes/API/"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/build/third-party-ndk/libevent/include/"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/hermes-engine/build/hermes/external/llvh/include/"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers/"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
+        "${NODE_MODULES_DIR}/react-native/sdks/hermes/public/"
+        "${NODE_MODULES_DIR}/react-native/sdks/hermes/external/llvh/include/"
+        "${NODE_MODULES_DIR}/react-native/sdks/hermes/external/llvh/utils/unittest/googletest/include/"
+        "${NODE_MODULES_DIR}/react-native/sdks/hermes/external/llvh/utils/unittest/googlemock/include/"
+        "${BUILD_DIR}/third-party-ndk/glog/exported/"
+        "${BUILD_DIR}/third-party-ndk/folly/"
+        "${BUILD_DIR}/third-party-ndk/double-conversion"
+        "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
+)
+]]
 # includes
 
 file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
@@ -102,6 +133,7 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/hermes"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/react/renderer/graphics/platform/cxx"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/runtimeexecutor"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
@@ -117,6 +149,7 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/headers/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${SRC_DIR}/main/cpp/headers"
+        "${SRC_DIR}/main/cpp/NativeProxy.cpp"
 )
 
 find_library(
@@ -141,7 +174,28 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+#[[
+find_library(
+        FB_LIB
+        fb
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 
+find_library(
+        JS_INSPECTOR_LIB
+        jsinspector
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+
+find_library(
+        FOLLY_FUTURES_LIB
+        folly_futures
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+]]
 if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
     find_library(
             FOLLY_LIB
@@ -256,9 +310,30 @@ if(${JS_RUNTIME} STREQUAL "hermes")
             PATHS ${HERMES_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
+    file (GLOB HERMES_INSPECTOR_DIR "${BUILD_DIR}/third-party-ndk/hermes-inspector/${ANDROID_ABI}")
+    find_library(
+            HERMES_INSPECTOR_LIB
+            hermes-inspector
+            PATHS ${HERMES_INSPECTOR_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+#[[
+    target_link_libraries(
+        hermes-inspector
+        ${HERMES_LIB}
+        ${FOLLY_LIB}
+        ${FOLLY_FUTURES_LIB}
+        ${JSI_LIB}
+        ${GLOG_LIB}
+        ${FB_LIB}
+        ${FBJNI_LIB}
+        ${JS_INSPECTOR_LIB}
+    )
+]]
     target_link_libraries(
             ${PACKAGE_NAME}
             ${HERMES_LIB}
+            ${HERMES_INSPECTOR_LIB}
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
