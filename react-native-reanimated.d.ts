@@ -538,6 +538,16 @@ declare module 'react-native-reanimated' {
     userConfig?: SensorConfig
   ): AnimatedSensor<any>;
 
+  export type FrameCallback = {
+    setActive: (isActive: boolean) => void;
+    isActive: boolean;
+    callbackId: number;
+  };
+  export function useFrameCallback(
+    callback: () => void,
+    autostart?: boolean
+  ): FrameCallback;
+
   export type AnimatedKeyboardInfo = {
     isShown: SharedValue<boolean>;
     isAnimating: SharedValue<boolean>;
