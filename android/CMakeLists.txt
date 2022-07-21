@@ -83,7 +83,6 @@ add_library(
 )
 
 # build hermes-inspector
-#[[
 file(
         GLOB_RECURSE
         HERMES_INSPECTOR_SOURCES_CPP
@@ -109,10 +108,16 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/sdks/hermes/external/llvh/utils/unittest/googlemock/include/"
         "${BUILD_DIR}/third-party-ndk/glog/exported/"
         "${BUILD_DIR}/third-party-ndk/folly/"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.h"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.h"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.h"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.cpp"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.cpp"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.cpp"
         "${BUILD_DIR}/third-party-ndk/double-conversion"
         "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
 )
-]]
+
 # includes
 
 file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
@@ -149,7 +154,13 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/headers/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${SRC_DIR}/main/cpp/headers"
-        "${SRC_DIR}/main/cpp/NativeProxy.cpp"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.h"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.h"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.h"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.cpp"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.cpp"
+        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.cpp"
 )
 
 find_library(
@@ -174,7 +185,7 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-#[[
+
 find_library(
         FB_LIB
         fb
@@ -189,13 +200,6 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 
-find_library(
-        FOLLY_FUTURES_LIB
-        folly_futures
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-]]
 if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
     find_library(
             FOLLY_LIB
@@ -310,14 +314,15 @@ if(${JS_RUNTIME} STREQUAL "hermes")
             PATHS ${HERMES_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
-    file (GLOB HERMES_INSPECTOR_DIR "${BUILD_DIR}/third-party-ndk/hermes-inspector/${ANDROID_ABI}")
+
+    file (GLOB FOLLY_FUTURES_DIR "${BUILD_DIR}/third-party-ndk/hermes-inspector/${ANDROID_ABI}")
     find_library(
-            HERMES_INSPECTOR_LIB
-            hermes-inspector
-            PATHS ${HERMES_INSPECTOR_DIR}
+            FOLLY_FUTURES_LIB
+            folly_futures
+            PATHS ${FOLLY_FUTURES_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
-#[[
+
     target_link_libraries(
         hermes-inspector
         ${HERMES_LIB}
@@ -329,11 +334,11 @@ if(${JS_RUNTIME} STREQUAL "hermes")
         ${FBJNI_LIB}
         ${JS_INSPECTOR_LIB}
     )
-]]
+
     target_link_libraries(
             ${PACKAGE_NAME}
             ${HERMES_LIB}
-            ${HERMES_INSPECTOR_LIB}
+            hermes-inspector
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
