@@ -30,7 +30,14 @@ export default function FrameCallbackExample() {
 
   const animatedStyle1 = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: x1.value }, { translateY: y1.value }],
+      transform: [
+        {
+          translateX: x1.value,
+        },
+        {
+          translateY: y1.value,
+        },
+      ],
     };
   });
 
@@ -54,7 +61,14 @@ export default function FrameCallbackExample() {
 
   const animatedStyle2 = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: x2.value }, { translateY: y2.value }],
+      transform: [
+        {
+          translateX: x2.value,
+        },
+        {
+          translateY: y2.value,
+        },
+      ],
     };
   });
 
@@ -66,24 +80,12 @@ export default function FrameCallbackExample() {
       </View>
       <View style={styles.buttonContainer}>
         <Button
-          title="Start/stop square1 animation"
-          onPress={() => {
-            if (frameCallback1.state) {
-              frameCallback1.stop();
-            } else {
-              frameCallback1.start();
-            }
-          }}
+          title="Start/stop square1 animation 1"
+          onPress={() => frameCallback1.setActive(!frameCallback1.isActive)}
         />
         <Button
           title="Start/stop square2 animation"
-          onPress={() => {
-            if (frameCallback2.state) {
-              frameCallback2.stop();
-            } else {
-              frameCallback2.start();
-            }
-          }}
+          onPress={() => frameCallback2.setActive(!frameCallback2.isActive)}
         />
       </View>
     </View>
