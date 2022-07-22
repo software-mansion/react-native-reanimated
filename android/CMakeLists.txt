@@ -11,10 +11,10 @@ else()
 endif()
 set (CMAKE_CXX_FLAGS ${ALL_FLAGS})
 
-#if(${NATIVE_DEBUG})
+if(${NATIVE_DEBUG})
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-#endif()
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
@@ -82,42 +82,6 @@ add_library(
         ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
 
-# build hermes-inspector
-file(
-        GLOB_RECURSE
-        HERMES_INSPECTOR_SOURCES_CPP
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/hermes/inspector/*.cpp"
-)
-add_library(
-        hermes-inspector
-        SHARED
-        ${HERMES_INSPECTOR_SOURCES_CPP}
-)
-target_include_directories(
-        hermes-inspector
-        PUBLIC
-        "${NODE_MODULES_DIR}/react-native/sdks/hermes/API/"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/build/third-party-ndk/libevent/include/"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/hermes-engine/build/hermes/external/llvh/include/"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers/"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
-        "${NODE_MODULES_DIR}/react-native/sdks/hermes/public/"
-        "${NODE_MODULES_DIR}/react-native/sdks/hermes/external/llvh/include/"
-        "${NODE_MODULES_DIR}/react-native/sdks/hermes/external/llvh/utils/unittest/googletest/include/"
-        "${NODE_MODULES_DIR}/react-native/sdks/hermes/external/llvh/utils/unittest/googlemock/include/"
-        "${BUILD_DIR}/third-party-ndk/glog/exported/"
-        "${BUILD_DIR}/third-party-ndk/folly/"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.h"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.h"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.h"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.cpp"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.cpp"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.cpp"
-        "${BUILD_DIR}/third-party-ndk/double-conversion"
-        "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
-)
-
 # includes
 
 file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
@@ -154,13 +118,6 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/headers/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${SRC_DIR}/main/cpp/headers"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.h"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.h"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.h"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/detail/*.cpp"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/futures/**/*.cpp"
-        "${BUILD_DIR}/third-party-ndk/folly/folly/**/*.cpp"
 )
 
 find_library(
@@ -182,20 +139,6 @@ find_library(
 find_library(
         FBJNI_LIB
         fbjni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-
-find_library(
-        FB_LIB
-        fb
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-
-find_library(
-        JS_INSPECTOR_LIB
-        jsinspector
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
@@ -314,31 +257,17 @@ if(${JS_RUNTIME} STREQUAL "hermes")
             PATHS ${HERMES_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
-
-    file (GLOB FOLLY_FUTURES_DIR "${BUILD_DIR}/third-party-ndk/hermes-inspector/${ANDROID_ABI}")
     find_library(
-            FOLLY_FUTURES_LIB
-            folly_futures
-            PATHS ${FOLLY_FUTURES_DIR}
+            HERMES_EXECUTOR_LIB
+            hermes-executor-debug
+            PATHS ${LIBRN_DIR}
             NO_CMAKE_FIND_ROOT_PATH
-    )
-
-    target_link_libraries(
-        hermes-inspector
-        ${HERMES_LIB}
-        ${FOLLY_LIB}
-        ${FOLLY_FUTURES_LIB}
-        ${JSI_LIB}
-        ${GLOG_LIB}
-        ${FB_LIB}
-        ${FBJNI_LIB}
-        ${JS_INSPECTOR_LIB}
     )
 
     target_link_libraries(
             ${PACKAGE_NAME}
             ${HERMES_LIB}
-            hermes-inspector
+            ${HERMES_EXECUTOR_LIB}
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
