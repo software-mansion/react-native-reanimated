@@ -46,7 +46,7 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 
 ![](/docs/shared-values/sv-immediate.gif)
 
-With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring).
+With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
 The only change that we can do now, is to wrap the random offset value with a `withSpring` call as shown below:
 
 ```js {3}
@@ -67,7 +67,7 @@ As a result the `offset` Shared Value transitions smoothly between the current a
 
 Animated Shared Value transitions are not the only way to initiate and run animations.
 It is often the case that we'd like to animate properties that are not directly mapped onto a Shared Value.
-For that, in Reanimated we allow for animations to be specified directly in the [`useAnimatedStyle`](../api/hooks/useAnimatedStyle) hook.
+For that, in Reanimated we allow for animations to be specified directly in the [`useAnimatedStyle`](api/useAnimatedStyle) hook.
 In order to do this you can use the same animation helper methods from Reanimated API, but instead of using it when updating a Shared Value you use it to wrap the style value property:
 
 ```js {5}
@@ -108,7 +108,7 @@ Interruptions also work correctly for animations defined in `useAnimatedStyle` h
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.
 
 We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the usecases, and hence we made it the default.
-In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](../api/animations/cancelAnimation) method in the latter case.
+In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](api/cancelAnimation) method in the latter case.
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
 
