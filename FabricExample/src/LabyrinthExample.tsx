@@ -4,18 +4,20 @@ import Animated, {
   SensorType,
   useSharedValue,
   useDerivedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { ImageBackground, Image, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
 // config
-const TILE_SIZE = 40;
-const BALL_SIZE = 30;
+const TILE_SIZE = 45;
+const BALL_SIZE = 35;
 const COLS = 7;
 const ROWS = 7;
 const BOUNCE_VELOCITY_FACTOR = 0.3;
 const DEBUG_SHOW_LINES = false;
+const FINISH_EPS = 3;
 
 const WALLS = [
   // edges
@@ -49,6 +51,12 @@ const WALLS = [
 const BOARD_WIDTH = TILE_SIZE * COLS;
 const BOARD_HEIGHT = TILE_SIZE * ROWS;
 const HALF_BALL_SIZE = BALL_SIZE / 2;
+
+const START_X = 0.5 * TILE_SIZE;
+const START_Y = 0.5 * TILE_SIZE;
+
+const FINISH_X = (COLS - 0.5) * TILE_SIZE;
+const FINISH_Y = (ROWS - 0.5) * TILE_SIZE;
 
 const VERTICAL_LINES = [];
 const HORIZONTAL_LINES = [];
@@ -85,71 +93,94 @@ function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
 
 function calculateStep(position, velocity, acceleration, dt) {
   'worklet';
-  velocity.value += 2 * acceleration * dt;
+  velocity.value += 3 * acceleration * dt;
   position.value += 150 * velocity.value * dt;
 }
 
 export default function LabyrinthExample() {
   const gravity = useAnimatedSensor(SensorType.GRAVITY, { interval: 8 });
 
-  const x = useSharedValue(TILE_SIZE / 2);
-  const y = useSharedValue(TILE_SIZE / 2);
+  const interactive = useSharedValue(true);
+  const x = useSharedValue(START_X);
+  const y = useSharedValue(START_Y);
+  const scale = useSharedValue(1);
 
   const vx = useSharedValue(0);
   const vy = useSharedValue(0);
 
   // TODO: useFrameCallback
   useDerivedValue(() => {
-    const dt = 1 / 60;
-    const ax = gravity.sensor.value.x;
-    const ay = -gravity.sensor.value.y;
+    if (interactive.value) {
+      const dt = 1 / 60;
+      const ax = gravity.sensor.value.x;
+      const ay = -gravity.sensor.value.y;
 
-    const prevX = x.value;
-    const prevY = y.value;
+      const prevX = x.value;
+      const prevY = y.value;
 
-    calculateStep(x, vx, ax, dt);
-    calculateStep(y, vy, ay, dt);
+      calculateStep(x, vx, ax, dt);
+      calculateStep(y, vy, ay, dt);
 
-    for (const line of VERTICAL_LINES) {
-      if (
-        ((vx.value > 0 && line.type === 'left') ||
-          (vx.value < 0 && line.type === 'right')) &&
-        segmentsIntersect(
-          prevX,
-          prevY,
-          x.value,
-          y.value,
-          line.x,
-          line.y1,
-          line.x,
-          line.y2
-        )
-      ) {
-        x.value = prevX;
-        vx.value *= -BOUNCE_VELOCITY_FACTOR;
-        break;
+      for (const line of VERTICAL_LINES) {
+        if (
+          ((vx.value > 0 && line.type === 'left') ||
+            (vx.value < 0 && line.type === 'right')) &&
+          segmentsIntersect(
+            prevX,
+            prevY,
+            x.value,
+            y.value,
+            line.x,
+            line.y1,
+            line.x,
+            line.y2
+          )
+        ) {
+          x.value = prevX;
+          vx.value *= -BOUNCE_VELOCITY_FACTOR;
+          break;
+        }
+      }
+
+      for (const line of HORIZONTAL_LINES) {
+        if (
+          ((vy.value > 0 && line.type === 'up') ||
+            (vy.value < 0 && line.type === 'down')) &&
+          segmentsIntersect(
+            prevX,
+            prevY,
+            x.value,
+            y.value,
+            line.x1,
+            line.y,
+            line.x2,
+            line.y
+          )
+        ) {
+          y.value = prevY;
+          vy.value *= -BOUNCE_VELOCITY_FACTOR;
+          break;
+        }
       }
     }
 
-    for (const line of HORIZONTAL_LINES) {
-      if (
-        ((vy.value > 0 && line.type === 'up') ||
-          (vy.value < 0 && line.type === 'down')) &&
-        segmentsIntersect(
-          prevX,
-          prevY,
-          x.value,
-          y.value,
-          line.x1,
-          line.y,
-          line.x2,
-          line.y
-        )
-      ) {
-        y.value = prevY;
-        vy.value *= -BOUNCE_VELOCITY_FACTOR;
-        break;
-      }
+    if (
+      interactive.value &&
+      Math.abs(x.value - FINISH_X) < FINISH_EPS &&
+      Math.abs(y.value - FINISH_Y) < FINISH_EPS
+    ) {
+      interactive.value = false;
+      x.value = withTiming(FINISH_X);
+      y.value = withTiming(FINISH_Y, {}, () => {
+        scale.value = withTiming(0.65, {}, () => {
+          x.value = START_X;
+          y.value = START_Y;
+          scale.value = 1.05;
+          scale.value = withTiming(1, {}, () => {
+            interactive.value = true;
+          });
+        });
+      });
     }
   });
 
@@ -171,6 +202,7 @@ export default function LabyrinthExample() {
     return {
       top: y.value - BALL_SIZE / 2,
       left: x.value - BALL_SIZE / 2,
+      transform: [{ scale: scale.value }],
     };
   });
 
@@ -287,6 +319,10 @@ const styles = StyleSheet.create({
   wall: {
     position: 'absolute',
     borderRadius: 4,
+    shadowColor: 'black',
+    shadowRadius: 3,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
   },
   line: {
     position: 'absolute',
