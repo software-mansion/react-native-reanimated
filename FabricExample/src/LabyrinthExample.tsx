@@ -62,16 +62,14 @@ const VERTICAL_LINES = [];
 const HORIZONTAL_LINES = [];
 
 for (const wall of WALLS) {
-  {
-    const x1 = wall.c1 * TILE_SIZE - HALF_BALL_SIZE - 4;
-    const x2 = wall.c2 * TILE_SIZE + HALF_BALL_SIZE + 4;
-    const y1 = wall.r1 * TILE_SIZE - HALF_BALL_SIZE - 4;
-    const y2 = wall.r2 * TILE_SIZE + HALF_BALL_SIZE + 4;
-    HORIZONTAL_LINES.push({ x1, x2, y: y1, type: 'up' });
-    HORIZONTAL_LINES.push({ x1, x2, y: y2, type: 'down' });
-    VERTICAL_LINES.push({ x: x1, y1, y2, type: 'left' });
-    VERTICAL_LINES.push({ x: x2, y1, y2, type: 'right' });
-  }
+  const x1 = wall.c1 * TILE_SIZE - HALF_BALL_SIZE - 4;
+  const x2 = wall.c2 * TILE_SIZE + HALF_BALL_SIZE + 4;
+  const y1 = wall.r1 * TILE_SIZE - HALF_BALL_SIZE - 4;
+  const y2 = wall.r2 * TILE_SIZE + HALF_BALL_SIZE + 4;
+  HORIZONTAL_LINES.push({ x1, x2, y: y1, type: 'up' });
+  HORIZONTAL_LINES.push({ x1, x2, y: y2, type: 'down' });
+  VERTICAL_LINES.push({ x: x1, y1, y2, type: 'left' });
+  VERTICAL_LINES.push({ x: x2, y1, y2, type: 'right' });
 }
 
 function crossProduct(ax, ay, bx, by, cx, cy) {
@@ -190,8 +188,8 @@ export default function LabyrinthExample() {
     return {
       transform: [
         { perspective: 1000 },
-        { rotateX: `${10 * Math.atan(gravity.sensor.value.y)}deg` },
-        { rotateY: `${10 * Math.atan(gravity.sensor.value.x)}deg` },
+        { rotateX: `${8 * Math.atan(gravity.sensor.value.y)}deg` },
+        { rotateY: `${8 * Math.atan(gravity.sensor.value.x)}deg` },
       ],
       shadowOffset: {
         width: 3 * gravity.sensor.value.x,
@@ -226,32 +224,18 @@ export default function LabyrinthExample() {
           }}
           resizeMode="cover"
           borderRadius={4}
-          style={styles.boardImageBackground}>
-          <View
-            style={{
-              ...styles.start,
-              top: TILE_SIZE * 0.15,
-              left: TILE_SIZE * 0.15,
+          style={styles.boardImageBackground}
+        />
+        <View style={styles.start} />
+        <View style={styles.finish} />
+        <Animated.View style={[styles.ball, ball]}>
+          <Image
+            source={{
+              uri: 'https://www.pngall.com/wp-content/uploads/8/Metal-Ball-Transparent.png',
             }}
+            style={styles.ballImage}
           />
-          <View
-            style={{
-              ...styles.start,
-              top: TILE_SIZE * (COLS - 1 + 0.15),
-              left: TILE_SIZE * (ROWS - 1 + 0.15),
-              opacity: 0.99,
-              backgroundColor: 'black',
-            }}
-          />
-          <Animated.View style={[styles.ball, ball]}>
-            <Image
-              source={{
-                uri: 'https://www.pngall.com/wp-content/uploads/8/Metal-Ball-Transparent.png',
-              }}
-              style={styles.ballImage}
-            />
-          </Animated.View>
-        </ImageBackground>
+        </Animated.View>
         {WALLS.map(({ c1, c2, r1, r2 }, i) => {
           const left = c1 * TILE_SIZE - 4;
           const top = r1 * TILE_SIZE - 4;
@@ -264,7 +248,8 @@ export default function LabyrinthExample() {
                 wallShadow,
                 { left, top, width, height },
               ]}
-              key={i}></Animated.View>
+              key={i}
+            />
           );
         })}
         {WALLS.map(({ c1, c2, r1, r2 }, i) => {
@@ -334,6 +319,7 @@ const styles = StyleSheet.create({
   ball: {
     width: BALL_SIZE,
     height: BALL_SIZE,
+    position: 'absolute',
   },
   ballImage: {
     width: BALL_SIZE * 1.16,
@@ -362,9 +348,21 @@ const styles = StyleSheet.create({
   start: {
     width: TILE_SIZE * 0.7,
     height: TILE_SIZE * 0.7,
+    top: TILE_SIZE * 0.15,
+    left: TILE_SIZE * 0.15,
     backgroundColor: 'saddlebrown',
     opacity: 0.25,
     position: 'absolute',
     borderRadius: 9999,
+  },
+  finish: {
+    width: TILE_SIZE * 0.7,
+    height: TILE_SIZE * 0.7,
+    top: TILE_SIZE * (COLS - 1 + 0.15),
+    left: TILE_SIZE * (ROWS - 1 + 0.15),
+    position: 'absolute',
+    borderRadius: 9999,
+    opacity: 0.99,
+    backgroundColor: 'black',
   },
 });
