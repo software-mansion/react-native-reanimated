@@ -125,9 +125,9 @@ export default function LabyrinthExample() {
             x.value,
             y.value,
             line.x,
-            line.y1,
+            line.y1 + 0.35,
             line.x,
-            line.y2
+            line.y2 - 0.35
           )
         ) {
           x.value = prevX;
