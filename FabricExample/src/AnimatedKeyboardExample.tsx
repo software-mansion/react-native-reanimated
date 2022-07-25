@@ -22,14 +22,15 @@ function NestedView(): React.ReactElement {
 
 function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
+  const OPENING = KeyboardState.OPENING;
   const style = useAnimatedStyle(() => {
-    const color = keyboard.state.value === KeyboardState.OPENING ? 'red' : 'blue';
+    const color = keyboard.state.value === OPENING ? 'red' : 'blue';
+
     return {
       backgroundColor: color,
     };
   });
   const translateStyle = useAnimatedStyle(() => {
-    // console.log(keyboard)
     return {
       transform: [{ translateY: -keyboard.height.value }],
     };
