@@ -13,6 +13,7 @@ import ChessboardExample from './src/ChessboardExample';
 import ColorExample from './src/ColorExample';
 import EmptyExample from './src/EmptyExample';
 import GestureHandlerExample from './src/GestureHandlerExample';
+import LabyrinthExample from './src/LabyrinthExample';
 import MeasureExample from './src/MeasureExample';
 import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
 import React from 'react';
@@ -29,7 +30,6 @@ import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LabyrinthExample from './src/LabyrinthExample';
 
 const EXAMPLES = [
   {
