@@ -208,11 +208,11 @@ export default function LabyrinthExample() {
     };
   });
 
-  const wall = useAnimatedStyle(() => {
+  const wallShadow = useAnimatedStyle(() => {
     return {
       shadowOffset: {
-        width: 1 * gravity.sensor.value.x + 1,
-        height: -1 * gravity.sensor.value.y + 1,
+        width: 0.8 * gravity.sensor.value.x + 1,
+        height: -0.8 * gravity.sensor.value.y + 1,
       },
     };
   });
@@ -259,8 +259,21 @@ export default function LabyrinthExample() {
           const height = (r2 - r1) * TILE_SIZE + 8;
           return (
             <Animated.View
-              style={[styles.wall, wall, { left, top, width, height }]}
-              key={i}>
+              style={[
+                styles.wallShadow,
+                wallShadow,
+                { left, top, width, height },
+              ]}
+              key={i}></Animated.View>
+          );
+        })}
+        {WALLS.map(({ c1, c2, r1, r2 }, i) => {
+          const left = c1 * TILE_SIZE - 4;
+          const top = r1 * TILE_SIZE - 4;
+          const width = (c2 - c1) * TILE_SIZE + 8;
+          const height = (r2 - r1) * TILE_SIZE + 8;
+          return (
+            <View style={[styles.wall, { left, top, width, height }]} key={i}>
               <ImageBackground
                 source={{
                   uri: 'https://i.postimg.cc/Vkp1Cyd2/wood-texture-3dsmax-183.jpg',
@@ -268,7 +281,7 @@ export default function LabyrinthExample() {
                 resizeMode="cover"
                 borderRadius={4}
                 style={styles.boardImageBackground}></ImageBackground>
-            </Animated.View>
+            </View>
           );
         })}
         {DEBUG_SHOW_LINES &&
@@ -332,6 +345,11 @@ const styles = StyleSheet.create({
   wall: {
     position: 'absolute',
     borderRadius: 4,
+  },
+  wallShadow: {
+    position: 'absolute',
+    borderRadius: 4,
+    backgroundColor: 'black',
     shadowColor: 'black',
     shadowRadius: 1,
     shadowOpacity: 1,
