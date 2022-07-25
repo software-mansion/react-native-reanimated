@@ -206,6 +206,17 @@ export default function LabyrinthExample() {
     };
   });
 
+  const ballShadow = useAnimatedStyle(() => {
+    return {
+      top: y.value - BALL_SIZE / 2,
+      left: x.value - BALL_SIZE / 2,
+      shadowOffset: {
+        width: 1.2 * gravity.sensor.value.x + 1,
+        height: -1.2 * gravity.sensor.value.y + 1,
+      },
+    };
+  });
+
   const wallShadow = useAnimatedStyle(() => {
     return {
       shadowOffset: {
@@ -228,6 +239,7 @@ export default function LabyrinthExample() {
         />
         <View style={styles.start} />
         <View style={styles.finish} />
+        <Animated.View style={[styles.ballShadow, ballShadow]} />
         <Animated.View style={[styles.ball, ball]}>
           <Image
             source={{
@@ -265,7 +277,8 @@ export default function LabyrinthExample() {
                 }}
                 resizeMode="cover"
                 borderRadius={4}
-                style={styles.boardImageBackground}></ImageBackground>
+                style={styles.boardImageBackground}
+              />
             </View>
           );
         })}
@@ -326,7 +339,16 @@ const styles = StyleSheet.create({
     height: BALL_SIZE * 1.16,
     top: -BALL_SIZE * 0.08,
     left: -BALL_SIZE * 0.08,
-    zIndex: 999,
+  },
+  ballShadow: {
+    position: 'absolute',
+    borderRadius: BALL_SIZE / 2,
+    width: BALL_SIZE,
+    height: BALL_SIZE,
+    backgroundColor: 'black',
+    shadowColor: 'black',
+    shadowRadius: 3,
+    shadowOpacity: 1,
   },
   wall: {
     position: 'absolute',
@@ -337,7 +359,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: 'black',
     shadowColor: 'black',
-    shadowRadius: 1,
+    shadowRadius: 2,
     shadowOpacity: 1,
   },
   line: {
