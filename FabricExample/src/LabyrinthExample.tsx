@@ -72,21 +72,17 @@ for (const wall of WALLS) {
   VERTICAL_LINES.push({ x: x2, y1, y2, type: 'right' });
 }
 
-function crossProduct(ax, ay, bx, by, cx, cy) {
-  'worklet';
-  return (bx - ax) * (cy - by) - (by - ay) * (cx - bx);
-}
-
 function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
   'worklet';
-  return (
-    crossProduct(ax, ay, cx, cy, dx, dy) *
-      crossProduct(bx, by, cx, cy, dx, dy) <
-      0 &&
-    crossProduct(cx, cy, ax, ay, bx, by) *
-      crossProduct(dx, dy, ax, ay, bx, by) <
-      0
-  );
+  const dx0 = bx - ax;
+  const dx1 = dx - cx;
+  const dy0 = by - ay;
+  const dy1 = dy - cy;
+  const p0 = dy1 * (dx - ax) - dx1 * (dy - ay);
+  const p1 = dy1 * (dx - bx) - dx1 * (dy - by);
+  const p2 = dy0 * (bx - cx) - dx0 * (by - cy);
+  const p3 = dy0 * (bx - dx) - dx0 * (by - dy);
+  return p0 * p1 <= 0 && p2 * p3 <= 0;
 }
 
 function calculateStep(position, velocity, acceleration, dt) {
