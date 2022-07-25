@@ -12,7 +12,7 @@ import React from 'react';
 
 // config
 const TILE_SIZE = 45;
-const BALL_SIZE = 35;
+const BALL_SIZE = 30;
 const COLS = 7;
 const ROWS = 7;
 const BOUNCE_VELOCITY_FACTOR = 0.3;
@@ -130,7 +130,7 @@ export default function LabyrinthExample() {
             line.y2
           )
         ) {
-          x.value = prevX;
+          x.value = line.x + (line.type === 'left' ? -0.35 : 0.35);
           vx.value *= -BOUNCE_VELOCITY_FACTOR;
           break;
         }
@@ -151,7 +151,7 @@ export default function LabyrinthExample() {
             line.y
           )
         ) {
-          y.value = prevY;
+          y.value = line.y + (line.type === 'up' ? -0.35 : 0.35);
           vy.value *= -BOUNCE_VELOCITY_FACTOR;
           break;
         }
