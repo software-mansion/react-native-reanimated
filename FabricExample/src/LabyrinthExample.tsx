@@ -130,7 +130,7 @@ export default function LabyrinthExample() {
             line.y2
           )
         ) {
-          x.value = line.x + (line.type === 'left' ? -0.35 : 0.35);
+          x.value = prevX;
           vx.value *= -BOUNCE_VELOCITY_FACTOR;
           break;
         }
@@ -151,7 +151,7 @@ export default function LabyrinthExample() {
             line.y
           )
         ) {
-          y.value = line.y + (line.type === 'up' ? -0.35 : 0.35);
+          y.value = prevY;
           vy.value *= -BOUNCE_VELOCITY_FACTOR;
           break;
         }
