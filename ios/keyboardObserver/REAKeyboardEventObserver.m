@@ -8,7 +8,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   OPENING = 1,
   OPEN = 2,
   CLOSING = 3,
-  CLOSE = 4,
+  CLOSED = 4,
 };
 
 @implementation REAKeyboardEventObserver {
@@ -131,7 +131,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)keyboardDidHide:(NSNotification *)notification
 {
-  _state = CLOSE;
+  _state = CLOSED;
   [self stopAnimation];
 }
 
@@ -184,10 +184,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   RCTExecuteOnMainQueue(^() {
     UIView *keyboardView = [self getKeyboardView];
     if (keyboardView == nil) {
-      self->_state = CLOSE;
+      self->_state = CLOSED;
     } else {
       CGFloat keyboardHeight = [self computeKeyboardHeight:keyboardView];
-      self->_state = keyboardHeight == 0 ? CLOSE : OPEN;
+      self->_state = keyboardHeight == 0 ? CLOSED : OPEN;
     }
     [self updateKeyboardFrame];
   });

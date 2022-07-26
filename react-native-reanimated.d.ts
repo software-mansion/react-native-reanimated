@@ -553,7 +553,7 @@ declare module 'react-native-reanimated' {
     OPENING = 1,
     OPEN = 2,
     CLOSING = 3,
-    CLOSE = 4,
+    CLOSED = 4,
   }
   export type AnimatedKeyboardInfo = {
     height: SharedValue<number>;

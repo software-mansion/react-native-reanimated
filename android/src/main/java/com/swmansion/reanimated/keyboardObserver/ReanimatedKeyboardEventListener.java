@@ -22,7 +22,7 @@ public class ReanimatedKeyboardEventListener {
     OPENING(1),
     OPEN(2),
     CLOSING(3),
-    CLOSE(4);
+    CLOSED(4);
 
     private final int value;
 
@@ -111,7 +111,7 @@ public class ReanimatedKeyboardEventListener {
 
     @Override
     public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-      state = keyboardHeight == 0 ? KeyboardState.CLOSE : KeyboardState.OPEN;
+      state = keyboardHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
       updateKeyboard(keyboardHeight);
     }
   }

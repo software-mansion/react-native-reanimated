@@ -154,7 +154,7 @@ export enum KeyboardState {
   OPENING = 1,
   OPEN = 2,
   CLOSING = 3,
-  CLOSE = 4,
+  CLOSED = 4,
 }
 
 export type AnimatedKeyboardInfo = {
