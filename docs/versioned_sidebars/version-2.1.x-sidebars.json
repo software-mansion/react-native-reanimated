@@ -55,11 +55,62 @@
         {
           "collapsed": true,
           "type": "category",
+          "label": "Animations",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/cancelAnimation"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/withDecay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/withDelay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/withRepeat"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/withSequence"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/withSpring"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/withTiming"
+            }
+          ]
+        },
+        {
+          "collapsed": true,
+          "type": "category",
           "label": "Hooks",
           "items": [
             {
               "type": "doc",
-              "id": "version-2.1.x/api/useSharedValue"
+              "id": "version-2.1.x/api/useAnimatedGestureHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/useAnimatedProps"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/useAnimatedReaction"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/useAnimatedRef"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.1.x/api/useAnimatedScrollHandler"
             },
             {
               "type": "doc",
@@ -71,58 +122,7 @@
             },
             {
               "type": "doc",
-              "id": "version-2.1.x/api/useAnimatedScrollHandler"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/useAnimatedGestureHandler"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/useAnimatedRef"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/useAnimatedReaction"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/useAnimatedProps"
-            }
-          ]
-        },
-        {
-          "collapsed": true,
-          "type": "category",
-          "label": "Animations",
-          "items": [
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/withTiming"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/withSpring"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/withDecay"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/cancelAnimation"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/withDelay"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/withSequence"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/withRepeat"
+              "id": "version-2.1.x/api/useSharedValue"
             }
           ]
         },
@@ -148,15 +148,15 @@
           "items": [
             {
               "type": "doc",
+              "id": "version-2.1.x/api/miscellaneous/interpolate"
+            },
+            {
+              "type": "doc",
               "id": "version-2.1.x/api/miscellaneous/runOnJS"
             },
             {
               "type": "doc",
               "id": "version-2.1.x/api/miscellaneous/runOnUI"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.1.x/api/miscellaneous/interpolate"
             }
           ]
         }

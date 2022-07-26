@@ -21,4 +21,6 @@ export type { ScrollHandler, ScrollHandlers } from './useAnimatedScrollHandler';
 export { useDerivedValue } from './useDerivedValue';
 export type { DerivedValue } from './useDerivedValue';
 export { useAnimatedSensor, SensorType } from './useAnimatedSensor';
+export { useFrameCallback } from './useFrameCallback';
+export type { FrameCallback } from './useFrameCallback';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
