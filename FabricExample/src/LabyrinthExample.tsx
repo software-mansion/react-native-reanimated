@@ -211,8 +211,8 @@ export default function LabyrinthExample() {
       top: y.value - BALL_SIZE / 2,
       left: x.value - BALL_SIZE / 2,
       shadowOffset: {
-        width: -1.2 * gravity.sensor.value.x + 1,
-        height: -1.2 * gravity.sensor.value.y + 1,
+        width: 1.2 * gravity.sensor.value.x + 1,
+        height: 1.2 * gravity.sensor.value.y + 1,
       },
     };
   });
@@ -220,8 +220,8 @@ export default function LabyrinthExample() {
   const wallShadow = useAnimatedStyle(() => {
     return {
       shadowOffset: {
-        width: -0.8 * gravity.sensor.value.x + 1,
-        height: -0.8 * gravity.sensor.value.y + 1,
+        width: 0.8 * gravity.sensor.value.x + 1,
+        height: 0.8 * gravity.sensor.value.y + 1,
       },
     };
   });
