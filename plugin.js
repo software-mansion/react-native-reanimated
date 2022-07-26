@@ -276,7 +276,7 @@ class ClosureGenerator {
   }
 }
 
-function buildWorkletString(t, fun, closureVariables, name) {
+function buildWorkletString(t, fun, closureVariables, name, sourceURL) {
   function prependClosureVariablesIfNecessary(closureVariables, body) {
     if (closureVariables.length === 0) {
       return body;
@@ -316,6 +316,8 @@ function buildWorkletString(t, fun, closureVariables, name) {
       fun.program.body[0].expression.body
     )
   );
+
+  t.addComment(workletFunction, 'trailing', '# sourceURL=' + sourceURL, true);
 
   return generate(workletFunction, { compact: true }).code;
 }
@@ -443,7 +445,8 @@ function makeWorklet(t, fun, state) {
     t,
     transformed.ast,
     variables,
-    functionName
+    functionName,
+    state.file.opts.filename
   );
   const workletHash = hash(funString);
 

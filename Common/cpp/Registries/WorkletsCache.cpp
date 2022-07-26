@@ -23,7 +23,7 @@ std::shared_ptr<jsi::Function> WorkletsCache::getFunction(
     auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
         "(" +
         ValueWrapper::asString(frozenObj->map["asString"]->valueContainer) +
-        ")");
+        "\n)");
     auto func = rt.evaluateJavaScript(
                       codeBuffer,
                       ValueWrapper::asString(
