@@ -62,10 +62,10 @@ const VERTICAL_LINES = [];
 const HORIZONTAL_LINES = [];
 
 for (const wall of WALLS) {
-  const x1 = wall.c1 * TILE_SIZE - HALF_BALL_SIZE - 4;
-  const x2 = wall.c2 * TILE_SIZE + HALF_BALL_SIZE + 4;
-  const y1 = wall.r1 * TILE_SIZE - HALF_BALL_SIZE - 4;
-  const y2 = wall.r2 * TILE_SIZE + HALF_BALL_SIZE + 4;
+  const x1 = wall.c1 * TILE_SIZE - HALF_BALL_SIZE - 5;
+  const x2 = wall.c2 * TILE_SIZE + HALF_BALL_SIZE + 5;
+  const y1 = wall.r1 * TILE_SIZE - HALF_BALL_SIZE - 5;
+  const y2 = wall.r2 * TILE_SIZE + HALF_BALL_SIZE + 5;
   HORIZONTAL_LINES.push({ x1, x2, y: y1, type: 'up' });
   HORIZONTAL_LINES.push({ x1, x2, y: y2, type: 'down' });
   VERTICAL_LINES.push({ x: x1, y1, y2, type: 'left' });
@@ -92,6 +92,10 @@ function calculateStep(position, velocity, acceleration, dt) {
 }
 
 export default function LabyrinthExample() {
+  // Tested only on iOS with Device Orientation: Landscape Right.
+  // For other orientation modes or platforms, sign swap or axis swap may be required.
+  // Also, sometimes the ball goes through walls.
+
   const gravity = useAnimatedSensor(SensorType.GRAVITY, { interval: 8 });
 
   const interactive = useSharedValue(true);
@@ -106,8 +110,8 @@ export default function LabyrinthExample() {
   useDerivedValue(() => {
     if (interactive.value) {
       const dt = 1 / 60;
-      const ax = gravity.sensor.value.x;
-      const ay = -gravity.sensor.value.y;
+      const ax = -gravity.sensor.value.y;
+      const ay = -gravity.sensor.value.x;
 
       const prevX = x.value;
       const prevY = y.value;
@@ -184,12 +188,12 @@ export default function LabyrinthExample() {
     return {
       transform: [
         { perspective: 1000 },
-        { rotateX: `${8 * Math.atan(gravity.sensor.value.y)}deg` },
-        { rotateY: `${8 * Math.atan(gravity.sensor.value.x)}deg` },
+        { rotateX: `${10 * Math.atan(gravity.sensor.value.x)}deg` },
+        { rotateY: `${10 * Math.atan(-gravity.sensor.value.y)}deg` },
       ],
       shadowOffset: {
-        width: 3 * gravity.sensor.value.x,
-        height: -3 * gravity.sensor.value.y,
+        width: -3 * gravity.sensor.value.y,
+        height: -3 * gravity.sensor.value.x,
       },
     };
   });
@@ -207,7 +211,7 @@ export default function LabyrinthExample() {
       top: y.value - BALL_SIZE / 2,
       left: x.value - BALL_SIZE / 2,
       shadowOffset: {
-        width: 1.2 * gravity.sensor.value.x + 1,
+        width: -1.2 * gravity.sensor.value.x + 1,
         height: -1.2 * gravity.sensor.value.y + 1,
       },
     };
@@ -216,7 +220,7 @@ export default function LabyrinthExample() {
   const wallShadow = useAnimatedStyle(() => {
     return {
       shadowOffset: {
-        width: 0.8 * gravity.sensor.value.x + 1,
+        width: -0.8 * gravity.sensor.value.x + 1,
         height: -0.8 * gravity.sensor.value.y + 1,
       },
     };
