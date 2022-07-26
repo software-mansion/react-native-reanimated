@@ -25,6 +25,7 @@ public class ReanimatedKeyboardEventListener {
     CLOSE(4);
 
     private final int value;
+
     KeyboardState(int value) {
       this.value = value;
     }
@@ -86,7 +87,7 @@ public class ReanimatedKeyboardEventListener {
     public WindowInsetsAnimationCompat.BoundsCompat onStart(
         @NonNull WindowInsetsAnimationCompat animation,
         @NonNull WindowInsetsAnimationCompat.BoundsCompat bounds) {
-      state = keyboardHeight == 0 ? KeyboardState.OPENING: KeyboardState.CLOSING;
+      state = keyboardHeight == 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
       updateKeyboard(keyboardHeight);
       return super.onStart(animation, bounds);
     }
@@ -110,7 +111,7 @@ public class ReanimatedKeyboardEventListener {
 
     @Override
     public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-      state = keyboardHeight == 0 ? KeyboardState.CLOSE: KeyboardState.OPEN;
+      state = keyboardHeight == 0 ? KeyboardState.CLOSE : KeyboardState.OPEN;
       updateKeyboard(keyboardHeight);
     }
   }

@@ -181,12 +181,11 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)recognizeInitialKeyboardState
 {
-  RCTExecuteOnMainQueue(^(){
+  RCTExecuteOnMainQueue(^() {
     UIView *keyboardView = [self getKeyboardView];
     if (keyboardView == nil) {
       self->_state = CLOSE;
-    }
-    else {
+    } else {
       CGFloat keyboardHeight = [self computeKeyboardHeight:keyboardView];
       self->_state = keyboardHeight == 0 ? CLOSE : OPEN;
     }
