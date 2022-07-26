@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import FrameCallbackRegistryJS from '../frameCallback/FrameCallbackRegistry';
+import FrameCallbackRegistryJS from '../frameCallback/FrameCallbackRegistryJS';
 
 export type FrameCallback = {
   setActive: (isActive: boolean) => void;
