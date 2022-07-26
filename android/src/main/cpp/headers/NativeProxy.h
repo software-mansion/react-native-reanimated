@@ -127,8 +127,8 @@ class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy$KeyboardEventDataUpdater;";
 
-  void keyboardEventDataUpdater(int state, int height) {
-    callback_(state, height);
+  void keyboardEventDataUpdater(int keyboardState, int height) {
+    callback_(keyboardState, height);
   }
 
   static void registerNatives() {
