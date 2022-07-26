@@ -34,6 +34,7 @@ module.exports = {
           ],
           Hooks: [
             'api/hooks/useAnimatedGestureHandler',
+            'api/hooks/useAnimatedKeyboard',
             'api/hooks/useAnimatedProps',
             'api/hooks/useAnimatedReaction',
             'api/hooks/useAnimatedRef',
