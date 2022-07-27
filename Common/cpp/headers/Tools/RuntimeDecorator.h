@@ -31,11 +31,18 @@ class RuntimeDecorator {
   static void decorateRuntime(jsi::Runtime &rt, const std::string &label);
   static void decorateUIRuntime(
       jsi::Runtime &rt,
-      const UpdaterFunction updater,
-      const RequestFrameFunction requestFrame,
+      const UpdatePropsFunction updateProps,
+      const MeasureFunction measure,
+#ifdef RCT_NEW_ARCH_ENABLED
+      const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
+      const DispatchCommandFunction dispatchCommand,
+#else
       const ScrollToFunction scrollTo,
-      const MeasuringFunction measure,
+#endif
+      const RequestFrameFunction requestFrame,
       const TimeProviderFunction getCurrentTime,
+      const RegisterSensorFunction registerSensor,
+      const UnregisterSensorFunction unregisterSensor,
       const SetGestureStateFunction setGestureState,
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy);
 

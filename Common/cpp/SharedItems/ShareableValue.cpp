@@ -1,4 +1,9 @@
 #include <cxxabi.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/uimanager/primitives.h>
+#endif
+
 #include "FrozenObject.h"
 #include "MutableValue.h"
 #include "MutableValueSetterProxy.h"
@@ -64,7 +69,7 @@ void ShareableValue::adapt(
       jsi::Object hiddenProperty = hiddenValue.asObject(rt);
       if (hiddenProperty.isHostObject<FrozenObject>(rt)) {
         type = ValueType::FrozenObjectType;
-        if (object.hasProperty(rt, "__worklet") && object.isFunction(rt)) {
+        if (object.hasProperty(rt, "__workletHash") && object.isFunction(rt)) {
           type = ValueType::WorkletFunctionType;
         }
         valueContainer = std::make_unique<FrozenObjectWrapper>(
@@ -99,7 +104,7 @@ void ShareableValue::adapt(
   } else if (value.isObject()) {
     auto object = value.asObject(rt);
     if (object.isFunction(rt)) {
-      if (object.getProperty(rt, "__worklet").isUndefined()) {
+      if (object.getProperty(rt, "__workletHash").isUndefined()) {
         // not a worklet, we treat this as a host function
         type = ValueType::HostFunctionType;
         containsHostFunction = true;
@@ -157,6 +162,13 @@ void ShareableValue::adapt(
       valueContainer =
           std::make_unique<RemoteObjectWrapper>(std::make_shared<RemoteObject>(
               rt, object, runtimeManager, runtimeManager->scheduler));
+#ifdef RCT_NEW_ARCH_ENABLED
+    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
+      type = ValueType::ShadowNodeType;
+      auto shadowNode = object.getHostObject<ShadowNodeWrapper>(rt)->shadowNode;
+      valueContainer = std::make_unique<ShadowNodeValueWrapper>(shadowNode);
+      adaptCache(rt, value);
+#endif
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::FrozenObjectType;
@@ -278,6 +290,12 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       auto &mutableObject = ValueWrapper::asMutableValue(valueContainer);
       return createHost(rt, mutableObject);
     }
+#ifdef RCT_NEW_ARCH_ENABLED
+    case ValueType::ShadowNodeType: {
+      auto &shadowNode = ValueWrapper::asShadowNode(valueContainer);
+      return createHost(rt, std::make_shared<ShadowNodeWrapper>(shadowNode));
+    }
+#endif
     case ValueType::HostFunctionType: {
       auto hostFunctionWrapper =
           ValueWrapper::asHostFunctionWrapper(valueContainer);

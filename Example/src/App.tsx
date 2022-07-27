@@ -34,13 +34,12 @@ import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import FrameCallbackExample from './FrameCallbackExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
 import { ReactionsCounterExample } from './ReactionsCounterExample';
-// @ts-ignore JS file
-import Reanimated1 from '../reanimated1/App';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
@@ -49,6 +48,9 @@ import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -64,6 +66,18 @@ const SCREENS: Screens = {
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
+  },
+  AnimatedKeyboard: {
+    screen: AnimatedKeyboardExample,
+    title: '🆕 Use Animated Keyboard',
+  },
+  AnimatedSensor: {
+    screen: AnimatedSensorExample,
+    title: '🆕 Use Animated Sensor',
+  },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: '🆕 Frame callback example',
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,
@@ -110,20 +124,24 @@ const SCREENS: Screens = {
     screen: Modal,
   },
   NativeModals: {
-    title: '🆕  Native modals (RN and Screens)',
+    title: '🆕 Native modals (RN and Screens)',
     screen: NativeModals,
   },
   Carousel: {
-    title: '🆕 Carousel',
+    title: 'Carousel',
     screen: Carousel,
   },
   PagerExample: {
     screen: PagerExample,
-    title: '🆕 Custom Handler Example - Pager',
+    title: 'Custom Handler Example - Pager',
   },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
+  },
+  AnimatedSharedStyle: {
+    screen: AnimatedSharedStyleExample,
+    title: 'Animated Shared Style',
   },
   WobbleExample: {
     screen: WobbleExample,
@@ -182,10 +200,9 @@ const SCREENS: Screens = {
 type RootStackParams = { Home: undefined } & { [key: string]: undefined };
 type MainScreenProps = {
   navigation: StackNavigationProp<RootStackParams, 'Home'>;
-  setUseRea2: (useRea2: boolean) => void;
 };
 
-function MainScreen({ navigation, setUseRea2 }: MainScreenProps) {
+function MainScreen({ navigation }: MainScreenProps) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
@@ -200,7 +217,6 @@ function MainScreen({ navigation, setUseRea2 }: MainScreenProps) {
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
-      ListFooterComponent={() => <LaunchReanimated1 setUseRea2={setUseRea2} />}
     />
   );
 }
@@ -228,29 +244,14 @@ export function MainScreenItem({
   );
 }
 
-function LaunchReanimated1({
-  setUseRea2,
-}: {
-  setUseRea2: (useRea2: boolean) => void;
-}) {
-  return (
-    <>
-      <ItemSeparator />
-      <RectButton style={styles.button} onPress={() => setUseRea2?.(false)}>
-        <Text style={styles.buttonText}>👵 Reanimated 1.x Examples</Text>
-      </RectButton>
-    </>
-  );
-}
-
 const Stack = createStackNavigator();
 
-const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
+const Reanimated2 = () => (
   <Stack.Navigator detachInactiveScreens={false}>
     <Stack.Screen
       name="Home"
       options={{ title: '🎬 Reanimated 2.x Examples' }}
-      children={(props) => <MainScreen {...props} setUseRea2={setUseRea2} />}
+      children={(props) => <MainScreen {...props} />}
     />
     {Object.keys(SCREENS).map((name) => (
       <Stack.Screen
@@ -264,13 +265,7 @@ const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
 );
 
 function App(): React.ReactElement {
-  const [useRea2, setUseRea2] = React.useState(true);
-
-  return (
-    <NavigationContainer>
-      {useRea2 ? Reanimated2(setUseRea2) : Reanimated1(setUseRea2)}
-    </NavigationContainer>
-  );
+  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
 }
 
 export const styles = StyleSheet.create({

@@ -1,13 +1,27 @@
 #include "NativeReanimatedModule.h"
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
+#endif
+
 #include <functional>
 #include <memory>
 #include <thread>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include "FabricUtils.h"
+#include "NewestShadowNodesRegistry.h"
+#include "ReanimatedUIManagerBinding.h"
+#endif
+
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
 #include "MapperRegistry.h"
+#include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
@@ -61,8 +75,12 @@ NativeReanimatedModule::NativeReanimatedModule(
     std::shared_ptr<Scheduler> scheduler,
     std::shared_ptr<jsi::Runtime> rt,
     std::shared_ptr<ErrorHandler> errorHandler,
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
         propObtainer,
+#endif
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
@@ -70,7 +88,20 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      propObtainer(propObtainer) {
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
+#else
+      propObtainer(propObtainer),
+#endif
+      animatedSensorModule(platformDepMethodsHolder, this),
+#ifdef RCT_NEW_ARCH_ENABLED
+      synchronouslyUpdateUIPropsFunction(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
+#else
+      configurePropsPlatformFunction(
+          platformDepMethodsHolder.configurePropsFunction)
+#endif
+{
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -78,20 +109,64 @@ NativeReanimatedModule::NativeReanimatedModule(
 
   this->layoutAnimationsProxy = layoutAnimationsProxy;
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  auto updateProps = [this](
+                         jsi::Runtime &rt,
+                         const jsi::Value &shadowNodeValue,
+                         const jsi::Value &props) {
+    this->updateProps(rt, shadowNodeValue, props);
+  };
+
+  auto removeShadowNodeFromRegistry =
+      [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+        this->removeShadowNodeFromRegistry(rt, shadowNodeValue);
+      };
+
+  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+    return this->measure(rt, shadowNodeValue);
+  };
+
+  auto dispatchCommand = [this](
+                             jsi::Runtime &rt,
+                             const jsi::Value &shadowNodeValue,
+                             const jsi::Value &commandNameValue,
+                             const jsi::Value &argsValue) {
+    this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
+  };
+#endif
+
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
-      platformDepMethodsHolder.updaterFunction,
-      requestAnimationFrame,
+#ifdef RCT_NEW_ARCH_ENABLED
+      updateProps,
+      measure,
+      removeShadowNodeFromRegistry,
+      dispatchCommand,
+#else
+      platformDepMethodsHolder.updatePropsFunction,
+      platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
-      platformDepMethodsHolder.measuringFunction,
+#endif
+      requestAnimationFrame,
       platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.registerSensor,
+      platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
       layoutAnimationsProxy);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
   };
-  updaterFunction = platformDepMethodsHolder.updaterFunction;
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  // nothing
+#else
+  updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
+#endif
+  subscribeForKeyboardEventsFunction =
+      platformDepMethodsHolder.subscribeForKeyboardEvents;
+  unsubscribeFromKeyboardEventsFunction =
+      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -243,11 +318,37 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::configureProps(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps) {
+#ifdef RCT_NEW_ARCH_ENABLED
+  jsi::Array array = nativeProps.asObject(rt).asArray(rt);
+  for (int i = 0; i < array.size(rt); ++i) {
+    std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    nativePropNames_.insert(name);
+  }
+#else
+  configurePropsPlatformFunction(rt, uiProps, nativeProps);
+#endif // RCT_NEW_ARCH_ENABLED
+
+  return jsi::Value::undefined();
+}
+
 void NativeReanimatedModule::onEvent(
     std::string eventName,
-    std::string eventAsString) {
+#ifdef RCT_NEW_ARCH_ENABLED
+    jsi::Value &&payload
+#else
+    std::string eventAsString
+#endif
+    /**/) {
   try {
+#ifdef RCT_NEW_ARCH_ENABLED
+    eventHandlerRegistry->processEvent(*runtime, eventName, payload);
+#else
     eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
+#endif
     mapperRegistry->execute(*runtime);
     if (mapperRegistry->needRunOnRender()) {
       maybeRequestRender();
@@ -296,6 +397,277 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     this->errorHandler->setError(str);
     this->errorHandler->raise();
   }
+}
+
+jsi::Value NativeReanimatedModule::registerSensor(
+    jsi::Runtime &rt,
+    const jsi::Value &sensorType,
+    const jsi::Value &interval,
+    const jsi::Value &sensorDataContainer) {
+  return animatedSensorModule.registerSensor(
+      rt, sensorType, interval, sensorDataContainer);
+}
+
+void NativeReanimatedModule::unregisterSensor(
+    jsi::Runtime &rt,
+    const jsi::Value &sensorId) {
+  animatedSensorModule.unregisterSensor(sensorId);
+}
+
+#ifdef RCT_NEW_ARCH_ENABLED
+bool NativeReanimatedModule::isThereAnyLayoutProp(
+    jsi::Runtime &rt,
+    const jsi::Value &props) {
+  const jsi::Array propNames = props.asObject(rt).getPropertyNames(rt);
+  for (size_t i = 0; i < propNames.size(rt); ++i) {
+    const std::string propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    bool isLayoutProp =
+        nativePropNames_.find(propName) != nativePropNames_.end();
+    if (isLayoutProp) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool NativeReanimatedModule::handleEvent(
+    const std::string &eventName,
+    jsi::Value &&payload,
+    double currentTime) {
+  jsi::Runtime &rt = *runtime.get();
+  jsi::Object global = rt.global();
+  jsi::String eventTimestampName =
+      jsi::String::createFromAscii(rt, "_eventTimestamp");
+  global.setProperty(rt, eventTimestampName, currentTime);
+  onEvent(eventName, std::move(payload));
+  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+
+  // TODO: return true if Reanimated successfully handled the event
+  // to avoid sending it to JavaScript
+  return false;
+}
+
+bool NativeReanimatedModule::handleRawEvent(
+    const RawEvent &rawEvent,
+    double currentTime) {
+  const EventTarget *eventTarget = rawEvent.eventTarget.get();
+  if (eventTarget == nullptr) {
+    // after app reload scrollview is unmounted and its content offset is set to
+    // 0 and view is thrown into recycle pool setting content offset triggers
+    // scroll event eventTarget is null though, because it's unmounting we can
+    // just ignore this event, because it's an event on unmounted component
+    return false;
+  }
+  const std::string &type = rawEvent.type;
+  const ValueFactory &payloadFactory = rawEvent.payloadFactory;
+
+  int tag = eventTarget->getTag();
+  std::string eventType = type;
+  if (eventType.rfind("top", 0) == 0) {
+    eventType = "on" + eventType.substr(3);
+  }
+  std::string eventName = std::to_string(tag) + eventType;
+  jsi::Runtime &rt = *runtime.get();
+  jsi::Value payload = payloadFactory(rt);
+
+  return handleEvent(eventName, std::move(payload), currentTime);
+}
+
+void NativeReanimatedModule::updateProps(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue,
+    const jsi::Value &props) {
+  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+
+  // TODO: support multiple surfaces
+  surfaceId_ = shadowNode->getSurfaceId();
+
+  if (isThereAnyLayoutProp(rt, props)) {
+    operationsInBatch_.emplace_back(
+        shadowNode, std::make_unique<jsi::Value>(rt, props));
+  } else {
+    // TODO: batch with layout props changes?
+    Tag tag = shadowNode->getTag();
+    synchronouslyUpdateUIPropsFunction(rt, tag, props);
+  }
+}
+
+void NativeReanimatedModule::performOperations() {
+  if (operationsInBatch_.empty()) {
+    return;
+  }
+
+  auto copiedOperationsQueue = std::move(operationsInBatch_);
+  operationsInBatch_ =
+      std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
+
+  auto copiedTagsToRemove = std::move(tagsToRemove_);
+  tagsToRemove_ = std::vector<Tag>();
+
+  react_native_assert(uiManager_ != nullptr);
+  const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
+  auto contextContainer = getContextContainerFromUIManager(
+      &*uiManager_); // TODO: use Scheduler::getContextContainer
+  PropsParserContext propsParserContext{surfaceId_, *contextContainer};
+  jsi::Runtime &rt = *runtime.get();
+
+  shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+    shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
+      // lock once due to performance reasons
+      auto lock = newestShadowNodesRegistry_->createLock();
+
+      auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
+
+      for (const auto &pair : copiedOperationsQueue) {
+        const ShadowNodeFamily &family = pair.first->getFamily();
+        react_native_assert(family.getSurfaceId() == surfaceId_);
+
+        auto newRootNode =
+            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
+              const auto newest =
+                  newestShadowNodesRegistry_->get(oldShadowNode.getTag());
+
+              const auto &source = newest == nullptr ? oldShadowNode : *newest;
+
+              const auto newProps = source.getComponentDescriptor().cloneProps(
+                  propsParserContext,
+                  source.getProps(),
+                  RawProps(rt, *pair.second));
+
+              return source.clone({/* .props = */ newProps});
+            });
+
+        if (newRootNode == nullptr) {
+          // this happens when React removed the component but Reanimated still
+          // tries to animate it, let's skip update for this specific component
+          continue;
+        }
+        rootNode = newRootNode;
+
+        auto ancestors = family.getAncestors(*rootNode);
+        for (const auto &pair : ancestors) {
+          const auto &parent = pair.first.get();
+          const auto &child = parent.getChildren().at(pair.second);
+          newestShadowNodesRegistry_->set(child, parent.getTag());
+        }
+      }
+
+      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+      for (auto tag : copiedTagsToRemove) {
+        newestShadowNodesRegistry_->remove(tag);
+      }
+
+      return std::static_pointer_cast<RootShadowNode>(rootNode);
+    });
+  });
+}
+
+void NativeReanimatedModule::removeShadowNodeFromRegistry(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  tagsToRemove_.push_back(shadowNode->getTag());
+}
+
+void NativeReanimatedModule::dispatchCommand(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue) {
+  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  std::string commandName = stringFromValue(rt, commandNameValue);
+  folly::dynamic args = commandArgsFromValue(rt, argsValue);
+
+  // TODO: use uiManager_->dispatchCommand once it's public
+  UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
+}
+
+jsi::Value NativeReanimatedModule::measure(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue) {
+  // based on implementation from UIManagerBinding.cpp
+
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  // TODO: use uiManager_->getRelativeLayoutMetrics once it's public
+  // auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
+  //     *shadowNode, nullptr, {/* .includeTransform = */ true});
+  auto layoutMetrics = UIManager_getRelativeLayoutMetrics(
+      uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
+
+  if (layoutMetrics == EmptyLayoutMetrics) {
+    return jsi::Value::undefined();
+  }
+  auto newestCloneOfShadowNode =
+      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+
+  auto layoutableShadowNode =
+      traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+  facebook::react::Point originRelativeToParent = layoutableShadowNode
+      ? layoutableShadowNode->getLayoutMetrics().frame.origin
+      : facebook::react::Point();
+
+  auto frame = layoutMetrics.frame;
+
+  jsi::Object result(rt);
+  result.setProperty(
+      rt, "x", jsi::Value(static_cast<double>(originRelativeToParent.x)));
+  result.setProperty(
+      rt, "y", jsi::Value(static_cast<double>(originRelativeToParent.y)));
+  result.setProperty(
+      rt, "width", jsi::Value(static_cast<double>(frame.size.width)));
+  result.setProperty(
+      rt, "height", jsi::Value(static_cast<double>(frame.size.height)));
+  result.setProperty(
+      rt, "pageX", jsi::Value(static_cast<double>(frame.origin.x)));
+  result.setProperty(
+      rt, "pageY", jsi::Value(static_cast<double>(frame.origin.y)));
+  return result;
+}
+
+void NativeReanimatedModule::setUIManager(
+    std::shared_ptr<UIManager> uiManager) {
+  uiManager_ = uiManager;
+}
+
+void NativeReanimatedModule::setNewestShadowNodesRegistry(
+    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
+  newestShadowNodesRegistry_ = newestShadowNodesRegistry;
+}
+#endif // RCT_NEW_ARCH_ENABLED
+
+jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &keyboardEventContainer) {
+  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
+  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
+      sharedProperties;
+  std::shared_ptr<ShareableValue> keyboardStateShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "state"), this);
+  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "height"), this);
+
+  auto keyboardEventDataUpdater =
+      [this, &rt, keyboardStateShared, heightShared](
+          int keyboardState, int height) {
+        auto &keyboardStateValue =
+            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
+        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
+
+        auto &heightMutableValue =
+            ValueWrapper::asMutableValue(heightShared->valueContainer);
+        heightMutableValue->setValue(rt, jsi::Value(height));
+
+        this->mapperRegistry->execute(*this->runtime);
+      };
+
+  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+}
+
+void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &listenerId) {
+  unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
 }
 
 } // namespace reanimated

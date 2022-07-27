@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.app.Activity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -228,24 +229,27 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void removeLeftovers() {
-    HashSet<Integer> roots = new HashSet<>();
-    // go through ready to remove from bottom to top
-    for (int tag : mToRemove) {
-      View view = mViewForTag.get(tag);
-      if (view == null) {
-        try {
-          view = mUIManager.resolveView(tag);
-          mViewForTag.put(tag, view);
-        } catch (IllegalViewOperationException ignored) {
-          continue;
+    // mToRemove may be null if onCatalystInstanceDestroy was called first
+    if (mToRemove != null) {
+      HashSet<Integer> roots = new HashSet<>();
+      // go through ready to remove from bottom to top
+      for (int tag : mToRemove) {
+        View view = mViewForTag.get(tag);
+        if (view == null) {
+          try {
+            view = mUIManager.resolveView(tag);
+            mViewForTag.put(tag, view);
+          } catch (IllegalViewOperationException ignored) {
+            continue;
+          }
         }
+        findRoot(view, roots);
       }
-      findRoot(view, roots);
-    }
-    for (int tag : roots) {
-      View view = mViewForTag.get(tag);
-      if (view != null) {
-        dfs(view, view, mToRemove);
+      for (int tag : roots) {
+        View view = mViewForTag.get(tag);
+        if (view != null) {
+          dfs(view, view, mToRemove);
+        }
       }
     }
   }
@@ -368,12 +372,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
       preparedValues.put(key, PixelUtil.toDIPFromPixel((int) values.get(key)));
     }
 
-    DisplayMetrics displaymetrics = new DisplayMetrics();
-    mContext.getCurrentActivity().getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-    int height = displaymetrics.heightPixels;
-    int width = displaymetrics.widthPixels;
-    preparedValues.put("windowWidth", PixelUtil.toDIPFromPixel(width));
-    preparedValues.put("windowHeight", PixelUtil.toDIPFromPixel(height));
+    DisplayMetrics displayMetrics = new DisplayMetrics();
+    Activity currentActivity = mContext.getCurrentActivity();
+    if (currentActivity != null) {
+      currentActivity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+      int height = displayMetrics.heightPixels;
+      int width = displayMetrics.widthPixels;
+      preparedValues.put("windowWidth", PixelUtil.toDIPFromPixel(width));
+      preparedValues.put("windowHeight", PixelUtil.toDIPFromPixel(height));
+    } else {
+      preparedValues.put("windowWidth", PixelUtil.toDIPFromPixel(0));
+      preparedValues.put("windowHeight", PixelUtil.toDIPFromPixel(0));
+    }
     return preparedValues;
   }
 

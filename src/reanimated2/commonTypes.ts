@@ -15,7 +15,6 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Context } from './hook/commonTypes';
 
 export type TransformProperty =
   | PerpectiveTransform
@@ -47,11 +46,12 @@ export interface SharedValue<T> {
   value: T;
 }
 
+export type Context = Record<string, unknown>;
+
 export interface WorkletFunction {
   _closure?: Context;
   __workletHash?: number;
   __optimalization?: number;
-  __worklet?: boolean;
 }
 
 export interface BasicWorkletFunction<T> extends WorkletFunction {
@@ -126,3 +126,38 @@ export type AnimationCallback = (
 ) => void;
 
 export type Timestamp = number;
+
+export type Value3D = {
+  x: number;
+  y: number;
+  z: number;
+};
+
+export type SensorValue3D = SharedValue<Value3D>;
+
+export type ValueRotation = {
+  qw: number;
+  qx: number;
+  qy: number;
+  qz: number;
+  yaw: number;
+  pitch: number;
+  roll: number;
+};
+
+export type SensorValueRotation = SharedValue<ValueRotation>;
+
+export type ShadowNodeWrapper = object;
+
+export enum KeyboardState {
+  UNKNOWN = 0,
+  OPENING = 1,
+  OPEN = 2,
+  CLOSING = 3,
+  CLOSED = 4,
+}
+
+export type AnimatedKeyboardInfo = {
+  height: SharedValue<number>;
+  state: SharedValue<KeyboardState>;
+};

@@ -5,6 +5,7 @@ import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_M
 
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.ReactPackage;
 import com.facebook.react.TurboReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -19,7 +20,7 @@ import com.facebook.systrace.Systrace;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ReanimatedPackage extends TurboReactPackage {
+public class ReanimatedPackage extends TurboReactPackage implements ReactPackage {
 
   @Override
   public NativeModule getModule(String name, ReactApplicationContext reactContext) {

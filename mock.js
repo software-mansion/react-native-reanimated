@@ -28,7 +28,7 @@ function simulateCallbackFactory(...params) {
     callback &&
       setTimeout(() => {
         // user defined callback
-        // eslint-disable-next-line standard/no-callback-literal
+        // eslint-disable-next-line node/no-callback-literal
         callback(...params);
       }, 0);
   };
@@ -73,9 +73,9 @@ function createMockComponent(name) {
 
 function createTransitioningComponent(Component) {
   return class extends React.Component {
-    static displayName = `Transitioning.${Component.displayName ||
-      Component.name ||
-      'Component'}`;
+    static displayName = `Transitioning.${
+      Component.displayName || Component.name || 'Component'
+    }`;
 
     setNativeProps() {
       // noop

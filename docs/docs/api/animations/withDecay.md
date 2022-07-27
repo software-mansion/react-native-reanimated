@@ -13,12 +13,14 @@ Starts a velocity based "scroll" animation.
 Object containing animation configuration.
 Allowed parameters are listed below:
 
-| Options        | Default | Description                                  |
-| -------------- | ------- | -------------------------------------------- |
-| velocity       | 0       | Initial velocity                             |
-| deceleration   | 0.998   | Rate of decay                                |
-| clamp          | []      | Array of two animation boundaries (optional) |
-| velocityFactor | 1       | Factor to modify velocity unit (optional)    |
+| Options           | Default | Description                                           |
+| ----------------- | ------- | ----------------------------------------------------- |
+| velocity          | 0       | Initial velocity                                      |
+| deceleration      | 0.998   | Rate of decay                                         |
+| clamp             | []      | Array of two animation boundaries (optional)          |
+| velocityFactor    | 1       | Factor to modify velocity unit (optional)             |
+| rubberBandEffect  | false   | Rubber band effect after reach clamp limit (optional) |
+| rubberBandFactor  | 0.6     | Factor to modify rubberBandEffect force (optional)    |
 
 ##### `velocityFactor`
 The default unit of velocity in decay is pixel per second but it can be problematic when you want to animate value not related to pixels for example opacity `[0, 1]` or progress bar `[0, 1]`. In this case, you can use `velocityFactor` property with value `< 1` to modify the velocity of change to more matched for the required domain.

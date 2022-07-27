@@ -1,6 +1,6 @@
-#import "REAInitializer.h"
-#import "REAUIManager.h"
-#import "UIResponder+Reanimated.h"
+#import <RNReanimated/REAInitializer.h>
+#import <RNReanimated/REAUIManager.h>
+#import <RNReanimated/UIResponder+Reanimated.h>
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
@@ -13,6 +13,7 @@ typedef HermesExecutorFactory ExecutorFactory;
 typedef JSCExecutorFactory ExecutorFactory;
 #endif
 
+#ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DONT_AUTOINSTALL_REANIMATED
 
 @implementation UIResponder (Reanimated)
@@ -30,4 +31,5 @@ typedef JSCExecutorFactory ExecutorFactory;
 
 @end
 
-#endif
+#endif // DONT_AUTOINSTALL_REANIMATED
+#endif // RCT_NEW_ARCH_ENABLED

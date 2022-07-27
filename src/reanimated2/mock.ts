@@ -59,13 +59,20 @@ const ReanimatedV2 = {
     elastic: ID,
     back: ID,
     bounce: ID,
-    bezier: ID,
+    bezier: () => ({ factory: ID }),
+    bezierFn: ID,
     in: ID,
     out: ID,
     inOut: ID,
   },
+  Extrapolation: {
+    EXTEND: 'extend',
+    CLAMP: 'clamp',
+    IDENTITY: 'identity',
+  },
 
   runOnJS: (fn) => fn,
+  runOnUI: (fn) => fn,
 };
 
 module.exports = {

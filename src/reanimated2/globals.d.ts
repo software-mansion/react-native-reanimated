@@ -1,9 +1,12 @@
-import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
+import { AnimatedStyle, StyleProps } from './commonTypes';
 import { ReanimatedConsole } from './core';
+import { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
+import { ShadowNodeWrapper } from './hook/commonTypes';
 import { MeasuredDimensions } from './NativeMethods';
 import { NativeReanimated } from './NativeReanimated/NativeReanimated';
 declare global {
   const _WORKLET: boolean;
+  const _IS_FABRIC: boolean;
   const _frameTimestamp: number;
   const _eventTimestamp: number;
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
@@ -14,10 +17,17 @@ declare global {
     flag: { value: boolean; _value: boolean }
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
-  const _updateProps: (
+  const _updatePropsPaper: (
     tag: number,
     name: string,
     updates: StyleProps | AnimatedStyle
+  ) => void;
+  const _updatePropsFabric: (
+    shadowNodeWrapper: ShadowNodeWrapper,
+    props: StyleProps | AnimatedStyle
+  ) => void;
+  const _removeShadowNodeFromRegistry: (
+    shadowNodeWrapper: ShadowNodeWrapper
   ) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _scrollTo: (
@@ -26,21 +36,28 @@ declare global {
     y: number,
     animated: boolean
   ) => void;
+  const _dispatchCommand: (
+    shadowNodeWrapper: ShadowNodeWrapper,
+    commandName: string,
+    args: Array<unknown>
+  ) => void;
   const _chronoNow: () => number;
   const ReanimatedDataMock: {
     now: () => number;
   };
+  const _frameCallbackRegistry: FrameCallbackRegistryUI;
   namespace NodeJS {
     interface Global {
-      __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
       _setGestureState: () => void;
       _WORKLET: boolean;
+      _IS_FABRIC: boolean;
       __reanimatedModuleProxy: NativeReanimated;
       _frameTimestamp: number | null;
       _measure: () => MeasuredDimensions;
       _scrollTo: () => void;
+      _dispatchCommand: () => void;
       _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationRepository: {
@@ -56,6 +73,7 @@ declare global {
       ReanimatedDataMock: {
         now: () => number;
       };
+      _frameCallbackRegistry: FrameCallbackRegistryUI;
     }
   }
 }

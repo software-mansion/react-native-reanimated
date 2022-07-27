@@ -1,5 +1,10 @@
 import { NativeModules } from 'react-native';
-import { SharedValue } from '../commonTypes';
+import {
+  SharedValue,
+  SensorValue3D,
+  SensorValueRotation,
+  AnimatedKeyboardInfo,
+} from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
 
 export class NativeReanimated {
@@ -7,7 +12,7 @@ export class NativeReanimated {
   private InnerNativeModule: any;
 
   constructor(native = true) {
-    if (global.__reanimatedModuleProxy === undefined) {
+    if (global.__reanimatedModuleProxy === undefined && native) {
       const { ReanimatedModule } = NativeModules;
       ReanimatedModule?.installTurboModule();
     }
@@ -29,6 +34,22 @@ export class NativeReanimated {
 
   makeRemote<T>(object = {}): T {
     return this.InnerNativeModule.makeRemote(object);
+  }
+
+  registerSensor(
+    sensorType: number,
+    interval: number,
+    sensorData: SensorValue3D | SensorValueRotation
+  ) {
+    return this.InnerNativeModule.registerSensor(
+      sensorType,
+      interval,
+      sensorData
+    );
+  }
+
+  unregisterSensor(sensorId: number) {
+    return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
   startMapper(
@@ -72,5 +93,17 @@ export class NativeReanimated {
 
   enableLayoutAnimations(flag: boolean): void {
     this.InnerNativeModule.enableLayoutAnimations(flag);
+  }
+
+  configureProps(uiProps: string[], nativeProps: string[]): void {
+    this.InnerNativeModule.configureProps(uiProps, nativeProps);
+  }
+
+  subscribeForKeyboardEvents(keyboardEventData: AnimatedKeyboardInfo): number {
+    return this.InnerNativeModule.subscribeForKeyboardEvents(keyboardEventData);
+  }
+
+  unsubscribeFromKeyboardEvents(listenerId: number): void {
+    this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 }

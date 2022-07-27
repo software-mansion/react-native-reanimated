@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.4.1",
+  "version": "3.0.0-rc.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -18,13 +18,7 @@
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "release": "npm login && release-it",
     "type:check": "yarn tsc --noEmit",
-    "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc && yarn type:generate:remove.ts && yarn type:generate:remove.tsx",
-    "type:generate:clean": "rm -rf lib/ && mkdir lib/",
-    "type:generate:cp-js-src": "cp -RL src/* lib/",
-    "type:generate:tsc": "yarn tsc",
-    "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
-    "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
-    "prepare": "husky install",
+    "prepare": "bob build && husky install",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
     "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
     "clean": "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
@@ -32,16 +26,19 @@
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep && yarn setup"
   },
-  "main": "lib/Animated.js",
-  "module": "lib/Animated",
-  "react-native": "src/Animated",
-  "source": "src/Animated",
+  "main": "lib/commonjs/index",
+  "module": "lib/module/index",
+  "react-native": "src/index",
+  "source": "src/index",
   "types": "react-native-reanimated.d.ts",
   "files": [
     "Common/",
     "src/",
     "lib/",
-    "libSo/",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
+    "!lib/typescript",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
@@ -49,12 +46,12 @@
     "ios/",
     "!ios/build/",
     "!android/build/",
+    "!android/.cxx/",
+    "!android/.gradle/",
     "RNReanimated.podspec",
     "README.md",
-    "react-native-reanimated.d.ts",
     "mock.js",
     "plugin.js",
-    "expo-module.config.json",
     "!__snapshots__",
     "!*.test.js",
     "!*.test.js.map"
@@ -74,35 +71,36 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
+    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@babel/plugin-transform-object-assign": "^7.16.7",
+    "@babel/preset-typescript": "^7.16.7",
     "@types/invariant": "^2.2.35",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
-    "react-native-screens": "^3.11.1",
     "setimmediate": "^1.0.5",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
+    "@babel/core": "^7.0.0-0",
     "react": "*",
-    "react-native": "*",
-    "react-native-gesture-handler": "*"
+    "react-native": "*"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.2",
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.5",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
+    "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
-    "@react-native-community/bob": "^0.17.1",
     "@react-native-community/eslint-config": "^0.0.5",
     "@testing-library/jest-native": "^4.0.4",
-    "@testing-library/react-hooks": "^5.0.3",
+    "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
     "@types/babel-types": "^7.0.11",
     "@types/babel__core": "^7.1.18",
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.14.2",
     "@types/jest": "^27.4.0",
-    "@types/react-native": "^0.66.15",
+    "@types/react-native": "^0.66.0",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "babel-eslint": "^10.1.0",
@@ -123,9 +121,10 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.68.0-rc.1",
+    "react-native": "0.68.0",
+    "react-native-builder-bob": "^0.18.3",
     "react-native-codegen": "^0.0.7",
-    "react-native-gesture-handler": "^1.6.1",
+    "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",
     "release-it": "^13.7.2",
     "typescript": "^4.1.3"
@@ -148,12 +147,23 @@
       ]
     }
   },
-  "@react-native-community/bob": {
+  "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
     "targets": [
       "commonjs",
-      "module"
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.json"
+        }
+      ]
     ]
-  }
+  },
+  "sideEffects": [
+    "./lib/reanimated2/core",
+    "./lib/reanimated2/js-reanimated/global",
+    "./lib/index"
+  ]
 }

@@ -2,6 +2,17 @@
 // @ts-nocheck
 import { jestResetJsReanimatedModule } from './core';
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toHaveAnimatedStyle(
+        style: Record<string, unknown>[] | Record<string, unknown>
+      ): R;
+    }
+  }
+}
+
 let config = {
   fps: 60,
 };
@@ -156,9 +167,9 @@ const tickTravel = () => {
   jest.advanceTimersByTime(frameTime);
 };
 
-export const withReanimatedTimer = (animatonTest) => {
+export const withReanimatedTimer = (animationTest) => {
   beforeTest();
-  animatonTest();
+  animationTest();
   afterTest();
 };
 
@@ -177,7 +188,15 @@ export const advanceAnimationByFrame = (count) => {
 };
 
 export const setUpTests = (userConfig = {}) => {
-  const expect = require('expect');
+  let expect;
+  try {
+    expect = require('expect');
+  } catch (_) {
+    // for Jest in version 28+
+    const { expect: expectModule } = require('@jest/globals');
+    expect = expectModule;
+  }
+
   require('setimmediate');
   frameTime = Math.round(1000 / config.fps);
 

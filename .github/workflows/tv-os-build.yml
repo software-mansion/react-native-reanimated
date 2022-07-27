@@ -1,0 +1,38 @@
+name: Test tvOS build
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'Common/**'
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-latest
+    env:
+      WORKING_DIRECTORY: TVOSExample
+    concurrency:
+      group: ios-tv-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'yarn'
+          cache-dependency-path: 'TVOSExample/yarn.lock'
+      - name: Install Reanimated node dependencies
+        run: yarn
+      - name: Install node dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn
+      - name: Install pods
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: pod install
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn tv-os
