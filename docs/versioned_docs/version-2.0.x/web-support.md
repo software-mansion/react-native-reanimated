@@ -28,7 +28,7 @@ If you want to use Reanimated in `webpack` app you should add extra configuratio
 
 Example webpack config file with Reanimated support:
 
-```js {6,14,34}
+```js {6,14,15,34}
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
@@ -42,6 +42,7 @@ module.exports = {
       filename: 'index.html',
       template: './index.html',
     }),
+    new webpack.EnvironmentPlugin({ JEST_WORKER_ID: null }),
     new webpack.DefinePlugin({ process: { env: {} } })
   ],
   module: {
