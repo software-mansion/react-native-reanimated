@@ -64,7 +64,7 @@ static inline ShadowNode::Shared cloneNode(
     UIManager *uiManager,
     NewestShadowNodesRegistry *newestShadowNodesRegistry,
     const ShadowNode::Shared &shadowNode,
-    const SharedShadowNodeSharedList &children = nullptr,
+    const ShadowNode::SharedListOfShared &children = nullptr,
     const RawProps *rawProps = nullptr) {
   {
     auto lock = newestShadowNodesRegistry->createLock();
