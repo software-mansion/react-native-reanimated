@@ -19,12 +19,10 @@ Hook `useAnimatedKeyboard` returns an instance of [[AnimatedKeyboardInfo](#anima
 
 #### `AnimatedKeyboardInfo: [object]`
 Properties:
-* `isShown`: [[SharedValue](../../api/hooks/useSharedValue)] contains [boolean]
-  contains info whether keyboard is shown on the screen
-* `isAnimating`: [[SharedValue](../../api/hooks/useSharedValue)] contains [boolean]
-  contains info whether keyboard is currently animating
-* `height`: [[SharedValue](../../api/hooks/useSharedValue)] contains [number]
+* `height`: [[SharedValue](../../api/hooks/useSharedValue)] contains `[number]`
   contains current height of the keyboard
+* `state`: [[SharedValue](../../api/hooks/useSharedValue)] contains `[enum]`
+  contains current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }`
 
 ### Example
 ```js

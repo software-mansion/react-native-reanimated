@@ -642,23 +642,17 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
   jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
   std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
       sharedProperties;
-  std::shared_ptr<ShareableValue> isShownShared = ShareableValue::adapt(
-      rt, keyboardEventObj.getProperty(rt, "isShown"), this);
-  std::shared_ptr<ShareableValue> isAnimatingShared = ShareableValue::adapt(
-      rt, keyboardEventObj.getProperty(rt, "isAnimating"), this);
+  std::shared_ptr<ShareableValue> keyboardStateShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "state"), this);
   std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
       rt, keyboardEventObj.getProperty(rt, "height"), this);
 
   auto keyboardEventDataUpdater =
-      [this, &rt, isShownShared, isAnimatingShared, heightShared](
-          bool isShown, bool isAnimating, int height) {
-        auto &isShownMutableValue =
-            ValueWrapper::asMutableValue(isShownShared->valueContainer);
-        isShownMutableValue->setValue(rt, jsi::Value(isShown));
-
-        auto &isAnimatingMutableValue =
-            ValueWrapper::asMutableValue(isAnimatingShared->valueContainer);
-        isAnimatingMutableValue->setValue(rt, jsi::Value(isAnimating));
+      [this, &rt, keyboardStateShared, heightShared](
+          int keyboardState, int height) {
+        auto &keyboardStateValue =
+            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
+        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
 
         auto &heightMutableValue =
             ValueWrapper::asMutableValue(heightShared->valueContainer);
