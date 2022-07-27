@@ -18,7 +18,8 @@
     "ts-check": "yarn tsc --noEmit",
     "e2e:android": "node ./scripts/generateIndex.js --test && yarn detox build --configuration android && yarn detox test --configuration android",
     "e2e:ios": "node ./scripts/generateIndex.js --test && yarn detox build --configuration ios && yarn detox test --configuration ios",
-    "e2e:tests": "yarn e2e:android && yarn e2e:ios"
+    "e2e:tests": "yarn e2e:android && yarn e2e:ios",
+    "pod-install": "cd ios && pod install && cd .."
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
