@@ -312,7 +312,8 @@ function buildWorkletString(t, fun, closureVariables, name) {
     )
   );
 
-  return generate(workletFunction, { compact: true }).code;
+  const funString = generate(workletFunction, { compact: true }).code;
+  return { workletFunction, funString };
 }
 
 function makeWorkletName(t, fun) {
@@ -434,7 +435,7 @@ function makeWorklet(t, fun, fileName) {
   } else {
     funExpression = clone;
   }
-  const funString = buildWorkletString(
+  const { workletFunction, funString } = buildWorkletString(
     t,
     transformed.ast,
     variables,
@@ -464,8 +465,9 @@ function makeWorklet(t, fun, fileName) {
     t.expressionStatement(
       t.assignmentExpression(
         '=',
-        t.memberExpression(privateFunctionId, t.identifier('asString'), false),
-        t.stringLiteral(funString)
+        t.memberExpression(privateFunctionId, t.identifier('__reanimated_workletFunction'), false),
+        // t.stringLiteral(funString)
+        workletFunction
       )
     ),
     t.expressionStatement(
