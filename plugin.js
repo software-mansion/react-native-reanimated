@@ -309,13 +309,14 @@ function buildWorkletString(t, fun, closureVariables, name) {
     },
   });
 
+  const expression = fun.program.body.find(
+    ({ type }) => type === 'ExpressionStatement'
+  ).expression;
+
   const workletFunction = t.functionExpression(
     t.identifier(name),
-    fun.program.body[0].expression.params,
-    prependClosureVariablesIfNecessary(
-      closureVariables,
-      fun.program.body[0].expression.body
-    )
+    expression.params,
+    prependClosureVariablesIfNecessary(closureVariables, expression.body)
   );
 
   return generate(workletFunction, { compact: true }).code;
