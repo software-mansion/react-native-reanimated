@@ -64,10 +64,10 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
     ShadowNode const *ancestorShadowNode,
     LayoutableShadowNode::LayoutInspectingPolicy policy);
 
-SharedShadowNode UIManager_cloneNode(
+ShadowNode::Shared UIManager_cloneNode(
     const UIManager *uiManager,
     const ShadowNode::Shared &shadowNode,
-    const SharedShadowNodeSharedList &children = nullptr,
+    const ShadowNode::SharedListOfShared &children = nullptr,
     const RawProps *rawProps = nullptr);
 
 void UIManager_appendChild(
