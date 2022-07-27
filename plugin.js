@@ -305,21 +305,18 @@ function buildWorkletString(t, fun, closureVariables, name) {
 
   traverse(fun, {
     enter(path) {
-      if (path.node.type === 'ExpressionStatement') {
-        t.removeComments(path.node);
-      }
+      t.removeComments(path.node);
     },
   });
 
- const expression=  fun.program.body.find(({type})=>type=== 'ExpressionStatement').expression
+  const expression = fun.program.body.find(
+    ({ type }) => type === 'ExpressionStatement'
+  ).expression;
 
   const workletFunction = t.functionExpression(
     t.identifier(name),
     expression.params,
-    prependClosureVariablesIfNecessary(
-      closureVariables,
-      expression.body
-    )
+    prependClosureVariablesIfNecessary(closureVariables, expression.body)
   );
 
   return generate(workletFunction, { compact: true }).code;
