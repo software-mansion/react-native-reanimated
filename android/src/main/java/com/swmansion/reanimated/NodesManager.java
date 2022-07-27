@@ -1,5 +1,7 @@
 package com.swmansion.reanimated;
 
+import static java.lang.Float.NaN;
+
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -56,7 +58,7 @@ public class NodesManager implements EventDispatcherListener {
       view = mUIManager.resolveView(viewTag);
     } catch (IllegalViewOperationException e) {
       e.printStackTrace();
-      return (new float[] {});
+      return (new float[] {NaN, NaN, NaN, NaN, NaN, NaN});
     }
     return NativeMethodsHelper.measure(view);
   }
