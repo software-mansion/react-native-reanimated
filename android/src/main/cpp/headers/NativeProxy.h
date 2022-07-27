@@ -123,8 +123,8 @@ class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy$KeyboardEventDataUpdater;";
 
-  void keyboardEventDataUpdater(bool isShown, bool isAnimating, int height) {
-    callback_(isShown, isAnimating, height);
+  void keyboardEventDataUpdater(int keyboardState, int height) {
+    callback_(keyboardState, height);
   }
 
   static void registerNatives() {
@@ -138,11 +138,10 @@ class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
  private:
   friend HybridBase;
 
-  explicit KeyboardEventDataUpdater(
-      std::function<void(bool, bool, int)> callback)
+  explicit KeyboardEventDataUpdater(std::function<void(int, int)> callback)
       : callback_(std::move(callback)) {}
 
-  std::function<void(bool, bool, int)> callback_;
+  std::function<void(int, int)> callback_;
 };
 
 class NativeProxy : public jni::HybridClass<NativeProxy> {
@@ -188,7 +187,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
   int subscribeForKeyboardEvents(
-      std::function<void(bool, bool, int)> keyboardEventDataUpdater);
+      std::function<void(int, int)> keyboardEventDataUpdater);
   void unsubscribeFromKeyboardEvents(int listenerId);
 
   explicit NativeProxy(

@@ -4,7 +4,7 @@
 #import <RNReanimated/REAEventDispatcher.h>
 #import <React/RCTEventDispatcher.h>
 
-typedef void (^KeyboardEventListenerBlock)(bool isShown, bool isAnimating, int height);
+typedef void (^KeyboardEventListenerBlock)(int keyboardState, int height);
 
 @interface REAKeyboardEventObserver : NSObject
 

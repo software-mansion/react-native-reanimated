@@ -138,8 +138,7 @@ void NativeProxy::installJSIBindings() {
   };
 
   auto subscribeForKeyboardEventsFunction =
-      [this](std::function<void(bool, bool, int)> keyboardEventDataUpdater)
-      -> int {
+      [this](std::function<void(int, int)> keyboardEventDataUpdater) -> int {
     return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
   };
 
@@ -357,7 +356,7 @@ void NativeProxy::configureProps(
 }
 
 int NativeProxy::subscribeForKeyboardEvents(
-    std::function<void(bool, bool, int)> keyboardEventDataUpdater) {
+    std::function<void(int, int)> keyboardEventDataUpdater) {
   auto method = javaPart_->getClass()
                     ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
                         "subscribeForKeyboardEvents");

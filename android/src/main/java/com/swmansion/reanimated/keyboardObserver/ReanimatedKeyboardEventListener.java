@@ -17,8 +17,27 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ReanimatedKeyboardEventListener {
+  enum KeyboardState {
+    UNKNOWN(0),
+    OPENING(1),
+    OPEN(2),
+    CLOSING(3),
+    CLOSED(4);
+
+    private final int value;
+
+    KeyboardState(int value) {
+      this.value = value;
+    }
+
+    public int asInt() {
+      return value;
+    }
+  }
+
   private final WeakReference<ReactApplicationContext> reactContext;
   private int nextListenerId = 0;
+  private KeyboardState state;
   private final HashMap<Integer, KeyboardEventDataUpdater> listeners = new HashMap<>();
 
   public ReanimatedKeyboardEventListener(WeakReference<ReactApplicationContext> reactContext) {
@@ -50,9 +69,9 @@ public class ReanimatedKeyboardEventListener {
         });
   }
 
-  private void updateKeyboard(boolean isShown, boolean isAnimating, int keyboardHeight) {
+  private void updateKeyboard(int keyboardHeight) {
     for (KeyboardEventDataUpdater listener : listeners.values()) {
-      listener.keyboardEventDataUpdater(isShown, isAnimating, keyboardHeight);
+      listener.keyboardEventDataUpdater(state.asInt(), keyboardHeight);
     }
   }
 
@@ -68,7 +87,8 @@ public class ReanimatedKeyboardEventListener {
     public WindowInsetsAnimationCompat.BoundsCompat onStart(
         @NonNull WindowInsetsAnimationCompat animation,
         @NonNull WindowInsetsAnimationCompat.BoundsCompat bounds) {
-      updateKeyboard(true, true, keyboardHeight);
+      state = keyboardHeight == 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
+      updateKeyboard(keyboardHeight);
       return super.onStart(animation, bounds);
     }
 
@@ -85,13 +105,14 @@ public class ReanimatedKeyboardEventListener {
                       0,
                       insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
                           - insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom));
-      updateKeyboard(true, true, keyboardHeight);
+      updateKeyboard(keyboardHeight);
       return insets;
     }
 
     @Override
     public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-      updateKeyboard(keyboardHeight > 0, false, keyboardHeight);
+      state = keyboardHeight == 0 ? KeyboardState.CLOSED : KeyboardState.OPEN;
+      updateKeyboard(keyboardHeight);
     }
   }
 
