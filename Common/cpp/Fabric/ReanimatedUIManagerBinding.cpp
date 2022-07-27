@@ -17,25 +17,48 @@ void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
         &newestShadowNodesRegistry) {
   // adapted from UIManagerBinding.cpp
   auto uiManagerModuleName = "nativeFabricUIManager";
-  auto uiManagerBinding = std::make_shared<ReanimatedUIManagerBinding>(
-      uiManager, runtimeExecutor, newestShadowNodesRegistry);
-  auto object = jsi::Object::createFromHostObject(runtime, uiManagerBinding);
+
+  auto eventHandler = [&]() -> std::unique_ptr<EventHandler const> {
+    auto uiManagerValue =
+        runtime.global().getProperty(runtime, uiManagerModuleName);
+    if (uiManagerValue.isUndefined()) {
+      return nullptr;
+    }
+
+    auto uiManagerBinding =
+        uiManagerValue.asObject(runtime).asHostObject<UIManagerBinding>(
+            runtime);
+    auto uiManagerBindingPublic =
+        reinterpret_cast<UIManagerBindingPublic *>(&*uiManagerBinding);
+    return std::move(uiManagerBindingPublic->eventHandler_);
+  }();
+
+  auto reanimatedUiManagerBinding =
+      std::make_shared<ReanimatedUIManagerBinding>(
+          uiManager,
+          runtimeExecutor,
+          std::move(eventHandler),
+          newestShadowNodesRegistry);
+  auto object =
+      jsi::Object::createFromHostObject(runtime, reanimatedUiManagerBinding);
   runtime.global().setProperty(runtime, uiManagerModuleName, std::move(object));
 }
 
 ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     std::shared_ptr<UIManager> uiManager,
     RuntimeExecutor runtimeExecutor,
+    std::unique_ptr<EventHandler const> eventHandler,
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
     : UIManagerBinding(uiManager, runtimeExecutor),
       uiManager_(std::move(uiManager)),
-      newestShadowNodesRegistry_(newestShadowNodesRegistry) {}
+      newestShadowNodesRegistry_(newestShadowNodesRegistry) {
+  if (eventHandler != nullptr) {
+    reinterpret_cast<UIManagerBindingPublic *>(this)->eventHandler_ =
+        std::move(eventHandler);
+  }
+}
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
-
-void ReanimatedUIManagerBinding::invalidate() const {
-  uiManager_->setDelegate(nullptr);
-}
 
 static inline ShadowNode::Shared cloneNode(
     UIManager *uiManager,
