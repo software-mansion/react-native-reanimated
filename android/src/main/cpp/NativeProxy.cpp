@@ -209,12 +209,6 @@ void NativeProxy::installJSIBindings(
 #if JS_RUNTIME_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
-// OLD CODE
-#if false
-    std::shared_ptr<jsi::Runtime> animatedRuntime =
-        facebook::hermes::makeHermesRuntime(config.build());
-  // NEW CODE
-#else
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
       facebook::hermes::makeHermesRuntime(config.build());
   facebook::hermes::HermesRuntime &hermesRuntimeRef = *runtime;
@@ -224,7 +218,6 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<jsi::Runtime> animatedRuntime = adapter->runtime_;
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated runtime");
-#endif
 #elif JS_RUNTIME_V8
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = false;
