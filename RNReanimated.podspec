@@ -46,7 +46,6 @@ end
 
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=' + rnVersion
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
-folly_version = '2021.04.26.00'
 boost_compiler_flags = '-Wno-documentation'
 
 Pod::Spec.new do |s|
@@ -86,6 +85,10 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.dependency "React-Core"
+  s.dependency "#{folly_prefix}Folly"
+  s.dependency "RCTRequired"
+  s.dependency "RCTTypeSafety"
+  s.dependency "ReactCommon/turbomodule/core"
   s.dependency 'FBLazyVector'
   s.dependency 'FBReactNativeSpec'
   s.dependency 'RCTRequired'
