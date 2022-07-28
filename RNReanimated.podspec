@@ -54,7 +54,6 @@ end
 
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DRNVERSION=' + rnVersion
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
-folly_version = '2021.06.28.00-v2'
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = ''
 if fabric_enabled
@@ -101,7 +100,7 @@ Pod::Spec.new do |s|
   if fabric_enabled
     s.dependency "React-RCTFabric"
     s.dependency "React-Codegen"
-    s.dependency "RCT-Folly", folly_version
+    s.dependency "RCT-Folly"
   else
     s.dependency "#{folly_prefix}Folly"
   end
