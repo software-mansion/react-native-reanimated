@@ -6,31 +6,33 @@ import { useEvent, useSharedValue } from '.';
 import { SharedValue } from '../commonTypes';
 import { ScrollEvent } from './useAnimatedScrollHandler';
 
+const subscribeForEvents = [
+  'onScroll',
+  'onScrollBeginDrag',
+  'onScrollEndDrag',
+  'onMomentumScrollBegin',
+  'onMomentumScrollEnd',
+];
+
 export function useScrollViewPosition(
   aref: RefObject<Animated.ScrollView>
 ): SharedValue<number> {
   const offsetRef = useRef(useSharedValue(0));
 
-  const subscribeForEvents = [
-    'onScroll',
-    'onScrollBeginDrag',
-    'onScrollEndDrag',
-    'onMomentumScrollBegin',
-    'onMomentumScrollEnd',
-  ];
-
-  const horizontal = false;
-  const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
+  const eventX = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
-    if (horizontal) {
-      offsetRef.current.value = event.contentOffset.x;
-    } else {
-      offsetRef.current.value = event.contentOffset.y;
-    }
+    offsetRef.current.value = event.contentOffset.x;
+  }, subscribeForEvents);
+
+  const eventY = useEvent<ScrollEvent>((event: ScrollEvent) => {
+    'worklet';
+    offsetRef.current.value = event.contentOffset.y;
   }, subscribeForEvents);
 
   useEffect(() => {
     const viewTag = findNodeHandle(aref.current);
+    const horizontal = aref.current?.currentProps.horizontal;
+    const event = horizontal ? eventX : eventY;
 
     event.current?.registerForEvents(viewTag as number, 'onScroll');
   }, [aref.current]);
