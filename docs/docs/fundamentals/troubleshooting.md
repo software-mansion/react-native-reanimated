@@ -24,3 +24,8 @@ Depending on how spread is used you may try one of the following alternatives:
 - `[...Array(length)].map` idiom: `Array(length).fill().map()`
 - merging objects: [`Object.assign()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
 - spreading args in function: [`func.apply()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+
+### `Export namespace should be first transformed by 'babel/plugin-proposal-export-namespace-from'`
+
+This error usually happens, when you forget to add the babel plugin in your `babel.plugin.js`. Please make
+sure you have added it.
