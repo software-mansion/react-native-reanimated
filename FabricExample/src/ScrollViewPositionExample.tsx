@@ -1,33 +1,19 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import Animated, {
   useScrollViewPosition,
   useAnimatedStyle,
   useAnimatedRef,
-  useEvent,
-  event,
 } from 'react-native-reanimated';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function ScrollViewPositionExample() {
   const aref = useAnimatedRef<Animated.ScrollView>();
-  // const scrollHandler = useScrollViewPosition(aref);
+  const scrollHandler = useScrollViewPosition(aref);
 
-  // useAnimatedStyle(() => {
-  //   console.log(scrollHandler.offset.value);
-  //   return {};
-  // });
-
-  const event = useEvent(
-    (event) => {
-      'worklet';
-      console.log("onScroll recieved:", event.contentOffset.y);
-    },
-    ['onScroll']
-  )
-
-  useEffect(() => {
-    // console.log(aref.current)
+  useAnimatedStyle(() => {
+    console.log(scrollHandler.value);
+    return {};
   });
 
   return (
@@ -36,24 +22,12 @@ export default function ScrollViewPositionExample() {
         <Text>Test</Text>
       </View>
       <View style={styles.divider} />
-      <Animated.ScrollView
-        ref={aref}
-        scrollEventThrottle={16}
-        onScroll={
-          // () => {
-          //   console.log('test1');
-          // }
-          useEvent((event) => {
-            'worklet';
-            console.log('test2');
-          }, [])
-        }
-        style={styles.scrollView} >
-          {[...Array(100)].map((_, i) => (
-            <Text key={i} style={styles.text}>
-              {i}
-            </Text>
-          ))}
+      <Animated.ScrollView ref={aref} style={styles.scrollView}>
+        {[...Array(100)].map((_, i) => (
+          <Text key={i} style={styles.text}>
+            {i}
+          </Text>
+        ))}
       </Animated.ScrollView>
     </>
   );

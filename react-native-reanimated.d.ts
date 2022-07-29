@@ -555,10 +555,9 @@ declare module 'react-native-reanimated' {
   };
   export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
 
-  export type ScrollViewPosition = { offset: SharedValue<number> };
   export function useScrollViewPosition(
     aref: RefObject<Animated.ScrollView>
-  ): ScrollViewPosition;
+  ): SharedValue<number>;
 
   export interface ExitAnimationsValues {
     currentOriginX: number;
