@@ -24,8 +24,8 @@ export default function ScrollViewOffsetExample() {
       <View style={styles.divider} />
       <Animated.ScrollView
         ref={aref}
-        style={styles.scrollView}
-        horizontal={false}>
+        scrollEventThrottle={16}
+        style={styles.scrollView}>
         {[...Array(100)].map((_, i) => (
           <Text key={i} style={styles.text}>
             {i}

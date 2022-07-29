@@ -38,7 +38,7 @@ export function useScrollViewOffset(
           .horizontal;
     const event = horizontal ? eventX : eventY;
 
-    event.current?.registerForEvents(viewTag as number, 'onScroll');
+    event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
 
   return offsetRef.current;

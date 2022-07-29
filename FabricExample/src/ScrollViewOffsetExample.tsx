@@ -22,7 +22,10 @@ export default function ScrollViewOffsetExample() {
         <Text>Test</Text>
       </View>
       <View style={styles.divider} />
-      <Animated.ScrollView ref={aref} style={styles.scrollView}>
+      <Animated.ScrollView
+        ref={aref}
+        scrollEventThrottle={16}
+        style={styles.scrollView}>
         {[...Array(100)].map((_, i) => (
           <Text key={i} style={styles.text}>
             {i}
