@@ -1,4 +1,4 @@
-import { runOnUI } from '..';
+import { runOnUI } from '../core';
 
 export default interface FrameCallbackRegistryUI {
   frameCallbackRegistry: Map<number, () => void>;

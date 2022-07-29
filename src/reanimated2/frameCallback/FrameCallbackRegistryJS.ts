@@ -1,4 +1,4 @@
-import { runOnUI } from '..';
+import { runOnUI } from '../core';
 import { prepareUIRegistry } from './FrameCallbackRegistryUI';
 
 export default class FrameCallbackRegistryJS {
