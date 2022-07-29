@@ -31,7 +31,11 @@ export function useScrollViewOffset(
 
   useEffect(() => {
     const viewTag = findNodeHandle(aref.current);
-    const horizontal = aref.current?.currentProps.horizontal;
+    console.log(aref.current);
+    const horizontal = _IS_FABRIC
+      ? aref.current?.currentProps.horizontal
+      : aref.current?._internalFiberInstanceHandleDEV._debugOwner.memoizedProps
+          .horizontal;
     const event = horizontal ? eventX : eventY;
 
     event.current?.registerForEvents(viewTag as number, 'onScroll');

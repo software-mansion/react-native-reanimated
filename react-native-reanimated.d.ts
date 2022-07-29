@@ -275,6 +275,13 @@ declare module 'react-native-reanimated' {
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
     export interface ScrollView extends ReactNativeScrollView {
       currentProps: { horizontal: boolean };
+      _internalFiberInstanceHandleDEV: {
+        _debugOwner: {
+          memoizedProps: {
+            horizontal: boolean;
+          };
+        };
+      };
     }
 
     export class Code extends Component<CodeProps> {}

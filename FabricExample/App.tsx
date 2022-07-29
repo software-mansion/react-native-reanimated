@@ -29,7 +29,7 @@ import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ScrollViewPositionExample from './src/ScrollViewPositionExample';
+import ScrollViewOffsetExample from './src/ScrollViewOffsetExample';
 
 const EXAMPLES = [
   {
@@ -120,7 +120,7 @@ const EXAMPLES = [
     name: 'ScrollViewPositionExample',
     icon: '𝌍',
     title: 'useScrollViewPosition',
-    component: ScrollViewPositionExample,
+    component: ScrollViewOffsetExample,
   },
   {
     name: 'MeasureExample',

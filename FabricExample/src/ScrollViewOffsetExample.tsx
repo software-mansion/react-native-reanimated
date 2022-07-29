@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function ScrollViewPositionExample() {
+export default function ScrollViewOffsetExample() {
   const aref = useAnimatedRef<Animated.ScrollView>();
   const scrollHandler = useScrollViewOffset(aref);
 
