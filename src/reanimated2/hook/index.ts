@@ -24,4 +24,4 @@ export { useAnimatedSensor, SensorType } from './useAnimatedSensor';
 export { useFrameCallback } from './useFrameCallback';
 export type { FrameCallback } from './useFrameCallback';
 export { useAnimatedKeyboard } from './useAnimatedKeyboard';
-export { useScrollViewPosition } from './useScrollViewPosition';
+export { useScrollViewOffset } from './useScrollViewPosition';

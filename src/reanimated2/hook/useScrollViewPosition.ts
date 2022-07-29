@@ -14,7 +14,7 @@ const subscribeForEvents = [
   'onMomentumScrollEnd',
 ];
 
-export function useScrollViewPosition(
+export function useScrollViewOffset(
   aref: RefObject<Animated.ScrollView>
 ): SharedValue<number> {
   const offsetRef = useRef(useSharedValue(0));
