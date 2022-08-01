@@ -19,24 +19,16 @@ export function useScrollViewOffset(
 ): SharedValue<number> {
   const offsetRef = useRef(useSharedValue(0));
 
-  const eventX = useEvent<ScrollEvent>((event: ScrollEvent) => {
+  const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
-    offsetRef.current.value = event.contentOffset.x;
-  }, subscribeForEvents);
-
-  const eventY = useEvent<ScrollEvent>((event: ScrollEvent) => {
-    'worklet';
-    offsetRef.current.value = event.contentOffset.y;
+    offsetRef.current.value =
+      event.contentOffset.x === 0
+        ? event.contentOffset.y
+        : event.contentOffset.x;
   }, subscribeForEvents);
 
   useEffect(() => {
     const viewTag = findNodeHandle(aref.current);
-    const horizontal = _IS_FABRIC
-      ? aref.current?.currentProps.horizontal
-      : aref.current?._internalFiberInstanceHandleDEV._debugOwner.memoizedProps
-          .horizontal;
-    const event = horizontal ? eventX : eventY;
-
     event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
 
