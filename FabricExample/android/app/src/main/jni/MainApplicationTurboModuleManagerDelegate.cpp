@@ -36,7 +36,7 @@ MainApplicationTurboModuleManagerDelegate::getTurboModule(
 }
 
 bool MainApplicationTurboModuleManagerDelegate::canCreateTurboModule(
-    std::string &name) {
+    const std::string &name) {
   return getTurboModule(name, nullptr) != nullptr ||
       getTurboModule(name, {.moduleName = name}) != nullptr;
 }

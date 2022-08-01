@@ -22,7 +22,7 @@ class MainApplicationTurboModuleManagerDelegate
 
   std::shared_ptr<TurboModule> getTurboModule(
       const std::string &name,
-      const std::shared_ptr<CallInvoker> jsInvoker) override;
+      const std::shared_ptr<CallInvoker> &jsInvoker) override;
   std::shared_ptr<TurboModule> getTurboModule(
       const std::string &name,
       const JavaTurboModule::InitParams &params) override;
@@ -31,7 +31,7 @@ class MainApplicationTurboModuleManagerDelegate
    * Test-only method. Allows user to verify whether a TurboModule can be
    * created by instances of this class.
    */
-  bool canCreateTurboModule(const std::string &name);
+   bool canCreateTurboModule(const std::string &name);
 };
 
 } // namespace react
