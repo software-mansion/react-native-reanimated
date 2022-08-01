@@ -89,10 +89,10 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
       shadowNode.getFamily(), *layoutableAncestorShadowNode, policy);
 }
 
-SharedShadowNode UIManager_cloneNode(
+ShadowNode::Shared UIManager_cloneNode(
     const UIManager *uiManager,
     const ShadowNode::Shared &shadowNode,
-    const SharedShadowNodeSharedList &children,
+    const ShadowNode::SharedListOfShared &children,
     const RawProps *rawProps) {
   auto delegate_ = getDelegateFromUIManager(uiManager);
   auto contextContainer_ = getContextContainerFromUIManager(uiManager);
