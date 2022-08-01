@@ -42,6 +42,7 @@ LOCAL_SHARED_LIBRARIES := \
 
 # Autolinked libraries
 LOCAL_SHARED_LIBRARIES += $(call import-codegen-modules) 
+
 # If you wish to add a custom TurboModule or Fabric component in your app you
 # will have to link against it here:
 # LOCAL_SHARED_LIBRARIES += \

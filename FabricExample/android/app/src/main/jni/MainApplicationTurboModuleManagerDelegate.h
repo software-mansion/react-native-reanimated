@@ -31,7 +31,7 @@ class MainApplicationTurboModuleManagerDelegate
    * Test-only method. Allows user to verify whether a TurboModule can be
    * created by instances of this class.
    */
-   bool canCreateTurboModule(const std::string &name);
+  bool canCreateTurboModule(const std::string &name);
 };
 
 } // namespace react
