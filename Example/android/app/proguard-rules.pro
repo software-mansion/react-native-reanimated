@@ -72,6 +72,7 @@
 # hermes
 -keep class com.facebook.hermes.unicode.** { *; }
 
-# Added
--keep class com.swmansion.reanimated.** { *; } // Added these two lines because of what they said in reanimated 2 documentation
+# Reanimated 2
+# https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation/#proguard
+-keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
