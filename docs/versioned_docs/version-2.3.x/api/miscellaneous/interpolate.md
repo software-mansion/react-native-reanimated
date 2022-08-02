@@ -40,7 +40,7 @@ If a string is provided, the provided extrapolation type is applied to both side
 :::info
 Available extrapolation types:
 * `Extrapolation.CLAMP` - clamps the value to the edge of the output range
-* `Extrapolation.IDENTITY` - returns the evalue that is being interpolated
+* `Extrapolation.IDENTITY` - returns the value that is being interpolated
 * `Extrapolation.EXTEND` - approximates the value even outside of the range
 
 Available extrapolation string values:
