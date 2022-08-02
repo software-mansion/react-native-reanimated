@@ -35,4 +35,9 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-var-requires': 'warn',
   },
+  ignorePatterns: [
+    'Examples/paper/index-template.js',
+    'Examples/paper/test/**',
+    'Examples/paper/test-suite/**',
+  ],
 };

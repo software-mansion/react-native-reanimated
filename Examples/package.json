@@ -1,7 +1,14 @@
 {
   "private": true,
-  "workspaces": [
-    "common",
-    "fabric"
-  ]
+  "workspaces": {
+    "packages": [
+      "common",
+      "fabric",
+      "paper"
+    ],
+    "nohoist": [
+      "fabric/**",
+      "paper/**"
+    ]
+  }
 }
