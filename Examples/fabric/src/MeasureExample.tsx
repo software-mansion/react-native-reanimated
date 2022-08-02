@@ -8,8 +8,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  runOnUI,
 } from 'react-native-reanimated';
-import { runOnUI } from '../../src/reanimated2/core';
 
 export default function MeasureExample() {
   const aref = useAnimatedRef<Animated.View>();
