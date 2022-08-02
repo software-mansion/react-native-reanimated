@@ -70,7 +70,7 @@ In swizzled components look for "SWM -" string to see our modifications
 module.exports = {
   title: 'React Native Reanimated',
   tagline: "React Native's Animated library reimplemented",
-  url: 'https://docs.swmansion.com/react-native-reanimated/',
+  url: 'https://docs.swmansion.com',
   baseUrl: '/react-native-reanimated/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
