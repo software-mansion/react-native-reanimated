@@ -157,7 +157,11 @@ def JS_RUNTIME = {
 
 def jsRuntimeDir = {
     if (JS_RUNTIME == "hermes") {
-        return Paths.get(CMAKE_NODE_MODULES_DIR, "hermes-engine")
+        if (rnMinorVersion >= 70) {
+            return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "sdks", "hermes")
+        } else {
+            return Paths.get(CMAKE_NODE_MODULES_DIR, "hermes-engine")
+        }
     } else if (JS_RUNTIME == "v8") {
         return findProject(":react-native-v8").getProjectDir().getParent()
     } else {

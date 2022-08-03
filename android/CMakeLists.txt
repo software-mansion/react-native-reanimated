@@ -244,11 +244,20 @@ target_link_libraries(
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-    target_include_directories(
+    if(${REACT_NATIVE_TARGET_VERSION} LESS 70)
+        target_include_directories(
             ${PACKAGE_NAME}
             PRIVATE
             "${JS_RUNTIME_DIR}/android/include"
-    )
+        )
+    else()
+        target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/API"
+            "${JS_RUNTIME_DIR}/public"
+        )
+    endif()
     file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
     find_library(
             HERMES_LIB
