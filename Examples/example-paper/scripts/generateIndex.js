@@ -5,8 +5,8 @@ const cwd = process.cwd();
 
 // check if in Example directory
 const cwdSplit = cwd.split(path.sep);
-if (cwdSplit[cwdSplit.length - 1] !== 'paper') {
-  console.log("invalid path, please enter the 'paper' directory");
+if (cwdSplit[cwdSplit.length - 1] !== 'example-paper') {
+  console.log("invalid path, please enter the 'example-paper' directory");
   process.exit(1);
 }
 

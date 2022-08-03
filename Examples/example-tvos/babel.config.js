@@ -9,7 +9,7 @@ module.exports = api => {
     plugins: [
       '@babel/plugin-proposal-optional-chaining',
       '@babel/plugin-transform-modules-commonjs',
-      '../plugin',
+      '../../plugin',
       isWeb
         ? [
             'module-resolver',
@@ -23,7 +23,7 @@ module.exports = api => {
             'module-resolver',
             {
               alias: {
-                'react-native-reanimated': '../src/index',
+                'react-native-reanimated': '../../src/index',
                 react: './node_modules/react',
                 'react-native': './node_modules/react-native',
                 '@babel': './node_modules/@babel',

@@ -24,17 +24,15 @@ rescue
     begin
       # Example app in reanimated repo
       # /react-native-reanimated/RNReanimated.podspec
-      # /react-native-reanimated/Examples/{paper,fabric}/node_modules/react-native/package.json
-      # or
-      # /react-native-reanimated/TVOSExample/node_modules/react-native/package.json
+      # /react-native-reanimated/Examples/{@example-paper,@example-fabric,@example-tvos}/node_modules/react-native/package.json
       if ENV["ReanimatedTVOSExample"] == "1" then
-        appName = "TVOSExample"
+        appName = "example-tvos"
       elsif ENV["RCT_NEW_ARCH_ENABLED"] == "1" then
-        appName = "Examples/paper"
+        appName = "example-fabric"
       else
-        appName = "Examples/fabric"
+        appName = "example-paper"
       end
-      reactJson = JSON.parse(File.read(File.join(__dir__, appName, "node_modules", "react-native", "package.json")))
+      reactJson = JSON.parse(File.read(File.join(__dir__, "Examples", appName, "node_modules", "react-native", "package.json")))
       reactVersion = reactJson["version"]
       reactTargetTvOS = ENV["ReanimatedTVOSExample"] == "1"
     rescue

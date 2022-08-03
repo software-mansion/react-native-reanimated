@@ -255,7 +255,7 @@ PODS:
     - React-jsi (= 0.68.0-0)
     - React-logger (= 0.68.0-0)
     - React-perflogger (= 0.68.0-0)
-  - RNReanimated (2.6.0):
+  - RNReanimated (3.0.0-rc.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -315,7 +315,7 @@ DEPENDENCIES:
   - React-RCTText (from `../node_modules/react-native/Libraries/Text`)
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
-  - RNReanimated (from `../../`)
+  - RNReanimated (from `../../../`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 EXTERNAL SOURCES:
@@ -378,7 +378,7 @@ EXTERNAL SOURCES:
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
   RNReanimated:
-    :path: "../../"
+    :path: "../../../"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -412,9 +412,9 @@ SPEC CHECKSUMS:
   React-RCTText: a83b3bf5a5140b3d40c718ecd76f3a64355bbfee
   React-runtimeexecutor: 5d1482345a0f47d08c8c72865420eb65c695f5a3
   ReactCommon: 946395267f1f0c2d4b62c14a798b7bdb5cb19eee
-  RNReanimated: 51e8417dacbb4faf2f04c92e55c712e4b90399ce
+  RNReanimated: 886dbf56a20c5894e879fd7334a57a097c4cca44
   Yoga: 2dd7e4fe11c3ac6e0e009ca7877bcfd00d955bb8
 
-PODFILE CHECKSUM: 252e5be06330220b0f5ac8dd954a25046b50c10e
+PODFILE CHECKSUM: c5df6ea3467f137766de5ed88159f6a3624b36cf
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.11.3

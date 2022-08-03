@@ -625,21 +625,21 @@ PODS:
   - React-jsinspector (0.69.0)
   - React-logger (0.69.0):
     - glog
-  - react-native-safe-area-context (4.2.5):
+  - react-native-safe-area-context (4.3.1):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
     - React
-    - react-native-safe-area-context/common (= 4.2.5)
-    - react-native-safe-area-context/fabric (= 4.2.5)
+    - react-native-safe-area-context/common (= 4.3.1)
+    - react-native-safe-area-context/fabric (= 4.3.1)
     - ReactCommon/turbomodule/core
-  - react-native-safe-area-context/common (4.2.5):
+  - react-native-safe-area-context/common (4.3.1):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
     - React
     - ReactCommon/turbomodule/core
-  - react-native-safe-area-context/fabric (4.2.5):
+  - react-native-safe-area-context/fabric (4.3.1):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -720,7 +720,7 @@ PODS:
     - React-jsi (= 0.69.0)
     - React-logger (= 0.69.0)
     - React-perflogger (= 0.69.0)
-  - RNGestureHandler (2.4.2):
+  - RNGestureHandler (2.5.0):
     - RCT-Folly (= 2021.06.28.00-v2)
     - RCTRequired
     - RCTTypeSafety
@@ -991,7 +991,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: b2a049b9f156342f6037ccb0c8acf69f923d3089
   React-jsinspector: 6aced68014b275b7abd073c9598b0affd0e1669c
   React-logger: bcf33ce10afa135158c72635e621ddb94126c610
-  react-native-safe-area-context: a9616f1fd257ff31946b518266a62f50dbcb3d5b
+  react-native-safe-area-context: 9812064211b05789b1c8d5e7b5ca12eabaac00f2
   React-perflogger: aa48956d87bae67fc847acc196fae97928b96cd3
   React-RCTActionSheet: 4eaab2b885130ce9a88c8fdac5f1992315da80f6
   React-RCTAnimation: 5e91e3ceb988838fa43615bb602181be30d2b26e
@@ -1006,7 +1006,7 @@ SPEC CHECKSUMS:
   React-rncore: 0a5131510415ca520866410f3504832de3d6f753
   React-runtimeexecutor: 7ad268dee53d001697e13264c6bc8e95a902352e
   ReactCommon: 74a3b8ee497c6d50ce86ef57e15c4c5bf654b83d
-  RNGestureHandler: ac67226292cd5e67e7203d682a7e39f85d7b88a9
+  RNGestureHandler: 28c0a447ceb87b96c4045c2f786f67958837f320
   RNReanimated: 1cc48c3b7dc54ad977d1995e73e11a858aecf809
   RNScreens: 592316e0744de3b640e90c335a45aad13088381a
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608

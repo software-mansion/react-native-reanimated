@@ -36,8 +36,8 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'warn',
   },
   ignorePatterns: [
-    'Examples/paper/index-template.js',
-    'Examples/paper/test/**',
-    'Examples/paper/test-suite/**',
+    'Examples/example-paper/index-template.js',
+    'Examples/example-paper/test/**',
+    'Examples/example-paper/test-suite/**',
   ],
 };

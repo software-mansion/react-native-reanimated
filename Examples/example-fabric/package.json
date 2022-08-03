@@ -1,5 +1,5 @@
 {
-  "name": "fabric",
+  "name": "example-fabric",
   "version": "0.0.1",
   "scripts": {
     "android": "react-native run-android",
@@ -15,7 +15,7 @@
     "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
-    "common": "*",
+    "example-common": "*",
     "react": "18.0.0",
     "react-native": "0.69.0",
     "react-native-gesture-handler": "^2.4.2",

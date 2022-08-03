@@ -2,13 +2,15 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "common",
-      "fabric",
-      "paper"
+      "example-common",
+      "example-fabric",
+      "example-paper",
+      "example-tvos"
     ],
     "nohoist": [
-      "fabric/**",
-      "paper/**"
+      "example-fabric/**",
+      "example-paper/**",
+      "example-tvos/**"
     ]
   }
 }
