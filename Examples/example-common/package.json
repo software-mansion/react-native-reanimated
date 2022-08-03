@@ -1,8 +1,11 @@
 {
   "name": "example-common",
-  "version": "1.0.0",
+  "version": "0.0.1",
 
   "dependencies": {
-    "react-native-reanimated": "link:../../"
+    "react": "18.0.0",
+    "react-native": "0.69.0",
+    "react-native-reanimated": "link:../../",
+    "react-native-gesture-handler": "^2.4.2"
   }
 }

@@ -8,6 +8,7 @@
       "example-tvos"
     ],
     "nohoist": [
+      "example-common/**",
       "example-fabric/**",
       "example-paper/**",
       "example-tvos/**"

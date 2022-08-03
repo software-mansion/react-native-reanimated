@@ -11,7 +11,7 @@ import {
   Keyboard,
   ScrollView,
 } from 'react-native';
-import React from 'react';
+import React, { useState } from 'react';
 
 const BOX_SIZE = 50;
 
@@ -35,7 +35,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       transform: [{ translateY: -keyboard.height.value }],
     };
   });
-  const [shouldShowNestedView, setShouldShowNestedView] = React.useState(false);
+  const [shouldShowNestedView, setShouldShowNestedView] = useState(false);
 
   return (
     <ScrollView

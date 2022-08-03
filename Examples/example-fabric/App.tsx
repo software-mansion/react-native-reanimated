@@ -7,7 +7,7 @@ import FrameCallbackExample from './src/FrameCallbackExample';
 import AnimatedTextInputExample from './src/AnimatedTextInputExample';
 import AnimatedTextWidthExample from './src/AnimatedTextWidthExample';
 import BokehExample from './src/BokehExample';
-import BouncingBoxExample from './src/BouncingBoxExample';
+import BouncingBoxExample from 'example-common/src/BouncingBoxExample';
 import BubblesExample from './src/BubblesExample';
 import ChessboardExample from './src/ChessboardExample';
 import ColorExample from './src/ColorExample';

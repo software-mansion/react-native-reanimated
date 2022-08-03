@@ -29,6 +29,7 @@ import {
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import BouncingBoxExample from 'example-common/src/BouncingBoxExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
@@ -194,6 +195,10 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
+  },
+  BouncingBoxExample: {
+    screen: BouncingBoxExample,
+    title: 'Bouncing Box Example',
   },
 };
 
