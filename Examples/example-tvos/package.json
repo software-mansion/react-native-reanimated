@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "example-tvos",
   "version": "0.0.1",
   "scripts": {
@@ -7,7 +8,8 @@
     "tv-os": "react-native run-ios --scheme=\"TVOSExample-tvOS\" --simulator=\"Apple TV\"",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.17.12",

@@ -1,7 +1,10 @@
 {
+  "private": true,
   "name": "example-common",
   "version": "0.0.1",
-
+  "scripts": {
+    "clean": "rm -rf node_modules"
+  },
   "dependencies": {
     "react": "18.0.0",
     "react-native": "0.69.0",

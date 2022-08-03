@@ -13,5 +13,12 @@
       "example-paper/**",
       "example-tvos/**"
     ]
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules && yarn fabric:clean && yarn paper:clean && yarn tvos:clean && yarn common:clean",
+    "fabric:clean": "cd example-fabric && yarn clean && cd ..",
+    "paper:clean": "cd example-paper && yarn clean && cd ..",
+    "tvos:clean": "cd example-tvos && yarn clean && cd ..",
+    "common:clean": "cd example-common && yarn clean && cd .."
   }
 }

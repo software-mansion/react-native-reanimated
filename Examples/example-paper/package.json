@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "example-paper",
   "version": "0.0.1",
   "scripts": {
@@ -18,7 +19,8 @@
     "e2e:android": "node ./scripts/generateIndex.js --test && yarn detox build --configuration android && yarn detox test --configuration android",
     "e2e:ios": "node ./scripts/generateIndex.js --test && yarn detox build --configuration ios && yarn detox test --configuration ios",
     "e2e:tests": "yarn e2e:android && yarn e2e:ios",
-    "pod-install": "cd ios && pod install && cd .."
+    "pod-install": "cd ios && pod install && cd ..",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "example-common": "*",
