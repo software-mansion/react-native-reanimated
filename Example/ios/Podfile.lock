@@ -510,7 +510,7 @@ SPEC CHECKSUMS:
   FBLazyVector: 4328f078255dd70661ddde3cb528d5115b8a7484
   FBReactNativeSpec: d23d4177a582d6a02b5eef5e78ddfe90b7fc5616
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  glog: 3d02b25ca00c2d456734d0bcff864cbc62f6ae1a
+  glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: ff967252c1fe9362bf4bfbd2a6bf1c18f51280bc
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
