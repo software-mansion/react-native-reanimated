@@ -34,7 +34,7 @@ Allowed parameters are listed below:
 | duration | 300                | How long the animation should last                     |
 | easing   | in-out quad easing | Worklet that drives the easing curve for the animation |
 
-For `easing` parameter we recommend using one of the pre-configured worklets defined in `Easing` module.
+For the `easing` parameter we recommend using one of the pre-configured worklets defined in the `Easing` module.
 
 #### `callback` [function]\(optional\)
 

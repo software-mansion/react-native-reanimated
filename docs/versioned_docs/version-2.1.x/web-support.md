@@ -4,27 +4,27 @@ title: Web Support
 sidebar_label: Web Support
 ---
 
-Since
+Since the
 [2.0.0-alpha.7](https://github.com/software-mansion/react-native-reanimated/releases/tag/2.0.0-alpha.7)
 release it's possible to launch reanimated 2 in a web browser. For that case all of the functionalities are implemented purely in javascript, hence the efficiency of the animations might drop.
 
-If you use
+If you use our
 [playground](https://github.com/software-mansion-labs/reanimated-2-playground)
-and want to start the app in the browser, just type:
+app and want to start it in the browser just type:
 ```shell
 yarn web
 ```
 
-If you want to start example applications from the 
+If you want to start the example applications from the 
 [reanimated repository](https://github.com/software-mansion/react-native-reanimated)
-you need to run a following command inside the `Example` directory:
+you need to run the following command inside the `Example` directory:
 ```shell
 yarn start-web
 ```
 
 ## Webpack support
 
-If you want to use Reanimated in `webpack` app you should add extra configuration to your `webpack` config.
+If you want to use Reanimated in a `webpack` app you should adjust your `webpack` config.
 
 Example webpack config file with Reanimated support:
 
