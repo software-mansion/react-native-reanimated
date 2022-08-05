@@ -8,30 +8,22 @@ export default function DebuggingInfoTable() {
     <>
       <table>
         <tr>
-          <th>Tool</th>
-          <th>JSC</th>
-          <th>Hermes</th>
-          <th>V8</th>
+          <th colSpan={2}>Tool</th>
+          <th style={{ width: '20%' }}>JSC</th>
+          <th style={{ width: '20%' }}>Hermes</th>
+          <th style={{ width: '20%' }}>V8</th>
         </tr>
         <tr>
-          <td>Chrome debugger</td>
+          <td rowSpan={2}>Chrome debugger</td>
+          <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('chromeDebugger/JSC/Android');
               }}>
-              Android*
-            </a>{' '}
-            ✅<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('chromeDebugger/JSC/iOS');
-              }}>
-              iOS*
-            </a>{' '}
-            ✅<br></br>
+              ✅*
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -39,17 +31,8 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('chromeDebugger/hermes/Android');
               }}>
-              Android
-            </a>{' '}
-            ❓<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('chromeDebugger/hermes/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            ❓<br></br>
+              ❓
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -57,38 +40,51 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('chromeDebugger/V8/Android');
               }}>
-              Android
-            </a>{' '}
-            ❓<br></br>
+              ❓
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'center' }}>iOS</td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('chromeDebugger/JSC/iOS');
+              }}>
+              ✅*
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('chromeDebugger/hermes/iOS');
+              }}>
+              ❓
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('chromeDebugger/V8/iOS');
               }}>
-              iOS
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
           </td>
         </tr>
         <tr>
-          <td>Chrome DevTools</td>
+          <td rowSpan={2}>Chrome DevTools</td>
+          <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('chromeDevTools/JSC/Android');
               }}>
-              Android
-            </a>{' '}
-            X<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('chromeDevTools/JSC/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -96,17 +92,8 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('chromeDevTools/hermes/Android');
               }}>
-              Android
-            </a>{' '}
-            ❓<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('chromeDevTools/hermes/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            ❓<br></br>
+              ❓
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -114,38 +101,51 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('chromeDevTools/V8/Android');
               }}>
-              Android
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'center' }}>iOS</td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('chromeDevTools/JSC/iOS');
+              }}>
+              X
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('chromeDevTools/hermes/iOS');
+              }}>
+              ❓
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('chromeDevTools/V8/iOS');
               }}>
-              iOS
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
           </td>
         </tr>
         <tr>
-          <td>Flipper (Hermes debugger)</td>
+          <td rowSpan={2}>Flipper (Hermes debugger)</td>
+          <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('flipper/JSC/Android');
               }}>
-              Android
-            </a>{' '}
-            X<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('flipper/JSC/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -153,17 +153,8 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('flipper/hermes/Android');
               }}>
-              Android
-            </a>{' '}
-            ❓<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('flipper/hermes/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            ❓<br></br>
+              ❓
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -171,38 +162,51 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('flipper/V8/Android');
               }}>
-              Android
-            </a>{' '}
-            ❓<br></br>
+              ❓
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'center' }}>iOS</td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('flipper/JSC/iOS');
+              }}>
+              X
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('flipper/hermes/iOS');
+              }}>
+              ❓
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('flipper/V8/iOS');
               }}>
-              iOS
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
           </td>
         </tr>
         <tr>
-          <td>Safari DevTools</td>
+          <td rowSpan={2}>Safari DevTools</td>
+          <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('safariDevTools/JSC/Android');
               }}>
-              Android
-            </a>{' '}
-            X<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('safariDevTools/JSC/iOS');
-              }}>
-              iOS*
-            </a>{' '}
-            ✅<br></br>
+              X
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -210,17 +214,8 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('safariDevTools/hermes/Android');
               }}>
-              Android
-            </a>{' '}
-            X<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('safariDevTools/hermes/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            ❓<br></br>
+              X
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -228,38 +223,51 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('safariDevTools/V8/Android');
               }}>
-              Android
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'center' }}>iOS</td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('safariDevTools/JSC/iOS');
+              }}>
+              ✅*
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('safariDevTools/hermes/iOS');
+              }}>
+              ❓
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('safariDevTools/V8/iOS');
               }}>
-              iOS
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
           </td>
         </tr>
         <tr>
-          <td>React DevTools</td>
+          <td rowSpan={2}>React DevTools</td>
+          <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('reactDevTools/JSC/Android');
               }}>
-              Android
-            </a>{' '}
-            ✅<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('reactDevTools/JSC/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            ✅<br></br>
+              ✅
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -267,17 +275,8 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('reactDevTools/hermes/Android');
               }}>
-              Android
-            </a>{' '}
-            ❓<br></br>
-            <a
-              href="#Details"
-              onClick={() => {
-                setDetails('reactDevTools/hermes/iOS');
-              }}>
-              iOS
-            </a>{' '}
-            ❓<br></br>
+              ❓
+            </a>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -285,17 +284,38 @@ export default function DebuggingInfoTable() {
               onClick={() => {
                 setDetails('reactDevTools/V8/Android');
               }}>
-              Android
-            </a>{' '}
-            ❓<br></br>
+              ❓
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style={{ textAlign: 'center' }}>iOS</td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('reactDevTools/JSC/iOS');
+              }}>
+              ✅
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
+            <a
+              href="#Details"
+              onClick={() => {
+                setDetails('reactDevTools/hermes/iOS');
+              }}>
+              ❓
+            </a>
+          </td>
+          <td style={{ textAlign: 'center' }}>
             <a
               href="#Details"
               onClick={() => {
                 setDetails('reactDevTools/V8/iOS');
               }}>
-              iOS
-            </a>{' '}
-            X<br></br>
+              X
+            </a>
           </td>
         </tr>
       </table>
