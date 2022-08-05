@@ -34,6 +34,11 @@ sure you have added it.
 
 This error usually happens when in your project exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside your `node_modules` instead of using it as a peer dependency. In this situation cause that two different versions of Reanimated JS module try to use the same Native Module. You can resolve this problem manually by modifying your `package.json` file.
 
+You can check which libraries are using Reanimated, for example, with the command:
+```bash
+npm why react-native-reanimated
+``` 
+
 If you use `yarn` you should add [`resolution` property](https://classic.yarnpkg.com/lang/en/docs/selective-version-resolutions/).
 ```json
 "resolutions": {
