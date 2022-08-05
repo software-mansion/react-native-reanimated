@@ -32,7 +32,7 @@ sure you have added it.
 
 ### Multpile versions of Reanimated was detected
 
-This error usually happens when in your project exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside your `node_modules` instead of using it as a peer dependency. In this situation cause that two different versions of Reanimated JS module try to use the same Native Module. You can resolve this problem manually by modifying your `package.json` file.
+This error usually happens when in your project exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside their own `node_modules` instead of using it as a peer dependency. In this situation cause that two different versions of Reanimated JS module try to use the same Native Module. You can resolve this problem manually by modifying your `package.json` file.
 
 You can check which libraries are using Reanimated, for example, with the command:
 ```bash
