@@ -1,7 +1,7 @@
 // In order to keep bundle size down, we treat this file as a polyfill for Web.
 
 import { shouldBeUseWeb } from '../PlatformChecker';
-export default (() => {
+const initializeGlobalsForWeb = () => {
   if (shouldBeUseWeb()) {
     global._frameTimestamp = null;
     global._setGlobalConsole = (_val) => {
@@ -37,4 +37,6 @@ export default (() => {
     };
   }
   return true;
-})();
+};
+
+export default initializeGlobalsForWeb();

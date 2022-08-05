@@ -6,7 +6,7 @@ if (!webGlobalIsInitialized) {
     but we need to use `webGlobalIsInitialized` somewhere to ensure function execution, 
     in another way, the bundler can remove unused variables. 
   */
-  console.error('[Reanimated] Unable to initialize global objects for WEB.');
+  console.error('[Reanimated] Unable to initialize global objects for web.');
 }
 
 export * from './reanimated2';
