@@ -460,6 +460,7 @@ On the new architecture, Hermes is downloaded from GitHub and then compiled from
 However, on the old architecture, we need to download Hermes header files on our own
 as well as unzip Hermes AAR in order to obtain `libhermes.so` shared library.
 For more details, see https://reactnative.dev/architecture/bundled-hermes
+or https://github.com/reactwg/react-native-new-architecture/discussions/4
 */
 if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
     // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
