@@ -71,7 +71,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -91,7 +91,7 @@ export default function DebuggingInfoTable() {
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -100,7 +100,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
         </tr>
         <tr>
@@ -114,7 +114,7 @@ export default function DebuggingInfoTable() {
               }}>
               Android
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -123,7 +123,7 @@ export default function DebuggingInfoTable() {
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -132,7 +132,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -161,7 +161,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -172,7 +172,7 @@ export default function DebuggingInfoTable() {
               }}>
               Android
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -181,7 +181,7 @@ export default function DebuggingInfoTable() {
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -190,7 +190,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
         </tr>
         <tr>
@@ -251,7 +251,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -271,7 +271,7 @@ export default function DebuggingInfoTable() {
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -280,7 +280,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
         </tr>
         <tr>
@@ -341,7 +341,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -361,7 +361,7 @@ export default function DebuggingInfoTable() {
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -370,7 +370,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
         </tr>
         <tr>
@@ -431,7 +431,7 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
@@ -451,7 +451,7 @@ export default function DebuggingInfoTable() {
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
             <a
               href=""
               onClick={(e) => {
@@ -460,12 +460,13 @@ export default function DebuggingInfoTable() {
               }}>
               Web
             </a>{' '}
-            ❓<br></br>
+            ❌<br></br>
           </td>
         </tr>
       </table>
 
-      <p>{detailsMap.get(details)}</p>
+      <h3>Details</h3>
+      {detailsMap.get(details)}
     </>
   );
 }
