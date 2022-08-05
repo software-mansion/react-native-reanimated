@@ -17,455 +17,290 @@ export default function DebuggingInfoTable() {
           <td>Chrome debugger</td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDebugger/JSC/Android');
               }}>
-              Android
+              Android*
             </a>{' '}
-            ❓<br></br>
+            ✅<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDebugger/JSC/iOS');
               }}>
-              iOS
+              iOS*
             </a>{' '}
-            ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('chromeDebugger/JSC/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❓<br></br>
+            ✅<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDebugger/hermes/Android');
               }}>
               Android
             </a>{' '}
             ❓<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDebugger/hermes/iOS');
               }}>
               iOS
             </a>{' '}
             ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('chromeDebugger/hermes/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDebugger/V8/Android');
               }}>
               Android
             </a>{' '}
             ❓<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDebugger/V8/iOS');
               }}>
               iOS
             </a>{' '}
-            ❌<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('chromeDebugger/V8/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
+            X<br></br>
           </td>
         </tr>
         <tr>
           <td>Chrome DevTools</td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDevTools/JSC/Android');
               }}>
               Android
             </a>{' '}
-            ❌<br></br>
+            X<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDevTools/JSC/iOS');
               }}>
               iOS
             </a>{' '}
-            ❌<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('chromeDevTools/JSC/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
+            X<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDevTools/hermes/Android');
               }}>
               Android
             </a>{' '}
             ❓<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDevTools/hermes/iOS');
               }}>
               iOS
             </a>{' '}
             ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('chromeDevTools/hermes/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDevTools/V8/Android');
               }}>
               Android
             </a>{' '}
-            ❌<br></br>
+            X<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('chromeDevTools/V8/iOS');
               }}>
               iOS
             </a>{' '}
-            ❌<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('chromeDevTools/V8/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
+            X<br></br>
           </td>
         </tr>
         <tr>
           <td>Flipper (Hermes debugger)</td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('flipper/JSC/Android');
               }}>
               Android
             </a>{' '}
-            ❓<br></br>
+            X<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('flipper/JSC/iOS');
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('flipper/JSC/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❓<br></br>
+            X<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('flipper/hermes/Android');
               }}>
               Android
             </a>{' '}
             ❓<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('flipper/hermes/iOS');
               }}>
               iOS
             </a>{' '}
             ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('flipper/hermes/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('flipper/V8/Android');
               }}>
               Android
             </a>{' '}
             ❓<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('flipper/V8/iOS');
               }}>
               iOS
             </a>{' '}
-            ❌<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('flipper/V8/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
+            X<br></br>
           </td>
         </tr>
         <tr>
           <td>Safari DevTools</td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('safariDevTools/JSC/Android');
               }}>
               Android
             </a>{' '}
-            ❓<br></br>
+            X<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('safariDevTools/JSC/iOS');
               }}>
-              iOS
+              iOS*
             </a>{' '}
-            ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('safariDevTools/JSC/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❓<br></br>
+            ✅<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('safariDevTools/hermes/Android');
               }}>
               Android
             </a>{' '}
-            ❓<br></br>
+            X<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('safariDevTools/hermes/iOS');
               }}>
               iOS
             </a>{' '}
             ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('safariDevTools/hermes/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('safariDevTools/V8/Android');
               }}>
               Android
             </a>{' '}
-            ❓<br></br>
+            X<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('safariDevTools/V8/iOS');
               }}>
               iOS
             </a>{' '}
-            ❌<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('safariDevTools/V8/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
+            X<br></br>
           </td>
         </tr>
         <tr>
           <td>React DevTools</td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('reactDevTools/JSC/Android');
               }}>
               Android
             </a>{' '}
-            ❓<br></br>
+            ✅<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('reactDevTools/JSC/iOS');
               }}>
               iOS
             </a>{' '}
-            ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('reactDevTools/JSC/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❓<br></br>
+            ✅<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('reactDevTools/hermes/Android');
               }}>
               Android
             </a>{' '}
             ❓<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('reactDevTools/hermes/iOS');
               }}>
               iOS
             </a>{' '}
             ❓<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('reactDevTools/hermes/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
           </td>
           <td style={{ textAlign: 'center' }}>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('reactDevTools/V8/Android');
               }}>
               Android
             </a>{' '}
             ❓<br></br>
             <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
+              href="#Details"
+              onClick={() => {
                 setDetails('reactDevTools/V8/iOS');
               }}>
               iOS
             </a>{' '}
-            ❌<br></br>
-            <a
-              href=""
-              onClick={(e) => {
-                e.preventDefault();
-                setDetails('reactDevTools/V8/Web');
-              }}>
-              Web
-            </a>{' '}
-            ❌<br></br>
+            X<br></br>
           </td>
         </tr>
       </table>
 
-      <h3>Details</h3>
+      <h3 id="Details">Details</h3>
       {detailsMap.get(details)}
     </>
   );

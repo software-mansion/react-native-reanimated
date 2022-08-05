@@ -1,37 +1,63 @@
 import React from 'react';
 
 // Shared stuff
-function hermesWeb(configuration: string) {
-  return (
-    <>
-      <p>
-        <i>Selected: {configuration}</i>
-        <br></br>
-        Hermes engine is currently unavailable on Web platforms.
-      </p>
-    </>
-  );
-}
 function v8OnlyAndroid(configuration: string) {
   return (
-    <>
-      <p>
-        <i>Selected: {configuration}</i>
-        <br></br>
-        The V8 engine is currently only available on Android.
-      </p>
-    </>
+    <p>
+      <i>Selected: {configuration}</i>
+      <br></br>
+      The V8 engine is currently only available on Android.
+    </p>
   );
 }
 function chromeDevToolsOnlyHermes(configuration: string) {
   return (
-    <>
-      <p>
-        <i>Selected: {configuration}</i>
-        <br></br>
-        Chrome DevTools only work with the Hermes engine.
-      </p>
-    </>
+    <p>
+      <i>Selected: {configuration}</i>
+      <br></br>
+      Chrome DevTools only work with the Hermes engine.
+    </p>
+  );
+}
+function flipperNoJSC(configuration: string) {
+  return (
+    <p>
+      <i>Selected: {configuration}</i>
+      <br></br>
+      Flipper doesn't work well with non-Hermes runtimes as it was mostly
+      designed to debug Hermes apps. The layout inspector and built-in React
+      DevTools will work and some logs will be visible but setting breakpoints
+      or viewing the source code is not possible.
+    </p>
+  );
+}
+function safariDevToolsiOSOnly(configuration: string) {
+  return (
+    <p>
+      <i>Selected: {configuration}</i>
+      <br></br>
+      Safari DevTools only work with iOS devices.
+    </p>
+  );
+}
+function chromeDebuggerShared(configuration: string) {
+  return (
+    <p>
+      <i>Selected: {configuration}</i> <br></br>
+      Since the Chrome Debugger runs it's own web worker all the code is run on
+      the JS thread. This means that this piece of code:
+      <pre>{`function runWorklet() {
+  'worklet';
+  console.log('worklet:', _WORKLET);
+}
+runOnUI(runWorklet)();`}</pre>
+      would output:
+      <pre>{`LOG: worklet: false`}</pre>
+      But despite this, all native functions like <code>scrollTo</code> and{' '}
+      <code>measure</code> are still available. It is also possible to set
+      breakpoints both in normal JS code as well as in worklet (since they run
+      on the main JS thread now).
+    </p>
   );
 }
 
@@ -39,20 +65,19 @@ function chromeDevToolsOnlyHermes(configuration: string) {
 export function nothingSelected() {
   return (
     <>
-      <p>Please select a configuration to view the details</p>
+      <p>
+        <i>Please select a configuration to view the details</i>
+      </p>
     </>
   );
 }
 
 // ChromeDebugger/JSC
 export function chromeDebuggerJSCAndroid() {
-  return <></>;
+  return chromeDebuggerShared('Chrome Debugger/JSC/Android');
 }
 export function chromeDebuggerJSCiOS() {
-  return <></>;
-}
-export function chromeDebuggerJSCWeb() {
-  return <></>;
+  return chromeDebuggerShared('Chrome Debugger/JSC/iOS');
 }
 // ChromeDebugger/Hermes
 export function chromeDebuggerHermesAndroid() {
@@ -61,18 +86,12 @@ export function chromeDebuggerHermesAndroid() {
 export function chromeDebuggerHermesiOS() {
   return <></>;
 }
-export function chromeDebuggerHermesWeb() {
-  return hermesWeb('Chrome Debugger/Hermes/Web');
-}
 // ChromeDebugger/V8
 export function chromeDebuggerV8Android() {
   return <></>;
 }
 export function chromeDebuggerV8iOS() {
   return v8OnlyAndroid('Chrome Debugger/V8/iOS');
-}
-export function chromeDebuggerV8Web() {
-  return v8OnlyAndroid('Chrome Debugger/V8/Web');
 }
 
 // ChromeDevTools/JSC
@@ -82,18 +101,12 @@ export function chromeDevToolsJSCAndroid() {
 export function chromeDevToolsJSCiOS() {
   return chromeDevToolsOnlyHermes('Chrome DevTools/JSC/iOS');
 }
-export function chromeDevToolsJSCWeb() {
-  return chromeDevToolsOnlyHermes('Chrome DevTools/JSC/Web');
-}
 // ChromeDevTools/Hermes
 export function chromeDevToolsHermesAndroid() {
   return <></>;
 }
 export function chromeDevToolsHermesiOS() {
   return <></>;
-}
-export function chromeDevToolsHermesWeb() {
-  return hermesWeb('Chrome DevTools/Hermes/Web');
 }
 // ChromeDevTools/V8
 export function chromeDevToolsV8Android() {
@@ -102,19 +115,13 @@ export function chromeDevToolsV8Android() {
 export function chromeDevToolsV8iOS() {
   return v8OnlyAndroid('Chrome DevTools/V8/iOS');
 }
-export function chromeDevToolsV8Web() {
-  return v8OnlyAndroid('Chrome DevTools/V8/Web');
-}
 
 // Flipper/JSC
 export function flipperJSCAndroid() {
-  return <></>;
+  return flipperNoJSC('Flipper/JSC/Android');
 }
 export function flipperJSCiOS() {
-  return <></>;
-}
-export function flipperJSCWeb() {
-  return <></>;
+  return flipperNoJSC('Flipper/JSC/iOS');
 }
 // Flipper/Hermes
 export function flipperHermesAndroid() {
@@ -123,9 +130,6 @@ export function flipperHermesAndroid() {
 export function flipperHermesiOS() {
   return <></>;
 }
-export function flipperHermesWeb() {
-  return hermesWeb('Flipper/Hermes/Web');
-}
 // Flipper/V8
 export function flipperV8Android() {
   return <></>;
@@ -133,50 +137,83 @@ export function flipperV8Android() {
 export function flipperV8iOS() {
   return v8OnlyAndroid('Flipper/V8/iOS');
 }
-export function flipperV8Web() {
-  return v8OnlyAndroid('Flipper/V8/Web');
-}
 
 // SafariDevTools/JSC
 export function safariDevToolsJSCAndroid() {
-  return <></>;
+  return safariDevToolsiOSOnly('Safari DevTools/JSC/Android');
 }
 export function safariDevToolsJSCiOS() {
-  return <></>;
-}
-export function safariDevToolsJSCWeb() {
-  return <></>;
+  return (
+    <>
+      <p>
+        <i>Selected: Safari DevTools/JSC/iOS</i>
+        <br></br>
+        After opening Safari and configuring it as specified in the React Native
+        docs, under <code>Develop &gt; Device</code> you'll see two JSC contexts
+        like in the screenshot below:
+        <img
+          src="/react-native-reanimated/img/debugging/SafariJSCiOS.png"
+          alt="Screenshot showing Safari's Develop menu options"
+        />
+      </p>
+      <p>
+        One of them will be the main JS context. All <code>console.log</code>
+        outputs will appear in the console of this context. You can also set
+        breakpoints here, but unfortunatley the only source file visible is the
+        transformed <code>indexjs.bundle</code> which does make things more
+        difficult to find. <br></br>
+        The other option will be the UI context. No console logs will appear in
+        the console of this context, but all worklet functions should be visible
+        as separate files. It is also possible to set breakpoints in these
+        worklets.
+      </p>
+      <p>
+        <b>Caution!</b>{' '}
+        <i>
+          Remember that console logs will appear on the main thread as the
+          console.log funcion on the UI thread is just a reference to the one
+          from the JS thread.
+        </i>
+      </p>
+    </>
+  );
 }
 // SafariDevTools/Hermes
 export function safariDevToolsHermesAndroid() {
-  return <></>;
+  return safariDevToolsiOSOnly('Safari DevTools/Hermes/Android');
 }
 export function safariDevToolsHermesiOS() {
   return <></>;
 }
-export function safariDevToolsHermesWeb() {
-  return hermesWeb('Safari DevTools/Hermes/Web');
-}
 // SafariDevTools/V8
 export function safariDevToolsV8Android() {
-  return <></>;
+  return safariDevToolsiOSOnly('Safari DevTools/V8/Android');
 }
 export function safariDevToolsV8iOS() {
   return v8OnlyAndroid('Safari DevTools/V8/iOS');
 }
-export function safariDevToolsV8Web() {
-  return v8OnlyAndroid('Safari DevTools/V8/Web');
-}
 
 // ReactDevTools/JSC
 export function reactDevToolsJSCAndroid() {
-  return <></>;
+  return (
+    <p>
+      <i>Selection: React DevTools/JSC/iOS</i>
+      <br></br>
+      React DevTools work as expected and the profiler and layout inspector can
+      be used as usual after running the command:
+      <pre>{`adb reverse tcp:8097 tcp:8097`}</pre>
+    </p>
+  );
 }
 export function reactDevToolsJSCiOS() {
-  return <></>;
-}
-export function reactDevToolsJSCWeb() {
-  return <></>;
+  return (
+    <p>
+      <i>Selection: React DevTools/JSC/iOS</i>
+      <br></br>
+      React DevTools work as expected and the profiler and layout inspector can
+      be used as usual.
+    </p>
+  );
 }
 // ReactDevTools/Hermes
 export function reactDevToolsHermesAndroid() {
@@ -185,16 +222,10 @@ export function reactDevToolsHermesAndroid() {
 export function reactDevToolsHermesiOS() {
   return <></>;
 }
-export function reactDevToolsHermesWeb() {
-  return hermesWeb('React DevTools/Hermes/Web');
-}
 // ReactDevTools/V8
 export function reactDevToolsV8Android() {
   return <></>;
 }
 export function reactDevToolsV8iOS() {
   return v8OnlyAndroid('React DevTools/V8/iOS');
-}
-export function reactDevToolsV8Web() {
-  return v8OnlyAndroid('React DevTools/V8/Web');
 }
