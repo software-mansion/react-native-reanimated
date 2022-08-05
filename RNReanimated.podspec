@@ -7,7 +7,7 @@ reactTargetTvOS = false
 isUserApp = false
 
 begin
-  # standard app
+  # user app
   # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
   # /appName/node_modules/react-native/package.json
   reactJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))
@@ -46,7 +46,7 @@ rescue
 end
 
 if isUserApp
-  libInstances = %x[find ../../ -name "package.json" | grep "reanimated"]
+  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/"]
   libInstancesArray = libInstances.split("\n")
   if libInstancesArray.length() > 1
     parsedLocation = ''
@@ -55,7 +55,7 @@ if isUserApp
       location['/package.json'] = ''
       parsedLocation += location + "\n"
     end
-    raise "[Reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multpile-versions-of-reanimated-was-detected \n\nConflict beetween: \n" + parsedLocation
+    raise "[Reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation
   end
 end
 

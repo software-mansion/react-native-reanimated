@@ -30,9 +30,9 @@ Depending on how spread is used you may try one of the following alternatives:
 This error usually happens, when you forget to add the babel plugin in your `babel.plugin.js`. Please make
 sure you have added it.
 
-### Multpile versions of Reanimated was detected
+### Multiple versions of Reanimated were detected
 
-This error usually happens when in your project exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside their own `node_modules` instead of using it as a peer dependency. In this situation cause that two different versions of Reanimated JS module try to use the same Native Module. You can resolve this problem manually by modifying your `package.json` file.
+This error usually happens when in your project there exists more than one instance of Reanimated. It can occur when some of your dependency has installed Reanimated inside their own `node_modules` instead of using it as a peer dependency. In this case two different versions of Reanimated JS module try to install the same Native Module. You can resolve this problem manually by modifying your `package.json` file.
 
 You can check which libraries are using Reanimated, for example, with the command:
 ```bash
@@ -54,7 +54,6 @@ If you use `npm` you should add [`overrides` property](https://docs.npmjs.com/cl
 ```
 
 After that you need to run you package manager again
-
 ```bash
 yarn
 ```
