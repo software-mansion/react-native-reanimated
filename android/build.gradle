@@ -451,6 +451,8 @@ However, on the old architecture, we need to download Hermes header files on our
 For more details, see https://reactnative.dev/architecture/bundled-hermes
 */
 if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
+    // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
+
     def reactNativeRootDir = resolveReactNativeDirectory()
     def customDownloadDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
     def downloadDir = customDownloadDir ? new File(customDownloadDir) : new File(reactNativeRootDir, "sdks/download")
