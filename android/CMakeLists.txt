@@ -244,7 +244,7 @@ target_link_libraries(
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-    if(${REACT_NATIVE_TARGET_VERSION} LESS 70)
+    if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
         target_include_directories(
             ${PACKAGE_NAME}
             PRIVATE

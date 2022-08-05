@@ -442,33 +442,54 @@ task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) 
     }
 }
 
-// TODO: fix paths
+/*
+Reanimated includes "hermes/hermes.h" header file in `NativeProxy.cpp`.
+Previously, we used header files from `hermes-engine` package in `node_modules`.
+Starting from React Native 0.69, Hermes is no longer distributed as package on NPM.
+On the new architecture, Hermes is downloaded from GitHub and then compiled from sources.
+However, on the old architecture, we need to download Hermes header files on our own.
+For more details, see https://reactnative.dev/architecture/bundled-hermes
+*/
+if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
+    def reactNativeRootDir = resolveReactNativeDirectory()
+    def customDownloadDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
+    def downloadDir = customDownloadDir ? new File(customDownloadDir) : new File(reactNativeRootDir, "sdks/download")
 
-def hermesVersion = "hermes-2022-07-20-RNv0.70.0-bc97c5399e0789c0a323f8e1431986e207a9e8ba";
-def hermesDir = "../Example/node_modules/react-native/sdks/hermes"
+    // By default we are going to download and unzip hermes inside the /sdks/hermes folder
+    // but you can provide an override for where the hermes source code is located.
+    def overrideHermesDir = System.getenv("REACT_NATIVE_OVERRIDE_HERMES_DIR") != null
+    def hermesDir = System.getenv("REACT_NATIVE_OVERRIDE_HERMES_DIR") ?: new File(reactNativeRootDir, "sdks/hermes")
+    def hermesBuildDir = new File("$buildDir/hermes")
 
-task downloadHermes(type: Download) {
-   src("https://github.com/facebook/hermes/tarball/${hermesVersion}")
-   onlyIfNewer(true)
-   overwrite(false)
-   dest(new File(downloadsDir, "hermes.tar.gz"))
-}
+    def hermesVersion = "main"
+    def hermesVersionFile = new File(reactNativeRootDir, "sdks/.hermesversion")
+    if (hermesVersionFile.exists()) {
+        hermesVersion = hermesVersionFile.text
+    }
 
-task unzipHermes(dependsOn: downloadHermes, type: Copy) {
-   from(tarTree(downloadHermes.dest)) {
-       eachFile { file ->
-           // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
-           // folder at the top level.
-           if (file.relativePath.segments.size() > 1) {
-               file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
-           }
-       }
-   }
-   into(hermesDir)
+    task downloadHermes(type: Download) {
+        src("https://github.com/facebook/hermes/tarball/${hermesVersion}")
+        onlyIfNewer(true)
+        overwrite(false)
+        dest(new File(downloadDir, "hermes.tar.gz"))
+    }
+
+    task unzipHermes(dependsOn: downloadHermes, type: Copy) {
+        from(tarTree(downloadHermes.dest)) {
+            eachFile { file ->
+                // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
+                // folder at the top level.
+                if (file.relativePath.segments.size() > 1) {
+                    file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
+                }
+            }
+        }
+        into(hermesDir)
+    }
 }
 
 task prepareHermes() {
-    if (rnMinorVersion >= 70) {
+    if (rnMinorVersion >= 69) {
         if (!isNewArchitectureEnabled()) {
             dependsOn(unzipHermes)
         }
