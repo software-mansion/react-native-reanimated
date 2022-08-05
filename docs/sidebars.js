@@ -70,7 +70,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guide/testing'],
+      items: ['guide/testing', 'guide/debugging'],
     },
     {
       type: 'category',
