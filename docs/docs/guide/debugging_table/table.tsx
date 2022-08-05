@@ -8,7 +8,8 @@ export default function DebuggingInfoTable() {
     <>
       <table>
         <tr>
-          <th colSpan={2}>Tool</th>
+          <th>Tool</th>
+          <th>Platform</th>
           <th style={{ width: '20%' }}>JSC</th>
           <th style={{ width: '20%' }}>Hermes</th>
           <th style={{ width: '20%' }}>V8</th>
@@ -17,308 +18,318 @@ export default function DebuggingInfoTable() {
           <td rowSpan={2}>Chrome debugger</td>
           <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDebugger/JSC/Android');
+                location.href = '#Details';
               }}>
               ✅*
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDebugger/hermes/Android');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDebugger/V8/Android');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDebugger/JSC/iOS');
+                location.href = '#Details';
               }}>
               ✅*
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDebugger/hermes/iOS');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDebugger/V8/iOS');
+                location.href = '#Details';
               }}>
               X
-            </a>
+            </button>
           </td>
         </tr>
         <tr>
           <td rowSpan={2}>Chrome DevTools</td>
           <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDevTools/JSC/Android');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDevTools/hermes/Android');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDevTools/V8/Android');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ❓
+            </button>
           </td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDevTools/JSC/iOS');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDevTools/hermes/iOS');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('chromeDevTools/V8/iOS');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
         </tr>
         <tr>
           <td rowSpan={2}>Flipper (Hermes debugger)</td>
           <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('flipper/JSC/Android');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('flipper/hermes/Android');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('flipper/V8/Android');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('flipper/JSC/iOS');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('flipper/hermes/iOS');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('flipper/V8/iOS');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
         </tr>
         <tr>
           <td rowSpan={2}>Safari DevTools</td>
           <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('safariDevTools/JSC/Android');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('safariDevTools/hermes/Android');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('safariDevTools/V8/Android');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('safariDevTools/JSC/iOS');
+                location.href = '#Details';
               }}>
               ✅*
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('safariDevTools/hermes/iOS');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('safariDevTools/V8/iOS');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
         </tr>
         <tr>
           <td rowSpan={2}>React DevTools</td>
           <td style={{ textAlign: 'center' }}>Android</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('reactDevTools/JSC/Android');
+                location.href = '#Details';
               }}>
               ✅
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('reactDevTools/hermes/Android');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('reactDevTools/V8/Android');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('reactDevTools/JSC/iOS');
+                location.href = '#Details';
               }}>
               ✅
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('reactDevTools/hermes/iOS');
+                location.href = '#Details';
               }}>
               ❓
-            </a>
+            </button>
           </td>
           <td style={{ textAlign: 'center' }}>
-            <a
-              href="#Details"
+            <button
               onClick={() => {
                 setDetails('reactDevTools/V8/iOS');
+                location.href = '#Details';
               }}>
-              X
-            </a>
+              ⚪️
+            </button>
           </td>
         </tr>
       </table>
+
+      <h4>Symbols:</h4>
+      <ul>
+        <li>
+          ✅ - this method is available, an asterisk indicates that some
+          limitations apply
+        </li>
+        <li>❌ - unavailable in apps using Reanimated</li>
+        <li>⚪️ - unavailable in React Native apps</li>
+      </ul>
 
       <h3 id="Details">Details</h3>
       {detailsMap.get(details)}

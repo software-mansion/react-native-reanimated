@@ -110,7 +110,7 @@ export function chromeDevToolsHermesiOS() {
 }
 // ChromeDevTools/V8
 export function chromeDevToolsV8Android() {
-  return chromeDevToolsOnlyHermes('Chrome DevTools/V8/Android');
+  return <></>;
 }
 export function chromeDevToolsV8iOS() {
   return v8OnlyAndroid('Chrome DevTools/V8/iOS');
