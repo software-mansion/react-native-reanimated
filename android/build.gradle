@@ -44,9 +44,19 @@ def safeExtGet(prop, fallback) {
 }
 
 def resolveBuildType() {
-    def buildType = System.getenv("CLIENT_SIDE_BUILD")
-    if (buildType != null) {
-        return buildType == "True"
+    def buildType = "debug"
+    tasks.all({ task ->
+        if (task.name == "buildCMakeRelease") {
+            buildType = "release"
+        }
+    })
+    return buildType
+}
+
+def resolveClientSideBuild() {
+    def clientSideBuild = System.getenv("CLIENT_SIDE_BUILD")
+    if (clientSideBuild != null) {
+        return clientSideBuild == "True"
     }
 
     if (hasProperty("clientSideBuild")) {
@@ -96,7 +106,7 @@ def getPlaygroundAppName() { // only for the development
     return playgroundAppName
 }
 
-boolean CLIENT_SIDE_BUILD = resolveBuildType()
+boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
 }
@@ -447,7 +457,8 @@ Reanimated includes "hermes/hermes.h" header file in `NativeProxy.cpp`.
 Previously, we used header files from `hermes-engine` package in `node_modules`.
 Starting from React Native 0.69, Hermes is no longer distributed as package on NPM.
 On the new architecture, Hermes is downloaded from GitHub and then compiled from sources.
-However, on the old architecture, we need to download Hermes header files on our own.
+However, on the old architecture, we need to download Hermes header files on our own
+as well as unzip Hermes AAR in order to obtain `libhermes.so` shared library.
 For more details, see https://reactnative.dev/architecture/bundled-hermes
 */
 if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
@@ -494,6 +505,21 @@ task prepareHermes() {
     if (rnMinorVersion >= 69) {
         if (!isNewArchitectureEnabled()) {
             dependsOn(unzipHermes)
+        }
+
+        doLast {
+            def hermesAAR = file("$reactNative/android/com/facebook/react/hermes-engine/$reactNativeVersion/hermes-engine-$reactNativeVersion-${resolveBuildType()}.aar") // e.g. hermes-engine-0.70.0-rc.1-debug.aar
+            if (!hermesAAR.exists()) {
+                throw new GradleScriptException("Could not find hermes-engine AAR", null)
+            }
+
+            def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
+
+            copy {
+                from soFiles
+                from "$reactNative/ReactAndroid/src/main/jni/first-party/hermes/Android.mk"
+                into "$thirdPartyNdkDir/hermes"
+            }
         }
     } else {
         doLast {
@@ -619,12 +645,7 @@ dependencies {
 }
 
 task unpackReactNativeAAR {
-    def buildType = "debug"
-    tasks.all({ task ->
-        if (task.name == "buildCMakeRelease") {
-            buildType = "release"
-        }
-    })
+    def buildType = resolveBuildType()
     def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
     if (rnMinorVersion < 69) {
         rnAarMatcher = "**/**/*.aar"
