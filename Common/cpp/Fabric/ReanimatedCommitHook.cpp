@@ -1,5 +1,6 @@
 #include <react/renderer/core/ComponentDescriptor.h>
 
+#include <chrono>
 #include <iostream>
 #include <set>
 
@@ -18,7 +19,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry or re-calculate layout
-    std::cout << "ReanimatedCommitHook: skipped" << std::endl;
+    // std::cout << "[ReanimatedCommitHook] lastReanimatedRoot is " <<
+    // &*newRootShadowNode << ", skipping" << std::endl;
     return newRootShadowNode;
   }
 
@@ -28,13 +30,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
 
+  // rootNode->sealRecursive();
+
   {
     auto lock = propsRegistry_->createLock();
 
-    static int i = 0;
-    std::cout << "[" << i++
-              << "] ReanimatedCommitHook: " << propsRegistry_->size()
-              << " changes" << std::endl;
+    auto start = std::chrono::high_resolution_clock::now();
 
     propsRegistry_->for_each(
         [&](ShadowNodeFamily const &family, const folly::dynamic &dynProps) {
@@ -49,6 +50,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
           }
           rootNode = newRootNode;
         });
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    static int i = 0;
+    std::cout << "[ReanimatedCommitHook] lastReanimatedRoot is "
+              << &*newRootShadowNode << ", i=" << i++
+              << ", size=" << propsRegistry_->size()
+              << ", time=" << duration.count() << "us" << std::endl;
   }
 
   shadowTreeCloner.updateYogaChildren();

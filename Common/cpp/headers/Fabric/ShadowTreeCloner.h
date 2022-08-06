@@ -31,8 +31,8 @@ class ShadowTreeCloner {
   void updateYogaChildren();
 
  private:
-  PropsParserContext propsParserContext_;
-  std::shared_ptr<PropsRegistry> propsRegistry_;
+  const PropsParserContext propsParserContext_;
+  const std::shared_ptr<PropsRegistry> propsRegistry_;
   std::set<ShadowNode *> yogaChildrenUpdates_;
 };
 

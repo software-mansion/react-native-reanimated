@@ -49,7 +49,7 @@ export default function RefExample() {
   };
 
   return (
-    <>
+    <View collapsable={false}>
       <View style={styles.buttons}>
         <Button onPress={handleToggleSharedValue} title="Toggle shared value" />
         <Button onPress={handleToggleState} title="Toggle state" />
@@ -57,7 +57,7 @@ export default function RefExample() {
       <Animated.View style={[styles.parent, style]}>
         <Child ref={ref} />
       </Animated.View>
-    </>
+    </View>
   );
 }
 

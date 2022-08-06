@@ -2,6 +2,7 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
@@ -32,8 +33,8 @@ export default function ChessboardExample() {
 
   const handleAnimateSize = () => {
     ref.current = 1 - ref.current;
-    sv.value = ref.current;
-    // sv.value = withTiming(ref.current, { duration: 2000 });
+    // sv.value = ref.current;
+    sv.value = withTiming(ref.current, { duration: 500 });
   };
 
   const handleToggleColors = () => {
@@ -41,7 +42,7 @@ export default function ChessboardExample() {
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }} collapsable={false}>
       <View style={styles.buttons}>
         <Button onPress={handleAnimateSize} title="Animate size" />
         <Button onPress={handleToggleColors} title="Toggle colors" />
@@ -63,7 +64,7 @@ export default function ChessboardExample() {
           ))}
         </View>
       </View>
-    </>
+    </View>
   );
 }
 

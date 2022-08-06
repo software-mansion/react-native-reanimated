@@ -10,6 +10,7 @@ import Animated, {
 export default function WidthExample() {
   const [padding, setPadding] = React.useState(20);
   const [height, setHeight] = React.useState(80);
+  const [fontSize, setFontSize] = React.useState(20);
 
   const sv = useSharedValue(0);
 
@@ -25,29 +26,34 @@ export default function WidthExample() {
     setHeight((h) => h + 10);
   };
 
+  const handleIncreaseFontSize = () => {
+    setFontSize((fs) => fs + 3);
+  };
+
   const childStyle = useAnimatedStyle(() => {
     return {
       width: 80 + 230 * sv.value,
-      borderWidth: 4 + sv.value * 30,
+      borderWidth: 5 + sv.value * 20,
     };
   }, []);
 
   return (
-    <>
+    <View style={{ flex: 1 }} collapsable={false}>
       <View style={styles.buttons}>
         <Button onPress={handleAnimateWidth} title="Animate width" />
         <Button onPress={handleIncreasePadding} title="Increase padding" />
         <Button onPress={handleIncreaseHeight} title="Increase height" />
+        <Button onPress={handleIncreaseFontSize} title="Increase font size" />
       </View>
       <View style={[styles.parent, { paddingVertical: padding }]}>
         <View collapsable={false} style={styles.middle}>
           <Animated.View style={[styles.left, { height }, childStyle]}>
-            <Text style={styles.text}>42</Text>
+            <Text style={{ fontSize, color: 'white' }}>42</Text>
           </Animated.View>
           <View style={styles.right} />
         </View>
       </View>
-    </>
+    </View>
   );
 }
 

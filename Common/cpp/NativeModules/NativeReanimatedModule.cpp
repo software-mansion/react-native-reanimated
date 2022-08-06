@@ -6,6 +6,7 @@
 #endif
 
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <thread>
 
@@ -517,6 +518,8 @@ void NativeReanimatedModule::performOperations() {
         // lock once due to performance reasons
         auto lock = propsRegistry_->createLock();
 
+        auto start = std::chrono::high_resolution_clock::now();
+
         for (const auto &pair : copiedOperationsQueue) {
           const ShadowNodeFamily &family = pair.first->getFamily();
           react_native_assert(family.getSurfaceId() == surfaceId_);
@@ -535,6 +538,12 @@ void NativeReanimatedModule::performOperations() {
           propsRegistry_->set(pair.first, dynamicFromValue(rt, *pair.second));
         }
 
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        std::cout << "[NativeReanimatedModule] time=" << duration.count()
+                  << "us";
+
         // remove from PropsRegistry
         for (auto tag : copiedTagsToRemove) {
           propsRegistry_->remove(tag);
@@ -547,6 +556,7 @@ void NativeReanimatedModule::performOperations() {
 
       // skip ReanimatedCommitHook for this ShadowTree
       propsRegistry_->setLastReanimatedRoot(newRoot);
+      std::cout << ", setLastReanimatedRoot " << &*newRoot << std::endl;
 
       return newRoot;
     });

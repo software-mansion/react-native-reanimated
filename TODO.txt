@@ -1,0 +1,24 @@
+1. generalized variant of cloneTree:
+    ShadowTreeCloner
+    updateYogaChildren
+    PR: https://github.com/software-mansion/react-native-reanimated/pull/3369/files
+
+2. why is cloning ShadowNodes so slow?
+    for first frame and some frames it's even 8x times slower than usually
+    getAncestors (traversing children list for each level)
+    cloneProps
+    updateYogaChildren
+
+3. optimize number of updates applied in ReanimatedCommitHook
+    problem: each prop update for each animated component from t=0 must be kept in PropsRegistry
+    idea: synchronize prop updates back to JS when React-Fabric clones ShadowNodes
+    demo: WidthExample
+    problem: works only in specific cases, works when children are updated but not when parents etc. are
+    next: synchronize or copy PropsRegistry for reading
+
+4. why is layout calculated before commit hooks?
+    asked on discord
+
+5. RNScreens state updates
+    still not working properly in WidthExample or ChessboardExample
+    fixed by wrapping in <View style={{ flex: 1 }} collapsable={false}>...</View>

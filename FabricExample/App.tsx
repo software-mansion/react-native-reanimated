@@ -185,6 +185,8 @@ function ItemSeparator() {
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  // return <NewestShadowNodesRegistryRemoveExample />;
+  // return <ChessboardExample />;
   return (
     <GestureHandlerRootView style={styles.container}>
       <NavigationContainer>
