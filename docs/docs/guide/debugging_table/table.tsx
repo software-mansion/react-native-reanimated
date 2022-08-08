@@ -321,7 +321,7 @@ export default function DebuggingInfoTable() {
         </tr>
       </table>
 
-      <h4>Symbols:</h4>
+      <h4>Key to symbols:</h4>
       <ul>
         <li>
           ✅ - available in apps using Reanimated, an asterisk indicates that
