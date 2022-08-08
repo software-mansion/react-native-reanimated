@@ -62,7 +62,7 @@ jobs:
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
-        run: pod check || pod install
+        run: pod install
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
