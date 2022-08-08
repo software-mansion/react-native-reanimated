@@ -46,7 +46,7 @@ function chromeDebuggerShared(configuration: string) {
     <p>
       <i>Selected: {configuration}</i> <br></br>
       Since the Chrome Debugger runs it's own web worker all the code is run on
-      the JS thread and it also uses the JavaScript engine provided by your web
+      the JS thread so it also uses the JavaScript engine provided by your web
       browser (V8 in Chrome, JSC in Safari and SpiderMonkey in Firefox). This
       means that this piece of code:
       <CodeBlock className="language-js">
@@ -58,7 +58,7 @@ runOnUI(runWorklet)();`}
       </CodeBlock>
       would output:
       <CodeBlock>{`LOG: worklet: false`}</CodeBlock>
-      Another side effect is that Reanimated uses web implementations of all
+      Another side effect is that Reanimated uses the web implementations of all
       function. This means that the <code>scrollTo</code> function will work
       (using the native web implementation), but the <code>measure</code>{' '}
       function will not be available and it's usage will trigger this error:
@@ -74,7 +74,7 @@ runOnUI(runWorklet)();`}
       Those functions that are provided by Reanimated and do not have web
       implementations won't work. <br></br>
       An example of this behaviour is the <code>useAnimatedSensor</code> hook
-      which only works on mobile platforms. When debugging in chrome and using
+      which only works on mobile platforms. When debugging in Chrome and using
       this hook the following message will appear in the logs:
       <CodeBlock>{`[Reanimated] useAnimatedSensor is not available on web yet. `}</CodeBlock>
       But despite all of this, it is still possible to set breakpoints both in
@@ -248,9 +248,9 @@ export function safariDevToolsJSCiOS() {
       <p>
         <b>Caution!</b>{' '}
         <i>
-          Remember that console logs will appear on the main thread as the
-          console.log funcion on the UI thread is just a reference to the one
-          from the JS thread.
+          Remember that console logs will appear on the main thread as
+          the <code>console.log</code> funcion on the UI thread is just a
+          reference to the one from the JS thread.
         </i>
       </p>
     </>
