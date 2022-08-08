@@ -28,7 +28,7 @@ worker inside your preferred browser which executes your app's code. It works
 with all the runtimes available in React Native.
 
 - [**Chrome DevTools**](https://reactnative.dev/docs/hermes#debugging-js-on-hermes-using-google-chromes-devtools)
-(available for Hermes only) are Chrome's built-in feature that allow connecting to a
+(unavailable for JSC) are Chrome's built-in feature that allow connecting to a
 remote JavaScript runtime. This means that the code you are debugging actually
 runs on the device itself and behaves the same way as it would with DevTools detached.
 
@@ -52,5 +52,18 @@ by the browser of you choice. We did not discover any issues with debugging
 apps using Reanimated on web.
 
 ### Debugging mobile apps
+
+<!-- 
+  Testing setup:
+    - Shared:
+      - react-native: 0.69.3
+      - empty app generated using the typescript template
+      - added reanimated only
+      - tested: scrollTo, measure, useAnimatedSensor, console logs with _WORKLET
+    - Android:
+      - Device: Pixel 5 API 32
+    - iOS:
+      - Device: iPhone 13 Pro (iOS 15.5)
+-->
 
 <CompatibilityTable/>
