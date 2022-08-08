@@ -14,13 +14,12 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-12
     strategy:
       matrix:
         working-directory: [Example, FabricExample]
     concurrency:
       group: ios-${{ matrix.working-directory }}-${{ github.ref }}
-      cancel-in-progress: true
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
