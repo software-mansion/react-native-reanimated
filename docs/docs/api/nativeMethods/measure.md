@@ -46,13 +46,11 @@ const Comp = () => {
 
   useDerivedValue(() => {
     const measured = measure(aref);
-    // ...
+    if (measured !== null) {
+      // ...
+    }
   });
 
   return <View ref={aref} />;
 };
 ```
-
-### Note
-
-You can use `measure()` only on rendered components. A good practice is to wrap the function call with a `try{} catch{}` block if there is a risk of calling the function on an item which is not rendered, for example: an invisible off screen item from FlatList.
