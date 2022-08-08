@@ -25,9 +25,15 @@ jobs:
         with:
           node-version: 14
           cache: 'yarn'
-      - name: Install Reanimated node dependencies
+      - uses: actions/cache@v2
+        with:
+          path: |
+            **/node_modules
+            **/${{ matrix.working-directory }}/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/yarn.lock', '**/${{ matrix.working-directory }}/yarn.lock') }}
+      - name: Install Reanimated dependencies
         run: yarn
-      - name: Install node dependencies
+      - name: Install app dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn
       - name: Install pods
