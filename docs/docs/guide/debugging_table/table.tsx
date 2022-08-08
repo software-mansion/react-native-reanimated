@@ -331,8 +331,10 @@ export default function DebuggingInfoTable() {
         <li>N/A - unavailable in React Native apps</li>
       </ul>
 
-      <h3 id="Details">Details</h3>
-      {details === '' ? <></> : <i>Selection: {details}</i>}
+      <h3 style={{ marginBottom: 0 }} id="Details">
+        Details
+      </h3>
+      <p>{details === '' ? <></> : <i>Selection: {details}</i>}</p>
 
       {detailsMap.get(details)}
     </>
