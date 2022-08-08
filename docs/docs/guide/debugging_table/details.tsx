@@ -1,4 +1,6 @@
 import React from 'react';
+// eslint-disable-next-line import/no-unresolved
+import CodeBlock from '@theme/CodeBlock';
 
 // Shared stuff
 function v8OnlyAndroid(configuration: string) {
@@ -48,18 +50,20 @@ function chromeDebuggerShared(configuration: string) {
       the JS thread and it also uses the JavaScript engine provided by your web
       browser (V8 in Chrome, JSC in Safari and SpiderMonkey in Firefox). This
       means that this piece of code:
-      <pre>{`function runWorklet() {
+      <CodeBlock className="language-js">
+        {`function runWorklet() {
   'worklet';
   console.log('worklet:', _WORKLET);
 }
-runOnUI(runWorklet)();`}</pre>
+runOnUI(runWorklet)();`}
+      </CodeBlock>
       would output:
-      <pre>{`LOG: worklet: false`}</pre>
+      <CodeBlock>{`LOG: worklet: false`}</CodeBlock>
       Another side effect is that Reanimated uses web implementations of all
       function. This means that the <code>scrollTo</code> function will work
       (using the native web implementation), but the <code>measure</code>{' '}
       function will not be available and it's usage will trigger this error:
-      <pre>{`[reanimated.measure] method cannot be used for web or Chrome Debugger`}</pre>
+      <CodeBlock>{`[reanimated.measure] method cannot be used for web or Chrome Debugger`}</CodeBlock>
       You may stil use the standard web version of measure as described{' '}
       <a
         href={
@@ -73,7 +77,7 @@ runOnUI(runWorklet)();`}</pre>
       An example of this behaviour is the <code>useAnimatedSensor</code> hook
       which only works on mobile platforms. When debugging in chrome and using
       this hook the following message will appear in the logs:
-      <pre>{`[Reanimated] useAnimatedSensor is not available on web yet. `}</pre>
+      <CodeBlock>{`[Reanimated] useAnimatedSensor is not available on web yet. `}</CodeBlock>
       But despite all of this, it is still possible to set breakpoints both in
       normal JS code as well as in worklets (since they run on the main JS
       thread now).
@@ -104,7 +108,7 @@ function reactDevToolsAndroidShared(configuration: string) {
       <br></br>
       React DevTools work as expected and the profiler and layout inspector can
       be used as usual after running the command:
-      <pre>{`adb reverse tcp:8097 tcp:8097`}</pre>
+      <CodeBlock>{`adb reverse tcp:8097 tcp:8097`}</CodeBlock>
     </p>
   );
 }
