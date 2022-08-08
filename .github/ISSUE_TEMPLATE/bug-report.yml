@@ -104,7 +104,7 @@ body:
     id: workflow
     attributes:
       label: Workflow
-      description: How your application is managed? Not sure? Read [this part of Expo documentation](https://docs.expo.dev/introduction/managed-vs-bare/)
+      description: How your application is managed? Not sure? Read [this part](https://docs.expo.dev/introduction/managed-vs-bare/) of Expo documentation
       options:
         - React Native (without Expo)
         - Expo bare workflow
