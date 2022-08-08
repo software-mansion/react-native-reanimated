@@ -45,7 +45,9 @@ function chromeDebuggerShared(configuration: string) {
     <p>
       <i>Selected: {configuration}</i> <br></br>
       Since the Chrome Debugger runs it's own web worker all the code is run on
-      the JS thread. This means that this piece of code:
+      the JS thread and it also uses the JavaScript engine provided by your web
+      browser (V8 in Chrome, JSC in Safari and SpiderMonkey in Firefox). This
+      means that this piece of code:
       <pre>{`function runWorklet() {
   'worklet';
   console.log('worklet:', _WORKLET);
@@ -53,10 +55,17 @@ function chromeDebuggerShared(configuration: string) {
 runOnUI(runWorklet)();`}</pre>
       would output:
       <pre>{`LOG: worklet: false`}</pre>
-      But despite this, all native functions like <code>scrollTo</code> and{' '}
-      <code>measure</code> are still available. It is also possible to set
-      breakpoints both in normal JS code as well as in worklet (since they run
-      on the main JS thread now).
+      Another side effect is that Reanimated uses web implementations of all
+      function. This means that functions like <code>scrollTo</code> and{' '}
+      <code>measure</code> will work the same as they do on web, while those
+      functions that are provided by Reanimated and do not have web
+      implementations won't work. <br></br>
+      An example of this behaviour is the <code>useAnimatedSensor</code> hook
+      which only works on mobile platforms. When debugging in chrome and using
+      this hook the following message will appear in the logs:
+      <pre>{`[Reanimated] useAnimatedSensor is not available on web yet. `}</pre>
+      But despite this, it is possible to set breakpoints both in normal JS code
+      as well as in worklets (since they run on the main JS thread now).
     </p>
   );
 }
@@ -81,14 +90,14 @@ export function chromeDebuggerJSCiOS() {
 }
 // ChromeDebugger/Hermes
 export function chromeDebuggerHermesAndroid() {
-  return <></>;
+  return chromeDebuggerShared('Chrome Debugger/Hermes/Android');
 }
 export function chromeDebuggerHermesiOS() {
-  return <></>;
+  return chromeDebuggerShared('Chrome Debugger/Hermes/iOS');
 }
 // ChromeDebugger/V8
 export function chromeDebuggerV8Android() {
-  return <></>;
+  return chromeDebuggerShared('Chrome Debugger/V8/Android');
 }
 export function chromeDebuggerV8iOS() {
   return v8OnlyAndroid('Chrome Debugger/V8/iOS');

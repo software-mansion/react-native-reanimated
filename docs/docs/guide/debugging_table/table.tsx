@@ -32,7 +32,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDebugger/hermes/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -41,7 +41,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDebugger/V8/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
         </tr>
@@ -62,7 +62,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDebugger/hermes/iOS');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
