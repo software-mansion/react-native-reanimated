@@ -17,6 +17,7 @@
   "dependencies": {
     "@docusaurus/core": "^2.0.1",
     "@docusaurus/preset-classic": "^2.0.1",
+    "@docusaurus/theme-classic": "^2.0.1",
     "@mdx-js/react": "^1.6.21",
     "classnames": "^2.3.1",
     "clsx": "^1.1.1",

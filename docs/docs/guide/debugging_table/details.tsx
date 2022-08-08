@@ -1,5 +1,5 @@
 import React from 'react';
-import CodeBlock from '@theme/CodeBlock';
+import CodeBlock from '@docusaurus/theme-classic/lib/theme/CodeBlock';
 
 // Shared stuff
 function V8OnlyAndroid() {
@@ -51,9 +51,9 @@ runOnUI(runWorklet)();`}
         }>
         here
       </a>
-      .<br></br>
+      .<br />
       Those functions that are provided by Reanimated and do not have web
-      implementations won't work. <br></br>
+      implementations won't work. <br />
       An example of this behaviour is the <code>useAnimatedSensor</code> hook
       which only works on mobile platforms. When debugging in Chrome and using
       this hook the following message will appear in the logs:
@@ -71,7 +71,7 @@ function FlipperHermesV8Shared() {
       doesn't recognize Reanimated's additional UI context. This means that you
       won't be able to debug worklets and breakpoints set in them will be
       ignored. All other features work as expected.
-      <br></br>
+      <br />
       <i>
         We are actively working on enabling worklet debugging with Flipper on
         Hermes.
@@ -86,7 +86,7 @@ function ChromeDevToolsHermesV8Shared() {
       unfortunatley don't recognize Reanimated's additional UI context. This
       means that you won't be able to debug worklets and breakpoints set in them
       will be ignored. All other features work as expected.
-      <br></br>
+      <br />
       <i>
         We are actively working on enabling worklet debugging with Chrome
         DevTools on Hermes.
@@ -198,7 +198,7 @@ export function SafariDevToolsJSCiOS() {
     <>
       <p>
         <i>Selected: Safari DevTools/JSC/iOS</i>
-        <br></br>
+        <br />
         After opening Safari and configuring it as specified in the React Native
         docs, under <code>Develop &gt; Device</code> you'll see two JSC contexts
         like in the screenshot below:
@@ -212,7 +212,7 @@ export function SafariDevToolsJSCiOS() {
         outputs will appear in the console of this context. You can also set
         breakpoints here, but unfortunatley the only source file visible is the
         transformed <code>indexjs.bundle</code> which does make things more
-        difficult to find. <br></br>
+        difficult to find. <br />
         The other option will be the UI context. No console logs will appear in
         the console of this context, but all worklet functions should be visible
         as separate files. It is also possible to set breakpoints in these

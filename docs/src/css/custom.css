@@ -660,6 +660,6 @@ section > .contaner > .row {
   max-width: 100px;
 }
 
-*{
+* {
   scroll-behavior: smooth;
 }
