@@ -14,6 +14,9 @@ export function getRelativeCoords(
 ): ComponentCoords {
   'worklet';
   const parentCoords = measure(parentRef);
+  if (!parentCoords) {
+    return { x, y };
+  }
   return {
     x: x - parentCoords.x,
     y: y - parentCoords.y,
