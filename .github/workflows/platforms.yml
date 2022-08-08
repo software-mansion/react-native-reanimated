@@ -37,4 +37,6 @@ jobs:
         uses: ./platforms
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          platforms-section-header: Platforms
+          platforms-comma-separated: true
           platforms-with-labels: '{"Android": "🤖android", "iOS": "🍎iOS", "Web": "🧭web"}'
