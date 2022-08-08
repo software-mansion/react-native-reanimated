@@ -116,8 +116,8 @@ body:
       label: Architecture
       description: What React Native architecture your application is running on?
       options:
-        - Paper (current)
-        - Fabric (new)
+        - Paper (Old Architecture)
+        - Fabric (New Architecture)
 
   - type: dropdown
     id: build-type
