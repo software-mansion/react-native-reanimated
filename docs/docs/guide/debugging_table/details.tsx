@@ -2,13 +2,13 @@ import React from 'react';
 import CodeBlock from '@theme/CodeBlock';
 
 // Shared stuff
-function v8OnlyAndroid() {
+function V8OnlyAndroid() {
   return <p>The V8 engine is currently only available on Android.</p>;
 }
-function chromeDevToolsNoJSC() {
+function ChromeDevToolsNoJSC() {
   return <p>Chrome DevTools don't work with the JSC engine.</p>;
 }
-function flipperNoJSC() {
+function FlipperNoJSC() {
   return (
     <p>
       Flipper doesn't work well with the JSC runtime as it was mostly designed
@@ -18,12 +18,12 @@ function flipperNoJSC() {
     </p>
   );
 }
-function safariDevToolsiOSOnly() {
+function SafariDevToolsiOSOnly() {
   return (
     <p>Safari DevTools only work with iOS devices running the JSC engine.</p>
   );
 }
-function chromeDebuggerShared() {
+function ChromeDebuggerShared() {
   return (
     <p>
       Since the Chrome Debugger runs it's own web worker all the code is run on
@@ -64,10 +64,10 @@ runOnUI(runWorklet)();`}
     </p>
   );
 }
-function flipperHermesV8Shared() {
+function FlipperHermesV8Shared() {
   return (
     <p>
-      Even though Flipper supports the Hermes and V8 engines it unfortunatley
+      Even though Flipper supports the Hermes and V8 engines it unfortunately
       doesn't recognize Reanimated's additional UI context. This means that you
       won't be able to debug worklets and breakpoints set in them will be
       ignored. All other features work as expected.
@@ -79,7 +79,7 @@ function flipperHermesV8Shared() {
     </p>
   );
 }
-function chromeDevToolsHermesV8Shared() {
+function ChromeDevToolsHermesV8Shared() {
   return (
     <p>
       Even though Chrome DevTools support the Hermes and V8 engines they
@@ -94,7 +94,7 @@ function chromeDevToolsHermesV8Shared() {
     </p>
   );
 }
-function reactDevToolsAndroidShared() {
+function ReactDevToolsAndroidShared() {
   return (
     <p>
       React DevTools work as expected and the profiler and layout inspector can
@@ -103,7 +103,7 @@ function reactDevToolsAndroidShared() {
     </p>
   );
 }
-function reactDevToolsiOSShared() {
+function ReactDevToolsiOSShared() {
   return (
     <p>
       React DevTools work as expected and the profiler and layout inspector can
@@ -113,87 +113,87 @@ function reactDevToolsiOSShared() {
 }
 
 // Nothing selected
-export function nothingSelected() {
+export function NothingSelected() {
   return (
     <>
       <p>
-        <i>Please select a configuration to view the details</i>
+        <i>Please select a configuration to view the details.</i>
       </p>
     </>
   );
 }
 
 // ChromeDebugger/JSC
-export function chromeDebuggerJSCAndroid() {
-  return chromeDebuggerShared();
+export function ChromeDebuggerJSCAndroid() {
+  return ChromeDebuggerShared();
 }
-export function chromeDebuggerJSCiOS() {
-  return chromeDebuggerShared();
+export function ChromeDebuggerJSCiOS() {
+  return ChromeDebuggerShared();
 }
 // ChromeDebugger/Hermes
-export function chromeDebuggerHermesAndroid() {
-  return chromeDebuggerShared();
+export function ChromeDebuggerHermesAndroid() {
+  return ChromeDebuggerShared();
 }
-export function chromeDebuggerHermesiOS() {
-  return chromeDebuggerShared();
+export function ChromeDebuggerHermesiOS() {
+  return ChromeDebuggerShared();
 }
 // ChromeDebugger/V8
-export function chromeDebuggerV8Android() {
-  return chromeDebuggerShared();
+export function ChromeDebuggerV8Android() {
+  return ChromeDebuggerShared();
 }
-export function chromeDebuggerV8iOS() {
-  return v8OnlyAndroid();
+export function ChromeDebuggerV8iOS() {
+  return V8OnlyAndroid();
 }
 
 // ChromeDevTools/JSC
-export function chromeDevToolsJSCAndroid() {
-  return chromeDevToolsNoJSC();
+export function ChromeDevToolsJSCAndroid() {
+  return ChromeDevToolsNoJSC();
 }
-export function chromeDevToolsJSCiOS() {
-  return chromeDevToolsNoJSC();
+export function ChromeDevToolsJSCiOS() {
+  return ChromeDevToolsNoJSC();
 }
 // ChromeDevTools/Hermes
-export function chromeDevToolsHermesAndroid() {
-  return chromeDevToolsHermesV8Shared();
+export function ChromeDevToolsHermesAndroid() {
+  return ChromeDevToolsHermesV8Shared();
 }
-export function chromeDevToolsHermesiOS() {
-  return chromeDevToolsHermesV8Shared();
+export function ChromeDevToolsHermesiOS() {
+  return ChromeDevToolsHermesV8Shared();
 }
 // ChromeDevTools/V8
-export function chromeDevToolsV8Android() {
-  return chromeDevToolsHermesV8Shared();
+export function ChromeDevToolsV8Android() {
+  return ChromeDevToolsHermesV8Shared();
 }
-export function chromeDevToolsV8iOS() {
-  return v8OnlyAndroid();
+export function ChromeDevToolsV8iOS() {
+  return V8OnlyAndroid();
 }
 
 // Flipper/JSC
-export function flipperJSCAndroid() {
-  return flipperNoJSC();
+export function FlipperJSCAndroid() {
+  return FlipperNoJSC();
 }
-export function flipperJSCiOS() {
-  return flipperNoJSC();
+export function FlipperJSCiOS() {
+  return FlipperNoJSC();
 }
 // Flipper/Hermes
-export function flipperHermesAndroid() {
-  return flipperHermesV8Shared();
+export function FlipperHermesAndroid() {
+  return FlipperHermesV8Shared();
 }
-export function flipperHermesiOS() {
-  return flipperHermesV8Shared();
+export function FlipperHermesiOS() {
+  return FlipperHermesV8Shared();
 }
 // Flipper/V8
-export function flipperV8Android() {
-  return flipperHermesV8Shared();
+export function FlipperV8Android() {
+  return FlipperHermesV8Shared();
 }
-export function flipperV8iOS() {
-  return v8OnlyAndroid();
+export function FlipperV8iOS() {
+  return V8OnlyAndroid();
 }
 
 // SafariDevTools/JSC
-export function safariDevToolsJSCAndroid() {
-  return safariDevToolsiOSOnly();
+export function SafariDevToolsJSCAndroid() {
+  return SafariDevToolsiOSOnly();
 }
-export function safariDevToolsJSCiOS() {
+export function SafariDevToolsJSCiOS() {
   return (
     <>
       <p>
@@ -230,38 +230,38 @@ export function safariDevToolsJSCiOS() {
   );
 }
 // SafariDevTools/Hermes
-export function safariDevToolsHermesAndroid() {
-  return safariDevToolsiOSOnly();
+export function SafariDevToolsHermesAndroid() {
+  return SafariDevToolsiOSOnly();
 }
-export function safariDevToolsHermesiOS() {
-  return safariDevToolsiOSOnly();
+export function SafariDevToolsHermesiOS() {
+  return SafariDevToolsiOSOnly();
 }
 // SafariDevTools/V8
-export function safariDevToolsV8Android() {
-  return safariDevToolsiOSOnly();
+export function SafariDevToolsV8Android() {
+  return SafariDevToolsiOSOnly();
 }
-export function safariDevToolsV8iOS() {
-  return v8OnlyAndroid();
+export function SafariDevToolsV8iOS() {
+  return V8OnlyAndroid();
 }
 
 // ReactDevTools/JSC
-export function reactDevToolsJSCAndroid() {
-  return reactDevToolsAndroidShared();
+export function ReactDevToolsJSCAndroid() {
+  return ReactDevToolsAndroidShared();
 }
-export function reactDevToolsJSCiOS() {
-  return reactDevToolsiOSShared();
+export function ReactDevToolsJSCiOS() {
+  return ReactDevToolsiOSShared();
 }
 // ReactDevTools/Hermes
-export function reactDevToolsHermesAndroid() {
-  return reactDevToolsAndroidShared();
+export function ReactDevToolsHermesAndroid() {
+  return ReactDevToolsAndroidShared();
 }
-export function reactDevToolsHermesiOS() {
-  return reactDevToolsiOSShared();
+export function ReactDevToolsHermesiOS() {
+  return ReactDevToolsiOSShared();
 }
 // ReactDevTools/V8
-export function reactDevToolsV8Android() {
-  return reactDevToolsAndroidShared();
+export function ReactDevToolsV8Android() {
+  return ReactDevToolsAndroidShared();
 }
-export function reactDevToolsV8iOS() {
-  return v8OnlyAndroid();
+export function ReactDevToolsV8iOS() {
+  return V8OnlyAndroid();
 }

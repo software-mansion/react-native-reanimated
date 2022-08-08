@@ -8,6 +8,7 @@
     "test:unit": "jest",
     "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
+    "lint:docs": "eslint --ext '.js,.ts,.tsx,.mdx' docs/ && yarn prettier --check docs/",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
     "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",

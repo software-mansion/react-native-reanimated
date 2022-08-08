@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { detailsMap } from './details_map';
 
 export default function DebuggingInfoTable() {
   const [details, setDetails] = React.useState('');
+
+  useEffect(() => {
+    location.href = '#details';
+  }, [details]);
 
   return (
     <>
@@ -21,28 +25,28 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Chrome Debugger/JSC/Android');
-                location.href = '#Details';
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ¹
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Chrome Debugger/hermes/Android');
-                location.href = '#Details';
+                setDetails('Chrome Debugger/Hermes/Android');
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ¹
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
                 setDetails('Chrome Debugger/V8/Android');
-                location.href = '#Details';
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ¹
           </td>
         </tr>
         <tr>
@@ -51,25 +55,24 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Chrome Debugger/JSC/iOS');
-                location.href = '#Details';
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ¹
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Chrome Debugger/hermes/iOS');
-                location.href = '#Details';
+                setDetails('Chrome Debugger/Hermes/iOS');
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ¹
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
                 setDetails('Chrome Debugger/V8/iOS');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -82,7 +85,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Chrome DevTools/JSC/Android');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -90,20 +92,20 @@ export default function DebuggingInfoTable() {
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Chrome DevTools/hermes/Android');
-                location.href = '#Details';
+                setDetails('Chrome DevTools/Hermes/Android');
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ²
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
                 setDetails('Chrome DevTools/V8/Android');
-                location.href = '#Details';
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ²
           </td>
         </tr>
         <tr>
@@ -112,7 +114,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Chrome DevTools/JSC/iOS');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -120,17 +121,16 @@ export default function DebuggingInfoTable() {
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Chrome DevTools/hermes/iOS');
-                location.href = '#Details';
+                setDetails('Chrome DevTools/Hermes/iOS');
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ²
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
                 setDetails('Chrome DevTools/V8/iOS');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -143,7 +143,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Flipper/JSC/Android');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -151,20 +150,20 @@ export default function DebuggingInfoTable() {
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Flipper/hermes/Android');
-                location.href = '#Details';
+                setDetails('Flipper/Hermes/Android');
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ²
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
                 setDetails('Flipper/V8/Android');
-                location.href = '#Details';
               }}>
-              ✅*
+              ✅
             </button>
+            ²
           </td>
         </tr>
         <tr>
@@ -173,7 +172,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Flipper/JSC/iOS');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -181,17 +179,16 @@ export default function DebuggingInfoTable() {
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Flipper/hermes/iOS');
-                location.href = '#Details';
+                setDetails('Flipper/Hermes/iOS');
               }}>
-              ✅*
-            </button>
+              ✅
+            </button>{' '}
+            ²
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
                 setDetails('Flipper/V8/iOS');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -204,7 +201,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Safari DevTools/JSC/Android');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -212,8 +208,7 @@ export default function DebuggingInfoTable() {
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Safari DevTools/hermes/Android');
-                location.href = '#Details';
+                setDetails('Safari DevTools/Hermes/Android');
               }}>
               N/A
             </button>
@@ -222,7 +217,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Safari DevTools/V8/Android');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -234,16 +228,14 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Safari DevTools/JSC/iOS');
-                location.href = '#Details';
               }}>
-              ✅*
+              ✅
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('Safari DevTools/hermes/iOS');
-                location.href = '#Details';
+                setDetails('Safari DevTools/Hermes/iOS');
               }}>
               N/A
             </button>
@@ -252,7 +244,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('Safari DevTools/V8/iOS');
-                location.href = '#Details';
               }}>
               N/A
             </button>
@@ -265,7 +256,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('React DevTools/JSC/Android');
-                location.href = '#Details';
               }}>
               ✅
             </button>
@@ -273,8 +263,7 @@ export default function DebuggingInfoTable() {
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('React DevTools/hermes/Android');
-                location.href = '#Details';
+                setDetails('React DevTools/Hermes/Android');
               }}>
               ✅
             </button>
@@ -283,7 +272,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('React DevTools/V8/Android');
-                location.href = '#Details';
               }}>
               ✅
             </button>
@@ -295,7 +283,6 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('React DevTools/JSC/iOS');
-                location.href = '#Details';
               }}>
               ✅
             </button>
@@ -303,8 +290,7 @@ export default function DebuggingInfoTable() {
           <td style={{ textAlign: 'center' }}>
             <button
               onClick={() => {
-                setDetails('React DevTools/hermes/iOS');
-                location.href = '#Details';
+                setDetails('React DevTools/Hermes/iOS');
               }}>
               ✅
             </button>
@@ -313,14 +299,15 @@ export default function DebuggingInfoTable() {
             <button
               onClick={() => {
                 setDetails('React DevTools/V8/iOS');
-                location.href = '#Details';
               }}>
               N/A
             </button>
           </td>
         </tr>
       </table>
-
+      ¹ - Works, but uses web implementations of function and runs everything on
+      the JS thread.
+      <br></br>² - Only the JS context can be debugged.
       <h4>Key to symbols:</h4>
       <ul>
         <li>
@@ -330,12 +317,10 @@ export default function DebuggingInfoTable() {
         <li>❌ - unavailable in apps using Reanimated</li>
         <li>N/A - unavailable in React Native apps</li>
       </ul>
-
-      <h3 style={{ marginBottom: 0 }} id="Details">
+      <h3 style={{ marginBottom: 0 }} id="details">
         Details
       </h3>
-      <p>{details === '' ? <></> : <i>Selection: {details}</i>}</p>
-
+      <p>{details && <i>Selection: {details}</i>}</p>
       {detailsMap.get(details)}
     </>
   );
