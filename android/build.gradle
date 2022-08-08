@@ -167,7 +167,7 @@ def JS_RUNTIME = {
 
 def jsRuntimeDir = {
     if (JS_RUNTIME == "hermes") {
-        if (rnMinorVersion >= 70) {
+        if (rnMinorVersion >= 69) {
             return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "sdks", "hermes")
         } else {
             return Paths.get(CMAKE_NODE_MODULES_DIR, "hermes-engine")
