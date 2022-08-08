@@ -2,29 +2,15 @@ import React from 'react';
 import CodeBlock from '@theme/CodeBlock';
 
 // Shared stuff
-function v8OnlyAndroid(configuration: string) {
-  return (
-    <p>
-      <i>Selected: {configuration}</i>
-      <br></br>
-      The V8 engine is currently only available on Android.
-    </p>
-  );
+function v8OnlyAndroid() {
+  return <p>The V8 engine is currently only available on Android.</p>;
 }
-function chromeDevToolsNoJSC(configuration: string) {
-  return (
-    <p>
-      <i>Selected: {configuration}</i>
-      <br></br>
-      Chrome DevTools don't work with the JSC engine.
-    </p>
-  );
+function chromeDevToolsNoJSC() {
+  return <p>Chrome DevTools don't work with the JSC engine.</p>;
 }
-function flipperNoJSC(configuration: string) {
+function flipperNoJSC() {
   return (
     <p>
-      <i>Selected: {configuration}</i>
-      <br></br>
       Flipper doesn't work well with the JSC runtime as it was mostly designed
       to debug Hermes apps. The layout inspector and built-in React DevTools
       will work and some logs will be visible but setting breakpoints or viewing
@@ -32,19 +18,14 @@ function flipperNoJSC(configuration: string) {
     </p>
   );
 }
-function safariDevToolsiOSOnly(configuration: string) {
+function safariDevToolsiOSOnly() {
   return (
-    <p>
-      <i>Selected: {configuration}</i>
-      <br></br>
-      Safari DevTools only work with iOS devices running the JSC engine.
-    </p>
+    <p>Safari DevTools only work with iOS devices running the JSC engine.</p>
   );
 }
-function chromeDebuggerShared(configuration: string) {
+function chromeDebuggerShared() {
   return (
     <p>
-      <i>Selected: {configuration}</i> <br></br>
       Since the Chrome Debugger runs it's own web worker all the code is run on
       the JS thread so it also uses the JavaScript engine provided by your web
       browser (V8 in Chrome, JSC in Safari and SpiderMonkey in Firefox). This
@@ -83,11 +64,9 @@ runOnUI(runWorklet)();`}
     </p>
   );
 }
-function flipperHermesV8Shared(configuration: string) {
+function flipperHermesV8Shared() {
   return (
     <p>
-      <i>Selected: {configuration}</i>
-      <br></br>
       Even though Flipper supports the Hermes and V8 engines it unfortunatley
       doesn't recognize Reanimated's additional UI context. This means that you
       won't be able to debug worklets and breakpoints set in them will be
@@ -100,11 +79,9 @@ function flipperHermesV8Shared(configuration: string) {
     </p>
   );
 }
-function chromeDevToolsHermesV8Shared(configuration: string) {
+function chromeDevToolsHermesV8Shared() {
   return (
     <p>
-      <i>Selected: {configuration}</i>
-      <br></br>
       Even though Chrome DevTools support the Hermes and V8 engines they
       unfortunatley don't recognize Reanimated's additional UI context. This
       means that you won't be able to debug worklets and breakpoints set in them
@@ -117,22 +94,18 @@ function chromeDevToolsHermesV8Shared(configuration: string) {
     </p>
   );
 }
-function reactDevToolsAndroidShared(configuration: string) {
+function reactDevToolsAndroidShared() {
   return (
     <p>
-      <i>Selection: {configuration}</i>
-      <br></br>
       React DevTools work as expected and the profiler and layout inspector can
       be used as usual after running the command:
       <CodeBlock>{`adb reverse tcp:8097 tcp:8097`}</CodeBlock>
     </p>
   );
 }
-function reactDevToolsiOSShared(configuration: string) {
+function reactDevToolsiOSShared() {
   return (
     <p>
-      <i>Selection: {configuration}</i>
-      <br></br>
       React DevTools work as expected and the profiler and layout inspector can
       be used as usual.
     </p>
@@ -152,73 +125,73 @@ export function nothingSelected() {
 
 // ChromeDebugger/JSC
 export function chromeDebuggerJSCAndroid() {
-  return chromeDebuggerShared('Chrome Debugger/JSC/Android');
+  return chromeDebuggerShared();
 }
 export function chromeDebuggerJSCiOS() {
-  return chromeDebuggerShared('Chrome Debugger/JSC/iOS');
+  return chromeDebuggerShared();
 }
 // ChromeDebugger/Hermes
 export function chromeDebuggerHermesAndroid() {
-  return chromeDebuggerShared('Chrome Debugger/Hermes/Android');
+  return chromeDebuggerShared();
 }
 export function chromeDebuggerHermesiOS() {
-  return chromeDebuggerShared('Chrome Debugger/Hermes/iOS');
+  return chromeDebuggerShared();
 }
 // ChromeDebugger/V8
 export function chromeDebuggerV8Android() {
-  return chromeDebuggerShared('Chrome Debugger/V8/Android');
+  return chromeDebuggerShared();
 }
 export function chromeDebuggerV8iOS() {
-  return v8OnlyAndroid('Chrome Debugger/V8/iOS');
+  return v8OnlyAndroid();
 }
 
 // ChromeDevTools/JSC
 export function chromeDevToolsJSCAndroid() {
-  return chromeDevToolsNoJSC('Chrome DevTools/JSC/Android');
+  return chromeDevToolsNoJSC();
 }
 export function chromeDevToolsJSCiOS() {
-  return chromeDevToolsNoJSC('Chrome DevTools/JSC/iOS');
+  return chromeDevToolsNoJSC();
 }
 // ChromeDevTools/Hermes
 export function chromeDevToolsHermesAndroid() {
-  return chromeDevToolsHermesV8Shared('Chrome DevTools/Hermes/Android');
+  return chromeDevToolsHermesV8Shared();
 }
 export function chromeDevToolsHermesiOS() {
-  return chromeDevToolsHermesV8Shared('Chrome DevTools/Hermes/iOS');
+  return chromeDevToolsHermesV8Shared();
 }
 // ChromeDevTools/V8
 export function chromeDevToolsV8Android() {
-  return chromeDevToolsHermesV8Shared('Chrome DevTools/V8/Android');
+  return chromeDevToolsHermesV8Shared();
 }
 export function chromeDevToolsV8iOS() {
-  return v8OnlyAndroid('Chrome DevTools/V8/iOS');
+  return v8OnlyAndroid();
 }
 
 // Flipper/JSC
 export function flipperJSCAndroid() {
-  return flipperNoJSC('Flipper/JSC/Android');
+  return flipperNoJSC();
 }
 export function flipperJSCiOS() {
-  return flipperNoJSC('Flipper/JSC/iOS');
+  return flipperNoJSC();
 }
 // Flipper/Hermes
 export function flipperHermesAndroid() {
-  return flipperHermesV8Shared('Flipper/Hermes/Android');
+  return flipperHermesV8Shared();
 }
 export function flipperHermesiOS() {
-  return flipperHermesV8Shared('Flipper/Hermes/iOS');
+  return flipperHermesV8Shared();
 }
 // Flipper/V8
 export function flipperV8Android() {
-  return flipperHermesV8Shared('Flipper/V8/Android');
+  return flipperHermesV8Shared();
 }
 export function flipperV8iOS() {
-  return v8OnlyAndroid('Flipper/V8/iOS');
+  return v8OnlyAndroid();
 }
 
 // SafariDevTools/JSC
 export function safariDevToolsJSCAndroid() {
-  return safariDevToolsiOSOnly('Safari DevTools/JSC/Android');
+  return safariDevToolsiOSOnly();
 }
 export function safariDevToolsJSCiOS() {
   return (
@@ -248,9 +221,9 @@ export function safariDevToolsJSCiOS() {
       <p>
         <b>Caution!</b>{' '}
         <i>
-          Remember that console logs will appear on the main thread as
-          the <code>console.log</code> funcion on the UI thread is just a
-          reference to the one from the JS thread.
+          Remember that console logs will appear on the main thread as the{' '}
+          <code>console.log</code> funcion on the UI thread is just a reference
+          to the one from the JS thread.
         </i>
       </p>
     </>
@@ -258,37 +231,37 @@ export function safariDevToolsJSCiOS() {
 }
 // SafariDevTools/Hermes
 export function safariDevToolsHermesAndroid() {
-  return safariDevToolsiOSOnly('Safari DevTools/Hermes/Android');
+  return safariDevToolsiOSOnly();
 }
 export function safariDevToolsHermesiOS() {
-  return safariDevToolsiOSOnly('Safari DevTools/Hermes/iOS');
+  return safariDevToolsiOSOnly();
 }
 // SafariDevTools/V8
 export function safariDevToolsV8Android() {
-  return safariDevToolsiOSOnly('Safari DevTools/V8/Android');
+  return safariDevToolsiOSOnly();
 }
 export function safariDevToolsV8iOS() {
-  return v8OnlyAndroid('Safari DevTools/V8/iOS');
+  return v8OnlyAndroid();
 }
 
 // ReactDevTools/JSC
 export function reactDevToolsJSCAndroid() {
-  return reactDevToolsAndroidShared('React DevTools/JSC/Android');
+  return reactDevToolsAndroidShared();
 }
 export function reactDevToolsJSCiOS() {
-  return reactDevToolsiOSShared('React DevTools/JSC/iOS');
+  return reactDevToolsiOSShared();
 }
 // ReactDevTools/Hermes
 export function reactDevToolsHermesAndroid() {
-  return reactDevToolsAndroidShared('React DevTools/Hermes/Android');
+  return reactDevToolsAndroidShared();
 }
 export function reactDevToolsHermesiOS() {
-  return reactDevToolsiOSShared('React DevTools/Hermes/iOS');
+  return reactDevToolsiOSShared();
 }
 // ReactDevTools/V8
 export function reactDevToolsV8Android() {
-  return reactDevToolsAndroidShared('React DevTools/V8/Android');
+  return reactDevToolsAndroidShared();
 }
 export function reactDevToolsV8iOS() {
-  return v8OnlyAndroid('React DevTools/V8/iOS');
+  return v8OnlyAndroid();
 }
