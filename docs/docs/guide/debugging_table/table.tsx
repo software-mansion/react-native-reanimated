@@ -324,8 +324,8 @@ export default function DebuggingInfoTable() {
       <h4>Symbols:</h4>
       <ul>
         <li>
-          ✅ - this method is available, an asterisk indicates that some
-          limitations apply
+          ✅ - available in apps using Reanimated, an asterisk indicates that
+          some limitations apply
         </li>
         <li>❌ - unavailable in apps using Reanimated</li>
         <li>N/A - unavailable in React Native apps</li>
