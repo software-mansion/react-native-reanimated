@@ -245,7 +245,7 @@ export default function DebuggingInfoTable() {
                 setDetails('safariDevTools/hermes/iOS');
                 location.href = '#Details';
               }}>
-              ❓
+              N/A
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>

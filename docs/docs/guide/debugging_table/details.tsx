@@ -36,7 +36,7 @@ function safariDevToolsiOSOnly(configuration: string) {
     <p>
       <i>Selected: {configuration}</i>
       <br></br>
-      Safari DevTools only work with iOS devices.
+      Safari DevTools only work with iOS devices running the JSC engine.
     </p>
   );
 }
@@ -192,7 +192,7 @@ export function safariDevToolsHermesAndroid() {
   return safariDevToolsiOSOnly('Safari DevTools/Hermes/Android');
 }
 export function safariDevToolsHermesiOS() {
-  return <></>;
+  return safariDevToolsiOSOnly('Safari DevTools/Hermes/iOS');
 }
 // SafariDevTools/V8
 export function safariDevToolsV8Android() {
