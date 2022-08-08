@@ -10,12 +10,12 @@ function v8OnlyAndroid(configuration: string) {
     </p>
   );
 }
-function chromeDevToolsOnlyHermes(configuration: string) {
+function chromeDevToolsNoJSC(configuration: string) {
   return (
     <p>
       <i>Selected: {configuration}</i>
       <br></br>
-      Chrome DevTools only work with the Hermes engine.
+      Chrome DevTools don't work with the JSC engine.
     </p>
   );
 }
@@ -24,10 +24,10 @@ function flipperNoJSC(configuration: string) {
     <p>
       <i>Selected: {configuration}</i>
       <br></br>
-      Flipper doesn't work well with non-Hermes runtimes as it was mostly
-      designed to debug Hermes apps. The layout inspector and built-in React
-      DevTools will work and some logs will be visible but setting breakpoints
-      or viewing the source code is not possible.
+      Flipper doesn't work well with the JSC runtime as it was mostly designed
+      to debug Hermes apps. The layout inspector and built-in React DevTools
+      will work and some logs will be visible but setting breakpoints or viewing
+      the source code is not possible.
     </p>
   );
 }
@@ -56,16 +56,65 @@ runOnUI(runWorklet)();`}</pre>
       would output:
       <pre>{`LOG: worklet: false`}</pre>
       Another side effect is that Reanimated uses web implementations of all
-      function. This means that functions like <code>scrollTo</code> and{' '}
-      <code>measure</code> will work the same as they do on web, while those
-      functions that are provided by Reanimated and do not have web
+      function. This means that the <code>scrollTo</code> function will work
+      (using the native web implementation), but the <code>measure</code>{' '}
+      function will not be available and it's usage will trigger this error:
+      <pre>{`[reanimated.measure] method cannot be used for web or Chrome Debugger`}</pre>
+      You may stil use the standard web version of measure as described{' '}
+      <a
+        href={
+          'https://docs.swmansion.com/react-native-reanimated/docs/api/nativeMethods/measure'
+        }>
+        here
+      </a>
+      .<br></br>
+      Those functions that are provided by Reanimated and do not have web
       implementations won't work. <br></br>
       An example of this behaviour is the <code>useAnimatedSensor</code> hook
       which only works on mobile platforms. When debugging in chrome and using
       this hook the following message will appear in the logs:
       <pre>{`[Reanimated] useAnimatedSensor is not available on web yet. `}</pre>
-      But despite this, it is possible to set breakpoints both in normal JS code
-      as well as in worklets (since they run on the main JS thread now).
+      But despite all of this, it is still possible to set breakpoints both in
+      normal JS code as well as in worklets (since they run on the main JS
+      thread now).
+    </p>
+  );
+}
+function flipperHermesV8Shared(configuration: string) {
+  return (
+    <p>
+      <i>Selected: {configuration}</i>
+      <br></br>
+      Even though Flipper supports the Hermes and V8 engines it unfortunatley
+      doesn't recognize Reanimated's additional UI context. This means that you
+      won't be able to debug worklets and breakpoints set in them will be
+      ignored. All other features work as expected.
+      <br></br>
+      <i>
+        We are actively working on enabling worklet debugging with Flipper on
+        Hermes.
+      </i>
+    </p>
+  );
+}
+function reactDevToolsAndroidShared(configuration: string) {
+  return (
+    <p>
+      <i>Selection: {configuration}</i>
+      <br></br>
+      React DevTools work as expected and the profiler and layout inspector can
+      be used as usual after running the command:
+      <pre>{`adb reverse tcp:8097 tcp:8097`}</pre>
+    </p>
+  );
+}
+function reactDevToolsiOSShared(configuration: string) {
+  return (
+    <p>
+      <i>Selection: {configuration}</i>
+      <br></br>
+      React DevTools work as expected and the profiler and layout inspector can
+      be used as usual.
     </p>
   );
 }
@@ -105,10 +154,10 @@ export function chromeDebuggerV8iOS() {
 
 // ChromeDevTools/JSC
 export function chromeDevToolsJSCAndroid() {
-  return chromeDevToolsOnlyHermes('Chrome DevTools/JSC/Android');
+  return chromeDevToolsNoJSC('Chrome DevTools/JSC/Android');
 }
 export function chromeDevToolsJSCiOS() {
-  return chromeDevToolsOnlyHermes('Chrome DevTools/JSC/iOS');
+  return chromeDevToolsNoJSC('Chrome DevTools/JSC/iOS');
 }
 // ChromeDevTools/Hermes
 export function chromeDevToolsHermesAndroid() {
@@ -134,14 +183,14 @@ export function flipperJSCiOS() {
 }
 // Flipper/Hermes
 export function flipperHermesAndroid() {
-  return <></>;
+  return flipperHermesV8Shared('Flipper/Hermes/Android');
 }
 export function flipperHermesiOS() {
-  return <></>;
+  return flipperHermesV8Shared('Flipper/Hermes/iOS');
 }
 // Flipper/V8
 export function flipperV8Android() {
-  return <></>;
+  return flipperHermesV8Shared('Flipper/V8/Android');
 }
 export function flipperV8iOS() {
   return v8OnlyAndroid('Flipper/V8/iOS');
@@ -204,36 +253,21 @@ export function safariDevToolsV8iOS() {
 
 // ReactDevTools/JSC
 export function reactDevToolsJSCAndroid() {
-  return (
-    <p>
-      <i>Selection: React DevTools/JSC/iOS</i>
-      <br></br>
-      React DevTools work as expected and the profiler and layout inspector can
-      be used as usual after running the command:
-      <pre>{`adb reverse tcp:8097 tcp:8097`}</pre>
-    </p>
-  );
+  return reactDevToolsAndroidShared('React DevTools/JSC/Android');
 }
 export function reactDevToolsJSCiOS() {
-  return (
-    <p>
-      <i>Selection: React DevTools/JSC/iOS</i>
-      <br></br>
-      React DevTools work as expected and the profiler and layout inspector can
-      be used as usual.
-    </p>
-  );
+  return reactDevToolsiOSShared('React DevTools/JSC/iOS');
 }
 // ReactDevTools/Hermes
 export function reactDevToolsHermesAndroid() {
-  return <></>;
+  return reactDevToolsAndroidShared('React DevTools/Hermes/Android');
 }
 export function reactDevToolsHermesiOS() {
-  return <></>;
+  return reactDevToolsiOSShared('React DevTools/Hermes/iOS');
 }
 // ReactDevTools/V8
 export function reactDevToolsV8Android() {
-  return <></>;
+  return reactDevToolsAndroidShared('React DevTools/V8/Android');
 }
 export function reactDevToolsV8iOS() {
   return v8OnlyAndroid('React DevTools/V8/iOS');

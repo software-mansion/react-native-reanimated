@@ -154,7 +154,7 @@ export default function DebuggingInfoTable() {
                 setDetails('flipper/hermes/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -163,7 +163,7 @@ export default function DebuggingInfoTable() {
                 setDetails('flipper/V8/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
         </tr>
@@ -184,7 +184,7 @@ export default function DebuggingInfoTable() {
                 setDetails('flipper/hermes/iOS');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -276,7 +276,7 @@ export default function DebuggingInfoTable() {
                 setDetails('reactDevTools/hermes/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -285,7 +285,7 @@ export default function DebuggingInfoTable() {
                 setDetails('reactDevTools/V8/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅
             </button>
           </td>
         </tr>
@@ -306,7 +306,7 @@ export default function DebuggingInfoTable() {
                 setDetails('reactDevTools/hermes/iOS');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
