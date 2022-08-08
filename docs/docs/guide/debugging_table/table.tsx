@@ -93,7 +93,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDevTools/hermes/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -102,7 +102,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDevTools/V8/Android');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
         </tr>
@@ -123,7 +123,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDevTools/hermes/iOS');
                 location.href = '#Details';
               }}>
-              ❓
+              ✅*
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>

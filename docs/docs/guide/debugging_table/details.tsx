@@ -1,5 +1,4 @@
 import React from 'react';
-// eslint-disable-next-line import/no-unresolved
 import CodeBlock from '@theme/CodeBlock';
 
 // Shared stuff
@@ -101,6 +100,23 @@ function flipperHermesV8Shared(configuration: string) {
     </p>
   );
 }
+function chromeDevToolsHermesV8Shared(configuration: string) {
+  return (
+    <p>
+      <i>Selected: {configuration}</i>
+      <br></br>
+      Even though Chrome DevTools support the Hermes and V8 engines they
+      unfortunatley don't recognize Reanimated's additional UI context. This
+      means that you won't be able to debug worklets and breakpoints set in them
+      will be ignored. All other features work as expected.
+      <br></br>
+      <i>
+        We are actively working on enabling worklet debugging with Chrome
+        DevTools on Hermes.
+      </i>
+    </p>
+  );
+}
 function reactDevToolsAndroidShared(configuration: string) {
   return (
     <p>
@@ -165,14 +181,14 @@ export function chromeDevToolsJSCiOS() {
 }
 // ChromeDevTools/Hermes
 export function chromeDevToolsHermesAndroid() {
-  return <></>;
+  return chromeDevToolsHermesV8Shared('Chrome DevTools/Hermes/Android');
 }
 export function chromeDevToolsHermesiOS() {
-  return <></>;
+  return chromeDevToolsHermesV8Shared('Chrome DevTools/Hermes/iOS');
 }
 // ChromeDevTools/V8
 export function chromeDevToolsV8Android() {
-  return <></>;
+  return chromeDevToolsHermesV8Shared('Chrome DevTools/V8/Android');
 }
 export function chromeDevToolsV8iOS() {
   return v8OnlyAndroid('Chrome DevTools/V8/iOS');
