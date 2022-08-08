@@ -71,7 +71,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDebugger/V8/iOS');
                 location.href = '#Details';
               }}>
-              X
+              N/A
             </button>
           </td>
         </tr>
@@ -84,7 +84,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDevTools/JSC/Android');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -114,7 +114,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDevTools/JSC/iOS');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -132,7 +132,7 @@ export default function DebuggingInfoTable() {
                 setDetails('chromeDevTools/V8/iOS');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
         </tr>
@@ -145,7 +145,7 @@ export default function DebuggingInfoTable() {
                 setDetails('flipper/JSC/Android');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -175,7 +175,7 @@ export default function DebuggingInfoTable() {
                 setDetails('flipper/JSC/iOS');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -193,7 +193,7 @@ export default function DebuggingInfoTable() {
                 setDetails('flipper/V8/iOS');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
         </tr>
@@ -206,7 +206,7 @@ export default function DebuggingInfoTable() {
                 setDetails('safariDevTools/JSC/Android');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -215,7 +215,7 @@ export default function DebuggingInfoTable() {
                 setDetails('safariDevTools/hermes/Android');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
           <td style={{ textAlign: 'center' }}>
@@ -224,7 +224,7 @@ export default function DebuggingInfoTable() {
                 setDetails('safariDevTools/V8/Android');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
         </tr>
@@ -254,7 +254,7 @@ export default function DebuggingInfoTable() {
                 setDetails('safariDevTools/V8/iOS');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
         </tr>
@@ -315,7 +315,7 @@ export default function DebuggingInfoTable() {
                 setDetails('reactDevTools/V8/iOS');
                 location.href = '#Details';
               }}>
-              ⚪️
+              N/A
             </button>
           </td>
         </tr>
@@ -328,7 +328,7 @@ export default function DebuggingInfoTable() {
           limitations apply
         </li>
         <li>❌ - unavailable in apps using Reanimated</li>
-        <li>⚪️ - unavailable in React Native apps</li>
+        <li>N/A - unavailable in React Native apps</li>
       </ul>
 
       <h3 id="Details">Details</h3>
