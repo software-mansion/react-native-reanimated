@@ -8,7 +8,7 @@ export default class FrameCallbackRegistryJS {
     prepareUIRegistry();
   }
 
-  registerFrameCallback(callback: () => void): number {
+  registerFrameCallback(callback: (frameTime: number) => void): number {
     if (!callback) {
       return -1;
     }

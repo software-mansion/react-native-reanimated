@@ -9,7 +9,7 @@ export type FrameCallback = {
 const frameCallbackRegistry = new FrameCallbackRegistryJS();
 
 export function useFrameCallback(
-  callback: () => void,
+  callback: (frameTime: number) => void,
   autostart = true
 ): FrameCallback {
   const ref = useRef<FrameCallback>({

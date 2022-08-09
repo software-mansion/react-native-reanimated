@@ -544,7 +544,7 @@ declare module 'react-native-reanimated' {
     callbackId: number;
   };
   export function useFrameCallback(
-    callback: () => void,
+    callback: (frameTime: number) => void,
     autostart?: boolean
   ): FrameCallback;
 
