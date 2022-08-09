@@ -7,14 +7,15 @@ sidebar_label: useFrameCallback
 This hook allows you to run a piece of code on every frame update.
 
 ```js
-useFrameCallback(updater: () => void, autostart: boolean = true) => [FrameCallback]
+useFrameCallback(callback: (frameInfo: FrameTimings) => void, autostart = true): [FrameCallback]
 ```
 
 ### Arguments
 
 #### `callback` [Function]
 
-Single worklet that will be called on every frame update without any arguments.
+Single worklet function that will be called on every frame update without any arguments.
+This function recieves a [`FrameTimings`](#frametimings-object) object as na argument.
 
 #### `autostart` [boolean]
 
@@ -23,7 +24,7 @@ registration is complete. This argument defaults to `true`.
 
 ### Returns
 
-An object of type `FrameCallback` which allows you to read and control the
+An object of type [`FrameCallback`](#framecallback-object) which allows you to read and control the
 callback state.
 
 ### Types
@@ -36,9 +37,18 @@ Properties:
                     or not (`false`)
 * `callbackId: number`: a unique identifier of the callback function
 
+#### `FrameTimings: [object]`
+
+Properties:
+* `timestamp: number`: the current system time
+* `frameTime: number`: time since last frame - this value may be zero on the first frame update
+* `elapsedTime: number`: time since the callback started running
+
+*All times are given in miliseconds*
+
 ## Example
 
-```js {13-16}
+```js {13-17}
 import Animated, {
   useAnimatedStyle,
   useFrameCallback,
@@ -51,7 +61,8 @@ import React from 'react';
 export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
-  const frameCallback = useFrameCallback(() => {
+  const frameCallback = useFrameCallback((frameTimigs) => {
+    console.log(frameTimings.frameTime + 'ms', 'have passed since the previous frame');
     // Move the box by one pixel on every frame
     x.value += 1;
   }, false);
