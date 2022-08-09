@@ -1,4 +1,5 @@
 import Animated, {
+  FrameTimings,
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
@@ -13,7 +14,9 @@ export default function FrameCallbackExample() {
   const x1 = useSharedValue(0);
   const y1 = useSharedValue(0);
 
-  const frameCallback1 = useFrameCallback(() => {
+  const frameCallback1 = useFrameCallback((frameTimings: FrameTimings) => {
+    console.log('Frame info:', frameTimings);
+
     if (x1.value === limit && y1.value !== 0) {
       y1.value -= 1;
     }
