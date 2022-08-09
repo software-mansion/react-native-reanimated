@@ -21,7 +21,7 @@ jobs:
       group: android-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: checkout
+      - name: Check out Git repository
         uses: actions/checkout@v2
 
       - name: Set up JDK 11
@@ -47,12 +47,32 @@ jobs:
           node-version: 14
           cache: 'yarn'
 
-      - name: Install root node dependencies
-        run: yarn
+      - name: Restore Reanimated node_modules from cache
+        uses: actions/cache@v2
+        id: cache-node-modules-reanimated
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-reanimated
 
-      - name: Install example app node dependencies
+      - name: Install Reanimated dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore app node_modules from cache
+        uses: actions/cache@v2
+        id: cache-node-modules-app
+        with:
+          path: |
+            ${{ matrix.working-directory }}/node_modules
+          key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
+
+      - name: Install app dependencies
         working-directory: ${{ matrix.working-directory }}
-        run: yarn
+        run: yarn install --frozen-lockfile
 
       - name: Cache hermes build
         uses: actions/cache@v3
