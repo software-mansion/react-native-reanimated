@@ -59,7 +59,7 @@ jobs:
             ${{ matrix.working-directory }}/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods2-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods2-${{ matrix.working-directory }}-${{ hashFiles('yarn.lock', '${{ matrix.working-directory }}/yarn.lock', '${{ matrix.working-directory }}/ios/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods2-${{ matrix.working-directory }}-
 
