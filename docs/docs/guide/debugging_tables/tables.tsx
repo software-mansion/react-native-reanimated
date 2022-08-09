@@ -19,8 +19,8 @@ export function SummaryTable() {
       <table>
         <thead>
           <tr>
-            <th>Tool</th>
-            <th>Platform</th>
+            <th style={{ width: '30%' }}>Tool</th>
+            <th style={{ width: '10%' }}>Platform</th>
             <th style={{ width: '20%' }}>JSC</th>
             <th style={{ width: '20%' }}>Hermes</th>
             <th style={{ width: '20%' }}>V8</th>
