@@ -185,10 +185,45 @@ target_link_libraries(
     android
 )
 
-if(${FOR_HERMES})
+if(${JS_RUNTIME} STREQUAL "hermes")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
+    if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+        # From `hermes-engine` npm package
+        target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/android/include"
+        )
+    else()
+        # Bundled Hermes from module `com.facebook.react:hermes-engine` or project `:ReactAndroid:hermes-engine`
+        target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/API"
+            "${JS_RUNTIME_DIR}/public"
+        )
+    endif()
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${HERMES_LIB}
+            "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so"
+    )
+elseif(${JS_RUNTIME} STREQUAL "v8")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
+    target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/src"
+    )
+    file (GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/*/jni/${ANDROID_ABI}")
+    find_library(
+            V8EXECUTOR_LIB
+            v8executor
+            PATHS ${V8_SO_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    target_link_libraries(
+            ${PACKAGE_NAME}
+            ${V8EXECUTOR_LIB}
     )
 else()
     target_link_libraries(

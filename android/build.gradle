@@ -58,9 +58,19 @@ def getCurrentFlavor() {
 }
 
 def resolveBuildType() {
-    def buildType = System.getenv("CLIENT_SIDE_BUILD")
-    if (buildType != null) {
-        return buildType == "True"
+    def buildType = "debug"
+    tasks.all({ task ->
+        if (task.name == "buildCMakeRelease") {
+            buildType = "release"
+        }
+    })
+    return buildType
+}
+
+def resolveClientSideBuild() {
+    def clientSideBuild = System.getenv("CLIENT_SIDE_BUILD")
+    if (clientSideBuild != null) {
+        return clientSideBuild == "True"
     }
 
     if (hasProperty("clientSideBuild")) {
@@ -207,7 +217,7 @@ def shouldBuildFromSource(aar) {
     return true
 }
 
-boolean CLIENT_SIDE_BUILD = resolveBuildType()
+boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
 
@@ -325,11 +335,39 @@ def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/thi
 def _stackProtectorFlag = true
 def FOR_HERMES = ""
 
-if (findProject(":app")) {
-    FOR_HERMES = project(":app").ext.react.enableHermes;
-} else {
-    FOR_HERMES = System.getenv("FOR_HERMES") == "True";
-}
+def CMAKE_NODE_MODULES_DIR = CLIENT_SIDE_BUILD
+    ? project.getProjectDir().getParentFile().getParent()
+    : Paths.get(project.getProjectDir().getParent(), getPlaygroundAppName(), "node_modules").toString()
+
+def JS_RUNTIME = {
+    // Returns the js runtime explicitly requested in the environment variable
+    if (System.getenv("JS_RUNTIME")) {
+        return System.getenv("JS_RUNTIME")
+    }
+
+    // Detect js runtime from project setup
+    def defaultRuntimeType = "jsc";
+    def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
+    if (v8Project != null) {
+        return "v8"
+    }
+    def appProject = findProject(":app") ? project(":app") : null
+    return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
+}.call()
+
+def jsRuntimeDir = {
+    if (JS_RUNTIME == "hermes") {
+        if (rnMinorVersion >= 69) {
+            return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "sdks", "hermes")
+        } else {
+            return Paths.get(CMAKE_NODE_MODULES_DIR, "hermes-engine")
+        }
+    } else if (JS_RUNTIME == "v8") {
+        return findProject(":react-native-v8").getProjectDir().getParent()
+    } else {
+        return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "ReactCommon", "jsi")
+    }
+}.call()
 
 def reactNativeArchitectures() {
     def value = project.getProperties().get("reactNativeArchitectures")
@@ -576,23 +614,96 @@ task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) 
     }
 }
 
+/*
+Reanimated includes "hermes/hermes.h" header file in `NativeProxy.cpp`.
+Previously, we used header files from `hermes-engine` package in `node_modules`.
+Starting from React Native 0.69, Hermes is no longer distributed as package on NPM.
+On the new architecture, Hermes is downloaded from GitHub and then compiled from sources.
+However, on the old architecture, we need to download Hermes header files on our own
+as well as unzip Hermes AAR in order to obtain `libhermes.so` shared library.
+For more details, see https://reactnative.dev/architecture/bundled-hermes
+or https://github.com/reactwg/react-native-new-architecture/discussions/4
+*/
+if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
+    // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
+
+    def reactNativeRootDir = resolveReactNativeDirectory()
+    def customDownloadDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
+    def downloadDir = customDownloadDir ? new File(customDownloadDir) : new File(reactNativeRootDir, "sdks/download")
+
+    // By default we are going to download and unzip hermes inside the /sdks/hermes folder
+    // but you can provide an override for where the hermes source code is located.
+    def hermesDir = System.getenv("REACT_NATIVE_OVERRIDE_HERMES_DIR") ?: new File(reactNativeRootDir, "sdks/hermes")
+
+    def hermesVersion = "main"
+    def hermesVersionFile = new File(reactNativeRootDir, "sdks/.hermesversion")
+    if (hermesVersionFile.exists()) {
+        hermesVersion = hermesVersionFile.text
+    }
+
+    task downloadHermes(type: Download) {
+        src("https://github.com/facebook/hermes/tarball/${hermesVersion}")
+        onlyIfNewer(true)
+        overwrite(false)
+        dest(new File(downloadDir, "hermes.tar.gz"))
+    }
+
+    task unzipHermes(dependsOn: downloadHermes, type: Copy) {
+        from(tarTree(downloadHermes.dest)) {
+            eachFile { file ->
+                // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
+                // folder at the top level.
+                if (file.relativePath.segments.size() > 1) {
+                    file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
+                }
+            }
+        }
+        into(hermesDir)
+    }
+}
+
 task prepareHermes() {
-    def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
-    if (!hermesPackagePath) {
-        throw new GradleScriptException("Could not find the hermes-engine npm package", null)
+    if (rnMinorVersion >= 69) {
+        if (!isNewArchitectureEnabled()) {
+            dependsOn(unzipHermes)
+        }
+
+        doLast {
+            def hermesAAR = file("$reactNative/android/com/facebook/react/hermes-engine/$reactNativeVersion/hermes-engine-$reactNativeVersion-${resolveBuildType()}.aar") // e.g. hermes-engine-0.70.0-rc.1-debug.aar
+            if (!hermesAAR.exists()) {
+                throw new GradleScriptException("Could not find hermes-engine AAR", null)
+            }
+
+            def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
+
+            copy {
+                from soFiles
+                from "$reactNative/ReactAndroid/src/main/jni/first-party/hermes/Android.mk"
+                into "$thirdPartyNdkDir/hermes"
+            }
+        }
+    } else {
+        doLast {
+            def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
+            if (!hermesPackagePath) {
+                throw new GradleScriptException("Could not find the hermes-engine npm package", null)
+            }
+
+            def hermesAAR = file("$hermesPackagePath/android/hermes-debug.aar")
+            if (!hermesAAR.exists()) {
+                throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-debug.aar\"", null)
+            }
+
+            def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
+
+            copy {
+                from soFiles
+                from "$reactNative/ReactAndroid/src/main/jni/first-party/hermes/Android.mk"
+                into "$thirdPartyNdkDir/hermes"
+            }
+        }
     }
-
-    def hermesAAR = file("$hermesPackagePath/android/hermes-debug.aar")
-    if (!hermesAAR.exists()) {
-        throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-debug.aar\"", null)
-    }
-
-    def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
-
-    copy {
-        from soFiles
-        from "$reactNative/ReactAndroid/src/main/jni/first-party/hermes/Android.mk"
-        into "$thirdPartyNdkDir/hermes"
+>>>>>>> 5be251254 (Add support for React Native 0.70 (#3417))
     }
 }
 
@@ -692,12 +803,12 @@ dependencies {
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
     extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
-    def buildType = "debug"
-    tasks.all({ task ->
-        if (task.name == "buildCMakeRelease") {
-            buildType = "release"
-        }
-    })
+    def jscAAR = fileTree("$reactNative/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
+    extractSO(files(jscAAR))
+}
+
+task unpackReactNativeAAR {
+    def buildType = resolveBuildType()
     def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
     if (rnMinorVersion < 69) {
         rnAarMatcher = "**/**/*.aar"
