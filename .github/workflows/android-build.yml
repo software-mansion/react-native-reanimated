@@ -74,30 +74,22 @@ jobs:
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
 
-      - name: Restore Hermes build from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine
-          key: ${{ runner.os }}-hermes-engine3-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
-
-      - name: Restore Gradle from cache
+      - name: Restore build from cache
         uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle3-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle3-${{ matrix.working-directory }}-
-
-      - name: Restore downloads from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            android/build/downloads
-            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/build/downloads
-          key: ${{ runner.os }}-downloads3-${{ matrix.working-directory }}-${{ hashFiles('android/build.gradle') }}
+            android/build
+            android/.cxx
+            ${{ matrix.working-directory }}/android/build
+            ${{ matrix.working-directory }}/android/.cxx
+            ${{ matrix.working-directory }}/android/app/build
+            ${{ matrix.working-directory }}/android/app/.cxx
+            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/build
+            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/build
+            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/.cxx
+          key: ${{ runner.os }}-build-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'android/build.gradle', format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
