@@ -244,21 +244,25 @@ target_link_libraries(
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-    target_include_directories(
+    if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+        # From `hermes-engine` npm package
+        target_include_directories(
             ${PACKAGE_NAME}
             PRIVATE
             "${JS_RUNTIME_DIR}/android/include"
-    )
-    file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
-    find_library(
-            HERMES_LIB
-            hermes
-            PATHS ${HERMES_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
+        )
+    else()
+        # Bundled Hermes from module `com.facebook.react:hermes-engine` or project `:ReactAndroid:hermes-engine`
+        target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/API"
+            "${JS_RUNTIME_DIR}/public"
+        )
+    endif()
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${HERMES_LIB}
+            "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so"
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
