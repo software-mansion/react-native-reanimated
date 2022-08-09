@@ -43,7 +43,7 @@ jobs:
         with:
           path: |
             ${{ matrix.working-directory }}/node_modules
-          key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/yarn.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
           restore-keys: |
             ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
 
@@ -59,7 +59,7 @@ jobs:
             ${{ matrix.working-directory }}/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles('yarn.lock', '${{ matrix.working-directory }}/yarn.lock', '${{ matrix.working-directory }}/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles('yarn.lock', format('{0}/yarn.lock', matrix.working-directory), format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
@@ -72,7 +72,7 @@ jobs:
           path: |
             ${{ matrix.working-directory }}/ios/build
             ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-build2-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-build2-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
           restore-keys: |
             ${{ runner.os }}-build2-${{ matrix.working-directory }}-
 
