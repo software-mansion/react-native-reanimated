@@ -78,8 +78,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/build/intermediates
-          key: ${{ runner.os }}-hermes-engine-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/node_modules/react-native/sdks/.hermesversion') }}
+            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine
+          key: ${{ runner.os }}-hermes-engine2-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/node_modules/react-native/sdks/.hermesversion') }}
 
       - name: Restore Gradle from cache
         uses: actions/cache@v3
@@ -87,7 +87,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-${{ matrix.working-directory }}-
 
@@ -96,7 +96,8 @@ jobs:
         with:
           path: |
             android/build/downloads
-          key: ${{ runner.os }}-downloads-${{ hashFiles('android/build.gradle') }}
+            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/build/downloads
+          key: ${{ runner.os }}-downloads-${{ matrix.working-directory }}-${{ hashFiles('android/build.gradle') }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
