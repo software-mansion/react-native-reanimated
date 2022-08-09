@@ -34,7 +34,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-reanimated
 
-      - name: Install Reanimated dependencies
+      - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
 
       - name: Restore app node_modules from cache
@@ -47,7 +47,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
 
-      - name: Install app dependencies
+      - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
 
