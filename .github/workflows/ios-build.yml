@@ -59,9 +59,7 @@ jobs:
             ${{ matrix.working-directory }}/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods2-${{ matrix.working-directory }}-${{ hashFiles('yarn.lock', '${{ matrix.working-directory }}/yarn.lock', '${{ matrix.working-directory }}/ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods2-${{ matrix.working-directory }}-
+          key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles('yarn.lock', '${{ matrix.working-directory }}/yarn.lock', '${{ matrix.working-directory }}/ios/Podfile.lock') }}
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
