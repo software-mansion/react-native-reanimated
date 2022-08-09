@@ -5,7 +5,7 @@ on:
       - '.github/workflows/ios-build.yml'
       - 'ios/**'
       - 'Common/**'
-      - '*.podspec'
+      - 'RNReanimated.podspec'
       - 'Example/ios/**'
       - 'FabricExample/ios/**'
   push:
@@ -24,18 +24,28 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v2
 
-      - name: Restore node_modules from cache
+      - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v2
-        id: yarn-cache
+        id: cache-node-modules-reanimated
         with:
           path: |
-            **/node_modules
-          key: ${{ runner.os }}-node_modules-${{ matrix.working-directory }}-${{ hashFiles('**/yarn.lock') }}
+            node_modules
+          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node_modules-${{ matrix.working-directory }}-
+            ${{ runner.os }}-node-modules-reanimated
 
       - name: Install Reanimated dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Restore app node_modules from cache
+        uses: actions/cache@v2
+        id: cache-node-modules-app
+        with:
+          path: |
+            ${{ matrix.working-directory }}/node_modules
+          key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
 
       - name: Install app dependencies
         working-directory: ${{ matrix.working-directory }}
@@ -43,15 +53,15 @@ jobs:
 
       - name: Restore Pods from cache
         uses: actions/cache@v2
-        id: pods-cache
+        id: cache-pods
         with:
           path: |
             ${{ matrix.working-directory }}/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles('**/Podfile.lock') }}
+          key: ${{ runner.os }}-pods2-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pods-${{ matrix.working-directory }}-
+            ${{ runner.os }}-pods2-${{ matrix.working-directory }}-
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
@@ -59,14 +69,14 @@ jobs:
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v2
-        id: build-cache
+        id: cache-build
         with:
           path: |
             ${{ matrix.working-directory }}/ios/build
             ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-build-${{ matrix.working-directory }}-${{ hashFiles('**/Podfile.lock') }}
+          key: ${{ runner.os }}-build2-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ matrix.working-directory }}-
+            ${{ runner.os }}-build2-${{ matrix.working-directory }}-
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
