@@ -1,5 +1,5 @@
 import { runOnUI } from '../core';
-import { prepareUIRegistry } from './FrameCallbackRegistryUI';
+import { FrameInfo, prepareUIRegistry } from './FrameCallbackRegistryUI';
 
 export default class FrameCallbackRegistryJS {
   private nextCallbackId = 0;
@@ -8,7 +8,7 @@ export default class FrameCallbackRegistryJS {
     prepareUIRegistry();
   }
 
-  registerFrameCallback(callback: (frameTime: number) => void): number {
+  registerFrameCallback(callback: (frameInfo: FrameInfo) => void): number {
     if (!callback) {
       return -1;
     }
