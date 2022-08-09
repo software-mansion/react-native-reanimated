@@ -63,6 +63,17 @@ jobs:
         working-directory: ${{ matrix.working-directory }}/ios
         run: pod install
 
+      - name: Restore build artifacts from cache
+        uses: actions/cache@v2
+        id: build-cache
+        with:
+          path: |
+            ${{ matrix.working-directory }}/ios/build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-build-${{ matrix.working-directory }}-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ matrix.working-directory }}-
+
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
         run: npx react-native run-ios
