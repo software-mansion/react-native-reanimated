@@ -471,9 +471,7 @@ if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
 
     // By default we are going to download and unzip hermes inside the /sdks/hermes folder
     // but you can provide an override for where the hermes source code is located.
-    def overrideHermesDir = System.getenv("REACT_NATIVE_OVERRIDE_HERMES_DIR") != null
     def hermesDir = System.getenv("REACT_NATIVE_OVERRIDE_HERMES_DIR") ?: new File(reactNativeRootDir, "sdks/hermes")
-    def hermesBuildDir = new File("$buildDir/hermes")
 
     def hermesVersion = "main"
     def hermesVersionFile = new File(reactNativeRootDir, "sdks/.hermesversion")
