@@ -2,37 +2,80 @@ name: Test tvOS build
 on:
   pull_request:
     paths:
+      - '.github/workflows/tv-os-build.yml'
+      - 'RNReanimated.podspec'
       - 'ios/**'
       - 'Common/**'
+      - 'TVOSExample/ios/**'
   push:
     branches:
       - main
-  workflow_dispatch:
+
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-12
     env:
       WORKING_DIRECTORY: TVOSExample
     concurrency:
-      group: ios-tv-${{ github.ref }}
-      cancel-in-progress: true
+      group: tvos-${{ github.ref }}
     steps:
-      - name: checkout
+      - name: Check out Git repository
         uses: actions/checkout@v2
-      - name: Use Node.js 14
-        uses: actions/setup-node@v2
+
+      - name: Restore Reanimated node_modules from cache
+        uses: actions/cache@v2
+        id: cache-node-modules-reanimated
         with:
-          node-version: 14
-          cache: 'yarn'
-          cache-dependency-path: 'TVOSExample/yarn.lock'
-      - name: Install Reanimated node dependencies
-        run: yarn
-      - name: Install node dependencies
+          path: |
+            node_modules
+          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-reanimated
+
+      - name: Install Reanimated dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore app node_modules from cache
+        uses: actions/cache@v2
+        id: cache-node-modules-app
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/node_modules
+          key: ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-${{ hashFiles('${{ env.WORKING_DIRECTORY }}/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-
+
+      - name: Install app dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn
-      - name: Install pods
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Pods from cache
+        uses: actions/cache@v2
+        id: cache-pods
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles('${{ env.WORKING_DIRECTORY }}/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-${{ env.WORKING_DIRECTORY }}-
+
+      - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: pod install
+
+      - name: Restore build artifacts from cache
+        uses: actions/cache@v2
+        id: cache-build
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/ios/build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-build-${{ env.WORKING_DIRECTORY }}-${{ hashFiles('${{ env.WORKING_DIRECTORY }}/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.WORKING_DIRECTORY }}-
+
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn tv-os
