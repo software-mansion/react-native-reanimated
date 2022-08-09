@@ -44,7 +44,7 @@ Properties:
 * `frameTime: number`: time since last frame - this value may be zero on the first frame update
 * `elapsedTime: number`: time since the callback started running
 
-*All times are given in miliseconds*
+**Caution!** *All times are given in miliseconds.*
 
 ## Example
 
