@@ -74,21 +74,22 @@ jobs:
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
 
-      - name: Cache hermes build
+      - name: Restore Hermes build from cache
         uses: actions/cache@v3
-        env:
-          cache-name: cache-rn-hermes-engine
         with:
-          path: ${{ matrix.working-directory }}/node_modules/react-native
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('**/react-native/package.json') }}
+          path: |
+            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/build/intermediates
+          key: ${{ runner.os }}-hermes-engine-${{ matrix.working-directory }}-${{ hashFiles('${{ matrix.working-directory }}/node_modules/react-native/sdks/.hermesversion') }}
 
-      - name: Cache android libraries
+      - name: Restore Gradle from cache
         uses: actions/cache@v3
-        env:
-          cache-name: cache-rn
         with:
-          path: ${{ matrix.working-directory }}/android/app/build/react-ndk
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('**/react-native/package.json') }}
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
