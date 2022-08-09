@@ -2,8 +2,11 @@ name: Test Android build
 on:
   pull_request:
     paths:
+      - '.github/workflows/android-build.yml'
       - 'android/**'
       - 'Common/**'
+      - 'Example/android/**'
+      - 'FabricExample/android/**'
   push:
     branches:
       - main
