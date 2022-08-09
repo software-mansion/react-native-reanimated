@@ -992,23 +992,23 @@ SPEC CHECKSUMS:
   React-jsinspector: 49a8875f27791316bb0039fa7627b4c1f0578cc7
   React-logger: 55ff3b00451ad1dc82654ba60134ec82ae4dbfed
   react-native-safe-area-context: a9616f1fd257ff31946b518266a62f50dbcb3d5b
-  React-perflogger: aa48956d87bae67fc847acc196fae97928b96cd3
-  React-RCTActionSheet: 4eaab2b885130ce9a88c8fdac5f1992315da80f6
-  React-RCTAnimation: 5e91e3ceb988838fa43615bb602181be30d2b26e
-  React-RCTBlob: 4fc8f15c018635668dec9b577f46acf75f604a68
-  React-RCTFabric: e22d23ecc2c1672c3a53feff7862e5ec04e6ff7c
-  React-RCTImage: 53ece22415c499ea18f0acafc2bc7ea89517a78c
-  React-RCTLinking: 0211dd109987c22d9b51d187498cac55a43fe24e
-  React-RCTNetwork: 540c0087fd0382c9b959169eb0e3727306f5d812
-  React-RCTSettings: d1e584c83392d1babbe5e731af10c2726d2545e2
-  React-RCTText: 9c5de1f593a548a2dbeb991ee01c88bef86f0659
-  React-RCTVibration: 7549ef7b07aad1cc629f4c6d88c325366f26423c
-  React-rncore: 0a5131510415ca520866410f3504832de3d6f753
-  React-runtimeexecutor: 7ad268dee53d001697e13264c6bc8e95a902352e
-  ReactCommon: 74a3b8ee497c6d50ce86ef57e15c4c5bf654b83d
-  RNGestureHandler: ac67226292cd5e67e7203d682a7e39f85d7b88a9
-  RNReanimated: 1cc48c3b7dc54ad977d1995e73e11a858aecf809
-  RNScreens: 592316e0744de3b640e90c335a45aad13088381a
+  React-perflogger: f53712c718e55b63c34140834fea4e8775948930
+  React-RCTActionSheet: 476de07b325fcd61e89b5556125272b1fa7475e8
+  React-RCTAnimation: b6e0756c75e3eb88a3d353cf4e6f4fb64a0c95d4
+  React-RCTBlob: bd8e3c8fb7d58649dc7439cfc2c4c67f15056ff4
+  React-RCTFabric: f3264d6482b552539c20bc407a455e69b2e6ce2f
+  React-RCTImage: 1f0da7dda69298b94e1a6b63a38fc59020e30d74
+  React-RCTLinking: 7b9b158fce18712ac99e9067d275ec6aaf6e3f4f
+  React-RCTNetwork: 91ee1f67414d6081122fa76fa81b3f9d8a53364d
+  React-RCTSettings: 045e4060d3d386851616e2b2fa4dce3dbd9cbb5a
+  React-RCTText: 52aba682bd0bd23c8f6e6a7706a0a15988fad9ce
+  React-RCTVibration: c1459baf923fb7565f87ddd5c95dd2d6906c04d3
+  React-rncore: 672cfc5debaa9418cb2a6069a038a03f7c86b9dc
+  React-runtimeexecutor: 211acec6c78026ab9a8c19dce305031158d33336
+  ReactCommon: e192c52229a978dc7ab7bfb21aa38c686005db31
+  RNGestureHandler: 1bc0d4872642fd1551784b6a42f57c25e2bcf106
+  RNReanimated: bf9a13df8464905e58268ac9ef108c143a63f08a
+  RNScreens: 71cee3b50648a986acd9d0e4ac9c8f20f1aedbf7
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: f2aa7bc41e39cbf8edc0251a86fa89193b51491b
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
