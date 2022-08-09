@@ -57,7 +57,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-reanimated
 
-      - name: Install Reanimated dependencies
+      - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
 
       - name: Restore app node_modules from cache
@@ -70,7 +70,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
 
-      - name: Install app dependencies
+      - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
 
@@ -89,8 +89,15 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-${{ matrix.working-directory }}-
+
+      - name: Restore downloads from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            android/build/downloads
+          key: ${{ runner.os }}-downloads-${{ hashFiles('android/build.gradle') }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
-        run: ./gradlew assembleDebug --console=plain -PreactNativeArchitectures=arm64-v8a
+        run: ./gradlew assembleDebug --build-cache --console=plain -PreactNativeArchitectures=arm64-v8a
