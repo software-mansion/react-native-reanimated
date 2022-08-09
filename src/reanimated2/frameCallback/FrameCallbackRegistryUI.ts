@@ -1,21 +1,21 @@
 import { runOnUI } from '../core';
 
 export default interface FrameCallbackRegistryUI {
-  frameCallbackRegistry: Map<number, (frameInfo: FrameInfo) => void>;
+  frameCallbackRegistry: Map<number, (frameInfo: FrameTimings) => void>;
   frameCallbackStartTime: Map<number, number>;
   frameCallbackActive: Set<number>;
   isFrameCallbackRunning: boolean;
   lastFrameTimestamp: number;
   runCallbacks: () => void;
   registerFrameCallback: (
-    callback: (frameInfo: FrameInfo) => void,
+    callback: (frameInfo: FrameTimings) => void,
     callbackId: number
   ) => void;
   unregisterFrameCallback: (frameCallbackId: number) => void;
   manageStateFrameCallback: (frameCallbackId: number, state: boolean) => void;
 }
 
-export type FrameInfo = {
+export type FrameTimings = {
   timestamp: number;
   frameTime: number;
   elapsedTime: number;
@@ -25,7 +25,7 @@ export const prepareUIRegistry = runOnUI(() => {
   'worklet';
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
-    frameCallbackRegistry: new Map<number, (frameInfo: FrameInfo) => void>(),
+    frameCallbackRegistry: new Map<number, (frameInfo: FrameTimings) => void>(),
     frameCallbackStartTime: new Map<number, number>(),
     frameCallbackActive: new Set<number>(),
     isFrameCallbackRunning: false,
@@ -46,7 +46,7 @@ export const prepareUIRegistry = runOnUI(() => {
             this.frameCallbackStartTime.set(key, timestamp);
           }
 
-          const frameInfo: FrameInfo = {
+          const frameInfo: FrameTimings = {
             timestamp: timestamp,
             frameTime: frameTime,
             elapsedTime: timestamp - startTime,
@@ -72,7 +72,7 @@ export const prepareUIRegistry = runOnUI(() => {
     },
 
     registerFrameCallback(
-      callback: (frameInfo: FrameInfo) => void,
+      callback: (frameInfo: FrameTimings) => void,
       callbackId: number
     ) {
       this.frameCallbackRegistry.set(callbackId, callback);

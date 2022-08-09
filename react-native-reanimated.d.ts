@@ -543,7 +543,7 @@ declare module 'react-native-reanimated' {
     isActive: boolean;
     callbackId: number;
   };
-  export type FrameInfo = {
+  export type FrameTimings = {
     timestamp: number;
     frameTime: number;
     elapsedTime: number;
