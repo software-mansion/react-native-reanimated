@@ -50,8 +50,8 @@ export const prepareUIRegistry = runOnUI(() => {
           }
 
           const frameTimings: FrameTimings = {
-            timestamp: timestamp,
-            timeSinceLastFrame: timeSinceLastFrame,
+            timestamp,
+            timeSinceLastFrame,
             elapsedTime: timestamp - startTime,
           };
 
