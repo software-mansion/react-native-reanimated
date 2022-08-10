@@ -7,14 +7,14 @@ sidebar_label: useFrameCallback
 This hook allows you to run a piece of code on every frame update.
 
 ```js
-useFrameCallback(callback: (frameInfo: FrameTimings) => void, autostart = true): [FrameCallback]
+useFrameCallback(callback: (frameTimings: FrameTimings) => void, autostart = true): [FrameCallback]
 ```
 
 ### Arguments
 
 #### `callback` [Function]
 
-Single worklet function that will be called on every frame update without any arguments.
+Single worklet function that will be called on every frame update.
 This function recieves a [`FrameTimings`](#frametimings-object) object as na argument.
 
 #### `autostart` [boolean]
@@ -40,11 +40,9 @@ Properties:
 #### `FrameTimings: [object]`
 
 Properties:
-* `timestamp: number`: the current system time
-* `frameTime: number`: time since last frame - this value may be zero on the first frame update
-* `elapsedTime: number`: time since the callback started running
-
-**Caution!** *All times are given in miliseconds.*
+* `timestamp: number`: the current system time (in miliseconds)
+* `timeSinceLastFrame: number`: time (in miliseconds) since last frame - this value may be zero on the first frame update
+* `elapsedTime: number`: time (in miliseconds) since the callback was last activated
 
 ## Example
 

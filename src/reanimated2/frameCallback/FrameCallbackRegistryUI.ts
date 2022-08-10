@@ -1,14 +1,14 @@
 import { runOnUI } from '../core';
 
 export default interface FrameCallbackRegistryUI {
-  frameCallbackRegistry: Map<number, (frameInfo: FrameTimings) => void>;
+  frameCallbackRegistry: Map<number, (frameTimings: FrameTimings) => void>;
   frameCallbackStartTime: Map<number, number>;
   frameCallbackActive: Set<number>;
   isFrameCallbackRunning: boolean;
   lastFrameTimestamp: number;
   runCallbacks: () => void;
   registerFrameCallback: (
-    callback: (frameInfo: FrameTimings) => void,
+    callback: (frameTimings: FrameTimings) => void,
     callbackId: number
   ) => void;
   unregisterFrameCallback: (frameCallbackId: number) => void;
@@ -17,7 +17,7 @@ export default interface FrameCallbackRegistryUI {
 
 export type FrameTimings = {
   timestamp: number;
-  frameTime: number;
+  timeSinceLastFrame: number;
   elapsedTime: number;
 };
 
@@ -25,7 +25,10 @@ export const prepareUIRegistry = runOnUI(() => {
   'worklet';
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
-    frameCallbackRegistry: new Map<number, (frameInfo: FrameTimings) => void>(),
+    frameCallbackRegistry: new Map<
+      number,
+      (frameTimings: FrameTimings) => void
+    >(),
     frameCallbackStartTime: new Map<number, number>(),
     frameCallbackActive: new Set<number>(),
     isFrameCallbackRunning: false,
@@ -37,7 +40,7 @@ export const prepareUIRegistry = runOnUI(() => {
           this.lastFrameTimestamp = timestamp;
         }
 
-        const frameTime = timestamp - this.lastFrameTimestamp;
+        const timeSinceLastFrame = timestamp - this.lastFrameTimestamp;
 
         this.frameCallbackActive.forEach((key: number) => {
           let startTime = this.frameCallbackStartTime.get(key) || 0;
@@ -46,14 +49,14 @@ export const prepareUIRegistry = runOnUI(() => {
             this.frameCallbackStartTime.set(key, timestamp);
           }
 
-          const frameInfo: FrameTimings = {
+          const frameTimings: FrameTimings = {
             timestamp: timestamp,
-            frameTime: frameTime,
+            timeSinceLastFrame: timeSinceLastFrame,
             elapsedTime: timestamp - startTime,
           };
 
           const callback = this.frameCallbackRegistry.get(key);
-          callback?.call({}, frameInfo);
+          callback?.call({}, frameTimings);
         });
 
         if (this.frameCallbackActive.size > 0) {
@@ -72,7 +75,7 @@ export const prepareUIRegistry = runOnUI(() => {
     },
 
     registerFrameCallback(
-      callback: (frameInfo: FrameTimings) => void,
+      callback: (frameTimings: FrameTimings) => void,
       callbackId: number
     ) {
       this.frameCallbackRegistry.set(callbackId, callback);
