@@ -484,4 +484,240 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
+
+  it('is idempotent', () => {
+    const input = `
+      import Animated, {
+        useAnimatedStyle,
+        useSharedValue,
+      } from "react-native-reanimated";
+      
+      import * as Reanimated from "react-native-reanimated";
+      
+      function Box1() {
+        const offset = useSharedValue(0);
+      
+        const animatedStyles = useAnimatedStyle(() => {
+          return {
+            transform: [{ translateX: offset.value * 255 }],
+          };
+        });
+      
+        return (
+          <>
+            <Animated.View style={[styles.box, animatedStyles]} />
+            <Button onPress={() => (offset.value = Math.random())} title="Move" />
+          </>
+        );
+      }
+      
+      function Box2() {
+        const offset = useSharedValue(0);
+      
+        const animatedStyles = useAnimatedStyle(() => {
+          return {
+            transform: [{ translateX: offset.value * 255 }],
+          };
+        });
+      
+        return (
+          <>
+            <Animated.View style={[styles.box, animatedStyles]} />
+            <Button onPress={() => (offset.value = Math.random())} title="Move" />
+          </>
+        );
+      }
+      
+      function Box3() {
+        const offset = Reanimated.useSharedValue(0);
+      
+        const animatedStyles = Reanimated.useAnimatedStyle(() => {
+          return {
+            transform: [{ translateX: offset.value * 255 }],
+          };
+        });
+      
+        return (
+          <>
+            <Animated.View style={[styles.box, animatedStyles]} />
+            <Button onPress={() => (offset.value = Math.random())} title="Move" />
+          </>
+        );
+      }
+      
+      function f1(x) {
+        return x + 2;
+      }
+      
+      const f2 = () => {
+        "worklet";
+        // some comment
+        /*
+        * other comment
+        */
+        return true;
+      };
+      
+      function foo1(x) {
+        'worklet'; // prettier-ignore
+        return x + 2;
+      }
+      
+      function foo2(x) {
+        "worklet";
+        const bar = 'worklet'; // prettier-ignore
+        const baz = "worklet"; // prettier-ignore
+      }
+      
+      const x = 5;
+      
+      const objX = { x };
+      
+      function f3() {
+        "worklet";
+        return { res: x + objX.x };
+      }
+      
+      function f4() {
+        "worklet";
+        console.log("test");
+      }
+      function foo3(x) {
+        "worklet";
+        return x + 2;
+      }
+      
+      const foo4 = (x) => {
+        "worklet";
+        return x + 2;
+      };
+      
+      const foo5 = function (x) {
+        "worklet";
+        return x + 2;
+      };
+      
+      const foo6 = function foo(x) {
+        "worklet";
+        return x + 2;
+      };
+      
+      class Foo1 {
+        bar(x) {
+          "worklet";
+          return x + 2;
+        }
+      }
+      
+      class Foo2 {
+        static bar(x) {
+          "worklet";
+          return x + 2;
+        }
+      }
+      
+      class Foo3 {
+        get bar() {
+          "worklet";
+          return x + 2;
+        }
+      }
+      
+      const animatedStyle1 = useAnimatedStyle(() => ({
+        width: 50,
+      }));
+      
+      const animatedStyle2 = useAnimatedStyle(function () {
+        return {
+          width: 50,
+        };
+      });
+      
+      const animatedStyle3 = useAnimatedStyle(function foo() {
+        return {
+          width: 50,
+        };
+      });
+      
+      useAnimatedGestureHandler({
+        onStart: (event) => {
+          console.log(event);
+        },
+      });
+      
+      useAnimatedGestureHandler({
+        onStart: function (event) {
+          console.log(event);
+        },
+      });
+      
+      useAnimatedGestureHandler({
+        onStart: function onStart(event) {
+          console.log(event);
+        },
+      });
+      
+      useAnimatedGestureHandler({
+        onStart(event) {
+          console.log(event);
+        },
+      });
+      
+      useAnimatedGestureHandler({});
+      
+      useAnimatedGestureHandler({
+        onStart: () => {},
+        onUpdate: () => {},
+        onEnd: () => {},
+      });
+      
+      import { Gesture } from "react-native-gesture-handler";
+      
+      const foo7 = Gesture.Tap()
+        .numberOfTaps(2)
+        .onBegin(() => {
+          console.log("onBegin");
+        })
+        .onStart((_event) => {
+          console.log("onStart");
+        })
+        .onEnd((_event, _success) => {
+          console.log("onEnd");
+        });
+      
+      const foo8 = Something.Tap().onEnd((_event, _success) => {
+        console.log("onEnd");
+      });
+      
+      function foo9() {
+        "worklet";
+        const bar = [4, 5];
+        const baz = [1, ...[2, 3], ...bar];
+      }
+      
+      function foo10() {
+        "worklet";
+        const bar = { d: 4, e: 5 };
+        const baz = { a: 1, ...{ b: 2, c: 3 }, ...bar };
+      }
+      
+      function foo11(...args) {
+        "worklet";
+        console.log(args);
+      }
+      
+      function foo12(arg) {
+        "worklet";
+        console.log(...arg);
+      }    
+    `;
+
+    const { code: code1 } = runPlugin(input);
+    const { code: code2 } = runPlugin(code1);
+    const { code: code3 } = runPlugin(code2);
+
+    // TODO: expect(code1).toEqual(code2);
+
+    expect(code2).toEqual(code3);
+  });
 });
