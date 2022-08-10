@@ -712,12 +712,13 @@ describe('babel plugin', () => {
       }    
     `;
 
-    const { code: code1 } = runPlugin(input);
-    const { code: code2 } = runPlugin(code1);
-    const { code: code3 } = runPlugin(code2);
+    const opts = { compact: true };
+    // Without this option, there are some minor differences
+    // related to whitespace characters when transforming imports.
 
-    // TODO: expect(code1).toEqual(code2);
+    const { code: code1 } = runPlugin(input, opts);
+    const { code: code2 } = runPlugin(code1, opts);
 
-    expect(code2).toEqual(code3);
+    expect(code1).toEqual(code2);
   });
 });
