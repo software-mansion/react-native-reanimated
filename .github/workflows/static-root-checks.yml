@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'src/**'
+      - '__tests__/**'
       - '*'
   push:
     branches:
