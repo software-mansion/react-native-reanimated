@@ -84,12 +84,13 @@ jobs:
             android/.cxx
             ${{ matrix.working-directory }}/android/build
             ${{ matrix.working-directory }}/android/.cxx
+            ${{ matrix.working-directory }}/android/.gradle
             ${{ matrix.working-directory }}/android/app/build
             ${{ matrix.working-directory }}/android/app/.cxx
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/build
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/build
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/.cxx
-          key: ${{ runner.os }}-build-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'android/build.gradle', format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
+          key: ${{ runner.os }}-build5-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'android/build.gradle', format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
