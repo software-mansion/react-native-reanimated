@@ -545,7 +545,7 @@ declare module 'react-native-reanimated' {
   };
   export type FrameTimings = {
     timestamp: number;
-    timeSinceLastFrame: number;
+    timeSinceLastFrame: number | null;
     elapsedTime: number;
   };
   export function useFrameCallback(

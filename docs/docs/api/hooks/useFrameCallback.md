@@ -41,7 +41,9 @@ Properties:
 
 Properties:
 * `timestamp: number`: the current system time (in miliseconds)
-* `timeSinceLastFrame: number`: time (in miliseconds) since last frame - this value may be zero on the first frame update
+* `timeSinceLastFrame: number | null`: time (in miliseconds) since last frame - this value
+  will be null on the first frame after activation (then it should be ~16ms on 60Hz
+  or ~8ms on 120Hz displays when there is no lag)
 * `elapsedTime: number`: time (in miliseconds) since the callback was last activated
 
 ## Example

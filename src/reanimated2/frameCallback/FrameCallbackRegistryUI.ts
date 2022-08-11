@@ -17,7 +17,7 @@ export default interface FrameCallbackRegistryUI {
 
 export type FrameTimings = {
   timestamp: number;
-  timeSinceLastFrame: number;
+  timeSinceLastFrame: number | null;
   elapsedTime: number;
 };
 
@@ -48,11 +48,12 @@ export const prepareUIRegistry = runOnUI(() => {
             startTime = timestamp;
             this.frameCallbackStartTime.set(key, timestamp);
           }
+          const elapsedTime = timestamp - startTime;
 
           const frameTimings: FrameTimings = {
             timestamp,
-            timeSinceLastFrame,
-            elapsedTime: timestamp - startTime,
+            elapsedTime,
+            timeSinceLastFrame: elapsedTime === 0 ? null : timeSinceLastFrame,
           };
 
           const callback = this.frameCallbackRegistry.get(key);
