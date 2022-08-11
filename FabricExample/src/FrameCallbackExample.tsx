@@ -15,7 +15,7 @@ export default function FrameCallbackExample() {
   const y1 = useSharedValue(0);
 
   const frameCallback1 = useFrameCallback((frameTimings: FrameTimings) => {
-    if (frameTimings.timeSinceLastFrame == null) {
+    if (frameTimings.timeSinceLastFrame === null) {
       console.log('First frame!');
     } else {
       console.log('Frame info:', frameTimings);

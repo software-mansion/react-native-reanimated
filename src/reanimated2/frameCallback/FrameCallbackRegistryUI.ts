@@ -43,18 +43,18 @@ export const prepareUIRegistry = runOnUI(() => {
         const timeSinceLastFrame = timestamp - this.lastFrameTimestamp;
 
         this.frameCallbackActive.forEach((key: number) => {
-          let startTime = this.frameCallbackStartTime.get(key) || 0;
-          if (startTime === 0) {
-            startTime = timestamp;
-            this.frameCallbackStartTime.set(key, timestamp);
-          }
-          const elapsedTime = timestamp - startTime;
+          const startTime = this.frameCallbackStartTime.get(key);
 
           const frameTimings: FrameTimings = {
             timestamp,
-            elapsedTime,
-            timeSinceLastFrame: elapsedTime === 0 ? null : timeSinceLastFrame,
+            elapsedTime: timestamp - (startTime || timestamp),
+            timeSinceLastFrame:
+              startTime === undefined ? null : timeSinceLastFrame,
           };
+
+          if (startTime === undefined) {
+            this.frameCallbackStartTime.set(key, timestamp);
+          }
 
           const callback = this.frameCallbackRegistry.get(key);
           callback?.call({}, frameTimings);
@@ -80,7 +80,6 @@ export const prepareUIRegistry = runOnUI(() => {
       callbackId: number
     ) {
       this.frameCallbackRegistry.set(callbackId, callback);
-      this.frameCallbackStartTime.set(callbackId, 0);
     },
 
     unregisterFrameCallback(frameCallbackId: number) {
@@ -96,8 +95,8 @@ export const prepareUIRegistry = runOnUI(() => {
         this.frameCallbackActive.add(frameCallbackId);
         this.runCallbacks();
       } else {
-        this.frameCallbackStartTime.set(frameCallbackId, 0);
         this.frameCallbackActive.delete(frameCallbackId);
+        this.frameCallbackStartTime.delete(frameCallbackId);
       }
     },
   };

@@ -40,11 +40,11 @@ Properties:
 #### `FrameTimings: [object]`
 
 Properties:
-* `timestamp: number`: the current system time (in miliseconds)
-* `timeSinceLastFrame: number | null`: time (in miliseconds) since last frame - this value
-  will be null on the first frame after activation (then it should be ~16ms on 60Hz
-  or ~8ms on 120Hz displays when there is no lag)
-* `elapsedTime: number`: time (in miliseconds) since the callback was last activated
+* `timestamp: number`: the current system time (in milliseconds)
+* `timeSinceLastFrame: number | null`: time (in milliseconds) since last frame - this value
+  will be null on the first frame after activation. Starting from the second frame,
+  it should be ~16ms on 60Hz or ~8ms on 120Hz displays (when there is no lag)
+* `elapsedTime: number`: time (in milliseconds) since the callback was last activated
 
 ## Example
 
