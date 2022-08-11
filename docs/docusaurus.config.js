@@ -70,7 +70,7 @@ In swizzled components look for "SWM -" string to see our modifications
 module.exports = {
   title: 'React Native Reanimated',
   tagline: "React Native's Animated library reimplemented",
-  url: 'https://docs.swmansion.com/react-native-reanimated/',
+  url: 'https://docs.swmansion.com',
   baseUrl: '/react-native-reanimated/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -82,13 +82,10 @@ module.exports = {
   projectName: 'react-native-reanimated',
   themeConfig: {
     algolia: {
-      apiKey: 'ffb6d91f5f14c201543b7ab35ae13535',
+      appId: 'CHLGM6BFRG',
+      apiKey: 'b87befadf62b27ce46142fee664e9c9c',
       indexName: 'react-native-reanimated',
       // contextualSearch: true, // doesn't work for some reason
-    },
-    googleAnalytics: {
-      trackingID: 'UA-41044622-6',
-      anonymizeIP: true,
     },
     colorMode: {
       disableSwitch: true,
@@ -140,6 +137,10 @@ module.exports = {
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        googleAnalytics: {
+          trackingID: 'UA-41044622-6',
+          anonymizeIP: true,
         },
       },
     ],

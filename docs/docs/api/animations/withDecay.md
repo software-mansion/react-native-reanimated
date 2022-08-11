@@ -23,7 +23,7 @@ Allowed parameters are listed below:
 | rubberBandFactor  | 0.6     | Factor to modify rubberBandEffect force (optional)    |
 
 ##### `velocityFactor`
-The default unit of velocity in decay is pixel per second but it can be problematic when you want to animate value not related to pixels for example opacity `[0, 1]` or progress bar `[0, 1]`. In this case, you can use `velocityFactor` property with value `< 1` to modify the velocity of change to more matched for the required domain.
+The default unit of velocity in decay is pixels per second but it can be problematic when you want to animate a value not related to pixels for example opacity `[0, 1]` or progress bar `[0, 1]`. In this case, you can use `velocityFactor` property with value `< 1` to modify the velocity of change to fit the required domain.
 
 #### `callback` [function]\(optional\)
 

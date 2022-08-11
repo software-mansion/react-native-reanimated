@@ -163,6 +163,10 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
 #endif
+  subscribeForKeyboardEventsFunction =
+      platformDepMethodsHolder.subscribeForKeyboardEvents;
+  unsubscribeFromKeyboardEventsFunction =
+      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -631,5 +635,39 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
   newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
+
+jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &keyboardEventContainer) {
+  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
+  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
+      sharedProperties;
+  std::shared_ptr<ShareableValue> keyboardStateShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "state"), this);
+  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "height"), this);
+
+  auto keyboardEventDataUpdater =
+      [this, &rt, keyboardStateShared, heightShared](
+          int keyboardState, int height) {
+        auto &keyboardStateValue =
+            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
+        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
+
+        auto &heightMutableValue =
+            ValueWrapper::asMutableValue(heightShared->valueContainer);
+        heightMutableValue->setValue(rt, jsi::Value(height));
+
+        this->mapperRegistry->execute(*this->runtime);
+      };
+
+  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+}
+
+void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &listenerId) {
+  unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
+}
 
 } // namespace reanimated
