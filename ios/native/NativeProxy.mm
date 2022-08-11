@@ -201,7 +201,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
-  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+  std::unique_ptr<facebook::hermes::HermesRuntime> runtime = facebook::hermes::makeHermesRuntime();
+  facebook::hermes::HermesRuntime &hermesRuntimeRef = *runtime;
+  auto jsQueue;
+  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(runtime, hermesRuntimeRef, jsQueue);
+  facebook::hermes::inspector::chrome::enableDebugging(std::move(adapter), "Reanimated runtime");
+  std::shared_ptr<jsi::Runtime> animatedRuntime = adapter->runtime_;
 #elif __has_include(<hermes/hermes.h>)
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else

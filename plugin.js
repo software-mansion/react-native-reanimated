@@ -328,7 +328,6 @@ function buildWorkletString(t, fun, closureVariables, name, sourceURL) {
   // console.log(transformed.code);
   // transformed.map.sourcesContent = transformed.code;
   // console.log(transformed.code);
-  // console.log(transformed.code);
 
   return (
     transformed.code +

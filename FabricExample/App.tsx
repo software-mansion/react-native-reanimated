@@ -149,6 +149,12 @@ const EXAMPLES = [
     title: 'Empty',
     component: EmptyExample,
   },
+  {
+    name: 'EmptyExample2',
+    icon: '👻',
+    title: 'Empty2',
+    component: EmptyExample,
+  },
 ];
 
 function HomeScreen() {
@@ -194,14 +200,17 @@ export default function App() {
             component={HomeScreen}
             options={{ headerTitle: 'Reanimated & Fabric examples' }}
           />
-          {EXAMPLES.map(({ name, title, component }) => (
-            <Stack.Screen
-              key={name}
-              name={name}
-              component={component}
-              options={{ headerTitle: title }}
-            />
-          ))}
+          {EXAMPLES.map(({ name, title, component }) => {
+            console.log(name);
+            return (
+              <Stack.Screen
+                key={name}
+                name={name}
+                component={component}
+                options={{ headerTitle: title }}
+              />
+            );
+          })}
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
