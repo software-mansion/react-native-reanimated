@@ -317,9 +317,25 @@ function buildWorkletString(t, fun, closureVariables, name, sourceURL) {
     )
   );
 
-  t.addComment(workletFunction, 'trailing', '# sourceURL=' + sourceURL, true);
+  // t.addComment(workletFunction, 'trailing', '# sourceURL=' + sourceURL, true);
 
-  return generate(workletFunction, { compact: true }).code;
+  const transformed = generate(workletFunction, {
+    compact: true,
+    sourceMaps: true,
+    sourceFileName: sourceURL,
+  });
+
+  // console.log(transformed.code);
+  // transformed.map.sourcesContent = transformed.code;
+  // console.log(transformed.code);
+  // console.log(transformed.code);
+
+  return (
+    transformed.code +
+    // + '//# sourceURL=' + sourceURL + '\n'
+    '//# sourceMappingURL=data:application/json;charset=utf-8,' +
+    JSON.stringify(transformed.map)
+  );
 }
 
 function makeWorkletName(t, fun) {
