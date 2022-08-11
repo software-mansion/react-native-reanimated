@@ -53,6 +53,10 @@ def resolveBuildType() {
     return buildType
 }
 
+def hermesEnableDebugger() {
+    return (resolveBuildType() == "debug") ? 1 : 0
+}
+
 def resolveClientSideBuild() {
     def clientSideBuild = System.getenv("CLIENT_SIDE_BUILD")
     if (clientSideBuild != null) {
@@ -262,7 +266,8 @@ android {
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
-                        "-DRNVERSION=${rnMinorVersion}"
+                        "-DRNVERSION=${rnMinorVersion}",
+                        "-DHERMES_ENABLE_DEBUGGER=${hermesEnableDebugger()}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
