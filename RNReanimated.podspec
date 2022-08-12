@@ -92,8 +92,7 @@ Pod::Spec.new do |s|
 
   s.source_files = [
     "ios/**/*.{mm,h,m}",
-    "Common/cpp/**/*.cpp",
-    "Common/cpp/headers/**/*.h"
+    "Common/cpp/**/*.{cpp,h}"
   ]
 
   s.preserve_paths = [
