@@ -1,8 +1,11 @@
 import com.android.Version
 
+import java.nio.file.Files
 import java.nio.file.Paths
+import java.nio.file.Path
 import org.apache.tools.ant.filters.ReplaceTokens
 import groovy.json.JsonSlurper
+import java.util.stream.Stream
 
 /**
  * Finds the path of the installed npm package with the given name using Node's
@@ -110,18 +113,21 @@ boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
 
-    def libInstanceCounter = 0;
-    String parsedLocation = "";
-    fileTree(rootDir.parent).visit { FileVisitDetails details ->
-        def path = details.file.path
-        if (path.contains("/react-native-reanimated/package.json")) {
-            libInstanceCounter++;
-            parsedLocation += "- " + path.replace("/package.json", "\n")
-        }
-        if (libInstanceCounter > 1) {
-            String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation + "\n";
-            throw new Exception(exceptionMessage);
-        }
+    Stream<Path> pathStream = Files.find(
+            Paths.get(rootDir.parent),
+            Integer.MAX_VALUE,
+            (path, basicFileAttributes) -> { path.toString().endsWith("/react-native-reanimated/package.json") }
+    )
+
+    String parsedLocation = ""
+    def libInstancesCount = 0
+    pathStream.forEach(path -> {
+        parsedLocation += "- " + path.toString().replace("/package.json", "\n")
+        libInstancesCount++
+    })
+    if (libInstancesCount > 1) {
+        String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation + "\n";
+        throw new Exception(exceptionMessage)
     }
 }
 def reactNative = resolveReactNativeDirectory()
