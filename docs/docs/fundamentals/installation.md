@@ -82,7 +82,7 @@ As reanimated is setup to configure and install automatically, the only thing yo
 
 ## Web
 
-You need to add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) babel plugin.
+You need to add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) Babel plugin.
 
 ```bash
 yarn add @babel/plugin-proposal-export-namespace-from
