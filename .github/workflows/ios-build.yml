@@ -4,6 +4,8 @@ on:
     paths:
       - 'ios/**'
       - 'Common/**'
+      - 'FabricExample/package.json'
+      - 'Example/package.json'
   push:
     branches:
       - main
