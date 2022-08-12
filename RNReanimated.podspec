@@ -46,7 +46,7 @@ rescue
 end
 
 if isUserApp
-  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/"]
+  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json"]
   libInstancesArray = libInstances.split("\n")
   if libInstancesArray.length() > 1
     parsedLocation = ''
