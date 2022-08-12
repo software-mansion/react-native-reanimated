@@ -467,7 +467,7 @@ function makeWorklet(t, fun, fileName) {
         '=',
         t.memberExpression(privateFunctionId, t.identifier('__reanimated_workletFunction'), false),
         // t.stringLiteral(funString)
-        workletFunction
+        t.callExpression(t.identifier('eval'), [t.stringLiteral('(' + funString + ')')])
       )
     ),
     t.expressionStatement(
