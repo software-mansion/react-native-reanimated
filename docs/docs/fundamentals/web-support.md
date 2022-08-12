@@ -8,7 +8,7 @@ Since the
 [2.0.0-alpha.7](https://github.com/software-mansion/react-native-reanimated/releases/tag/2.0.0-alpha.7)
 release it's possible to launch reanimated 2 in a web browser. For that case all of the functionalities are implemented purely in javascript, hence the efficiency of the animations might drop.
 
-Reanimated for web require following configuration steps. You need to add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) and Reaniamted babel plugin to your `babel.config.js`.
+Reanimated for Web requires the following configuration steps. You need to add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) as well as Reanimated Babel plugin to your `babel.config.js`.
 
 ```bash
 yarn add @babel/plugin-proposal-export-namespace-from
