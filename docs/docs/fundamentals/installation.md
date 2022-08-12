@@ -19,30 +19,34 @@ yarn add react-native-reanimated
 
 Add Reanimated's babel plugin to your `babel.config.js`:
 
-```js {5}
+```js {7}
   module.exports = {
+    presets: [
       ...
-      plugins: [
-          ...
-          'react-native-reanimated/plugin',
-      ],
+    ],
+    plugins: [
+      ...
+      'react-native-reanimated/plugin',
+    ],
   };
 ```
 
 By default, Reanimated plugin generate source location using absolute path. You can configure to use relative path:
 
-```js {7}
+```js {9}
   module.exports = {
+    presets: [
       ...
-      plugins: [
-          ...
-          [
-              'react-native-reanimated/plugin', {
-                  relativeSourceLocation: true,
-              },
-          ]
-      ],
-  };
+    ],
+    plugins: [
+        ...
+        [
+            'react-native-reanimated/plugin', {
+                relativeSourceLocation: true,
+            },
+        ]
+    ],
+};
 ```
 
 :::caution
@@ -88,9 +92,11 @@ You need to add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs
 yarn add @babel/plugin-proposal-export-namespace-from
 ```
 
-```js {5}
+```js {7}
   module.exports = {
-      ...
+      presets: [
+        ...
+      ],
       plugins: [
           ...
           '@babel/plugin-proposal-export-namespace-from',
