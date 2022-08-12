@@ -109,14 +109,14 @@ function Box() {
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: offset.value * 255 }],
+      transform: [{ translateX: offset.value }],
     };
   });
 
   return (
     <>
       <Animated.View style={[styles.box, animatedStyles]} />
-      <Button onPress={() => (offset.value = Math.random())} title="Move" />
+      <Button onPress={() => (offset.value = Math.random() * 255)} title="Move" />
     </>
   );
 }
@@ -159,7 +159,7 @@ function Box() {
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: offset.value * 255 }],
+      transform: [{ translateX: offset.value }],
     };
   });
 
@@ -168,7 +168,7 @@ function Box() {
       <Animated.View style={[styles.box, animatedStyles]} />
       <Button
         onPress={() => {
-          offset.value = withSpring(Math.random());
+          offset.value = withSpring(Math.random() * 255);
         }}
         title="Move"
       />

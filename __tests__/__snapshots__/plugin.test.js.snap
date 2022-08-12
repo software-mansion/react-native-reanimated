@@ -153,17 +153,13 @@ var foo = function () {
 `;
 
 exports[`babel plugin transforms spread operator in worklets for objects 1`] = `
-"var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-
-var _extends2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/extends\\"));
-
-var foo = function () {
+"var foo = function () {
   var _f = function _f() {
     var bar = {
       d: 4,
       e: 5
     };
-    var baz = (0, _extends2.default)({
+    var baz = Object.assign({
       a: 1
     }, {
       b: 2,
