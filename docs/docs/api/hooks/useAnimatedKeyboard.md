@@ -3,6 +3,13 @@ id: useAnimatedKeyboard
 title: useAnimatedKeyboard
 sidebar_label: useAnimatedKeyboard
 ---
+
+:::caution
+
+Android implementation of `useAnimatedKeyboard` is an experimental feature.
+
+:::
+
 With the `useAnimatedKeyboard` hook, you can create animations based on current keyboard position.
 
 On Android, make sure to set `android:windowSoftInputMode` in your `AndroidMainfest.xml` to `adjustResize`. Then, using the `useAnimatedKeyboard` hook disables
