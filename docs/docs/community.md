@@ -19,14 +19,6 @@ Reanimated community is the best! 🎉  We want to say thank you to all communit
 
   <div class="community-holder-container-item">
     <div class="community-imageHolder">
-      <img src="https://ca.slack-edge.com/T03Q9AMJJ-UBHF6F55K-63eefc68a264-512" />
-    </div>
-    <div>Szymon Kapała</div>
-    <a href="https://twitter.com/Turbo_Szymon">@Turbo_Szymon</a>
-  </div>
-
-  <div class="community-holder-container-item">
-    <div class="community-imageHolder">
       <img src="https://ca.slack-edge.com/T03Q9AMJJ-U01029QHCDB-79dd9904eb93-512" />
     </div>
     <div>Krzysztof Piaskowy</div>
@@ -35,10 +27,10 @@ Reanimated community is the best! 🎉  We want to say thank you to all communit
 
   <div class="community-holder-container-item">
     <div class="community-imageHolder">
-      <img src="https://ca.slack-edge.com/T03Q9AMJJ-U027SRB1QBA-927e57802215-512" />
+      <img src="https://ca.slack-edge.com/T03Q9AMJJ-U01GDBF9M9D-54f024a4c134-512" />
     </div>
-    <div>Jakub Myśliwiec</div>
-    <a href="https://twitter.com/jmysliv">@jmysliv</a>
+    <div>Tomasz Zawadzki</div>
+    <a href="https://twitter.com/tomekzaw_">@tomekzaw_</a>
   </div>
 
 </div>
