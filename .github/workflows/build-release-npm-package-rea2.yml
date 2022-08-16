@@ -9,3 +9,4 @@ jobs:
     with:
       version: release
       ref: Reanimated2
+      upload_binaries: true
