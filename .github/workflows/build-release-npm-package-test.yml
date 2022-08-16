@@ -9,4 +9,4 @@ jobs:
     uses: ./.github/workflows/build-npm-package.yml
     with:
       version: release
-      ref: '@piaskowyk/2.9.1'
+      ref: '@piaskowyk/3.0.0-rc.1'
