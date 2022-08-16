@@ -55,15 +55,17 @@ To use Reanimated 2 built from the main branch:
 
 ## Babel plugin
 
-Add Reanimated's babel plugin to your `babel.config.js`:
+Add Reanimated's Babel plugin to your `babel.config.js`:
 
-```js {5}
+```js {7}
   module.exports = {
+    presets: [
       ...
-      plugins: [
-          ...
-          'react-native-reanimated/plugin',
-      ],
+    ],
+    plugins: [
+      ...
+      'react-native-reanimated/plugin',
+    ],
   };
 ```
 

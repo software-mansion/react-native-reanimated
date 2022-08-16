@@ -70,7 +70,6 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
-    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
     "@types/invariant": "^2.2.35",
