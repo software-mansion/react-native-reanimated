@@ -69,7 +69,7 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
 
     newChildNode = parentNode.clone({
         ShadowNodeFragment::propsPlaceholder(),
-        std::make_shared<SharedShadowNodeList>(children),
+        std::make_shared<ShadowNode::ListOfShared>(children),
     });
   }
 
