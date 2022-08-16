@@ -6,6 +6,8 @@ on:
     paths:
       - 'android/**'
       - 'Common/**'
+      - 'FabricExample/package.json'
+      - 'Example/package.json'
   push:
     branches:
       - main
