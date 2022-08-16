@@ -9,6 +9,9 @@ on:
       ref:
         required: false
         type: string
+      upload_binaries:
+        required: false
+        type: bool
 
 jobs:
   build:
@@ -45,11 +48,11 @@ jobs:
           path: '*.tgz'
 
       - name: Compress Android build output
-        if: ${{ [[ -e build_output ]] }}
+        if: ${{ inputs.upload_binaries }}
         run: zip -r android-build-output.zip build_output
 
       - name: Upload Android build folder
-        if: ${{ [[ -e android-build-output.zip ]] }}
+        if: ${{ inputs.upload_binaries }}
         uses: actions/upload-artifact@v2
         with:
           name: android-build-output
