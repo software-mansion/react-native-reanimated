@@ -13,6 +13,7 @@
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
+#include "ShadowTreeCloner.h"
 #endif
 
 #include "EventHandlerRegistry.h"
@@ -507,56 +508,42 @@ void NativeReanimatedModule::performOperations() {
 
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  auto contextContainer = getContextContainerFromUIManager(
-      &*uiManager_); // TODO: use Scheduler::getContextContainer
-  PropsParserContext propsParserContext{surfaceId_, *contextContainer};
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
-      // lock once due to performance reasons
-      auto lock = newestShadowNodesRegistry_->createLock();
-
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-      for (const auto &pair : copiedOperationsQueue) {
-        const ShadowNodeFamily &family = pair.first->getFamily();
-        react_native_assert(family.getSurfaceId() == surfaceId_);
+      ShadowTreeCloner shadowTreeCloner{
+          newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
-        auto newRootNode =
-            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto newest =
-                  newestShadowNodesRegistry_->get(oldShadowNode.getTag());
+      {
+        // lock once due to performance reasons
+        auto lock = newestShadowNodesRegistry_->createLock();
 
-              const auto &source = newest == nullptr ? oldShadowNode : *newest;
+        for (const auto &pair : copiedOperationsQueue) {
+          const ShadowNodeFamily &family = pair.first->getFamily();
+          react_native_assert(family.getSurfaceId() == surfaceId_);
 
-              const auto newProps = source.getComponentDescriptor().cloneProps(
-                  propsParserContext,
-                  source.getProps(),
-                  RawProps(rt, *pair.second));
+          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+              rootNode, family, RawProps(rt, *pair.second));
 
-              return source.clone({/* .props = */ newProps});
-            });
-
-        if (newRootNode == nullptr) {
-          // this happens when React removed the component but Reanimated still
-          // tries to animate it, let's skip update for this specific component
-          continue;
+          if (newRootNode == nullptr) {
+            // this happens when React removed the component but Reanimated
+            // still tries to animate it, let's skip update for this specific
+            // component
+            continue;
+          }
+          rootNode = newRootNode;
         }
-        rootNode = newRootNode;
 
-        auto ancestors = family.getAncestors(*rootNode);
-        for (const auto &pair : ancestors) {
-          const auto &parent = pair.first.get();
-          const auto &child = parent.getChildren().at(pair.second);
-          newestShadowNodesRegistry_->set(child, parent.getTag());
+        // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+        for (auto tag : copiedTagsToRemove) {
+          newestShadowNodesRegistry_->remove(tag);
         }
       }
 
-      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-      for (auto tag : copiedTagsToRemove) {
-        newestShadowNodesRegistry_->remove(tag);
-      }
+      shadowTreeCloner.updateYogaChildren();
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });

@@ -1,6 +1,6 @@
 name: Bug report
 description: Report an issue with Reanimated here.
-labels: 'needs-review'
+labels: 'Needs review'
 body:
   - type: markdown
     attributes:
@@ -114,7 +114,7 @@ body:
     id: architecture
     attributes:
       label: Architecture
-      description: What React Native architecture your application is running on?
+      description: What React Native architecture your application is running on? Currently, the default architecture on React Native is Paper so if you haven't changed it in your application select this option.
       options:
         - Paper (Old Architecture)
         - Fabric (New Architecture)
@@ -141,5 +141,16 @@ body:
   - type: input
     id: device-model
     attributes:
-      label: Real device model
-      placeholder: ex. Samsung Galaxy A22
+      label: Device model
+      description: What device you are experiencing this problem on? Specify full device name along with the version of the operating system it's running.
+      placeholder: ex. Samsung Galaxy A22 (Android 12)
+
+  - type: dropdown
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      description: I searched for similar issues in the repository.
+      options:
+        - 'Yes'
+    validations:
+      required: true

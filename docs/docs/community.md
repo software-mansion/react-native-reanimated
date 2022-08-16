@@ -10,27 +10,27 @@ Reanimated community is the best! 🎉  We want to say thank you to all communit
 <div class="community-holder-container">
 
   <div class="community-holder-container-item">
-    <img class="community-imageHolder" src="https://ca.slack-edge.com/T03Q9AMJJ-U0F40CATS-d0a2e7559a1b-512" />
+    <div class="community-imageHolder">
+      <img src="https://ca.slack-edge.com/T03Q9AMJJ-U0F40CATS-d0a2e7559a1b-512" />
+    </div>
     <div>Krzysztof Magiera</div>
     <a href="https://twitter.com/kzzzf">@kzzzf</a>
   </div>
 
   <div class="community-holder-container-item">
-    <img class="community-imageHolder" src="https://ca.slack-edge.com/T03Q9AMJJ-UBHF6F55K-63eefc68a264-512" />
-    <div>Szymon Kapała</div>
-    <a href="https://twitter.com/Turbo_Szymon">@Turbo_Szymon</a>
-  </div>
-
-  <div class="community-holder-container-item">
-    <img class="community-imageHolder" src="https://ca.slack-edge.com/T03Q9AMJJ-U01029QHCDB-79dd9904eb93-512" />
+    <div class="community-imageHolder">
+      <img src="https://ca.slack-edge.com/T03Q9AMJJ-U01029QHCDB-79dd9904eb93-512" />
+    </div>
     <div>Krzysztof Piaskowy</div>
     <a href="https://twitter.com/piaskowyk">@piaskowyk</a>
   </div>
 
   <div class="community-holder-container-item">
-    <img class="community-imageHolder" src="https://ca.slack-edge.com/T03Q9AMJJ-U027SRB1QBA-927e57802215-512" />
-    <div>Jakub Myśliwiec</div>
-    <a href="https://twitter.com/jmysliv">@jmysliv</a>
+    <div class="community-imageHolder">
+      <img src="https://ca.slack-edge.com/T03Q9AMJJ-U01GDBF9M9D-54f024a4c134-512" />
+    </div>
+    <div>Tomasz Zawadzki</div>
+    <a href="https://twitter.com/tomekzaw_">@tomekzaw_</a>
   </div>
 
 </div>
@@ -41,14 +41,18 @@ We really appreciate our sponsors! Thanks to them we can develop our library and
 
   <div class="community-holder-container-item">
     <a href="https://www.shopify.com/">
-      <img class="community-imageHolder" src="https://avatars1.githubusercontent.com/u/8085?v=3&s=100" />
+      <div class="community-imageHolder">
+        <img src="https://avatars1.githubusercontent.com/u/8085?v=3&s=100" />
+      </div>
       <div>Shopify</div>
     </a>
   </div>
 
   <div class="community-holder-container-item">
     <a href="https://expo.dev">
-    <img class="community-imageHolder" src="https://avatars2.githubusercontent.com/u/12504344?v=3&s=100" />
+    <div class="community-imageHolder">
+      <img src="https://avatars2.githubusercontent.com/u/12504344?v=3&s=100" />
+    </div>
     <div>Expo</div>
     </a>
   </div>
