@@ -1,6 +1,6 @@
 #!/bin/bash
 
-yarn
+yarn --frozen-lockfile
 yarn bob build
 if [[ $1 = "nightly" ]];
 then
