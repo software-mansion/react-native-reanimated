@@ -17,7 +17,7 @@ yarn add react-native-reanimated
 
 ## Babel plugin
 
-Add Reanimated's babel plugin to your `babel.config.js`:
+Add Reanimated's Babel plugin to your `babel.config.js`:
 
 ```js {7}
   module.exports = {
