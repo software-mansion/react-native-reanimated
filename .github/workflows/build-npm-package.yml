@@ -11,7 +11,7 @@ on:
         type: string
       upload_binaries:
         required: false
-        type: bool
+        type: boolean
 
 jobs:
   build:
