@@ -1,5 +1,6 @@
 #!/bin/bash
 
+yarn
 yarn bob build
 if [[ $1 = "nightly" ]];
 then
