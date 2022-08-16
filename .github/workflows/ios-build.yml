@@ -4,9 +4,12 @@ on:
     paths:
       - 'ios/**'
       - 'Common/**'
+      - 'FabricExample/package.json'
+      - 'Example/package.json'
   push:
     branches:
       - main
+
 jobs:
   build:
     # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060

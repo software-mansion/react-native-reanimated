@@ -4,11 +4,11 @@ title: runOnJS
 sidebar_label: runOnJS
 ---
 
-When you call a function on UI thread you can't be sure if you call a worklet or a callback from JS thread. To make it more transparent we introduced `runOnJS`, which calls a callback asynchronously. An exception will be thrown if you call a JS callback without this function.
+When you call a function on the UI thread you can't be sure if you're calling a worklet or a callback from the JS thread. To make it more transparent we introduced `runOnJS`, which calls a callback asynchronously. An exception will be thrown if you call a JS callback without this function.
 
 :::info
 
-If you want to invoke some function from external library in `runOnJS` please wrap it into a separate function.
+If you want to invoke some function from an external library in `runOnJS` please wrap it in a separate function.
 
 Code like this may not work:
 
@@ -29,7 +29,7 @@ useDerivedValue(() => {
 });
 ```
 
-This is because internally `runOnJS` uses `Object.defineProperty`. Therefore if we want to call a method of some object we may not have an access to `this` inside a called function.
+This is because internally `runOnJS` uses `Object.defineProperty`. Therefore if we want to call a method of some object we may not have access to `this` inside the called function.
 
 This code shows how it works:
 
@@ -42,9 +42,10 @@ class A {
 
 const a = new A();
 const ob = {};
-Object.defineProperty(ob, 'foo', { enumerable: false, value: a.foo }); // we do something like this in runOnJS
+// We do something like this in runOnJS
+Object.defineProperty(ob, 'foo', { enumerable: false, value: a.foo });
 
-a.foo(5); // normal [this] access
+a.foo(5); // Normal [this] access
 ob.foo(5); // [this] is not correct
 ```
 
@@ -54,11 +55,11 @@ ob.foo(5); // [this] is not correct
 
 #### `fn` [function]
 
-The first and the only argument is a function which is supposed to be run.
+The first and only argument is the function that is supposed to be run.
 
 ### Returns
 
-`runOnJS` returns a function which can be safely run from UI thread.
+`runOnJS` returns a function which can be safely run from the UI thread.
 
 ## Example
 

@@ -7,6 +7,7 @@ const { transformSync } = require('@babel/core');
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
 const functionArgsToWorkletize = new Map([
+  ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
   ['createAnimatedPropAdapter', [0]],
@@ -308,13 +309,14 @@ function buildWorkletString(t, fun, closureVariables, name) {
     },
   });
 
+  const expression = fun.program.body.find(
+    ({ type }) => type === 'ExpressionStatement'
+  ).expression;
+
   const workletFunction = t.functionExpression(
     t.identifier(name),
-    fun.program.body[0].expression.params,
-    prependClosureVariablesIfNecessary(
-      closureVariables,
-      fun.program.body[0].expression.body
-    )
+    expression.params,
+    prependClosureVariablesIfNecessary(closureVariables, expression.body)
   );
 
   return generate(workletFunction, { compact: true }).code;
@@ -759,16 +761,6 @@ function isPossibleOptimization(fun) {
   return flags;
 }
 
-const pluginProposalExportNamespaceFrom =
-  require('@babel/plugin-proposal-export-namespace-from').default;
-const apiMock = {
-  assertVersion: () => {
-    // do nothing.
-  },
-};
-const ExportNamedDeclarationFn =
-  pluginProposalExportNamespaceFrom(apiMock).visitor.ExportNamedDeclaration;
-
 module.exports = function ({ types: t }) {
   return {
     pre() {
@@ -791,7 +783,6 @@ module.exports = function ({ types: t }) {
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
         },
       },
-      ExportNamedDeclaration: ExportNamedDeclarationFn,
     },
   };
 };
