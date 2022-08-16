@@ -45,11 +45,11 @@ jobs:
           path: '*.tgz'
 
       - name: Compress Android build output
-        if: [[ -e build_output ]]
+        if: ${{ [[ -e build_output ]] }}
         run: zip -r android-build-output.zip build_output
 
       - name: Upload Android build folder
-        if: [[ -e build_output ]]
+        if: ${{ [[ -e android-build-output.zip ]] }}
         uses: actions/upload-artifact@v2
         with:
           name: android-build-output
