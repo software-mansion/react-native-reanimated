@@ -16,7 +16,9 @@ yarn add @babel/plugin-proposal-export-namespace-from
 
 ```js {5,6}
 module.exports = {
-  ...
+  presets: [
+      ...
+  ],
   plugins: [
     ...
     '@babel/plugin-proposal-export-namespace-from',
