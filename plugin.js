@@ -277,7 +277,7 @@ class ClosureGenerator {
   }
 }
 
-function buildWorkletString(t, fun, closureVariables, name, sourceURL) {
+function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   function prependClosureVariablesIfNecessary(closureVariables, body) {
     if (closureVariables.length === 0) {
       return body;
@@ -303,15 +303,16 @@ function buildWorkletString(t, fun, closureVariables, name, sourceURL) {
     ]);
   }
 
-  traverse(fun, {
-    enter(path) {
-      t.removeComments(path.node);
-    },
-  });
+  // traverse(fun, {
+  //   enter(path) {
+  //     t.removeComments(path.node);
+  //   },
+  // });
 
-  const expression = fun.program.body.find(
-    ({ type }) => type === 'ExpressionStatement'
-  ).expression;
+  const expression =
+    fun.program.body.find(({ type }) => type === 'FunctionDeclaration') ||
+    fun.program.body.find(({ type }) => type === 'ExpressionStatement')
+      .expression;
 
   const workletFunction = t.functionExpression(
     t.identifier(name),
@@ -319,24 +320,20 @@ function buildWorkletString(t, fun, closureVariables, name, sourceURL) {
     prependClosureVariablesIfNecessary(closureVariables, expression.body)
   );
 
-  // t.addComment(workletFunction, 'trailing', '# sourceURL=' + sourceURL, true);
+  // console.log(generate(workletFunction));
+  const code = generate(workletFunction).code;
 
-  const transformed = generate(workletFunction, {
+  const transformed = transformSync(code, {
     compact: true,
-    sourceMaps: true,
-    sourceFileName: sourceURL,
+    sourceMaps: 'inline',
+    inputSourceMap: inputMap,
+    ast: false,
+    babelrc: false,
+    configFile: false,
+    comments: false,
   });
 
-  // console.log(transformed.code);
-  // transformed.map.sourcesContent = transformed.code;
-  // console.log(transformed.code);
-
-  return (
-    transformed.code +
-    // + '//# sourceURL=' + sourceURL + '\n'
-    '//# sourceMappingURL=data:application/json;charset=utf-8,' +
-    JSON.stringify(transformed.map)
-  );
+  return transformed.code;
 }
 
 function makeWorkletName(t, fun) {
@@ -363,6 +360,8 @@ function makeWorklet(t, fun, state) {
   const closureGenerator = new ClosureGenerator();
   const options = {};
 
+  // console.log(fun.scope.block.body);
+
   // remove 'worklet'; directive before calling .toString()
   fun.traverse({
     DirectiveLiteral(path) {
@@ -375,10 +374,24 @@ function makeWorklet(t, fun, state) {
   // We use copy because some of the plugins don't update bindings and
   // some even break them
 
-  const code =
-    '\n(' + (t.isObjectMethod(fun) ? 'function ' : '') + fun.toString() + '\n)';
+  const codeObject = generate(fun.node, {
+    sourceMaps: true,
+    sourceFileName: state.file.opts.filename,
+  });
+  // console.log(codeObject.code);
+  // console.log(JSON.stringify(codeObject.map));
 
-  const transformed = transformSync(code, {
+  // Generally:
+  // 1. Take the ast
+  // 2. Use generate() to generate function code with inline source map instead of toString()
+
+  // const code =
+  //   '(' + (t.isObjectMethod(fun) ? 'function ' : '') + fun.toString() + '\n)';
+
+  // console.log(code);
+  // console.log(fun.scope.block.body.body);
+
+  const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
@@ -391,7 +404,13 @@ function makeWorklet(t, fun, state) {
     ast: true,
     babelrc: false,
     configFile: false,
+    inputSourceMap: codeObject.map,
   });
+
+  // console.log(transformed.ast.program.body[0].expression.body);
+  // console.log(transformed.code);
+  // console.log(JSON.stringify(transformed.map));
+
   if (
     fun.parent &&
     fun.parent.callee &&
@@ -458,13 +477,15 @@ function makeWorklet(t, fun, state) {
   } else {
     funExpression = clone;
   }
+
   const funString = buildWorkletString(
     t,
     transformed.ast,
     variables,
     functionName,
-    state.file.opts.filename
+    transformed.map
   );
+  // console.log(funString);
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
