@@ -1,6 +1,6 @@
 {
   "name": "@exodus/react-native-reanimated",
-  "version": "2.4.1-exodus.5",
+  "version": "2.4.1-exodus.7",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
