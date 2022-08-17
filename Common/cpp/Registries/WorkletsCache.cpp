@@ -6,14 +6,6 @@ using namespace facebook;
 
 namespace reanimated {
 
-jsi::Value eval(jsi::Runtime &rt, const char *code) {
-  return rt.global().getPropertyAsFunction(rt, "eval").call(rt, code);
-}
-
-jsi::Function function(jsi::Runtime &rt, const std::string &code) {
-  return eval(rt, ("(" + code + ")").c_str()).getObject(rt).getFunction(rt);
-}
-
 std::shared_ptr<jsi::Function> WorkletsCache::getFunction(
     jsi::Runtime &rt,
     std::shared_ptr<FrozenObject> frozenObj) {
@@ -22,7 +14,7 @@ std::shared_ptr<jsi::Function> WorkletsCache::getFunction(
   if (worklets.count(workletHash) == 0) {
     auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
         "(" +
-        ValueWrapper::asString(frozenObj->map["asString"]->valueContainer) +
+        ValueWrapper::asString(frozenObj->map["__reanimated_workletFunction"]->valueContainer) +
         ")");
     auto func = rt.evaluateJavaScript(
                       codeBuffer,

@@ -319,7 +319,8 @@ function createChecker(
   }
   // use original worklet on UI side
   checkIfReaOne._closure = worklet._closure;
-  checkIfReaOne.asString = worklet.asString;
+  checkIfReaOne.__reanimated_workletFunction =
+    worklet.__reanimated_workletFunction;
   checkIfReaOne.__workletHash = worklet.__workletHash;
   checkIfReaOne.__location = worklet.__location;
   return checkIfReaOne;

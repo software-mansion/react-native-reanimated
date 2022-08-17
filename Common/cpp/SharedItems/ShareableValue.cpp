@@ -434,8 +434,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           runtimeManager->scheduler->scheduleOnUI([=] {
             jsi::Runtime &rt = *runtimeManager->runtime.get();
             auto jsThis = createFrozenWrapper(rt, frozenObject).getObject(rt);
-            auto code =
-                jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
+            /* auto code = */
+            /*     jsThis.getProperty(rt, "asString").asString(rt).utf8(rt); */
             std::shared_ptr<jsi::Function> funPtr(
                 runtimeManager->workletsCache->getFunction(rt, frozenObject));
 
