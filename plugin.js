@@ -278,36 +278,48 @@ class ClosureGenerator {
 }
 
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
-  function prependClosureVariablesIfNecessary(closureVariables, body) {
-    if (closureVariables.length === 0) {
-      return body;
+  function prependClosureVariablesIfNecessary() {
+    const closureDeclaration = t.variableDeclaration('const', [
+      t.variableDeclarator(
+        t.objectPattern(
+          closureVariables.map((variable) =>
+            t.objectProperty(
+              t.identifier(variable.name),
+              t.identifier(variable.name),
+              false,
+              true
+            )
+          )
+        ),
+        t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
+      ),
+    ]);
+
+    function prependClosure(path) {
+      if (closureVariables.length === 0 || path.parent.type !== 'Program') {
+        return;
+      }
+
+      path.node.body.body.unshift(closureDeclaration);
     }
 
-    return t.blockStatement([
-      t.variableDeclaration('const', [
-        t.variableDeclarator(
-          t.objectPattern(
-            closureVariables.map((variable) =>
-              t.objectProperty(
-                t.identifier(variable.name),
-                t.identifier(variable.name),
-                false,
-                true
-              )
-            )
-          ),
-          t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
-        ),
-      ]),
-      body,
-    ]);
+    return {
+      visitor: {
+        FunctionDeclaration(path) {
+          prependClosure(path);
+        },
+        FunctionExpression(path) {
+          prependClosure(path);
+        },
+        ArrowFunctionExpression(path) {
+          prependClosure(path);
+        },
+        ObjectMethod(path) {
+          prependClosure(path);
+        },
+      },
+    };
   }
-
-  // traverse(fun, {
-  //   enter(path) {
-  //     t.removeComments(path.node);
-  //   },
-  // });
 
   const expression =
     fun.program.body.find(({ type }) => type === 'FunctionDeclaration') ||
@@ -317,13 +329,13 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   const workletFunction = t.functionExpression(
     t.identifier(name),
     expression.params,
-    prependClosureVariablesIfNecessary(closureVariables, expression.body)
+    expression.body
   );
 
-  // console.log(generate(workletFunction));
   const code = generate(workletFunction).code;
 
   const transformed = transformSync(code, {
+    plugins: [prependClosureVariablesIfNecessary()],
     compact: true,
     sourceMaps: 'inline',
     inputSourceMap: inputMap,
@@ -360,9 +372,7 @@ function makeWorklet(t, fun, state) {
   const closureGenerator = new ClosureGenerator();
   const options = {};
 
-  // console.log(fun.scope.block.body);
-
-  // remove 'worklet'; directive before calling .toString()
+  // remove 'worklet'; directive before generating string
   fun.traverse({
     DirectiveLiteral(path) {
       if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
@@ -378,18 +388,6 @@ function makeWorklet(t, fun, state) {
     sourceMaps: true,
     sourceFileName: state.file.opts.filename,
   });
-  // console.log(codeObject.code);
-  // console.log(JSON.stringify(codeObject.map));
-
-  // Generally:
-  // 1. Take the ast
-  // 2. Use generate() to generate function code with inline source map instead of toString()
-
-  // const code =
-  //   '(' + (t.isObjectMethod(fun) ? 'function ' : '') + fun.toString() + '\n)';
-
-  // console.log(code);
-  // console.log(fun.scope.block.body.body);
 
   const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
@@ -406,10 +404,6 @@ function makeWorklet(t, fun, state) {
     configFile: false,
     inputSourceMap: codeObject.map,
   });
-
-  // console.log(transformed.ast.program.body[0].expression.body);
-  // console.log(transformed.code);
-  // console.log(JSON.stringify(transformed.map));
 
   if (
     fun.parent &&
@@ -485,7 +479,6 @@ function makeWorklet(t, fun, state) {
     functionName,
     transformed.map
   );
-  // console.log(funString);
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
