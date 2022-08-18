@@ -277,6 +277,8 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_VERSION", rnMinorVersion.toString())
+        
+        consumerProguardFiles 'proguard-rules.pro'
     }
     externalNativeBuild {
         cmake {
