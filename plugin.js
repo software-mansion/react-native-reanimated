@@ -277,6 +277,10 @@ class ClosureGenerator {
   }
 }
 
+function isRelease() {
+  return process.env.BABEL_ENV !== 'development';
+}
+
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
@@ -334,10 +338,12 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
 
   const code = generate(workletFunction).code;
 
+  console.log(isRelease());
+
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
-    compact: true,
-    sourceMaps: 'inline',
+    compact: isRelease(),
+    sourceMaps: isRelease() ? false : 'inline',
     inputSourceMap: inputMap,
     ast: false,
     babelrc: false,

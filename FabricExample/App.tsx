@@ -163,12 +163,6 @@ const EXAMPLES = [
     title: 'Empty',
     component: EmptyExample,
   },
-  {
-    name: 'EmptyExample2',
-    icon: '👻',
-    title: 'Empty2',
-    component: EmptyExample,
-  },
 ];
 
 function HomeScreen() {
