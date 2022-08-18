@@ -368,7 +368,6 @@ function makeWorklet(t, fun, state) {
   const functionName = makeWorkletName(t, fun);
 
   const closure = new Map();
-  const outputs = new Set();
   const closureGenerator = new ClosureGenerator();
   const options = {};
 
@@ -447,17 +446,6 @@ function makeWorklet(t, fun, state) {
       }
       closure.set(name, path.node);
       closureGenerator.addPath(name, path);
-    },
-    AssignmentExpression(path) {
-      // test for <something>.value = <something> expressions
-      const left = path.node.left;
-      if (
-        t.isMemberExpression(left) &&
-        t.isIdentifier(left.object) &&
-        t.isIdentifier(left.property, { name: 'value' })
-      ) {
-        outputs.add(left.object.name);
-      }
     },
   });
 
