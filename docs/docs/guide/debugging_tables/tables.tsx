@@ -40,52 +40,52 @@ export function SummaryTable() {
             <td style={{ textAlign: 'center' }}>iOS</td>
             <td style={{ textAlign: 'center' }}>✅ ¹</td>
             <td style={{ textAlign: 'center' }}>✅ ¹</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
               <a href="#chrome-devtools">Chrome DevTools</a>
             </td>
             <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
             <td style={{ textAlign: 'center' }}>✅ ²</td>
             <td style={{ textAlign: 'center' }}>✅ ²</td>
           </tr>
           <tr>
             <td style={{ textAlign: 'center' }}>iOS</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
             <td style={{ textAlign: 'center' }}>✅ ²</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
               <a href="#flipper-hermes-debugger">Flipper (Hermes debugger)</a>
             </td>
             <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
             <td style={{ textAlign: 'center' }}>✅ ²</td>
             <td style={{ textAlign: 'center' }}>✅ ²</td>
           </tr>
           <tr>
             <td style={{ textAlign: 'center' }}>iOS</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
             <td style={{ textAlign: 'center' }}>✅ ²</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
               <a href="#safari-devtools">Safari DevTools</a>
             </td>
             <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           </tr>
           <tr>
             <td style={{ textAlign: 'center' }}>iOS</td>
             <td style={{ textAlign: 'center' }}>✅</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
@@ -100,16 +100,18 @@ export function SummaryTable() {
             <td style={{ textAlign: 'center' }}>iOS</td>
             <td style={{ textAlign: 'center' }}>✅</td>
             <td style={{ textAlign: 'center' }}>✅</td>
-            <td style={{ textAlign: 'center' }}>N/A</td>
+            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           </tr>
         </tbody>
       </table>
-      ¹ - Works, but uses web implementations of function and runs everything on
-      the JS thread.
+      ¹ - Works, but uses web implementations of functions and runs worklets on
+      the JS thread. This means that{' '}
+      <a href="../../api/nativeMethods/measure">measure</a> and LayoutAnimations
+      will not be available.
       <br />² - Works, but only the JS context can be debugged.
-      <h4 style={{ marginBottom: 0 }}>Legend:</h4>
+      <h4 style={{ marginBottom: 6 }}>Legend:</h4>
       <ul>
-        <li>✅ - available for Reanimated apps</li>
+        <li>✅ - available in React Native apps using Reanimated</li>
         <li>N/A - unavailable in React Native apps</li>
       </ul>
     </>
@@ -138,7 +140,7 @@ export function ChromeDebuggerTable() {
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>✅</td>
           <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -159,15 +161,15 @@ export function ChromeDevToolsTable() {
       <tbody>
         <tr>
           <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           <td style={{ textAlign: 'center' }}>✅</td>
           <td style={{ textAlign: 'center' }}>✅</td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -188,15 +190,15 @@ export function FlipperTable() {
       <tbody>
         <tr>
           <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           <td style={{ textAlign: 'center' }}>✅</td>
           <td style={{ textAlign: 'center' }}>✅</td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
           <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -217,15 +219,15 @@ export function SafariDevToolsTable() {
       <tbody>
         <tr>
           <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
         </tr>
         <tr>
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -254,9 +256,21 @@ export function ReactDeveloperToolsTable() {
           <td style={{ textAlign: 'center' }}>iOS</td>
           <td style={{ textAlign: 'center' }}>✅</td>
           <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>N/A</td>
+          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
         </tr>
       </tbody>
     </table>
   );
 }
+
+const styles = {
+  width20: {
+    width: '20%',
+  },
+  center: {
+    textAlign: 'center',
+  },
+  notAvailable: {
+    color: 'lightgray',
+  },
+};

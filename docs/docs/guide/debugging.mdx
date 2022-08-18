@@ -20,7 +20,7 @@ This article summarizes all the available methods and highlights their caveats.
 :::info
 
 Reanimated v1 works with all the common React Native debugging tools. This
-article focuses on the use of these tools with Reaniamted v2.
+article focuses on the use of these tools with Reanimated v2.
 
 :::
 
@@ -52,6 +52,10 @@ and keep code execution on device.
 are a standalone app that allows debugging UI through the inspector as well as monitoring
 performance and profiling your app.
 
+### The JS context vs. the UI context
+
+// TODO
+
 ### Debugging web apps
 
 For debugging web apps you may use the tools you prefer or any that are provided
@@ -62,17 +66,22 @@ apps using Reanimated on web.
 
 <SummaryTable />
 
+:::caution
+
+Remember that console logs will always appear in the primary JS context as the
+`console.log` function on the UI thread is just a reference to the one from
+the JS thread.
+
+:::
+
 ### Chrome Debugger
 
 <ChromeDebuggerTable />
 
-:::info
-
+**Summary:**
 Works, but uses web implementations of functions and runs everything on the JS thread.
 
-:::
-
-Since the Chrome Debugger runs it's own web worker all the code is run on
+Since the Chrome Debugger runs its own web worker all the code is run on
 the JS thread and it uses the JavaScript engine provided by your web
 browser (V8 in Chrome, JSC in Safari and SpiderMonkey in Firefox). This
 means that this piece of code:
@@ -100,7 +109,7 @@ function will not be available and it's usage will trigger this error:
 [reanimated.measure] method cannot be used for web or Chrome Debugger
 ```
 
-You may stil use the standard web version of measure as described
+You may still use the standard web version of measure as described
 [here](../api/nativeMethods/measure).
 
 Those functions that are provided by Reanimated and do not have web
@@ -121,11 +130,8 @@ thread now).
 
 <ChromeDevToolsTable />
 
-:::info
-
+**Summary:**
 Works, but only the JS context can be debugged.
-
-:::
 
 Even though Chrome DevTools supports the Hermes and V8 engines it
 unfortunately doesn't recognize Reanimated's additional UI context. This
@@ -138,11 +144,8 @@ will be ignored. All other features work as expected.
 
 <FlipperTable />
 
-:::info
-
+**Summary:**
 Works, but only the JS context can be debugged.
-
-:::
 
 Even though Flipper supports the Hermes and V8 engines it
 unfortunately doesn't recognize Reanimated's additional UI context. This
@@ -155,11 +158,9 @@ will be ignored. All other features work as expected.
 
 <SafariDevToolsTable />
 
-:::info
-
+**Summary:**
 Safari DevTools is only available on iOS devices running the JSC engine.
-
-:::
+Worklet debugging is available.
 
 After opening Safari and configuring it as specified in the React Native
 docs, under `Develop > Device` you'll see two JSC contexts
@@ -167,32 +168,23 @@ like in the screenshot below:
 
 ![Screenshot showing Safari's Develop menu options](/img/debugging/SafariJSCiOS.png)
 
-One of them will be the main JS context. All `console.log`
-outputs will appear in the console of this context. You can also set
-breakpoints here, but unfortunately the only source file visible is the
-transformed `indexjs.bundle` which does make things more
-difficult to find.
+The order og the contexts is random, but one of them will be the main JS context.
+All `console.log` outputs will appear in the console of this context. You can also
+set breakpoints here, but unfortunately the only source file visible is the
+transformed `indexjs.bundle` which does make things more difficult to find.
 
 The other option will be the UI context. No console logs will appear in
 the console of this context, but all worklet functions should be visible
 as separate files. It is also possible to set breakpoints in these
 worklets.
 
-**Caution!**
-*Remember that console logs will appear on the main thread as the
-`console.log` funcion on the UI thread is just a reference to the one from
-the JS thread.*
-
 ### React Developer Tools
 
 <ReactDeveloperToolsTable />
 
-:::info
-
+**Summary:**
 React Developer Tools work as expected and the profiler and layout inspector can
 be used as usual.
-
-:::
 
 On Android remember to first run the command:
 ```
