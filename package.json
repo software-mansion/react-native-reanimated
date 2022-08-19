@@ -38,6 +38,7 @@
     "!**/__fixtures__",
     "!**/__mocks__",
     "!lib/typescript",
+    "react-native-reanimated.d.ts",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
