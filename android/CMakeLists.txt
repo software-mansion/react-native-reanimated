@@ -261,17 +261,24 @@ if(${JS_RUNTIME} STREQUAL "hermes")
             "${JS_RUNTIME_DIR}/public"
         )
     endif()
-    find_library(
-            HERMES_EXECUTOR_LIB
-            hermes-executor-debug
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    target_link_libraries(
-            ${PACKAGE_NAME}
-            "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so"
-            ${HERMES_EXECUTOR_LIB}
-    )
+    if (${HERMES_ENABLE_DEBUGGER})
+        find_library(
+                HERMES_EXECUTOR_LIB
+                hermes-executor-debug
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+        target_link_libraries(
+                ${PACKAGE_NAME}
+                "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so"
+                ${HERMES_EXECUTOR_LIB}
+        )
+    else()
+        target_link_libraries(
+                ${PACKAGE_NAME}
+                "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so"
+        )
+    endif()
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
     target_include_directories(
