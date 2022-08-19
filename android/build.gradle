@@ -291,8 +291,6 @@ android {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
         excludes = [
-                "META-INF",
-                "META-INF/**",
                 "**/libc++_shared.so",
                 "**/libfbjni.so",
                 "**/libjsi.so",
