@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './styles.module.css';
 
 /*
   Testing setup:
@@ -19,11 +20,11 @@ export function SummaryTable() {
       <table>
         <thead>
           <tr>
-            <th style={{ width: '30%' }}>Tool</th>
-            <th style={{ width: '10%' }}>Platform</th>
-            <th style={{ width: '20%' }}>JSC</th>
-            <th style={{ width: '20%' }}>Hermes</th>
-            <th style={{ width: '20%' }}>V8</th>
+            <th className={styles.width30}>Tool</th>
+            <th className={styles.width10}>Platform</th>
+            <th className={styles.width20}>JSC</th>
+            <th className={styles.width20}>Hermes</th>
+            <th className={styles.width20}>V8</th>
           </tr>
         </thead>
         <tbody>
@@ -31,76 +32,76 @@ export function SummaryTable() {
             <td rowSpan={2}>
               <a href="#chrome-debugger">Chrome debugger</a>
             </td>
-            <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center' }}>✅ ¹</td>
-            <td style={{ textAlign: 'center' }}>✅ ¹</td>
-            <td style={{ textAlign: 'center' }}>✅ ¹</td>
+            <td className={styles.cellNormal}>Android</td>
+            <td className={styles.cellNormal}>✅ ¹</td>
+            <td className={styles.cellNormal}>✅ ¹</td>
+            <td className={styles.cellNormal}>✅ ¹</td>
           </tr>
           <tr>
-            <td style={{ textAlign: 'center' }}>iOS</td>
-            <td style={{ textAlign: 'center' }}>✅ ¹</td>
-            <td style={{ textAlign: 'center' }}>✅ ¹</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td className={styles.cellNormal}>iOS</td>
+            <td className={styles.cellNormal}>✅ ¹</td>
+            <td className={styles.cellNormal}>✅ ¹</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
               <a href="#chrome-devtools">Chrome DevTools</a>
             </td>
-            <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-            <td style={{ textAlign: 'center' }}>✅ ²</td>
-            <td style={{ textAlign: 'center' }}>✅ ²</td>
+            <td className={styles.cellNormal}>Android</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
+            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>✅ ²</td>
           </tr>
           <tr>
-            <td style={{ textAlign: 'center' }}>iOS</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-            <td style={{ textAlign: 'center' }}>✅ ²</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td className={styles.cellNormal}>iOS</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
+            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
               <a href="#flipper-hermes-debugger">Flipper (Hermes debugger)</a>
             </td>
-            <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-            <td style={{ textAlign: 'center' }}>✅ ²</td>
-            <td style={{ textAlign: 'center' }}>✅ ²</td>
+            <td className={styles.cellNormal}>Android</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
+            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>✅ ²</td>
           </tr>
           <tr>
-            <td style={{ textAlign: 'center' }}>iOS</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-            <td style={{ textAlign: 'center' }}>✅ ²</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td className={styles.cellNormal}>iOS</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
+            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
               <a href="#safari-devtools">Safari DevTools</a>
             </td>
-            <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td className={styles.cellNormal}>Android</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
-            <td style={{ textAlign: 'center' }}>iOS</td>
-            <td style={{ textAlign: 'center' }}>✅</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td className={styles.cellNormal}>iOS</td>
+            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
             <td rowSpan={2}>
               <a href="#react-developer-tools">React Developer Tools</a>
             </td>
-            <td style={{ textAlign: 'center' }}>Android</td>
-            <td style={{ textAlign: 'center' }}>✅</td>
-            <td style={{ textAlign: 'center' }}>✅</td>
-            <td style={{ textAlign: 'center' }}>✅</td>
+            <td className={styles.cellNormal}>Android</td>
+            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNormal}>✅</td>
           </tr>
           <tr>
-            <td style={{ textAlign: 'center' }}>iOS</td>
-            <td style={{ textAlign: 'center' }}>✅</td>
-            <td style={{ textAlign: 'center' }}>✅</td>
-            <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+            <td className={styles.cellNormal}>iOS</td>
+            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
         </tbody>
       </table>
@@ -124,23 +125,23 @@ export function ChromeDebuggerTable() {
       <thead>
         <tr>
           <th>Platform</th>
-          <th style={{ width: '20%' }}>JSC</th>
-          <th style={{ width: '20%' }}>Hermes</th>
-          <th style={{ width: '20%' }}>V8</th>
+          <th className={styles.width20}>JSC</th>
+          <th className={styles.width20}>Hermes</th>
+          <th className={styles.width20}>V8</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
+          <td className={styles.cellNormal}>Android</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
         </tr>
         <tr>
-          <td style={{ textAlign: 'center' }}>iOS</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td className={styles.cellNormal}>iOS</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -153,23 +154,23 @@ export function ChromeDevToolsTable() {
       <thead>
         <tr>
           <th>Platform</th>
-          <th style={{ width: '20%' }}>JSC</th>
-          <th style={{ width: '20%' }}>Hermes</th>
-          <th style={{ width: '20%' }}>V8</th>
+          <th className={styles.width20}>JSC</th>
+          <th className={styles.width20}>Hermes</th>
+          <th className={styles.width20}>V8</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
+          <td className={styles.cellNormal}>Android</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
         </tr>
         <tr>
-          <td style={{ textAlign: 'center' }}>iOS</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td className={styles.cellNormal}>iOS</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -182,23 +183,23 @@ export function FlipperTable() {
       <thead>
         <tr>
           <th>Platform</th>
-          <th style={{ width: '20%' }}>JSC</th>
-          <th style={{ width: '20%' }}>Hermes</th>
-          <th style={{ width: '20%' }}>V8</th>
+          <th className={styles.width20}>JSC</th>
+          <th className={styles.width20}>Hermes</th>
+          <th className={styles.width20}>V8</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
+          <td className={styles.cellNormal}>Android</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
         </tr>
         <tr>
-          <td style={{ textAlign: 'center' }}>iOS</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td className={styles.cellNormal}>iOS</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -211,23 +212,23 @@ export function SafariDevToolsTable() {
       <thead>
         <tr>
           <th>Platform</th>
-          <th style={{ width: '20%' }}>JSC</th>
-          <th style={{ width: '20%' }}>Hermes</th>
-          <th style={{ width: '20%' }}>V8</th>
+          <th className={styles.width20}>JSC</th>
+          <th className={styles.width20}>Hermes</th>
+          <th className={styles.width20}>V8</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td className={styles.cellNormal}>Android</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
         <tr>
-          <td style={{ textAlign: 'center' }}>iOS</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td className={styles.cellNormal}>iOS</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
     </table>
@@ -240,37 +241,25 @@ export function ReactDeveloperToolsTable() {
       <thead>
         <tr>
           <th>Platform</th>
-          <th style={{ width: '20%' }}>JSC</th>
-          <th style={{ width: '20%' }}>Hermes</th>
-          <th style={{ width: '20%' }}>V8</th>
+          <th className={styles.width20}>JSC</th>
+          <th className={styles.width20}>Hermes</th>
+          <th className={styles.width20}>V8</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style={{ textAlign: 'center' }}>Android</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
+          <td className={styles.cellNormal}>Android</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
         </tr>
         <tr>
-          <td style={{ textAlign: 'center' }}>iOS</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center' }}>✅</td>
-          <td style={{ textAlign: 'center', color: 'lightgray' }}>N/A</td>
+          <td className={styles.cellNormal}>iOS</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
     </table>
   );
 }
-
-const styles = {
-  width20: {
-    width: '20%',
-  },
-  center: {
-    textAlign: 'center',
-  },
-  notAvailable: {
-    color: 'lightgray',
-  },
-};
