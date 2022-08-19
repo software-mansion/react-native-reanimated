@@ -338,8 +338,6 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
 
   const code = generate(workletFunction).code;
 
-  console.log(isRelease());
-
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
     compact: isRelease(),
