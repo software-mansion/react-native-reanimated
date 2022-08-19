@@ -37,7 +37,10 @@
     ]
   },
   "devDependencies": {
+    "@docusaurus/module-type-aliases": "^2.0.1",
+    "@tsconfig/docusaurus": "^1.0.6",
     "eslint": "^8.21.0",
-    "eslint-plugin-mdx": "^2.0.2"
+    "eslint-plugin-mdx": "^2.0.2",
+    "typescript": "^4.7.4"
   }
 }
