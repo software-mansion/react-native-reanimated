@@ -113,18 +113,18 @@ boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
 
-    Stream<Path> pathStream = Files.find(
+    List<Path> paths = Files.find(
             Paths.get(rootDir.parent),
             Integer.MAX_VALUE,
-            (path, basicFileAttributes) -> { path.toString().endsWith("/react-native-reanimated/package.json") }
-    )
+            { path, basicFileAttributes -> path.toString().endsWith("/react-native-reanimated/package.json") }
+    ).toArray()
 
     String parsedLocation = ""
     def libInstancesCount = 0
-    pathStream.forEach(path -> {
+    for (def path in paths) {
         parsedLocation += "- " + path.toString().replace("/package.json", "\n")
         libInstancesCount++
-    })
+    }
     if (libInstancesCount > 1) {
         String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation + "\n";
         throw new Exception(exceptionMessage)
