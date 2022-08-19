@@ -6,10 +6,14 @@ import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/c
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
+interface AnimatedFlatListProps {
+  onLayout: (event: LayoutChangeEvent) => void;
+  // implicit `children` prop has been removed in @types/react^18.0.0
+  children: React.ReactNode;
+}
+
 const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
-  const cellRenderer: React.FC<{
-    onLayout: (event: LayoutChangeEvent) => void;
-  }> = (props) => {
+  const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
       <ReanimatedView layout={itemLayoutAnimation} onLayout={props.onLayout}>
         {props.children}
@@ -20,11 +24,11 @@ const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
   return cellRenderer;
 };
 
-export interface ReanimatedFlatlistProps<ItemT> extends FlatListProps<ItemT> {
+export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
-type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatlistProps<T>>;
+type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatListProps<T>>;
 
 const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {

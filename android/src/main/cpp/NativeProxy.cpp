@@ -7,8 +7,10 @@
 #include <memory>
 #include <string>
 
-#if FOR_HERMES
+#if JS_RUNTIME_HERMES
 #include <hermes/hermes.h>
+#elif JS_RUNTIME_V8
+#include <v8runtime/V8RuntimeFactory.h>
 #else
 #include <jsi/JSCRuntime.h>
 #endif
@@ -38,10 +40,8 @@ NativeProxy::NativeProxy(
       layoutAnimations(std::move(_layoutAnimations)) {}
 
 NativeProxy::~NativeProxy() {
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Value::undefined());
+  // removed temporary, new event listener mechanism need fix on the RN side
+  // reactScheduler_->removeEventListener(eventListener_);
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -146,11 +146,17 @@ void NativeProxy::installJSIBindings() {
     unsubscribeFromKeyboardEvents(listenerId);
   };
 
-#if FOR_HERMES
+#if JS_RUNTIME_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::hermes::makeHermesRuntime(config.build());
+#elif JS_RUNTIME_V8
+  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
+  config->enableInspector = false;
+  config->appName = "reanimated";
+  std::shared_ptr<jsi::Runtime> animatedRuntime =
+      rnv8::createSharedV8Runtime(runtime_, std::move(config));
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::jsc::makeJSCRuntime();
