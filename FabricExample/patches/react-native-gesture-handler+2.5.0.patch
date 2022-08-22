@@ -1,0 +1,984 @@
+diff --git a/node_modules/react-native-gesture-handler/RNGestureHandler.podspec b/node_modules/react-native-gesture-handler/RNGestureHandler.podspec
+index 100d320..033dcd7 100644
+--- a/node_modules/react-native-gesture-handler/RNGestureHandler.podspec
++++ b/node_modules/react-native-gesture-handler/RNGestureHandler.podspec
+@@ -19,7 +19,6 @@ Pod::Spec.new do |s|
+   if fabric_enabled
+     # folly_version must match the version used in React Native
+     # See folly_version in react-native/React/FBReactNativeSpec/FBReactNativeSpec.podspec
+-    folly_version = '2021.06.28.00-v2'
+     folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
+ 
+     s.pod_target_xcconfig = {
+@@ -32,7 +31,7 @@ Pod::Spec.new do |s|
+     s.dependency "React"
+     s.dependency "React-RCTFabric" # This is for fabric component
+     s.dependency "React-Codegen"
+-    s.dependency "RCT-Folly", folly_version
++    s.dependency "RCT-Folly"
+     s.dependency "RCTRequired"
+     s.dependency "RCTTypeSafety"
+     s.dependency "ReactCommon/turbomodule/core"
+diff --git a/node_modules/react-native-gesture-handler/android/build.gradle b/node_modules/react-native-gesture-handler/android/build.gradle
+index ad5845e..0202efd 100644
+--- a/node_modules/react-native-gesture-handler/android/build.gradle
++++ b/node_modules/react-native-gesture-handler/android/build.gradle
+@@ -178,4 +178,10 @@ if (isNewArchitectureEnabled()) {
+         libraryName = "rngesturehandler"
+         codegenJavaPackageName = "com.swmansion.gesturehandler"
+     }
++
++    afterEvaluate {
++        project.getTasksByName("configureNdkBuildDebug", false).forEach {
++            it.dependsOn(rootProject.getTasksByName("packageReactNdkDebugLibs", true))
++        }
++    }
+ }
+diff --git a/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86/metadata_generation_command.txt b/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86/metadata_generation_command.txt
+new file mode 100644
+index 0000000..2c979a9
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86/metadata_generation_command.txt
+@@ -0,0 +1,28 @@
++Executable : /Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/ndk-build
++arguments : 
++NDK_PROJECT_PATH=null
++APP_BUILD_SCRIPT=/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk
++APP_ABI=x86
++NDK_ALL_ABIS=x86
++NDK_DEBUG=1
++NDK_OUT=/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/obj
++NDK_LIBS_OUT=/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/lib
++APP_CFLAGS+=-Wall
++APP_CFLAGS+=-Werror
++APP_CFLAGS+=-fexceptions
++APP_CFLAGS+=-frtti
++APP_CFLAGS+=-DWITH_INSPECTOR=1
++APP_CPPFLAGS+=-std=c++17
++APP_PLATFORM=android-21
++APP_STL=c++_shared
++NDK_TOOLCHAIN_VERSION=clang
++GENERATED_SRC_DIR=/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/generated/source
++PROJECT_BUILD_DIR=/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build
++REACT_ANDROID_DIR=/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid
++REACT_ANDROID_BUILD_DIR=/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build
++APP_SHORT_COMMANDS=false
++LOCAL_SHORT_COMMANDS=false
++-B
++-n
++jvmArgs : 
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/build_model.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/build_model.json
+new file mode 100644
+index 0000000..98be979
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/build_model.json
+@@ -0,0 +1,177 @@
++{
++  "abi": "X86",
++  "info": {
++    "abi": "X86",
++    "bitness": 32,
++    "deprecated": false,
++    "default": true
++  },
++  "cxxBuildFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86",
++  "soFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/obj/local/x86",
++  "soRepublishFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/ndkBuild/debug/obj/local/x86",
++  "abiPlatformVersion": 21,
++  "variant": {
++    "buildSystemArgumentList": [
++      "APP_PLATFORM\u003dandroid-21",
++      "APP_STL\u003dc++_shared",
++      "NDK_TOOLCHAIN_VERSION\u003dclang",
++      "GENERATED_SRC_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/generated/source",
++      "PROJECT_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build",
++      "REACT_ANDROID_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid",
++      "REACT_ANDROID_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build"
++    ],
++    "cFlagsList": [
++      "-Wall",
++      "-Werror",
++      "-fexceptions",
++      "-frtti",
++      "-DWITH_INSPECTOR\u003d1"
++    ],
++    "cppFlagsList": [
++      "-std\u003dc++17"
++    ],
++    "variantName": "debug",
++    "isDebuggableEnabled": true,
++    "validAbiList": [
++      "ARMEABI_V7A",
++      "ARM64_V8A",
++      "X86",
++      "X86_64"
++    ],
++    "buildTargetSet": [
++      "rngesturehandler_modules"
++    ],
++    "implicitBuildTargetSet": [],
++    "cmakeSettingsConfiguration": "android-gradle-plugin-predetermined-name",
++    "module": {
++      "cxxFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/.cxx",
++      "intermediatesBaseFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates",
++      "intermediatesFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx",
++      "gradleModulePathName": ":react-native-gesture-handler",
++      "moduleRootFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android",
++      "moduleBuildFile": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build.gradle",
++      "makeFile": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++      "buildSystem": "NDK_BUILD",
++      "ndkFolder": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888",
++      "ndkVersion": "24.0.8215888",
++      "ndkSupportedAbiList": [
++        "ARMEABI_V7A",
++        "ARM64_V8A",
++        "X86",
++        "X86_64"
++      ],
++      "ndkDefaultAbiList": [
++        "ARMEABI_V7A",
++        "ARM64_V8A",
++        "X86",
++        "X86_64"
++      ],
++      "ndkDefaultStl": "SYSTEM",
++      "ndkMetaPlatforms": {
++        "min": 19,
++        "max": 32,
++        "aliases": {
++          "20": 19,
++          "25": 24,
++          "J": 16,
++          "J-MR1": 17,
++          "J-MR2": 18,
++          "K": 19,
++          "L": 21,
++          "L-MR1": 22,
++          "M": 23,
++          "N": 24,
++          "N-MR1": 24,
++          "O": 26,
++          "O-MR1": 27,
++          "P": 28,
++          "Q": 29,
++          "R": 30,
++          "S": 31,
++          "Sv2": 32
++        }
++      },
++      "ndkMetaAbiList": [
++        {
++          "abi": "ARMEABI_V7A",
++          "bitness": 32,
++          "deprecated": false,
++          "default": true
++        },
++        {
++          "abi": "ARM64_V8A",
++          "bitness": 64,
++          "deprecated": false,
++          "default": true
++        },
++        {
++          "abi": "X86",
++          "bitness": 32,
++          "deprecated": false,
++          "default": true
++        },
++        {
++          "abi": "X86_64",
++          "bitness": 64,
++          "deprecated": false,
++          "default": true
++        }
++      ],
++      "cmakeToolchainFile": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/build/cmake/android.toolchain.cmake",
++      "stlSharedObjectMap": {
++        "LIBCXX_SHARED": {
++          "ARMEABI_V7A": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so",
++          "ARM64_V8A": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so",
++          "X86": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so",
++          "X86_64": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so"
++        },
++        "LIBCXX_STATIC": {},
++        "NONE": {},
++        "SYSTEM": {}
++      },
++      "project": {
++        "rootBuildGradleFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android",
++        "sdkFolder": "/Users/tomekzaw/Library/Android/sdk",
++        "isBuildOnlyTargetAbiEnabled": true,
++        "isCmakeBuildCohabitationEnabled": false,
++        "isPrefabEnabled": false
++      },
++      "outputOptions": []
++    },
++    "prefabClassPaths": [],
++    "prefabPackages": [],
++    "prefabPackageConfigurations": [],
++    "stlType": "c++_shared",
++    "optimizationTag": "Debug"
++  },
++  "buildSettings": {
++    "environmentVariables": []
++  },
++  "prefabFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/prefab/x86",
++  "isActiveAbi": true,
++  "fullConfigurationHash": "3r2d6f2f505w701gb6b45z6k2n6g543r1u304r53503n4b3g345652213v3w4u",
++  "configurationArguments": [
++    "NDK_PROJECT_PATH\u003dnull",
++    "APP_BUILD_SCRIPT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "APP_ABI\u003dx86",
++    "NDK_ALL_ABIS\u003dx86",
++    "NDK_DEBUG\u003d1",
++    "NDK_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/obj",
++    "NDK_LIBS_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/lib",
++    "APP_CFLAGS+\u003d-Wall",
++    "APP_CFLAGS+\u003d-Werror",
++    "APP_CFLAGS+\u003d-fexceptions",
++    "APP_CFLAGS+\u003d-frtti",
++    "APP_CFLAGS+\u003d-DWITH_INSPECTOR\u003d1",
++    "APP_CPPFLAGS+\u003d-std\u003dc++17",
++    "APP_PLATFORM\u003dandroid-21",
++    "APP_STL\u003dc++_shared",
++    "NDK_TOOLCHAIN_VERSION\u003dclang",
++    "GENERATED_SRC_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/generated/source",
++    "PROJECT_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build",
++    "REACT_ANDROID_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid",
++    "REACT_ANDROID_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build"
++  ],
++  "stlLibraryFile": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so",
++  "intermediatesParentFolder": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f"
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_1413_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_1413_timing.txt
+new file mode 100644
+index 0000000..8f5edf5
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_1413_timing.txt
+@@ -0,0 +1,14 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 32ms
++  execute-generate-process completed in 33ms
++generate_cxx_metadata completed in 34ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 32ms
++  execute-generate-process completed in 32ms
++generate_cxx_metadata completed in 34ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_1644_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_1644_timing.txt
+new file mode 100644
+index 0000000..1de4c63
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_1644_timing.txt
+@@ -0,0 +1,35 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 30ms
++  execute-generate-process completed in 30ms
++generate_cxx_metadata completed in 32ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 33ms
++  execute-generate-process completed in 34ms
++generate_cxx_metadata completed in 35ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 31ms
++  execute-generate-process completed in 31ms
++generate_cxx_metadata completed in 33ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 32ms
++  execute-generate-process completed in 33ms
++generate_cxx_metadata completed in 34ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 32ms
++  execute-generate-process completed in 32ms
++generate_cxx_metadata completed in 34ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_164_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_164_timing.txt
+new file mode 100644
+index 0000000..3e5eb13
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_164_timing.txt
+@@ -0,0 +1,21 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 36ms
++  execute-generate-process completed in 36ms
++generate_cxx_metadata completed in 39ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 36ms
++  execute-generate-process completed in 38ms
++generate_cxx_metadata completed in 39ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 33ms
++  execute-generate-process completed in 34ms
++generate_cxx_metadata completed in 35ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_21_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_21_timing.txt
+new file mode 100644
+index 0000000..4bddcfd
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_21_timing.txt
+@@ -0,0 +1,7 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 33ms
++  execute-generate-process completed in 34ms
++generate_cxx_metadata completed in 36ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_2212_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_2212_timing.txt
+new file mode 100644
+index 0000000..8526945
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_2212_timing.txt
+@@ -0,0 +1,14 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 33ms
++  execute-generate-process completed in 33ms
++generate_cxx_metadata completed in 35ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 31ms
++  execute-generate-process completed in 31ms
++generate_cxx_metadata completed in 31ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_612_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_612_timing.txt
+new file mode 100644
+index 0000000..9f78d3c
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_612_timing.txt
+@@ -0,0 +1,7 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 32ms
++  execute-generate-process completed in 32ms
++generate_cxx_metadata completed in 34ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_731_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_731_timing.txt
+new file mode 100644
+index 0000000..a46cf31
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_731_timing.txt
+@@ -0,0 +1,7 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 33ms
++  execute-generate-process completed in 33ms
++generate_cxx_metadata completed in 35ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_849_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_849_timing.txt
+new file mode 100644
+index 0000000..af17ff1
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_849_timing.txt
+@@ -0,0 +1,7 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 45ms
++  execute-generate-process completed in 48ms
++generate_cxx_metadata completed in 48ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_968_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_968_timing.txt
+new file mode 100644
+index 0000000..5357a34
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/generate_cxx_metadata_968_timing.txt
+@@ -0,0 +1,21 @@
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 35ms
++  execute-generate-process completed in 35ms
++generate_cxx_metadata completed in 36ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 31ms
++  execute-generate-process completed in 31ms
++generate_cxx_metadata completed in 32ms
++
++# C/C++ build system timings
++generate_cxx_metadata
++  execute-generate-process
++    execute-process 33ms
++  execute-generate-process completed in 33ms
++generate_cxx_metadata completed in 35ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_record.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_record.json
+new file mode 100644
+index 0000000..2deb756
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_record.json
+@@ -0,0 +1,128 @@
++[
++  {
++    "level_": 0,
++    "message_": "Start JSON generation. Platform version: 21 min SDK version: x86",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 377853793
++  },
++  {
++    "level_": 0,
++    "message_": "rebuilding JSON /Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86/android_gradle_build.json due to:",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 677461035
++  },
++  {
++    "level_": 0,
++    "message_": "- expected json /Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86/android_gradle_build.json file is not present, will remove stale json folder",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 1139732223
++  },
++  {
++    "level_": 0,
++    "message_": "- command changed from previous, will remove stale json folder",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -1455983875
++  },
++  {
++    "level_": 0,
++    "message_": "removing stale contents from \u0027/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86\u0027",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -2012281960
++  },
++  {
++    "level_": 0,
++    "message_": "created folder \u0027/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/.cxx/Debug/3r2d6f2f/x86\u0027",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 1857793956
++  },
++  {
++    "level_": 0,
++    "message_": "executing ndkBuild Executable : /Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/ndk-build\narguments : \nNDK_PROJECT_PATH\u003dnull\nAPP_BUILD_SCRIPT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk\nAPP_ABI\u003dx86\nNDK_ALL_ABIS\u003dx86\nNDK_DEBUG\u003d1\nNDK_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/obj\nNDK_LIBS_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/lib\nAPP_CFLAGS+\u003d-Wall\nAPP_CFLAGS+\u003d-Werror\nAPP_CFLAGS+\u003d-fexceptions\nAPP_CFLAGS+\u003d-frtti\nAPP_CFLAGS+\u003d-DWITH_INSPECTOR\u003d1\nAPP_CPPFLAGS+\u003d-std\u003dc++17\nAPP_PLATFORM\u003dandroid-21\nAPP_STL\u003dc++_shared\nNDK_TOOLCHAIN_VERSION\u003dclang\nGENERATED_SRC_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/generated/source\nPROJECT_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build\nREACT_ANDROID_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid\nREACT_ANDROID_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build\nAPP_SHORT_COMMANDS\u003dfalse\nLOCAL_SHORT_COMMANDS\u003dfalse\n-B\n-n\njvmArgs : \n\n",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -2008682771
++  },
++  {
++    "level_": 0,
++    "message_": "Executable : /Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/ndk-build\narguments : \nNDK_PROJECT_PATH\u003dnull\nAPP_BUILD_SCRIPT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk\nAPP_ABI\u003dx86\nNDK_ALL_ABIS\u003dx86\nNDK_DEBUG\u003d1\nNDK_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/obj\nNDK_LIBS_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/lib\nAPP_CFLAGS+\u003d-Wall\nAPP_CFLAGS+\u003d-Werror\nAPP_CFLAGS+\u003d-fexceptions\nAPP_CFLAGS+\u003d-frtti\nAPP_CFLAGS+\u003d-DWITH_INSPECTOR\u003d1\nAPP_CPPFLAGS+\u003d-std\u003dc++17\nAPP_PLATFORM\u003dandroid-21\nAPP_STL\u003dc++_shared\nNDK_TOOLCHAIN_VERSION\u003dclang\nGENERATED_SRC_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/generated/source\nPROJECT_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build\nREACT_ANDROID_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid\nREACT_ANDROID_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build\nAPP_SHORT_COMMANDS\u003dfalse\nLOCAL_SHORT_COMMANDS\u003dfalse\n-B\n-n\njvmArgs : \n\n",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -605876928
++  },
++  {
++    "level_": 0,
++    "message_": "JSON generation completed with problem. Exception: Build command failed.\nError while executing process /Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/ndk-build with arguments {NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d1 NDK_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/obj NDK_LIBS_OUT\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/lib APP_CFLAGS+\u003d-Wall APP_CFLAGS+\u003d-Werror APP_CFLAGS+\u003d-fexceptions APP_CFLAGS+\u003d-frtti APP_CFLAGS+\u003d-DWITH_INSPECTOR\u003d1 APP_CPPFLAGS+\u003d-std\u003dc++17 APP_PLATFORM\u003dandroid-21 APP_STL\u003dc++_shared NDK_TOOLCHAIN_VERSION\u003dclang GENERATED_SRC_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/generated/source PROJECT_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build REACT_ANDROID_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid REACT_ANDROID_BUILD_DIR\u003d/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native/ReactAndroid/build APP_SHORT_COMMANDS\u003dfalse LOCAL_SHORT_COMMANDS\u003dfalse -B -n}\nAndroid NDK: ERROR:/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk:fb: LOCAL_SRC_FILES points to a missing file    \nAndroid NDK: Check that /Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/react-ndk/exported/x86/libfb.so exists  or that its path is correct   \n\nfcntl(): Bad file descriptor\n/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/build/core/prebuilt-library.mk:51: *** Android NDK: Aborting    .  Stop.\n",
++    "file_": "/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk",
++    "tag_": "debug|x86",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -492658746
++  }
++]
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_stderr.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_stderr.txt
+new file mode 100644
+index 0000000..58828b8
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_stderr.txt
+@@ -0,0 +1,2 @@
++fcntl(): Bad file descriptor
++/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888/build/core/prebuilt-library.mk:51: *** Android NDK: Aborting    .  Stop.
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_stdout.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_stdout.txt
+new file mode 100644
+index 0000000..801c1c5
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/Debug/3r2d6f2f/meta/x86/metadata_generation_stdout.txt
+@@ -0,0 +1,2 @@
++Android NDK: ERROR:/Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/node_modules/react-native-gesture-handler/android/src/main/jni/Android.mk:fb: LOCAL_SRC_FILES points to a missing file    
++Android NDK: Check that /Users/tomekzaw/RNOS/PR3481/react-native-reanimated/FabricExample/android/app/build/react-ndk/exported/x86/libfb.so exists  or that its path is correct   
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j.json
+new file mode 100644
+index 0000000..e542dae
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j.json
+@@ -0,0 +1,14 @@
++{
++  "allAbis": [
++    "armeabi-v7a",
++    "arm64-v8a",
++    "x86",
++    "x86_64"
++  ],
++  "validAbis": [
++    "ARMEABI_V7A",
++    "ARM64_V8A",
++    "X86",
++    "X86_64"
++  ]
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j.log b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j.log
+new file mode 100644
+index 0000000..0637a08
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j.log
+@@ -0,0 +1 @@
++[]
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j_key.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j_key.json
+new file mode 100644
+index 0000000..2b2c0ca
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/abi_configuration_1r4g2r6j_key.json
+@@ -0,0 +1,18 @@
++{
++  "ndkHandlerSupportedAbis": [
++    "ARMEABI_V7A",
++    "ARM64_V8A",
++    "X86",
++    "X86_64"
++  ],
++  "ndkHandlerDefaultAbis": [
++    "ARMEABI_V7A",
++    "ARM64_V8A",
++    "X86",
++    "X86_64"
++  ],
++  "externalNativeBuildAbiFilters": [],
++  "ndkConfigAbiFilters": [],
++  "splitsFilterAbis": [],
++  "ideBuildOnlyTargetAbi": true
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_1413_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_1413_timing.txt
+new file mode 100644
+index 0000000..ad5cad1
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_1413_timing.txt
+@@ -0,0 +1,4 @@
++# C/C++ build system timings
++
++# C/C++ build system timings
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_1644_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_1644_timing.txt
+new file mode 100644
+index 0000000..16c5b4e
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_1644_timing.txt
+@@ -0,0 +1,13 @@
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++create_cxx_tasks
++  create-initial-cxx-model 14ms
++create_cxx_tasks completed in 15ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_164_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_164_timing.txt
+new file mode 100644
+index 0000000..61eff19
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_164_timing.txt
+@@ -0,0 +1,8 @@
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_21_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_21_timing.txt
+new file mode 100644
+index 0000000..8e54c47
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_21_timing.txt
+@@ -0,0 +1,13 @@
++# C/C++ build system timings
++create_cxx_tasks
++  create-initial-cxx-model 14ms
++create_cxx_tasks completed in 16ms
++
++# C/C++ build system timings
++create_cxx_tasks
++  create-initial-cxx-model
++    create-ARMEABI_V7A-model 10ms
++    [gap of 35ms]
++  create-initial-cxx-model completed in 52ms
++create_cxx_tasks completed in 61ms
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_2212_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_2212_timing.txt
+new file mode 100644
+index 0000000..1ae655d
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_2212_timing.txt
+@@ -0,0 +1,6 @@
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_612_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_612_timing.txt
+new file mode 100644
+index 0000000..9708df4
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_612_timing.txt
+@@ -0,0 +1,2 @@
++# C/C++ build system timings
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_731_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_731_timing.txt
+new file mode 100644
+index 0000000..9708df4
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_731_timing.txt
+@@ -0,0 +1,2 @@
++# C/C++ build system timings
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_849_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_849_timing.txt
+new file mode 100644
+index 0000000..9708df4
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_849_timing.txt
+@@ -0,0 +1,2 @@
++# C/C++ build system timings
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_968_timing.txt b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_968_timing.txt
+new file mode 100644
+index 0000000..61eff19
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/create_cxx_tasks_968_timing.txt
+@@ -0,0 +1,8 @@
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++
++# C/C++ build system timings
++
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4.json
+new file mode 100644
+index 0000000..8ea17b3
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4.json
+@@ -0,0 +1,11 @@
++{
++  "ndk": "/Users/tomekzaw/Library/Android/sdk/ndk/21.4.7075529",
++  "revision": {
++    "mMajor": 21,
++    "mMinor": 4,
++    "mMicro": 7075529,
++    "mPreview": 0,
++    "mPrecision": "MICRO",
++    "mPreviewSeparator": " "
++  }
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4.log b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4.log
+new file mode 100644
+index 0000000..0da961a
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4.log
+@@ -0,0 +1,72 @@
++[
++  {
++    "level_": 0,
++    "message_": "android.ndkVersion from module build.gradle is [21.4.7075529]",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 404960658
++  },
++  {
++    "level_": 0,
++    "message_": "android.ndkPath from module build.gradle is not set",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -1959194912
++  },
++  {
++    "level_": 0,
++    "message_": "ndk.dir in local.properties is not set",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -1254733719
++  },
++  {
++    "level_": 0,
++    "message_": "Not considering ANDROID_NDK_HOME because support was removed after deprecation period.",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 608080351
++  },
++  {
++    "level_": 0,
++    "message_": "sdkFolder is /Users/tomekzaw/Library/Android/sdk",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 465393690
++  }
++]
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4_key.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4_key.json
+new file mode 100644
+index 0000000..6d3a0d5
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_2s67n2w4_key.json
+@@ -0,0 +1,9 @@
++{
++  "ndkVersionFromDsl": "21.4.7075529",
++  "sdkFolder": "/Users/tomekzaw/Library/Android/sdk",
++  "sideBySideNdkFolderNames": [
++    "20.1.5948944",
++    "24.0.8215888",
++    "21.4.7075529"
++  ]
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838.json
+new file mode 100644
+index 0000000..da351d6
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838.json
+@@ -0,0 +1,11 @@
++{
++  "ndk": "/Users/tomekzaw/Library/Android/sdk/ndk/24.0.8215888",
++  "revision": {
++    "mMajor": 24,
++    "mMinor": 0,
++    "mMicro": 8215888,
++    "mPreview": 0,
++    "mPrecision": "MICRO",
++    "mPreviewSeparator": " "
++  }
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838.log b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838.log
+new file mode 100644
+index 0000000..64fd31c
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838.log
+@@ -0,0 +1,72 @@
++[
++  {
++    "level_": 0,
++    "message_": "android.ndkVersion from module build.gradle is [24.0.8215888]",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -1777055
++  },
++  {
++    "level_": 0,
++    "message_": "android.ndkPath from module build.gradle is not set",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -1526804877
++  },
++  {
++    "level_": 0,
++    "message_": "ndk.dir in local.properties is not set",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": -822343684
++  },
++  {
++    "level_": 0,
++    "message_": "Not considering ANDROID_NDK_HOME because support was removed after deprecation period.",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 1040470386
++  },
++  {
++    "level_": 0,
++    "message_": "sdkFolder is /Users/tomekzaw/Library/Android/sdk",
++    "file_": "",
++    "tag_": "",
++    "diagnosticCode_": 0,
++    "memoizedIsInitialized": 1,
++    "unknownFields": {
++      "fields": {},
++      "fieldsDescending": {}
++    },
++    "memoizedSize": -1,
++    "memoizedHashCode": 897783725
++  }
++]
+\ No newline at end of file
+diff --git a/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838_key.json b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838_key.json
+new file mode 100644
+index 0000000..0049448
+--- /dev/null
++++ b/node_modules/react-native-gesture-handler/android/build/intermediates/cxx/ndk_locator_record_525f1838_key.json
+@@ -0,0 +1,9 @@
++{
++  "ndkVersionFromDsl": "24.0.8215888",
++  "sdkFolder": "/Users/tomekzaw/Library/Android/sdk",
++  "sideBySideNdkFolderNames": [
++    "20.1.5948944",
++    "24.0.8215888",
++    "21.4.7075529"
++  ]
++}
+\ No newline at end of file
