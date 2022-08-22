@@ -105,9 +105,9 @@ Pod::Spec.new do |s|
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\"",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
   }
-  s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
+  s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
   s.xcconfig               = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Private/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
                                "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
 
   s.requires_arc = true
@@ -140,12 +140,14 @@ Pod::Spec.new do |s|
   s.dependency 'React-RCTImage'
   s.dependency 'React-Core/RCTWebSocket'
   s.dependency 'React-cxxreact'
+  s.dependency 'React-hermes'
   s.dependency 'React-jsi'
   s.dependency 'React-jsiexecutor'
   s.dependency 'React-jsinspector'
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
+  s.dependency 'hermes-engine'
 
   if reactVersion.match(/^0.62/)
     s.dependency 'ReactCommon/callinvoker'
