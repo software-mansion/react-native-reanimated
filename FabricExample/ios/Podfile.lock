@@ -625,26 +625,26 @@ PODS:
   - React-jsinspector (0.70.0-rc.2)
   - React-logger (0.70.0-rc.2):
     - glog
-  - react-native-safe-area-context (4.2.5):
+  - react-native-safe-area-context (4.3.3):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
-    - React
-    - react-native-safe-area-context/common (= 4.2.5)
-    - react-native-safe-area-context/fabric (= 4.2.5)
+    - React-Core
+    - react-native-safe-area-context/common (= 4.3.3)
+    - react-native-safe-area-context/fabric (= 4.3.3)
     - ReactCommon/turbomodule/core
-  - react-native-safe-area-context/common (4.2.5):
+  - react-native-safe-area-context/common (4.3.3):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
-    - React
+    - React-Core
     - ReactCommon/turbomodule/core
-  - react-native-safe-area-context/fabric (4.2.5):
+  - react-native-safe-area-context/fabric (4.3.3):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
-    - React
     - React-Codegen
+    - React-Core
     - react-native-safe-area-context/common
     - React-RCTFabric
     - ReactCommon/turbomodule/core
@@ -757,7 +757,7 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (3.15.0):
+  - RNScreens (3.16.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -765,8 +765,8 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 3.15.0)
-  - RNScreens/common (3.15.0):
+    - RNScreens/common (= 3.16.0)
+  - RNScreens/common (3.16.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -991,7 +991,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 12d1ed281abeda9428fb16c1026487542395c3b7
   React-jsinspector: 49a8875f27791316bb0039fa7627b4c1f0578cc7
   React-logger: 55ff3b00451ad1dc82654ba60134ec82ae4dbfed
-  react-native-safe-area-context: a9616f1fd257ff31946b518266a62f50dbcb3d5b
+  react-native-safe-area-context: 6ab17f921537d721f7315b198d82d6a65a2680f9
   React-perflogger: f53712c718e55b63c34140834fea4e8775948930
   React-RCTActionSheet: 476de07b325fcd61e89b5556125272b1fa7475e8
   React-RCTAnimation: b6e0756c75e3eb88a3d353cf4e6f4fb64a0c95d4
@@ -1008,7 +1008,7 @@ SPEC CHECKSUMS:
   ReactCommon: e192c52229a978dc7ab7bfb21aa38c686005db31
   RNGestureHandler: c2c12e610e4d94ea917bbd31801974edcee4dd94
   RNReanimated: 10249ac81b456595273588ce2195198d85fcbd28
-  RNScreens: 865ade69cfb9cc9d3bb3b42131dfa83855b5e7a0
+  RNScreens: bb17bdc9eca378fefc6103fb52c35b4f7ef0a791
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: f2aa7bc41e39cbf8edc0251a86fa89193b51491b
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
