@@ -91,28 +91,3 @@ export function withRepeat(
     } as RepeatAnimation;
   });
 }
-
-/**
- * @deprecated Kept for backward compatibility. Will be removed soon.
- */
-export function repeat(
-  _nextAnimation: NextAnimation<RepeatAnimation>,
-  numberOfReps = 2,
-  reverse = false,
-  callback?: AnimationCallback
-): Animation<RepeatAnimation> {
-  'worklet';
-  console.warn(
-    'Method `repeat` is deprecated. Please use `withRepeat` instead'
-  );
-  return withRepeat(_nextAnimation, numberOfReps, reverse, callback);
-}
-
-export function loop(
-  nextAnimation: NextAnimation<RepeatAnimation>,
-  numberOfLoops = 1
-): Animation<RepeatAnimation> {
-  'worklet';
-  console.warn('Method `loop` is deprecated. Please use `withRepeat` instead');
-  return repeat(nextAnimation, Math.round(numberOfLoops * 2), true);
-}

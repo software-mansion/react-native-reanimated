@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.0.0-rc.0",
+  "version": "3.0.0-rc.2",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
@@ -38,6 +38,7 @@
     "!**/__fixtures__",
     "!**/__mocks__",
     "!lib/typescript",
+    "react-native-reanimated.d.ts",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
