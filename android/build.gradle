@@ -117,7 +117,7 @@ def shouldAssertNoMultipleInstallations() {
   }
 }
 
-def assertNoMultipleInstallations() {
+def noMultipleInstallationsAssertion() {
     // Assert there are no multiple installations of Reanimated
     Set<File> files = fileTree(dir: rootDir.parent, include: "**/react-native-reanimated/package.json").files
     if (files.size() > 1) {
@@ -130,9 +130,6 @@ def assertNoMultipleInstallations() {
 boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
-    if (shouldAssertNoMultipleInstallations()) {
-      assertNoMultipleInstallations()
-    }
 }
 def reactNative = resolveReactNativeDirectory()
 def reactNativeManifest = file("$reactNative/package.json")
@@ -340,6 +337,17 @@ android {
             }
         }
     }
+}
+
+def assertionTask = task assertNoMultipleInstallations {
+    onlyIf { shouldAssertNoMultipleInstallations() && CLIENT_SIDE_BUILD }
+    doFirst {
+        noMultipleInstallationsAssertion()
+    }
+}
+
+tasks.preBuild {
+    dependsOn assertionTask
 }
 
 task cleanCmakeCache() {
