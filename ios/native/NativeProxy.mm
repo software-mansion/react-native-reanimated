@@ -31,7 +31,6 @@
 #endif
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#import <cxxreact/MessageQueueThread.h>
 #import <reacthermes/HermesExecutorFactory.h>
 #import "REAHermesExecutorRuntimeAdapter.h"
 #import "REAMessageThread.h"
@@ -207,10 +206,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime = facebook::hermes::makeHermesRuntime();
   facebook::hermes::HermesRuntime &hermesRuntimeRef = *runtime;
-  auto jsQueue = std::make_shared<REAMessageThread>(
-      [NSRunLoop currentRunLoop],
-      ^(NSError *error){
-      });
+  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
   auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(std::move(runtime), hermesRuntimeRef, jsQueue);
   std::shared_ptr<jsi::Runtime> animatedRuntime = adapter->runtime_;
   facebook::hermes::inspector::chrome::enableDebugging(std::move(adapter), "Reanimated runtime");
