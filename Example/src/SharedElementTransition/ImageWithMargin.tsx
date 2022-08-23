@@ -52,7 +52,7 @@ function Screen1({ navigation }) {
         <AnimatedImage 
           sharedTransitionTag="mleko"
           source={photo} 
-          style={{width: 150, height: 150, marginLeft: 50, marginTop: 50 }}
+          style={{width: 150, height: 150, margin: 70 }}
         />
         {/* <AnimatedImage 
           sharedTransitionTag="mleko"
@@ -100,18 +100,10 @@ function Screen2({ navigation }) {
           style={{width: '100%', height: 500}}
         /> 
       </Animated.View> */}
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
       <AnimatedImage
         sharedTransitionTag="mleko"
         source={photo} 
-        style={{width: '100%', height: 500}}
+        style={{width: '100%', height: 500, marginTop: 200}}
       />
       {/* <Animated.Text entering={FadeInDown.delay(1000).duration(500)} style={{margin: 10, textAlign: 'justify'}}>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id egestas nunc. Fusce molestie, libero a lacinia mollis, nisi nisi porttitor tortor, eget vestibulum lectus mauris id mi. Aenean imperdiet tempor est eu auctor. Praesent vitae mi at risus dapibus vulputate ac quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et. Maecenas at fermentum eros, sed accumsan enim. Nam diam est, dapibus malesuada volutpat non, vehicula at mauris. Curabitur vehicula commodo ligula. Maecenas tincidunt nibh et nulla fermentum efficitur. Donec id fermentum leo, in luctus dui. Nam nec nisi quam. In eu lobortis turpis. Quisque lacinia mi non hendrerit dictum.
@@ -173,8 +165,7 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          // stackAnimation: 'none',
-          stackAnimation: 'fade_from_bottom',
+          stackAnimation: 'none',
         }}>
         <Stack.Screen
           name="Screen1"

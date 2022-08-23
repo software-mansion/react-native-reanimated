@@ -66,8 +66,8 @@
     }
     _initialValuesSnapshotBackup[fromView.reactTag] = fromViewSnapshotBefore;
     
-    [_animationsManager onViewTransition:fromView before:fromViewSnapshotBefore after:after needsLayout:false];
-    [_animationsManager onViewTransition:toView before:fromViewSnapshotBefore after:after needsLayout:true];
+    [_animationsManager onViewTransition:fromView before:fromViewSnapshotBefore after:after];
+    [_animationsManager onViewTransition:toView before:fromViewSnapshotBefore after:after];
   } else {
     // TODO
     REASnapshot *toViewSnapshot = [[REASnapshot alloc] init:toView withConverter:converter withParent:startingViewConverter];
