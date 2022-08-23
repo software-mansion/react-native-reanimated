@@ -19,3 +19,30 @@ index 100d320..033dcd7 100644
      s.dependency "RCTRequired"
      s.dependency "RCTTypeSafety"
      s.dependency "ReactCommon/turbomodule/core"
+diff --git a/node_modules/react-native-gesture-handler/android/build.gradle b/node_modules/react-native-gesture-handler/android/build.gradle
+index ad5845e..7318b1b 100644
+--- a/node_modules/react-native-gesture-handler/android/build.gradle
++++ b/node_modules/react-native-gesture-handler/android/build.gradle
+@@ -59,6 +59,11 @@ def shouldUseCommonInterfaceFromReanimated() {
+     }
+ }
+ 
++def reactNativeArchitectures() {
++    def value = project.getProperties().get("reactNativeArchitectures")
++    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
++}
++
+ repositories {
+     mavenCentral()
+ }
+@@ -98,6 +103,10 @@ android {
+                 }
+             }
+         }
++
++        ndk {
++            abiFilters (*reactNativeArchitectures())
++        }
+     }
+ 
+     compileOptions {

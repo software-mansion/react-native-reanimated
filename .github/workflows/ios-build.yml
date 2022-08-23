@@ -12,8 +12,7 @@ on:
 
 jobs:
   build:
-    # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       matrix:
         working-directory: [Example, FabricExample]
