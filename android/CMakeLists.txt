@@ -23,13 +23,7 @@ set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-set (ignoreMe "${PLAYGROUND_APP_NAME}")
-
-if(${CLIENT_SIDE_BUILD})
-    set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
-else()
-    set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
-endif()
+set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
@@ -289,7 +283,6 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
             ${V8EXECUTOR_LIB}
     )
 else()
-    set (ignoreMe "${JS_RUNTIME_DIR}")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
     find_library(
             JSEXECUTOR_LIB
@@ -328,3 +321,9 @@ if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
             ./empty.cpp
     )
 endif()
+
+# Resolves "CMake Warning: Manually-specified variables were not used by the project"
+# when any of the following variables is not used in some build configuration.
+set (ignoreMe "${CLIENT_SIDE_BUILD}")
+set (ignoreMe "${JS_RUNTIME_DIR}")
+set (ignoreMe "${PLAYGROUND_APP_NAME}")
