@@ -1,10 +1,13 @@
 #include <cxxabi.h>
+#include <utility>
+
 #include "FrozenObject.h"
 #include "MutableValue.h"
 #include "MutableValueSetterProxy.h"
 #include "RemoteObject.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
+#include "ShareableValue.h"
 #include "SharedParent.h"
 
 namespace reanimated {
