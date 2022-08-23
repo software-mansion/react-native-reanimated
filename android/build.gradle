@@ -109,6 +109,14 @@ def getPlaygroundAppName() { // only for the development
     return playgroundAppName
 }
 
+def shouldAssertNoMultipleInstallations() {
+  if (rootProject.hasProperty("assertNoMultipleInstallations")) {
+    return rootProject.property("assertNoMultipleInstallations") == "true"
+  } else {
+    return true
+  }
+}
+
 def assertNoMultipleInstallations() {
     // Assert there are no multiple installations of Reanimated
     Set<File> files = fileTree(dir: rootDir.parent, include: "**/react-native-reanimated/package.json").files
@@ -122,7 +130,9 @@ def assertNoMultipleInstallations() {
 boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
-    // assertNoMultipleInstallations()
+    if (shouldAssertNoMultipleInstallations()) {
+      assertNoMultipleInstallations()
+    }
 }
 def reactNative = resolveReactNativeDirectory()
 def reactNativeManifest = file("$reactNative/package.json")
