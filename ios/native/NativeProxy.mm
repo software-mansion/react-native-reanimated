@@ -34,13 +34,12 @@
 #import <cxxreact/MessageQueueThread.h>
 #import <reacthermes/HermesExecutorFactory.h>
 #import "REAHermesExecutorRuntimeAdapter.h"
+#import "REAMessageThread.h"
 #elif __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
 #else
 #import <jsi/JSCRuntime.h>
 #endif
-
-#import <React/RCTMessageThread.h>
 
 namespace reanimated {
 
@@ -208,7 +207,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime = facebook::hermes::makeHermesRuntime();
   facebook::hermes::HermesRuntime &hermesRuntimeRef = *runtime;
-  auto jsQueue = std::make_shared<RCTMessageThread>(
+  auto jsQueue = std::make_shared<REAMessageThread>(
       [NSRunLoop currentRunLoop],
       ^(NSError *error){
       });

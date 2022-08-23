@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cxxreact/MessageQueueThread.h>
 #include <hermes/hermes.h>
 #include <reacthermes/Registration.h>
 #include <reacthermes/RuntimeAdapter.h>
 #include <memory>
+#include "REAMessageThread.h"
 
 namespace reanimated {
 
@@ -17,12 +17,14 @@ class HermesExecutorRuntimeAdapter
   HermesExecutorRuntimeAdapter(
       std::shared_ptr<facebook::jsi::Runtime> runtime,
       facebook::hermes::HermesRuntime &hermesRuntime,
-      std::shared_ptr<MessageQueueThread> thread)
+      std::shared_ptr<REAMessageThread> thread)
       : runtime_(runtime),
         hermesRuntime_(hermesRuntime),
         thread_(std::move(thread)) {}
 
-  virtual ~HermesExecutorRuntimeAdapter(){};
+  virtual ~HermesExecutorRuntimeAdapter() {
+    thread_->quitSynchronous();
+  };
 
   facebook::jsi::Runtime &getRuntime() override {
     return *runtime_;
@@ -45,7 +47,7 @@ class HermesExecutorRuntimeAdapter
  public:
   std::shared_ptr<facebook::jsi::Runtime> runtime_;
   facebook::hermes::HermesRuntime &hermesRuntime_;
-  std::shared_ptr<MessageQueueThread> thread_;
+  std::shared_ptr<REAMessageThread> thread_;
 };
 
 } // namespace reanimated
