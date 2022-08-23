@@ -4,6 +4,8 @@
 #include "ShareableValue.h"
 #include "SharedParent.h"
 
+#include <string>
+
 namespace reanimated {
 
 void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
