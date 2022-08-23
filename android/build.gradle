@@ -116,7 +116,7 @@ if (CLIENT_SIDE_BUILD) {
     List<Path> paths = Files.find(
             Paths.get(rootDir.parent),
             Integer.MAX_VALUE,
-            {path, fileAttributes -> path.toString().endsWith("/react-native-reanimated/package.json") }
+            { path, basicFileAttributes -> path.toString().endsWith("/react-native-reanimated/package.json") }
     ).toArray()
 
     String parsedLocation = ""
