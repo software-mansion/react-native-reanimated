@@ -21,7 +21,10 @@ class HermesExecutorRuntimeAdapter
         hermesRuntime_(hermesRuntime),
         thread_(std::move(thread)) {}
 
-  virtual ~HermesExecutorRuntimeAdapter(){};
+  virtual ~HermesExecutorRuntimeAdapter() {
+    facebook::hermes::inspector::chrome::disableDebugging(hermesRuntime_);
+    thread_->quitSynchronous();
+  };
 
   facebook::jsi::Runtime &getRuntime() override {
     return *runtime_;

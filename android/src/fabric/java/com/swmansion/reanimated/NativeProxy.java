@@ -8,9 +8,7 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.queue.MessageQueueThread;
-import com.facebook.react.bridge.queue.QueueThreadExceptionHandler;
-import com.facebook.react.bridge.queue.ReactQueueConfigurationImpl;
-import com.facebook.react.bridge.queue.ReactQueueConfigurationSpec;
+import com.facebook.react.bridge.queue.MessageQueueThreadSpec;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
@@ -300,17 +298,11 @@ public class NativeProxy {
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     FabricUIManager fabricUIManager =
-        (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
-    ReactQueueConfigurationImpl queueHolder = ReactQueueConfigurationImpl.create(
-        ReactQueueConfigurationSpec.createDefault(),
-        new QueueThreadExceptionHandler() {
-          @Override
-          public void handleException(Exception e) {
-            throw new RuntimeException(e);
-          }
-        }
-    );
-    installJSIBindings(fabricUIManager, queueHolder.getUIQueueThread());
+      (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
+    ReanimatedMessageQueueThread messageQueue = new ReanimatedMessageQueueThread();
+    Log.i("Reanimated", "Installing JSI Bindings");
+    installJSIBindings(fabricUIManager, messageQueue);
+    Log.i("Reanimated", "Done installing JSI Bindings");
     AnimationsManager animationsManager =
         mContext
             .get()
