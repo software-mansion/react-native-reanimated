@@ -1,8 +1,8 @@
 #pragma once
 
 #include <hermes/hermes.h>
-#include <reacthermes/Registration.h>
-#include <reacthermes/RuntimeAdapter.h>
+#include <hermes/inspector/RuntimeAdapter.h>
+#include <hermes/inspector/chrome/Registration.h>
 #include <memory>
 #include "REAMessageThread.h"
 

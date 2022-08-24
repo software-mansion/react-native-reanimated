@@ -5,6 +5,7 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 reactVersion = '0.0.0'
 reactTargetTvOS = false
 isUserApp = false
+nodeModulesDir = File.join(__dir__, "../../node_modules")
 
 begin
   # user app
@@ -14,6 +15,7 @@ begin
   reactVersion = reactJson["version"]
   reactTargetTvOS = reactJson["name"] == "react-native-tvos"
   isUserApp = true
+  nodeModulesDir = File.join(__dir__, "../../node_modules")
 rescue
   begin
     # monorepo
@@ -22,6 +24,7 @@ rescue
     reactJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))
     reactVersion = reactJson["version"]
     reactTargetTvOS = reactJson["name"] == "react-native-tvos"
+    nodeModulesDir = File.join(__dir__, "../../../../node_modules")
   rescue
     begin
       # Example app in reanimated repo
@@ -37,6 +40,7 @@ rescue
       reactJson = JSON.parse(File.read(File.join(__dir__, appName, "node_modules", "react-native", "package.json")))
       reactVersion = reactJson["version"]
       reactTargetTvOS = ENV["ReanimatedTVOSExample"] == "1"
+      nodeModulesDir = File.join(__dir__, appName, "node_modules")
     rescue
       # should never happen
       reactVersion = '0.68.0'
@@ -44,6 +48,8 @@ rescue
     end
   end
 end
+
+reactCommonDir = File.join(nodeModulesDir, "react-native", "ReactCommon")
 
 if isUserApp
   libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/"]
@@ -107,7 +113,7 @@ Pod::Spec.new do |s|
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
   s.xcconfig               = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Private/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"" + " \"" + reactCommonDir + "\"",
                                "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
 
   s.requires_arc = true
