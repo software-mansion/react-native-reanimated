@@ -48,7 +48,7 @@ def safeExtGet(prop, fallback) {
 
 def resolveBuildType() {
     Gradle gradle = getGradle()
-    String tskReqStr = gradle.getStartParameter().getTaskRequests().toString()
+    String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
     
     return tskReqStr.contains('Release') ? 'release' : 'debug'
 }
