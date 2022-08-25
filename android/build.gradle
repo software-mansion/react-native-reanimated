@@ -110,8 +110,8 @@ def getPlaygroundAppName() { // only for the development
 }
 
 def shouldAssertNoMultipleInstallations() {
-  if (rootProject.hasProperty("assertNoMultipleInstallations")) {
-    return rootProject.property("assertNoMultipleInstallations") == "true"
+  if (rootProject.hasProperty("disableMultipleInstancesCheck")) {
+    return rootProject.property("disableMultipleInstancesCheck") != "true"
   } else {
     return true
   }
