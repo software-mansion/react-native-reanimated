@@ -82,79 +82,82 @@ describe.each(transformPresets)('fixture with %s', (_, executeTransform) => {
 
     const { code } = executeTransform(input);
     expect(code).toMatchInlineSnapshot(`
-    "\\"use strict\\";
-    var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
-    function _getRequireWildcardCache() {
-        if (typeof WeakMap !== \\"function\\") return null;
-        var cache = new WeakMap();
-        _getRequireWildcardCache = function() {
-            return cache;
-        };
-        return cache;
-    }
-    function _interopRequireWildcard(obj) {
-        if (obj && obj.__esModule) {
-            return obj;
-        }
-        if (obj === null || typeof obj !== \\"object\\" && typeof obj !== \\"function\\") {
-            return {
-                default: obj
-            };
-        }
-        var cache = _getRequireWildcardCache();
-        if (cache && cache.has(obj)) {
-            return cache.get(obj);
-        }
-        var newObj = {};
-        var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
-        for(var key in obj){
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
-                if (desc && (desc.get || desc.set)) {
-                    Object.defineProperty(newObj, key, desc);
-                } else {
-                    newObj[key] = obj[key];
-                }
-            }
-        }
-        newObj.default = obj;
-        if (cache) {
-            cache.set(obj, newObj);
-        }
-        return newObj;
-    }
-    function Box() {
-        const offset = (0, _reactNativeReanimated).useSharedValue(0);
-        const animatedStyles = (0, _reactNativeReanimated).useAnimatedStyle(function() {
-            const _f = function _f() {
-                return {
-                    transform: [
-                        {
-                            translateX: offset.value * 255
-                        }
-                    ]
-                };
-            };
-            _f._closure = {
-                offset: offset
-            };
-            _f.asString = \\"function _f(){const{offset}=jsThis._closure;{return{transform:[{translateX:offset.value*255}]};}}\\";
-            _f.__workletHash = 7114514849439;
-            _f.__location = \\"${process.cwd()}/jest tests fixture (10:46)\\";
-            _f.__optimalization = 3;
-            return _f;
-        }());
-        return /*#__PURE__*/ React.createElement(React.Fragment, null, /*#__PURE__*/ React.createElement(_reactNativeReanimated.default.View, {
-            style: [
-                styles.box,
-                animatedStyles
-            ]
-        }), /*#__PURE__*/ React.createElement(Button, {
-            onPress: ()=>offset.value = Math.random(),
-            title: \\"Move\\"
-        }));
-    }
-    "
+      "\\"use strict\\";
+      Object.defineProperty(exports, \\"__esModule\\", {
+          value: true
+      });
+      const _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
+      function _getRequireWildcardCache(nodeInterop) {
+          if (typeof WeakMap !== \\"function\\") return null;
+          var cacheBabelInterop = new WeakMap();
+          var cacheNodeInterop = new WeakMap();
+          return (_getRequireWildcardCache = function(nodeInterop) {
+              return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+          })(nodeInterop);
+      }
+      function _interopRequireWildcard(obj, nodeInterop) {
+          if (!nodeInterop && obj && obj.__esModule) {
+              return obj;
+          }
+          if (obj === null || typeof obj !== \\"object\\" && typeof obj !== \\"function\\") {
+              return {
+                  default: obj
+              };
+          }
+          var cache = _getRequireWildcardCache(nodeInterop);
+          if (cache && cache.has(obj)) {
+              return cache.get(obj);
+          }
+          var newObj = {};
+          var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+          for(var key in obj){
+              if (key !== \\"default\\" && Object.prototype.hasOwnProperty.call(obj, key)) {
+                  var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+                  if (desc && (desc.get || desc.set)) {
+                      Object.defineProperty(newObj, key, desc);
+                  } else {
+                      newObj[key] = obj[key];
+                  }
+              }
+          }
+          newObj.default = obj;
+          if (cache) {
+              cache.set(obj, newObj);
+          }
+          return newObj;
+      }
+      function Box() {
+          const offset = (0, _reactNativeReanimated.useSharedValue)(0);
+          const animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function() {
+              const _f = function _f() {
+                  return {
+                      transform: [
+                          {
+                              translateX: offset.value * 255
+                          }
+                      ]
+                  };
+              };
+              _f._closure = {
+                  offset: offset
+              };
+              _f.asString = \\"function _f(){const{offset}=jsThis._closure;{return{transform:[{translateX:offset.value*255}]};}}\\";
+              _f.__workletHash = 7114514849439;
+              _f.__location = \\"${process.cwd()}/jest tests fixture (10:46)\\";
+              _f.__optimalization = 3;
+              return _f;
+          }());
+          return /*#__PURE__*/ React.createElement(React.Fragment, null, /*#__PURE__*/ React.createElement(_reactNativeReanimated.default.View, {
+              style: [
+                  styles.box,
+                  animatedStyles
+              ]
+          }), /*#__PURE__*/ React.createElement(Button, {
+              onPress: ()=>offset.value = Math.random(),
+              title: \\"Move\\"
+          }));
+      } /*#__PURE__*/ 
+      "
     `);
   });
 
@@ -261,6 +264,7 @@ describe.each(transformPresets)('fixture with %s', (_, executeTransform) => {
           _f.__location = \\"${process.cwd()}/jest tests fixture (2:6)\\";
           return _f;
       }();
+       // prettier-ignore
       "
     `);
   });
@@ -442,9 +446,9 @@ describe.each(transformPresets)('fixture with %s', (_, executeTransform) => {
           ]
       };
       const f = function() {
-          const _f = function _f(obj1) {
+          const _f = function _f(obj) {
               ;
-              return obj1.array[2];
+              return obj.array[2];
           };
           _f._closure = {};
           _f.asString = \\"function f(obj){;return obj.array[2];}\\";
@@ -458,7 +462,7 @@ describe.each(transformPresets)('fixture with %s', (_, executeTransform) => {
 
   it("doesn't capture `var` variables", () => {
     const input = `
-      const variable = 1;
+      const variable1 = 1;
 
       function f() {
         'worklet';
@@ -499,7 +503,9 @@ describe.each(transformPresets)('fixture with %s', (_, executeTransform) => {
       }
 
       visitAssignmentExpression(n: AssignmentExpression): Expression {
-        if (n.left.property.value === '_closure') {
+        // @ts-ignore if it doesn't exist, there's no closure
+        if (n.left.property?.value === '_closure') {
+          // @ts-ignore if it doesn't exist, there's no closure
           this.closureBindings = n.right.properties;
         }
 
@@ -1011,37 +1017,40 @@ describe.each(transformPresets)('fixture with %s', (_, executeTransform) => {
 
     const { code } = executeTransform(input);
     expect(code).toMatchInlineSnapshot(`
-      "\\"use strict\\";
-      var _reactNativeGestureHandler = require(\\"react-native-gesture-handler\\");
-      const foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(function() {
-          const _f = function _f() {
-              console.log('onBegin');
-          };
-          _f._closure = {};
-          _f.asString = 'function _f(){console.log(\\"onBegin\\");}';
-          _f.__workletHash = 11722320302202;
-          _f.__location = \\"${process.cwd()}/jest tests fixture (6:17)\\";
-          return _f;
-      }()).onStart(function() {
-          const _f = function _f(_event) {
-              console.log('onStart');
-          };
-          _f._closure = {};
-          _f.asString = 'function _f(_event){console.log(\\"onStart\\");}';
-          _f.__workletHash = 6526883337326;
-          _f.__location = \\"${process.cwd()}/jest tests fixture (9:17)\\";
-          return _f;
-      }()).onEnd(function() {
-          const _f = function _f(_event, _success) {
-              console.log('onEnd');
-          };
-          _f._closure = {};
-          _f.asString = 'function _f(_event,_success){console.log(\\"onEnd\\");}';
-          _f.__workletHash = 707182796977;
-          _f.__location = \\"${process.cwd()}/jest tests fixture (12:15)\\";
-          return _f;
-      }());
-      "
+    "\\"use strict\\";
+    Object.defineProperty(exports, \\"__esModule\\", {
+        value: true
+    });
+    const _reactNativeGestureHandler = require(\\"react-native-gesture-handler\\");
+    const foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(function() {
+        const _f = function _f() {
+            console.log('onBegin');
+        };
+        _f._closure = {};
+        _f.asString = 'function _f(){console.log(\\"onBegin\\");}';
+        _f.__workletHash = 11722320302202;
+        _f.__location = \\"${process.cwd()}/jest tests fixture (6:17)\\";
+        return _f;
+    }()).onStart(function() {
+        const _f = function _f(_event) {
+            console.log('onStart');
+        };
+        _f._closure = {};
+        _f.asString = 'function _f(_event){console.log(\\"onStart\\");}';
+        _f.__workletHash = 6526883337326;
+        _f.__location = \\"${process.cwd()}/jest tests fixture (9:17)\\";
+        return _f;
+    }()).onEnd(function() {
+        const _f = function _f(_event, _success) {
+            console.log('onEnd');
+        };
+        _f._closure = {};
+        _f.asString = 'function _f(_event,_success){console.log(\\"onEnd\\");}';
+        _f.__workletHash = 707182796977;
+        _f.__location = \\"${process.cwd()}/jest tests fixture (12:15)\\";
+        return _f;
+    }());
+    "
     `);
   });
 
