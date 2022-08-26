@@ -1,20 +1,34 @@
 use std::path::PathBuf;
 
 use serde_json::Value;
-use swc_plugin::{ast::*, plugin_transform, source_map::FileName, TransformPluginProgramMetadata};
+use swc_core::{
+    ast::*,
+    common::FileName,
+    plugin::{
+        metadata::TransformPluginMetadataContextKind, metadata::TransformPluginProgramMetadata,
+        plugin_transform,
+    },
+    visit::as_folder,
+    visit::FoldWith,
+};
 use swc_reanimated_worklets_visitor::{create_worklets_visitor, WorkletsOptions};
 
 #[plugin_transform]
 pub fn process(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
-    let context: Value = serde_json::from_str(&metadata.transform_context)
-        .expect("Should able to deserialize context");
-    let filename = if let Some(filename) = (&context["filename"]).as_str() {
+    let filename = if let Some(filename) =
+        &metadata.get_context(&TransformPluginMetadataContextKind::Filename)
+    {
         FileName::Real(PathBuf::from(filename))
     } else {
         FileName::Anon
     };
 
-    let plugin_config: Option<Value> = serde_json::from_str(&metadata.plugin_config).ok();
+    let plugin_config: Option<Value> = serde_json::from_str(
+        &metadata
+            .get_transform_plugin_config()
+            .expect("Should be able to get config"),
+    )
+    .ok();
 
     let relative_cwd = if let Some(config) = plugin_config {
         config["relativeCwd"]
