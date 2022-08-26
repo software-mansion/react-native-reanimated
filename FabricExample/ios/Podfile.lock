@@ -720,7 +720,7 @@ PODS:
     - React-jsi (= 0.70.0-rc.4)
     - React-logger (= 0.70.0-rc.4)
     - React-perflogger (= 0.70.0-rc.4)
-  - RNGestureHandler (2.5.0):
+  - RNGestureHandler (2.6.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -757,7 +757,7 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (3.16.0):
+  - RNScreens (3.17.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -765,8 +765,8 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 3.16.0)
-  - RNScreens/common (3.16.0):
+    - RNScreens/common (= 3.17.0)
+  - RNScreens/common (3.17.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1006,9 +1006,9 @@ SPEC CHECKSUMS:
   React-rncore: 2e7ba0d27522e086256cc4b8812a6b848797e78f
   React-runtimeexecutor: acdac2c12107f252067a4a9ce763401be24ce241
   ReactCommon: cd66b63dd9594a99e8b882b28342e8ba3fab9b39
-  RNGestureHandler: c2c12e610e4d94ea917bbd31801974edcee4dd94
-  RNReanimated: 10249ac81b456595273588ce2195198d85fcbd28
-  RNScreens: bb17bdc9eca378fefc6103fb52c35b4f7ef0a791
+  RNGestureHandler: 182b4e135cc4fec4988687e2f123e302dc6b4b71
+  RNReanimated: a91b2ed2ac39b96a6a024ab55a6b546b1ec10f84
+  RNScreens: e2cd04caa74748a6e42609a7b84f76c71d70a6ee
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: d7ebba05ea16d2c8b196d640cb8107f9f0aefcde
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
