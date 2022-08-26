@@ -145,10 +145,11 @@ pub static BLACKLISTED_FUNCTIONS: [&str; 52] = [
     "call",
     "__callAsync",
     "includes",
-  ];
+];
 
 pub static FUNCTION_ARGS_TO_WORKLETIZE: Lazy<HashMap<&'static str, Vec<usize>>> = Lazy::new(|| {
     HashMap::from([
+        ("useFrameCallback", vec![0]),
         ("useAnimatedStyle", vec![0]),
         ("useAnimatedProps", vec![0]),
         ("createAnimatedPropAdapter", vec![0]),
@@ -156,7 +157,6 @@ pub static FUNCTION_ARGS_TO_WORKLETIZE: Lazy<HashMap<&'static str, Vec<usize>>> 
         ("useAnimatedScrollHandler", vec![0]),
         ("useAnimatedReaction", vec![0, 1]),
         ("useWorkletCallback", vec![0]),
-        ("createWorklet", vec![0]),
         // animations' callbacks
         ("withTiming", vec![2]),
         ("withSpring", vec![2]),
@@ -167,5 +167,5 @@ pub static FUNCTION_ARGS_TO_WORKLETIZE: Lazy<HashMap<&'static str, Vec<usize>>> 
 
 pub static FUNCTIONLESS_FLAG: i32 = 0b00000001;
 pub static STATEMENTLESS_FLAG: i32 = 0b00000010;
-pub static LEAST_SIGNIFICANT_32_BITS: i64 = 0b0000000000000000000000000000000011111111111111111111111111111111;
-
+pub static LEAST_SIGNIFICANT_32_BITS: i64 =
+    0b0000000000000000000000000000000011111111111111111111111111111111;
