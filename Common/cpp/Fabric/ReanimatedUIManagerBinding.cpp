@@ -4,6 +4,8 @@
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 
+#include <utility>
+
 using namespace facebook;
 using namespace react;
 
