@@ -37,6 +37,8 @@ jobs:
         run: /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
       - name: Install CMake 3.6.4111459
         run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "cmake;3.6.4111459"
+      - name: List installed CMake versions
+        run: ls $ANDROID_HOME/cmake
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
