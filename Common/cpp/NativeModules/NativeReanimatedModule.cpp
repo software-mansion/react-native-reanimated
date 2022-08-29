@@ -29,6 +29,8 @@
 #include "ShareableValue.h"
 #include "WorkletEventHandler.h"
 
+#include "HermesExecutorRuntimeAdapter.h"
+
 using namespace facebook;
 
 namespace reanimated {
@@ -84,7 +86,12 @@ NativeReanimatedModule::NativeReanimatedModule(
         propObtainer,
 #endif
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-    PlatformDepMethodsHolder platformDepMethodsHolder)
+    PlatformDepMethodsHolder platformDepMethodsHolder
+#if HERMES_ENABLE_DEBUGGER
+    ,
+    std::shared_ptr<ReanimatedDecoratedRuntime> decoratedRuntime
+#endif
+    )
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
       mapperRegistry(std::make_shared<MapperRegistry>()),
@@ -96,6 +103,9 @@ NativeReanimatedModule::NativeReanimatedModule(
       propObtainer(propObtainer),
 #endif
       animatedSensorModule(platformDepMethodsHolder, this),
+#if HERMES_ENABLE_DEBUGGER
+      runtimeDecorator_(decoratedRuntime),
+#endif
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
@@ -103,6 +113,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction)
 #endif
+
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);

@@ -20,6 +20,8 @@
 #include "RuntimeManager.h"
 #include "Scheduler.h"
 
+#include "HermesExecutorRuntimeAdapter.h"
+
 namespace reanimated {
 
 using FrameCallback = std::function<void(double)>;
@@ -47,7 +49,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
           propObtainer,
 #endif
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-      PlatformDepMethodsHolder platformDepMethodsHolder);
+      PlatformDepMethodsHolder platformDepMethodsHolder
+#if HERMES_ENABLE_DEBUGGER
+      ,
+      std::shared_ptr<ReanimatedDecoratedRuntime> decoratedRuntime
+#endif
+  );
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
       override;
@@ -160,6 +167,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
+
+#if HERMES_ENABLE_DEBUGGER
+  std::shared_ptr<ReanimatedDecoratedRuntime> runtimeDecorator_;
+#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
