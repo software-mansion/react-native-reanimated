@@ -278,7 +278,9 @@ class ClosureGenerator {
 }
 
 function isRelease() {
-  return process.env.BABEL_ENV !== 'development';
+  return (
+    process.env.BABEL_ENV === 'release' || process.env.BABEL_ENV === 'jest'
+  );
 }
 
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
@@ -392,7 +394,10 @@ function makeWorklet(t, fun, state) {
     sourceFileName: state.file.opts.filename,
   });
 
-  const transformed = transformSync(codeObject.code, {
+  const code =
+    '(' + (t.isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
+
+  const transformed = transformSync(code, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
