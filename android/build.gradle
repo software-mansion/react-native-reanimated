@@ -281,7 +281,7 @@ android {
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
-            version "3.8+"
+            version "3.8.0+"
         }
     }
     lintOptions {
