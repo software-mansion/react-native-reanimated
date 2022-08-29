@@ -52,7 +52,7 @@ end
 reactCommonDir = File.join(nodeModulesDir, "react-native", "ReactCommon")
 
 if isUserApp
-  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/"]
+  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json"]
   libInstancesArray = libInstances.split("\n")
   if libInstancesArray.length() > 1
     parsedLocation = ''
@@ -98,8 +98,7 @@ Pod::Spec.new do |s|
 
   s.source_files = [
     "ios/**/*.{mm,h,m}",
-    "Common/cpp/**/*.cpp",
-    "Common/cpp/headers/**/*.h"
+    "Common/cpp/**/*.{cpp,h}"
   ]
 
   s.preserve_paths = [

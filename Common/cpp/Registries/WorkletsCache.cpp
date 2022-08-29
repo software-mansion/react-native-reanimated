@@ -2,6 +2,9 @@
 #include "FrozenObject.h"
 #include "ShareableValue.h"
 
+#include <string>
+#include <utility>
+
 using namespace facebook;
 
 namespace reanimated {
