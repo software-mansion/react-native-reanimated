@@ -120,6 +120,8 @@ struct ReentrancyCheck {
 #endif
 };
 
+#pragma GCC diagnostic ignored "-Wunused-private-field"
+
 class ReanimatedDecoratedRuntime : jsi::WithRuntimeDecorator<ReentrancyCheck> {
  public:
   ReanimatedDecoratedRuntime(
@@ -152,5 +154,7 @@ class ReanimatedDecoratedRuntime : jsi::WithRuntimeDecorator<ReentrancyCheck> {
   facebook::hermes::HermesRuntime &hermesRuntime_;
   ReentrancyCheck reentrancyCheck_;
 };
+
+#pragma GCC diagnostic warning "-Wunused-private-field"
 
 } // namespace reanimated
