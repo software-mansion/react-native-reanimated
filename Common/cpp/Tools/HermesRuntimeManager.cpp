@@ -65,7 +65,7 @@ HermesRuntimeManager::HermesRuntimeManager(
       hermesRuntime_(*runtime_) {
 #if HERMES_ENABLE_DEBUGGER
   auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(
-      runtime_, hermesRuntime_, messageQueueThread);
+      runtime_, hermesRuntime_, std::move(messageQueueThread));
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated runtime");
 #endif
