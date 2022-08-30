@@ -25,7 +25,9 @@ class HermesExecutorRuntimeAdapter
         hermesRuntime_(hermesRuntime),
         thread_(std::move(thread)) {}
 
-  virtual ~HermesExecutorRuntimeAdapter(){};
+  virtual ~HermesExecutorRuntimeAdapter() {
+    thread_->quitSynchronous();
+  };
 
   facebook::jsi::Runtime &getRuntime() override {
     return *runtime_;
