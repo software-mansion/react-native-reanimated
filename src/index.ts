@@ -1,4 +1,4 @@
-// tree-shaken side effects
+import * as Animated from './Animated';
 import webGlobalIsInitialized from './reanimated2/js-reanimated/global';
 if (!webGlobalIsInitialized) {
   /* 
@@ -10,4 +10,4 @@ if (!webGlobalIsInitialized) {
 }
 
 export * from './reanimated2';
-export * as default from './Animated';
+export default Animated;

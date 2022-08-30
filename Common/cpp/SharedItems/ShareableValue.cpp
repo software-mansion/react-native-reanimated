@@ -1,4 +1,5 @@
 #include <cxxabi.h>
+#include <utility>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/primitives.h>
@@ -10,6 +11,7 @@
 #include "RemoteObject.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
+#include "ShareableValue.h"
 #include "SharedParent.h"
 
 namespace reanimated {
