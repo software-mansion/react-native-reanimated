@@ -102,7 +102,7 @@ public class NativeProxy {
       mHybridData = hybridData;
     }
 
-    public native void keyboardEventDataUpdater(boolean isShown, boolean isAnimating, int height);
+    public native void keyboardEventDataUpdater(int keyboardState, int height);
   }
 
   @DoNotStrip

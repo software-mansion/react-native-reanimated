@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import FrameCallbackRegistry from '../frameCallback/FrameCallbackRegistry';
+import FrameCallbackRegistryJS from '../frameCallback/FrameCallbackRegistryJS';
 
 export type FrameCallback = {
   setActive: (isActive: boolean) => void;
   isActive: boolean;
   callbackId: number;
 };
-const frameCallbackRegistry = new FrameCallbackRegistry();
+const frameCallbackRegistry = new FrameCallbackRegistryJS();
 
 export function useFrameCallback(
   callback: () => void,

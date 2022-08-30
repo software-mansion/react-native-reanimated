@@ -1,6 +1,15 @@
 #import "REAKeyboardEventObserver.h"
 #import <Foundation/Foundation.h>
 #import <React/RCTDefines.h>
+#import <React/RCTUIManager.h>
+
+typedef NS_ENUM(NSUInteger, KeyboardState) {
+  UNKNOWN = 0,
+  OPENING = 1,
+  OPEN = 2,
+  CLOSING = 3,
+  CLOSED = 4,
+};
 
 @implementation REAKeyboardEventObserver {
   NSNumber *_nextListenerId;
@@ -8,9 +17,7 @@
   CADisplayLink *displayLink;
   int _windowsCount;
   UIView *_keyboardView;
-
-  bool _isShown;
-  bool _isAnimating;
+  KeyboardState _state;
 }
 
 - (instancetype)init
@@ -18,6 +25,7 @@
   self = [super init];
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
+  _state = UNKNOWN;
   return self;
 }
 
@@ -71,14 +79,12 @@
 
 - (void)runAnimation
 {
-  _isAnimating = true;
   displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
   [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 }
 
 - (void)stopAnimation
 {
-  _isAnimating = false;
   [displayLink invalidate];
   displayLink = nil;
   [self updateKeyboardFrame];
@@ -91,33 +97,41 @@
     return;
   }
 
+  CGFloat keyboardHeight = [self computeKeyboardHeight:keyboardView];
+  for (NSString *key in _listeners.allKeys) {
+    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
+  }
+}
+
+- (CGFloat)computeKeyboardHeight:(UIView *)keyboardView
+{
   CGFloat keyboardFrameY = [keyboardView.layer presentationLayer].frame.origin.y;
   CGFloat keyboardWindowH = keyboardView.window.bounds.size.height;
   CGFloat keyboardHeight = keyboardWindowH - keyboardFrameY;
-  for (NSString *key in _listeners.allKeys) {
-    ((KeyboardEventListenerBlock)_listeners[key])(_isShown, _isAnimating, keyboardHeight);
-  }
+  return keyboardHeight;
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-  _isShown = true;
+  _state = OPENING;
   [self runAnimation];
 }
 
 - (void)keyboardDidShow:(NSNotification *)notification
 {
+  _state = OPEN;
   [self stopAnimation];
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
+  _state = CLOSING;
   [self runAnimation];
 }
 
 - (void)keyboardDidHide:(NSNotification *)notification
 {
-  _isShown = false;
+  _state = CLOSED;
   [self stopAnimation];
 }
 
@@ -150,6 +164,9 @@
   }
 
   [_listeners setObject:listener forKey:listenerId];
+  if (_state == UNKNOWN) {
+    [self recognizeInitialKeyboardState];
+  }
   return [listenerId intValue];
 }
 
@@ -161,6 +178,21 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
   }
 }
+
+- (void)recognizeInitialKeyboardState
+{
+  RCTExecuteOnMainQueue(^() {
+    UIView *keyboardView = [self getKeyboardView];
+    if (keyboardView == nil) {
+      self->_state = CLOSED;
+    } else {
+      CGFloat keyboardHeight = [self computeKeyboardHeight:keyboardView];
+      self->_state = keyboardHeight == 0 ? CLOSED : OPEN;
+    }
+    [self updateKeyboardFrame];
+  });
+}
+
 #endif
 
 @end

@@ -3,7 +3,14 @@ id: useAnimatedKeyboard
 title: useAnimatedKeyboard
 sidebar_label: useAnimatedKeyboard
 ---
-With the `useAnimatedKeyboard` hook, you can create animations based on current kayboard position.
+
+:::caution
+
+Android implementation of `useAnimatedKeyboard` is an experimental feature.
+
+:::
+
+With the `useAnimatedKeyboard` hook, you can create animations based on current keyboard position.
 
 On Android, make sure to set `android:windowSoftInputMode` in your `AndroidMainfest.xml` to `adjustResize`. Then, using the `useAnimatedKeyboard` hook disables
 the default Android behavior (resizing the view to accomodate keyboard) in the whole app. Using values from `useAnimatedKeyboard` hook you can handle the keyboard yourself. Unmounting all components that use `useAnimatedKeyboard` hook brings back the default Android behavior.
@@ -19,12 +26,10 @@ Hook `useAnimatedKeyboard` returns an instance of [[AnimatedKeyboardInfo](#anima
 
 #### `AnimatedKeyboardInfo: [object]`
 Properties:
-* `isShown`: [[SharedValue](../../api/hooks/useSharedValue)] contains [boolean]
-  contains info whether keyboard is shown on the screen
-* `isAnimating`: [[SharedValue](../../api/hooks/useSharedValue)] contains [boolean]
-  contains info whether keyboard is currently animating
-* `height`: [[SharedValue](../../api/hooks/useSharedValue)] contains [number]
+* `height`: [[SharedValue](../../api/hooks/useSharedValue)] contains `[number]`
   contains current height of the keyboard
+* `state`: [[SharedValue](../../api/hooks/useSharedValue)] contains `[enum]`
+  contains current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }`
 
 ### Example
 ```js

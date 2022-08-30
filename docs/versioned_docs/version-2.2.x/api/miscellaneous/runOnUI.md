@@ -4,13 +4,13 @@ title: runOnUI
 sidebar_label: runOnUI
 ---
 
-Enables executing worklet function on the UI thread. Note that UI execution is asynchronous from the caller’s perspective. When you pass arguments, they will be copied to the UI JS context.
+Enables executing worklet functions on the UI thread. Note that UI execution is asynchronous from the caller’s perspective. When you pass arguments, they will be copied to the UI context.
 
 ### Arguments
 
 #### `fn` [function]
 
-The first and the only argument is a worklet function that is supposed to be run.
+The first and only argument is a worklet function that is supposed to be run.
 
 ### Returns
 

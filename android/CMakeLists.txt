@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12.0)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DRNVERSION=${RNVERSION} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall")
+set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DRNVERSION=${RNVERSION} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall -Werror")
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     set (ALL_FLAGS "${DEFAULT_FLAGS} -DRCT_NEW_ARCH_ENABLED")
 else()
@@ -23,13 +23,7 @@ set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-set (ignoreMe "${PLAYGROUND_APP_NAME}")
-
-if(${CLIENT_SIDE_BUILD})
-    set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
-else()
-    set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
-endif()
+set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
@@ -107,16 +101,16 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/yoga"
-        "${COMMON_SRC_DIR}/cpp/headers/Tools"
-        "${COMMON_SRC_DIR}/cpp/headers/SpecTools"
-        "${COMMON_SRC_DIR}/cpp/headers/NativeModules"
-        "${COMMON_SRC_DIR}/cpp/headers/SharedItems"
-        "${COMMON_SRC_DIR}/cpp/headers/Registries"
-        "${COMMON_SRC_DIR}/cpp/headers/LayoutAnimations"
-        "${COMMON_SRC_DIR}/cpp/headers/AnimatedSensor"
-        "${COMMON_SRC_DIR}/cpp/headers/Fabric"
+        "${COMMON_SRC_DIR}/cpp/Tools"
+        "${COMMON_SRC_DIR}/cpp/SpecTools"
+        "${COMMON_SRC_DIR}/cpp/NativeModules"
+        "${COMMON_SRC_DIR}/cpp/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/Registries"
+        "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
+        "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
+        "${COMMON_SRC_DIR}/cpp/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
-        "${SRC_DIR}/main/cpp/headers"
+        "${SRC_DIR}/main/cpp"
 )
 
 find_library(
@@ -213,6 +207,12 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             NO_CMAKE_FIND_ROOT_PATH
     )
     find_library(
+            RRC_VIEW
+            rrc_view
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+    find_library(
             REACT_RENDER_SCHEDULER
             react_render_scheduler
             PATHS ${LIBRN_DIR}
@@ -244,21 +244,25 @@ target_link_libraries(
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-    target_include_directories(
+    if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+        # From `hermes-engine` npm package
+        target_include_directories(
             ${PACKAGE_NAME}
             PRIVATE
             "${JS_RUNTIME_DIR}/android/include"
-    )
-    file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
-    find_library(
-            HERMES_LIB
-            hermes
-            PATHS ${HERMES_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
+        )
+    else()
+        # Bundled Hermes from module `com.facebook.react:hermes-engine` or project `:ReactAndroid:hermes-engine`
+        target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/API"
+            "${JS_RUNTIME_DIR}/public"
+        )
+    endif()
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${HERMES_LIB}
+            "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so"
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
@@ -279,7 +283,6 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
             ${V8EXECUTOR_LIB}
     )
 else()
-    set (ignoreMe "${JS_RUNTIME_DIR}")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
     find_library(
             JSEXECUTOR_LIB
@@ -303,6 +306,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             ${REACT_DEBUG}
             ${REACT_RENDER_DEBUG}
             ${RRC_ROOT}
+            ${RRC_VIEW}
             ${FABRICJNI}
             ${REACT_RENDER_SCHEDULER}
     )
@@ -317,3 +321,9 @@ if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
             ./empty.cpp
     )
 endif()
+
+# Resolves "CMake Warning: Manually-specified variables were not used by the project"
+# when any of the following variables is not used in some build configuration.
+set (ignoreMe "${CLIENT_SIDE_BUILD}")
+set (ignoreMe "${JS_RUNTIME_DIR}")
+set (ignoreMe "${PLAYGROUND_APP_NAME}")

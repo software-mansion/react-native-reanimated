@@ -123,9 +123,16 @@ android {
         }
     }
     signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
     }
     buildTypes {
         debug {
+            signingConfig signingConfigs.debug
             packagingOptions {
                 doNotStrip "**/**/*.so"
             }
@@ -136,6 +143,7 @@ android {
             }
         }
         release {
+            signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
