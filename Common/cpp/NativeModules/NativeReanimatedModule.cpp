@@ -20,6 +20,7 @@
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "FrozenObject.h"
+#include "HermesRuntimeManager.h"
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
 #include "MapperRegistry.h"
@@ -28,8 +29,6 @@
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
 #include "WorkletEventHandler.h"
-
-#include "HermesExecutorRuntimeAdapter.h"
 
 using namespace facebook;
 
@@ -89,7 +88,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     PlatformDepMethodsHolder platformDepMethodsHolder
 #if HERMES_ENABLE_DEBUGGER
     ,
-    std::shared_ptr<ReanimatedDecoratedRuntime> decoratedRuntime
+    std::shared_ptr<HermesRuntimeManager> hermesRuntimeManager
 #endif
     )
     : NativeReanimatedModuleSpec(jsInvoker),
@@ -104,7 +103,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
       animatedSensorModule(platformDepMethodsHolder, this),
 #if HERMES_ENABLE_DEBUGGER
-      runtimeDecorator_(decoratedRuntime),
+      hermesRuntimeManager_(hermesRuntimeManager),
 #endif
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(

@@ -13,14 +13,13 @@
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
+#include "HermesRuntimeManager.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
-
-#include "HermesExecutorRuntimeAdapter.h"
 
 namespace reanimated {
 
@@ -52,7 +51,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       PlatformDepMethodsHolder platformDepMethodsHolder
 #if HERMES_ENABLE_DEBUGGER
       ,
-      std::shared_ptr<ReanimatedDecoratedRuntime> decoratedRuntime
+      std::shared_ptr<HermesRuntimeManager> hermesRuntimeManager
 #endif
   );
 
@@ -167,9 +166,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
-
 #if HERMES_ENABLE_DEBUGGER
-  std::shared_ptr<ReanimatedDecoratedRuntime> runtimeDecorator_;
+  std::shared_ptr<HermesRuntimeManager> hermesRuntimeManager_;
 #endif
 
 #ifdef RCT_NEW_ARCH_ENABLED

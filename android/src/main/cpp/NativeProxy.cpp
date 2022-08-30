@@ -8,7 +8,7 @@
 #include <string>
 
 #if JS_RUNTIME_HERMES
-#include <hermes/hermes.h>
+#include "HermesRuntimeManager.h"
 #elif JS_RUNTIME_V8
 #include <v8runtime/V8RuntimeFactory.h>
 #else
@@ -30,7 +30,6 @@
 #endif
 
 #if HERMES_ENABLE_DEBUGGER
-#include "HermesExecutorRuntimeAdapter.h"
 #include "react/jni/JMessageQueueThread.h"
 #endif
 
@@ -213,18 +212,13 @@ void NativeProxy::installJSIBindings(
   };
 
 #if JS_RUNTIME_HERMES
-  auto configBuiler =
-      ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
-  std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
-      facebook::hermes::makeHermesRuntime(configBuiler.build());
-  facebook::hermes::HermesRuntime &hermesRuntimeRef = *runtime;
-  auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
-
-  auto decoratedRuntime = std::make_shared<ReanimatedDecoratedRuntime>(
-      std::move(runtime), hermesRuntimeRef, jsQueue);
-
+  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(
+#if HERMES_ENABLE_DEBUGGER
+      std::make_shared<JMessageQueueThread>(messageQueueThread)
+#endif
+  );
   std::shared_ptr<jsi::Runtime> animatedRuntime =
-      decoratedRuntime->getRuntime();
+      hermesRuntimeManager->getRuntime();
 #elif JS_RUNTIME_V8
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = false;
@@ -308,7 +302,7 @@ void NativeProxy::installJSIBindings(
       platformDepMethodsHolder
 #if HERMES_ENABLE_DEBUGGER
       ,
-      decoratedRuntime
+      hermesRuntimeManager
 #endif
   );
 
