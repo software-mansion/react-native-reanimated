@@ -17,6 +17,18 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+/** HermesRuntimeManager
+ *
+ * It is very important that this object exists as long as the app is running
+ * and is destroyed before any reload or shutdown of the app. In more simple
+ * terms: it should only exists as long as the ReanimatedNativeModule exists, so
+ * it is easily done by keeping a reference (and the only one to be exact) to
+ * this object inside ReanimatedNativeModule.
+ *
+ * When HERMES_ENABLE_DEBUGGER is set the destructor of this object disconnects
+ * the runtime from the debugger. Failing to do so will crash the app.
+ */
+
 class HermesRuntimeManager {
  public:
   HermesRuntimeManager(
