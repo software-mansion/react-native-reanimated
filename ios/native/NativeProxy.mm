@@ -217,7 +217,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   );
   std::shared_ptr<jsi::Runtime> animatedRuntime = hermesRuntimeManager->getRuntime();
 #elif __has_include(<hermes/hermes.h>)
-  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>();
+  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(
+#if HERMES_ENABLE_DEBUGGER
+      std::make_shared<REAMessageThread>(
+          [NSRunLoop currentRunLoop],
+          ^(NSError *error) {
+            throw error;
+          })
+#endif
+  );
   std::shared_ptr<jsi::Runtime> animatedRuntime = hermesRuntimeManager->getRuntime();
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
