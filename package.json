@@ -59,9 +59,7 @@
     "plugin.js",
     "!__snapshots__",
     "!*.test.js",
-    "!*.test.js.map",
-    "plugin-swc/target/wasm32-wasi/release/swc_plugin_reanimated.wasm",
-    "plugin-swc/package.json"
+    "!*.test.js.map"
   ],
   "repository": {
     "type": "git",
