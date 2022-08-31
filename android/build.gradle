@@ -47,13 +47,10 @@ def safeExtGet(prop, fallback) {
 }
 
 def resolveBuildType() {
-    def buildType = "debug"
-    tasks.all({ task ->
-        if (task.name == "buildCMakeRelease") {
-            buildType = "release"
-        }
-    })
-    return buildType
+    Gradle gradle = getGradle()
+    String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
+    
+    return tskReqStr.contains('Release') ? 'release' : 'debug'
 }
 
 def resolveClientSideBuild() {
