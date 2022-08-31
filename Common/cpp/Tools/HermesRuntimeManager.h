@@ -23,7 +23,8 @@ using namespace react;
  * and is destroyed before any reload or shutdown of the app. In more simple
  * terms: it should only exists as long as the ReanimatedNativeModule exists, so
  * it is easily done by keeping a reference (and the only one to be exact) to
- * this object inside ReanimatedNativeModule.
+ * this object inside ReanimatedNativeModule and in that way keep the objects'
+ * lifetimes in sync.
  *
  * When HERMES_ENABLE_DEBUGGER is set the destructor of this object disconnects
  * the runtime from the debugger. Failing to do so will crash the app.
@@ -31,11 +32,7 @@ using namespace react;
 
 class HermesRuntimeManager {
  public:
-  HermesRuntimeManager(
-#if HERMES_ENABLE_DEBUGGER
-      std::shared_ptr<MessageQueueThread> messageQueueThread
-#endif
-  );
+  HermesRuntimeManager(std::shared_ptr<MessageQueueThread> messageQueueThread);
   ~HermesRuntimeManager();
   std::shared_ptr<facebook::jsi::Runtime> getRuntime();
 

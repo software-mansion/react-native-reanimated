@@ -57,10 +57,7 @@ class HermesExecutorRuntimeAdapter
 };
 
 HermesRuntimeManager::HermesRuntimeManager(
-#if HERMES_ENABLE_DEBUGGER
-    std::shared_ptr<MessageQueueThread> messageQueueThread
-#endif
-    )
+    std::shared_ptr<MessageQueueThread> messageQueueThread)
     : runtime_(facebook::hermes::makeHermesRuntime()),
       hermesRuntime_(*runtime_) {
 #if HERMES_ENABLE_DEBUGGER
@@ -68,6 +65,8 @@ HermesRuntimeManager::HermesRuntimeManager(
       runtime_, hermesRuntime_, std::move(messageQueueThread));
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated runtime");
+#else
+  (void)messageQueueThread;
 #endif
 }
 

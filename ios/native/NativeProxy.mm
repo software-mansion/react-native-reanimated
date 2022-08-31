@@ -206,26 +206,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
-  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(
-#if HERMES_ENABLE_DEBUGGER
-      std::make_shared<REAMessageThread>(
-          [NSRunLoop currentRunLoop],
-          ^(NSError *error) {
-            throw error;
-          })
-#endif
-  );
+  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
+  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(jsQueue);
   std::shared_ptr<jsi::Runtime> animatedRuntime = hermesRuntimeManager->getRuntime();
 #elif __has_include(<hermes/hermes.h>)
-  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(
-#if HERMES_ENABLE_DEBUGGER
-      std::make_shared<REAMessageThread>(
-          [NSRunLoop currentRunLoop],
-          ^(NSError *error) {
-            throw error;
-          })
-#endif
-  );
+  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
+  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(jsQueue);
   std::shared_ptr<jsi::Runtime> animatedRuntime = hermesRuntimeManager->getRuntime();
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();

@@ -213,10 +213,7 @@ void NativeProxy::installJSIBindings(
 
 #if JS_RUNTIME_HERMES
   auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(
-#if HERMES_ENABLE_DEBUGGER
-      std::make_shared<JMessageQueueThread>(messageQueueThread)
-#endif
-  );
+      std::make_shared<JMessageQueueThread>(messageQueueThread));
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       hermesRuntimeManager->getRuntime();
 #elif JS_RUNTIME_V8
