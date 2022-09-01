@@ -3,7 +3,7 @@ name: Test docs build
 on:
   pull_request:
     branches:
-      - main
+      - Reanimated2
     paths:
       - 'docs/**'
 

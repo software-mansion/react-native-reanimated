@@ -3,7 +3,7 @@ name: Validate C++
 on:
   push:
     branches:
-      - main
+      - Reanimated2
     paths:
       - '.github/workflows/validate-cpp.yml'
       - 'Common/cpp/**'

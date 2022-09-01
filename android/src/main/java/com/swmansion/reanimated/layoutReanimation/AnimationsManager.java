@@ -229,8 +229,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void removeLeftovers() {
-    //mToRemove may be null if onCatalystInstanceDestroy was called first
-    if(mToRemove != null){
+    // mToRemove may be null if onCatalystInstanceDestroy was called first
+    if (mToRemove != null) {
       HashSet<Integer> roots = new HashSet<>();
       // go through ready to remove from bottom to top
       for (int tag : mToRemove) {
