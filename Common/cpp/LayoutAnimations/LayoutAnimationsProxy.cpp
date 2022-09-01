@@ -4,6 +4,8 @@
 #include "ShareableValue.h"
 #include "ValueWrapper.h"
 
+#include <utility>
+
 namespace reanimated {
 
 const long long idOffset = 1e9;

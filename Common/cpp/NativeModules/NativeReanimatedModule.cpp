@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <thread>
+#include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
