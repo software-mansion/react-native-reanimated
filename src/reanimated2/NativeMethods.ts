@@ -19,13 +19,13 @@ export interface MeasuredDimensions {
   pageY: number;
 }
 
-const isNativeUndefined = shouldBeUseWeb();
+const isNative = shouldBeUseWeb();
 
 export function measure(
   animatedRef: RefObjectFunction<Component>
 ): MeasuredDimensions | null {
   'worklet';
-  if (!_WORKLET || isNativeUndefined) {
+  if (!_WORKLET || !isNative) {
     console.warn(
       '[Reanimated] measure() cannot be used for web or Chrome Debugger'
     );
@@ -63,7 +63,7 @@ export function dispatchCommand(
   args: Array<unknown>
 ): void {
   'worklet';
-  if (!_WORKLET || isNativeUndefined) {
+  if (!_WORKLET || !isNative) {
     return;
   }
   const shadowNodeWrapper = animatedRef();
@@ -95,7 +95,7 @@ if (global._IS_FABRIC) {
     animated: boolean
   ) => {
     'worklet';
-    if (!_WORKLET || isNativeUndefined) {
+    if (!_WORKLET || !isNative) {
       return;
     }
     const viewTag = animatedRef();
@@ -105,7 +105,7 @@ if (global._IS_FABRIC) {
 
 export function setGestureState(handlerTag: number, newState: number): void {
   'worklet';
-  if (!_WORKLET || isNativeUndefined) {
+  if (!_WORKLET || !isNative) {
     console.warn(
       '[Reanimated] You can not use setGestureState in non-worklet function.'
     );
