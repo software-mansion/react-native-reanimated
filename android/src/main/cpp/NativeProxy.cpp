@@ -353,11 +353,10 @@ void NativeProxy::configureProps(
                         ReadableNativeArray::javaobject)>("configureProps");
   method(
       javaPart_.get(),
-      ReadableNativeArray::newObjectCxxArgs(
-          std::move(jsi::dynamicFromValue(rt, uiProps)))
+      ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps))
           .get(),
       ReadableNativeArray::newObjectCxxArgs(
-          std::move(jsi::dynamicFromValue(rt, nativeProps)))
+          jsi::dynamicFromValue(rt, nativeProps))
           .get());
 }
 
