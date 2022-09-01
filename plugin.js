@@ -284,6 +284,10 @@ function isRelease() {
   );
 }
 
+function isJest() {
+  return process.env.BABEL_ENV === 'jest';
+}
+
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
@@ -341,12 +345,16 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
 
   const code = generate(workletFunction).code;
 
-  // Clear contents array (should be empty anyways)
-  inputMap.sourcesContent = [];
-  // Include source contents in source map, because Flipper/iframe is not
-  // allowed to read files from disk.
-  for (const sourceFile of inputMap.sources) {
-    inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString('utf-8'));
+  if (!isJest()) {
+    // Clear contents array (should be empty anyways)
+    inputMap.sourcesContent = [];
+    // Include source contents in source map, because Flipper/iframe is not
+    // allowed to read files from disk.
+    for (const sourceFile of inputMap.sources) {
+      inputMap.sourcesContent.push(
+        fs.readFileSync(sourceFile).toString('utf-8')
+      );
+    }
   }
 
   const transformed = transformSync(code, {
