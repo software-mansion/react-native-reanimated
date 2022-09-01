@@ -3,6 +3,7 @@ const generate = require('@babel/generator').default;
 const hash = require('string-hash-64');
 const traverse = require('@babel/traverse').default;
 const { transformSync } = require('@babel/core');
+const fs = require('fs');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -339,6 +340,14 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   );
 
   const code = generate(workletFunction).code;
+
+  // Clear contents array (should be empty anyways)
+  inputMap.sourcesContent = [];
+  // Include source contents in source map, because Flipper/iframe is not
+  // allowed to read files from disk.
+  for (const sourceFile of inputMap.sources) {
+    inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString('utf-8'));
+  }
 
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
