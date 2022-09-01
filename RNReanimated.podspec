@@ -46,7 +46,7 @@ rescue
 end
 
 if isUserApp
-  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json"]
+  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json" | grep -v "/.yarn/"]
   libInstancesArray = libInstances.split("\n")
   if libInstancesArray.length() > 1
     parsedLocation = ''
@@ -92,8 +92,7 @@ Pod::Spec.new do |s|
 
   s.source_files = [
     "ios/**/*.{mm,h,m}",
-    "Common/cpp/**/*.cpp",
-    "Common/cpp/headers/**/*.h"
+    "Common/cpp/**/*.{cpp,h}"
   ]
 
   s.preserve_paths = [
