@@ -102,15 +102,16 @@ NativeReanimatedModule::NativeReanimatedModule(
       propObtainer(propObtainer),
 #endif
       animatedSensorModule(platformDepMethodsHolder, this),
-#if HERMES_ENABLE_DEBUGGER
-      hermesRuntimeManager_(hermesRuntimeManager),
-#endif
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
 #else
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction)
+#endif
+#if HERMES_ENABLE_DEBUGGER
+      ,
+      hermesRuntimeManager_(hermesRuntimeManager)
 #endif
 
 {

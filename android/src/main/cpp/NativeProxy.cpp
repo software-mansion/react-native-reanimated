@@ -105,10 +105,11 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 void NativeProxy::installJSIBindings(
-#ifdef RCT_NEW_ARCH_ENABLED
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+#ifdef RCT_NEW_ARCH_ENABLED
+    ,
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager
 #endif
     /**/) {
 #ifdef RCT_NEW_ARCH_ENABLED
