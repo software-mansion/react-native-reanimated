@@ -38,23 +38,24 @@ export function measure(
     );
     return null;
   }
+  let result: MeasuredDimensions | null = null;
   try {
-    const result = _measure(viewTag);
-    if (result.x === -1234567) {
-      throw new Error(
-        `The view with tag ${viewTag} returned an invalid measurement response`
-      );
-    }
-    if (isNaN(result.x)) {
+    const measured = _measure(viewTag);
+    if (measured.x === -1234567) {
       console.warn(
-        '[Reanimated] Trying to measure a component which gets view-flattened on Android. To disable view-flattening, set `collapsable={false}` on this component.'
+        `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response`
       );
+    } else if (isNaN(measured.x)) {
+      console.warn(
+        `[Reanimated] The view with tag ${viewTag} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
+      );
+    } else {
+      result = measured;
     }
-    return result;
   } catch (e) {
     console.warn(`[Reanimated] ${e}`);
-    return null;
   }
+  return result;
 }
 
 export function dispatchCommand(
