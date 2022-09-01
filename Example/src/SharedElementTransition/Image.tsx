@@ -80,7 +80,7 @@ function Screen1({ navigation }) {
         source={photo} 
         style={{width: '100%', height: 300}}
       /> */}
-      <Button onPress={() => navigation.navigate('Screen2')} title="Show more" />
+      <Button onPress={() => navigation.navigate('Screen2')} title="Go to the next screen" />
     </Animated.ScrollView>
   );
 }
@@ -100,14 +100,7 @@ function Screen2({ navigation }) {
           style={{width: '100%', height: 500}}
         /> 
       </Animated.View> */}
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
-      <Text>mleko</Text>
+      <Text style={{marginTop: 50, textAlign: 'justify'}}>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id egestas nunc. Fusce molestie, libero a lacinia mollis, nisi nisi porttitor tortor, eget vestibulum lectus mauris id mi. Aenean imperdiet tempor est eu auctor. Praesent vitae mi at risus dapibus vulputate ac quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et. Maecenas at fermentum eros, sed accumsan enim. Nam diam est, dapibus malesuada volutpat non, vehicula at mauris.</Text>
       <AnimatedImage
         sharedTransitionTag="mleko"
         source={photo} 
