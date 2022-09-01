@@ -3,6 +3,9 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 
+#include <memory>
+#include <utility>
+
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #include <reacthermes/HermesExecutorFactory.h>
 #else // __has_include(<hermes/hermes.h>) or ANDROID
@@ -30,7 +33,7 @@ class HermesExecutorRuntimeAdapter
 
   virtual ~HermesExecutorRuntimeAdapter() {
     thread_->quitSynchronous();
-  };
+  }
 
   facebook::jsi::Runtime &getRuntime() override {
     return *runtime_;

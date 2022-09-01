@@ -301,7 +301,7 @@ void NativeProxy::installJSIBindings(
       ,
       hermesRuntimeManager
 #endif
-  );
+      /**/);
 
   _nativeReanimatedModule = module;
 

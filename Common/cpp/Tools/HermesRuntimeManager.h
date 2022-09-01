@@ -3,6 +3,8 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 
+#include <memory>
+
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #include <reacthermes/HermesExecutorFactory.h>
 #else // __has_include(<hermes/hermes.h>) or ANDROID
@@ -32,7 +34,8 @@ using namespace react;
 
 class HermesRuntimeManager {
  public:
-  HermesRuntimeManager(std::shared_ptr<MessageQueueThread> messageQueueThread);
+  explicit HermesRuntimeManager(
+      std::shared_ptr<MessageQueueThread> messageQueueThread);
   ~HermesRuntimeManager();
   std::shared_ptr<facebook::jsi::Runtime> getRuntime();
 

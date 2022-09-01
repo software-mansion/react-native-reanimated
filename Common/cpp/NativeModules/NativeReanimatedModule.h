@@ -53,7 +53,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       ,
       std::shared_ptr<HermesRuntimeManager> hermesRuntimeManager
 #endif
-  );
+      /**/);
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
       override;
