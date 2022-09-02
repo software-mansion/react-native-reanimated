@@ -2,7 +2,7 @@ name: Test Android build
 on:
   pull_request:
     branches:
-      - main
+      - Reanimated2
     paths:
       - 'android/**'
       - 'Common/**'
@@ -10,7 +10,7 @@ on:
       - 'Example/package.json'
   push:
     branches:
-      - main
+      - Reanimated2
 jobs:
   build:
     runs-on: ubuntu-latest

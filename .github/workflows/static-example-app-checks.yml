@@ -2,12 +2,12 @@ name: Test Example App TypeScript and Lint
 on:
   pull_request:
     branches:
-      - main
+      - Reanimated2
     paths:
       - 'Example/**'
   push:
     branches:
-      - main
+      - Reanimated2
 jobs:
   check:
     runs-on: ubuntu-latest

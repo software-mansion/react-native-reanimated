@@ -2,13 +2,13 @@ name: Test tvOS build
 on:
   pull_request:
     branches:
-      - main
+      - Reanimated2
     paths:
       - 'ios/**'
       - 'Common/**'
   push:
     branches:
-      - main
+      - Reanimated2
   workflow_dispatch:
 jobs:
   build:
