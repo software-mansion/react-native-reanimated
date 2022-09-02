@@ -1,5 +1,7 @@
 #include "NativeReanimatedModuleSpec.h"
 
+#include <utility>
+
 #define SPEC_PREFIX(FN_NAME) __hostFunction_NativeReanimatedModuleSpec_##FN_NAME
 
 namespace reanimated {
