@@ -1,0 +1,176 @@
+diff --git a/node_modules/metro-inspector-proxy/src/Device.js b/node_modules/metro-inspector-proxy/src/Device.js
+index 3225715..48f3f42 100644
+--- a/node_modules/metro-inspector-proxy/src/Device.js
++++ b/node_modules/metro-inspector-proxy/src/Device.js
+@@ -70,6 +70,7 @@ const EMULATOR_LOCALHOST_ADDRESSES = ["10.0.2.2", "10.0.3.2"]; // Prefix for scr
+ 
+ const FILE_PREFIX = "file://";
+ const REACT_NATIVE_RELOADABLE_PAGE_ID = "-1";
++const REANIMATED_RELOADABLE_PAGE_ID = '-2';
+ /**
+  * Device class represents single device connection to Inspector Proxy. Each device
+  * can have multiple inspectable pages.
+@@ -87,6 +88,7 @@ class Device {
+   // (and will interact with the latest React Native page).
+ 
+   _lastConnectedReactNativePage = null; // Whether we are in the middle of a reload in the REACT_NATIVE_RELOADABLE_PAGE.
++  _lastConnectedReanimatedPage = null;
+ 
+   _isReloading = false; // The previous "GetPages" message, for deduplication in debug logs.
+ 
+@@ -138,6 +140,8 @@ class Device {
+   }
+ 
+   getPagesList() {
++    let returnPages = this._pages;
++    
+     if (this._lastConnectedReactNativePage) {
+       const reactNativeReloadablePage = {
+         id: REACT_NATIVE_RELOADABLE_PAGE_ID,
+@@ -145,10 +149,19 @@ class Device {
+         vm: "don't use",
+         app: this._app,
+       };
+-      return this._pages.concat(reactNativeReloadablePage);
+-    } else {
+-      return this._pages;
++      returnPages = returnPages.concat(reactNativeReloadablePage);
++    }
++    if (this._lastConnectedReanimatedPage) {
++      const reanimatedReloadablePage = {
++        id: REANIMATED_RELOADABLE_PAGE_ID,
++        title: "Reanimated runtime (Improved Chrome Reloads)",
++        vm: "don't use",
++        app: this._app,
++      };
++      returnPages = returnPages.concat(reanimatedReloadablePage);
+     }
++
++    return returnPages;
+   } // Handles new debugger connection to this device:
+   // 1. Sends connect event to device
+   // 2. Forwards all messages from the debugger to device as wrappedEvent
+@@ -245,6 +258,23 @@ class Device {
+           ) {
+             this._newReactNativePage(this._pages[i]);
+ 
++            break;
++          }
++        }
++      }
++      for (let i = 0; i < this._pages.length; ++i) {
++        if (this._pages[i].title.indexOf("Reanimated") >= 0) {
++          var _this$_lastConnectedR;
++
++          if (
++            this._pages[i].id !=
++            ((_this$_lastConnectedR = this._lastConnectedReanimatedPage) ===
++              null || _this$_lastConnectedR === void 0
++              ? void 0
++              : _this$_lastConnectedR.id)
++          ) {
++            this._newReanimatedPage(this._pages[i]);
++
+             break;
+           }
+         }
+@@ -260,7 +290,8 @@ class Device {
+       if (debuggerSocket && debuggerSocket.readyState === _ws.default.OPEN) {
+         if (
+           this._debuggerConnection != null &&
+-          this._debuggerConnection.pageId !== REACT_NATIVE_RELOADABLE_PAGE_ID
++          this._debuggerConnection.pageId !== REACT_NATIVE_RELOADABLE_PAGE_ID &&
++          this._debuggerConnection.pageId !== REANIMATED_RELOADABLE_PAGE_ID
+         ) {
+           debug(`Page ${pageId} is reloading.`);
+           debuggerSocket.send(
+@@ -383,6 +414,71 @@ class Device {
+     }
+   } // Allows to make changes in incoming message from device.
+ 
++  _newReanimatedPage(page) {
++    var _this$_lastConnectedR2;
++
++    debug(`Reanimated page updated to ${page.id}`);
++
++    if (
++      this._debuggerConnection == null ||
++      this._debuggerConnection.pageId !== REANIMATED_RELOADABLE_PAGE_ID
++    ) {
++      // We can just remember new page ID without any further actions if no
++      // debugger is currently attached or attached debugger is not
++      // "Reloadable React Native" connection.
++      this._lastConnectedReanimatedPage = page;
++      return;
++    }
++
++    const oldPageId =
++      (_this$_lastConnectedR2 = this._lastConnectedReanimatedPage) === null ||
++      _this$_lastConnectedR2 === void 0
++        ? void 0
++        : _this$_lastConnectedR2.id;
++    this._lastConnectedReanimatedPage = page;
++    this._isReloading = true; // We already had a debugger connected to React Native page and a
++    // new one appeared - in this case we need to emulate execution context
++    // detroy and resend Debugger.enable and Runtime.enable commands to new
++    // page.
++
++    if (oldPageId != null) {
++      this._sendMessageToDevice({
++        event: "disconnect",
++        payload: {
++          pageId: oldPageId,
++        },
++      });
++    }
++
++    this._sendMessageToDevice({
++      event: "connect",
++      payload: {
++        pageId: page.id,
++      },
++    });
++
++    const toSend = [
++      {
++        method: "Runtime.enable",
++        id: 1e9,
++      },
++      {
++        method: "Debugger.enable",
++        id: 1e9,
++      },
++    ];
++
++    for (const message of toSend) {
++      this._sendMessageToDevice({
++        event: "wrappedEvent",
++        payload: {
++          pageId: this._mapToDevicePageId(page.id),
++          wrappedEvent: JSON.stringify(message),
++        },
++      });
++    }
++  } // Allows to make changes in incoming message from device.
++
+   _processMessageFromDevice(payload, debuggerInfo) {
+     // Replace Android addresses for scriptParsed event.
+     if (payload.method === "Debugger.scriptParsed") {
+@@ -425,6 +521,7 @@ class Device {
+         }
+       }
+ 
++      // TODO: We should also do this for reanimated
+       if (debuggerInfo.pageId == REACT_NATIVE_RELOADABLE_PAGE_ID) {
+         // Chrome won't use the source map unless it appears to be new.
+         if (payload.params.sourceMapURL) {
+@@ -546,6 +643,9 @@ class Device {
+       this._lastConnectedReactNativePage != null
+     ) {
+       return this._lastConnectedReactNativePage.id;
++    } else if (pageId === REANIMATED_RELOADABLE_PAGE_ID &&
++               this._lastConnectedReanimatedPage != null) {
++      return this._lastConnectedReanimatedPage.id;
+     } else {
+       return pageId;
+     }
