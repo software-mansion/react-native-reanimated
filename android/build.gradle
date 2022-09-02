@@ -106,7 +106,7 @@ def getPlaygroundAppName() { // only for the development
     return playgroundAppName
 }
 
-def shouldAssertNoMultipleInstallations() {
+def shouldAssertNoMultipleInstances() {
   if (rootProject.hasProperty("disableMultipleInstancesCheck")) {
     return rootProject.property("disableMultipleInstancesCheck") != "true"
   } else {
@@ -114,7 +114,7 @@ def shouldAssertNoMultipleInstallations() {
   }
 }
 
-def noMultipleInstallationsAssertion() {
+def noMultipleInstancesAssertion() {
     // Assert there are no multiple installations of Reanimated
     Set<File> files = fileTree(rootDir.parent) {
         include "**/react-native-reanimated/package.json"
@@ -339,10 +339,10 @@ android {
     }
 }
 
-def assertionTask = task assertNoMultipleInstallations {
-    onlyIf { shouldAssertNoMultipleInstallations() && CLIENT_SIDE_BUILD }
+def assertionTask = task assertNoMultipleInstances {
+    onlyIf { shouldAssertNoMultipleInstances() && CLIENT_SIDE_BUILD }
     doFirst {
-        noMultipleInstallationsAssertion()
+        noMultipleInstancesAssertion()
     }
 }
 
