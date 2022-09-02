@@ -561,6 +561,10 @@ declare module 'react-native-reanimated' {
   };
   export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
 
+  export function useScrollViewOffset(
+    aref: RefObject<Animated.ScrollView>
+  ): SharedValue<number>;
+
   export interface ExitAnimationsValues {
     currentOriginX: number;
     currentOriginY: number;

@@ -44,6 +44,7 @@ module.exports = {
             'api/hooks/useEvent',
             'api/hooks/useFrameCallback',
             'api/hooks/useHandler',
+            'api/hooks/useScrollViewOffset',
             'api/hooks/useSharedValue',
           ],
           'Layout Animations': [
