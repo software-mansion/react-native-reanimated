@@ -17,7 +17,7 @@ jobs:
       matrix:
         working-directory: [Example, FabricExample]
     concurrency:
-      group: ios-${{ github.ref }}
+      group: ios-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout
