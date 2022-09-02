@@ -119,7 +119,11 @@ def shouldAssertNoMultipleInstallations() {
 
 def noMultipleInstallationsAssertion() {
     // Assert there are no multiple installations of Reanimated
-    Set<File> files = fileTree(dir: rootDir.parent, include: "**/react-native-reanimated/package.json").files
+    Set<File> files = fileTree(rootDir.parent) {
+        include "**/react-native-reanimated/package.json"
+        exclude "**/.yarn/**"
+    }.files
+
     if (files.size() > 1) {
         String parsedLocation = files.stream().map({ File file -> "- " + file.toString().replace("/package.json", "") }).collect().join("\n")
         String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation + "\n";
