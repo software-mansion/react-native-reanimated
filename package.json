@@ -1,9 +1,8 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.0.0-rc.0",
+  "version": "3.0.0-rc.2",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
     "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java",
@@ -39,6 +38,7 @@
     "!**/__fixtures__",
     "!**/__mocks__",
     "!lib/typescript",
+    "react-native-reanimated.d.ts",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
@@ -71,7 +71,6 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
-    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
     "@types/invariant": "^2.2.35",
@@ -121,7 +120,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.68.0",
+    "react-native": "0.70.0-rc.4",
     "react-native-builder-bob": "^0.18.3",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^2.4.2",

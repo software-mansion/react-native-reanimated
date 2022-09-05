@@ -29,6 +29,8 @@ import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ScrollViewOffsetExample from './src/ScrollViewOffsetExample';
+import ArticleProgressExample from './src/ArticleProgressExample';
 
 const EXAMPLES = [
   {
@@ -114,6 +116,18 @@ const EXAMPLES = [
     icon: '🦘',
     title: 'scrollTo',
     component: ScrollToExample,
+  },
+  {
+    name: 'ScrollViewPositionExample',
+    icon: '𝌍',
+    title: 'useScrollViewPosition',
+    component: ScrollViewOffsetExample,
+  },
+  {
+    name: 'ArticleProgressExample',
+    icon: '📰',
+    title: 'Article Progress Example',
+    component: ArticleProgressExample,
   },
   {
     name: 'MeasureExample',

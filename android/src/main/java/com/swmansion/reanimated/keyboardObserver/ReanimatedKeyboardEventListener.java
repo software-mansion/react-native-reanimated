@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.PixelUtil;
+import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NativeProxy.KeyboardEventDataUpdater;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -55,7 +56,10 @@ public class ReanimatedKeyboardEventListener {
     ViewCompat.setOnApplyWindowInsetsListener(
         rootView,
         (v, insets) -> {
-          int paddingBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+          int paddingBottom = 0;
+          if (!BuildConfig.IS_NEW_ARCHITECTURE_ENABLED && BuildConfig.REACT_NATIVE_VERSION < 70) {
+            paddingBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+          }
           int paddingTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
           View content =
               rootView.getRootView().findViewById(com.swmansion.reanimated.R.id.action_bar_root);

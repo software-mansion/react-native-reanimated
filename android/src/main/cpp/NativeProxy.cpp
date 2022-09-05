@@ -67,10 +67,6 @@ NativeProxy::NativeProxy(
 }
 
 NativeProxy::~NativeProxy() {
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Value::undefined());
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
 }
