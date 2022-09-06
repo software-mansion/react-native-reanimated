@@ -809,14 +809,7 @@ declare module 'react-native-reanimated' {
   export function defineAnimation<T>(starting: any, factory: () => T): number;
   export function measure<T extends Component>(
     ref: RefObject<T>
-  ): {
-    width: number;
-    height: number;
-    x: number;
-    y: number;
-    pageX: number;
-    pageY: number;
-  } | null;
+  ): MeasuredDimensions | null;
 
   export function getRelativeCoords(
     ref: RefObject<Component>,
