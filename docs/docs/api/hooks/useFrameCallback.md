@@ -14,7 +14,7 @@ useFrameCallback(callback: (frameTimings: FrameTimings) => void, autostart = tru
 
 #### `callback` [Function]
 
-Single worklet function that will be called on every frame update.
+A single worklet function that will be called on every frame update.
 This function recieves a [`FrameTimings`](#frametimings-object) object as na argument.
 
 #### `autostart` [boolean]
@@ -42,8 +42,8 @@ Properties:
 Properties:
 * `timestamp: number`: the current system time (in milliseconds)
 * `timeSinceLastFrame: number | null`: time (in milliseconds) since last frame - this value
-  will be null on the first frame after activation. Starting from the second frame,
-  it should be ~16ms on 60Hz or ~8ms on 120Hz displays (when there is no lag)
+  will be `null` on the first frame after activation. Starting from the second frame,
+  it should be ~16 ms on 60 Hz or ~8 ms on 120 Hz displays (when there is no lag)
 * `elapsedTime: number`: time (in milliseconds) since the callback was last activated
 
 ## Example
