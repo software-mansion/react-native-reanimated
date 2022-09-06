@@ -19,7 +19,7 @@ export interface MeasuredDimensions {
   pageY: number;
 }
 
-const isNative = shouldBeUseWeb();
+const isNative = !shouldBeUseWeb();
 
 export function measure(
   animatedRef: RefObjectFunction<Component>
