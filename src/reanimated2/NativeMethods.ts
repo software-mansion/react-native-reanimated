@@ -31,6 +31,7 @@ export function measure(
     );
     return null;
   }
+
   const viewTag = animatedRef();
   if (viewTag === -1) {
     console.warn(
@@ -38,24 +39,21 @@ export function measure(
     );
     return null;
   }
-  let result: MeasuredDimensions | null = null;
-  try {
-    const measured = _measure(viewTag);
-    if (measured.x === -1234567) {
-      console.warn(
-        `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response`
-      );
-    } else if (isNaN(measured.x)) {
-      console.warn(
-        `[Reanimated] The view with tag ${viewTag} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
-      );
-    } else {
-      result = measured;
-    }
-  } catch (e) {
-    console.warn(`[Reanimated] ${e}`);
+
+  const measured = _measure(viewTag);
+  if (measured.x === -1234567) {
+    console.warn(
+      `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response`
+    );
+    return null;
+  } else if (isNaN(measured.x)) {
+    console.warn(
+      `[Reanimated] The view with tag ${viewTag} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
+    );
+    return null;
+  } else {
+    return measured;
   }
-  return result;
 }
 
 export function dispatchCommand(
