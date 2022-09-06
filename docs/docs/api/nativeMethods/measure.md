@@ -29,7 +29,7 @@ The product of [`useAnimatedRef`](../hooks/useAnimatedRef) which is Reanimated's
 
 ### Returns
 
-An object containing these fields:
+An object of type `MeasuredDimensions`, which contains these fields:
 
 - `x`
 - `y`
