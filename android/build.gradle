@@ -57,6 +57,21 @@ dependencies {
 }
 
 afterEvaluate { project ->
+    
+    if (project['name'] == 'react-native-reanimated') {
+        def myAttribute = Attribute.of('com.android.build.api.attributes.BuildTypeAttr', String)
+        dependencies.attributesSchema {
+            attribute(myAttribute)
+        }
+        
+        configurations {
+            implementation {
+                attributes {
+                    attribute(myAttribute, 'release')
+                }
+            }
+        }
+    }
 
     task androidJavadoc(type: Javadoc) {
         source = android.sourceSets.main.java.srcDirs
