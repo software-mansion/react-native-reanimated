@@ -54,6 +54,8 @@ declare module 'react-native-reanimated' {
     import('./lib/types/lib/reanimated2/animation/index').StyleLayoutAnimation;
   export type Animation<T> =
     import('./lib/types/lib/reanimated2/commonTypes').Animation<T>;
+  export type MeasuredDimensions =
+    import('./lib/types/lib/reanimated2/commonTypes').MeasuredDimensions;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;
