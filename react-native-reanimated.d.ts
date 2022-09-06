@@ -816,7 +816,7 @@ declare module 'react-native-reanimated' {
     y: number;
     pageX: number;
     pageY: number;
-  };
+  } | null;
 
   export function getRelativeCoords(
     ref: RefObject<Component>,
