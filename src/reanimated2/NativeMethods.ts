@@ -27,7 +27,7 @@ export function measure(
   const viewTag = animatedRef();
   if (viewTag === -1) {
     console.warn(
-      `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure()`
+      `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   }
