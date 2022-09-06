@@ -18,10 +18,10 @@
     "@react-navigation/native-stack": "^6.6.2",
     "react": "18.1.0",
     "react-native": "0.70.0-rc.4",
-    "react-native-gesture-handler": "^2.5.0",
+    "react-native-gesture-handler": "^2.6.0",
     "react-native-reanimated": "link:../",
     "react-native-safe-area-context": "^4.3.3",
-    "react-native-screens": "software-mansion/react-native-screens#dfc90db38f849ca7e3a7895c4eb94bbfaee4f708"
+    "react-native-screens": "^3.17.0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",
