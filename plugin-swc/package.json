@@ -52,7 +52,7 @@
   "homepage": "https://github.com/kwonoj/swc-plugin-react-native-reanimated#readme",
   "devDependencies": {
     "@napi-rs/cli": "^2.7.0",
-    "@swc/core": "^1.2.244",
+    "@swc/core": "1.2.248",
     "@swc/jest": "^0.2.21",
     "@taplo/cli": "^0.3.2",
     "@types/jest": "^27.5.1",

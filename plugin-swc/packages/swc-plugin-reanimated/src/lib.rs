@@ -2,14 +2,12 @@ use std::path::PathBuf;
 
 use serde_json::Value;
 use swc_core::{
-    ast::*,
     common::FileName,
+    ecma::{ast::*, visit::as_folder, visit::FoldWith},
     plugin::{
         metadata::TransformPluginMetadataContextKind, metadata::TransformPluginProgramMetadata,
         plugin_transform,
     },
-    visit::as_folder,
-    visit::FoldWith,
 };
 use swc_reanimated_worklets_visitor::{create_worklets_visitor, WorkletsOptions};
 
