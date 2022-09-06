@@ -62,7 +62,7 @@ export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
   const frameCallback = useFrameCallback((frameTimigs) => {
-    console.log(frameTimings.frameTime + 'ms', 'have passed since the previous frame');
+    console.log(`${frameTimings.frameTime} ms have passed since the previous frame`);
     // Move the box by one pixel on every frame
     x.value += 1;
   }, false);

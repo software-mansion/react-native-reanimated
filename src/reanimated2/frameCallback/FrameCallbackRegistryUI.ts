@@ -1,11 +1,15 @@
 import { runOnUI } from '../core';
 
-export default interface FrameCallbackRegistryUI {
-  frameCallbackRegistry: Map<number, (frameTimings: FrameTimings) => void>;
-  frameCallbackStartTime: Map<number, number>;
+type CallbackDetails = {
+  callback: (frameTimings: FrameTimings) => void;
+  startTime: number | undefined;
+};
+
+interface FrameCallbackRegistryUI {
+  frameCallbackRegistry: Map<number, CallbackDetails>;
   frameCallbackActive: Set<number>;
   isFrameCallbackRunning: boolean;
-  lastFrameTimestamp: number;
+  lastFrameTimestamp: number | undefined;
   runCallbacks: () => void;
   registerFrameCallback: (
     callback: (frameTimings: FrameTimings) => void,
@@ -17,7 +21,7 @@ export default interface FrameCallbackRegistryUI {
 
 export type FrameTimings = {
   timestamp: number;
-  timeSinceLastFrame: number | null;
+  duration: number | undefined;
   elapsedTime: number;
 };
 
@@ -25,39 +29,41 @@ export const prepareUIRegistry = runOnUI(() => {
   'worklet';
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
-    frameCallbackRegistry: new Map<
-      number,
-      (frameTimings: FrameTimings) => void
-    >(),
-    frameCallbackStartTime: new Map<number, number>(),
+    frameCallbackRegistry: new Map<number, CallbackDetails>(),
     frameCallbackActive: new Set<number>(),
     isFrameCallbackRunning: false,
-    lastFrameTimestamp: 0,
+    lastFrameTimestamp: undefined,
 
     runCallbacks() {
       const loop = (timestamp: number) => {
-        if (this.lastFrameTimestamp === 0) {
+        if (this.lastFrameTimestamp === undefined) {
           this.lastFrameTimestamp = timestamp;
         }
 
         const timeSinceLastFrame = timestamp - this.lastFrameTimestamp;
 
         this.frameCallbackActive.forEach((key: number) => {
-          const startTime = this.frameCallbackStartTime.get(key);
-
-          const frameTimings: FrameTimings = {
-            timestamp,
-            elapsedTime: timestamp - (startTime || timestamp),
-            timeSinceLastFrame:
-              startTime === undefined ? null : timeSinceLastFrame,
-          };
+          const startTime = this.frameCallbackRegistry.get(key)?.startTime;
+          const elapsedTime = timestamp - (startTime || timestamp);
+          const duration =
+            startTime === undefined ? undefined : timeSinceLastFrame;
 
           if (startTime === undefined) {
-            this.frameCallbackStartTime.set(key, timestamp);
+            const callbackDetails = this.frameCallbackRegistry.get(key)!;
+            callbackDetails.startTime = timestamp;
+
+            this.frameCallbackRegistry.set(key, callbackDetails);
           }
 
-          const callback = this.frameCallbackRegistry.get(key);
-          callback?.call({}, frameTimings);
+          const callbackDetails = this.frameCallbackRegistry.get(key);
+          callbackDetails?.callback.call(
+            {},
+            {
+              timestamp,
+              elapsedTime,
+              duration,
+            }
+          );
         });
 
         if (this.frameCallbackActive.size > 0) {
@@ -79,7 +85,10 @@ export const prepareUIRegistry = runOnUI(() => {
       callback: (frameTimings: FrameTimings) => void,
       callbackId: number
     ) {
-      this.frameCallbackRegistry.set(callbackId, callback);
+      this.frameCallbackRegistry.set(callbackId, {
+        callback,
+        startTime: undefined,
+      });
     },
 
     unregisterFrameCallback(frameCallbackId: number) {
@@ -95,8 +104,12 @@ export const prepareUIRegistry = runOnUI(() => {
         this.frameCallbackActive.add(frameCallbackId);
         this.runCallbacks();
       } else {
+        const callbackDetails =
+          this.frameCallbackRegistry.get(frameCallbackId)!;
+        callbackDetails.startTime = undefined;
+
         this.frameCallbackActive.delete(frameCallbackId);
-        this.frameCallbackStartTime.delete(frameCallbackId);
+        this.frameCallbackRegistry.set(frameCallbackId, callbackDetails);
       }
     },
   };
