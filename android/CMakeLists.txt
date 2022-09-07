@@ -54,17 +54,6 @@ if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         )
 endif()
 
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-    set(
-        FABRIC_UTILS_CPP
-        "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
-    )
-    set(
-        REANIMATED_UI_MANAGER_BINDING_CPP
-        "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
-    )
-endif()
-
 add_library(
         ${PACKAGE_NAME}
         SHARED
@@ -72,8 +61,6 @@ add_library(
         ${SOURCES_ANDROID}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
-        ${FABRIC_UTILS_CPP}
-        ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
 
 # includes
