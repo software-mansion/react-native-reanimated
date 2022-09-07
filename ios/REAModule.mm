@@ -60,7 +60,9 @@ static int instanceCounterREAModule = 0;
 {
   // The counter may be 1 during a reload, because the previous instance
   // may not have been deallocated in time, but it should not be higher.
-  NSAssert(instanceCounterREAModule <= 1, @"More than one REAModule instance present");
+  NSAssert(
+      instanceCounterREAModule <= 1,
+      @"More than one REAModule instance present. This may indicate a memory leak due to a retain cycle.");
   instanceCounterREAModule++;
   return [super init];
 }
