@@ -1,5 +1,7 @@
 /*
 STATE: OK
+
+desc: animacje wyjścia się nie uruchamiają, trzeba zobaczyć czy tak powinno być czy jakiś bug
 */
 
 import * as React from 'react';
@@ -7,13 +9,13 @@ import {
   Button,
   View,
   Image,
-  Text
+  Text,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
 } from 'react-native-screens/native-stack';
-import Animated from 'react-native-reanimated';
+import Animated, { SlideInLeft, SlideOutLeft } from 'react-native-reanimated';
 import photo from './assets/image.jpg';
 
 const Stack = createNativeStackNavigator();
@@ -23,14 +25,14 @@ const AnimatedImage = Animated.createAnimatedComponent(Image);
 function Screen1({ navigation }) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
-      <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
+      <View style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <AnimatedImage 
           sharedTransitionTag="mleko"
           source={photo} 
-          style={{width: 150, height: 150, marginLeft: 50, marginTop: 50 }}
+          style={{width: 150, height: 150, marginTop: 50 }}
         />
-      </View>
       <Button onPress={() => navigation.navigate('Screen2')} title="Go to the next screen" />
+      </View>
     </Animated.ScrollView>
   );
 }
@@ -39,14 +41,29 @@ function Screen2({ navigation }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <Text style={{marginTop: 50, textAlign: 'justify'}}>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id egestas nunc. Fusce molestie, libero a lacinia mollis, nisi nisi porttitor tortor, eget vestibulum lectus mauris id mi. Aenean imperdiet tempor est eu auctor. Praesent vitae mi at risus dapibus vulputate ac quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et. Maecenas at fermentum eros, sed accumsan enim. Nam diam est, dapibus malesuada volutpat non, vehicula at mauris.</Text>
+      <Animated.Text 
+        style={{marginTop: 50, fontWeight: 'bold', fontSize: 30}}
+        entering={SlideInLeft.delay(1000)}
+        exiting={SlideOutLeft}
+      >
+        Awesome header!
+      </Animated.Text>
       <AnimatedImage
         sharedTransitionTag="mleko"
         source={photo} 
         style={{width: '100%', height: 500}}
       />
+      <Animated.Text 
+        style={{ textAlign: 'justify' }}
+        entering={SlideInLeft.delay(1000)}
+        exiting={SlideOutLeft}
+      >
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id egestas nunc. Fusce molestie, libero a lacinia mollis, nisi nisi porttitor tortor, eget vestibulum lectus mauris id mi. Aenean imperdiet tempor est eu auctor. Praesent vitae mi at risus dapibus vulputate ac quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et. Maecenas at fermentum eros, sed accumsan enim. Nam diam est, dapibus malesuada volutpat non, vehicula at mauris.
+        </Animated.Text>
       <AnimatedButton
         title="go back"
+        entering={SlideInLeft.delay(1000)}
+        exiting={SlideOutLeft}
         onPress={() => navigation.navigate('Screen1')}
       />
     </View>

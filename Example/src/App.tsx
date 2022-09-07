@@ -50,8 +50,16 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 
-import SimpleSharedElementTransition from './SharedElementTransition/Simple';
 import ImageSET from './SharedElementTransition/Image';
+import GallerySET from './SharedElementTransition/Gallery';
+import ManyTagsSET from './SharedElementTransition/ManyTags';
+import ParentMarginSET from './SharedElementTransition/ParentMargin';
+import RestoreStateSET from './SharedElementTransition/RestoreState';
+import HeadersSET from './SharedElementTransition/Headers';
+import CardSET from './SharedElementTransition/Card';
+import LayoutAnimationSET from './SharedElementTransition/LayoutAnimation';
+import MixedPropsSET from './SharedElementTransition/MixedProps';
+import CustomTransitionSET from './SharedElementTransition/CustomTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -64,14 +72,6 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
-  SimpleSharedElementTransition: {
-    screen: SimpleSharedElementTransition,
-    title: '🆕 Shared Element Transition 1',
-  },
-  ImageSET: {
-    screen: ImageSET,
-    title: '🆕 Shared Element Transition 2',
-  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
@@ -290,4 +290,4 @@ export const styles = StyleSheet.create({
   },
 });
 
-export default ImageSET;
+export default RestoreStateSET;
