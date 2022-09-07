@@ -280,15 +280,6 @@ android {
             path "CMakeLists.txt"
         }
     }
-    buildTypes {
-        debug {
-            externalNativeBuild {
-                cmake {
-                    arguments "-DDEBUG=true"
-                }
-            }
-        }
-    }
     lintOptions {
         abortOnError false
     }
