@@ -51,23 +51,25 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
+#ifdef DEBUG
 // This counts how many instances of REAModule are present. Thanks to this we
 // can easily detect if there is a memory leak (ex. due to a retain cycle).
-static int instanceCounter = 0;
+static int instanceCounterREAModule = 0;
 
 - (id)init
 {
   // The counter may be 1 during a reload, because the previous instance
   // may not have been deallocated in time, but it should not be higher.
-  NSAssert(instanceCounter <= 1, @"More than one REAModule instance present");
-  instanceCounter++;
+  NSAssert(instanceCounterREAModule <= 1, @"More than one REAModule instance present");
+  instanceCounterREAModule++;
   return [super init];
 }
 
 - (void)dealloc
 {
-  instanceCounter--;
+  instanceCounterREAModule--;
 }
+#endif
 
 + (BOOL)requiresMainQueueSetup
 {

@@ -72,6 +72,16 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(
   return res;
 }
 
+#ifdef DEBUG
+static int instanceCounterNativeReanimatedModule = 0;
+#endif
+
+NativeReanimatedModule::~NativeReanimatedModule() {
+#ifdef DEBUG
+  instanceCounterNativeReanimatedModule--;
+#endif
+}
+
 NativeReanimatedModule::NativeReanimatedModule(
     std::shared_ptr<CallInvoker> jsInvoker,
     std::shared_ptr<Scheduler> scheduler,
@@ -104,6 +114,10 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction)
 #endif
 {
+#ifdef DEBUG
+  assert(instanceCounterNativeReanimatedModule <= 1);
+  instanceCounterNativeReanimatedModule++;
+#endif
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
