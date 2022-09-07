@@ -51,6 +51,25 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
+static int instanceCounter = 0;
+
+- (id)init
+{
+  NSAssert(instanceCounter == 0, @"More than one instance of REAModule present");
+  instanceCounter++;
+  return [super init];
+}
+
+- (void)dealloc
+{
+  instanceCounter--;
+}
+
++ (BOOL)requiresMainQueueSetup
+{
+  return YES;
+}
+
 - (void)invalidate
 {
 #ifdef RCT_NEW_ARCH_ENABLED
