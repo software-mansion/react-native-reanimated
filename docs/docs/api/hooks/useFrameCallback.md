@@ -7,7 +7,7 @@ sidebar_label: useFrameCallback
 This hook allows you to run a piece of code on every frame update.
 
 ```js
-useFrameCallback(callback: (frameTimings: FrameTimings) => void, autostart = true): [FrameCallback]
+useFrameCallback(callback: (frameTimings: FrameTime) => void, autostart = true): [FrameCallback]
 ```
 
 ### Arguments
@@ -15,7 +15,7 @@ useFrameCallback(callback: (frameTimings: FrameTimings) => void, autostart = tru
 #### `callback` [Function]
 
 A single worklet function that will be called on every frame update.
-This function recieves a [`FrameTimings`](#frametimings-object) object as na argument.
+This function recieves a [`FrameTime`](#frametime-object) object as na argument.
 
 #### `autostart` [boolean]
 
@@ -37,12 +37,12 @@ Properties:
                     or not (`false`)
 * `callbackId: number`: a unique identifier of the callback function
 
-#### `FrameTimings: [object]`
+#### `FrameTime: [object]`
 
 Properties:
 * `timestamp: number`: the current system time (in milliseconds)
-* `timeSinceLastFrame: number | null`: time (in milliseconds) since last frame - this value
-  will be `null` on the first frame after activation. Starting from the second frame,
+* `duration: number | undefined`: time (in milliseconds) since last frame - this value
+  will be `undefined` on the first frame after activation. Starting from the second frame,
   it should be ~16 ms on 60 Hz or ~8 ms on 120 Hz displays (when there is no lag)
 * `elapsedTime: number`: time (in milliseconds) since the callback was last activated
 
@@ -61,8 +61,8 @@ import React from 'react';
 export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
-  const frameCallback = useFrameCallback((frameTimigs) => {
-    console.log(`${frameTimings.frameTime} ms have passed since the previous frame`);
+  const frameCallback = useFrameCallback((frameTime) => {
+    console.log(`${frameTime.duration} ms have passed since the previous frame`);
     // Move the box by one pixel on every frame
     x.value += 1;
   }, false);

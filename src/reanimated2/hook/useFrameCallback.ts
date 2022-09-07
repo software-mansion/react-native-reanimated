@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import FrameCallbackRegistryJS from '../frameCallback/FrameCallbackRegistryJS';
-import { FrameTimings } from '../frameCallback/FrameCallbackRegistryUI';
+import { FrameTime } from '../frameCallback/FrameCallbackRegistryUI';
 
 export type FrameCallback = {
   setActive: (isActive: boolean) => void;
@@ -10,7 +10,7 @@ export type FrameCallback = {
 const frameCallbackRegistry = new FrameCallbackRegistryJS();
 
 export function useFrameCallback(
-  callback: (frameTimings: FrameTimings) => void,
+  callback: (frameTime: FrameTime) => void,
   autostart = true
 ): FrameCallback {
   const ref = useRef<FrameCallback>({

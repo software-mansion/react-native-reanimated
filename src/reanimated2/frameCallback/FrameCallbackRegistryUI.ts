@@ -1,7 +1,7 @@
 import { runOnUI } from '../core';
 
 type CallbackDetails = {
-  callback: (frameTimings: FrameTimings) => void;
+  callback: (frameTimings: FrameTime) => void;
   startTime: number | undefined;
 };
 
@@ -12,14 +12,14 @@ interface FrameCallbackRegistryUI {
   lastFrameTimestamp: number | undefined;
   runCallbacks: () => void;
   registerFrameCallback: (
-    callback: (frameTimings: FrameTimings) => void,
+    callback: (frameTimings: FrameTime) => void,
     callbackId: number
   ) => void;
   unregisterFrameCallback: (frameCallbackId: number) => void;
   manageStateFrameCallback: (frameCallbackId: number, state: boolean) => void;
 }
 
-export type FrameTimings = {
+export type FrameTime = {
   timestamp: number;
   duration: number | undefined;
   elapsedTime: number;
@@ -58,11 +58,7 @@ export const prepareUIRegistry = runOnUI(() => {
           const callbackDetails = this.frameCallbackRegistry.get(key);
           callbackDetails?.callback.call(
             {},
-            {
-              timestamp,
-              elapsedTime,
-              duration,
-            }
+            { timestamp, elapsedTime, duration }
           );
         });
 
@@ -82,7 +78,7 @@ export const prepareUIRegistry = runOnUI(() => {
     },
 
     registerFrameCallback(
-      callback: (frameTimings: FrameTimings) => void,
+      callback: (frameTimings: FrameTime) => void,
       callbackId: number
     ) {
       this.frameCallbackRegistry.set(callbackId, {
