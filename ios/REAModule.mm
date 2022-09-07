@@ -55,7 +55,9 @@ static int instanceCounter = 0;
 
 - (id)init
 {
-  NSAssert(instanceCounter == 0, @"More than one instance of REAModule present");
+  // The counter may be 1 during a reload, because the previous instance
+  // may not have been deallocated in time, but it should not be higher.
+  NSAssert(instanceCounter <= 1, @"More than one REAModule instance present");
   instanceCounter++;
   return [super init];
 }
