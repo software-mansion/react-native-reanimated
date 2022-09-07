@@ -51,6 +51,8 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
+// This counts how many instances of REAModule are present. Thanks to this we
+// can easily detect if there is a memory leak (ex. due to a retain cycle).
 static int instanceCounter = 0;
 
 - (id)init
