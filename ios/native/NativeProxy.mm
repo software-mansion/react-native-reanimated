@@ -314,6 +314,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       removeConfig.call(*rt, jsi::Value([tag intValue]));
     }
   }];
+  
+  [animationsManager setLayoutAnimationProxy:layoutAnimationsProxy];
 
   // Layout Animations end
 #endif

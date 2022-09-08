@@ -31,6 +31,7 @@
 @implementation ScreensTransitionDelegate {
   RCTUIManager *_uiManager;
   NSMutableDictionary *_initialValuesSnapshotBackup;
+  NSMutableSet<NSNumber *> *_toRestore;
 }
 
 @synthesize sharedTransitionsItems;
@@ -40,6 +41,7 @@
   self = [super init];
   sharedTransitionsItems = [NSMutableDictionary<NSString *, NSMutableArray<SharedViewConfig *> *> new];
   _initialValuesSnapshotBackup = [NSMutableDictionary new];
+  _toRestore = [NSMutableSet<NSNumber *> new];
   return self;
 }
 
@@ -65,6 +67,8 @@
       after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
     }
     _initialValuesSnapshotBackup[fromView.reactTag] = fromViewSnapshotBefore;
+    
+    [_toRestore addObject:fromView.reactTag];
     
     [_animationsManager onViewTransition:fromView before:fromViewSnapshotBefore after:after];
     [_animationsManager onViewTransition:toView before:fromViewSnapshotBefore after:after];
@@ -109,6 +113,16 @@
       [sharedTransitionsItems removeObjectForKey:transitionTag];
     }
   }
+}
+
+- (void)notifyAboutViewDidDisappear:(UIView *)screeen
+{
+  for (NSNumber *viewTag in _toRestore) {
+    REASnapshot *initialState = _initialValuesSnapshotBackup[viewTag];
+    [_animationsManager stopAnimation:viewTag];
+    [[_animationsManager getNodeManager] updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];
+  }
+  [_toRestore removeAllObjects];
 }
 
 @end

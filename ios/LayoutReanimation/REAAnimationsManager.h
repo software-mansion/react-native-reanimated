@@ -2,6 +2,9 @@
 #import <RNReanimated/REASnapshot.h>
 #import <React/RCTUIManager.h>
 #import <RNReanimated/REANodesManager.h>
+#if __cplusplus
+#import <RNReanimated/LayoutAnimationsProxy.h>
+#endif // __cplusplus
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,6 +20,10 @@ typedef NS_ENUM(NSInteger, ViewState) {
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
 - (void)setNodeManager:(REANodesManager *)nodeManager;
+- (REANodesManager *)getNodeManager;
+#if __cplusplus
+- (void)setLayoutAnimationProxy:(std::shared_ptr<reanimated::LayoutAnimationsProxy>)layoutAnimationsProxy;
+#endif // __cplusplus
 - (void)setRemovingConfigBlock:(void (^)(NSNumber *tag))block;
 - (void)setAnimationStartingBlock:
     (void (^)(NSNumber *tag, NSString *type, NSDictionary *target, NSNumber *depth))startAnimation;
@@ -30,6 +37,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
 - (void)onScreenTransition:(UIView *)screen finish:(REASnapshot *)finish transitionType:(NSString *)transitionType;
 - (void)setToBeRemovedRegistry:(NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *)toBeRemovedRegister;
 - (void)removeLeftovers;
+- (void)stopAnimation:(NSNumber *)tag;
 
 @end
 

@@ -43,7 +43,8 @@ function Screen2({ navigation }) {
       />
       <Button
         title="go back"
-        onPress={() => navigation.navigate('Screen1')}
+        // onPress={() => navigation.navigate('Screen1')}
+        onPress={() => navigation.goBack()}
       />
     </View>
   );

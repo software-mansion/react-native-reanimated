@@ -28,6 +28,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
   REANodesManager * _nodeManager;
+  std::weak_ptr<reanimated::LayoutAnimationsProxy> _layoutAnimationsProxy;
 }
 
 + (NSArray *)layoutKeys
@@ -106,7 +107,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   UIView *currentView = view;
   NSNumber *lastToRemoveTag = nil;
   while (currentView != nil) {
-    ViewState state = [_states[currentView.reactTag] intValue];
+    ViewState state = (ViewState)[_states[currentView.reactTag] intValue];
     if (state == Disappearing) {
       return;
     }
@@ -167,7 +168,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 - (void)notifyAboutEnd:(NSNumber *)tag cancelled:(BOOL)cancelled
 {
   if (!cancelled) {
-    ViewState state = [_states[tag] intValue];
+    ViewState state = (ViewState)[_states[tag] intValue];
     if (state == Appearing) {
       _states[tag] = [NSNumber numberWithInt:Layout];
     }
@@ -186,7 +187,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (_states[tag] == nil) {
     return;
   }
-  ViewState state = [_states[tag] intValue];
+  ViewState state = (ViewState)[_states[tag] intValue];
   if (state == Inactive) {
     _states[tag] = [NSNumber numberWithInt:Appearing];
   }
@@ -296,7 +297,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 - (void)onViewRemoval:(UIView *)view before:(REASnapshot *)before
 {
   NSNumber *tag = view.reactTag;
-  ViewState state = [_states[tag] intValue];
+  ViewState state = (ViewState)[_states[tag] intValue];
   if (state == Disappearing || state == ToRemove || tag == nil) {
     return;
   }
@@ -323,7 +324,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _viewForTag[tag] = view;
   }
   NSMutableDictionary *targetValues = after.values;
-  ViewState state = [_states[tag] intValue];
+  ViewState state = (ViewState)[_states[tag] intValue];
   if (state == Inactive) {
     if (targetValues != nil) {
       NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
@@ -341,7 +342,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (_states[tag] == nil) {
     return;
   }
-  ViewState state = [_states[tag] intValue];
+  ViewState state = (ViewState)[_states[tag] intValue];
   if (state == Disappearing || state == ToRemove || state == Inactive) {
     return;
   }
@@ -389,6 +390,23 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 - (void)setNodeManager:(REANodesManager *)nodeManager
 {
   _nodeManager = nodeManager;
+}
+
+- (REANodesManager *)getNodeManager
+{
+  return _nodeManager;
+}
+
+- (void)stopAnimation:(NSNumber *)tag
+{
+  if(_layoutAnimationsProxy.lock() != nullptr) {
+    _layoutAnimationsProxy.lock()->stopObserving([tag intValue], true);
+  }
+}
+
+- (void)setLayoutAnimationProxy:(std::shared_ptr<reanimated::LayoutAnimationsProxy>)layoutAnimationsProxy
+{
+  _layoutAnimationsProxy = layoutAnimationsProxy;
 }
 
 @end
