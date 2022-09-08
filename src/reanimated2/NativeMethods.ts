@@ -1,9 +1,8 @@
 /* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
-import { RefObjectFunction } from './commonTypes';
+import { MeasuredDimensions } from './commonTypes';
+import { RefObjectFunction } from './hook/commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 
 export function getTag(
@@ -12,45 +11,41 @@ export function getTag(
   return findNodeHandle(view);
 }
 
-export interface MeasuredDimensions {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  pageX: number;
-  pageY: number;
-}
-
-const isNativeIndefined = shouldBeUseWeb();
+const isNative = !shouldBeUseWeb();
 
 export function measure(
   animatedRef: RefObjectFunction<Component>
-): MeasuredDimensions {
+): MeasuredDimensions | null {
   'worklet';
-  if (!_WORKLET || isNativeIndefined) {
+  if (!_WORKLET || !isNative) {
     console.warn(
-      '[reanimated.measure] method cannot be used for web or Chrome Debugger'
+      '[Reanimated] measure() cannot be used for web or Chrome Debugger'
     );
-    return {
-      x: NaN,
-      y: NaN,
-      width: NaN,
-      height: NaN,
-      pageX: NaN,
-      pageY: NaN,
-    };
+    return null;
   }
+
   const viewTag = animatedRef();
-  const result = _measure(viewTag);
-  if (result.x === -1234567) {
-    throw new Error(`The view with tag ${viewTag} could not be measured`);
-  }
-  if (isNaN(result.x)) {
+  if (viewTag === -1) {
     console.warn(
-      'Trying to measure a component which gets view-flattened on Android. To disable view-flattening, set `collapsable={false}` on this component.'
+      `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
+    return null;
   }
-  return result;
+
+  const measured = _measure(viewTag);
+  if (measured.x === -1234567) {
+    console.warn(
+      `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response`
+    );
+    return null;
+  } else if (isNaN(measured.x)) {
+    console.warn(
+      `[Reanimated] The view with tag ${viewTag} gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
+    );
+    return null;
+  } else {
+    return measured;
+  }
 }
 
 export function dispatchCommand(
@@ -59,7 +54,7 @@ export function dispatchCommand(
   args: Array<unknown>
 ): void {
   'worklet';
-  if (!_WORKLET || isNativeIndefined) {
+  if (!_WORKLET || !isNative) {
     return;
   }
   const shadowNodeWrapper = animatedRef();
@@ -91,7 +86,7 @@ if (global._IS_FABRIC) {
     animated: boolean
   ) => {
     'worklet';
-    if (!_WORKLET || isNativeIndefined) {
+    if (!_WORKLET || !isNative) {
       return;
     }
     const viewTag = animatedRef();
@@ -101,7 +96,7 @@ if (global._IS_FABRIC) {
 
 export function setGestureState(handlerTag: number, newState: number): void {
   'worklet';
-  if (!_WORKLET || isNativeIndefined) {
+  if (!_WORKLET || !isNative) {
     console.warn(
       '[Reanimated] You can not use setGestureState in non-worklet function.'
     );
