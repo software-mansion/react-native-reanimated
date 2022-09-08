@@ -25,6 +25,7 @@ import ScreenStackExample from './src/ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './src/ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollToExample from './src/ScrollToExample';
 import ScrollViewExample from './src/ScrollViewExample';
+import SvgExample from './src/SvgExample';
 import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
@@ -86,6 +87,12 @@ const EXAMPLES = [
     icon: '👌',
     title: 'Draggable circle',
     component: GestureHandlerExample,
+  },
+  {
+    name: 'SvgExample',
+    icon: '🟢',
+    title: 'Animated SVG circle',
+    component: SvgExample,
   },
   {
     name: 'BouncingBoxExample',
