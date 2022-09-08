@@ -155,7 +155,8 @@ def FBJNI_VERSION = "0.3.0"
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
 // After that we build native code from src/main/jni with module path pointing at third-party-ndk.
 
-def downloadsDir = new File("$buildDir/downloads")
+def customDownloadsDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
+def downloadsDir = customDownloadsDir ? new File(customDownloadsDir) : new File("$buildDir/downloads")
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
@@ -483,8 +484,7 @@ if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
     // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
 
     def reactNativeRootDir = resolveReactNativeDirectory()
-    def customDownloadDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
-    def downloadDir = customDownloadDir ? new File(customDownloadDir) : new File(reactNativeRootDir, "sdks/download")
+    def downloadDir = customDownloadsDir ? new File(customDownloadsDir) : new File(reactNativeRootDir, "sdks/download")
 
     // By default we are going to download and unzip hermes inside the /sdks/hermes folder
     // but you can provide an override for where the hermes source code is located.
