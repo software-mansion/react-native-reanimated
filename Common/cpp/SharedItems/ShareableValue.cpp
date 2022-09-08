@@ -479,6 +479,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                   rt,
                   static_cast<const jsi::Value *>(args),
                   static_cast<size_t>(params.size()));
+            } catch (jsi::JSError &e) {
+              throw e;
             } catch (std::exception &e) {
               std::string str = e.what();
               runtimeManager->errorHandler->setError(str);
