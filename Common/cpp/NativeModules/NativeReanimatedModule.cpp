@@ -72,19 +72,6 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(
   return res;
 }
 
-#ifdef DEBUG
-// This counts how many instances of NativeReanimatedModule are present. Thanks
-// to this we can easily detect if there is a memory leak (ex. due to a retain
-// cycle).
-static int instanceCounterNativeReanimatedModule = 0;
-#endif
-
-NativeReanimatedModule::~NativeReanimatedModule() {
-#ifdef DEBUG
-  instanceCounterNativeReanimatedModule--;
-#endif
-}
-
 NativeReanimatedModule::NativeReanimatedModule(
     std::shared_ptr<CallInvoker> jsInvoker,
     std::shared_ptr<Scheduler> scheduler,
@@ -117,14 +104,6 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction)
 #endif
 {
-#ifdef DEBUG
-  // The counter may be 1 during a reload, because the previous instance
-  // may not have been deallocated in time, but it should not be higher.
-  assert(
-      instanceCounterNativeReanimatedModule <= 1 &&
-      "More than one REAModule instance present. This may indicate a memory leak due to a retain cycle.");
-  instanceCounterNativeReanimatedModule++;
-#endif
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();

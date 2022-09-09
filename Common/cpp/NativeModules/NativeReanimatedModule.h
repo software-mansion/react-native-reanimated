@@ -19,6 +19,7 @@
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
+#include "SingleInstanceChecker.h"
 
 namespace reanimated {
 
@@ -48,7 +49,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #endif
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
       PlatformDepMethodsHolder platformDepMethodsHolder);
-  ~NativeReanimatedModule();
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
       override;
@@ -183,6 +183,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
+
+#ifdef DEBUG
+  SingleInstanceCheker<NativeReanimatedModule> instanceCounter_;
+#endif
 };
 
 } // namespace reanimated

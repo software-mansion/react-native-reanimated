@@ -20,7 +20,10 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 
-using namespace facebook::react;
+#import "SingleInstanceChecker.h"
+"
+
+    using namespace facebook::react;
 using namespace reanimated;
 
 @interface RCTBridge (JSIRuntime)
@@ -47,31 +50,12 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
+#ifdef DEBUG
+  SingleInstanceCheker<REAModule> instanceCounter_;
+#endif
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
-
-#ifdef DEBUG
-// This counts how many instances of REAModule are present. Thanks to this we
-// can easily detect if there is a memory leak (ex. due to a retain cycle).
-static int instanceCounterREAModule = 0;
-
-- (id)init
-{
-  // The counter may be 1 during a reload, because the previous instance
-  // may not have been deallocated in time, but it should not be higher.
-  NSAssert(
-      instanceCounterREAModule <= 1,
-      @"More than one REAModule instance present. This may indicate a memory leak due to a retain cycle.");
-  instanceCounterREAModule++;
-  return [super init];
-}
-
-- (void)dealloc
-{
-  instanceCounterREAModule--;
-}
-#endif
 
 + (BOOL)requiresMainQueueSetup
 {
