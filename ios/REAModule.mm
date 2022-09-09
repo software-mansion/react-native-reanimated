@@ -3,14 +3,26 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REATransitionManager.h>
 
+#import "SingleInstanceChecker.h"
+
+using namespace reanimated;
+
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
   REATransitionManager *_transitionManager;
+#ifdef DEBUG
+  SingleInstanceChecker<REAModule> singleInstanceChecker_;
+#endif
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
+
++ (BOOL)requiresMainQueueSetup
+{
+  return YES;
+}
 
 - (void)invalidate
 {
