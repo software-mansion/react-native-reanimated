@@ -21,9 +21,8 @@
 #import <RNReanimated/REANodesManager.h>
 
 #import "SingleInstanceChecker.h"
-"
 
-    using namespace facebook::react;
+using namespace facebook::react;
 using namespace reanimated;
 
 @interface RCTBridge (JSIRuntime)
