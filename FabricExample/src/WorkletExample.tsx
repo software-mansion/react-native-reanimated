@@ -45,7 +45,7 @@ export default function WorkletExample() {
   // 3. Throw error on JS
 
   const handlePress3 = () => {
-    throw new Error('Hello world!');
+    throw new Error('Hello world from React Native JS!');
   };
 
   // 4. Throw error from worklet
@@ -53,7 +53,7 @@ export default function WorkletExample() {
   const handlePress4 = () => {
     runOnUI(() => {
       'worklet';
-      throw new Error('Hello world!');
+      throw new Error('Hello world from worklet!');
     })();
   };
 
@@ -64,7 +64,7 @@ export default function WorkletExample() {
       'worklet';
       (() => {
         'worklet';
-        throw new Error('Hello world!');
+        throw new Error('Hello world from nested worklet!');
       })();
     })();
   };
@@ -75,7 +75,7 @@ export default function WorkletExample() {
 
   useAnimatedStyle(() => {
     if (_WORKLET && sv.value >= 1) {
-      throw new Error('Hello world!');
+      throw new Error('Hello world from useAnimatedStyle!');
     }
     return {};
   });
