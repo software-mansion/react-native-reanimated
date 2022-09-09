@@ -50,7 +50,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
 #ifdef DEBUG
-  SingleInstanceCheker<REAModule> instanceCounter_;
+  SingleInstanceChecker<REAModule> instanceCounter_;
 #endif
 }
 

@@ -1,53 +1,58 @@
 #pragma once
 
+#ifdef DEBUG
+
+#include <cxxabi.h>
+
 #include <iostream>
 #include <string>
 
 namespace reanimated {
-
-using namespace std;
 
 // This is a class that counts how many instances of a different class there
 // are. It is meant only to be used with classes that should only have one
 // instance.
 
 template <class T>
-class SingleInstanceCheker {
+class SingleInstanceChecker {
  public:
-  SingleInstanceCheker();
-  ~SingleInstanceCheker();
+  SingleInstanceChecker();
+  ~SingleInstanceChecker();
 
  private:
-  void assertWithMessage(bool condition, string message) {
+  void assertWithMessage(bool condition, std::string message) {
     if (!condition) {
-      cerr << message << endl;
+      std::cerr << message << std::endl;
       assert(condition);
     }
   }
 
-  // A static field will exist separatley for every class template.
-  inline static int instanceCount;
+  // A static field will exist separately for every class template.
+  // This has to be inline for automatic initialization.
+  inline static int instanceCount_;
 };
 
 template <class T>
-SingleInstanceCheker<T>::SingleInstanceCheker() {
-  // This gives us a slightly magled class name, but it is still readable
-  // in debug.
-  string className = typeid(T).name();
+SingleInstanceChecker<T>::SingleInstanceChecker() {
+  int status = 0;
+  std::string className =
+      __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
 
   // Only one instance should exist, but it is possible for two instances
   // to co-exist during a reload.
   assertWithMessage(
-      instanceCount <= 1,
+      /*instanceCount_ <= 1*/ false,
       "More than one instance of " + className +
           " present. This may indicate a memory leak due to a retain cycle.");
 
-  instanceCount++;
+  instanceCount_++;
 }
 
 template <class T>
-SingleInstanceCheker<T>::~SingleInstanceCheker() {
-  instanceCount--;
+SingleInstanceChecker<T>::~SingleInstanceChecker() {
+  instanceCount_--;
 }
 
 } // namespace reanimated
+
+#endif // DEBUG
