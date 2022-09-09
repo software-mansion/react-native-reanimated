@@ -185,7 +185,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 
 #ifdef DEBUG
-  SingleInstanceChecker<NativeReanimatedModule> instanceCounter_;
+  SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };
 
