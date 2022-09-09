@@ -9,20 +9,20 @@ using namespace std;
 
 template <class T>
 class SingleInstanceCheker {
- private:
-  inline static int instanceCount;
-
  public:
   SingleInstanceCheker();
   ~SingleInstanceCheker();
-};
 
-void assertWithMessage(bool condition, string message) {
-  if (!condition) {
-    cerr << message << endl;
-    assert(condition);
+ private:
+  void assertWithMessage(bool condition, string message) {
+    if (!condition) {
+      cerr << message << endl;
+      assert(condition);
+    }
   }
-}
+
+  inline static int instanceCount;
+};
 
 template <class T>
 SingleInstanceCheker<T>::SingleInstanceCheker() {
