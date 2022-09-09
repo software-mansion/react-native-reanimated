@@ -106,26 +106,31 @@ def getPlaygroundAppName() { // only for the development
     return playgroundAppName
 }
 
-boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
-if (CLIENT_SIDE_BUILD) {
-    configurations.maybeCreate("default")
+def shouldAssertNoMultipleInstances() {
+  if (rootProject.hasProperty("disableMultipleInstancesCheck")) {
+    return rootProject.property("disableMultipleInstancesCheck") != "true"
+  } else {
+    return true
+  }
+}
 
-    List<Path> paths = Files.find(
-            Paths.get(rootDir.parent),
-            Integer.MAX_VALUE,
-            { path, basicFileAttributes -> path.toString().endsWith("/react-native-reanimated/package.json") && !path.toString().contains("/.yarn/") }
-    ).toArray()
+def noMultipleInstancesAssertion() {
+    // Assert there are no multiple installations of Reanimated
+    Set<File> files = fileTree(rootDir.parent) {
+        include "**/react-native-reanimated/package.json"
+        exclude "**/.yarn/**"
+    }.files
 
-    String parsedLocation = ""
-    def libInstancesCount = 0
-    for (def path in paths) {
-        parsedLocation += "- " + path.toString().replace("/package.json", "\n")
-        libInstancesCount++
-    }
-    if (libInstancesCount > 1) {
+    if (files.size() > 1) {
+        String parsedLocation = files.stream().map({ File file -> "- " + file.toString().replace("/package.json", "") }).collect().join("\n")
         String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation + "\n";
         throw new Exception(exceptionMessage)
     }
+}
+
+boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
+if (CLIENT_SIDE_BUILD) {
+    configurations.maybeCreate("default")
 }
 def reactNative = resolveReactNativeDirectory()
 def reactNativeManifest = file("$reactNative/package.json")
@@ -333,6 +338,17 @@ android {
             }
         }
     }
+}
+
+def assertionTask = task assertNoMultipleInstances {
+    onlyIf { shouldAssertNoMultipleInstances() && CLIENT_SIDE_BUILD }
+    doFirst {
+        noMultipleInstancesAssertion()
+    }
+}
+
+tasks.preBuild {
+    dependsOn assertionTask
 }
 
 task cleanCmakeCache() {
