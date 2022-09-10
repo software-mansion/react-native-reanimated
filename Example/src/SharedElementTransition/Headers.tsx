@@ -34,7 +34,7 @@ function Screen2() {
   return (
     <View style={{ flex: 1 }}>
       <Animated.View
-        style={{ width: '100%', height: 200, backgroundColor: 'green', marginTop: 200 }}
+        style={{ width: '100%', height: 100, backgroundColor: 'green', marginTop: 0 }}
         sharedTransitionTag="mleko"
       />
     </View>
@@ -44,7 +44,11 @@ function Screen2() {
 export default function SimpleSharedElementTransition() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          stackAnimation: 'slide_from_right',
+          // stackAnimation: 'none',
+        }}>
         <Stack.Screen
           name="Screen1"
           component={Screen1}

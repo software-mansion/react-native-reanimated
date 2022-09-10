@@ -74,8 +74,8 @@
     [_animationsManager onViewTransition:toView before:fromViewSnapshotBefore after:after];
   } else {
     // TODO
-    REASnapshot *toViewSnapshot = [[REASnapshot alloc] init:toView withConverter:converter withParent:startingViewConverter];
-    [_animationsManager onScreenTransition:fromView finish:toViewSnapshot transitionType:transitionType];
+//    REASnapshot *toViewSnapshot = [[REASnapshot alloc] init:toView withConverter:converter withParent:startingViewConverter];
+//    [_animationsManager onScreenTransition:fromView finish:toViewSnapshot transitionType:transitionType];
   }
 }
 
