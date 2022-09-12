@@ -369,6 +369,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
+  [view.superview bringSubviewToFront:view];
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   self->_startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }

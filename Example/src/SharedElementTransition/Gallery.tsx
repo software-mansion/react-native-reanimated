@@ -44,7 +44,7 @@ function Screen1({ navigation }) {
               <AnimatedImage 
                 sharedTransitionTag={"mleko" + i}
                 source={photo} 
-                style={{width: 150, height: 150, margin: 10 }}
+                style={{width: 150, height: 150, marginTop: 20 }}
               />
             </TouchableNativeFeedback>
           )
