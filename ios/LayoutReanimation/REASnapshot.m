@@ -36,9 +36,10 @@
   // these values are the same as `globalOriginX` and `globalOriginY` because they are not used in JS fro some reason
   _values[@"originX"] = [NSNumber numberWithDouble:originFromRootPerspective.x - view.bounds.size.width / 2.0];
   _values[@"originY"] = [NSNumber numberWithDouble:originFromRootPerspective.y - view.bounds.size.height / 2.0];
-  if ([[view valueForKey:@"reactTag"] isEqual: @(39)]) {
-    _values[@"originY"] = @(91); // TODO
-  }
+// TODO: headers
+//  if ([[view valueForKey:@"reactTag"] isEqual: @(39)]) {
+//    _values[@"originY"] = @(91);
+//  }
 
   _values[@"globalOriginX"] = [NSNumber numberWithDouble:originFromRootPerspective.x - view.bounds.size.width / 2.0];
   _values[@"globalOriginY"] = [NSNumber numberWithDouble:originFromRootPerspective.y - view.bounds.size.height / 2.0];

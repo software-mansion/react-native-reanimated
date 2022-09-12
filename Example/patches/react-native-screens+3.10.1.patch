@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-screens/ios/RNSScreen.m b/node_modules/react-native-screens/ios/RNSScreen.m
-index e0dd2ba..8d1c6b5 100644
+index e0dd2ba..bf67c9c 100644
 --- a/node_modules/react-native-screens/ios/RNSScreen.m
 +++ b/node_modules/react-native-screens/ios/RNSScreen.m
 @@ -706,6 +706,7 @@ - (void)viewDidDisappear:(BOOL)animated
@@ -74,11 +74,9 @@ index e0dd2ba..8d1c6b5 100644
                                              transitionType:@"sharedElementTransition"];
    }
    [reaDelegate reanimatedMockTransitionWithConverterView:[context containerView]
-@@ -840,15 +850,29 @@ + (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoo
- 
+@@ -841,19 +851,22 @@ + (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoo
  - (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<NSArray *> *)sharedElements
  {
-+  // this function is called after end of native animation of screen
    for (NSArray *sharedElement in sharedElements) {
 -    UIView *endingView = sharedElement[1];
 -    [endingView removeFromSuperview];
@@ -93,25 +91,20 @@ index e0dd2ba..8d1c6b5 100644
 +      UIView *startContainer = sharedElement[2];
 +      int index = [sharedElement[3] intValue];
 +      [startContainer insertSubview:startingView atIndex:index];
-+      
-+      UIView *endingView = sharedElement[1];
-+      // assign current state to the new component
-+      UIView *screen = endingView.reactViewController.view;
-+      CGRect absoluteFrame = [screen convertRect:startingView.frame toView:nil];
-+      float headerSize = absoluteFrame.origin.y - startingView.frame.origin.y;
-+      endingView.frame = CGRectMake(
-+        startingView.frame.origin.x,
-+        startingView.frame.origin.y - headerSize,
-+        startingView.frame.size.width, 
-+        startingView.frame.size.height
-+      );
-+      endingView.hidden = NO;
-+      
-+      // restore // nie wiem czy potrzebne jeszcze
 +      startingView.frame = [sharedElement[4] CGRectValue];
++      UIView *endingView = sharedElement[1];
++      endingView.hidden = NO;
    }
  
    [self->_animationTimer setPaused:YES];
+   [self->_animationTimer invalidate];
+   [_fakeView removeFromSuperview];
++  
++  
++  
+ }
+ 
+ @end
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 index 6f1d46c..aaee72a 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h

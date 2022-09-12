@@ -235,7 +235,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   }
   if (newProps[@"originY"]) {
     double originY = [self getDoubleOrZero:newProps[@"originY"]];
-    originY -= view.reactViewController.view.frame.origin.y;
+// TODO: headers
+//    originY -= view.reactViewController.view.frame.origin.y;
     view.center = CGPointMake(view.center.x, originY + view.bounds.size.height / 2.0);
     [newProps removeObjectForKey:@"originY"];
   }
