@@ -235,9 +235,10 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   }
   if (newProps[@"originY"]) {
     double originY = [self getDoubleOrZero:newProps[@"originY"]];
-// TODO: headers
-//    originY -= view.reactViewController.view.frame.origin.y;
-    view.center = CGPointMake(view.center.x, originY + view.bounds.size.height / 2.0);
+    CGPoint newCenter = CGPointMake(view.center.x, originY + view.bounds.size.height / 2.0);
+    UIView *window = UIApplication.sharedApplication.keyWindow;
+    CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
+    view.center = convertedCenter;
     [newProps removeObjectForKey:@"originY"];
   }
   [componentData setProps:newProps forView:view];

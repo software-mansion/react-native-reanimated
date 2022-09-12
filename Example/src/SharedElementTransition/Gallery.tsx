@@ -1,7 +1,5 @@
 /*
 STATE: OK
-
-desc: trzeba ustawić z-indeks dla elementu któwy jest animowany
 */
 
 import * as React from 'react';
@@ -36,8 +34,9 @@ function Screen1({ navigation }) {
     });
   }
   return (
-    <Animated.ScrollView style={{ flex: 1 }}>
-      <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-around'}}>
+    <Animated.ScrollView style={{ flex: 1, marginTop: 50 }}>
+      <Text style={{fontSize: 30, fontWeight: 'bold', marginLeft: 30}}>Gallery</Text>
+      <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-evenly'}}>
         {
           [...Array(6)].map((_, i) => 
             <TouchableNativeFeedback key={i} onPress={() => { goNext("mleko" + i) }}>

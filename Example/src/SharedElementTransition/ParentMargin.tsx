@@ -1,7 +1,5 @@
 /*
-STATE: FAIL
-
-desc: przy cofaniu, przeskakuje z jakiegoś powodu
+STATE: OK
 */
 
 import * as React from 'react';
@@ -24,11 +22,15 @@ function Screen1({ navigation }) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <View style={{display: 'flex', flexDirection: 'column'}}>
-        <View style={{ marginTop: 200 }}>
-          <Animated.View 
-            sharedTransitionTag="mleko"
-            style={{ width: 150, height: 150, marginLeft: 50, backgroundColor: 'green' }}
-          />
+        <View style={{ marginTop: 50 }}>
+          <View style={{ marginTop: 50 }}>
+            <View style={{ marginTop: 50 }}>
+              <Animated.View 
+                sharedTransitionTag="mleko"
+                style={{ width: 150, height: 150, marginLeft: 50, backgroundColor: 'green' }}
+              />
+            </View>
+          </View>
         </View>
       </View>
       <Button onPress={() => navigation.navigate('Screen2')} title="Go to the next screen" />
