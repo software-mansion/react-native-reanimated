@@ -288,7 +288,7 @@ android {
         abortOnError false
     }
     packagingOptions {
-        doNotStrip resolveBuildType() == 'Debug' ? "**/**/*.so" : ''
+        doNotStrip resolveBuildType() == 'debug' ? "**/**/*.so" : ''
         excludes = [
                 "**/libc++_shared.so",
                 "**/libfbjni.so",
@@ -557,9 +557,9 @@ task prepareHermes() {
                 throw new GradleScriptException("Could not find the hermes-engine npm package", null)
             }
 
-            def hermesAAR = file("$hermesPackagePath/android/hermes-debug.aar")
+            def hermesAAR = file("$hermesPackagePath/android/hermes-${resolveBuildType()}.aar") // e.g. hermes-debug.aar
             if (!hermesAAR.exists()) {
-                throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-debug.aar\"", null)
+                throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-${resolveBuildType()}.aar\"", null)
             }
 
             def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
@@ -737,7 +737,7 @@ afterEvaluate {
 
 if (CLIENT_SIDE_BUILD) {
     def aarDir = "${buildDir}/outputs"
-    def aar = file("${aarDir}/android-debug.aar")
+    def aar = file("${aarDir}/android-${resolveBuildType()}.aar") // e.g. android-debug.aar
     if (aar == null) {
         throw GradleScriptException("AAR build failed. No AAR found in ${aarDir}.")
     }
