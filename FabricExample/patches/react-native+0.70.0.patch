@@ -1,0 +1,209 @@
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutor.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutor.java
+index a9a4745..29b8b57 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutor.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutor.java
+@@ -33,8 +33,10 @@ public class HermesExecutor extends JavaScriptExecutor {
+     }
+   }
+ 
+-  HermesExecutor(@Nullable RuntimeConfig config) {
+-    super(config == null ? initHybridDefaultConfig() : initHybrid(config.heapSizeMB));
++  HermesExecutor(@Nullable RuntimeConfig config, boolean enableDebugger, String debuggerName) {
++    super(config == null
++              ? initHybridDefaultConfig(enableDebugger, debuggerName) 
++              : initHybrid(enableDebugger, debuggerName, config.heapSizeMB));
+   }
+ 
+   @Override
+@@ -51,7 +53,9 @@ public class HermesExecutor extends JavaScriptExecutor {
+    */
+   public static native boolean canLoadFile(String path);
+ 
+-  private static native HybridData initHybridDefaultConfig();
++  private static native HybridData initHybridDefaultConfig(
++      boolean enableDebugger, String debuggerName);
+ 
+-  private static native HybridData initHybrid(long heapSizeMB);
++  private static native HybridData initHybrid(
++      boolean enableDebugger, String debuggerName, long heapSizeMB);
+ }
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutorFactory.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutorFactory.java
+index 944afe6..a51d582 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutorFactory.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/HermesExecutorFactory.java
+@@ -15,6 +15,8 @@ public class HermesExecutorFactory implements JavaScriptExecutorFactory {
+   private static final String TAG = "Hermes";
+ 
+   private final RuntimeConfig mConfig;
++  private boolean mEnableDebugger = true;
++  private String mDebuggerName = "";
+ 
+   public HermesExecutorFactory() {
+     this(null);
+@@ -24,9 +26,17 @@ public class HermesExecutorFactory implements JavaScriptExecutorFactory {
+     mConfig = config;
+   }
+ 
++  public void setEnableDebugger(boolean enableDebugger) {
++    mEnableDebugger = enableDebugger;
++  }
++
++  public void setDebuggerName(String debuggerName) {
++    mDebuggerName = debuggerName;
++  }
++
+   @Override
+   public JavaScriptExecutor create() {
+-    return new HermesExecutor(mConfig);
++    return new HermesExecutor(mConfig, mEnableDebugger, mDebuggerName);
+   }
+ 
+   @Override
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/OnLoad.cpp b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/OnLoad.cpp
+index 304603f..2a102d5 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/OnLoad.cpp
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/hermes/reactexecutor/OnLoad.cpp
+@@ -69,26 +69,39 @@ class HermesExecutorHolder
+       "Lcom/facebook/hermes/reactexecutor/HermesExecutor;";
+ 
+   static jni::local_ref<jhybriddata> initHybridDefaultConfig(
+-      jni::alias_ref<jclass>) {
++      jni::alias_ref<jclass>,
++      bool enableDebugger,
++      std::string debuggerName) {
+     JReactMarker::setLogPerfMarkerIfNeeded();
+ 
+     std::call_once(flag, []() {
+       facebook::hermes::HermesRuntime::setFatalHandler(hermesFatalHandler);
+     });
+-    return makeCxxInstance(
+-        std::make_unique<HermesExecutorFactory>(installBindings));
++    auto factory = std::make_unique<HermesExecutorFactory>(installBindings);
++    factory->setEnableDebugger(enableDebugger);
++    if (!debuggerName.empty()) {
++      factory->setDebuggerName(debuggerName);
++    }
++    return makeCxxInstance(std::move(factory));
+   }
+ 
+   static jni::local_ref<jhybriddata> initHybrid(
+       jni::alias_ref<jclass>,
++      bool enableDebugger,
++      std::string debuggerName,
+       jlong heapSizeMB) {
+     JReactMarker::setLogPerfMarkerIfNeeded();
+     auto runtimeConfig = makeRuntimeConfig(heapSizeMB);
+     std::call_once(flag, []() {
+       facebook::hermes::HermesRuntime::setFatalHandler(hermesFatalHandler);
+     });
+-    return makeCxxInstance(std::make_unique<HermesExecutorFactory>(
+-        installBindings, JSIExecutor::defaultTimeoutInvoker, runtimeConfig));
++    auto factory = std::make_unique<HermesExecutorFactory>(
++        installBindings, JSIExecutor::defaultTimeoutInvoker, runtimeConfig);
++    factory->setEnableDebugger(enableDebugger);
++    if (!debuggerName.empty()) {
++      factory->setDebuggerName(debuggerName);
++    }
++    return makeCxxInstance(std::move(factory));
+   }
+ 
+   static bool canLoadFile(jni::alias_ref<jclass>, const std::string &path) {
+diff --git a/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp b/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
+index e1ab6c8..d2b6b2a 100644
+--- a/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
++++ b/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
+@@ -155,23 +155,28 @@ class DecoratedRuntime : public jsi::WithRuntimeDecorator<ReentrancyCheck> {
+   DecoratedRuntime(
+       std::unique_ptr<Runtime> runtime,
+       HermesRuntime &hermesRuntime,
+-      std::shared_ptr<MessageQueueThread> jsQueue)
++      std::shared_ptr<MessageQueueThread> jsQueue,
++      bool enableDebugger,
++      const std::string &debuggerName)
+       : jsi::WithRuntimeDecorator<ReentrancyCheck>(*runtime, reentrancyCheck_),
+         runtime_(std::move(runtime)),
+         hermesRuntime_(hermesRuntime) {
+ #ifdef HERMES_ENABLE_DEBUGGER
+-    auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(
++    enableDebugger_ = enableDebugger;
++    if (enableDebugger_) {
++      auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(
+         runtime_, hermesRuntime_, jsQueue);
+-    facebook::hermes::inspector::chrome::enableDebugging(
+-        std::move(adapter), "Hermes React Native");
+-#else
+-    (void)hermesRuntime_;
++      facebook::hermes::inspector::chrome::enableDebugging(
++          std::move(adapter), debuggerName);
++    }
+ #endif
+   }
+ 
+   ~DecoratedRuntime() {
+ #ifdef HERMES_ENABLE_DEBUGGER
+-    facebook::hermes::inspector::chrome::disableDebugging(*runtime_);
++    if (enableDebugger_) {
++      facebook::hermes::inspector::chrome::disableDebugging(*runtime_);
++    }
+ #endif
+   }
+ 
+@@ -186,10 +191,21 @@ class DecoratedRuntime : public jsi::WithRuntimeDecorator<ReentrancyCheck> {
+   std::shared_ptr<Runtime> runtime_;
+   ReentrancyCheck reentrancyCheck_;
+   HermesRuntime &hermesRuntime_;
++#ifdef HERMES_ENABLE_DEBUGGER
++  bool enableDebugger_;
++#endif
+ };
+ 
+ } // namespace
+ 
++void HermesExecutorFactory::setEnableDebugger(bool enableDebugger) {
++  enableDebugger_ = enableDebugger;
++}
++
++void HermesExecutorFactory::setDebuggerName(const std::string &debuggerName) {
++  debuggerName_ = debuggerName;
++}
++
+ std::unique_ptr<JSExecutor> HermesExecutorFactory::createJSExecutor(
+     std::shared_ptr<ExecutorDelegate> delegate,
+     std::shared_ptr<MessageQueueThread> jsQueue) {
+@@ -197,7 +213,11 @@ std::unique_ptr<JSExecutor> HermesExecutorFactory::createJSExecutor(
+       makeHermesRuntimeSystraced(runtimeConfig_);
+   HermesRuntime &hermesRuntimeRef = *hermesRuntime;
+   auto decoratedRuntime = std::make_shared<DecoratedRuntime>(
+-      std::move(hermesRuntime), hermesRuntimeRef, jsQueue);
++      std::move(hermesRuntime),
++      hermesRuntimeRef,
++      jsQueue,
++      enableDebugger_,
++      debuggerName_);
+ 
+   // So what do we have now?
+   // DecoratedRuntime -> HermesRuntime
+diff --git a/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.h b/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.h
+index 5d4468e..545f883 100644
+--- a/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.h
++++ b/node_modules/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.h
+@@ -28,6 +28,10 @@ class HermesExecutorFactory : public JSExecutorFactory {
+     assert(timeoutInvoker_ && "Should not have empty timeoutInvoker");
+   }
+ 
++  void setEnableDebugger(bool enableDebugger);
++
++  void setDebuggerName(const std::string &debuggerName);
++
+   std::unique_ptr<JSExecutor> createJSExecutor(
+       std::shared_ptr<ExecutorDelegate> delegate,
+       std::shared_ptr<MessageQueueThread> jsQueue) override;
+@@ -36,6 +40,8 @@ class HermesExecutorFactory : public JSExecutorFactory {
+   JSIExecutor::RuntimeInstaller runtimeInstaller_;
+   JSIScopedTimeoutInvoker timeoutInvoker_;
+   ::hermes::vm::RuntimeConfig runtimeConfig_;
++  bool enableDebugger_ = true;
++  std::string debuggerName_ = "Hermes React Native";
+ };
+ 
+ class HermesExecutor : public JSIExecutor {
