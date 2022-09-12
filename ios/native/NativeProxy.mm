@@ -205,13 +205,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 #endif
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
-  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(jsQueue);
-  std::shared_ptr<jsi::Runtime> animatedRuntime = hermesRuntimeManager->getRuntime();
-#elif __has_include(<hermes/hermes.h>)
+#if __has_include(<reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>)
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
