@@ -47,13 +47,10 @@ def safeExtGet(prop, fallback) {
 }
 
 def resolveBuildType() {
-    def buildType = "debug"
-    tasks.all({ task ->
-        if (task.name == "buildCMakeRelease") {
-            buildType = "release"
-        }
-    })
-    return buildType
+    Gradle gradle = getGradle()
+    String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
+    
+    return tskReqStr.contains('Release') ? 'release' : 'debug'
 }
 
 def resolveClientSideBuild() {
@@ -109,26 +106,31 @@ def getPlaygroundAppName() { // only for the development
     return playgroundAppName
 }
 
-boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
-if (CLIENT_SIDE_BUILD) {
-    configurations.maybeCreate("default")
+def shouldAssertNoMultipleInstances() {
+  if (rootProject.hasProperty("disableMultipleInstancesCheck")) {
+    return rootProject.property("disableMultipleInstancesCheck") != "true"
+  } else {
+    return true
+  }
+}
 
-    List<Path> paths = Files.find(
-            Paths.get(rootDir.parent),
-            Integer.MAX_VALUE,
-            { path, basicFileAttributes -> path.toString().endsWith("/react-native-reanimated/package.json") }
-    ).toArray()
+def noMultipleInstancesAssertion() {
+    // Assert there are no multiple installations of Reanimated
+    Set<File> files = fileTree(rootDir.parent) {
+        include "**/react-native-reanimated/package.json"
+        exclude "**/.yarn/**"
+    }.files
 
-    String parsedLocation = ""
-    def libInstancesCount = 0
-    for (def path in paths) {
-        parsedLocation += "- " + path.toString().replace("/package.json", "\n")
-        libInstancesCount++
-    }
-    if (libInstancesCount > 1) {
+    if (files.size() > 1) {
+        String parsedLocation = files.stream().map({ File file -> "- " + file.toString().replace("/package.json", "") }).collect().join("\n")
         String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation + "\n";
         throw new Exception(exceptionMessage)
     }
+}
+
+boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
+if (CLIENT_SIDE_BUILD) {
+    configurations.maybeCreate("default")
 }
 def reactNative = resolveReactNativeDirectory()
 def reactNativeManifest = file("$reactNative/package.json")
@@ -158,7 +160,8 @@ def FBJNI_VERSION = "0.3.0"
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
 // After that we build native code from src/main/jni with module path pointing at third-party-ndk.
 
-def downloadsDir = new File("$buildDir/downloads")
+def customDownloadsDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
+def downloadsDir = customDownloadsDir ? new File(customDownloadsDir) : new File("$buildDir/downloads")
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
@@ -281,7 +284,6 @@ android {
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
-            version "3.18.1"
         }
     }
     buildTypes {
@@ -352,6 +354,17 @@ android {
             }
         }
     }
+}
+
+def assertionTask = task assertNoMultipleInstances {
+    onlyIf { shouldAssertNoMultipleInstances() && CLIENT_SIDE_BUILD }
+    doFirst {
+        noMultipleInstancesAssertion()
+    }
+}
+
+tasks.preBuild {
+    dependsOn assertionTask
 }
 
 task cleanCmakeCache() {
@@ -503,8 +516,7 @@ if (rnMinorVersion >= 69 && !isNewArchitectureEnabled()) {
     // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
 
     def reactNativeRootDir = resolveReactNativeDirectory()
-    def customDownloadDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
-    def downloadDir = customDownloadDir ? new File(customDownloadDir) : new File(reactNativeRootDir, "sdks/download")
+    def downloadDir = customDownloadsDir ? new File(customDownloadsDir) : new File(reactNativeRootDir, "sdks/download")
 
     // By default we are going to download and unzip hermes inside the /sdks/hermes folder
     // but you can provide an override for where the hermes source code is located.
@@ -672,7 +684,8 @@ dependencies {
     }
     implementation "com.facebook.react:react-native:+" // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    implementation "androidx.core:core:1.7.0"
+    implementation "androidx.core:core:1.6.0"
+    
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
     extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 

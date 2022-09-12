@@ -1,5 +1,5 @@
 project(Reanimated)
-cmake_minimum_required(VERSION 3.12.0)
+cmake_minimum_required(VERSION 3.8)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
@@ -8,6 +8,9 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
     set (ALL_FLAGS "${DEFAULT_FLAGS} -DRCT_NEW_ARCH_ENABLED")
 else()
     set (ALL_FLAGS ${DEFAULT_FLAGS})
+endif()
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set (ALL_FLAGS "${ALL_FLAGS} -DDEBUG")
 endif()
 set (CMAKE_CXX_FLAGS ${ALL_FLAGS})
 
@@ -54,17 +57,6 @@ if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         )
 endif()
 
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-    set(
-        FABRIC_UTILS_CPP
-        "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
-    )
-    set(
-        REANIMATED_UI_MANAGER_BINDING_CPP
-        "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
-    )
-endif()
-
 add_library(
         ${PACKAGE_NAME}
         SHARED
@@ -72,8 +64,6 @@ add_library(
         ${SOURCES_ANDROID}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
-        ${FABRIC_UTILS_CPP}
-        ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
 
 # includes

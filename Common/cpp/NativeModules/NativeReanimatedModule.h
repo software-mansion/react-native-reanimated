@@ -20,6 +20,7 @@
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
+#include "SingleInstanceChecker.h"
 
 namespace reanimated {
 
@@ -191,6 +192,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
+
+#ifdef DEBUG
+  SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
+#endif
 };
 
 } // namespace reanimated

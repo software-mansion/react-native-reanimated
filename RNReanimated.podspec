@@ -52,7 +52,7 @@ end
 reactCommonDir = File.join(nodeModulesDir, "react-native", "ReactCommon")
 
 if isUserApp
-  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json"]
+  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json" | grep -v "/.yarn/"]
   libInstancesArray = libInstances.split("\n")
   if libInstancesArray.length() > 1
     parsedLocation = ''
