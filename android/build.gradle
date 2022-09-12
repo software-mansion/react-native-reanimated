@@ -145,7 +145,6 @@ if (localPropertiesFile.exists()) {
     localProps.load(new InputStreamReader(new FileInputStream(localPropertiesFile), "UTF-8"))
 }
 
-def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').toBoolean()
 def reactProperties = new Properties()
 file("$reactNative/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
@@ -261,7 +260,6 @@ android {
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
-                        "-DNATIVE_DEBUG=${debugNativeLibraries}",
                         "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
@@ -290,8 +288,7 @@ android {
         abortOnError false
     }
     packagingOptions {
-        println "Native libs debug enabled: ${debugNativeLibraries}"
-        doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
+        doNotStrip resolveBuildType() == 'Debug' ? "**/**/*.so" : ''
         excludes = [
                 "**/libc++_shared.so",
                 "**/libfbjni.so",
