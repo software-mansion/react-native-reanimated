@@ -1,7 +1,7 @@
 /*
 STATE: FAIL
 
-desc: no nie do końca działa tak jak powinno
+desc: nie wraca na swoją poprzednią pozycję, trzeba na snapshoty i konwersję popatrzeć
 */
 
 import * as React from 'react';

@@ -290,4 +290,4 @@ export const styles = StyleSheet.create({
   },
 });
 
-export default HeadersSET;
+export default CardSET;

@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-screens/ios/RNSScreen.m b/node_modules/react-native-screens/ios/RNSScreen.m
-index e0dd2ba..bf67c9c 100644
+index e0dd2ba..8e5d63d 100644
 --- a/node_modules/react-native-screens/ios/RNSScreen.m
 +++ b/node_modules/react-native-screens/ios/RNSScreen.m
 @@ -706,6 +706,7 @@ - (void)viewDidDisappear:(BOOL)animated
@@ -10,9 +10,12 @@ index e0dd2ba..bf67c9c 100644
  }
  
  - (void)traverseForScrollView:(UIView *)view
-@@ -749,7 +750,19 @@ - (void)setupProgressNotification
+@@ -747,9 +748,21 @@ - (void)setupProgressNotification
+ {
+   if (self.transitionCoordinator != nil) {
      _fakeView.alpha = 0.0;
-     NSMutableArray<NSArray *> *sharedElements = nil;
+-    NSMutableArray<NSArray *> *sharedElements = nil;
++    NSMutableArray<SharedElementConfig *> *sharedElements = nil;
      if (_closing) {
 -      sharedElements = [RNSSharedElementAnimator prepareSharedElementsArrayForVC:self];
 +      if (self == [self.transitionCoordinator viewControllerForKey:UITransitionContextToViewControllerKey]) {
@@ -31,12 +34,14 @@ index e0dd2ba..bf67c9c 100644
      }
  
      [self.transitionCoordinator
-@@ -758,13 +771,10 @@ - (void)setupProgressNotification
+@@ -757,14 +770,11 @@ - (void)setupProgressNotification
+           [[context containerView] addSubview:self->_fakeView];
            self->_fakeView.alpha = 1.0;
            if (self->_closing) {
-             for (NSArray *sharedElement in sharedElements) {
+-            for (NSArray *sharedElement in sharedElements) {
 -              UIView *endingView = sharedElement[1];
-+              UIView *startingView = sharedElement[0];
++            for (SharedElementConfig *sharedElement in sharedElements) {
++              UIView *startingView = sharedElement.fromView; //[0];
                // we add all views immediately, otherwise it won't work correctly
 -              [[context containerView] addSubview:endingView];
 +              [[context containerView] addSubview:startingView];
@@ -47,22 +52,29 @@ index e0dd2ba..bf67c9c 100644
            }
  
            self->_animationTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleAnimation)];
-@@ -792,7 +802,7 @@ - (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingFor
+@@ -792,8 +802,8 @@ - (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingFor
    [((RNSScreenView *)self.view) notifyTransitionProgress:progress closing:closing goingForward:goingForward];
  }
  
 -+ (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoordinatorContext> _Nonnull)context
+-                                sharedElements:(NSMutableArray<NSArray *> *)sharedElements
 ++ (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoordinator> _Nonnull)context
-                                 sharedElements:(NSMutableArray<NSArray *> *)sharedElements
++                                sharedElements:(NSMutableArray<SharedElementConfig *> *)sharedElements
                                    goingForward:(BOOL)goingForward
  {
-@@ -814,14 +824,14 @@ + (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoo
+   UIViewController *toViewController = [context viewControllerForKey:UITransitionContextToViewControllerKey];
+@@ -812,16 +822,16 @@ + (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoo
+   while ([[lowestToVC childViewControllers] count] > 0) {
+     lowestToVC = lowestToVC.childViewControllers[lowestToVC.childViewControllers.count - 1];
    }
-   for (NSArray *sharedElement in sharedElements) {
-     UIView *startingView = sharedElement[0];
+-  for (NSArray *sharedElement in sharedElements) {
+-    UIView *startingView = sharedElement[0];
 -    UIView *endingViewParent = sharedElement[2];
-+    UIView *startingViewParent = sharedElement[2];
-     UIView *endingView = sharedElement[1];
+-    UIView *endingView = sharedElement[1];
++  for (SharedElementConfig *sharedElement in sharedElements) {
++    UIView *startingView = sharedElement.fromView; //[0];
++    UIView *startingViewParent = sharedElement.fromContainer; //[2];
++    UIView *endingView = sharedElement.toView; //[1];
  
      [reaDelegate reanimatedMockTransitionWithConverterView:[context containerView]
                                                    fromView:startingView
@@ -74,10 +86,14 @@ index e0dd2ba..bf67c9c 100644
                                              transitionType:@"sharedElementTransition"];
    }
    [reaDelegate reanimatedMockTransitionWithConverterView:[context containerView]
-@@ -841,19 +851,22 @@ + (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoo
- - (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<NSArray *> *)sharedElements
+@@ -838,17 +848,17 @@ + (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoo
+                                           transitionType:goingForward ? @"entering" : @"reappearing"];
+ }
+ 
+-- (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<NSArray *> *)sharedElements
++- (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<SharedElementConfig *> *)sharedElements
  {
-   for (NSArray *sharedElement in sharedElements) {
+-  for (NSArray *sharedElement in sharedElements) {
 -    UIView *endingView = sharedElement[1];
 -    [endingView removeFromSuperview];
 -    UIView *endingContainer = sharedElement[2];
@@ -86,30 +102,23 @@ index e0dd2ba..bf67c9c 100644
 -    endingView.frame = [sharedElement[4] CGRectValue];
 -    UIView *startingView = sharedElement[0];
 -    startingView.hidden = NO;
-+      UIView *startingView = sharedElement[0];
++  for (SharedElementConfig *sharedElement in sharedElements) {
++      UIView *startingView = sharedElement.fromView; // sharedElement[0];
 +      [startingView removeFromSuperview];
-+      UIView *startContainer = sharedElement[2];
-+      int index = [sharedElement[3] intValue];
++      UIView *startContainer = sharedElement.fromContainer; // sharedElement[2];
++      int index = sharedElement.fromViewIndex; // [sharedElement[3] intValue];
 +      [startContainer insertSubview:startingView atIndex:index];
-+      startingView.frame = [sharedElement[4] CGRectValue];
-+      UIView *endingView = sharedElement[1];
++      startingView.frame = sharedElement.fromViewFrame; // [sharedElement[4] CGRectValue];
++      UIView *endingView = sharedElement.toView; // sharedElement[1];
 +      endingView.hidden = NO;
    }
  
    [self->_animationTimer setPaused:YES];
-   [self->_animationTimer invalidate];
-   [_fakeView removeFromSuperview];
-+  
-+  
-+  
- }
- 
- @end
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
-index 6f1d46c..aaee72a 100644
+index 6f1d46c..ccedbb5 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
-@@ -1,11 +1,25 @@
+@@ -1,11 +1,40 @@
 +@interface SharedViewConfig: NSObject;
 +
 +- (void)setView:(UIView *)view;
@@ -117,6 +126,21 @@ index 6f1d46c..aaee72a 100644
 +
 +@property NSNumber *viewTag;
 +@property BOOL toRemove;
++
++@end
++
++@interface SharedElementConfig : NSObject;
++
++@property UIView *fromView;
++@property UIView *toView;
++@property UIView *fromContainer;
++@property int fromViewIndex; 
++@property CGRect fromViewFrame;
++
++-(instancetype)initWithFromView:(UIView *)fromView 
++                         toView:(UIView *)toView 
++                  fromContainer:(UIView *)fromContainer
++                  fromViewFrame:(CGRect)fromViewFrame;
 +
 +@end
 +
@@ -135,27 +159,54 @@ index 6f1d46c..aaee72a 100644
  
  @end
  
-@@ -13,6 +27,7 @@
+@@ -13,6 +42,7 @@
  
  + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate;
  + (NSObject<RNSSharedElementTransitionsDelegate> *)getDelegate;
 -+ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)vc;
-++ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)vc anotherVC:(UIViewController *)anotherVC;
+++ (NSMutableArray<SharedElementConfig *> *)prepareSharedElementsArrayForVC:(UIViewController *)vc anotherVC:(UIViewController *)anotherVC;
 ++ (void)notifyAboutViewDidDisappear:(UIView *)screeen;
  
  @end
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-index 4c82bf4..337a66c 100644
+index 4c82bf4..eee4048 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-@@ -17,26 +17,47 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+@@ -3,6 +3,25 @@
+ 
+ #import <React/RCTUIManager.h>
+ 
++@implementation SharedElementConfig 
++
++-(instancetype)initWithFromView:(UIView *)fromView 
++                         toView:(UIView *)toView 
++                  fromContainer:(UIView *)fromContainer
++                  fromViewFrame:(CGRect)fromViewFrame
++{
++  if (self = [super init]) {
++    _fromView = fromView;
++    _toView = toView;
++    _fromContainer = fromContainer;
++    _fromViewFrame = fromViewFrame;
++  }
++
++  return self;
++}
++
++@end
++
+ @implementation RNSSharedElementAnimator
+ 
+ static NSObject<RNSSharedElementTransitionsDelegate> *_delegate;
+@@ -17,26 +36,48 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
    return _delegate;
  }
  
 -+ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)vc
-++ (NSMutableArray<NSArray *> *)prepareSharedElementsArrayForVC:(UIViewController *)viewController anotherVC:(UIViewController *)anotherViewController
+++ (NSMutableArray<SharedElementConfig *> *)prepareSharedElementsArrayForVC:(UIViewController *)viewController anotherVC:(UIViewController *)anotherViewController
  {
-   NSMutableArray<NSArray *> *sharedElementsArray = [NSMutableArray new];
+-  NSMutableArray<NSArray *> *sharedElementsArray = [NSMutableArray new];
++  NSMutableArray<SharedElementConfig *> *sharedElementsArray = [NSMutableArray new];
  
 -  NSArray<__kindof UIViewController *> *viewControllers = vc.navigationController.viewControllers;
 -  RNSScreenView *screenView = (RNSScreenView *)vc.view;
@@ -174,6 +225,7 @@ index 4c82bf4..337a66c 100644
 +    UIView *fromView, *toView;
 +    for (SharedViewConfig *sharedViewConfig in sharedViewConfigs) {
 +      UIView *view = [uiManager viewForReactTag:sharedViewConfig.viewTag];
++      NSLog(@"%@", view.reactTag);
 +      if (view == nil) {
 +        view = [sharedViewConfig getView];
 +      }
@@ -207,30 +259,48 @@ index 4c82bf4..337a66c 100644
        // we are in previous vc and going forward
        start = fromView;
        end = toView;
-@@ -47,18 +68,24 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+@@ -46,19 +87,41 @@ + (void)setDelegate:(NSObject<RNSSharedElementTransitionsDelegate> *)delegate
+       end = fromView;
      }
  
-     // we reparent starting view and animate it, then reparent it back after the transition
+-    // we reparent starting view and animate it, then reparent it back after the transition
 -    UIView *endContainer = end.reactSuperview;
 -    int endIndex = (int)[[endContainer reactSubviews] indexOfObject:end];
 -    CGRect endFrame = end.frame;
 -    [end removeFromSuperview];
 +      UIView *startContainer = start.reactSuperview;
-+      int startIndex = (int)[[startContainer reactSubviews] indexOfObject:start];
 +      CGRect startFrame = start.frame;
-+      [start removeFromSuperview];
- 
+       
 -    start.hidden = YES;
 -    if (start != nil && end != nil) {
 -      [sharedElementsArray addObject:@[ start, end, endContainer, @(endIndex), @(endFrame) ]];
 -    }
-+      end.hidden = YES;
++      SharedElementConfig *sharedElementConfig = [
++        [SharedElementConfig alloc] 
++          initWithFromView:start
++                    toView:end
++             fromContainer:startContainer
++             fromViewFrame:startFrame
++      ];
 +      if (start != nil && end != nil) {
-+        [sharedElementsArray addObject:@[ start, end, startContainer, @(startIndex), @(startFrame) ]];
++        [sharedElementsArray addObject:sharedElementConfig];
 +      }
++  }
++  
++  // we reparent starting view and animate it, then reparent it back after the transition
++  for (SharedElementConfig *sharedElementConfig in sharedElementsArray) {
++    UIView *start = sharedElementConfig.fromView;
++    UIView *end = sharedElementConfig.toView;
++    
++    UIView *startContainer = start.reactSuperview;
++    int startIndex = (int)[[startContainer reactSubviews] indexOfObject:start];
++    [start removeFromSuperview];
++    end.hidden = YES;
++    sharedElementConfig.fromViewIndex = startIndex;
    }
+   
 +  [_delegate afterPreparingCallback];
- 
++
    return sharedElementsArray;
  }
  
