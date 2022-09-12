@@ -54,11 +54,15 @@ end
 
 rnVersion = reactVersion.split('.')[1]
 
+fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+if fabric_enabled
+  raise "[Reanimated] Reanimated 2.x does not support Fabric. Please upgrade to react-native-reanimated@3.0.0-rc.2 to enable Fabric support. For details, see https://blog.swmansion.com/announcing-reanimated-3-16167428c5f7"
+end
+
 folly_prefix = ""
 if rnVersion.to_i >= 64
   folly_prefix = "RCT-"
 end
-
 
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=' + rnVersion
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
