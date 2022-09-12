@@ -316,6 +316,7 @@ android {
                 "**/libfolly_runtime.so",
                 "**/libglog.so",
                 "**/libhermes.so",
+                "**/libhermes-executor-debug.so",
                 "**/libreactnativejni.so",
                 "**/libjscexecutor.so",
                 "**/libv8executor.so",
