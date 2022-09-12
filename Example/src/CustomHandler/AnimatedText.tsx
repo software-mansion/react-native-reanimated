@@ -20,7 +20,7 @@ export function AnimatedText({
   text: Animated.SharedValue<string>;
 }): React.ReactElement {
   const animatedProps = useAnimatedProps(() => {
-    return ({ text: text.value } as unknown) as TextInputProps;
+    return { text: text.value } as unknown as TextInputProps;
   });
 
   return (

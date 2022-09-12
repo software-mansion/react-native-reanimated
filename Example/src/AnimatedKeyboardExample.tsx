@@ -41,8 +41,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
     <ScrollView
       contentContainerStyle={styles.container}
       keyboardDismissMode="interactive"
-      scrollEnabled={false}
-    >
+      scrollEnabled={false}>
       <Animated.View style={[styles.box, style]} />
       <Button
         title="Toggle nested view"
