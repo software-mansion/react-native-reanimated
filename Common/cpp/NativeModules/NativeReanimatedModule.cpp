@@ -102,10 +102,6 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction)
-#if HERMES_ENABLE_DEBUGGER
-      ,
-      hermesRuntimeManager_(hermesRuntimeManager)
-#endif
 #endif
 
 {
