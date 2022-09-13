@@ -9,9 +9,12 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
 else()
     set (ALL_FLAGS ${DEFAULT_FLAGS})
 endif()
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set (ALL_FLAGS "${ALL_FLAGS} -DDEBUG")
+endif()
 set (CMAKE_CXX_FLAGS ${ALL_FLAGS})
 
-if(${NATIVE_DEBUG})
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 endif()
@@ -54,17 +57,6 @@ if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
         )
 endif()
 
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-    set(
-        FABRIC_UTILS_CPP
-        "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
-    )
-    set(
-        REANIMATED_UI_MANAGER_BINDING_CPP
-        "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
-    )
-endif()
-
 add_library(
         ${PACKAGE_NAME}
         SHARED
@@ -72,8 +64,6 @@ add_library(
         ${SOURCES_ANDROID}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
-        ${FABRIC_UTILS_CPP}
-        ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
 
 # includes
