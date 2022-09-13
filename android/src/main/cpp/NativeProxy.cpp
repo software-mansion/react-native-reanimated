@@ -8,7 +8,8 @@
 #include <string>
 
 #if JS_RUNTIME_HERMES
-#include "HermesRuntimeManager.h"
+#include <hermes/hermes.h>
+#include "ReanimatedHermesRuntime.h"
 #elif JS_RUNTIME_V8
 #include <v8runtime/V8RuntimeFactory.h>
 #else
@@ -213,10 +214,14 @@ void NativeProxy::installJSIBindings(
   };
 
 #if JS_RUNTIME_HERMES
-  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(
-      std::make_shared<JMessageQueueThread>(messageQueueThread));
+  std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
+      facebook::hermes::makeHermesRuntime();
+  facebook::hermes::HermesRuntime &hermesRuntime = *runtime;
   std::shared_ptr<jsi::Runtime> animatedRuntime =
-      hermesRuntimeManager->getRuntime();
+      std::make_shared<ReanimatedHermesRuntime>(
+          std::move(runtime),
+          hermesRuntime,
+          std::make_shared<JMessageQueueThread>(messageQueueThread));
 #elif JS_RUNTIME_V8
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = false;
@@ -297,12 +302,7 @@ void NativeProxy::installJSIBindings(
       propObtainer,
 #endif
       layoutAnimationsProxy,
-      platformDepMethodsHolder
-#if HERMES_ENABLE_DEBUGGER
-      ,
-      hermesRuntimeManager
-#endif
-      /**/);
+      platformDepMethodsHolder);
 
   _nativeReanimatedModule = module;
 
