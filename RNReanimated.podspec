@@ -48,17 +48,21 @@ if isUserApp
       location['/package.json'] = ''
       parsedLocation += location + "\n"
     end
-    raise "[Reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation
+    raise "[react-native-reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation
   end
 end
 
 rnVersion = reactVersion.split('.')[1]
 
+fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+if fabric_enabled
+  raise "[react-native-reanimated] Reanimated 2.x does not support Fabric. Please upgrade to 3.x to use Reanimated with the New Architecture. For details, see https://blog.swmansion.com/announcing-reanimated-3-16167428c5f7"
+end
+
 folly_prefix = ""
 if rnVersion.to_i >= 64
   folly_prefix = "RCT-"
 end
-
 
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=' + rnVersion
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
