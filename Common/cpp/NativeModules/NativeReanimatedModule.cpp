@@ -20,7 +20,6 @@
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "FrozenObject.h"
-#include "HermesRuntimeManager.h"
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
 #include "MapperRegistry.h"
@@ -85,12 +84,7 @@ NativeReanimatedModule::NativeReanimatedModule(
         propObtainer,
 #endif
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-    PlatformDepMethodsHolder platformDepMethodsHolder
-#if HERMES_ENABLE_DEBUGGER
-    ,
-    std::shared_ptr<HermesRuntimeManager> hermesRuntimeManager
-#endif
-    )
+    PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
       mapperRegistry(std::make_shared<MapperRegistry>()),
@@ -103,9 +97,6 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
       animatedSensorModule(platformDepMethodsHolder, this),
 #ifdef RCT_NEW_ARCH_ENABLED
-#if HERMES_ENABLE_DEBUGGER
-      hermesRuntimeManager_(hermesRuntimeManager),
-#endif
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
 #else

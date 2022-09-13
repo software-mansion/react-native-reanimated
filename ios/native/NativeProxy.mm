@@ -31,9 +31,11 @@
 #endif
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#import <HermesRuntimeManager.h>
+#import <ReanimatedHermesRuntime.h>
+#import <reacthermes/HermesExecutorFactory.h>
 #elif __has_include(<hermes/hermes.h>)
-#import <HermesRuntimeManager.h>
+#import <ReanimatedHermesRuntime.h>
+#import <hermes/hermes.h>
 #else
 #import <jsi/JSCRuntime.h>
 #endif
@@ -209,8 +211,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-  auto hermesRuntimeManager = std::make_shared<HermesRuntimeManager>(jsQueue);
-  std::shared_ptr<jsi::Runtime> animatedRuntime = hermesRuntimeManager->getRuntime();
+  std::unique_ptr<facebook::hermes::HermesRuntime> runtime = facebook::hermes::makeHermesRuntime();
+  facebook::hermes::HermesRuntime &hermesRuntime = *runtime;
+
+  std::shared_ptr<jsi::Runtime> animatedRuntime =
+      std::make_shared<ReanimatedHermesRuntime>(std::move(runtime), hermesRuntime, jsQueue);
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
@@ -381,12 +386,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       propObtainer,
 #endif
       layoutAnimationsProxy,
-      platformDepMethodsHolder
-#if HERMES_ENABLE_DEBUGGER
-      ,
-      hermesRuntimeManager
-#endif
-  );
+      platformDepMethodsHolder);
 
   scheduler->setRuntimeManager(module);
 

@@ -1,6 +1,7 @@
-#include "HermesRuntimeManager.h"
+#include "ReanimatedHermesRuntime.h"
 
 #include <cxxreact/MessageQueueThread.h>
+#include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
 #include <memory>
@@ -8,7 +9,7 @@
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) or ANDROID
+#else // __has_include(<hermes/hermes.h>) || ANDROID
 #include <hermes/hermes.h>
 #endif
 
@@ -24,7 +25,7 @@ class HermesExecutorRuntimeAdapter
     : public facebook::hermes::inspector::RuntimeAdapter {
  public:
   HermesExecutorRuntimeAdapter(
-      std::shared_ptr<facebook::jsi::Runtime> runtime,
+      std::shared_ptr<facebook::hermes::HermesRuntime> runtime,
       facebook::hermes::HermesRuntime &hermesRuntime,
       std::shared_ptr<MessageQueueThread> thread)
       : runtime_(runtime),
@@ -59,28 +60,29 @@ class HermesExecutorRuntimeAdapter
   std::shared_ptr<MessageQueueThread> thread_;
 };
 
-HermesRuntimeManager::HermesRuntimeManager(
-    std::shared_ptr<MessageQueueThread> messageQueueThread)
-    : runtime_(facebook::hermes::makeHermesRuntime()),
-      hermesRuntime_(*runtime_) {
+ReanimatedHermesRuntime::ReanimatedHermesRuntime(
+    std::unique_ptr<jsi::Runtime> runtime,
+    facebook::hermes::HermesRuntime &hermesRuntime,
+    std::shared_ptr<MessageQueueThread> jsQueue)
+    : jsi::WithRuntimeDecorator<ReentrancyCheck>(*runtime, reentrancyCheck_),
+      runtime_(std::move(runtime)),
+      hermesRuntime_(hermesRuntime) {
 #if HERMES_ENABLE_DEBUGGER
+  std::shared_ptr<facebook::hermes::HermesRuntime> rt(runtime_, &hermesRuntime);
   auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(
-      runtime_, hermesRuntime_, std::move(messageQueueThread));
+      rt, hermesRuntime, jsQueue);
   facebook::hermes::inspector::chrome::enableDebugging(
-      std::move(adapter), "Reanimated runtime");
+      std::move(adapter), "Reanimated Runtime");
 #else
+  // This is to prevent unused variable warnings
   (void)messageQueueThread;
 #endif
 }
 
-HermesRuntimeManager::~HermesRuntimeManager() {
+ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 #if HERMES_ENABLE_DEBUGGER
   facebook::hermes::inspector::chrome::disableDebugging(hermesRuntime_);
 #endif
-}
-
-std::shared_ptr<facebook::jsi::Runtime> HermesRuntimeManager::getRuntime() {
-  return runtime_;
 }
 
 } // namespace reanimated

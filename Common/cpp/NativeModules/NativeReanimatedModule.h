@@ -13,7 +13,6 @@
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
-#include "HermesRuntimeManager.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
@@ -50,10 +49,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #endif
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
       PlatformDepMethodsHolder platformDepMethodsHolder
-#if HERMES_ENABLE_DEBUGGER
-      ,
-      std::shared_ptr<HermesRuntimeManager> hermesRuntimeManager
-#endif
       /**/);
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
@@ -167,9 +162,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
-#if HERMES_ENABLE_DEBUGGER
-  std::shared_ptr<HermesRuntimeManager> hermesRuntimeManager_;
-#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
