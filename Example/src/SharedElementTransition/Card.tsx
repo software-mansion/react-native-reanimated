@@ -2,6 +2,7 @@
 STATE: FAIL
 
 desc: nie wraca na swoją poprzednią pozycję, trzeba na snapshoty i konwersję popatrzeć
+jakby nie łapał absolutnej pozycji
 */
 
 import * as React from 'react';
@@ -33,26 +34,26 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
   
   return <TouchableNativeFeedback onPress={() => { goNext(isOpen ? 'Screen1' : 'Screen2') }}>
     <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50 } : { height: 110, marginTop: 20 }}
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green', opacity: 0.5 } : { height: 110, marginTop: 20, backgroundColor: 'green', opacity: 0.5 }}
       sharedTransitionTag={transitionTag + "1"}
     >
-      <Animated.Text
+      {/* <Animated.Text
         sharedTransitionTag={transitionTag + "2"}
         style={{ width: '100%', height: 20 }}
       >
         {title}
-      </Animated.Text>
+      </Animated.Text> */}
       <AnimatedImage 
         sharedTransitionTag={transitionTag + "3"}
         source={photo} 
         style={{ width: '100%', height: isOpen ? 300 : 100 }}
       />
-      <Animated.Text
+      {/* <Animated.Text
         sharedTransitionTag={transitionTag + "4"}
         style={{ width: '100%', height: isOpen ? 100 : 0 }}
       >
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid, earum non, dignissimos fugit rerum exercitationem ab consequatur, error animi veritatis delectus. Nostrum sapiente distinctio possimus vel nam facilis ut?
-      </Animated.Text>
+      </Animated.Text> */}
     </Animated.View>
   </TouchableNativeFeedback>
 }
@@ -80,10 +81,6 @@ function Screen2({ route, navigation }) {
         transitionTag={sharedTransitionTag} 
         isOpen={true} 
       />
-      <Button
-        title="go back"
-        onPress={() => navigation.navigate('Screen1')}
-      />
     </View>
   );
 }
@@ -93,7 +90,8 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'none',
+          stackAnimation: 'fade',
+          // stackAnimation: 'none',
         }}>
         <Stack.Screen
           name="Screen1"

@@ -31,6 +31,7 @@
 @implementation ScreensTransitionDelegate {
   RCTUIManager *_uiManager;
   NSMutableDictionary *_initialValuesSnapshotBackup;
+  NSMutableDictionary *_snapshotRegistry;
   NSMutableSet<NSNumber *> *_toRestore;
 }
 
@@ -41,6 +42,7 @@
   self = [super init];
   sharedTransitionsItems = [NSMutableDictionary<NSString *, NSMutableArray<SharedViewConfig *> *> new];
   _initialValuesSnapshotBackup = [NSMutableDictionary new];
+  _snapshotRegistry = [NSMutableDictionary new];
   _toRestore = [NSMutableSet<NSNumber *> new];
   return self;
 }
@@ -58,22 +60,24 @@
                                    transitionType:(NSString *)transitionType
 {
   if ([transitionType isEqualToString:@"sharedElementTransition"]) {
-    REASnapshot *fromViewSnapshotBefore = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
+    REASnapshot *fromViewSnapshotBefore = _snapshotRegistry[fromView.reactTag];
     REASnapshot *after = _initialValuesSnapshotBackup[toView.reactTag];
     if (after != nil) {
       [_initialValuesSnapshotBackup removeObjectForKey:toView.reactTag];
     }
     else {
       after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
+      after = _snapshotRegistry[toView.reactTag];
     }
     _initialValuesSnapshotBackup[fromView.reactTag] = fromViewSnapshotBefore;
     
     [_toRestore addObject:fromView.reactTag];
-    
+    NSLog(@"%@, %@, %@", fromView.reactTag, fromViewSnapshotBefore.values[@"originY"], after.values[@"originY"]);
     [_animationsManager onViewTransition:fromView before:fromViewSnapshotBefore after:after];
     [_animationsManager onViewTransition:toView before:fromViewSnapshotBefore after:after];
   } else {
-    // TODO
+
+    // TODO: animate scrreen transition
 //    REASnapshot *toViewSnapshot = [[REASnapshot alloc] init:toView withConverter:converter withParent:startingViewConverter];
 //    [_animationsManager onScreenTransition:fromView finish:toViewSnapshot transitionType:transitionType];
   }
@@ -123,6 +127,11 @@
     [[_animationsManager getNodeManager] updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];
   }
   [_toRestore removeAllObjects];
+}
+
+- (void)makeSnapshot:(UIView *)view withViewController:(UIView *)viewController
+{
+  _snapshotRegistry[view.reactTag] = [[REASnapshot alloc] init:view withConverter:nil withParent:viewController];
 }
 
 @end
