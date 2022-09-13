@@ -20,6 +20,8 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 
+#import "SingleInstanceChecker.h"
+
 using namespace facebook::react;
 using namespace reanimated;
 
@@ -47,9 +49,17 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
+#ifdef DEBUG
+  SingleInstanceChecker<REAModule> singleInstanceChecker_;
+#endif
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
+
++ (BOOL)requiresMainQueueSetup
+{
+  return YES;
+}
 
 - (void)invalidate
 {
