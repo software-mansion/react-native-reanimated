@@ -195,7 +195,7 @@ index 6f1d46c..e9c218e 100644
  
  @end
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-index 4c82bf4..b78057b 100644
+index 4c82bf4..14a7f58 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 @@ -3,6 +3,25 @@
@@ -313,7 +313,7 @@ index 4c82bf4..b78057b 100644
 +  }
 +  
 +  // we reparent starting view and animate it, then reparent it back after the transition
-+  for (SharedElementConfig *sharedElementConfig in sharedElementsArray) {
++  for (SharedElementConfig *sharedElementConfig in [sharedElementsArray reverseObjectEnumerator]) {
 +    UIView *start = sharedElementConfig.fromView;
 +    UIView *end = sharedElementConfig.toView;
 +    [_delegate makeSnapshot:start withViewController:sharedElementConfig.fromContainer];
