@@ -25,37 +25,25 @@ class HermesExecutorRuntimeAdapter
     : public facebook::hermes::inspector::RuntimeAdapter {
  public:
   HermesExecutorRuntimeAdapter(
-      std::shared_ptr<facebook::hermes::HermesRuntime> runtime,
       facebook::hermes::HermesRuntime &hermesRuntime,
       std::shared_ptr<MessageQueueThread> thread)
-      : runtime_(runtime),
-        hermesRuntime_(hermesRuntime),
-        thread_(std::move(thread)) {}
+      : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
 
   virtual ~HermesExecutorRuntimeAdapter() {
     thread_->quitSynchronous();
   }
 
   facebook::jsi::Runtime &getRuntime() override {
-    return *runtime_;
+    return hermesRuntime_;
   }
 
   facebook::hermes::debugger::Debugger &getDebugger() override {
     return hermesRuntime_.getDebugger();
   }
 
-  void tickleJs() override {
-    // The queue will ensure that runtime_ is still valid when this
-    // gets invoked.
-    thread_->runOnQueue([&runtime = runtime_]() {
-      auto func =
-          runtime->global().getPropertyAsFunction(*runtime, "__tickleJs");
-      func.call(*runtime);
-    });
-  }
+  void tickleJs() override {}
 
  public:
-  std::shared_ptr<facebook::jsi::Runtime> runtime_;
   facebook::hermes::HermesRuntime &hermesRuntime_;
   std::shared_ptr<MessageQueueThread> thread_;
 };
@@ -69,8 +57,8 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
       hermesRuntime_(hermesRuntime) {
 #if HERMES_ENABLE_DEBUGGER
   std::shared_ptr<facebook::hermes::HermesRuntime> rt(runtime_, &hermesRuntime);
-  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(
-      rt, hermesRuntime, jsQueue);
+  auto adapter =
+      std::make_unique<HermesExecutorRuntimeAdapter>(hermesRuntime, jsQueue);
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
