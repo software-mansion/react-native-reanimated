@@ -36,11 +36,14 @@
 }
 
 @synthesize sharedTransitionsItems;
+@synthesize iterationOrder;
 
 - (instancetype)init
 {
   self = [super init];
+  // It is important to keep right order of items
   sharedTransitionsItems = [NSMutableDictionary<NSString *, NSMutableArray<SharedViewConfig *> *> new];
+  iterationOrder = [NSMutableArray<NSString *> new];
   _initialValuesSnapshotBackup = [NSMutableDictionary new];
   _snapshotRegistry = [NSMutableDictionary new];
   _toRestore = [NSMutableSet<NSNumber *> new];
@@ -86,6 +89,7 @@
 - (void)registerTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
   if (!sharedTransitionsItems[transitionTag]) {
+    [iterationOrder addObject:transitionTag];
     sharedTransitionsItems[transitionTag] = [NSMutableArray<SharedViewConfig *> new];
   }
   SharedViewConfig *sharedViewConfig = [[SharedViewConfig new] initWithTag:viewTag];
@@ -115,6 +119,7 @@
     [sharedViewConfigs removeObjectsInArray:discardedItems];
     if ([sharedTransitionsItems[transitionTag] count] == 0) {
       [sharedTransitionsItems removeObjectForKey:transitionTag];
+      [iterationOrder removeObject:transitionTag];
     }
   }
 }
@@ -131,6 +136,7 @@
 
 - (void)makeSnapshot:(UIView *)view withViewController:(UIView *)viewController
 {
+  // TODO: withConverter - to remove from function definition
   _snapshotRegistry[view.reactTag] = [[REASnapshot alloc] init:view withConverter:nil withParent:viewController];
 }
 

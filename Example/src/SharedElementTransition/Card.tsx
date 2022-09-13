@@ -34,15 +34,15 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
   
   return <TouchableNativeFeedback onPress={() => { goNext(isOpen ? 'Screen1' : 'Screen2') }}>
     <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green', opacity: 0.5 } : { height: 110, marginTop: 20, backgroundColor: 'green', opacity: 0.5 }}
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 110, marginTop: 20, backgroundColor: 'green' }}
       sharedTransitionTag={transitionTag + "1"}
     >
-      {/* <Animated.Text
+      <Animated.Text
         sharedTransitionTag={transitionTag + "2"}
         style={{ width: '100%', height: 20 }}
       >
         {title}
-      </Animated.Text> */}
+      </Animated.Text>
       <AnimatedImage 
         sharedTransitionTag={transitionTag + "3"}
         source={photo} 
@@ -60,12 +60,12 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
 
 function Screen1({ navigation }) {
   return (
-    <Animated.ScrollView style={{ flex: 1 }}>
+    <Animated.ScrollView style={{ flex: 1, marginTop: 34 }}>
       <Card navigation={navigation} title="Mleko1" transitionTag="mleko1" />
-      <Card navigation={navigation} title="Mleko2" transitionTag="mleko2" />
+      {/* <Card navigation={navigation} title="Mleko2" transitionTag="mleko2" />
       <Card navigation={navigation} title="Mleko3" transitionTag="mleko3" />
       <Card navigation={navigation} title="Mleko4" transitionTag="mleko4" />
-      <Card navigation={navigation} title="Mleko5" transitionTag="mleko5" />
+      <Card navigation={navigation} title="Mleko5" transitionTag="mleko5" /> */}
     </Animated.ScrollView>
   );
 }
