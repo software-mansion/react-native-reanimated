@@ -1,73 +1,77 @@
 import { runOnUI } from '../core';
 
-type CallbackDetails = {
-  callback: (frameTimings: FrameTime) => void;
+type Callback = {
+  // What about calling this field `call`? Then we would have `callback.call()`.
+  // It looks nice, but arguably it is confusing, as `call` isn't actually a
+  // function, but rather a function object. -> discuss this with someone
+  function: (callbackDetails: CallbackDetails) => void;
   startTime: number | undefined;
 };
 
+export type CallbackDetails = {
+  lastFrameTimestamp: number;
+  lastFrameDuration: number | undefined;
+  elapsedTime: number;
+};
+
 interface FrameCallbackRegistryUI {
-  frameCallbackRegistry: Map<number, CallbackDetails>;
+  frameCallbackRegistry: Map<number, Callback>;
   frameCallbackActive: Set<number>;
   isFrameCallbackRunning: boolean;
-  lastFrameTimestamp: number | undefined;
+  previousFrameTimestamp: number | undefined;
   runCallbacks: () => void;
   registerFrameCallback: (
-    callback: (frameTimings: FrameTime) => void,
+    callback: (callbackDetails: CallbackDetails) => void,
     callbackId: number
   ) => void;
   unregisterFrameCallback: (frameCallbackId: number) => void;
   manageStateFrameCallback: (frameCallbackId: number, state: boolean) => void;
 }
 
-export type FrameTime = {
-  timestamp: number;
-  duration: number | undefined;
-  elapsedTime: number;
-};
-
 export const prepareUIRegistry = runOnUI(() => {
   'worklet';
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
-    frameCallbackRegistry: new Map<number, CallbackDetails>(),
+    frameCallbackRegistry: new Map<number, Callback>(),
     frameCallbackActive: new Set<number>(),
     isFrameCallbackRunning: false,
-    lastFrameTimestamp: undefined,
+    previousFrameTimestamp: undefined,
 
     runCallbacks() {
-      const loop = (timestamp: number) => {
-        if (this.lastFrameTimestamp === undefined) {
-          this.lastFrameTimestamp = timestamp;
+      const loop = (lastFrameTimestamp: number) => {
+        if (this.previousFrameTimestamp === undefined) {
+          this.previousFrameTimestamp = lastFrameTimestamp;
         }
 
-        const timeSinceLastFrame = timestamp - this.lastFrameTimestamp;
+        const timeSinceLastFrame =
+          lastFrameTimestamp - this.previousFrameTimestamp;
 
         this.frameCallbackActive.forEach((key: number) => {
-          const startTime = this.frameCallbackRegistry.get(key)?.startTime;
-          const elapsedTime = timestamp - (startTime || timestamp);
-          const duration =
+          const callback = this.frameCallbackRegistry.get(key)!;
+
+          const startTime = callback.startTime;
+          const elapsedTime =
+            lastFrameTimestamp - (startTime || lastFrameTimestamp);
+          const lastFrameDuration =
             startTime === undefined ? undefined : timeSinceLastFrame;
 
           if (startTime === undefined) {
-            const callbackDetails = this.frameCallbackRegistry.get(key)!;
-            callbackDetails.startTime = timestamp;
-
-            this.frameCallbackRegistry.set(key, callbackDetails);
+            callback.startTime = lastFrameTimestamp;
           }
 
-          const callbackDetails = this.frameCallbackRegistry.get(key);
-          callbackDetails?.callback.call(
-            {},
-            { timestamp, elapsedTime, duration }
-          );
+          callback.function({
+            lastFrameTimestamp,
+            elapsedTime,
+            lastFrameDuration,
+          });
         });
 
         if (this.frameCallbackActive.size > 0) {
-          this.lastFrameTimestamp = timestamp;
+          this.previousFrameTimestamp = lastFrameTimestamp;
           requestAnimationFrame(loop);
         } else {
           this.isFrameCallbackRunning = false;
-          this.lastFrameTimestamp = 0;
+          this.previousFrameTimestamp = undefined;
         }
       };
 
@@ -78,11 +82,11 @@ export const prepareUIRegistry = runOnUI(() => {
     },
 
     registerFrameCallback(
-      callback: (frameTimings: FrameTime) => void,
+      callback: (callbackDetails: CallbackDetails) => void,
       callbackId: number
     ) {
       this.frameCallbackRegistry.set(callbackId, {
-        callback,
+        function: callback,
         startTime: undefined,
       });
     },
@@ -100,12 +104,10 @@ export const prepareUIRegistry = runOnUI(() => {
         this.frameCallbackActive.add(frameCallbackId);
         this.runCallbacks();
       } else {
-        const callbackDetails =
-          this.frameCallbackRegistry.get(frameCallbackId)!;
-        callbackDetails.startTime = undefined;
+        const callback = this.frameCallbackRegistry.get(frameCallbackId)!;
+        callback.startTime = undefined;
 
         this.frameCallbackActive.delete(frameCallbackId);
-        this.frameCallbackRegistry.set(frameCallbackId, callbackDetails);
       }
     },
   };
