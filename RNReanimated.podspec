@@ -136,6 +136,7 @@ Pod::Spec.new do |s|
   if !reactTargetTvOS
     s.dependency 'React-RCTActionSheet'
     s.dependency 'React-hermes'
+    s.dependency 'hermes-engine'
   end
   s.dependency 'React-RCTNetwork'
   s.dependency 'React-RCTAnimation'
@@ -152,7 +153,6 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  s.dependency 'hermes-engine'
 
   if reactVersion.match(/^0.62/)
     s.dependency 'ReactCommon/callinvoker'
