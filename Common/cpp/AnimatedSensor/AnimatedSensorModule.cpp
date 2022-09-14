@@ -2,6 +2,9 @@
 #include "MutableValue.h"
 #include "ValueWrapper.h"
 
+#include <memory>
+#include <utility>
+
 namespace reanimated {
 
 AnimatedSensorModule::AnimatedSensorModule(

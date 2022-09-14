@@ -4,19 +4,20 @@ on:
     paths:
       - 'ios/**'
       - 'Common/**'
+      - 'FabricExample/package.json'
+      - 'Example/package.json'
   push:
     branches:
       - main
 
 jobs:
   build:
-    # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       matrix:
         working-directory: [Example, FabricExample]
     concurrency:
-      group: ios-${{ github.ref }}
+      group: ios-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout

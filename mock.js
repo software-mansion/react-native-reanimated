@@ -102,6 +102,7 @@ const Reanimated = {
   Text,
   Image,
   ScrollView: Animated.ScrollView,
+  FlatList: Animated.FlatList,
   Code,
 
   Clock: NOOP,

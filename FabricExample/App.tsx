@@ -25,10 +25,13 @@ import ScreenStackExample from './src/ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './src/ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollToExample from './src/ScrollToExample';
 import ScrollViewExample from './src/ScrollViewExample';
+import SvgExample from './src/SvgExample';
 import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ScrollViewOffsetExample from './src/ScrollViewOffsetExample';
+import ArticleProgressExample from './src/ArticleProgressExample';
 
 const EXAMPLES = [
   {
@@ -86,6 +89,12 @@ const EXAMPLES = [
     component: GestureHandlerExample,
   },
   {
+    name: 'SvgExample',
+    icon: '🟢',
+    title: 'Animated SVG circle',
+    component: SvgExample,
+  },
+  {
     name: 'BouncingBoxExample',
     icon: '📦',
     title: 'Bouncing box',
@@ -114,6 +123,18 @@ const EXAMPLES = [
     icon: '🦘',
     title: 'scrollTo',
     component: ScrollToExample,
+  },
+  {
+    name: 'ScrollViewPositionExample',
+    icon: '𝌍',
+    title: 'useScrollViewPosition',
+    component: ScrollViewOffsetExample,
+  },
+  {
+    name: 'ArticleProgressExample',
+    icon: '📰',
+    title: 'Article Progress Example',
+    component: ArticleProgressExample,
   },
   {
     name: 'MeasureExample',
