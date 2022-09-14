@@ -1,5 +1,8 @@
 #pragma once
 
+#if (__has_include( \
+         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>) || JS_RUNTIME_HERMES)
+
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
@@ -12,9 +15,6 @@
 #else // __has_include(<hermes/hermes.h>) or ANDROID
 #include <hermes/hermes.h>
 #endif
-
-#include <hermes/inspector/RuntimeAdapter.h>
-#include <hermes/inspector/chrome/Registration.h>
 
 namespace reanimated {
 
@@ -104,3 +104,5 @@ class ReanimatedHermesRuntime
 };
 
 } // namespace reanimated
+
+#endif

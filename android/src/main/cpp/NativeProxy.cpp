@@ -1,16 +1,14 @@
+#include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 
 #include <memory>
 #include <string>
 
-#include "react/jni/JMessageQueueThread.h"
-#include "ReanimatedRuntime.h"
-
-#include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
 #include "LayoutAnimationsProxy.h"
@@ -23,6 +21,8 @@
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
+
+#include "ReanimatedRuntime.h"
 
 namespace reanimated {
 
@@ -204,7 +204,8 @@ void NativeProxy::installJSIBindings(
   };
 
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
-  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(jsQueue);
+  std::shared_ptr<jsi::Runtime> animatedRuntime =
+      ReanimatedRuntime::make(jsQueue);
 
   auto workletRuntimeValue =
       runtime_->global()
