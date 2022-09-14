@@ -148,7 +148,7 @@ index e0dd2ba..8061e21 100644
  
    [self->_animationTimer setPaused:YES];
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
-index 6f1d46c..90abaa1 100644
+index 6f1d46c..8a2caa6 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.h
 @@ -1,11 +1,42 @@
@@ -180,7 +180,7 @@ index 6f1d46c..90abaa1 100644
  @protocol RNSSharedElementTransitionsDelegate <NSObject>
  
 +@property NSMutableDictionary<NSString *, NSMutableArray<SharedViewConfig *>*> * sharedTransitionsItems;
-+@property NSMutableArray<NSString *> * iterationOrder;
++@property NSMutableArray<NSString *> * sharedElementsIterationOrder;
 +
 +- (void)afterPreparingCallback;
  - (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
@@ -205,7 +205,7 @@ index 6f1d46c..90abaa1 100644
  
  @end
 diff --git a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
-index 4c82bf4..f637ce5 100644
+index 4c82bf4..05e333f 100644
 --- a/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 +++ b/node_modules/react-native-screens/ios/RNSSharedElementAnimator.m
 @@ -3,6 +3,25 @@
@@ -256,7 +256,7 @@ index 4c82bf4..f637ce5 100644
 -                                                        withRootTag:[screenView rootTag]];
 +  RCTUIManager *uiManager = [screenView bridge].uiManager;
 +  NSNumber *rootTag = screenView.rootTag;
-+  for (NSString *key in [_delegate.iterationOrder reverseObjectEnumerator]) {
++  for (NSString *key in [_delegate.sharedElementsIterationOrder reverseObjectEnumerator]) {
 +    NSArray<SharedViewConfig *> *sharedViewConfigs = _delegate.sharedTransitionsItems[key];
 +    UIView *fromView, *toView;
 +    for (SharedViewConfig *sharedViewConfig in sharedViewConfigs) {
