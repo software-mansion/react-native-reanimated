@@ -486,7 +486,6 @@ or https://github.com/reactwg/react-native-new-architecture/discussions/4
 if (REACT_NATIVE_MINOR_VERSION >= 69 && !isNewArchitectureEnabled()) {
     // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
 
-    def reactNativeRootDir = resolveReactNativeDirectory()
     def downloadDir = customDownloadsDir ? new File(customDownloadsDir) : new File(reactNativeRootDir, "sdks/download")
 
     // By default we are going to download and unzip hermes inside the /sdks/hermes folder
