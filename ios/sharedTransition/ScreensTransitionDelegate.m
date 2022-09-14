@@ -69,20 +69,20 @@
       [_initialValuesSnapshotBackup removeObjectForKey:toView.reactTag];
     }
     else {
-      after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
+      after = [[REASnapshot alloc] init:toView withParent:toViewConverter];
       after = _snapshotRegistry[toView.reactTag];
     }
     _initialValuesSnapshotBackup[fromView.reactTag] = fromViewSnapshotBefore;
     
     [_toRestore addObject:fromView.reactTag];
-    NSLog(@"%@, %@, %@", fromView.reactTag, fromViewSnapshotBefore.values[@"originY"], after.values[@"originY"]);
+    
     [_animationsManager onViewTransition:fromView before:fromViewSnapshotBefore after:after];
     [_animationsManager onViewTransition:toView before:fromViewSnapshotBefore after:after];
-  } else {
-
+  } 
+  else {
     // TODO: animate scrreen transition
-//    REASnapshot *toViewSnapshot = [[REASnapshot alloc] init:toView withConverter:converter withParent:startingViewConverter];
-//    [_animationsManager onScreenTransition:fromView finish:toViewSnapshot transitionType:transitionType];
+    // REASnapshot *toViewSnapshot = [[REASnapshot alloc] init:toView withConverter:converter withParent:startingViewConverter];
+    // [_animationsManager onScreenTransition:fromView finish:toViewSnapshot transitionType:transitionType];
   }
 }
 
@@ -136,8 +136,7 @@
 
 - (void)makeSnapshot:(UIView *)view withViewController:(UIView *)viewController
 {
-  // TODO: withConverter - to remove from function definition
-  _snapshotRegistry[view.reactTag] = [[REASnapshot alloc] init:view withConverter:nil withParent:viewController];
+  _snapshotRegistry[view.reactTag] = [[REASnapshot alloc] init:view withParent:viewController];
 }
 
 @end

@@ -35,8 +35,8 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
   return <TouchableNativeFeedback onPress={() => { goNext(isOpen ? 'Screen1' : 'Screen2') }}>
     <Animated.View sharedTransitionTag={transitionTag + "1"}>
     <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'transparent' } : { height: 120, marginTop: 20, backgroundColor: 'transparent' }}
-      // sharedTransitionTag={transitionTag + "1_"}
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 20, backgroundColor: 'green' }}
+      sharedTransitionTag={transitionTag + "1_"}
     >
       <Animated.Text
         sharedTransitionTag={transitionTag + "2"}

@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)init;
 - (instancetype)init:(UIView *)view;
-- (instancetype)init:(UIView *)view withConverter:(UIView *)converter withParent:(UIView *)parent;
+- (instancetype)init:(UIView *)view withParent:(UIView *)parent;
 
 @end
 
