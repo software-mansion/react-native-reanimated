@@ -92,6 +92,13 @@ struct ReentrancyCheck {
 #endif
 };
 
+// This is in fact a subclass of jsi::Runtime! WithRuntimeDecorator is a
+// template class that is a subclass of DecoratedRuntime which is also a
+// tempalte class that then inherits its template, which in this case is
+// jsi::Runtime. So the inheritance is: ReanimatedHermesRuntime ->
+// WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
+// more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
+// https://github.com/facebook/react-native/blob/main/ReactCommon/jsi/jsi/decorator.h
 class ReanimatedHermesRuntime
     : public jsi::WithRuntimeDecorator<ReentrancyCheck> {
  public:

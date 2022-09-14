@@ -30,8 +30,8 @@
 #import <dlfcn.h>
 #endif
 
-#import "ReanimatedRuntime.h"
 #import "REAMessageThread.h"
+#import "ReanimatedRuntime.h"
 
 namespace reanimated {
 
