@@ -210,10 +210,6 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
               forView:(UIView *)view
     withComponentData:(RCTComponentData *)componentData
 {
-//  if ([_sharedTransitionWithLayout containsObject:view.reactTag]) {
-//    [_nodeManager updateProps:newProps ofViewWithTag:view.reactTag withName:@"RCTView"];
-//    return;
-//  }
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
     double oldHeight = view.bounds.size.height;
@@ -228,20 +224,29 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     view.center = CGPointMake(view.center.x + view.bounds.size.width / 2.0 - oldWidth / 2.0, view.center.y);
     [newProps removeObjectForKey:@"width"];
   }
+  
+  bool updateViewPosition = false;
+  double originX = 0, originY = 0;
   if (newProps[@"originX"]) {
-    // TODO: Add conversion like for originY
-    double originX = [self getDoubleOrZero:newProps[@"originX"]];
-    view.center = CGPointMake(originX + view.bounds.size.width / 2.0, view.center.y);
+    updateViewPosition = true;
+    originX = [self getDoubleOrZero:newProps[@"originX"]];
     [newProps removeObjectForKey:@"originX"];
   }
   if (newProps[@"originY"]) {
-    double originY = [self getDoubleOrZero:newProps[@"originY"]];
-    CGPoint newCenter = CGPointMake(view.center.x, originY + view.bounds.size.height / 2.0);
+    updateViewPosition = true;
+    originY = [self getDoubleOrZero:newProps[@"originY"]];
+    [newProps removeObjectForKey:@"originY"];
+  }
+  if (updateViewPosition) {
+    CGPoint newCenter = CGPointMake(
+      originX + view.bounds.size.width / 2.0, 
+      originY + view.bounds.size.height / 2.0
+    );
     UIView *window = UIApplication.sharedApplication.keyWindow;
     CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
     view.center = convertedCenter;
-    [newProps removeObjectForKey:@"originY"];
   }
+
   [componentData setProps:newProps forView:view];
 }
 

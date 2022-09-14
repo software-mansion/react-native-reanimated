@@ -22,12 +22,12 @@ function Screen1({ navigation }) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <View style={{display: 'flex', flexDirection: 'column'}}>
-        <View style={{ marginTop: 50 }}>
-          <View style={{ marginTop: 50 }}>
-            <View style={{ marginTop: 50 }}>
+        <View style={{ marginTop: 50, marginLeft: 10 }}>
+          <View style={{ marginTop: 50, marginLeft: 10 }}>
+            <View style={{ marginTop: 50, marginLeft: 10 }}>
               <Animated.View 
                 sharedTransitionTag="mleko"
-                style={{ width: 150, height: 150, marginLeft: 50, backgroundColor: 'green' }}
+                style={{ width: 150, height: 150, backgroundColor: 'green' }}
               />
             </View>
           </View>
