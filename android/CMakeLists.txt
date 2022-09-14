@@ -96,6 +96,7 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/SpecTools"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
         "${COMMON_SRC_DIR}/cpp/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
         "${COMMON_SRC_DIR}/cpp/Registries"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
