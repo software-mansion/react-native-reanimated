@@ -29,7 +29,6 @@
 @end
 
 @implementation ScreensTransitionDelegate {
-  RCTUIManager *_uiManager;
   NSMutableDictionary *_snapshotRegistry;
   NSMutableSet<NSNumber *> *_toRestore;
 }
@@ -45,11 +44,6 @@
   _snapshotRegistry = [NSMutableDictionary new];
   _toRestore = [NSMutableSet<NSNumber *> new];
   return self;
-}
-
-- (void)setUIManager:(RCTUIManager *)uiManager
-{
-  _uiManager = uiManager;
 }
 
 - (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
@@ -114,6 +108,7 @@
 {
   REANodesManager *reanimatedNodeManager = [_animationsManager getNodeManager];
   for (NSNumber *viewTag in _toRestore) {
+    // _snapshotRegistry containst last snapshot of component state before transition start
     REASnapshot *initialState = _snapshotRegistry[viewTag];
     [_animationsManager stopAnimation:viewTag];
     [reanimatedNodeManager updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];

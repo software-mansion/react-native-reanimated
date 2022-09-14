@@ -337,16 +337,21 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   ScreensTransitionDelegate *delegate = [ScreensTransitionDelegate new];
   [delegate setAnimationsManager:animationsManager];
-  [delegate setUIManager:bridge.uiManager];
   [RNSSharedElementAnimator setDelegate:delegate];
   auto registerTransitioinTag = [delegate](
-                                    jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {
+    jsi::Runtime &rt, 
+    const jsi::Value &transitionTag, 
+    const jsi::Value &viewTag
+  ) {
     auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
     auto viewTagNS = @(viewTag.asNumber());
     [delegate registerTransitioinTag:transitionTagNS viewTag:viewTagNS];
   };
   auto unregisterTransitioinTag = [delegate](
-                                      jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {
+    jsi::Runtime &rt, 
+    const jsi::Value &transitionTag, 
+    const jsi::Value &viewTag
+  ) {
     auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
     auto viewTagNS = @(viewTag.asNumber());
     [delegate unregisterTransitioinTag:transitionTagNS viewTag:viewTagNS];
