@@ -229,6 +229,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     [newProps removeObjectForKey:@"width"];
   }
   if (newProps[@"originX"]) {
+    // TODO: Add conversion like for originY
     double originX = [self getDoubleOrZero:newProps[@"originX"]];
     view.center = CGPointMake(originX + view.bounds.size.width / 2.0, view.center.y);
     [newProps removeObjectForKey:@"originX"];
@@ -370,7 +371,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
- [view.superview bringSubviewToFront:view];
+  [view.superview bringSubviewToFront:view];
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   self->_startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }
