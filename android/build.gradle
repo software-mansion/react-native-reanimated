@@ -127,13 +127,12 @@ def noMultipleInstancesAssertion() {
     }
 }
 
-def reactNativeRootDir = resolveReactNativeDirectory()
-
-def localProps = new Properties()
-def localPropertiesFile = file("local.properties")
-if (localPropertiesFile.exists()) {
-    localProps.load(new InputStreamReader(new FileInputStream(localPropertiesFile), "UTF-8"))
+boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
+if (CLIENT_SIDE_BUILD) {
+    configurations.maybeCreate("default")
 }
+
+def reactNativeRootDir = resolveReactNativeDirectory()
 
 def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
