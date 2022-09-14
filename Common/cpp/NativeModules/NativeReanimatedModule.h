@@ -48,8 +48,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
           propObtainer,
 #endif
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-      PlatformDepMethodsHolder platformDepMethodsHolder
-      /**/);
+      PlatformDepMethodsHolder platformDepMethodsHolder);
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
       override;

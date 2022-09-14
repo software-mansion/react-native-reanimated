@@ -1,5 +1,7 @@
 #include "ReanimatedHermesRuntime.h"
 
+// Only include this file in hermes enabled builds as some platforms (like tvOS)
+// don't support hermes and it causes the compilation to fail.
 #if (__has_include( \
          <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>) || JS_RUNTIME_HERMES)
 
@@ -33,6 +35,8 @@ class HermesExecutorRuntimeAdapter
       : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
 
   virtual ~HermesExecutorRuntimeAdapter() {
+    // This is not necessary on Android, but there is an assertion for
+    // that on iOS.
     thread_->quitSynchronous();
   }
 
@@ -44,6 +48,10 @@ class HermesExecutorRuntimeAdapter
     return hermesRuntime_.getDebugger();
   }
 
+  // This function is not empty in React Native and it is used to make sure
+  // that the runtime is still valid when it gets invoked. This is not necessary
+  // in our case since we will definetley disable debugging on the runtime
+  // before it gets destroyed (because we do it in the destructor).
   void tickleJs() override {}
 
  public:
@@ -65,13 +73,14 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
-  // This is to prevent unused variable warnings
+  // This is to prevent unused variable warnings on Android
   (void)messageQueueThread;
 #endif
 }
 
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 #if HERMES_ENABLE_DEBUGGER
+  // We have to disable debugging before the runtime is destroyed.
   facebook::hermes::inspector::chrome::disableDebugging(hermesRuntime_);
 #endif
 }

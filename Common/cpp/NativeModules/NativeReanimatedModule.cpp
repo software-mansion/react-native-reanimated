@@ -103,7 +103,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction)
 #endif
-
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);

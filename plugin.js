@@ -284,10 +284,6 @@ function isRelease() {
   );
 }
 
-function isJest() {
-  return process.env.BABEL_ENV === 'jest';
-}
-
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
@@ -345,7 +341,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
 
   const code = generate(workletFunction).code;
 
-  if (!isJest()) {
+  if (!isRelease()) {
     // Clear contents array (should be empty anyways)
     inputMap.sourcesContent = [];
     // Include source contents in source map, because Flipper/iframe is not
