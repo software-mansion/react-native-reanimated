@@ -733,6 +733,7 @@ PODS:
     - FBLazyVector
     - FBReactNativeSpec
     - glog
+    - hermes-engine
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -743,6 +744,7 @@ PODS:
     - React-Core/RCTWebSocket
     - React-CoreModules
     - React-cxxreact
+    - React-hermes
     - React-jsi
     - React-jsiexecutor
     - React-jsinspector
@@ -1018,7 +1020,7 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 80c195ffcafb190f531fdc849dc2d19cb4bb2b34
   ReactCommon: de55f940495d7bf87b5d7bf55b5b15cdd50d7d7b
   RNGestureHandler: 182b4e135cc4fec4988687e2f123e302dc6b4b71
-  RNReanimated: a91b2ed2ac39b96a6a024ab55a6b546b1ec10f84
+  RNReanimated: a29563ad94cfb14919d7b76382ee6674210d6f75
   RNScreens: e2cd04caa74748a6e42609a7b84f76c71d70a6ee
   RNSVG: 81cdb77109d5f3e77dcf1dd8045aaaa8144afddf
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608

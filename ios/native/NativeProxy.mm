@@ -30,19 +30,8 @@
 #import <dlfcn.h>
 #endif
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#import <ReanimatedHermesRuntime.h>
-#import <reacthermes/HermesExecutorFactory.h>
-#elif __has_include(<hermes/hermes.h>)
-#import <ReanimatedHermesRuntime.h>
-#import <hermes/hermes.h>
-#else
-#import <jsi/JSCRuntime.h>
-#endif
-
-#if HERMES_ENABLE_DEBUGGER
+#import "ReanimatedRuntime.h"
 #import "REAMessageThread.h"
-#endif
 
 namespace reanimated {
 
@@ -207,18 +196,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 #endif
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>)
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-  std::unique_ptr<facebook::hermes::HermesRuntime> runtime = facebook::hermes::makeHermesRuntime();
-  facebook::hermes::HermesRuntime &hermesRuntime = *runtime;
-
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      std::make_shared<ReanimatedHermesRuntime>(std::move(runtime), hermesRuntime, jsQueue);
-#else
-  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
-#endif
+  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(jsQueue);
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);

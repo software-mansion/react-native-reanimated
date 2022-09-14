@@ -7,14 +7,8 @@
 #include <memory>
 #include <string>
 
-#if JS_RUNTIME_HERMES
-#include <hermes/hermes.h>
-#include "ReanimatedHermesRuntime.h"
-#elif JS_RUNTIME_V8
-#include <v8runtime/V8RuntimeFactory.h>
-#else
-#include <jsi/JSCRuntime.h>
-#endif
+#include "react/jni/JMessageQueueThread.h"
+#include "ReanimatedRuntime.h"
 
 #include <android/log.h>
 #include "AndroidErrorHandler.h"
@@ -28,10 +22,6 @@
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
-#endif
-
-#if HERMES_ENABLE_DEBUGGER
-#include "react/jni/JMessageQueueThread.h"
 #endif
 
 namespace reanimated {
@@ -213,25 +203,9 @@ void NativeProxy::installJSIBindings(
     unsubscribeFromKeyboardEvents(listenerId);
   };
 
-#if JS_RUNTIME_HERMES
-  std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
-      facebook::hermes::makeHermesRuntime();
-  facebook::hermes::HermesRuntime &hermesRuntime = *runtime;
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      std::make_shared<ReanimatedHermesRuntime>(
-          std::move(runtime),
-          hermesRuntime,
-          std::make_shared<JMessageQueueThread>(messageQueueThread));
-#elif JS_RUNTIME_V8
-  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
-  config->enableInspector = false;
-  config->appName = "reanimated";
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      rnv8::createSharedV8Runtime(runtime_, std::move(config));
-#else
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::jsc::makeJSCRuntime();
-#endif
+  auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
+  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(jsQueue);
+
   auto workletRuntimeValue =
       runtime_->global()
           .getProperty(*runtime_, "ArrayBuffer")
