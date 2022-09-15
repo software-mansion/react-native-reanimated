@@ -15,7 +15,7 @@ useFrameCallback(callback: (frameInfo: frameInfo) => void, autostart = true): [F
 #### `callback` [Function]
 
 A single worklet function that will be called on every frame update.
-This function recieves a [`CallbackDetails`](#frameinfo-object) object as na argument.
+This function recieves a [`FrameInfo`](#frameinfo-object) object as na argument.
 
 #### `autostart` [boolean]
 
