@@ -66,20 +66,20 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
     : jsi::WithRuntimeDecorator<ReentrancyCheck>(*runtime, reentrancyCheck_),
       runtime_(std::move(runtime)),
       hermesRuntime_(hermesRuntime) {
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && ANDROID
   std::shared_ptr<facebook::hermes::HermesRuntime> rt(runtime_, &hermesRuntime);
   auto adapter =
       std::make_unique<HermesExecutorRuntimeAdapter>(hermesRuntime, jsQueue);
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
-  // This is to prevent unused variable warnings on Android
-  (void)messageQueueThread;
+  // This is required by iOS
+  jsQueue->quitSynchronous();
 #endif
 }
 
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && ANDROID
   // We have to disable debugging before the runtime is destroyed.
   facebook::hermes::inspector::chrome::disableDebugging(hermesRuntime_);
 #endif

@@ -54,3 +54,11 @@ connect to a non-existent runtime.
 The runtime should also be destroyed before the Reanimated module, because
 otherwise there might be weird BAD_ACCESS errors when the gc gets it
 hand on the runtime.
+
+1. Known issues (+które wersje chrome nie działają, issue)
+2. Przykład workletu+sourcemap+jakie sciezki (iframe sandbox)
+3. Endpoint json
+4. Inline rzeczy
+5. define
+6. przejrzeć commity
+7. debugging docs + troubleshooting
