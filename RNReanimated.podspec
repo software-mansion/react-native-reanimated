@@ -135,8 +135,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-Core/DevSupport'
   if !reactTargetTvOS
     s.dependency 'React-RCTActionSheet'
-    s.dependency 'React-hermes'
-    s.dependency 'hermes-engine'
   end
   s.dependency 'React-RCTNetwork'
   s.dependency 'React-RCTAnimation'
