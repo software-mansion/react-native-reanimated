@@ -1,5 +1,5 @@
 import Animated, {
-  CallbackDetails,
+  FrameInfo,
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
@@ -14,29 +14,26 @@ export default function FrameCallbackExample() {
   const x1 = useSharedValue(0);
   const y1 = useSharedValue(0);
 
-  const frameCallback1 = useFrameCallback(
-    (callbackDetails: CallbackDetails) => {
-      if (callbackDetails.lastFrameDuration === undefined) {
-        console.log('First frame!');
-      } else {
-        console.log('Frame info:', callbackDetails);
-      }
+  const frameCallback1 = useFrameCallback((frameInfo: FrameInfo) => {
+    if (frameInfo.duration === undefined) {
+      console.log('First frame!');
+    } else {
+      console.log('Frame info:', frameInfo);
+    }
 
-      if (x1.value === limit && y1.value !== 0) {
-        y1.value -= 1;
-      }
-      if (x1.value === 0 && y1.value !== limit) {
-        y1.value += 1;
-      }
-      if (y1.value === limit && x1.value !== limit) {
-        x1.value += 1;
-      }
-      if (y1.value === 0 && x1.value !== 0) {
-        x1.value -= 1;
-      }
-    },
-    false
-  );
+    if (x1.value === limit && y1.value !== 0) {
+      y1.value -= 1;
+    }
+    if (x1.value === 0 && y1.value !== limit) {
+      y1.value += 1;
+    }
+    if (y1.value === limit && x1.value !== limit) {
+      x1.value += 1;
+    }
+    if (y1.value === 0 && x1.value !== 0) {
+      x1.value -= 1;
+    }
+  }, false);
 
   const animatedStyle1 = useAnimatedStyle(() => {
     return {

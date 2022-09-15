@@ -1,27 +1,24 @@
 import { runOnUI } from '../core';
 
-type Callback = {
-  // What about calling this field `call`? Then we would have `callback.call()`.
-  // It looks nice, but arguably it is confusing, as `call` isn't actually a
-  // function, but rather a function object. -> discuss this with someone
-  function: (callbackDetails: CallbackDetails) => void;
+type CallbackDetails = {
+  callback: (frameInfo: FrameInfo) => void;
   startTime: number | undefined;
 };
 
-export type CallbackDetails = {
-  lastFrameTimestamp: number;
-  lastFrameDuration: number | undefined;
-  elapsedTime: number;
+export type FrameInfo = {
+  timestamp: number;
+  duration: number | undefined;
+  timeSinceFirstFrame: number;
 };
 
 interface FrameCallbackRegistryUI {
-  frameCallbackRegistry: Map<number, Callback>;
+  frameCallbackRegistry: Map<number, CallbackDetails>;
   frameCallbackActive: Set<number>;
   isFrameCallbackRunning: boolean;
   previousFrameTimestamp: number | undefined;
   runCallbacks: () => void;
   registerFrameCallback: (
-    callback: (callbackDetails: CallbackDetails) => void,
+    callback: (frameInfo: FrameInfo) => void,
     callbackId: number
   ) => void;
   unregisterFrameCallback: (frameCallbackId: number) => void;
@@ -32,42 +29,40 @@ export const prepareUIRegistry = runOnUI(() => {
   'worklet';
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
-    frameCallbackRegistry: new Map<number, Callback>(),
+    frameCallbackRegistry: new Map<number, CallbackDetails>(),
     frameCallbackActive: new Set<number>(),
     isFrameCallbackRunning: false,
     previousFrameTimestamp: undefined,
 
     runCallbacks() {
-      const loop = (lastFrameTimestamp: number) => {
+      const loop = (timestamp: number) => {
         if (this.previousFrameTimestamp === undefined) {
-          this.previousFrameTimestamp = lastFrameTimestamp;
+          this.previousFrameTimestamp = timestamp;
         }
 
-        const timeSinceLastFrame =
-          lastFrameTimestamp - this.previousFrameTimestamp;
+        const timeSinceLastFrame = timestamp - this.previousFrameTimestamp;
 
         this.frameCallbackActive.forEach((key: number) => {
           const callback = this.frameCallbackRegistry.get(key)!;
 
           const startTime = callback.startTime;
-          const elapsedTime =
-            lastFrameTimestamp - (startTime || lastFrameTimestamp);
-          const lastFrameDuration =
+          const timeSinceFirstFrame = timestamp - (startTime || timestamp);
+          const duration =
             startTime === undefined ? undefined : timeSinceLastFrame;
 
           if (startTime === undefined) {
-            callback.startTime = lastFrameTimestamp;
+            callback.startTime = timestamp;
           }
 
-          callback.function({
-            lastFrameTimestamp,
-            elapsedTime,
-            lastFrameDuration,
+          callback.callback({
+            timestamp,
+            duration,
+            timeSinceFirstFrame,
           });
         });
 
         if (this.frameCallbackActive.size > 0) {
-          this.previousFrameTimestamp = lastFrameTimestamp;
+          this.previousFrameTimestamp = timestamp;
           requestAnimationFrame(loop);
         } else {
           this.isFrameCallbackRunning = false;
@@ -82,11 +77,11 @@ export const prepareUIRegistry = runOnUI(() => {
     },
 
     registerFrameCallback(
-      callback: (callbackDetails: CallbackDetails) => void,
+      callback: (frameInfo: FrameInfo) => void,
       callbackId: number
     ) {
       this.frameCallbackRegistry.set(callbackId, {
-        function: callback,
+        callback: callback,
         startTime: undefined,
       });
     },
