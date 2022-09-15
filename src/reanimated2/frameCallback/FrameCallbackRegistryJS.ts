@@ -24,20 +24,17 @@ export default class FrameCallbackRegistryJS {
     return callbackId;
   }
 
-  unregisterFrameCallback(frameCallbackId: number): void {
+  unregisterFrameCallback(callbackId: number): void {
     runOnUI(() => {
       'worklet';
-      global._frameCallbackRegistry.unregisterFrameCallback(frameCallbackId);
+      global._frameCallbackRegistry.unregisterFrameCallback(callbackId);
     })();
   }
 
-  manageStateFrameCallback(frameCallbackId: number, state: boolean): void {
+  manageStateFrameCallback(callbackId: number, state: boolean): void {
     runOnUI(() => {
       'worklet';
-      global._frameCallbackRegistry.manageStateFrameCallback(
-        frameCallbackId,
-        state
-      );
+      global._frameCallbackRegistry.manageStateFrameCallback(callbackId, state);
     })();
   }
 }

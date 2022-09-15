@@ -13,16 +13,15 @@ export type FrameInfo = {
 
 interface FrameCallbackRegistryUI {
   frameCallbackRegistry: Map<number, CallbackDetails>;
-  frameCallbackActive: Set<number>;
-  isFrameCallbackRunning: boolean;
+  activeFrameCallbacks: Set<number>;
   previousFrameTimestamp: number | undefined;
   runCallbacks: () => void;
   registerFrameCallback: (
     callback: (frameInfo: FrameInfo) => void,
     callbackId: number
   ) => void;
-  unregisterFrameCallback: (frameCallbackId: number) => void;
-  manageStateFrameCallback: (frameCallbackId: number, state: boolean) => void;
+  unregisterFrameCallback: (callbackId: number) => void;
+  manageStateFrameCallback: (callbackId: number, state: boolean) => void;
 }
 
 export const prepareUIRegistry = runOnUI(() => {
@@ -30,8 +29,7 @@ export const prepareUIRegistry = runOnUI(() => {
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
     frameCallbackRegistry: new Map<number, CallbackDetails>(),
-    frameCallbackActive: new Set<number>(),
-    isFrameCallbackRunning: false,
+    activeFrameCallbacks: new Set<number>(),
     previousFrameTimestamp: undefined,
 
     runCallbacks() {
@@ -42,37 +40,38 @@ export const prepareUIRegistry = runOnUI(() => {
 
         const timeSinceLastFrame = timestamp - this.previousFrameTimestamp;
 
-        this.frameCallbackActive.forEach((key: number) => {
-          const callback = this.frameCallbackRegistry.get(key)!;
+        this.activeFrameCallbacks.forEach((callbackId: number) => {
+          const callbackDetails = this.frameCallbackRegistry.get(callbackId)!;
 
-          const startTime = callback.startTime;
+          const { startTime } = callbackDetails;
           const timeSinceFirstFrame = timestamp - (startTime || timestamp);
           const duration =
             startTime === undefined ? undefined : timeSinceLastFrame;
 
           if (startTime === undefined) {
-            callback.startTime = timestamp;
+            callbackDetails.startTime = timestamp;
           }
 
-          callback.callback({
+          callbackDetails.callback({
             timestamp,
             duration,
             timeSinceFirstFrame,
           });
         });
 
-        if (this.frameCallbackActive.size > 0) {
+        if (this.activeFrameCallbacks.size > 0) {
           this.previousFrameTimestamp = timestamp;
           requestAnimationFrame(loop);
         } else {
-          this.isFrameCallbackRunning = false;
           this.previousFrameTimestamp = undefined;
         }
       };
 
-      if (!this.isFrameCallbackRunning) {
+      // runCallback() should only be called after registering a callback,
+      // so if there is only one active callback, then it means that there were
+      // zero previously and the loop isn't running yet.
+      if (this.activeFrameCallbacks.size === 1) {
         requestAnimationFrame(loop);
-        this.isFrameCallbackRunning = true;
       }
     },
 
@@ -86,23 +85,23 @@ export const prepareUIRegistry = runOnUI(() => {
       });
     },
 
-    unregisterFrameCallback(frameCallbackId: number) {
-      this.manageStateFrameCallback(frameCallbackId, false);
-      this.frameCallbackRegistry.delete(frameCallbackId);
+    unregisterFrameCallback(callbackId: number) {
+      this.manageStateFrameCallback(callbackId, false);
+      this.frameCallbackRegistry.delete(callbackId);
     },
 
-    manageStateFrameCallback(frameCallbackId: number, state: boolean) {
-      if (frameCallbackId === -1) {
+    manageStateFrameCallback(callbackId: number, state: boolean) {
+      if (callbackId === -1) {
         return;
       }
       if (state) {
-        this.frameCallbackActive.add(frameCallbackId);
+        this.activeFrameCallbacks.add(callbackId);
         this.runCallbacks();
       } else {
-        const callback = this.frameCallbackRegistry.get(frameCallbackId)!;
+        const callback = this.frameCallbackRegistry.get(callbackId)!;
         callback.startTime = undefined;
 
-        this.frameCallbackActive.delete(frameCallbackId);
+        this.activeFrameCallbacks.delete(callbackId);
       }
     },
   };
