@@ -290,7 +290,7 @@ android {
         debug {
             externalNativeBuild {
                 cmake {
-                    arguments "-DHERMES_ENABLE_DEBUGGER=1"
+                    arguments "-DHERMES_ENABLE_DEBUGGER=${JS_RUNTIME=="hermes"}"
                 }
             }
         }
