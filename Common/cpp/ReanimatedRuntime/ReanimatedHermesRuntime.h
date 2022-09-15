@@ -2,8 +2,7 @@
 
 // Only include this file in hermes enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
-#if (__has_include( \
-         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>) || JS_RUNTIME_HERMES)
+#if JS_RUNTIME_HERMES
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
@@ -24,7 +23,8 @@ using namespace facebook;
 using namespace react;
 
 // ReentrancyCheck is copied from React Native
-// (ReactCommon/hermes/executor/HermesExecutorFactory.cpp)
+// from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
+// https://github.com/facebook/react-native/blob/main/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
 struct ReentrancyCheck {
 // This is effectively a very subtle and complex assert, so only
 // include it in builds which would include asserts.

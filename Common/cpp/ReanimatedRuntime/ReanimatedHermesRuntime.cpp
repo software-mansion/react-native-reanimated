@@ -2,8 +2,7 @@
 
 // Only include this file in hermes enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
-#if (__has_include( \
-         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>) || JS_RUNTIME_HERMES)
+#if JS_RUNTIME_HERMES
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
@@ -73,7 +72,8 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
-  // This is required by iOS
+  // This is required by iOS, because there is an assertion in the destructor
+  // that the thread was indeed `quit` before
   jsQueue->quitSynchronous();
 #endif
 }
