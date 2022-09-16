@@ -14,7 +14,7 @@ export type FrameInfo = {
 interface FrameCallbackRegistryUI {
   frameCallbackRegistry: Map<number, CallbackDetails>;
   activeFrameCallbacks: Set<number>;
-  previousFrameTimestamp: number | undefined;
+  previousFrameTimestamp: number | null;
   runCallbacks: () => void;
   registerFrameCallback: (
     callback: (frameInfo: FrameInfo) => void,
@@ -34,7 +34,7 @@ export const prepareUIRegistry = runOnUI(() => {
 
     runCallbacks() {
       const loop = (timestamp: number) => {
-        if (this.previousFrameTimestamp === undefined) {
+        if (this.previousFrameTimestamp === null) {
           this.previousFrameTimestamp = timestamp;
         }
 
@@ -45,7 +45,7 @@ export const prepareUIRegistry = runOnUI(() => {
 
           const { startTime } = callbackDetails;
 
-          if (startTime === undefined) {
+          if (startTime === null) {
             // First frame
             callbackDetails.startTime = timestamp;
 
@@ -104,7 +104,7 @@ export const prepareUIRegistry = runOnUI(() => {
         this.runCallbacks();
       } else {
         const callback = this.frameCallbackRegistry.get(callbackId)!;
-        callback.startTime = undefined;
+        callback.startTime = null;
 
         this.activeFrameCallbacks.delete(callbackId);
       }
