@@ -1,8 +1,5 @@
 /*
-STATE: FAIL
-
-desc: nie wraca na swoją poprzednią pozycję, trzeba na snapshoty i konwersję popatrzeć
-jakby nie łapał absolutnej pozycji
+STATE: OK
 */
 
 import * as React from 'react';
@@ -10,6 +7,7 @@ import {
   Button,
   View,
   Image,
+  LogBox,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import {
@@ -20,6 +18,7 @@ import {
   TouchableNativeFeedback,
 } from 'react-native-gesture-handler';
 import photo from './assets/image.jpg'
+LogBox.ignoreLogs(['Looks']); // soooooo anoying 😡
 
 const Stack = createNativeStackNavigator();
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -35,7 +34,7 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
   return <TouchableNativeFeedback onPress={() => { goNext(isOpen ? 'Screen1' : 'Screen2') }}>
     <Animated.View sharedTransitionTag={transitionTag + "1"}>
     <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 20, backgroundColor: 'green' }}
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 30, backgroundColor: 'green' }}
       sharedTransitionTag={transitionTag + "1_"}
     >
       <Animated.Text
@@ -64,7 +63,7 @@ function Screen1({ navigation }) {
   return (
     <Animated.ScrollView style={{ flex: 1, marginTop: 37 }}>
       {
-        [...Array(10)].map((_, i) => 
+        [...Array(5)].map((_, i) => 
           <Card 
             key={i} 
             navigation={navigation} 
