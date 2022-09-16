@@ -2,7 +2,7 @@ import { runOnUI } from '../core';
 
 type CallbackDetails = {
   callback: (frameInfo: FrameInfo) => void;
-  startTime: number | undefined;
+  startTime: number | null;
 };
 
 export type FrameInfo = {
@@ -30,7 +30,7 @@ export const prepareUIRegistry = runOnUI(() => {
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
     frameCallbackRegistry: new Map<number, CallbackDetails>(),
     activeFrameCallbacks: new Set<number>(),
-    previousFrameTimestamp: undefined,
+    previousFrameTimestamp: null,
 
     runCallbacks() {
       const loop = (timestamp: number) => {
@@ -68,7 +68,7 @@ export const prepareUIRegistry = runOnUI(() => {
           this.previousFrameTimestamp = timestamp;
           requestAnimationFrame(loop);
         } else {
-          this.previousFrameTimestamp = undefined;
+          this.previousFrameTimestamp = null;
         }
       };
 
@@ -86,7 +86,7 @@ export const prepareUIRegistry = runOnUI(() => {
     ) {
       this.frameCallbackRegistry.set(callbackId, {
         callback: callback,
-        startTime: undefined,
+        startTime: null,
       });
     },
 

@@ -15,7 +15,7 @@ useFrameCallback(callback: (frameInfo: frameInfo) => void, autostart = true): [F
 #### `callback` [Function]
 
 A single worklet function that will be called on every frame update.
-This function recieves a [`FrameInfo`](#frameinfo-object) object as na argument.
+This function receives a [`FrameInfo`](#frameinfo-object) object as an argument.
 
 #### `autostart` [boolean]
 
@@ -63,7 +63,7 @@ export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
   const frameCallback = useFrameCallback((frameInfo) => {
-    if (frameInfo.timeSincePreviousFrame == null) {
+    if (frameInfo.timeSincePreviousFrame === null) {
       console.log('First frame!');
     } else {
       console.log(`${frameInfo.duration} ms have passed since the previous frame`);
