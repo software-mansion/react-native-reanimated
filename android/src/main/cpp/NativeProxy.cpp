@@ -130,7 +130,7 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto getCurrentTime = [this]() {
-    static auto method =
+    static const auto method =
         javaPart_->getClass()->getMethod<jlong()>("getCurrentTime");
     jlong output = method(javaPart_.get());
     return static_cast<double>(output);
