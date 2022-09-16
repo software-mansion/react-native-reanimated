@@ -25,7 +25,7 @@ index 43f9d42..3abd665 100644
  
      fun <T : Event<T>>sendEvent(event: T, reactApplicationContext: ReactContext) {
 diff --git a/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt b/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt
-index 9c89b93..3fb52a2 100644
+index 78fcb87..ebc4943 100644
 --- a/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt
 +++ b/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt
 @@ -347,6 +347,7 @@ class RNGestureHandlerModule(reactContext: ReactApplicationContext?)
