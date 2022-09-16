@@ -212,6 +212,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   int subscribeForKeyboardEvents(
       std::function<void(int, int)> keyboardEventDataUpdater);
   void unsubscribeFromKeyboardEvents(int listenerId);
+  int registerSharedTransitionTag(
+      std::string sharedTransitionTag,
+      int viewTag);
+  void unregisterSharedTransitionTag(
+      std::string sharedTransitionTag,
+      int viewTag);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else

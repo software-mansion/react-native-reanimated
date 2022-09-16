@@ -90,10 +90,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      registerTransitionTagPlatformFunction(
-          platformDepMethodsHolder.registerTransitionTag),
-      unregisterTransitionTagPlatformFunction(
-          platformDepMethodsHolder.unregisterTransitionTag),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -102,11 +98,15 @@ NativeReanimatedModule::NativeReanimatedModule(
       animatedSensorModule(platformDepMethodsHolder, this),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
       configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction)
+          platformDepMethodsHolder.configurePropsFunction),
 #endif
+      registerTransitionTagPlatformFunction(
+        platformDepMethodsHolder.registerTransitionTag),
+      unregisterTransitionTagPlatformFunction(
+        platformDepMethodsHolder.unregisterTransitionTag)
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);

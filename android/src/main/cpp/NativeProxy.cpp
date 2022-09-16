@@ -262,6 +262,27 @@ void NativeProxy::installJSIBindings(
 
   // Layout Animations End
 
+  // Shared Element Transition Start
+  auto registerSharedTransitionTagFunction = [this](
+    jsi::Runtime &rt,
+    const jsi::Value &transitionTag,
+    const jsi::Value &viewTag
+  ) {
+    auto transitionTagString = transitionTag.asString(rt).utf8(rt).c_str();
+    auto viewTagNumber = viewTag.asNumber();
+    return registerSharedTransitionTag(transitionTagString, viewTagNumber);
+  };
+  auto unregisterSharedTransitionTagFunction = [this](
+    jsi::Runtime &rt,
+    const jsi::Value &transitionTag,
+    const jsi::Value &viewTag
+  ) {
+    auto transitionTagString = transitionTag.asString(rt).utf8(rt).c_str();
+    auto viewTagNumber = viewTag.asNumber();
+    unregisterSharedTransitionTag(transitionTagString, viewTagNumber);
+  };
+  // Shared Element Transition End
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -278,6 +299,8 @@ void NativeProxy::installJSIBindings(
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
+      registerSharedTransitionTagFunction,
+      unregisterSharedTransitionTagFunction,
   };
 
   auto module = std::make_shared<NativeReanimatedModule>(
@@ -512,6 +535,23 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   auto method = javaPart_->getClass()->getMethod<void(int)>(
       "unsubscribeFromKeyboardEvents");
   method(javaPart_.get(), listenerId);
+}
+
+int NativeProxy::registerSharedTransitionTag(
+  std::string sharedTransitionTag,
+  int viewTag) {
+  static auto method =
+    javaPart_->getClass()->getMethod<int(std::string, int)>("registerSharedTransitionTag");
+  return method(
+    javaPart_.get(),
+    sharedTransitionTag,
+    viewTag);
+}
+void NativeProxy::unregisterSharedTransitionTag(
+  std::string sharedTransitionTag,
+  int viewTag) {
+//  auto method = javaPart_->getClass()->getMethod<void(JString, int)>("unregisterSharedTransitionTag");
+//  method(javaPart_.get(), sharedTransitionTag, viewTag);
 }
 
 } // namespace reanimated

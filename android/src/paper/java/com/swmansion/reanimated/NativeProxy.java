@@ -27,6 +27,8 @@ import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
+import com.swmansion.reanimated.sharedElementTransition.ScreensTransitionDelegate;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,19 +40,6 @@ public class NativeProxy {
 
   static {
     SoLoader.loadLibrary("reanimated");
-  }
-
-  private static class SharedElementAnimatorDelegateClass implements SharedElementAnimatorDelegate {
-    private AnimationsManager mAnimationsManager;
-
-    SharedElementAnimatorDelegateClass(AnimationsManager animationsManager) {
-      mAnimationsManager = animationsManager;
-    }
-
-    public void runTransition(View before, View after) {
-
-      mAnimationsManager.onViewTransition(before, after);
-    }
   }
 
   @DoNotStrip
@@ -128,6 +117,7 @@ public class NativeProxy {
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
+  private ScreensTransitionDelegate screensTransitionDelegate;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
 
@@ -291,6 +281,24 @@ public class NativeProxy {
     reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
   }
 
+  @DoNotStrip
+  private int registerSharedTransitionTag(String sharedTransitionTag, int viewTag) {
+    if (screensTransitionDelegate != null) {
+      return screensTransitionDelegate.registerSharedTransitionTag(sharedTransitionTag, viewTag);
+    }
+    else {
+      Log.w("[Reanimated]", "screensTransitionDelegate not initialized");
+      return -1;
+    }
+  }
+
+  @DoNotStrip
+  private void unregisterSharedTransitionTag(String sharedTransitionTag, int viewTag) {
+    if (screensTransitionDelegate != null) {
+      screensTransitionDelegate.unregisterSharedTransitionTag(sharedTransitionTag, viewTag);
+    }
+  }
+
   public void onCatalystInstanceDestroy() {
     mScheduler.deactivate();
     mHybridData.resetNative();
@@ -309,17 +317,20 @@ public class NativeProxy {
             .getNativeModule(ReanimatedModule.class)
             .getNodesManager()
             .getAnimationsManager();
-
     try {
       Class<NativeModule> sharedElementAnimatorClass =
           (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.SharedElementAnimatorClass");
       SharedElementAnimator sharedElementAnimator =
           (SharedElementAnimator) mContext.get().getNativeModule(sharedElementAnimatorClass);
       if (sharedElementAnimator != null) {
-        sharedElementAnimator.setDelegate(
-            new SharedElementAnimatorDelegateClass(animationsManager));
+        screensTransitionDelegate = new ScreensTransitionDelegate(animationsManager);
+        sharedElementAnimator.setDelegate(screensTransitionDelegate);
+      }
+      else {
+        Log.w("[Reaniamted]", "Unable to get com.swmansion.rnscreens.SharedElementAnimatorClass class");
       }
     } catch (ClassCastException | ClassNotFoundException e) {
+      e.printStackTrace();
     }
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
