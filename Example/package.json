@@ -42,7 +42,7 @@
     "react-native-gesture-handler": "^1.10.1",
     "react-native-pager-view": "^5.4.1",
     "react-native-safe-area-context": "^3.1.9",
-    "react-native-screens": "github:software-mansion/react-native-screens#462eaffe868a2424141e904af91b6a352f4811b1",
+    "react-native-screens": "github:software-mansion/react-native-screens#eb202b50cab99bb82f0ed5ffdc8d3812a6a6879c",
     "react-native-status-bar-height": "^2.4.0",
     "react-native-svg": "^12.1.0",
     "react-native-web": "^0.14.7",
