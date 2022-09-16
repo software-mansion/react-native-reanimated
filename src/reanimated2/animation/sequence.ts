@@ -83,16 +83,3 @@ export function withSequence(
     }
   );
 }
-
-/**
- * @deprecated Kept for backward compatibility. Will be removed soon.
- */
-export function sequence(
-  ..._animations: NextAnimation<SequenceAnimation>[]
-): Animation<SequenceAnimation> {
-  'worklet';
-  console.warn(
-    'Method `sequence` is deprecated. Please use `withSequence` instead'
-  );
-  return withSequence(..._animations);
-}

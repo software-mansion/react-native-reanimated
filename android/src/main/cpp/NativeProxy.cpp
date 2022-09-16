@@ -7,8 +7,10 @@
 #include <memory>
 #include <string>
 
-#if FOR_HERMES
+#if JS_RUNTIME_HERMES
 #include <hermes/hermes.h>
+#elif JS_RUNTIME_V8
+#include <v8runtime/V8RuntimeFactory.h>
 #else
 #include <jsi/JSCRuntime.h>
 #endif
@@ -65,10 +67,6 @@ NativeProxy::NativeProxy(
 }
 
 NativeProxy::~NativeProxy() {
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Value::undefined());
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
 }
@@ -198,11 +196,27 @@ void NativeProxy::installJSIBindings(
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
-#if FOR_HERMES
+
+  auto subscribeForKeyboardEventsFunction =
+      [this](std::function<void(int, int)> keyboardEventDataUpdater) -> int {
+    return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
+  };
+
+  auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
+    unsubscribeFromKeyboardEvents(listenerId);
+  };
+
+#if JS_RUNTIME_HERMES
   auto config =
       ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::hermes::makeHermesRuntime(config.build());
+#elif JS_RUNTIME_V8
+  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
+  config->enableInspector = false;
+  config->appName = "reanimated";
+  std::shared_ptr<jsi::Runtime> animatedRuntime =
+      rnv8::createSharedV8Runtime(runtime_, std::move(config));
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::jsc::makeJSCRuntime();
@@ -261,7 +275,10 @@ void NativeProxy::installJSIBindings(
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
-      setGestureStateFunction};
+      setGestureStateFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
+  };
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -477,6 +494,24 @@ void NativeProxy::configureProps(
       ReadableNativeArray::newObjectCxxArgs(
           jsi::dynamicFromValue(rt, nativeProps))
           .get());
+}
+
+int NativeProxy::subscribeForKeyboardEvents(
+    std::function<void(int, int)> keyboardEventDataUpdater) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
+                        "subscribeForKeyboardEvents");
+  return method(
+      javaPart_.get(),
+      KeyboardEventDataUpdater::newObjectCxxArgs(
+          std::move(keyboardEventDataUpdater))
+          .get());
+}
+
+void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>(
+      "unsubscribeFromKeyboardEvents");
+  method(javaPart_.get(), listenerId);
 }
 
 } // namespace reanimated

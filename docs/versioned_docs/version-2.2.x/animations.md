@@ -5,13 +5,13 @@ sidebar_label: Animations
 ---
 
 Animations are first-class citizens in Reanimated 2.
-The library comes bundled with a number of animation helper methods that makes it very easy to go from immediate property updates into animated ones.
+The library comes bundled with a number of animation helper methods that make it very easy to go from immediate property updates into animated ones.
 
-In the previous article about [Shared Values](shared-values) we learned about `useAnimatedStyle` hook, that allows for creating an association between Reanimated code and view properties.
+In the previous article about [Shared Values](shared-values) we learned about the `useAnimatedStyle` hook, that allows for creating an association between Reanimated code and view properties.
 We also learned how to perform animated transitions of Shared Values.
 This, however, is not the only way how animations can be started.
-On top of that Reanimated provides a number of animation modifiers and ways how animations can be customized.
-In this article we explore this and other methods that can be used to perform animated view updates.
+On top of that Reanimated provides a number of animation modifiers and ways for animations to be customized.
+In this article we explore the methods that can be used to perform animated view updates.
 
 ## Shared Value Animated Transitions
 
@@ -46,8 +46,8 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 
 ![](/docs/shared-values/sv-immediate.gif)
 
-With Reanimated 2, such Shared Value updates can be transformed to an animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
-The only change that we can do now, is to wrap random offset value in `withSpring` call as shown below:
+With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
+The only change that we can do now, is to wrap the random offset value with a `withSpring` call as shown below:
 
 ```js {3}
 <Button
@@ -58,7 +58,7 @@ The only change that we can do now, is to wrap random offset value in `withSprin
 />
 ```
 
-This way, instead of assigning a number to Shared Value, we make an animation object which is then used to run updates on the Shared Value until it reaches the target.
+This way, instead of assigning a number to the Shared Value, we make an animation object which is then used to run updates on the Shared Value until it reaches the target.
 As a result the `offset` Shared Value transitions smoothly between the current and the newly assigned random number, which results in a nice spring-based animation in between those states:
 
 ![](/docs/shared-values/sv-spring.gif)
@@ -67,7 +67,7 @@ As a result the `offset` Shared Value transitions smoothly between the current a
 
 Animated Shared Value transitions are not the only way to initiate and run animations.
 It is often the case that we'd like to animate properties that are not directly mapped onto a Shared Value.
-For that, in Reanimated we allow for animations to be specified directly in [`useAnimatedStyle`](api/useAnimatedStyle) hook.
+For that, in Reanimated we allow for animations to be specified directly in the [`useAnimatedStyle`](api/useAnimatedStyle) hook.
 In order to do this you can use the same animation helper methods from Reanimated API, but instead of using it when updating a Shared Value you use it to wrap the style value property:
 
 ```js {5}
@@ -82,7 +82,7 @@ const animatedStyles = useAnimatedStyle(() => {
 });
 ```
 
-As you can see, the only change compared to the example from the previous section is that we wrapped the value provided to `translateX` offset in `withSpring` call.
+As you can see, the only change compared to the example from the previous section is that we wrapped the value provided to `translateX` offset in a `withSpring` call.
 This tells the Reanimated engine that all updates made to `translateX` offset should be animated using spring.
 With this change added, we no longer need to animate the `offset` Shared Value updates, and can keep those updates being "immediate":
 
@@ -101,14 +101,14 @@ It forces you to have everything defined in one place vs scattered around the co
 Animated UI updates, by definition, take time to perform.
 It is often undesirable to freeze user interactions with the App and wait for transitions to finish.
 While allowing the user to interact with the screen while style properties are being animated, the framework needs to support a way for those animations to be interrupted or reconfigured as they go.
-This is the case for Reanimated animations API as well.
-Whenever you make animated updates of Shared Values, or you specify animations in `useAnimatedStyle` hook, those animations are fully interruptible.
-In the former case, when you make an update to Shared Value that is being animated, the framework won't wait for the previous animation to finish, but will immediately initiate a new transition starting from the current position of the previous animation.
+This is the case for the Reanimated animations API as well.
+Whenever you make animated updates of Shared Values, or you specify animations in the `useAnimatedStyle` hook, those animations are fully interruptible.
+In the former case, when you make an update to a Shared Value that is being animated, the framework won't wait for the previous animation to finish, but will immediately initiate a new transition starting from the current position of the previous animation.
 Interruptions also work correctly for animations defined in `useAnimatedStyle` hook.
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.
 
 We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the usecases, and hence we made it the default.
-In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or [`cancelAnimation`](api/cancelAnimation) method in the latter case.
+In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](api/cancelAnimation) method in the latter case.
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
 
@@ -117,14 +117,14 @@ To illustrate how interruptions perform in practice, please take a look at the b
 ## Customizing Animations
 
 Reanimated currently provides three built-in animation helpers: [`withTiming`](api/withTiming), [`withSpring`](api/withSpring), and [`withDecay`](api/withDecay).
-As there are ways of expanding that with your own, custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), we are not yet ready to document that as we still plan some changes of that part of the API.
-However, the built-in methods along with the animation modifiers (that we discuss later on), already provides a great flexibility.
+There are ways of expanding that with your own custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), but we are not yet ready to document that as we still plan some changes in that part of the API.
+However, the built-in methods along with the animation modifiers (that we discuss later on), already provide great flexibility.
 Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](api/withTiming) and [`withSpring`](api/withSpring) for the complete set of parameters.
 
 Both animation helper methods share a similar structure.
 They take target value as the first parameter, configuration object as the second, and finally a callback method as the last parameter.
-Starting from the end, callback is a method that runs when the animation is finished, or when the animation is interrupted/cancelled.
-Callback is run with a single argument – a boolean indicating whether the animation has finished executing without cancellation:
+Starting from the end, the callback is a method that runs when the animation is finished, or when the animation is interrupted/cancelled.
+Thr callback is run with a single argument – a boolean indicating whether the animation has finished executing without cancellation:
 
 ```js
 <Button
@@ -165,11 +165,11 @@ offset.value = withTiming(0, {
 ```
 
 You may want to visit [easings.net](https://easings.net/) and check various easing visualizations.
-To learn how to apply these please refer to [Easing.ts](https://github.com/software-mansion/react-native-reanimated/blob/main/src/reanimated2/Easing.ts) file where all the easing related helper methods are defined.
+To learn how to apply these please refer to the [Easing.ts](https://github.com/software-mansion/react-native-reanimated/blob/main/src/reanimated2/Easing.ts) file where all the easing related helper methods are defined.
 
 ### Spring
 
-Unlike timing, spring-based animation does not take a duration as a parameter.
+Unlike timing, spring-based animations do not take duration as a parameter.
 Instead the time it takes for the spring to run is determined by the spring physics (which is configurable), initial velocity, and the distance to travel.
 Below we show an example of how a custom spring animation can be defined and how it compares to the default spring settings.
 Please review [`withSpring`](api/withSpring) documentation for the complete list of configurable options.
@@ -215,22 +215,22 @@ function Box() {
 
 ![](/docs/animations/twosprings.gif)
 
-Unlike in the previous example, here we define animation in the `useAnimatedStyle` hook.
+Unlike in the previous example, here we define the animation in the `useAnimatedStyle` hook.
 This makes it possible to use a single Shared Value but map that to two View's styles.
 
 ## Animation Modifiers
 
-Beside the ability of adjusting animation options, another way of customizing animations is by using animation modifiers.
+Besides the ability to adjust animation options, another way of customizing animations is by using animation modifiers.
 Currently, Reanimated exposes three modifiers: [`withDelay`](api/withDelay), [`withSequence`](api/withSequence) and [`withRepeat`](api/withRepeat).
-As the name suggests, `withDelay` modifier makes the provided animation to start with a given delay, the `withSequence` modifier allows a number of animations to be provided and will make them run one after another.
+As the name suggests, the `withDelay` modifier makes the provided animation start with a given delay, the `withSequence` modifier allows a number of animations to be provided and will make them run one after another.
 Finally, the `withRepeat` modifier allows for the provided animation to be repeated several times.
 
 Modifiers typically take one or more animation objects with optional configuration as an input, and return an object that represents the modified animation.
 This makes it possible to wrap existing animation helpers (or custom helpers), or make a chain of modifiers when necessary.
 Please refer to the documentation of each of the modifier methods to learn about the ways how they can be parameterized.
 
-Let us now exercise the use of modifiers in practice and build animation that causes a rectangular view to wobble upon a button click.
-We start by rendering the actual view and defining rotation Shared Value that we then use to run the animation:
+Let us now exercise the use of modifiers in practice and build an animation that causes a rectangular view to wobble upon a button click.
+We start by rendering the actual view and defining the rotation Shared Value that we then use to run the animation:
 
 ```js
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
@@ -267,7 +267,7 @@ rotation.value = withRepeat(withTiming(10), 6, true)
 ```
 
 The above code will cause the view to run six repetitions of timing animation between the initial state of the `rotation` value (that is `0`) and value `10`.
-The third parameter passed to the `withRepeat` method makes the animation to run in reverse every other repetition.
+The third parameter passed to the `withRepeat` method makes the animation run in reverse every other repetition.
 Setting the reverse flag to `true` will result in the rotation doing three full loops (from `0` to `10` and back).
 At the end of all six repetitions the rotation will go back to zero.
 Here is what will happen when we click on the "wobble" button:
@@ -292,15 +292,15 @@ In the above code we put three animations in a sequence.
 First, we start a timing to the minimum swing position (`-10` degrees), after that we start a loop that goes between `-10` and `10` degrees six times (same as in the previous implementation).
 Finally, we add a finishing timing animation that makes the rotation go back to zero.
 For the surrounding timing animation we pass a duration that is half of the duration we use for the looped animation.
-It is because those animations make half the distance, thus this way we maintain the similar velocity for the initial, middle and finishing swings.
+It is because those animations make half the distance, thus this way we maintain similar velocities for the initial, middle and finishing swings.
 Below we present the end result:
 
 ![](/docs/animations/wobble.gif)
 
 ## Animating Layout Properties
 
-Reanimated makes it possible for animations to be executed by completely avoiding the main React Native's JavaScript thread.
-Thanks to the animation runner being completely isolated, the application logic (rendering components, fetching and processing data, etc) cannot impact the performance of animation and hence allows to avoid many unpredictable frame drops.
+Reanimated makes it possible for animations to be executed by completely avoiding React Native's main JavaScript thread.
+Thanks to the animation runner being completely isolated, the application logic (rendering components, fetching and processing data, etc) do not impact the performance of animations and allow to avoid many unpredictable frame drops.
 Developers who are familiar with React Native's [Animated API](https://reactnative.dev/docs/animated) and the concept of [Native Driver](https://reactnative.dev/blog/2017/02/14/using-native-driver-for-animated) may already understand this benefit, and also know that the use of Native Driver is limited to some subset of view properties.
 This, however, is not the case in Reanimated which supports animations of **all** native properties without generating any load on the main JavaScript thread (including layout properties like `width`, `flex`, etc.).
 This, in fact, was already the case since the first version of Reanimated but we'd like to emphasize that again as we receive questions around this topic from time to time.
@@ -323,4 +323,4 @@ Thankfully, Reanimated allows for that, but as the properties do not belong to s
 For this purpose Reanimated exposes a separate hook called `useAnimatedProps`.
 It works in a very similar way to `useAnimatedStyle` but instead of expecting a method that returns the animated styles, we expect the returned object to contain properties that we want to animate.
 Then, in order to hook animated props to a view, we provide the resulting object as `animatedProps` property to the "Animated" version of the view type we want to render (e.g. `Animated.View`).
-Please check the documentation of [`useAnimatedProps`](api/useAnimatedProps) hook for usage examples.
+Please check the documentation of the [`useAnimatedProps`](api/useAnimatedProps) hook for usage examples.

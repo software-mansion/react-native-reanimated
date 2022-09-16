@@ -1,6 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#if RNVERSION < 69
+#if REACT_NATIVE_MINOR_VERSION < 69
 #error \
     "Reanimated 3 does not support React Native 0.68.x when Fabric is enabled. Please upgrade to React Native 0.69.0 or newer if you want to use Reanimated with the new architecture."
 #endif
@@ -89,10 +89,10 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
       shadowNode.getFamily(), *layoutableAncestorShadowNode, policy);
 }
 
-SharedShadowNode UIManager_cloneNode(
+ShadowNode::Shared UIManager_cloneNode(
     const UIManager *uiManager,
     const ShadowNode::Shared &shadowNode,
-    const SharedShadowNodeSharedList &children,
+    const ShadowNode::SharedListOfShared &children,
     const RawProps *rawProps) {
   auto delegate_ = getDelegateFromUIManager(uiManager);
   auto contextContainer_ = getContextContainerFromUIManager(uiManager);

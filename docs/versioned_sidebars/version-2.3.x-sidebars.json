@@ -64,11 +64,63 @@
           "type": "category",
           "collapsed": true,
           "collapsible": true,
+          "label": "Animations",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/animations/cancelAnimation"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/animations/withDecay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/animations/withDelay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/animations/withRepeat"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/animations/withSequence"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/animations/withSpring"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/animations/withTiming"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "collapsed": true,
+          "collapsible": true,
           "label": "Hooks",
           "items": [
             {
               "type": "doc",
-              "id": "version-2.3.x/api/hooks/useSharedValue"
+              "id": "version-2.3.x/api/hooks/useAnimatedGestureHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/hooks/useAnimatedProps"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/hooks/useAnimatedReaction"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/hooks/useAnimatedRef"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/hooks/useAnimatedScrollHandler"
             },
             {
               "type": "doc",
@@ -80,23 +132,7 @@
             },
             {
               "type": "doc",
-              "id": "version-2.3.x/api/hooks/useAnimatedScrollHandler"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/hooks/useAnimatedGestureHandler"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/hooks/useAnimatedRef"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/hooks/useAnimatedReaction"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/hooks/useAnimatedProps"
+              "id": "version-2.3.x/api/hooks/useEvent"
             },
             {
               "type": "doc",
@@ -104,59 +140,7 @@
             },
             {
               "type": "doc",
-              "id": "version-2.3.x/api/hooks/useEvent"
-            }
-          ]
-        },
-        {
-          "type": "category",
-          "collapsed": true,
-          "collapsible": true,
-          "label": "Animations",
-          "items": [
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/animations/withTiming"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/animations/withSpring"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/animations/withDecay"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/animations/cancelAnimation"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/animations/withDelay"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/animations/withSequence"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/animations/withRepeat"
-            }
-          ]
-        },
-        {
-          "type": "category",
-          "collapsed": true,
-          "collapsible": true,
-          "label": "Native methods",
-          "items": [
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/nativeMethods/measure"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/nativeMethods/scrollTo"
+              "id": "version-2.3.x/api/hooks/useSharedValue"
             }
           ]
         },
@@ -192,15 +176,27 @@
           "type": "category",
           "collapsed": true,
           "collapsible": true,
+          "label": "Native methods",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/nativeMethods/measure"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/nativeMethods/scrollTo"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "collapsed": true,
+          "collapsible": true,
           "label": "Miscellaneous",
           "items": [
             {
               "type": "doc",
-              "id": "version-2.3.x/api/miscellaneous/runOnJS"
-            },
-            {
-              "type": "doc",
-              "id": "version-2.3.x/api/miscellaneous/runOnUI"
+              "id": "version-2.3.x/api/miscellaneous/getRelativeCoords"
             },
             {
               "type": "doc",
@@ -208,7 +204,11 @@
             },
             {
               "type": "doc",
-              "id": "version-2.3.x/api/miscellaneous/getRelativeCoords"
+              "id": "version-2.3.x/api/miscellaneous/runOnJS"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.3.x/api/miscellaneous/runOnUI"
             }
           ]
         }

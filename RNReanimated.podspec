@@ -2,24 +2,26 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
-reactVersion = '0.0.0'
+reactNativeVersion = '0.0.0'
 reactTargetTvOS = false
+isUserApp = false
 
 begin
-  # standard app
+  # user app
   # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
   # /appName/node_modules/react-native/package.json
-  reactJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))
-  reactVersion = reactJson["version"]
-  reactTargetTvOS = reactJson["name"] == "react-native-tvos"
+  reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))
+  reactNativeVersion = reactNativePackageJson["version"]
+  reactTargetTvOS = reactNativePackageJson["name"] == "react-native-tvos"
+  isUserApp = true
 rescue
   begin
     # monorepo
     # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
     # /monorepo/node_modules/react-native/package.json
-    reactJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))
-    reactVersion = reactJson["version"]
-    reactTargetTvOS = reactJson["name"] == "react-native-tvos"
+    reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))
+    reactNativeVersion = reactNativePackageJson["version"]
+    reactTargetTvOS = reactNativePackageJson["name"] == "react-native-tvos"
   rescue
     begin
       # Example app in reanimated repo
@@ -32,29 +34,42 @@ rescue
       else
         appName = "Example"
       end
-      reactJson = JSON.parse(File.read(File.join(__dir__, appName, "node_modules", "react-native", "package.json")))
-      reactVersion = reactJson["version"]
+      reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, appName, "node_modules", "react-native", "package.json")))
+      reactNativeVersion = reactNativePackageJson["version"]
       reactTargetTvOS = ENV["ReanimatedTVOSExample"] == "1"
     rescue
       # should never happen
-      reactVersion = '0.68.0'
-      puts "[RNReanimated] Unable to recognized your `react-native` version! Default `react-native` version: " + reactVersion
+      reactNativeVersion = '0.68.0'
+      puts "[RNReanimated] Unable to recognize your `react-native` version! Default `react-native` version: " + reactNativeVersion
     end
   end
 end
 
-rnVersion = reactVersion.split('.')[1]
+if isUserApp
+  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json" | grep -v "/.yarn/"]
+  libInstancesArray = libInstances.split("\n")
+  if libInstancesArray.length() > 1
+    parsedLocation = ''
+    for location in libInstancesArray
+      location['../../'] = '- '
+      location['/package.json'] = ''
+      parsedLocation += location + "\n"
+    end
+    raise "[Reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation
+  end
+end
+
+reactNativeMinorVersion = reactNativeVersion.split('.')[1].to_i
 
 fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
 
 folly_prefix = ""
-if rnVersion.to_i >= 64
+if reactNativeMinorVersion >= 64
   folly_prefix = "RCT-"
 end
 
-folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DRNVERSION=' + rnVersion
+folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=' + reactNativeMinorVersion.to_s
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
-folly_version = '2021.06.28.00-v2'
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = ''
 if fabric_enabled
@@ -77,8 +92,7 @@ Pod::Spec.new do |s|
 
   s.source_files = [
     "ios/**/*.{mm,h,m}",
-    "Common/cpp/**/*.cpp",
-    "Common/cpp/headers/**/*.h"
+    "Common/cpp/**/*.{cpp,h}"
   ]
 
   s.preserve_paths = [
@@ -101,7 +115,7 @@ Pod::Spec.new do |s|
   if fabric_enabled
     s.dependency "React-RCTFabric"
     s.dependency "React-Codegen"
-    s.dependency "RCT-Folly", folly_version
+    s.dependency "RCT-Folly"
   else
     s.dependency "#{folly_prefix}Folly"
   end
@@ -132,12 +146,9 @@ Pod::Spec.new do |s|
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
 
-  if reactVersion.match(/^0.62/)
+  if reactNativeMinorVersion == 62
     s.dependency 'ReactCommon/callinvoker'
   else
     s.dependency 'React-callinvoker'
   end
-
-
 end
-

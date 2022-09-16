@@ -5,7 +5,6 @@ sidebar_label: Installation
 ---
 
 Installing Reanimated requires a couple of additional steps compared to installing most of the popular react-native packages.
-Specifically on Android the setup consist of adding additional code to the main application class.
 The steps needed to get reanimated properly configured are listed in the below paragraphs.
 
 ## Installing the package
@@ -18,15 +17,17 @@ yarn add react-native-reanimated
 
 ## Babel plugin
 
-Add Reanimated's babel plugin to your `babel.config.js`:
+Add Reanimated's Babel plugin to your `babel.config.js`:
 
-```js {5}
+```js {7}
   module.exports = {
+    presets: [
       ...
-      plugins: [
-          ...
-          'react-native-reanimated/plugin',
-      ],
+    ],
+    plugins: [
+      ...
+      'react-native-reanimated/plugin',
+    ],
   };
 ```
 
@@ -54,7 +55,7 @@ No additional steps are necessary.
 
 ### Proguard
 
-If you're using Proguard, make sure to add rule preventing it from optimizing Turbomodule classes:
+If you're using Proguard, make sure to add rules preventing it from optimizing Turbomodule classes:
 
 ```
 -keep class com.swmansion.reanimated.** { *; }
@@ -67,5 +68,9 @@ As reanimated is setup to configure and install automatically, the only thing yo
 
 ## Sample React-Native project configured with Reanimated
 
-If you have troubles configuring Reanimated in your project, or just want to try the library without the need of setting it up ion a fresh project we recommend checking our [Reanimated Playground](https://github.com/software-mansion-labs/reanimated-2-playground) repo, which is essentially a fresh React-Native app with Reanimated library installed and configured properly.
-[Visit the Playground repo here] or copy the command below to do a git clone:
+If you have troubles configuring Reanimated in your project, or just want to try the library without the need of setting it up on a fresh project we recommend checking our [Reanimated Playground](https://github.com/software-mansion-labs/reanimated-2-playground) repo, which is essentially a fresh React-Native app with Reanimated library installed and configured properly.
+[Visit the Playground repo here](https://github.com/software-mansion-labs/reanimated-2-playground) or copy the command below to do a git clone:
+
+```
+git clone https://github.com/software-mansion-labs/reanimated-2-playground.git
+```

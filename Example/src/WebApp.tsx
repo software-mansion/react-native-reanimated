@@ -19,6 +19,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
+import FrameCallbackExample from './FrameCallbackExample';
 import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import MeasureExample from './MeasureExample';
@@ -74,6 +75,10 @@ const SCREENS: Screens = {
   ScrollableViewExample: {
     screen: ScrollableViewExample,
     title: '🆕 (advanced) ScrollView imitation',
+  },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: '🆕 Frame callback example',
   },
   /** /
   AnimatedTabBarExample: {

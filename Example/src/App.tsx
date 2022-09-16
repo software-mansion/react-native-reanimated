@@ -34,6 +34,7 @@ import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import FrameCallbackExample from './FrameCallbackExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
@@ -49,6 +50,8 @@ import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 
 import ImageSET from './SharedElementTransition/Image';
 import GallerySET from './SharedElementTransition/Gallery';
@@ -76,9 +79,17 @@ const SCREENS: Screens = {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
   },
+  AnimatedKeyboard: {
+    screen: AnimatedKeyboardExample,
+    title: '🆕 Use Animated Keyboard',
+  },
   AnimatedSensor: {
     screen: AnimatedSensorExample,
     title: '🆕 Use Animated Sensor',
+  },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: '🆕 Frame callback example',
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,
@@ -159,6 +170,10 @@ const SCREENS: Screens = {
   ScrollEventExample: {
     screen: ScrollEventExample,
     title: 'Scroll Events',
+  },
+  ScrollViewOffsetExample: {
+    screen: ScrollViewOffsetExample,
+    title: 'ScrollView offset',
   },
   ChatHeadsExample: {
     screen: ChatHeadsExample,
