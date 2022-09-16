@@ -381,16 +381,16 @@ export function jestResetJsReanimatedModule() {
   (NativeReanimatedModule as JSReanimated).jestResetModule();
 }
 
-export function registerTransitioinTag(
+export function registerTransitionTag(
   transitionTag: string,
   viewTag: number
 ): void {
-  NativeReanimatedModule.registerTransitioinTag(transitionTag, viewTag);
+  NativeReanimatedModule.registerTransitionTag(transitionTag, viewTag);
 }
 
-export function unregisterTransitioinTag(
+export function unregisterTransitionTag(
   transitionTag: string,
   viewTag: number
 ): void {
-  NativeReanimatedModule.unregisterTransitioinTag(transitionTag, viewTag);
+  NativeReanimatedModule.unregisterTransitionTag(transitionTag, viewTag);
 }

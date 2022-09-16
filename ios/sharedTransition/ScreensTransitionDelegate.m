@@ -66,7 +66,7 @@
   }
 }
 
-- (void)registerTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
+- (void)registerTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
   if (!sharedTransitionsItems[transitionTag]) {
     [sharedElementsIterationOrder addObject:transitionTag];
@@ -76,7 +76,7 @@
   [self->sharedTransitionsItems[transitionTag] addObject:sharedViewConfig];
 }
 
-- (void)unregisterTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
+- (void)unregisterTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
   for (SharedViewConfig *config in sharedTransitionsItems[transitionTag]) {
     NSNumber *currentViewTag = config.viewTag;

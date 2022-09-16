@@ -144,11 +144,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
 
-  jsi::Value registerTransitioinTag(
+  jsi::Value registerTransitionTag(
       jsi::Runtime &rt,
       const jsi::Value &transitionTag,
       const jsi::Value &viewTag) override;
-  jsi::Value unregisterTransitioinTag(
+  jsi::Value unregisterTransitionTag(
       jsi::Runtime &rt,
       const jsi::Value &transitionTag,
       const jsi::Value &viewTag) override;
@@ -170,8 +170,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
-  TransitioinTagFunction registerTransitioinTagPlatformFunction;
-  TransitioinTagFunction unregisterTransitioinTagPlatformFunction;
+  TransitionTagFunction registerTransitionTagPlatformFunction;
+  TransitionTagFunction unregisterTransitionTagPlatformFunction;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;

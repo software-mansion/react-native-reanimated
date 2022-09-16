@@ -107,11 +107,11 @@ export class NativeReanimated {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 
-  registerTransitioinTag(transitionTag: string, viewTag: number): void {
-    this.InnerNativeModule.registerTransitioinTag(transitionTag, viewTag);
+  registerTransitionTag(transitionTag: string, viewTag: number): void {
+    this.InnerNativeModule.registerTransitionTag(transitionTag, viewTag);
   }
 
-  unregisterTransitioinTag(transitionTag: string, viewTag: number): void {
-    this.InnerNativeModule.unregisterTransitioinTag(transitionTag, viewTag);
+  unregisterTransitionTag(transitionTag: string, viewTag: number): void {
+    this.InnerNativeModule.unregisterTransitionTag(transitionTag, viewTag);
   }
 }

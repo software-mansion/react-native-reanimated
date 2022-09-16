@@ -1,7 +1,5 @@
 /*
-STATE: FAIL
-
-desc: przejście z ekranu 3 na 1 nie przywraca stanu komponentu na ekranie pierwszym
+STATE: OK
 */
 
 import * as React from 'react';

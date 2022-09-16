@@ -10235,9 +10235,9 @@ react-native-safe-area-context@^4.3.3:
   resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-4.3.3.tgz#a0f1e3116ded39efc1b78a46a6d89c71169827e4"
   integrity sha512-xwsloGLDUzeTN40TIh4Te/zRePSnBAuWlLIiEW3RYE9gHHYslqQWpfK7N24SdAQEH3tHZ+huoYNjo2GQJO/vnQ==
 
-"react-native-screens@github:software-mansion/react-native-screens#eb202b50cab99bb82f0ed5ffdc8d3812a6a6879c":
-  version "3.10.1"
-  resolved "https://codeload.github.com/software-mansion/react-native-screens/tar.gz/eb202b50cab99bb82f0ed5ffdc8d3812a6a6879c"
+"react-native-screens@github:software-mansion/react-native-screens#9b39b3659afd5b2eaadceb085b5e03efdadc4332":
+  version "3.17.0"
+  resolved "https://codeload.github.com/software-mansion/react-native-screens/tar.gz/9b39b3659afd5b2eaadceb085b5e03efdadc4332"
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"

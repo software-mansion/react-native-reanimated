@@ -159,23 +159,23 @@ static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value SPEC_PREFIX(registerTransitioinTag)(
+static jsi::Value SPEC_PREFIX(registerTransitionTag)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->registerTransitioinTag(rt, std::move(args[0]), std::move(args[1]));
+      ->registerTransitionTag(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
-static jsi::Value SPEC_PREFIX(unregisterTransitioinTag)(
+static jsi::Value SPEC_PREFIX(unregisterTransitionTag)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->unregisterTransitioinTag(rt, std::move(args[0]), std::move(args[1]));
+      ->unregisterTransitionTag(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -209,9 +209,9 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unsubscribeFromKeyboardEvents"] =
       MethodMetadata{1, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
 
-  methodMap_["registerTransitioinTag"] =
-      MethodMetadata{2, SPEC_PREFIX(registerTransitioinTag)};
-  methodMap_["unregisterTransitioinTag"] =
-      MethodMetadata{2, SPEC_PREFIX(unregisterTransitioinTag)};
+  methodMap_["registerTransitionTag"] =
+      MethodMetadata{2, SPEC_PREFIX(registerTransitionTag)};
+  methodMap_["unregisterTransitionTag"] =
+      MethodMetadata{2, SPEC_PREFIX(unregisterTransitionTag)};
 }
 } // namespace reanimated

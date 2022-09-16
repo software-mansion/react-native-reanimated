@@ -87,11 +87,11 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &nativeProps) = 0;
 
   // shared element transition
-  virtual jsi::Value registerTransitioinTag(
+  virtual jsi::Value registerTransitionTag(
       jsi::Runtime &rt,
       const jsi::Value &transitionTag,
       const jsi::Value &viewTag) = 0;
-  virtual jsi::Value unregisterTransitioinTag(
+  virtual jsi::Value unregisterTransitionTag(
       jsi::Runtime &rt,
       const jsi::Value &transitionTag,
       const jsi::Value &viewTag) = 0;

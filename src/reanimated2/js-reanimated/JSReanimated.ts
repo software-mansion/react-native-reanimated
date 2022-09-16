@@ -142,13 +142,13 @@ export default class JSReanimated extends NativeReanimated {
     // noop
   }
 
-  registerTransitioinTag(_: string, __: number): void {
+  registerTransitionTag(_: string, __: number): void {
     console.warn(
       '[Reanimated] shared element transition is not available on web yet.'
     );
   }
 
-  unregisterTransitioinTag(_: string, __: number): void {
+  unregisterTransitionTag(_: string, __: number): void {
     console.warn(
       '[Reanimated] shared element transition is not available on web yet.'
     );

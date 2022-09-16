@@ -10,8 +10,8 @@ import {
   makeMutable,
   runOnUI,
   enableLayoutAnimations,
-  registerTransitioinTag,
-  unregisterTransitioinTag,
+  registerTransitionTag,
+  unregisterTransitionTag,
 } from './reanimated2/core';
 import {
   DefaultEntering,
@@ -229,7 +229,7 @@ export default function createAnimatedComponent(
           })();
         }
         if (this._sharedTransitionTag) {
-          unregisterTransitioinTag(this._sharedTransitionTag, this._viewTag);
+          unregisterTransitionTag(this._sharedTransitionTag, this._viewTag);
         }
       }
     }
@@ -450,7 +450,7 @@ export default function createAnimatedComponent(
           }
           if (this.props.sharedTransitionTag) {
             this._sharedTransitionTag = this.props.sharedTransitionTag;
-            registerTransitioinTag(this._sharedTransitionTag, tag);
+            registerTransitionTag(this._sharedTransitionTag, tag);
           }
 
           if (has('build', reappearing)) {

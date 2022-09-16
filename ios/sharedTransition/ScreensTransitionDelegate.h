@@ -6,7 +6,7 @@
 
 @property REAAnimationsManager *animationsManager;
 
-- (void)registerTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
-- (void)unregisterTransitioinTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
+- (void)registerTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
+- (void)unregisterTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
 
 @end

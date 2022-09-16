@@ -90,10 +90,10 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      registerTransitioinTagPlatformFunction(
-          platformDepMethodsHolder.registerTransitioinTag),
-      unregisterTransitioinTagPlatformFunction(
-          platformDepMethodsHolder.unregisterTransitioinTag),
+      registerTransitionTagPlatformFunction(
+          platformDepMethodsHolder.registerTransitionTag),
+      unregisterTransitionTagPlatformFunction(
+          platformDepMethodsHolder.unregisterTransitionTag),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -662,19 +662,19 @@ void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
   unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
 }
 
-jsi::Value NativeReanimatedModule::registerTransitioinTag(
+jsi::Value NativeReanimatedModule::registerTransitionTag(
     jsi::Runtime &rt,
     const jsi::Value &transitionTag,
     const jsi::Value &viewTag) {
-  registerTransitioinTagPlatformFunction(rt, transitionTag, viewTag);
+  registerTransitionTagPlatformFunction(rt, transitionTag, viewTag);
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::unregisterTransitioinTag(
+jsi::Value NativeReanimatedModule::unregisterTransitionTag(
     jsi::Runtime &rt,
     const jsi::Value &transitionTag,
     const jsi::Value &viewTag) {
-  unregisterTransitioinTagPlatformFunction(rt, transitionTag, viewTag);
+  unregisterTransitionTagPlatformFunction(rt, transitionTag, viewTag);
   return jsi::Value::undefined();
 }
 

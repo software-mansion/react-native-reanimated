@@ -64,7 +64,7 @@ using ConfigurePropsFunction = std::function<void(
 using KeyboardEventSubscribeFunction =
     std::function<int(std::function<void(int, int)>)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
-using TransitioinTagFunction = std::function<void(
+using TransitionTagFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &transitionTag,
     const jsi::Value &viewTag)>;
@@ -85,8 +85,8 @@ struct PlatformDepMethodsHolder {
   SetGestureStateFunction setGestureStateFunction;
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
-  TransitioinTagFunction registerTransitioinTag;
-  TransitioinTagFunction unregisterTransitioinTag;
+  TransitionTagFunction registerTransitionTag;
+  TransitionTagFunction unregisterTransitionTag;
 };
 
 } // namespace reanimated

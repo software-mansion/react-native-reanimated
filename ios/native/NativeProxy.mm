@@ -356,23 +356,23 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   ScreensTransitionDelegate *delegate = [ScreensTransitionDelegate new];
   [delegate setAnimationsManager:animationsManager];
   [RNSSharedElementAnimator setDelegate:delegate];
-  auto registerTransitioinTag = [delegate](
+  auto registerTransitionTag = [delegate](
     jsi::Runtime &rt, 
     const jsi::Value &transitionTag, 
     const jsi::Value &viewTag
   ) {
     auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
     auto viewTagNS = @(viewTag.asNumber());
-    [delegate registerTransitioinTag:transitionTagNS viewTag:viewTagNS];
+    [delegate registerTransitionTag:transitionTagNS viewTag:viewTagNS];
   };
-  auto unregisterTransitioinTag = [delegate](
+  auto unregisterTransitionTag = [delegate](
     jsi::Runtime &rt, 
     const jsi::Value &transitionTag, 
     const jsi::Value &viewTag
   ) {
     auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
     auto viewTagNS = @(viewTag.asNumber());
-    [delegate unregisterTransitioinTag:transitionTagNS viewTag:viewTagNS];
+    [delegate unregisterTransitionTag:transitionTagNS viewTag:viewTagNS];
   };
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
@@ -391,8 +391,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
-      registerTransitioinTag,
-      unregisterTransitioinTag,
+      registerTransitionTag,
+      unregisterTransitionTag,
   };
 
   module = std::make_shared<NativeReanimatedModule>(
