@@ -54,6 +54,8 @@ declare module 'react-native-reanimated' {
     import('./lib/types/lib/reanimated2/animation/index').StyleLayoutAnimation;
   export type Animation<T> =
     import('./lib/types/lib/reanimated2/commonTypes').Animation<T>;
+  export type MeasuredDimensions =
+    import('./lib/types/lib/reanimated2/commonTypes').MeasuredDimensions;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;
@@ -561,6 +563,10 @@ declare module 'react-native-reanimated' {
   };
   export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
 
+  export function useScrollViewOffset(
+    aref: RefObject<Animated.ScrollView>
+  ): SharedValue<number>;
+
   export interface ExitAnimationsValues {
     currentOriginX: number;
     currentOriginY: number;
@@ -805,14 +811,7 @@ declare module 'react-native-reanimated' {
   export function defineAnimation<T>(starting: any, factory: () => T): number;
   export function measure<T extends Component>(
     ref: RefObject<T>
-  ): {
-    width: number;
-    height: number;
-    x: number;
-    y: number;
-    pageX: number;
-    pageY: number;
-  };
+  ): MeasuredDimensions | null;
 
   export function getRelativeCoords(
     ref: RefObject<Component>,
