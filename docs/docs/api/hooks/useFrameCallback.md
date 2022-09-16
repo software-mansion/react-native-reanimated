@@ -42,8 +42,8 @@ Properties:
 Properties:
 * `timestamp: number`: the system time (in milliseconds) when the last
   frame was rendered
-* `duration: number | undefined`: time (in milliseconds) since last frame. This value
-  will be `undefined` on the first frame after activation. Starting from the second frame,
+* `timeSincePreviousFrame: number | null`: time (in milliseconds) since last frame. This value
+  will be `null` on the first frame after activation. Starting from the second frame,
   it should be ~16 ms on 60 Hz or ~8 ms on 120 Hz displays (when there is no lag)
 * `timeSinceFirstFrame: number`: time (in milliseconds) since the callback was last activated
 
@@ -63,7 +63,7 @@ export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
   const frameCallback = useFrameCallback((frameInfo) => {
-    if (frameInfo.duration == undefined) {
+    if (frameInfo.timeSincePreviousFrame == null) {
       console.log('First frame!');
     } else {
       console.log(`${frameInfo.duration} ms have passed since the previous frame`);

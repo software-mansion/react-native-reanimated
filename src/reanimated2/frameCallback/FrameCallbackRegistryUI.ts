@@ -7,7 +7,7 @@ type CallbackDetails = {
 
 export type FrameInfo = {
   timestamp: number;
-  duration: number | undefined;
+  timeSincePreviousFrame: number | null;
   timeSinceFirstFrame: number;
 };
 
@@ -38,25 +38,30 @@ export const prepareUIRegistry = runOnUI(() => {
           this.previousFrameTimestamp = timestamp;
         }
 
-        const timeSinceLastFrame = timestamp - this.previousFrameTimestamp;
+        const delta = timestamp - this.previousFrameTimestamp;
 
         this.activeFrameCallbacks.forEach((callbackId: number) => {
           const callbackDetails = this.frameCallbackRegistry.get(callbackId)!;
 
           const { startTime } = callbackDetails;
-          const timeSinceFirstFrame = timestamp - (startTime || timestamp);
-          const duration =
-            startTime === undefined ? undefined : timeSinceLastFrame;
 
           if (startTime === undefined) {
+            // First frame
             callbackDetails.startTime = timestamp;
-          }
 
-          callbackDetails.callback({
-            timestamp,
-            duration,
-            timeSinceFirstFrame,
-          });
+            callbackDetails.callback({
+              timestamp,
+              timeSincePreviousFrame: null,
+              timeSinceFirstFrame: 0,
+            });
+          } else {
+            // Next frame
+            callbackDetails.callback({
+              timestamp,
+              timeSincePreviousFrame: delta,
+              timeSinceFirstFrame: timestamp - startTime,
+            });
+          }
         });
 
         if (this.activeFrameCallbacks.size > 0) {
