@@ -188,13 +188,14 @@ export const advanceAnimationByFrame = (count) => {
 };
 
 export const setUpTests = (userConfig = {}) => {
-  let expect;
-  try {
-    expect = require('expect');
-  } catch (_) {
-    // for Jest in version 28+
-    const { expect: expectModule } = require('@jest/globals');
-    expect = expectModule;
+  let jestExpect = typeof expect === 'undefined' ? undefined : expect;
+  if (!jestExpect) {
+    try {
+      jestExpect = require('@jest/globals').expect;
+    } catch (_) {
+      // for Jest in version < 25.5
+      jestExpect = require('expect');
+    }
   }
 
   require('setimmediate');
@@ -205,7 +206,7 @@ export const setUpTests = (userConfig = {}) => {
     ...userConfig,
   };
 
-  expect.extend({
+  jestExpect.extend({
     toHaveAnimatedStyle(received, expectedStyle, config = {}) {
       return compareStyle(received, expectedStyle, config);
     },
