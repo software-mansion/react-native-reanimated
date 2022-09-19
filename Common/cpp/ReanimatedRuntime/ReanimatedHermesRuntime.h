@@ -32,11 +32,11 @@ using namespace react;
 // ReentrancyCheck is copied from React Native
 // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
 // https://github.com/facebook/react-native/blob/main/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
-struct ReentrancyCheck {
+struct ReanimatedReentrancyCheck {
 // This is effectively a very subtle and complex assert, so only
 // include it in builds which would include asserts.
 #ifndef NDEBUG
-  ReentrancyCheck() : tid(std::thread::id()), depth(0) {}
+  ReanimatedReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
   void before() {
     std::thread::id this_id = std::this_thread::get_id();
@@ -107,7 +107,7 @@ struct ReentrancyCheck {
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/ReactCommon/jsi/jsi/decorator.h
 class ReanimatedHermesRuntime
-    : public jsi::WithRuntimeDecorator<ReentrancyCheck> {
+    : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
  public:
   ReanimatedHermesRuntime(
       std::unique_ptr<jsi::Runtime> runtime,
@@ -118,7 +118,7 @@ class ReanimatedHermesRuntime
  private:
   std::shared_ptr<jsi::Runtime> runtime_;
   facebook::hermes::HermesRuntime &hermesRuntime_;
-  ReentrancyCheck reentrancyCheck_;
+  ReanimatedReentrancyCheck reentrancyCheck_;
 };
 
 } // namespace reanimated

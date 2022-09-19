@@ -29,9 +29,12 @@ class HermesExecutorRuntimeAdapter
     : public facebook::hermes::inspector::RuntimeAdapter {
  public:
   HermesExecutorRuntimeAdapter(
+      std::weak_ptr<jsi::Runtime> runtimeWeak,
       facebook::hermes::HermesRuntime &hermesRuntime,
       std::shared_ptr<MessageQueueThread> thread)
-      : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
+      : runtimeWeak_(runtimeWeak),
+        hermesRuntime_(hermesRuntime),
+        thread_(std::move(thread)) {}
 
   virtual ~HermesExecutorRuntimeAdapter() {
     // This is not necessary on Android, but there is an assertion for
@@ -47,13 +50,19 @@ class HermesExecutorRuntimeAdapter
     return hermesRuntime_.getDebugger();
   }
 
-  // This function is not empty in React Native and it is used to make sure
-  // that the runtime is still valid when it gets invoked. This is not necessary
-  // in our case since we will definetley disable debugging on the runtime
-  // before it gets destroyed (because we do it in the destructor).
-  void tickleJs() override {}
+  void tickleJs() override {
+    // The queue will ensure that runtime_ is responsive.
+    thread_->runOnQueue([&runtimeWeak = runtimeWeak_]() {
+      if (auto runtime = runtimeWeak.lock()) {
+        auto func =
+            runtime->global().getPropertyAsFunction(*runtime, "__tickleJs");
+        func.call(*runtime);
+      }
+    });
+  }
 
  public:
+  std::weak_ptr<jsi::Runtime> runtimeWeak_;
   facebook::hermes::HermesRuntime &hermesRuntime_;
   std::shared_ptr<MessageQueueThread> thread_;
 };
@@ -62,13 +71,15 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
     std::unique_ptr<jsi::Runtime> runtime,
     facebook::hermes::HermesRuntime &hermesRuntime,
     std::shared_ptr<MessageQueueThread> jsQueue)
-    : jsi::WithRuntimeDecorator<ReentrancyCheck>(*runtime, reentrancyCheck_),
+    : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
+          *runtime,
+          reentrancyCheck_),
       runtime_(std::move(runtime)),
       hermesRuntime_(hermesRuntime) {
-#if HERMES_ENABLE_DEBUGGER && ANDROID
+#if HERMES_ENABLE_DEBUGGER
   std::shared_ptr<facebook::hermes::HermesRuntime> rt(runtime_, &hermesRuntime);
-  auto adapter =
-      std::make_unique<HermesExecutorRuntimeAdapter>(hermesRuntime, jsQueue);
+  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(
+      runtime_, hermesRuntime, jsQueue);
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
@@ -79,7 +90,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 }
 
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
-#if HERMES_ENABLE_DEBUGGER && ANDROID
+#if HERMES_ENABLE_DEBUGGER
   // We have to disable debugging before the runtime is destroyed.
   facebook::hermes::inspector::chrome::disableDebugging(hermesRuntime_);
 #endif
