@@ -2,7 +2,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Button, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
@@ -23,7 +23,7 @@ export default function OverlappingBoxesExample() {
       <Animated.View style={[styles.first, style]} />
       <View style={styles.second} />
       <View style={styles.button}>
-        <Button title="Toggle z-index" onPress={handlePress} />
+        <Button title="Toggle z-index &amp; elevation" onPress={handlePress} />
       </View>
     </>
   );
