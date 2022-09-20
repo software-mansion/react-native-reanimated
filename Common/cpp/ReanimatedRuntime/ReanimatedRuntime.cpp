@@ -29,6 +29,8 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
   return std::make_shared<ReanimatedHermesRuntime>(
       std::move(runtime), hermesRuntime, jsQueue);
 #elif JS_RUNTIME_V8
+  // This is required by iOS, because there is an assertion in the destructor
+  // that the thread was indeed `quit` before
   jsQueue->quitSynchronous();
 
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
@@ -36,6 +38,8 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
   config->appName = "reanimated";
   return rnv8::createSharedV8Runtime(runtime_, std::move(config));
 #else
+  // This is required by iOS, because there is an assertion in the destructor
+  // that the thread was indeed `quit` before
   jsQueue->quitSynchronous();
 
   return facebook::jsc::makeJSCRuntime();

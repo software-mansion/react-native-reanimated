@@ -34,8 +34,8 @@ class HermesExecutorRuntimeAdapter
       : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
 
   virtual ~HermesExecutorRuntimeAdapter() {
-    // This is not necessary on Android, but there is an assertion for
-    // that on iOS.
+    // This is required by iOS, because there is an assertion in the destructor
+    // that the thread was indeed `quit` before
     thread_->quitSynchronous();
   }
 
