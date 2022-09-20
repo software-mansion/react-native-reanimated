@@ -187,3 +187,8 @@ maps loading for node.js apps. This issue is not caused by Reanimated in any
 way and should be fixed by Chrome developers in later versions.
 
 The issue was tracked here: https://bugs.chromium.org/p/chromium/issues/detail?id=1358497
+
+**App reloads don't work**
+
+On iOS the app will crash on every reload if a debugger is connected to the runtime.
+On Android it will also crash but only after a few reloads.
