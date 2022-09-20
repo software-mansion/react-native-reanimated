@@ -2,12 +2,14 @@
 
 // JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
 // on iOS.
+#if __APPLE__
 #if (__has_include( \
-         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>) || JS_RUNTIME_HERMES)
+         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
 #define JS_RUNTIME_HERMES 1
 #endif
+#endif
 
-// Only include this file in hermes enabled builds as some platforms (like tvOS)
+// Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
 #if JS_RUNTIME_HERMES
 
@@ -101,7 +103,7 @@ struct ReanimatedReentrancyCheck {
 
 // This is in fact a subclass of jsi::Runtime! WithRuntimeDecorator is a
 // template class that is a subclass of DecoratedRuntime which is also a
-// tempalte class that then inherits its template, which in this case is
+// template class that then inherits its template, which in this case is
 // jsi::Runtime. So the inheritance is: ReanimatedHermesRuntime ->
 // WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:

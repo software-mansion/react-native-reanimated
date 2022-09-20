@@ -1,6 +1,6 @@
 #include "ReanimatedHermesRuntime.h"
 
-// Only include this file in hermes enabled builds as some platforms (like tvOS)
+// Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
 #if JS_RUNTIME_HERMES
 
@@ -47,6 +47,10 @@ class HermesExecutorRuntimeAdapter
     return hermesRuntime_.getDebugger();
   }
 
+  // This is not empty in the original implementation, but we decided to tickle
+  // the runtime by running a small piece of code on every frame as using this
+  // required us to hold a refernce to the runtime inside this adapter which
+  // caused issues while reloading the app.
   void tickleJs() override {}
 
  public:
