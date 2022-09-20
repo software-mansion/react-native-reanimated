@@ -31,7 +31,7 @@ const AnimatedText = Animated.createAnimatedComponent(Text);
 const gallery = {
   florence: {
     image: florence,
-    title: 'Beaufiful city of Florence',
+    title: 'Beautiful city of Florence',
     description:
       'Florence was a centre of medieval European trade and finance and one of the wealthiest cities of that era.',
   },
