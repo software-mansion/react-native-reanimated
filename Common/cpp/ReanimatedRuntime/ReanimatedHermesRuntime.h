@@ -110,13 +110,12 @@ class ReanimatedHermesRuntime
     : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
  public:
   ReanimatedHermesRuntime(
-      std::unique_ptr<jsi::Runtime> runtime,
-      facebook::hermes::HermesRuntime &hermesRuntime,
+      std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
       std::shared_ptr<MessageQueueThread> jsQueue);
   ~ReanimatedHermesRuntime();
 
  private:
-  std::shared_ptr<jsi::Runtime> runtime_;
+  std::shared_ptr<facebook::hermes::HermesRuntime> runtime_;
   facebook::hermes::HermesRuntime &hermesRuntime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
 };

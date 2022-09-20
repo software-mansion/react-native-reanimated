@@ -24,10 +24,8 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
 #if JS_RUNTIME_HERMES
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
       facebook::hermes::makeHermesRuntime();
-  facebook::hermes::HermesRuntime &hermesRuntime = *runtime;
 
-  return std::make_shared<ReanimatedHermesRuntime>(
-      std::move(runtime), hermesRuntime, jsQueue);
+  return std::make_shared<ReanimatedHermesRuntime>(std::move(runtime), jsQueue);
 #elif JS_RUNTIME_V8
   // This is required by iOS, because there is an assertion in the destructor
   // that the thread was indeed `quit` before

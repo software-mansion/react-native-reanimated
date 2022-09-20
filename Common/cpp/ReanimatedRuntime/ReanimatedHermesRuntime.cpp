@@ -55,17 +55,16 @@ class HermesExecutorRuntimeAdapter
 };
 
 ReanimatedHermesRuntime::ReanimatedHermesRuntime(
-    std::unique_ptr<jsi::Runtime> runtime,
-    facebook::hermes::HermesRuntime &hermesRuntime,
+    std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
     std::shared_ptr<MessageQueueThread> jsQueue)
     : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
           *runtime,
           reentrancyCheck_),
       runtime_(std::move(runtime)),
-      hermesRuntime_(hermesRuntime) {
+      hermesRuntime_(*runtime_) {
 #if HERMES_ENABLE_DEBUGGER
   auto adapter =
-      std::make_unique<HermesExecutorRuntimeAdapter>(hermesRuntime, jsQueue);
+      std::make_unique<HermesExecutorRuntimeAdapter>(hermesRuntime_, jsQueue);
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
