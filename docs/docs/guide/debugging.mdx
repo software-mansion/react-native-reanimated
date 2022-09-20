@@ -138,28 +138,103 @@ thread now).
 <ChromeDevToolsTable />
 
 **Summary:**
-Works, but only the JS context can be debugged.
+Works and both contexts can be debugged.
 
-Even though Chrome DevTools supports the Hermes and V8 engines, it
-unfortunately doesn't recognize Reanimated's additional UI context. This
-means that you won't be able to debug worklets and breakpoints set in them
-will be ignored. All other features work as expected.
+:::warning
 
-*We are actively working on enabling worklet debugging with Chrome DevTools on Hermes.*
+This is an early experimental feature.
+
+:::
+
+Worklet debugging is now available in Reanimated apps as an early experimental
+feature. We do not recommend using Chrome DevTools to debug the UI context, but
+instead try using the Flipper tool. It has fewer bugs and provides a much better
+experience.
+
+If you still want to use Chrome DevTools then follow these steps:
+
+1. Add the `patch-package` to your project and set it up to run as a `post-install` task.
+
+2. Add [this](/content/metro-inspector-proxy+0.72.1.patch) patch for metro and
+[this](react-native-gesture-handler+2.5.0.patch) one for `react-native-gesture-handler`.
+
+3. Go to [chrome://inspect](chrome://inspect) in a Google Chrome browser.
+
+4. Select the Reanimated runtime from the list. The list should look something
+like this:
+
+![Screenshot showing Chrome DevTools target selection](/img/debugging/ChromeDevToolsList.png)
+
+You may choose either `Reanimated Runtime` or `Reaniamted Runtime experimental
+(Improved Chrome Reloads)`.
+
+:::caution
+
+Known issues include:
+- Android app crashes after a few reloads if a debugger connection is opeb while
+performing a reload.
+
+- iOS app crashes on every reload if a debugger connection is open while
+performing a reload.
+
+- Breakpoints might not be active after a reload even though they look as if they
+were.
+
+These **do not** affect release builds and debug builds, when the debugger connection
+is closed while performing a reload.
+
+:::
+
+*We are actively working on improving the debugging experience with Chrome DevTools on Hermes.*
 
 ### Flipper (Hermes debugger)
 
 <FlipperTable />
 
 **Summary:**
-Works, but only the JS context can be debugged.
+Works and both contexts can be debugged.
 
-Even though Flipper supports the Hermes and V8 engines, it
-unfortunately doesn't recognize Reanimated's additional UI context. This
-means that you won't be able to debug worklets and breakpoints set in them
-will be ignored. All other features work as expected.
+:::warning
 
-*We are actively working on enabling worklet debugging with Flipper on Hermes.*
+This is an early experimental feature.
+
+:::
+
+Worklet debugging is now available in Reanimated apps as an early experimental
+feature. If you want to try it out follow these steps:
+
+1. Add the `patch-package` to your project and set it up to run as a `post-install` task.
+
+2. Add [this](/content/metro-inspector-proxy+0.72.1.patch) patch for metro and
+[this](react-native-gesture-handler+2.5.0.patch) one for `react-native-gesture-handler`.
+
+3. Install the `flipper-plugin-reanimated` plugin in flipper.
+
+4. Select the plugin from the side menu (it might be disabled) and you should
+be good to go!
+
+:::caution
+
+Known issues include:
+- Android app crashes after a few reloads if a debugger connection is opeb while
+performing a reload.
+
+- iOS app crashes on every reload if a debugger connection is open while
+performing a reload.
+
+- Breakpoints might not be active after a reload even though they look as if they
+were.
+
+- Android app crashes if the Flipper client is closed and will crash on startup
+after that. This is a known Flipper issue ([link](https://github.com/facebook/flipper/issues/3026))
+and is not related to Reanimated.
+
+These **do not** affect release builds and debug builds, when the debugger connection
+is closed while performing a reload.
+
+:::
+
+*We are actively working on improving the debugging experience with Flipper on Hermes.*
 
 ### Safari DevTools
 

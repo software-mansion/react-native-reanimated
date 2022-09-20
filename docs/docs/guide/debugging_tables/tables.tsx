@@ -50,7 +50,7 @@ export function SummaryTable() {
             <td className={styles.cellNormal}>Android</td>
             <td className={styles.cellNotAvailable}>N/A</td>
             <td className={styles.cellNormal}>✅ ²</td>
-            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>⚛️</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
@@ -65,7 +65,7 @@ export function SummaryTable() {
             <td className={styles.cellNormal}>Android</td>
             <td className={styles.cellNotAvailable}>N/A</td>
             <td className={styles.cellNormal}>✅ ²</td>
-            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>⚛️</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
@@ -93,14 +93,14 @@ export function SummaryTable() {
               <a href="#react-developer-tools">React Developer Tools</a>
             </td>
             <td className={styles.cellNormal}>Android</td>
-            <td className={styles.cellNormal}>✅</td>
-            <td className={styles.cellNormal}>✅</td>
-            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNormal}>⚛️</td>
+            <td className={styles.cellNormal}>⚛️</td>
+            <td className={styles.cellNormal}>⚛️</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
-            <td className={styles.cellNormal}>✅</td>
-            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNormal}>⚛️</td>
+            <td className={styles.cellNormal}>⚛️</td>
             <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
         </tbody>
@@ -109,10 +109,14 @@ export function SummaryTable() {
       the JS thread. This means that{' '}
       <a href="../../api/nativeMethods/measure">measure</a> and LayoutAnimations
       will not be available.
-      <br />² - Works, but only the JS context can be debugged.
+      <br />² - Experimental feature (see description).
       <h4 style={{ marginBottom: 6 }}>Legend:</h4>
       <ul>
-        <li>✅ - available in React Native apps using Reanimated</li>
+        <li>✅ - special features for React Native apps using Reanimated</li>
+        <li>
+          ⚛️ - works the same as with all React Native apps, debugging worklets
+          is not available
+        </li>
         <li>N/A - unavailable in React Native apps</li>
       </ul>
     </>
@@ -164,7 +168,7 @@ export function ChromeDevToolsTable() {
           <td className={styles.cellNormal}>Android</td>
           <td className={styles.cellNotAvailable}>N/A</td>
           <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
@@ -193,7 +197,7 @@ export function FlipperTable() {
           <td className={styles.cellNormal}>Android</td>
           <td className={styles.cellNotAvailable}>N/A</td>
           <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
@@ -249,14 +253,14 @@ export function ReactDeveloperToolsTable() {
       <tbody>
         <tr>
           <td className={styles.cellNormal}>Android</td>
-          <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️</td>
+          <td className={styles.cellNormal}>⚛️</td>
+          <td className={styles.cellNormal}>⚛️</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
-          <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️</td>
+          <td className={styles.cellNormal}>⚛️</td>
           <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
