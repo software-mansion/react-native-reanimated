@@ -1,10 +1,7 @@
 import com.android.Version
-
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.Path
 import org.apache.tools.ant.filters.ReplaceTokens
-import java.util.stream.Stream
+
+import java.nio.file.Paths
 
 /**
  * Finds the path of the installed npm package with the given name using Node's
