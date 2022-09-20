@@ -175,8 +175,8 @@ const EXAMPLES = [
   },
   {
     name: 'OverlappingBoxesExample',
-    icon: '🟦',
-    title: 'zIndex & elevation',
+    icon: '🔝',
+    title: 'z-index & elevation',
     component: OverlappingBoxesExample,
   },
   {
