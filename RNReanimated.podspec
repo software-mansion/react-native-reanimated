@@ -5,26 +5,26 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 reactNativeVersion = '0.0.0'
 reactTargetTvOS = false
 isUserApp = false
-nodeModulesDir = File.join(__dir__, "../../node_modules")
+nodeModulesDir = File.join(__dir__, "..", "..", "node_modules")
 
 begin
   # user app
   # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
   # /appName/node_modules/react-native/package.json
-  reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))
+  nodeModulesDir = File.join(__dir__, "..", "..", "node_modules")
+  reactNativePackageJson = JSON.parse(File.read(File.join(nodeModulesDir, "react-native", "package.json")))
   reactNativeVersion = reactNativePackageJson["version"]
   reactTargetTvOS = reactNativePackageJson["name"] == "react-native-tvos"
   isUserApp = true
-  nodeModulesDir = File.join(__dir__, "../../node_modules")
 rescue
   begin
     # monorepo
     # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
     # /monorepo/node_modules/react-native/package.json
-    reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))
+    nodeModulesDir = File.join(__dir__, "..", "..", "..", "..", "node_modules")
+    reactNativePackageJson = JSON.parse(File.read(File.join(nodeModulesDir, "react-native", "package.json")))
     reactNativeVersion = reactNativePackageJson["version"]
     reactTargetTvOS = reactNativePackageJson["name"] == "react-native-tvos"
-    nodeModulesDir = File.join(__dir__, "..", "..", "..", "..", "node_modules")
   rescue
     begin
       # Example app in reanimated repo
@@ -37,10 +37,10 @@ rescue
       else
         appName = "Example"
       end
-      reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, appName, "node_modules", "react-native", "package.json")))
+      nodeModulesDir = File.join(__dir__, appName, "node_modules")
+      reactNativePackageJson = JSON.parse(File.read(File.join(nodeModulesDir, "react-native", "package.json")))
       reactNativeVersion = reactNativePackageJson["version"]
       reactTargetTvOS = ENV["ReanimatedTVOSExample"] == "1"
-      nodeModulesDir = File.join(__dir__, appName, "node_modules")
     rescue
       # should never happen
       reactNativeVersion = '0.68.0'
@@ -112,7 +112,7 @@ Pod::Spec.new do |s|
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
   s.xcconfig               = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"#{reactCommonDir}\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"#{reactCommonDir}\"",
                                "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
 
   s.requires_arc = true

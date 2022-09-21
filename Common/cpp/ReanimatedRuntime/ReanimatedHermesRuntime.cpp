@@ -60,7 +60,7 @@ class HermesExecutorRuntimeAdapter
   std::shared_ptr<MessageQueueThread> thread_;
 };
 
-#endif
+#endif // HERMES_ENABLE_DEBUGGER
 
 ReanimatedHermesRuntime::ReanimatedHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
@@ -90,4 +90,4 @@ ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 
 } // namespace reanimated
 
-#endif
+#endif // JS_RUNTIME_HERMES

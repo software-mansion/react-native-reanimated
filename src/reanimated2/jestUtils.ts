@@ -210,11 +210,6 @@ export const setUpTests = (userConfig = {}) => {
       return compareStyle(received, expectedStyle, config);
     },
   });
-
-  // We want to detect this, so we can disable source maps (because they break
-  // snapshot tests), but just setting the build type to 'release' could
-  // be dangerous and potentially break some other stuff outside of reanimated.
-  process.env.BABEL_ENV = 'jest';
 };
 
 export const getAnimatedStyle = (received) => {

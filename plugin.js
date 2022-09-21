@@ -279,9 +279,21 @@ class ClosureGenerator {
 }
 
 function isRelease() {
-  return (
-    process.env.BABEL_ENV === 'release' || process.env.BABEL_ENV === 'jest'
-  );
+  return process.env.BABEL_ENV === 'release';
+}
+
+function shouldGenerateSourceMap() {
+  if (isRelease()) {
+    return false;
+  }
+
+  if (process.env.REANIMATED_PLUGIN_TESTS === 'jest') {
+    // We want to detect this, so we can disable source maps (because they break
+    // snapshot tests with jest).
+    return false;
+  }
+
+  return true;
 }
 
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
@@ -341,7 +353,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
 
   const code = generate(workletFunction).code;
 
-  if (!isRelease()) {
+  if (shouldGenerateSourceMap()) {
     // Clear contents array (should be empty anyways)
     inputMap.sourcesContent = [];
     // Include source contents in source map, because Flipper/iframe is not
@@ -355,8 +367,8 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
 
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
-    compact: isRelease(),
-    sourceMaps: isRelease() ? false : 'inline',
+    compact: !shouldGenerateSourceMap(),
+    sourceMaps: shouldGenerateSourceMap() ? 'inline' : false,
     inputSourceMap: inputMap,
     ast: false,
     babelrc: false,

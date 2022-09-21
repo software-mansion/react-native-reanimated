@@ -2,11 +2,10 @@
 
 // JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
 // on iOS.
-#if __APPLE__
-#if (__has_include( \
-         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
+#if __APPLE__ &&    \
+    (__has_include( \
+        <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
 #define JS_RUNTIME_HERMES 1
-#endif
 #endif
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
@@ -98,7 +97,7 @@ struct ReanimatedReentrancyCheck {
   // This is not atomic, as it is only written or read from the owning
   // thread.
   unsigned int depth;
-#endif
+#endif // NDEBUG
 };
 
 // This is in fact a subclass of jsi::Runtime! WithRuntimeDecorator is a
@@ -123,4 +122,4 @@ class ReanimatedHermesRuntime
 
 } // namespace reanimated
 
-#endif
+#endif // JS_RUNTIME_HERMES

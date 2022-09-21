@@ -2,11 +2,10 @@
 
 // JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
 // on iOS.
-#ifdef __APPLE__
-#if (__has_include( \
-         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
+#if __APPLE__ &&    \
+    (__has_include( \
+        <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
 #define JS_RUNTIME_HERMES 1
-#endif
 #endif
 
 #include <cxxreact/MessageQueueThread.h>

@@ -180,7 +180,7 @@ read files from disk, but the `IFrame` interface used by Flipper is sandboxed
 and doesn't allow filesystem access. Therefore we also need to include the files
 content in the `sourcesContent` array.
 
-**Chrome version  105.0.5195.102 doesn't load source maps**
+**Chrome version 105.0.5195.102 doesn't load source maps**
 
 This version of Chrome introduced a regression into DevTools that broke source
 maps loading for node.js apps. This issue is not caused by Reanimated in any
