@@ -47,26 +47,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ matrix.working-directory }}/node_modules
-          key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
-          restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
+          key: ${{ runner.os }}-android-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
+          restore-keys: ${{ runner.os }}-android-node-modules-${{ matrix.working-directory }}-
 
       - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
-
-      - name: Cache Hermes build
-        if: matrix.working-directory == 'FabricExample'
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.working-directory }}/node_modules/react-native
-          key: ${{ runner.os }}-android-build-hermes-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/package.json', matrix.working-directory), format('{0}/patches/react-native+**', matrix.working-directory)) }}
-
-      - name: Cache Android libraries
-        if: matrix.working-directory == 'FabricExample'
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.working-directory }}/android/app/build/react-ndk
-          key: ${{ runner.os }}-android-build-libraries-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/package.json', matrix.working-directory), format('{0}/patches/react-native+**', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
