@@ -29,26 +29,20 @@ jobs:
 
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3
-        id: cache-node-modules-reanimated
         with:
-          path: |
-            node_modules
+          path: node_modules
           key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-reanimated
+          restore-keys: ${{ runner.os }}-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
 
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
-        id: cache-node-modules-app
         with:
-          path: |
-            ${{ matrix.working-directory }}/node_modules
+          path: ${{ matrix.working-directory }}/node_modules
           key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
+          restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
 
       - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
@@ -56,13 +50,12 @@ jobs:
 
       - name: Restore Pods from cache
         uses: actions/cache@v3
-        id: cache-pods
         with:
           path: |
             ${{ matrix.working-directory }}/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods3-${{ matrix.working-directory }}-${{ hashFiles('yarn.lock', format('{0}/yarn.lock', matrix.working-directory), format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
+          key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
@@ -70,12 +63,11 @@ jobs:
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v3
-        id: cache-build
         with:
           path: |
             ${{ matrix.working-directory }}/ios/build
             ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-build3-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
+          key: ${{ runner.os }}-ios-build-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
