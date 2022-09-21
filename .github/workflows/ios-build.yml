@@ -28,10 +28,6 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v3
 
-      - run: ls ~/Library/Developer/Xcode/DerivedData
-
-      - run: find ~/Library/Developer/Xcode/DerivedData -name "*.a"
-
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3
         with:
@@ -77,3 +73,7 @@ jobs:
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
         run: npx react-native run-ios
+
+      - run: ls ~/Library/Developer/Xcode/DerivedData
+
+      - run: find ~/Library/Developer/Xcode/DerivedData -name "*.a"
