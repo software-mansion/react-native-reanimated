@@ -54,29 +54,19 @@ jobs:
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
 
-      - name: Restore app build from cache
+      - name: Cache Hermes build
+        if: matrix.working-directory == 'FabricExample'
         uses: actions/cache@v3
         with:
-          path: |
-            ${{ matrix.working-directory }}/android/app/build
-            ${{ matrix.working-directory }}/android/app/.cxx
-          key: ${{ runner.os }}-android-app-build-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
+          path: ${{ matrix.working-directory }}/node_modules/react-native
+          key: ${{ runner.os }}-android-build-hermes-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/package.json', matrix.working-directory), format('{0}/patches/react-native+**', matrix.working-directory)) }}
 
-      - name: Restore ReactAndroid build from cache
+      - name: Cache Android libraries
+        if: matrix.working-directory == 'FabricExample'
         uses: actions/cache@v3
         with:
-          path: |
-            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/build
-            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/.cxx
-          key: ${{ runner.os }}-react-android-build-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/package.json', matrix.working-directory)) }}
-
-      - name: Restore Hermes build from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/build
-            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/.cxx
-          key: ${{ runner.os }}-android-hermes-build-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
+          path: ${{ matrix.working-directory }}/android/app/build/react-ndk
+          key: ${{ runner.os }}-android-build-libraries-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/package.json', matrix.working-directory), format('{0}/patches/react-native+**', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
