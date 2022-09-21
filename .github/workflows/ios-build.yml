@@ -28,6 +28,10 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v3
 
+      - run: ls ~/Library/Developer/Xcode/DerivedData
+
+      - run: find ~/Library/Developer/Xcode/DerivedData -name "*.a"
+
       - name: Restore Reanimated node_modules from cache
         uses: actions/cache@v3
         with:
@@ -69,9 +73,6 @@ jobs:
             ${{ matrix.working-directory }}/ios/build
             ~/Library/Developer/Xcode/DerivedData
           key: ${{ runner.os }}-ios-build-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
-
-      - name: List static libraries
-        run: find ~/Library/Developer/Xcode/DerivedData -name "*.a" | grep FabricExample
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
