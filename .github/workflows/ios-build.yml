@@ -73,7 +73,3 @@ jobs:
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
         run: npx react-native run-ios
-
-      - run: ls ~/Library/Developer/Xcode/DerivedData
-
-      - run: find ~/Library/Developer/Xcode/DerivedData -name "*.a"
