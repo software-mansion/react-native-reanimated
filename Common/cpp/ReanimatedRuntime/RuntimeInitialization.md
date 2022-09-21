@@ -22,7 +22,7 @@ To enable debugging on the Hermes runtime we need to do two things:
 
 1. Include source maps in JavaScript files
 
-This part is done purely in JavaScript via the babel plugin. The `makeWorklet`
+This part is done purely in JavaScript via the Babel plugin. The `makeWorklet`
 function received an AST tree, which is aware of the modifications it made to
 the code and therefore can generate the necessary source maps. It is important
 that when we want to create a string from the AST we use the `generate` function

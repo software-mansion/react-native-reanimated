@@ -64,11 +64,10 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
     : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
           *runtime,
           reentrancyCheck_),
-      runtime_(std::move(runtime)),
-      hermesRuntime_(*runtime_) {
+      runtime_(std::move(runtime)) {
 #if HERMES_ENABLE_DEBUGGER
   auto adapter =
-      std::make_unique<HermesExecutorRuntimeAdapter>(hermesRuntime_, jsQueue);
+      std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
@@ -81,7 +80,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 #if HERMES_ENABLE_DEBUGGER
   // We have to disable debugging before the runtime is destroyed.
-  facebook::hermes::inspector::chrome::disableDebugging(hermesRuntime_);
+  facebook::hermes::inspector::chrome::disableDebugging(*runtime_);
 #endif
 }
 

@@ -14,6 +14,7 @@
 #include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
+#include "ReanimatedRuntime.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <JFabricUIManager.h>
@@ -21,8 +22,6 @@
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
-
-#include "ReanimatedRuntime.h"
 
 namespace reanimated {
 

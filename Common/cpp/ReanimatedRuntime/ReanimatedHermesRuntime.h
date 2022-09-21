@@ -22,7 +22,7 @@
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) or ANDROID
+#else // __has_include(<hermes/hermes.h>) || ANDROID
 #include <hermes/hermes.h>
 #endif
 
@@ -118,7 +118,6 @@ class ReanimatedHermesRuntime
 
  private:
   std::shared_ptr<facebook::hermes::HermesRuntime> runtime_;
-  facebook::hermes::HermesRuntime &hermesRuntime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
 };
 

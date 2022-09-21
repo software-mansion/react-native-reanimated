@@ -287,7 +287,8 @@ public class NativeProxy {
       return;
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
-    installJSIBindings(new ReanimatedMessageQueueThread());
+    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    installJSIBindings(messageQueueThread);
     AnimationsManager animationsManager =
         mContext
             .get()

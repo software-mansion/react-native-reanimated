@@ -9,6 +9,12 @@ import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+// This class is an almost exact copy of MessageQueueThreadImpl taken from here:
+// https://github.com/facebook/react-native/blob/main/ReactAndroid/src/main/java/com/facebook/react/bridge/queue/MessageQueueThreadImpl.java
+// The only method that has changed is `quitSynchronous()`. In the originial
+// implementation it quits the associated looper, which we don't want to do
+// since it is the main looper and it would cause the UI thread to become
+// unresponsive.
 @DoNotStrip
 public class ReanimatedMessageQueueThread implements MessageQueueThread {
   private final MessageQueueThreadImpl messageQueueThread;

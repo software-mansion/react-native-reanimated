@@ -298,7 +298,8 @@ public class NativeProxy {
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     FabricUIManager fabricUIManager =
       (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
-    installJSIBindings(new ReanimatedMessageQueueThread(), fabricUIManager);
+    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    installJSIBindings(messageQueueThread, fabricUIManager);
     AnimationsManager animationsManager =
         mContext
             .get()
