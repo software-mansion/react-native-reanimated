@@ -407,6 +407,10 @@ function makeWorklet(t, fun, state) {
     sourceFileName: state.file.opts.filename,
   });
 
+  // We need to add a newline at the end, because there could potentially be a
+  // comment after the function that gets included here, and then the closing
+  // bracket would become part of the comment thus resulting in an error, since
+  // there is a missing closing bracket.
   const code =
     '(' + (t.isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
