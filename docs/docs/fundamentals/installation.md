@@ -19,30 +19,34 @@ yarn add react-native-reanimated
 
 Add Reanimated's babel plugin to your `babel.config.js`:
 
-```js {5}
+```js {7}
   module.exports = {
+    presets: [
       ...
-      plugins: [
-          ...
-          'react-native-reanimated/plugin',
-      ],
+    ],
+    plugins: [
+      ...
+      'react-native-reanimated/plugin',
+    ],
   };
 ```
 
 By default, Reanimated plugin generate source location using absolute path. You can configure to use relative path:
 
-```js {5}
+```js {9}
   module.exports = {
+    presets: [
       ...
-      plugins: [
-          ...
-          [
-              'react-native-reanimated/plugin', {
-                  relativeSourceLocation: true,
-              },
-          ]
-      ],
-  };
+    ],
+    plugins: [
+        ...
+        [
+            'react-native-reanimated/plugin', {
+                relativeSourceLocation: true,
+            },
+        ]
+    ],
+};
 ```
 
 :::caution
@@ -79,6 +83,27 @@ If you're using Proguard, make sure to add rules preventing it from optimizing T
 ## iOS
 
 As reanimated is setup to configure and install automatically, the only thing you have to do is to run `pod install` in the `ios/` directory. Note that the auto-installation setup works for the standard React Native apps, if you have problems setting it up with a custom setup (e.g. brownfield) please start a new issue where we can find a way to guide you through that process.
+
+## Web
+
+You need to add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) Babel plugin.
+
+```bash
+yarn add @babel/plugin-proposal-export-namespace-from
+```
+
+```js {7}
+  module.exports = {
+      presets: [
+        ...
+      ],
+      plugins: [
+          ...
+          '@babel/plugin-proposal-export-namespace-from',
+          'react-native-reanimated/plugin',
+      ],
+  };
+```
 
 ## Sample React-Native project configured with Reanimated
 

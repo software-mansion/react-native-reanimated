@@ -5,6 +5,7 @@ import android.content.Context;
 
 import com.facebook.react.ReactApplication;
 import com.reactnativecommunity.picker.RNCPickerPackage;
+import com.swmansion.gesturehandler.RNGestureHandlerPackage;
 import com.swmansion.rnscreens.RNScreensPackage;
 import com.th3rdwave.safeareacontext.SafeAreaContextPackage;
 import com.facebook.react.ReactInstanceManager;
@@ -14,7 +15,6 @@ import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 import com.horcrux.svg.SvgPackage;
 import com.reactnativepagerview.PagerViewPackage;
-import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
 import com.swmansion.reanimated.ReanimatedPackage;
 
 import org.reactnative.maskedview.RNCMaskedViewPackage;

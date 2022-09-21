@@ -450,7 +450,7 @@ function makeWorklet(t, fun, state) {
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
-  if (state.opts.relativeSourceLocation) {
+  if (state.opts && state.opts.relativeSourceLocation) {
     const path = require('path');
     location = path.relative(state.cwd, location);
   }
@@ -761,16 +761,6 @@ function isPossibleOptimization(fun) {
   return flags;
 }
 
-const pluginProposalExportNamespaceFrom =
-  require('@babel/plugin-proposal-export-namespace-from').default;
-const apiMock = {
-  assertVersion: () => {
-    // do nothing.
-  },
-};
-const ExportNamedDeclarationFn =
-  pluginProposalExportNamespaceFrom(apiMock).visitor.ExportNamedDeclaration;
-
 module.exports = function ({ types: t }) {
   return {
     pre() {
@@ -793,7 +783,6 @@ module.exports = function ({ types: t }) {
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
         },
       },
-      ExportNamedDeclaration: ExportNamedDeclarationFn,
     },
   };
 };
