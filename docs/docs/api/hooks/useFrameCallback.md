@@ -7,14 +7,15 @@ sidebar_label: useFrameCallback
 This hook allows you to run a piece of code on every frame update.
 
 ```js
-useFrameCallback(updater: () => void, autostart: boolean = true) => [FrameCallback]
+useFrameCallback(callback: (frameInfo: frameInfo) => void, autostart = true): [FrameCallback]
 ```
 
 ### Arguments
 
 #### `callback` [Function]
 
-Single worklet that will be called on every frame update without any arguments.
+A single worklet function that will be called on every frame update.
+This function receives a [`FrameInfo`](#frameinfo-object) object as an argument.
 
 #### `autostart` [boolean]
 
@@ -23,7 +24,7 @@ registration is complete. This argument defaults to `true`.
 
 ### Returns
 
-An object of type `FrameCallback` which allows you to read and control the
+An object of type [`FrameCallback`](#framecallback-object) which allows you to read and control the
 callback state.
 
 ### Types
@@ -36,9 +37,19 @@ Properties:
                     or not (`false`)
 * `callbackId: number`: a unique identifier of the callback function
 
+#### `FrameInfo: [object]`
+
+Properties:
+* `timestamp: number`: the system time (in milliseconds) when the last
+  frame was rendered
+* `timeSincePreviousFrame: number | null`: time (in milliseconds) since last frame. This value
+  will be `null` on the first frame after activation. Starting from the second frame,
+  it should be ~16 ms on 60 Hz or ~8 ms on 120 Hz displays (when there is no lag)
+* `timeSinceFirstFrame: number`: time (in milliseconds) since the callback was last activated
+
 ## Example
 
-```js {13-16}
+```js {13-21}
 import Animated, {
   useAnimatedStyle,
   useFrameCallback,
@@ -51,7 +62,12 @@ import React from 'react';
 export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
-  const frameCallback = useFrameCallback(() => {
+  const frameCallback = useFrameCallback((frameInfo) => {
+    if (frameInfo.timeSincePreviousFrame === null) {
+      console.log('First frame!');
+    } else {
+      console.log(`${frameInfo.duration} ms have passed since the previous frame`);
+    }
     // Move the box by one pixel on every frame
     x.value += 1;
   }, false);
