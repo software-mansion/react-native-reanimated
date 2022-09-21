@@ -6,10 +6,12 @@
 #import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
+#import <RNReanimated/REAMessageThread.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
+#import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -29,9 +31,6 @@
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
 #endif
-
-#import "REAMessageThread.h"
-#import "ReanimatedRuntime.h"
 
 namespace reanimated {
 

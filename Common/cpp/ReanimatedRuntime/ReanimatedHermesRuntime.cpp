@@ -25,6 +25,8 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+#if HERMES_ENABLE_DEBUGGER
+
 class HermesExecutorRuntimeAdapter
     : public facebook::hermes::inspector::RuntimeAdapter {
  public:
@@ -57,6 +59,8 @@ class HermesExecutorRuntimeAdapter
   facebook::hermes::HermesRuntime &hermesRuntime_;
   std::shared_ptr<MessageQueueThread> thread_;
 };
+
+#endif
 
 ReanimatedHermesRuntime::ReanimatedHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
