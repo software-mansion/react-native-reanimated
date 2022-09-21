@@ -76,7 +76,7 @@ jobs:
           path: |
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/build
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/.cxx
-          key: ${{ runner.os }}-android-hermes-build-${{ matrix.working-directory }}-${{ format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
+          key: ${{ runner.os }}-android-hermes-build-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
