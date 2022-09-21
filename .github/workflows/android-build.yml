@@ -19,66 +19,65 @@ jobs:
     strategy:
       matrix:
         working-directory: [Example, FabricExample]
+      fail-fast: false
     concurrency:
       group: android-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
+      - name: Setup Java 11
+        uses: actions/setup-java@v3
         with:
-          java-version: '11'
-
-      - name: Accept licenses
-        run: /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
+          distribution: 'zulu'
+          java-version: 11
 
       - name: Restore Reanimated node_modules from cache
-        uses: actions/cache@v2
-        id: cache-node-modules-reanimated
+        uses: actions/cache@v3
         with:
-          path: |
-            node_modules
+          path: node_modules
           key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-reanimated
+          restore-keys: ${{ runner.os }}-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
 
       - name: Restore app node_modules from cache
-        uses: actions/cache@v2
-        id: cache-node-modules-app
+        uses: actions/cache@v3
         with:
-          path: |
-            ${{ matrix.working-directory }}/node_modules
+          path: ${{ matrix.working-directory }}/node_modules
           key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
+          restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
 
       - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
 
-      - name: Restore build from cache
+      - name: Restore app build from cache
         uses: actions/cache@v3
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            android/build
-            android/.cxx
-            ${{ matrix.working-directory }}/android/build
-            ${{ matrix.working-directory }}/android/.cxx
-            ${{ matrix.working-directory }}/android/.gradle
             ${{ matrix.working-directory }}/android/app/build
             ${{ matrix.working-directory }}/android/app/.cxx
+          key: ${{ runner.os }}-android-app-build-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
+
+      - name: Restore ReactAndroid build from cache
+        uses: actions/cache@v3
+        with:
+          path: |
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/build
+            ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/.cxx
+          key: ${{ runner.os }}-react-android-build-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/node_modules/react-native/package.json', matrix.working-directory)) }}
+
+      - name: Restore Hermes build from cache
+        uses: actions/cache@v3
+        with:
+          path: |
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/build
             ${{ matrix.working-directory }}/node_modules/react-native/ReactAndroid/hermes-engine/.cxx
-          key: ${{ runner.os }}-build5-${{ matrix.working-directory }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'android/build.gradle', format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
+          key: ${{ runner.os }}-android-hermes-build-${{ matrix.working-directory }}-${{ format('{0}/node_modules/react-native/sdks/.hermesversion', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
-        run: ./gradlew assembleDebug --build-cache --console=plain -PreactNativeArchitectures=arm64-v8a
+        run: ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a
