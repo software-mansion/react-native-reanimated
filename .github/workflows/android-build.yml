@@ -37,8 +37,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
-          restore-keys: ${{ runner.os }}-node-modules-reanimated-
+          key: ${{ runner.os }}-android-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-android-node-modules-reanimated-
 
       - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
