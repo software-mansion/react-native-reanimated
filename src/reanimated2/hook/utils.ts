@@ -234,7 +234,7 @@ export function styleDiff<T extends AnimatedStyle>(
 
 export function getStyleWithoutAnimations(newStyle: AnimatedStyle): StyleProps {
   'worklet';
-  const diff: StyleProps = {};
+  const diff: StyleProps = Object.create(null);
 
   for (const key in newStyle) {
     const value = newStyle[key];

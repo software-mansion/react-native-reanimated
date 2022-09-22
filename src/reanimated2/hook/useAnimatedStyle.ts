@@ -253,7 +253,7 @@ function styleUpdater(
         requestFrame(frame);
       }
     }
-    state.last = Object.assign({}, oldValues, newValues);
+    state.last = Object.assign(Object.create(null), oldValues, newValues);
     const style = getStyleWithoutAnimations(state.last);
     if (style) {
       updateProps(viewDescriptors, style, maybeViewRef);
@@ -263,7 +263,7 @@ function styleUpdater(
     state.animations = [];
 
     const diff = styleDiff(oldValues, newValues);
-    state.last = Object.assign({}, oldValues, newValues);
+    state.last = Object.assign(Object.create(null), oldValues, newValues);
     if (diff) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
@@ -361,7 +361,7 @@ function jestStyleUpdater(
 
   // calculate diff
   const diff = styleDiff(oldValues, newValues);
-  state.last = Object.assign({}, oldValues, newValues);
+  state.last = Object.assign(Object.create(null), oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
     updatePropsJestWrapper(
@@ -473,7 +473,11 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           const newValues = updaterFn();
           const oldValues = remoteState.last;
           const diff = styleDiff<T>(oldValues, newValues);
-          remoteState.last = Object.assign({}, oldValues, newValues);
+          remoteState.last = Object.assign(
+            Object.create(null),
+            oldValues,
+            newValues
+          );
           parseColors(diff);
           return diff;
         };
@@ -483,7 +487,11 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           const newValues = updaterFn();
           const oldValues = remoteState.last;
           const diff = styleDiff<T>(oldValues, newValues);
-          remoteState.last = Object.assign({}, oldValues, newValues);
+          remoteState.last = Object.assign(
+            Object.create(null),
+            oldValues,
+            newValues
+          );
           return diff;
         };
       }
