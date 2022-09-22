@@ -1,37 +1,38 @@
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  GestureHandlerRootView,
+  RectButton,
+} from 'react-native-gesture-handler';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 
 import AnimatedKeyboardExample from './src/AnimatedKeyboardExample';
 import AnimatedSensorExample from './src/AnimatedSensorExample';
-import FrameCallbackExample from './src/FrameCallbackExample';
 import AnimatedTextInputExample from './src/AnimatedTextInputExample';
 import AnimatedTextWidthExample from './src/AnimatedTextWidthExample';
+import ArticleProgressExample from './src/ArticleProgressExample';
 import BokehExample from './src/BokehExample';
 import BouncingBoxExample from './src/BouncingBoxExample';
 import BubblesExample from './src/BubblesExample';
 import ChessboardExample from './src/ChessboardExample';
 import ColorExample from './src/ColorExample';
 import EmptyExample from './src/EmptyExample';
+import FrameCallbackExample from './src/FrameCallbackExample';
 import GestureHandlerExample from './src/GestureHandlerExample';
 import MeasureExample from './src/MeasureExample';
 import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
+import OverlappingBoxesExample from './src/OverlappingBoxesExample';
 import React from 'react';
-import {
-  GestureHandlerRootView,
-  RectButton,
-} from 'react-native-gesture-handler';
 import RefExample from './src/RefExample';
 import ScreenStackExample from './src/ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './src/ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollToExample from './src/ScrollToExample';
 import ScrollViewExample from './src/ScrollViewExample';
+import ScrollViewOffsetExample from './src/ScrollViewOffsetExample';
 import SvgExample from './src/SvgExample';
 import TransformExample from './src/TransformExample';
 import WidthExample from './src/WidthExample';
 import WorkletExample from './src/WorkletExample';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ScrollViewOffsetExample from './src/ScrollViewOffsetExample';
-import ArticleProgressExample from './src/ArticleProgressExample';
 
 const EXAMPLES = [
   {
@@ -171,6 +172,12 @@ const EXAMPLES = [
     icon: '♟️',
     title: 'Chessboard',
     component: ChessboardExample,
+  },
+  {
+    name: 'OverlappingBoxesExample',
+    icon: '🔝',
+    title: 'z-index & elevation',
+    component: OverlappingBoxesExample,
   },
   {
     name: 'NewestShadowNodesRegistryRemoveExample',
