@@ -74,7 +74,7 @@ import com.android.build.OutputFile
 
 project.ext.react = [
         entryFile   : "index.js",
-        enableHermes: false,
+        enableHermes: true,
 ]
 def enableHermes = project.ext.react.get("enableHermes", false);
 
