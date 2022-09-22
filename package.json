@@ -5,8 +5,9 @@
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
-    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java",
+    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java && yarn lint:docs",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
+    "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
     "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
@@ -137,7 +138,8 @@
     "android/src/**/*.java": "yarn format:java",
     "android/src/**/*.{h,cpp}": "yarn format:android",
     "ios/**/*.{h,m,mm,cpp}": "yarn format:ios",
-    "Common/**/*.{h,cpp}": "yarn format:common"
+    "Common/**/*.{h,cpp}": "yarn format:common",
+    "docs/**/*.{md,mdx}": "yarn lint:docs"
   },
   "release-it": {
     "hooks": {
