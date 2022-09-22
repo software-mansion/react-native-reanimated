@@ -157,6 +157,11 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
+println "reactNativeThirdParty ${reactNativeThirdParty}"
+println "customDownloadsDir ${customDownloadsDir}"
+println "downloadsDir ${downloadsDir}"
+println "thirdPartyNdkDir ${thirdPartyNdkDir}"
+
 def _stackProtectorFlag = true
 
 def CMAKE_NODE_MODULES_DIR = CLIENT_SIDE_BUILD
@@ -205,10 +210,14 @@ def reactNativeArchitectures() {
 //   - glog-0.3.5
 def dependenciesPath = System.getenv("REACT_NATIVE_DEPENDENCIES")
 
+println "dependenciesPath ${dependenciesPath}"
+
 // The Boost library is a very large download (>100MB).
 // If Boost is already present on your system, define the REACT_NATIVE_BOOST_PATH env variable
 // and the build will use that.
 def boostPath = dependenciesPath ?: System.getenv("REACT_NATIVE_BOOST_PATH")
+
+println "boostPath ${boostPath}"
 
 def follyReplaceContent = '''
   ssize_t r;
@@ -370,7 +379,7 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
     thirdPartyNdkDir.mkdirs()
 }
 
-task resolveBoost(dependsOn: createNativeDepsDirectories, type: Copy) {
+Task resolveBoost = task resolveBoost(dependsOn: createNativeDepsDirectories, type: Copy) {
     def artifactLocalName = "boost_${BOOST_VERSION}.tar.gz"
 
     from reactNativeAndroidDownloadDir
@@ -389,7 +398,7 @@ task resolveBoost(dependsOn: createNativeDepsDirectories, type: Copy) {
     }
 }
 
-task resolveDoubleConversion(dependsOn: createNativeDepsDirectories, type: Copy) {
+Task resolveDoubleConversion = task resolveDoubleConversion(dependsOn: createNativeDepsDirectories, type: Copy) {
     def artifactLocalName = "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz"
 
     from reactNativeAndroidDownloadDir
@@ -408,7 +417,7 @@ task resolveDoubleConversion(dependsOn: createNativeDepsDirectories, type: Copy)
     }
 }
 
-task resolveFolly(dependsOn: createNativeDepsDirectories, type: Copy) {
+Task resolveFolly = task resolveFolly(dependsOn: createNativeDepsDirectories, type: Copy) {
     def artifactLocalName = "folly-${FOLLY_VERSION}.tar.gz"
 
     from reactNativeAndroidDownloadDir
@@ -427,7 +436,7 @@ task resolveFolly(dependsOn: createNativeDepsDirectories, type: Copy) {
     }
 }
 
-task resolveGlog(dependsOn: createNativeDepsDirectories, type: Copy) {
+Task resolveGlog = task resolveGlog(dependsOn: createNativeDepsDirectories, type: Copy) {
     def artifactLocalName = "glog-${GLOG_VERSION}.tar.gz"
 
     from reactNativeAndroidDownloadDir
@@ -445,6 +454,26 @@ task resolveGlog(dependsOn: createNativeDepsDirectories, type: Copy) {
         return tar.isFile()
     }
 }
+
+def reactNativeAndroidProject = findProject(":ReactAndroid")
+if (reactNativeAndroidProject != null) {
+    println "ReactAndroid project $reactNativeAndroidProject"
+    println "Before after evaluate block"
+    reactNativeAndroidProject.afterEvaluate {
+        println "Inside afterEvaluate block"
+        def resolveTasks = [resolveBoost, resolveGlog, resolveDoubleConversion, resolveFolly]
+        resolveTasks.forEach({ t ->
+            def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName("download" + t.name.replace("resolve", ""))
+            if (reactAndroidDownloadTask != null) {
+                println "Setting dependency between $it.name & $reactAndroidDownloadTask.name"
+                t.dependsOn(reactAndroidDownloadTask)
+            }
+        })
+    }
+} else {
+    println "Failed to find :ReactAndroid project -> explicit dependency between download tasks is not set."
+}
+
 
 task downloadBoost(dependsOn: resolveBoost, type: Download) {
     def transformedVersion = BOOST_VERSION.replace("_", ".")
