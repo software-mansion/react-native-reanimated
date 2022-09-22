@@ -379,8 +379,8 @@ def resolveTaskFactory(String name, String artifactLocalName, File reactNativeAn
             }
 
             // If it is not the case we check whether it was downloaded by ReactAndroid project
-            def boostTar = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
-            return boostTar.isFile()
+            def tarFile = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
+            return tarFile.isFile()
         }
     }
 }
