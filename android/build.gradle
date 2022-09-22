@@ -379,8 +379,8 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
     thirdPartyNdkDir.mkdirs()
 }
 
-def resolveTaskFactory(String taskSuffix, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
-    return tasks.create(name: "resolve" + taskSuffix, dependsOn: createNativeDepsDirectories, type: Copy) {
+def resolveTaskFactory(String name, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
+    return tasks.create(name: name.startsWith("resolve") ? name : "resolve" + name, dependsOn: createNativeDepsDirectories, type: Copy) {
         from reactNativeAndroidDownloadDir
         include artifactLocalName
         into reanimatedDownloadDir
@@ -398,10 +398,10 @@ def resolveTaskFactory(String taskSuffix, String artifactLocalName, File reactNa
     }
 }
 
-Task resolveBoost = resolveTaskFactory("Boost", "boost_${BOOST_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
-Task resolveDoubleConversion = resolveTaskFactory("DoubleConversion", "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
-Task resolveFolly = resolveTaskFactory("Folly", "folly-${FOLLY_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
-Task resolveGlog = resolveTaskFactory("Glog", "glog-${GLOG_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveBoost = resolveTaskFactory("resolveBoost", "boost_${BOOST_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveDoubleConversion = resolveTaskFactory("resolveDoubleConversion", "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveFolly = resolveTaskFactory("resolveFolly", "folly-${FOLLY_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveGlog = resolveTaskFactory("resolveGlog", "glog-${GLOG_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
 
 def reactNativeAndroidProject = findProject(":ReactAndroid")
 if (reactNativeAndroidProject != null) {
@@ -413,7 +413,7 @@ if (reactNativeAndroidProject != null) {
         resolveTasks.forEach({ t ->
             def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName("download" + t.name.replace("resolve", ""))
             if (reactAndroidDownloadTask != null) {
-                println "Setting dependency between $it.name & $reactAndroidDownloadTask.name"
+                println "Setting dependency between $t.name & $reactAndroidDownloadTask.name"
                 t.dependsOn(reactAndroidDownloadTask)
             }
         })
