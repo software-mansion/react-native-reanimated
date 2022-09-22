@@ -52,21 +52,17 @@ def resolveBuildType() {
 def resolveClientSideBuild() {
     def clientSideBuild = System.getenv("CLIENT_SIDE_BUILD")
     if (clientSideBuild != null) {
-        println "Resolving CLIENT_SIDE_BUILD to ${clientSideBuild == "True"} due to env var"
         return clientSideBuild == "True"
     }
 
     if (hasProperty("clientSideBuild")) {
-        println "Resolving CLIENT_SIDE_BUILD to ${property("clientSideBuild") == "true"} due to project property"
         return property("clientSideBuild") == "true"
     }
 
     if (isDeveloperMode()) {
-        println "Resolving CLIENT_SIDE_BUILD to false due to developer mode"
         return false
     }
 
-    println "Resolving CLIENT_SIDE_BUILD to true by defaulting"
     return true
 }
 
@@ -157,11 +153,6 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
-println "reactNativeThirdParty ${reactNativeThirdParty}"
-println "customDownloadsDir ${customDownloadsDir}"
-println "downloadsDir ${downloadsDir}"
-println "thirdPartyNdkDir ${thirdPartyNdkDir}"
-
 def _stackProtectorFlag = true
 
 def CMAKE_NODE_MODULES_DIR = CLIENT_SIDE_BUILD
@@ -210,14 +201,10 @@ def reactNativeArchitectures() {
 //   - glog-0.3.5
 def dependenciesPath = System.getenv("REACT_NATIVE_DEPENDENCIES")
 
-println "dependenciesPath ${dependenciesPath}"
-
 // The Boost library is a very large download (>100MB).
 // If Boost is already present on your system, define the REACT_NATIVE_BOOST_PATH env variable
 // and the build will use that.
 def boostPath = dependenciesPath ?: System.getenv("REACT_NATIVE_BOOST_PATH")
-
-println "boostPath ${boostPath}"
 
 def follyReplaceContent = '''
   ssize_t r;
@@ -405,15 +392,11 @@ Task resolveGlog = resolveTaskFactory("resolveGlog", "glog-${GLOG_VERSION}.tar.g
 
 def reactNativeAndroidProject = findProject(":ReactAndroid")
 if (reactNativeAndroidProject != null) {
-    println "ReactAndroid project $reactNativeAndroidProject"
-    println "Before after evaluate block"
     reactNativeAndroidProject.afterEvaluate {
-        println "Inside afterEvaluate block"
         def resolveTasks = [resolveBoost, resolveGlog, resolveDoubleConversion, resolveFolly]
         resolveTasks.forEach({ t ->
             def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName("download" + t.name.replace("resolve", ""))
             if (reactAndroidDownloadTask != null) {
-                println "Setting dependency between $t.name & $reactAndroidDownloadTask.name"
                 t.dependsOn(reactAndroidDownloadTask)
             }
         })
