@@ -1,4 +1,4 @@
-import { AppRegistry, Platform } from 'react-native';
+import { AppRegistry, LogBox, Platform } from 'react-native';
 import { name as appName } from './app.json';
 import App from './src/App';
 
@@ -9,3 +9,7 @@ if (Platform.OS === 'web') {
   const rootTag = document.getElementById('root');
   AppRegistry.runApplication(appName, { rootTag });
 }
+
+LogBox.ignoreLogs([
+  'RCTBridge required dispatch_sync to load REAModule. This may lead to deadlocks',
+]);

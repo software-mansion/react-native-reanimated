@@ -273,6 +273,26 @@ android {
             path "CMakeLists.txt"
         }
     }
+    buildTypes {
+        debug {
+            externalNativeBuild {
+                cmake {
+                    if (JS_RUNTIME == "hermes") {
+                        arguments "-DHERMES_ENABLE_DEBUGGER=1"
+                    } else {
+                        arguments "-DHERMES_ENABLE_DEBUGGER=0"
+                    }
+                }
+            }
+        }
+        release {
+            externalNativeBuild {
+                cmake {
+                    arguments "-DHERMES_ENABLE_DEBUGGER=0"
+                }
+            }
+        }
+    }
     lintOptions {
         abortOnError false
     }
@@ -286,6 +306,7 @@ android {
                 "**/libfolly_runtime.so",
                 "**/libglog.so",
                 "**/libhermes.so",
+                "**/libhermes-executor-debug.so",
                 "**/libreactnativejni.so",
                 "**/libjscexecutor.so",
                 "**/libv8executor.so",

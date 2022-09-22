@@ -19,8 +19,8 @@ var f = function () {
       x: objX.x
     }
   };
-  _f.asString = \\"function f(){const{x,objX}=jsThis._closure;{return{res:x+objX.x};}}\\";
-  _f.__workletHash = 10184269015616;
+  _f.asString = \\"function f(){const{x,objX}=jsThis._closure;return{res:x+objX.x};}\\";
+  _f.__workletHash = 4922892741734;
   _f.__location = \\"${ process.cwd() }/jest tests fixture (6:6)\\";
   return _f;
 }();"
@@ -82,8 +82,8 @@ function Box() {
     _f._closure = {
       offset: offset
     };
-    _f.asString = \\"function _f(){const{offset}=jsThis._closure;{return{transform:[{translateX:offset.value*255}]};}}\\";
-    _f.__workletHash = 7114514849439;
+    _f.asString = \\"function _f(){const{offset}=jsThis._closure;return{transform:[{translateX:offset.value*255}]};}\\";
+    _f.__workletHash = 8545597539225;
     _f.__location = \\"${ process.cwd() }/jest tests fixture (10:48)\\";
     _f.__optimalization = 3;
     return _f;
@@ -225,8 +225,8 @@ var Foo = function () {
       _f._closure = {
         x: x
       };
-      _f.asString = \\"function get(){const{x}=jsThis._closure;{return x+2;}}\\";
-      _f.__workletHash = 2468276954688;
+      _f.asString = \\"function get(){const{x}=jsThis._closure;return x+2;}\\";
+      _f.__workletHash = 923830736710;
       _f.__location = \\"${ process.cwd() }/jest tests fixture\\";
       return _f;
     }()

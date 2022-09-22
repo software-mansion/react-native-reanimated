@@ -1,26 +1,20 @@
+#include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 
 #include <memory>
 #include <string>
 
-#if JS_RUNTIME_HERMES
-#include <hermes/hermes.h>
-#elif JS_RUNTIME_V8
-#include <v8runtime/V8RuntimeFactory.h>
-#else
-#include <jsi/JSCRuntime.h>
-#endif
-
-#include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
+#include "ReanimatedRuntime.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <JFabricUIManager.h>
@@ -101,7 +95,9 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 void NativeProxy::installJSIBindings(
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
+    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager
 #endif
@@ -205,21 +201,10 @@ void NativeProxy::installJSIBindings(
     unsubscribeFromKeyboardEvents(listenerId);
   };
 
-#if JS_RUNTIME_HERMES
-  auto config =
-      ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
+  auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::hermes::makeHermesRuntime(config.build());
-#elif JS_RUNTIME_V8
-  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
-  config->enableInspector = false;
-  config->appName = "reanimated";
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      rnv8::createSharedV8Runtime(runtime_, std::move(config));
-#else
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::jsc::makeJSCRuntime();
-#endif
+      ReanimatedRuntime::make(jsQueue);
+
   auto workletRuntimeValue =
       runtime_->global()
           .getProperty(*runtime_, "ArrayBuffer")

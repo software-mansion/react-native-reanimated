@@ -3,6 +3,7 @@ const generate = require('@babel/generator').default;
 const hash = require('string-hash-64');
 const traverse = require('@babel/traverse').default;
 const { transformSync } = require('@babel/core');
+const fs = require('fs');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -277,49 +278,105 @@ class ClosureGenerator {
   }
 }
 
-function buildWorkletString(t, fun, closureVariables, name) {
-  function prependClosureVariablesIfNecessary(closureVariables, body) {
-    if (closureVariables.length === 0) {
-      return body;
-    }
+function isRelease() {
+  return process.env.BABEL_ENV === 'release';
+}
 
-    return t.blockStatement([
-      t.variableDeclaration('const', [
-        t.variableDeclarator(
-          t.objectPattern(
-            closureVariables.map((variable) =>
-              t.objectProperty(
-                t.identifier(variable.name),
-                t.identifier(variable.name),
-                false,
-                true
-              )
-            )
-          ),
-          t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
-        ),
-      ]),
-      body,
-    ]);
+function shouldGenerateSourceMap() {
+  if (isRelease()) {
+    return false;
   }
 
-  traverse(fun, {
-    enter(path) {
-      t.removeComments(path.node);
-    },
-  });
+  if (process.env.REANIMATED_PLUGIN_TESTS === 'jest') {
+    // We want to detect this, so we can disable source maps (because they break
+    // snapshot tests with jest).
+    return false;
+  }
 
-  const expression = fun.program.body.find(
-    ({ type }) => type === 'ExpressionStatement'
-  ).expression;
+  return true;
+}
+
+function buildWorkletString(t, fun, closureVariables, name, inputMap) {
+  function prependClosureVariablesIfNecessary() {
+    const closureDeclaration = t.variableDeclaration('const', [
+      t.variableDeclarator(
+        t.objectPattern(
+          closureVariables.map((variable) =>
+            t.objectProperty(
+              t.identifier(variable.name),
+              t.identifier(variable.name),
+              false,
+              true
+            )
+          )
+        ),
+        t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
+      ),
+    ]);
+
+    function prependClosure(path) {
+      if (closureVariables.length === 0 || path.parent.type !== 'Program') {
+        return;
+      }
+
+      path.node.body.body.unshift(closureDeclaration);
+    }
+
+    return {
+      visitor: {
+        FunctionDeclaration(path) {
+          prependClosure(path);
+        },
+        FunctionExpression(path) {
+          prependClosure(path);
+        },
+        ArrowFunctionExpression(path) {
+          prependClosure(path);
+        },
+        ObjectMethod(path) {
+          prependClosure(path);
+        },
+      },
+    };
+  }
+
+  const expression =
+    fun.program.body.find(({ type }) => type === 'FunctionDeclaration') ||
+    fun.program.body.find(({ type }) => type === 'ExpressionStatement')
+      .expression;
 
   const workletFunction = t.functionExpression(
     t.identifier(name),
     expression.params,
-    prependClosureVariablesIfNecessary(closureVariables, expression.body)
+    expression.body
   );
 
-  return generate(workletFunction, { compact: true }).code;
+  const code = generate(workletFunction).code;
+
+  if (shouldGenerateSourceMap()) {
+    // Clear contents array (should be empty anyways)
+    inputMap.sourcesContent = [];
+    // Include source contents in source map, because Flipper/iframe is not
+    // allowed to read files from disk.
+    for (const sourceFile of inputMap.sources) {
+      inputMap.sourcesContent.push(
+        fs.readFileSync(sourceFile).toString('utf-8')
+      );
+    }
+  }
+
+  const transformed = transformSync(code, {
+    plugins: [prependClosureVariablesIfNecessary()],
+    compact: !shouldGenerateSourceMap(),
+    sourceMaps: shouldGenerateSourceMap() ? 'inline' : false,
+    inputSourceMap: inputMap,
+    ast: false,
+    babelrc: false,
+    configFile: false,
+    comments: false,
+  });
+
+  return transformed.code;
 }
 
 function makeWorkletName(t, fun) {
@@ -342,11 +399,10 @@ function makeWorklet(t, fun, state) {
   const functionName = makeWorkletName(t, fun);
 
   const closure = new Map();
-  const outputs = new Set();
   const closureGenerator = new ClosureGenerator();
   const options = {};
 
-  // remove 'worklet'; directive before calling .toString()
+  // remove 'worklet'; directive before generating string
   fun.traverse({
     DirectiveLiteral(path) {
       if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
@@ -358,8 +414,17 @@ function makeWorklet(t, fun, state) {
   // We use copy because some of the plugins don't update bindings and
   // some even break them
 
+  const codeObject = generate(fun.node, {
+    sourceMaps: true,
+    sourceFileName: state.file.opts.filename,
+  });
+
+  // We need to add a newline at the end, because there could potentially be a
+  // comment after the function that gets included here, and then the closing
+  // bracket would become part of the comment thus resulting in an error, since
+  // there is a missing closing bracket.
   const code =
-    '\n(' + (t.isObjectMethod(fun) ? 'function ' : '') + fun.toString() + '\n)';
+    '(' + (t.isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = transformSync(code, {
     filename: state.file.opts.filename,
@@ -374,7 +439,9 @@ function makeWorklet(t, fun, state) {
     ast: true,
     babelrc: false,
     configFile: false,
+    inputSourceMap: codeObject.map,
   });
+
   if (
     fun.parent &&
     fun.parent.callee &&
@@ -418,17 +485,6 @@ function makeWorklet(t, fun, state) {
       closure.set(name, path.node);
       closureGenerator.addPath(name, path);
     },
-    AssignmentExpression(path) {
-      // test for <something>.value = <something> expressions
-      const left = path.node.left;
-      if (
-        t.isMemberExpression(left) &&
-        t.isIdentifier(left.object) &&
-        t.isIdentifier(left.property, { name: 'value' })
-      ) {
-        outputs.add(left.object.name);
-      }
-    },
   });
 
   const variables = Array.from(closure.values());
@@ -441,11 +497,13 @@ function makeWorklet(t, fun, state) {
   } else {
     funExpression = clone;
   }
+
   const funString = buildWorkletString(
     t,
     transformed.ast,
     variables,
-    functionName
+    functionName,
+    transformed.map
   );
   const workletHash = hash(funString);
 
