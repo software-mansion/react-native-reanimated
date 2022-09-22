@@ -402,7 +402,7 @@ if (reactNativeAndroidProject != null) {
         })
     }
 } else {
-    println "Failed to find :ReactAndroid project -> explicit dependency between download tasks is not set."
+    println "Failed to find :ReactAndroid project -> explicit dependency between download tasks is not set. This is fine if you are using Paper architecture."
 }
 
 task downloadBoost(dependsOn: resolveBoost, type: Download) {
