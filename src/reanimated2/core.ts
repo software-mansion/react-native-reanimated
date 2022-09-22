@@ -380,3 +380,20 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
 export function jestResetJsReanimatedModule() {
   (NativeReanimatedModule as JSReanimated).jestResetModule();
 }
+
+function isHermes() {
+  return 'HermesInternal' in global;
+}
+
+// If we are in debug mode on Hermes we want to always run a simple frame callback
+// to keep the runtime (and debugger console) responsive.
+if (__DEV__ && isHermes()) {
+  function loop() {
+    'worklet';
+    // Inspired by
+    // https://github.com/facebook/react-native/blob/39fb2cccb2f98f4e7862e47274e5c186ea9e5110/ReactCommon/hermes/inspector/Inspector.cpp#L115
+    Math.random();
+    requestAnimationFrame(loop);
+  }
+  runOnUI(loop)();
+}
