@@ -17,9 +17,16 @@ export function measure(
   animatedRef: RefObjectFunction<Component>
 ): MeasuredDimensions | null {
   'worklet';
-  if (!_WORKLET || !isNative) {
+  if (!isNative) {
     console.warn(
       '[Reanimated] measure() cannot be used for web or Chrome Debugger'
+    );
+    return null;
+  } else if (!_WORKLET) {
+    console.warn(
+      '[Reanimated] measure() was called from the wrong thread. This may happen ' +
+        'if you called measure() in the useAnimatedStyle hook. If you want to' +
+        'prevent this warning then wrap the call with `if (_WORKLET)`.'
     );
     return null;
   }
