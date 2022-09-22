@@ -21,6 +21,17 @@ new Promise((resolve, reject) => {
 });
 ```
 
+If you call `measure()` inside of [`useAnimatedStyle()`](../hooks/useAnimatedStyle)
+you may get a warning that `measure()` was called from the wrong thread. This
+is safe to ignore, but it you don't want this error to appear then wrap the call
+like this:
+
+```js
+if (_WORKLET) {
+  const measure = measure(animatedRef);
+}
+```
+
 ### Arguments
 
 #### animatedRef
