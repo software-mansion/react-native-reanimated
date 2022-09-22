@@ -379,81 +379,29 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
     thirdPartyNdkDir.mkdirs()
 }
 
-Task resolveBoost = task resolveBoost(dependsOn: createNativeDepsDirectories, type: Copy) {
-    def artifactLocalName = "boost_${BOOST_VERSION}.tar.gz"
+def resolveTaskFactory(String taskSuffix, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
+    return tasks.create(name: "resolve" + taskSuffix, dependsOn: createNativeDepsDirectories, type: Copy) {
+        from reactNativeAndroidDownloadDir
+        include artifactLocalName
+        into reanimatedDownloadDir
 
-    from reactNativeAndroidDownloadDir
-    include artifactLocalName
-    into downloadsDir
+        onlyIf {
+            // First we check whether the file is already in our download directory
+            if (file("$reanimatedDownloadDir/$artifactLocalName").isFile()) {
+                return false
+            }
 
-    onlyIf {
-        // First we check whether the file is already in our download directory
-        if (file("$downloadsDir/$artifactLocalName").isFile()) {
-            return false
+            // If it is not the case we check whether it was downloaded by ReactAndroid project
+            def boostTar = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
+            return boostTar.isFile()
         }
-
-        // If it is not the case we check whether it was downloaded by ReactAndroid project
-        def boostTar = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
-        return boostTar.isFile()
     }
 }
 
-Task resolveDoubleConversion = task resolveDoubleConversion(dependsOn: createNativeDepsDirectories, type: Copy) {
-    def artifactLocalName = "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz"
-
-    from reactNativeAndroidDownloadDir
-    include artifactLocalName
-    into downloadsDir
-
-    onlyIf {
-        // First we check whether the file is already in our download directory
-        if (file("$downloadsDir/$artifactLocalName").isFile()) {
-            return false
-        }
-
-        // If it is not the case we check whether it was downloaded by ReactAndroid project
-        def tar = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
-        return tar.isFile()
-    }
-}
-
-Task resolveFolly = task resolveFolly(dependsOn: createNativeDepsDirectories, type: Copy) {
-    def artifactLocalName = "folly-${FOLLY_VERSION}.tar.gz"
-
-    from reactNativeAndroidDownloadDir
-    include artifactLocalName
-    into downloadsDir
-
-    onlyIf {
-        // First we check whether the file is already in our download directory
-        if (file("$downloadsDir/$artifactLocalName").isFile()) {
-            return false
-        }
-
-        // If it is not the case we check whether it was downloaded by ReactAndroid project
-        def tar = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
-        return tar.isFile()
-    }
-}
-
-Task resolveGlog = task resolveGlog(dependsOn: createNativeDepsDirectories, type: Copy) {
-    def artifactLocalName = "glog-${GLOG_VERSION}.tar.gz"
-
-    from reactNativeAndroidDownloadDir
-    include artifactLocalName
-    into downloadsDir
-
-    onlyIf {
-        // First we check whether the file is already in our download directory
-        if (file("$downloadsDir/$artifactLocalName").isFile()) {
-            return false
-        }
-
-        // If it is not the case we check whether it was downloaded by ReactAndroid project
-        def tar = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
-        return tar.isFile()
-    }
-}
+Task resolveBoost = resolveTaskFactory("Boost", "boost_${BOOST_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveDoubleConversion = resolveTaskFactory("DoubleConversion", "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveFolly = resolveTaskFactory("Folly", "folly-${FOLLY_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveGlog = resolveTaskFactory("Glog", "glog-${GLOG_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
 
 def reactNativeAndroidProject = findProject(":ReactAndroid")
 if (reactNativeAndroidProject != null) {
