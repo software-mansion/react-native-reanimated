@@ -33,14 +33,14 @@ export function SummaryTable() {
               <a href="#chrome-debugger">Chrome debugger</a>
             </td>
             <td className={styles.cellNormal}>Android</td>
-            <td className={styles.cellNormal}>✅ ¹</td>
-            <td className={styles.cellNormal}>✅ ¹</td>
-            <td className={styles.cellNormal}>✅ ¹</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ¹</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ¹</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ¹</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
-            <td className={styles.cellNormal}>✅ ¹</td>
-            <td className={styles.cellNormal}>✅ ¹</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ¹</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ¹</td>
             <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
@@ -49,13 +49,13 @@ export function SummaryTable() {
             </td>
             <td className={styles.cellNormal}>Android</td>
             <td className={styles.cellNotAvailable}>N/A</td>
-            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ²</td>
             <td className={styles.cellNormal}>⚛️</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
             <td className={styles.cellNotAvailable}>N/A</td>
-            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ²</td>
             <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
@@ -64,13 +64,13 @@ export function SummaryTable() {
             </td>
             <td className={styles.cellNormal}>Android</td>
             <td className={styles.cellNotAvailable}>N/A</td>
-            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ²</td>
             <td className={styles.cellNormal}>⚛️</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
             <td className={styles.cellNotAvailable}>N/A</td>
-            <td className={styles.cellNormal}>✅ ²</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ²</td>
             <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
           <tr>
@@ -84,7 +84,7 @@ export function SummaryTable() {
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
-            <td className={styles.cellNormal}>✅</td>
+            <td className={styles.cellNormal}>⚛️ ✅</td>
             <td className={styles.cellNotAvailable}>N/A</td>
             <td className={styles.cellNotAvailable}>N/A</td>
           </tr>
@@ -112,7 +112,7 @@ export function SummaryTable() {
       <br />² - Experimental feature (see description).
       <h4 style={{ marginBottom: 6 }}>Legend:</h4>
       <ul>
-        <li>✅ - special features for React Native apps using Reanimated</li>
+        <li>⚛️ ✅ - special features for React Native apps using Reanimated</li>
         <li>
           ⚛️ - works the same as with all React Native apps, debugging worklets
           is not available
@@ -137,14 +137,14 @@ export function ChromeDebuggerTable() {
       <tbody>
         <tr>
           <td className={styles.cellNormal}>Android</td>
-          <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
-          <td className={styles.cellNormal}>✅</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
           <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
@@ -167,13 +167,13 @@ export function ChromeDevToolsTable() {
         <tr>
           <td className={styles.cellNormal}>Android</td>
           <td className={styles.cellNotAvailable}>N/A</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
           <td className={styles.cellNormal}>⚛️</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
           <td className={styles.cellNotAvailable}>N/A</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
           <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
@@ -196,13 +196,13 @@ export function FlipperTable() {
         <tr>
           <td className={styles.cellNormal}>Android</td>
           <td className={styles.cellNotAvailable}>N/A</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
           <td className={styles.cellNormal}>⚛️</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
           <td className={styles.cellNotAvailable}>N/A</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
           <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
       </tbody>
@@ -230,7 +230,7 @@ export function SafariDevToolsTable() {
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
-          <td className={styles.cellNormal}>✅</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
           <td className={styles.cellNotAvailable}>N/A</td>
           <td className={styles.cellNotAvailable}>N/A</td>
         </tr>
