@@ -422,7 +422,6 @@ if (reactNativeAndroidProject != null) {
     println "Failed to find :ReactAndroid project -> explicit dependency between download tasks is not set."
 }
 
-
 task downloadBoost(dependsOn: resolveBoost, type: Download) {
     def transformedVersion = BOOST_VERSION.replace("_", ".")
     def artifactLocalName = "boost_${BOOST_VERSION}.tar.gz"
