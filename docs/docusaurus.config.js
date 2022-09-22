@@ -134,6 +134,14 @@ module.exports = {
           path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: undefined, // hide edit button
+          versions: {
+            '2.5.x': {
+              label: '2.5.x – 2.10.x',
+            },
+            '2.3.x': {
+              label: '2.3.x – 2.4.x',
+            },
+          }
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
