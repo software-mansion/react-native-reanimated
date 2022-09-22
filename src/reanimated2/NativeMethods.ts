@@ -22,7 +22,9 @@ export function measure(
       '[Reanimated] measure() cannot be used on web or Chrome Debugger'
     );
     return null;
-  } else if (!_WORKLET) {
+  }
+
+  if (!_WORKLET) {
     console.warn(
       '[Reanimated] measure() was called from the main JS context. Measure is' +
         'only available in the UI runtime. This may also happen if measure()' +
