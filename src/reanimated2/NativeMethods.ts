@@ -19,14 +19,17 @@ export function measure(
   'worklet';
   if (!isNative) {
     console.warn(
-      '[Reanimated] measure() cannot be used for web or Chrome Debugger'
+      '[Reanimated] measure() cannot be used on web or Chrome Debugger'
     );
     return null;
   } else if (!_WORKLET) {
     console.warn(
-      '[Reanimated] measure() was called from the wrong thread. This may happen ' +
-        'if you called measure() in the useAnimatedStyle hook. If you want to' +
-        'prevent this warning then wrap the call with `if (_WORKLET)`.'
+      '[Reanimated] measure() was called from the main JS context. Measure is' +
+        'only available in the UI runtime. This may also happen if measure()' +
+        'was called by a worklet in the useAnimatedStyle hook, because useAnimatedStyle' +
+        'calls the given worklet on the JS runtime during render. If you want to' +
+        'prevent this warning then wrap the call with `if (_WORKLET)`. Then it will' +
+        'only be called on the UI runtime after the render has been completed.'
     );
     return null;
   }
