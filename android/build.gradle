@@ -379,8 +379,11 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
             }
 
             // If it is not the case we check whether it was downloaded by ReactAndroid project
-            def tarFile = Paths.get(reactNativeAndroidDownloadDir.toString(), artifactLocalName).toFile()
-            return tarFile.isFile()
+            if (file("$reactNativeAndroidDownloadDir/$artifactLocalName").isFile()) {
+                return true
+            }
+
+            return false
         }
     }
 }
