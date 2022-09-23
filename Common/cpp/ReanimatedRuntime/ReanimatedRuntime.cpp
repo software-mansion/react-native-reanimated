@@ -38,7 +38,7 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
   jsQueue->quitSynchronous();
 
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
-  config->enableInspector = false;
+  config->enableInspector = true;
   config->appName = "reanimated";
   return rnv8::createSharedV8Runtime(runtime, std::move(config));
 #else
