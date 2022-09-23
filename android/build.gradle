@@ -394,10 +394,10 @@ def reactNativeAndroidProject = findProject(":ReactAndroid")
 if (reactNativeAndroidProject != null) {
     reactNativeAndroidProject.afterEvaluate {
         def resolveTasks = [resolveBoost, resolveGlog, resolveDoubleConversion, resolveFolly]
-        resolveTasks.forEach({ t ->
-            def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName("download" + t.name.replace("resolve", ""))
+        resolveTasks.forEach({ task ->
+            def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName("download" + task.name.replace("resolve", ""))
             if (reactAndroidDownloadTask != null) {
-                t.dependsOn(reactAndroidDownloadTask)
+                task.dependsOn(reactAndroidDownloadTask)
             }
         })
     }
