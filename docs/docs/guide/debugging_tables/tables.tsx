@@ -50,7 +50,7 @@ export function SummaryTable() {
             <td className={styles.cellNormal}>Android</td>
             <td className={styles.cellNotAvailable}>N/A</td>
             <td className={styles.cellNormal}>⚛️ ✅ ²</td>
-            <td className={styles.cellNormal}>⚛️</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ²</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
@@ -65,7 +65,7 @@ export function SummaryTable() {
             <td className={styles.cellNormal}>Android</td>
             <td className={styles.cellNotAvailable}>N/A</td>
             <td className={styles.cellNormal}>⚛️ ✅ ²</td>
-            <td className={styles.cellNormal}>⚛️</td>
+            <td className={styles.cellNormal}>⚛️ ✅ ²</td>
           </tr>
           <tr>
             <td className={styles.cellNormal}>iOS</td>
@@ -168,7 +168,7 @@ export function ChromeDevToolsTable() {
           <td className={styles.cellNormal}>Android</td>
           <td className={styles.cellNotAvailable}>N/A</td>
           <td className={styles.cellNormal}>⚛️ ✅</td>
-          <td className={styles.cellNormal}>⚛️</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
@@ -197,7 +197,7 @@ export function FlipperTable() {
           <td className={styles.cellNormal}>Android</td>
           <td className={styles.cellNotAvailable}>N/A</td>
           <td className={styles.cellNormal}>⚛️ ✅</td>
-          <td className={styles.cellNormal}>⚛️</td>
+          <td className={styles.cellNormal}>⚛️ ✅</td>
         </tr>
         <tr>
           <td className={styles.cellNormal}>iOS</td>
