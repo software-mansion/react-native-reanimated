@@ -398,14 +398,18 @@ if (reactNativeAndroidProject != null) {
     reactNativeAndroidProject.afterEvaluate {
         def resolveTasks = [resolveBoost, resolveGlog, resolveDoubleConversion, resolveFolly]
         resolveTasks.forEach({ task ->
-            def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName("download" + task.name.replace("resolve", ""))
+            String reactAndroidDownloadTaskName = "download" + task.name.replace("resolve", "")
+            def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName(reactAndroidDownloadTaskName)
             if (reactAndroidDownloadTask != null) {
                 task.dependsOn(reactAndroidDownloadTask)
+            } else {
+                throw new GradleScriptException("[Reanimated] Failed to find task named `$reactAndroidDownloadTaskName` in `:ReactAndroid` project." +
+                        " Explicit dependency between it and $task.name task can not be set.")
             }
         })
     }
 } else if (isNewArchitectureEnabled()) {
-    throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks cannot be set.")
+    throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks can not be set.")
 }
 
 task downloadBoost(dependsOn: resolveBoost, type: Download) {
