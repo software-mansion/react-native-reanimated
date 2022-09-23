@@ -366,8 +366,8 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
     thirdPartyNdkDir.mkdirs()
 }
 
-def resolveTaskFactory(String name, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
-    return tasks.create(name: name.startsWith("resolve") ? name : "resolve" + name, dependsOn: createNativeDepsDirectories, type: Copy) {
+def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
+    return tasks.create(name: taskName, dependsOn: createNativeDepsDirectories, type: Copy) {
         from reactNativeAndroidDownloadDir
         include artifactLocalName
         into reanimatedDownloadDir
