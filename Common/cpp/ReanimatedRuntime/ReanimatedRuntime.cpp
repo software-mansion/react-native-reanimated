@@ -20,6 +20,9 @@ using namespace facebook;
 using namespace react;
 
 std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
+#if defined(ANDROID) && JS_RUNTIME_V8
+    const jsi::Runtime *runtime,
+#endif
     std::shared_ptr<MessageQueueThread> jsQueue) {
 #if JS_RUNTIME_HERMES
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
@@ -37,7 +40,7 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = false;
   config->appName = "reanimated";
-  return rnv8::createSharedV8Runtime(runtime_, std::move(config));
+  return rnv8::createSharedV8Runtime(runtime, std::move(config));
 #else
   // This is required by iOS, because there is an assertion in the destructor
   // that the thread was indeed `quit` before

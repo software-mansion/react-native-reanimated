@@ -202,8 +202,11 @@ void NativeProxy::installJSIBindings(
   };
 
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      ReanimatedRuntime::make(jsQueue);
+  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(
+#if JS_RUNTIME_V8
+      runtime_,
+#endif
+      jsQueue);
 
   auto workletRuntimeValue =
       runtime_->global()
