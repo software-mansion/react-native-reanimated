@@ -8,7 +8,7 @@ export type DerivedValue<T> = Readonly<SharedValue<T>>;
 
 export function useDerivedValue<T>(
   processor: BasicWorkletFunction<T>,
-  dependencies: DependencyList
+  dependencies?: DependencyList
 ): DerivedValue<T> {
   const initRef = useRef<SharedValue<T> | null>(null);
   const inputs = Object.values(processor._closure ?? {});

@@ -16,7 +16,7 @@ export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
 export function useAnimatedReaction<T>(
   prepare: BasicWorkletFunction<T>,
   react: AnimatedReactionWorkletFunction<T>,
-  dependencies: DependencyList
+  dependencies?: DependencyList
 ): void {
   const previous = useSharedValue<T | null>(null);
   if (dependencies === undefined) {
