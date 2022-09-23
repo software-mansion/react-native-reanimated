@@ -401,8 +401,8 @@ if (reactNativeAndroidProject != null) {
             }
         })
     }
-} else {
-    println "Failed to find :ReactAndroid project -> explicit dependency between download tasks is not set. This is fine if you are using Paper architecture."
+} else if (isNewArchitectureEnabled()) {
+    throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks cannot be set.")
 }
 
 task downloadBoost(dependsOn: resolveBoost, type: Download) {
