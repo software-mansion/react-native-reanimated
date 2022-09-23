@@ -6280,6 +6280,11 @@ react-native-svg@^13.2.0:
     css-select "^5.1.0"
     css-tree "^1.1.3"
 
+react-native-v8@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/react-native-v8/-/react-native-v8-1.5.0.tgz#7f25de5185fc8e242df461989ac22535c5a279d9"
+  integrity sha512-J4QLhZHmyhGiZPAbYPncGw8+gEGYmi9HeNd8725kRujXWXldIRWnWJiWmj1lERjJUX4ciQEH76CZ1V+ytbHc2A==
+
 react-native@0.70.1:
   version "0.70.1"
   resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.70.1.tgz#ce5ffb9a167a77321de1a7fbb492352e92c9399e"
@@ -7445,6 +7450,11 @@ uuid@^8.3.0:
   version "8.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
+
+v8-android-jit@^10.100.1:
+  version "10.100.1"
+  resolved "https://registry.yarnpkg.com/v8-android-jit/-/v8-android-jit-10.100.1.tgz#063dd25aaa3742ce347020faa31bc3d64186646b"
+  integrity sha512-W5xeoX/a28rjPCPXRJDLEi9o+DfHl9FyhbmhtuLP1LSCbPTMmOsFRkFzkz2FMS+i7S13zTq4q3Rr2GogKo1+RQ==
 
 v8-to-istanbul@^7.0.0:
   version "7.1.2"
