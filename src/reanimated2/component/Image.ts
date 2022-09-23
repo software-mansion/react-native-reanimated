@@ -1,6 +1,6 @@
 import { Image } from 'react-native';
 import createAnimatedComponent from '../../createAnimatedComponent';
 
-const AnimatedImage = createAnimatedComponent(Image as any);
+export const AnimatedImage = createAnimatedComponent(Image as any);
 
-export default AnimatedImage;
+export type AnimatedImage = typeof AnimatedImage & Image;

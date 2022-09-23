@@ -1,6 +1,6 @@
 import { ScrollView } from 'react-native';
 import createAnimatedComponent from '../../createAnimatedComponent';
 
-const AnimatedScrollView = createAnimatedComponent(ScrollView);
+export const AnimatedScrollView = createAnimatedComponent(ScrollView);
 
-export default AnimatedScrollView;
+export type AnimatedScrollView = typeof AnimatedScrollView & ScrollView;

@@ -1,6 +1,6 @@
 import React, { ForwardedRef, forwardRef } from 'react';
 import { FlatList, FlatListProps, LayoutChangeEvent } from 'react-native';
-import ReanimatedView from './View';
+import { AnimatedView } from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 
@@ -15,9 +15,9 @@ interface AnimatedFlatListProps {
 const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
   const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
-      <ReanimatedView layout={itemLayoutAnimation} onLayout={props.onLayout}>
+      <AnimatedView layout={itemLayoutAnimation} onLayout={props.onLayout}>
         {props.children}
-      </ReanimatedView>
+      </AnimatedView>
     );
   };
 
@@ -30,7 +30,7 @@ export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
 
 type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatListProps<T>>;
 
-const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
+export const ReanimatedFlatList: ReanimatedFlatListFC = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
     const { itemLayoutAnimation, ...restProps } = props;
 
@@ -49,4 +49,4 @@ const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
   }
 );
 
-export default ReanimatedFlatlist;
+export type AnimatedFlatList = typeof AnimatedFlatList & FlatList;
