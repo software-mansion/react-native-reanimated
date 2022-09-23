@@ -39,7 +39,7 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
 
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = true;
-  config->appName = "reanimated";
+  config->appName = "Reanimated Runtime";
   return rnv8::createSharedV8Runtime(runtime, std::move(config));
 #else
   // This is required by iOS, because there is an assertion in the destructor
