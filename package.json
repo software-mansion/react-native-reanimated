@@ -31,7 +31,7 @@
   "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
-  "types": "react-native-reanimated.d.ts",
+  "types": "lib/typescript/index",
   "files": [
     "Common/",
     "src/",
@@ -40,7 +40,6 @@
     "!**/__fixtures__",
     "!**/__mocks__",
     "!lib/typescript",
-    "react-native-reanimated.d.ts",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
