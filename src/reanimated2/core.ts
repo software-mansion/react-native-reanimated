@@ -94,7 +94,9 @@ export function runOnUI<A extends any[], R>(
 }
 
 export function makeShareable<T>(value: T): T {
-  isConfiguredCheck();
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
   return NativeReanimatedModule.makeShareable(value);
 }
 
@@ -267,13 +269,77 @@ function workletValueSetterJS<T extends WorkletValue>(
   }
 }
 
+function workletMaker(workletObject, context) {
+  'worklet';
+  let workletsCache = global.__workletsCache;
+  if (workletsCache === undefined) {
+    // init context
+    workletsCache = global.__workletsCache = new Map();
+  }
+  let workletFun = workletsCache.get(workletObject.__workletHash);
+  if (workletFun === undefined) {
+    workletFun = eval(workletObject.asString);
+    workletsCache.put(workletObject.__workletHash, workletFun);
+  }
+  function workletForRealz() {
+    global.jsThis = workletObject;
+    workletFun();
+  }
+}
+
+const _adaptCache = new WeakMap();
+
+function makeShareableCloneRecursive(value) {
+  const type = typeof value;
+  if ((type === 'object' || type === 'function') && value !== null) {
+    const cached = _adaptCache.get(value);
+    if (cached !== undefined) {
+      return cached;
+    } else {
+      let toAdapt;
+      if (Array.isArray(value)) {
+        toAdapt = value.map((element) => makeShareableCloneRecursive(element));
+      } else {
+        toAdapt = {};
+        for (const [key, element] of Object.entries(value)) {
+          toAdapt[key] = makeShareableCloneRecursive(element);
+        }
+      }
+      Object.freeze(value);
+      const adapted = NativeReanimatedModule.makeShareableClone(toAdapt);
+      _adaptCache.set(value, adapted);
+      return adapted;
+    }
+  }
+  return NativeReanimatedModule.makeShareableClone(value);
+}
+
+export function doSomething() {
+  // const data = makeShareableCloneRecursive({
+  //   a: 14,
+  //   b: 'hello',
+  //   c: [1, 2, { x: 8 }, 'yollo'],
+  // });
+
+  function work() {
+    'worklet';
+    console.log('hellow from the UI thread');
+  }
+  const shareableWork = makeShareableCloneRecursive(work);
+  NativeReanimatedModule.scheduleOnUI(shareableWork);
+}
+
 export function makeMutable<T>(value: T): SharedValue<T> {
-  isConfiguredCheck();
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
   return NativeReanimatedModule.makeMutable(value);
 }
 
 export function makeRemote<T>(object = {}): T {
-  isConfiguredCheck();
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
   return NativeReanimatedModule.makeRemote(object);
 }
 
@@ -286,7 +352,9 @@ export function startMapper(
   },
   viewDescriptors: Descriptor[] | SharedValue<Descriptor[]> = []
 ): number {
-  isConfiguredCheck();
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
   return NativeReanimatedModule.startMapper(
     mapper,
     inputs,
@@ -324,7 +392,8 @@ export function runOnJS<A extends any[], R>(
 NativeReanimatedModule.installCoreFunctions(
   NativeReanimatedModule.native
     ? (workletValueSetter as <T>(value: T) => void)
-    : (workletValueSetterJS as <T>(value: T) => void)
+    : (workletValueSetterJS as <T>(value: T) => void),
+  workletMaker
 );
 
 if (!isWeb() && isConfigured()) {

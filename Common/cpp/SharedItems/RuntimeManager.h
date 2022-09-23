@@ -13,6 +13,25 @@ namespace reanimated {
 
 using namespace facebook;
 
+class CoreUIFunction {
+private:
+  std::shared_ptr<jsi::Function> uiFunction;
+  std::string functionBody;
+public:
+  CoreUIFunction(jsi::Runtime &rt, const jsi::Value &workletObject) {
+    functionBody = workletObject.asObject(rt).getProperty(rt, "asString").asString(rt).utf8(rt);
+  }
+  template <typename... Args>
+  jsi::Value call(jsi::Runtime &rt, Args&&... args) {
+    if (uiFunction == nullptr) {
+      auto codeBuffer = std::make_shared<const jsi::StringBuffer>("(" + functionBody + ")");
+      uiFunction = std::make_shared<jsi::Function>(rt.evaluateJavaScript(codeBuffer, "__TODO").asObject(rt).asFunction(rt));
+    }
+    return uiFunction->call(rt, &args...);
+  }
+  
+};
+
 /**
  A class that manages a jsi::Runtime apart from the React-JS runtime.
  */
@@ -41,6 +60,10 @@ class RuntimeManager {
    JS. Can be null.
    */
   std::shared_ptr<ShareableValue> valueSetter;
+  /**
+   Holds the jsi::Function that creates worklet functions.
+   */
+  std::shared_ptr<CoreUIFunction> workletMaker;
   /**
    Holds the jsi::Runtime this RuntimeManager is managing.
    */

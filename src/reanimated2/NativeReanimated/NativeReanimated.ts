@@ -7,6 +7,10 @@ import {
 } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
 
+type Shareable = {
+  __thereIsNothingHereImJustMakingTypescriptHappy: number;
+};
+
 export class NativeReanimated {
   native: boolean;
   private InnerNativeModule: any;
@@ -20,8 +24,19 @@ export class NativeReanimated {
     this.native = native;
   }
 
-  installCoreFunctions(valueSetter: <T>(value: T) => void): void {
-    return this.InnerNativeModule.installCoreFunctions(valueSetter);
+  installCoreFunctions(valueSetter: <T>(value: T) => void, workletMaker): void {
+    return this.InnerNativeModule.installCoreFunctions(
+      valueSetter,
+      workletMaker
+    );
+  }
+
+  makeShareableClone<T>(value: T): Shareable {
+    return this.InnerNativeModule.makeShareableClone(value);
+  }
+
+  scheduleOnUI(shareable: Shareable) {
+    return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
   makeShareable<T>(value: T): T {

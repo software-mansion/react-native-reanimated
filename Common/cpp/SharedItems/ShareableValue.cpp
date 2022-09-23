@@ -15,15 +15,20 @@
 #include "SharedParent.h"
 
 namespace reanimated {
-class ShareableValue;
-const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
-const char *ALREADY_CONVERTED = "__alreadyConverted";
+
 const char *CALL_ASYNC = "__callAsync";
 const char *PRIMAL_FUNCTION = "__primalFunction";
 const char *CALLBACK_ERROR_SUFFIX =
     "\n\nPossible solutions are:\n"
     "a) If you want to synchronously execute this method, mark it as a Worklet\n"
     "b) If you want to execute this method on the JS thread, wrap it using runOnJS";
+
+class ShareableValueRef : public jsi::HostObject {
+public:
+  std::shared_ptr<ShareableValue> value;
+  ShareableValueRef(std::shared_ptr<ShareableValue> _value) : value(_value) {};
+  ~ShareableValueRef() {};
+};
 
 void addHiddenProperty(
     jsi::Runtime &rt,
@@ -46,43 +51,10 @@ void freeze(jsi::Runtime &rt, const jsi::Object &obj) {
   freeze.call(rt, obj);
 }
 
-void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
-  // when adapting from host object we can assign cached value immediately such
-  // that we avoid running `toJSValue` in the future when given object is
-  // accessed
-  if (RuntimeDecorator::isWorkletRuntime(rt)) {
-    if (remoteValue.expired()) {
-      remoteValue = getWeakRef(rt);
-    }
-    (*remoteValue.lock()) = jsi::Value(rt, value);
-  } else {
-    hostValue = std::make_unique<jsi::Value>(rt, value);
-  }
-}
-
 void ShareableValue::adapt(
     jsi::Runtime &rt,
     const jsi::Value &value,
     ValueType objectType) {
-  if (value.isObject()) {
-    jsi::Object object = value.asObject(rt);
-    jsi::Value hiddenValue = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP);
-    if (!(hiddenValue.isUndefined())) {
-      jsi::Object hiddenProperty = hiddenValue.asObject(rt);
-      if (hiddenProperty.isHostObject<FrozenObject>(rt)) {
-        type = ValueType::FrozenObjectType;
-        if (object.hasProperty(rt, "__workletHash") && object.isFunction(rt)) {
-          type = ValueType::WorkletFunctionType;
-        }
-        valueContainer = std::make_unique<FrozenObjectWrapper>(
-            hiddenProperty.getHostObject<FrozenObject>(rt));
-        if (object.hasProperty(rt, ALREADY_CONVERTED)) {
-          adaptCache(rt, value);
-        }
-        return;
-      }
-    }
-  }
 
   if (objectType == ValueType::MutableValueType) {
     type = ValueType::MutableValueType;
@@ -109,7 +81,6 @@ void ShareableValue::adapt(
       if (object.getProperty(rt, "__workletHash").isUndefined()) {
         // not a worklet, we treat this as a host function
         type = ValueType::HostFunctionType;
-        containsHostFunction = true;
 
         // Check if it's a hostFunction wrapper
         jsi::Value primalFunction = object.getProperty(rt, PRIMAL_FUNCTION);
@@ -129,15 +100,6 @@ void ShareableValue::adapt(
         type = ValueType::WorkletFunctionType;
         valueContainer = std::make_unique<FrozenObjectWrapper>(
             std::make_shared<FrozenObject>(rt, object, runtimeManager));
-        auto &frozenObject = ValueWrapper::asFrozenObject(valueContainer);
-        containsHostFunction |= frozenObject->containsHostFunction;
-        if (RuntimeDecorator::isReactRuntime(rt) && !containsHostFunction) {
-          addHiddenProperty(
-              rt,
-              createHost(rt, frozenObject),
-              object,
-              HIDDEN_HOST_OBJECT_PROP);
-        }
       }
     } else if (object.isArray(rt)) {
       type = ValueType::FrozenArrayType;
@@ -146,19 +108,16 @@ void ShareableValue::adapt(
       auto &frozenArray = ValueWrapper::asFrozenArray(valueContainer);
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
         auto sv = adapt(rt, array.getValueAtIndex(rt, i), runtimeManager);
-        containsHostFunction |= sv->containsHostFunction;
         frozenArray.push_back(sv);
       }
     } else if (object.isHostObject<MutableValue>(rt)) {
       type = ValueType::MutableValueType;
       valueContainer = std::make_unique<MutableValueWrapper>(
           object.getHostObject<MutableValue>(rt));
-      adaptCache(rt, value);
     } else if (object.isHostObject<RemoteObject>(rt)) {
       type = ValueType::RemoteObjectType;
       valueContainer = std::make_unique<RemoteObjectWrapper>(
           object.getHostObject<RemoteObject>(rt));
-      adaptCache(rt, value);
     } else if (objectType == ValueType::RemoteObjectType) {
       type = ValueType::RemoteObjectType;
       valueContainer =
@@ -177,15 +136,7 @@ void ShareableValue::adapt(
       valueContainer = std::make_unique<FrozenObjectWrapper>(
           std::make_shared<FrozenObject>(rt, object, runtimeManager));
       auto &frozenObject = ValueWrapper::asFrozenObject(valueContainer);
-      containsHostFunction |= frozenObject->containsHostFunction;
       if (RuntimeDecorator::isReactRuntime(rt)) {
-        if (!containsHostFunction) {
-          addHiddenProperty(
-              rt,
-              createHost(rt, frozenObject),
-              object,
-              HIDDEN_HOST_OBJECT_PROP);
-        }
         freeze(rt, object);
       }
     }
@@ -198,39 +149,31 @@ void ShareableValue::adapt(
   }
 }
 
+static int counter;
+
+ShareableValue::ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s) : StoreUser(s, *runtimeManager), runtimeManager(runtimeManager) {
+  counter++;
+  Logger::log("Create shareable value");
+}
+
+ShareableValue::~ShareableValue() {
+  counter--;
+  Logger::log("DESTROY SHAREABLE VALUE");
+  Logger::log(counter);
+}
+
 std::shared_ptr<ShareableValue> ShareableValue::adapt(
     jsi::Runtime &rt,
     const jsi::Value &value,
     RuntimeManager *runtimeManager,
     ValueType valueType) {
-  auto sv = std::shared_ptr<ShareableValue>(
-      new ShareableValue(runtimeManager, runtimeManager->scheduler));
+  auto sv = std::make_shared<ShareableValue>(runtimeManager, runtimeManager->scheduler);
   sv->adapt(rt, value, valueType);
   return sv;
 }
 
 jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
-  // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to
-  // avoid ref loops
-  if (&rt == runtimeManager->runtime.get()) {
-    // Getting value on the same runtime where it was created, prepare
-    // remoteValue
-    if (remoteValue.expired()) {
-      remoteValue = getWeakRef(rt);
-    }
-
-    if (remoteValue.lock()->isUndefined()) {
-      (*remoteValue.lock()) = toJSValue(rt);
-    }
-    return jsi::Value(rt, *remoteValue.lock());
-  } else {
-    // Getting value on a different runtime than where it was created from,
-    // prepare hostValue
-    if (hostValue.get() == nullptr) {
-      hostValue = std::make_unique<jsi::Value>(toJSValue(rt));
-    }
-    return jsi::Value(rt, *hostValue);
-  }
+  return toJSValue(rt);
 }
 
 jsi::Object ShareableValue::createHost(
@@ -247,11 +190,6 @@ jsi::Value createFrozenWrapper(
   jsi::Object obj = frozenObject->shallowClone(rt);
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
-  if (!frozenObject->containsHostFunction) {
-    addHiddenProperty(
-        rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
-    addHiddenProperty(rt, true, obj, ALREADY_CONVERTED);
-  }
   return freeze.call(rt, obj);
 }
 

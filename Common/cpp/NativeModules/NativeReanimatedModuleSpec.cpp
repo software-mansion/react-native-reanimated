@@ -12,11 +12,20 @@ static jsi::Value SPEC_PREFIX(installCoreFunctions)(
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->installCoreFunctions(rt, std::move(args[0]));
+      ->installCoreFunctions(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
 // SharedValue
+
+static jsi::Value SPEC_PREFIX(makeShareableClone)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->makeShareableClone(rt, std::move(args[0]));
+}
 
 static jsi::Value SPEC_PREFIX(makeShareable)(
     jsi::Runtime &rt,
@@ -44,6 +53,20 @@ static jsi::Value SPEC_PREFIX(makeRemote)(
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->makeRemote(rt, std::move(args[0]));
 }
+
+// scheduler
+
+static jsi::Value SPEC_PREFIX(scheduleOnUI)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->scheduleOnUI(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+// mappers
 
 static jsi::Value SPEC_PREFIX(startMapper)(
     jsi::Runtime &rt,
@@ -163,11 +186,14 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["installCoreFunctions"] =
-      MethodMetadata{1, SPEC_PREFIX(installCoreFunctions)};
+      MethodMetadata{2, SPEC_PREFIX(installCoreFunctions)};
 
+  methodMap_["makeShareableClone"] = MethodMetadata{1, SPEC_PREFIX(makeShareableClone)};
   methodMap_["makeShareable"] = MethodMetadata{1, SPEC_PREFIX(makeShareable)};
   methodMap_["makeMutable"] = MethodMetadata{1, SPEC_PREFIX(makeMutable)};
   methodMap_["makeRemote"] = MethodMetadata{1, SPEC_PREFIX(makeRemote)};
+
+  methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
 
   methodMap_["startMapper"] = MethodMetadata{5, SPEC_PREFIX(startMapper)};
   methodMap_["stopMapper"] = MethodMetadata{1, SPEC_PREFIX(stopMapper)};

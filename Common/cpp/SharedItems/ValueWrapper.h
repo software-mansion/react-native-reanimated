@@ -11,6 +11,7 @@
 #include "JSIStoreValueUser.h"
 #include "SharedParent.h"
 #include "WorkletsCache.h"
+#include "Logger.h"
 
 using namespace facebook::react;
 
@@ -24,12 +25,18 @@ class ValueWrapper {
 
  public:
   ValueWrapper() {}
-  explicit ValueWrapper(ValueType _type) : type(_type) {}
+  explicit ValueWrapper(ValueType _type) : type(_type) {
+//    Logger::log("Creating value wrapper");
+//    counter++;
+  }
   ValueType getType() const {
     return type;
   }
 
-  virtual ~ValueWrapper() {}
+  virtual ~ValueWrapper() {
+//    counter--;
+//    Logger::log("Destroy value wrapper "); Logger::log(counter);
+  }
 
   static inline bool asBoolean(
       const std::unique_ptr<ValueWrapper> &valueContainer);

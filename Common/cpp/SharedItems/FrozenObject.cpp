@@ -18,7 +18,6 @@ FrozenObject::FrozenObject(
     std::string nameStr = propertyName.utf8(rt);
     map[nameStr] = ShareableValue::adapt(
         rt, object.getProperty(rt, propertyName), runtimeManager);
-    this->containsHostFunction |= map[nameStr]->containsHostFunction;
   }
 }
 

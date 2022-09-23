@@ -3,6 +3,7 @@
 #else
 #include "Scheduler.h"
 #endif
+#include "RuntimeManager.h"
 
 namespace reanimated {
 
@@ -16,6 +17,7 @@ void Scheduler::scheduleOnJS(std::function<void()> job) {
 
 void Scheduler::triggerUI() {
   scheduledOnUI = false;
+  auto scope = jsi::Scope(*runtimeManager.lock()->runtime);
   while (uiJobs.getSize()) {
     auto job = uiJobs.pop();
     job();

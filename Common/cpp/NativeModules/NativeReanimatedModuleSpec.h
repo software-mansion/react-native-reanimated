@@ -24,14 +24,18 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  public:
   virtual void installCoreFunctions(
       jsi::Runtime &rt,
-      const jsi::Value &valueSetter) = 0;
+      const jsi::Value &valueSetter,
+      const jsi::Value &workletMaker) = 0;
 
   // SharedValue
-  virtual jsi::Value makeShareable(
-      jsi::Runtime &rt,
-      const jsi::Value &value) = 0;
+  virtual jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value) = 0;
+  virtual jsi::Value makeShareable(jsi::Runtime &rt, const jsi::Value &value) = 0;
   virtual jsi::Value makeMutable(jsi::Runtime &rt, const jsi::Value &value) = 0;
   virtual jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) = 0;
+
+  // Scheduling
+  virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
+  virtual void scheduleOnJS(jsi::Runtime &rt, const jsi::Value &function) = 0;
 
   // mappers
   virtual jsi::Value startMapper(

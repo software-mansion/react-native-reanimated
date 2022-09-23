@@ -30,7 +30,6 @@ class FrozenObject : public jsi::HostObject {
       const jsi::Object &object,
       RuntimeManager *runtimeManager);
   jsi::Object shallowClone(jsi::Runtime &rt);
-  bool containsHostFunction = false;
 };
 
 } // namespace reanimated

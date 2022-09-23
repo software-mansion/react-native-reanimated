@@ -35,28 +35,27 @@ class ShareableValue : public std::enable_shared_from_this<ShareableValue>,
  private:
   RuntimeManager *runtimeManager;
   std::unique_ptr<ValueWrapper> valueContainer;
-  std::unique_ptr<jsi::Value> hostValue;
-  std::weak_ptr<jsi::Value> remoteValue;
-  bool containsHostFunction = false;
-
-  ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s)
-      : StoreUser(s, *runtimeManager), runtimeManager(runtimeManager) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt);
   jsi::Object createHost(
       jsi::Runtime &rt,
       std::shared_ptr<jsi::HostObject> host);
   void adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType);
-  void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
   std::string demangleExceptionName(std::string toDemangle);
 
  public:
+                         ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s);
+                         ~ShareableValue();
   ValueType type = ValueType::UndefinedType;
   static std::shared_ptr<ShareableValue> adapt(
       jsi::Runtime &rt,
       const jsi::Value &value,
       RuntimeManager *runtimeManager,
       ValueType objectType = ValueType::UndefinedType);
+  static jsi::Value makeShareableHostObjectClone(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      RuntimeManager *runtimeManager);
   jsi::Value getValue(jsi::Runtime &rt);
 };
 
