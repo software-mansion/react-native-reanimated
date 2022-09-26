@@ -109,6 +109,100 @@ def getPlaygroundAppName() { // only for the development
     return playgroundAppName
 }
 
+def detectAAR(minor, engine) {
+    def rnMinorVersionCopy = Integer.parseInt(minor)
+    def aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
+
+    if (aar.exists()) {
+        println "AAR for react-native-reanimated has been found\n$aar"
+        return aar
+    } else {
+        while (!aar.exists() && rnMinorVersionCopy >= 63) {
+            rnMinorVersionCopy -= 1
+            aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
+        }
+
+        if (rnMinorVersionCopy < 63) {
+            println "No AAR for react-native-reanimated found. Attempting to build from source."
+        } else { // aar exists, but was build for lower react-native version
+            println "\n\n\n"
+            println "****************************************************************************************"
+            println "\n\n\n"
+            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $minor found."
+            println "Falling back to AAR for react-native version $rnMinorVersionCopy."
+            println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
+            println "Please post a pull request to implement support for react-native version $minor to the reanimated repo."
+            println "Thanks!"
+            println "\n\n\n"
+            println "****************************************************************************************"
+
+            return aar
+        }
+    }
+    return null
+}
+
+def detectReanimatedConfig() {
+    def buildFromSourceConf = false
+    rootProject.getSubprojects().forEach({project ->
+        if (project.plugins.hasPlugin("com.android.application")) {
+            if (
+            project.ext.has("reanimated")
+                    && project.ext.reanimated.buildFromSource
+            ) {
+                buildFromSourceConf = true
+            }
+        }
+    })
+    return buildFromSourceConf
+}
+
+def shouldBuildFromSource(aar, jsRuntimeName) {
+    if (jsRuntimeName == "v8") {
+        return false
+    }
+    else if (isDeveloperMode()) {
+        // Example app
+        return true
+    }
+    else if (detectReanimatedConfig()) {
+        // on user demand
+        return true
+    }
+    else if (aar != null) {
+        // when binary exist
+        return false
+    }
+    // when binary is not found
+    return true
+}
+
+def getTaskByPath(project, String appName, String secondPart, String flavorString, String lastPart) {
+    String pathName = "${appName}:${secondPart}${flavorString}${lastPart}"
+    Task task = project.getTasks().findByPath(pathName)
+    if (task != null) {
+        return task
+    }
+    pathName = "${appName}:${secondPart}${flavorString.capitalize()}${lastPart}"
+    return project.getTasks().findByPath(pathName)
+}
+
+def JS_RUNTIME = {
+    // Returns the js runtime explicitly requested in the environment variable
+    if (System.getenv("JS_RUNTIME")) {
+        return System.getenv("JS_RUNTIME")
+    }
+
+    // Detect js runtime from project setup
+    def defaultRuntimeType = "jsc";
+    def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
+    if (v8Project != null) {
+        return "v8"
+    }
+    def appProject = findProject(":app") ? project(":app") : null
+    return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
+}.call()
+
 boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
@@ -141,6 +235,59 @@ def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.
 def reactNativeVersion = reactNativeManifestAsJson.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 def rnMinorVersion = Integer.parseInt(minor)
+def aar = detectAAR(minor, JS_RUNTIME)
+boolean BUILD_FROM_SOURCE = shouldBuildFromSource(aar, JS_RUNTIME)
+
+if (!BUILD_FROM_SOURCE) {
+    if (rnMinorVersion < 65) {
+        tasks.register("replaceSoTaskDebug", replaceSoTask)
+        tasks.register("replaceSoTaskRelease", replaceSoTask)
+        Task replaceSoTaskDebug = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskDebug")
+        Task replaceSoTaskRelease = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskRelease")
+
+        if (replaceSoTaskDebug != null && replaceSoTaskRelease != null) {
+            rootProject.getSubprojects().forEach({project ->
+                if (project.plugins.hasPlugin("com.android.application") && project.getProperties().get("android")) {
+                    def projectProperties = project.getProperties()
+                    def flavorString = getCurrentFlavor()
+                    def reanimatedConf = projectProperties.get("reanimated")
+
+                    if (
+                    flavorString != "NOT-FOUND"
+                            && (!reanimatedConf || (reanimatedConf && !reanimatedConf.get("enablePackagingOptions")))
+                    ) {
+                        replaceSoTask.appName = projectProperties.path
+                        replaceSoTask.buildDir = projectProperties.buildDir
+                        def appName = projectProperties.path
+
+                        Task debugNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "DebugNativeLibs")
+                        Task debugDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "DebugDebugSymbols")
+                        Task releaseNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "ReleaseNativeLibs")
+                        Task releaseDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "ReleaseDebugSymbols")
+                        Task debugTask = getTaskByPath(project, appName, "package", flavorString, "Debug")
+                        Task releaseTask = getTaskByPath(project, appName, "package", flavorString, "Release")
+
+                        if (
+                        debugNativeLibsTask != null && debugDebugSymbolsTask != null
+                                && releaseNativeLibsTask != null && releaseDebugSymbolsTask != null
+                                && debugTask != null && releaseTask != null
+                        ) {
+                            replaceSoTaskDebug.dependsOn(debugNativeLibsTask, debugDebugSymbolsTask)
+                            debugTask.dependsOn(replaceSoTaskDebug)
+                            replaceSoTaskRelease.dependsOn(releaseNativeLibsTask, releaseDebugSymbolsTask)
+                            releaseTask.dependsOn(replaceSoTaskRelease)
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    artifacts.add("default", aar)
+}
+
+// end if already loaded aar
+if (!BUILD_FROM_SOURCE) return
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
@@ -173,22 +320,6 @@ def _stackProtectorFlag = true
 def CMAKE_NODE_MODULES_DIR = CLIENT_SIDE_BUILD
         ? project.getProjectDir().getParentFile().getParent()
         : Paths.get(project.getProjectDir().getParent(), getPlaygroundAppName(), "node_modules").toString()
-
-def JS_RUNTIME = {
-    // Returns the js runtime explicitly requested in the environment variable
-    if (System.getenv("JS_RUNTIME")) {
-        return System.getenv("JS_RUNTIME")
-    }
-
-    // Detect js runtime from project setup
-    def defaultRuntimeType = "jsc";
-    def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
-    if (v8Project != null) {
-        return "v8"
-    }
-    def appProject = findProject(":app") ? project(":app") : null
-    return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
-}.call()
 
 def jsRuntimeDir = {
     if (JS_RUNTIME == "hermes") {
@@ -737,7 +868,7 @@ afterEvaluate {
 
 if (CLIENT_SIDE_BUILD) {
     def aarDir = "${buildDir}/outputs"
-    def aar = file("${aarDir}/android-debug.aar")
+    aar = file("${aarDir}/android-debug.aar")
     if (aar == null) {
         throw GradleScriptException("AAR build failed. No AAR found in ${aarDir}.")
     }
