@@ -31,7 +31,8 @@ class MapperRegistry;
 class EventHandlerRegistry;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec,
-                               public RuntimeManager {
+                               public RuntimeManager,
+                               public std::enable_shared_from_this<RuntimeManager> {
   friend ShareableValue;
   friend MutableValue;
 

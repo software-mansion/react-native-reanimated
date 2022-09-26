@@ -24,10 +24,13 @@ export class NativeReanimated {
     this.native = native;
   }
 
-  installCoreFunctions(valueSetter: <T>(value: T) => void, workletMaker): void {
+  installCoreFunctions(
+    valueSetter: <T>(value: T) => void,
+    valueUnpacker
+  ): void {
     return this.InnerNativeModule.installCoreFunctions(
       valueSetter,
-      workletMaker
+      valueUnpacker
     );
   }
 

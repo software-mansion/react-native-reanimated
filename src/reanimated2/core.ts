@@ -269,22 +269,24 @@ function workletValueSetterJS<T extends WorkletValue>(
   }
 }
 
-function workletMaker(workletObject, context) {
+function valueUnpacker(objectToUnpack) {
   'worklet';
+  _log('unpak');
   let workletsCache = global.__workletsCache;
   if (workletsCache === undefined) {
-    // init context
+    // init
     workletsCache = global.__workletsCache = new Map();
   }
-  let workletFun = workletsCache.get(workletObject.__workletHash);
+  let workletFun = workletsCache.get(objectToUnpack.__workletHash);
   if (workletFun === undefined) {
-    workletFun = eval(workletObject.asString);
-    workletsCache.put(workletObject.__workletHash, workletFun);
+    workletFun = eval('(' + objectToUnpack.asString + ')');
+    workletsCache.set(objectToUnpack.__workletHash, workletFun);
   }
-  function workletForRealz() {
-    global.jsThis = workletObject;
+  return () => {
+    _log('run worklet for realz ' + JSON.stringify(objectToUnpack));
+    jsThis = objectToUnpack;
     workletFun();
-  }
+  };
 }
 
 const _adaptCache = new WeakMap();
@@ -321,9 +323,15 @@ export function doSomething() {
   //   c: [1, 2, { x: 8 }, 'yollo'],
   // });
 
+  function anotherWork() {
+    'worklet';
+    console.log('Can run me too');
+  }
+
   function work() {
     'worklet';
     console.log('hellow from the UI thread');
+    anotherWork();
   }
   const shareableWork = makeShareableCloneRecursive(work);
   NativeReanimatedModule.scheduleOnUI(shareableWork);
@@ -393,7 +401,7 @@ NativeReanimatedModule.installCoreFunctions(
   NativeReanimatedModule.native
     ? (workletValueSetter as <T>(value: T) => void)
     : (workletValueSetterJS as <T>(value: T) => void),
-  workletMaker
+  valueUnpacker
 );
 
 if (!isWeb() && isConfigured()) {

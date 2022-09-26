@@ -174,9 +174,9 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueSetter,
-    const jsi::Value &workletMaker) {
+    const jsi::Value &valueUnpacker) {
   this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
-  this->workletMaker = std::make_shared<CoreUIFunction>(rt, workletMaker);
+  this->valueUnpacker = std::make_shared<CoreUIFunction>(rt, valueUnpacker);
 }
 
 class Shareable {
@@ -198,6 +198,7 @@ public:
   };
 
   Shareable(ValueType valueType_) : valueType(valueType_) {};
+  virtual jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) = 0;
 
   ValueType valueType;
 
@@ -236,6 +237,15 @@ public:
       data.push_back(extractShareableOrThrow(rt, array.getValueAtIndex(rt, i)));
     }
   }
+
+  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
+    jsi::Runtime &rt = *runtimeManager->runtime;
+    auto ary = jsi::Array(rt, data.size());
+    for (size_t i = 0; i < data.size(); i++) {
+      ary.setValueAtIndex(rt, i, data[i]->toJSValue(runtimeManager));
+    }
+    return ary;
+  }
 protected:
   std::vector<std::shared_ptr<Shareable>> data;
 };
@@ -252,15 +262,37 @@ public:
       data.push_back(std::make_pair(key.utf8(rt), value));
     }
   }
+  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
+    jsi::Runtime &rt = *runtimeManager->runtime;
+    auto obj = jsi::Object(rt);
+    for (size_t i = 0; i < data.size(); i++) {
+      obj.setProperty(rt, data[i].first.c_str(), data[i].second->toJSValue(runtimeManager));
+    }
+    return obj;
+  }
 protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data;
 
+};
+
+class ShareableWorklet : public ShareableObject {
+public:
+  ShareableWorklet(jsi::Runtime & rt, const jsi::Object &worklet) : ShareableObject(rt, worklet) {
+    valueType = WorkletType;
+  }
+  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
+    jsi::Value obj = ShareableObject::toJSValue(runtimeManager);
+    return runtimeManager->valueUnpacker->call(*runtimeManager->runtime, obj);
+  }
 };
 
 class ShareableString : public Shareable {
 public:
   ShareableString(jsi::Runtime &rt, const jsi::String &string) : Shareable(StringType) {
     data = string.utf8(rt);
+  }
+  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
+    return jsi::String::createFromUtf8(*runtimeManager->runtime, data);
   }
 protected:
   std::string data;
@@ -278,6 +310,21 @@ public:
   ShareableScalar() : Shareable(UndefinedType) {}
   ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
+  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
+    switch (valueType) {
+      case Shareable::UndefinedType:
+        return jsi::Value();
+      case Shareable::NullType:
+        return jsi::Value(nullptr);
+      case Shareable::BooleanType:
+        return jsi::Value(data.boolean);
+      case Shareable::NumberType:
+        return jsi::Value(data.number);
+      default:
+        throw "invalid scalar type";
+    }
+  }
+
 protected:
   union Data {
     bool boolean;
@@ -290,7 +337,9 @@ protected:
 std::shared_ptr<Shareable> Shareable::newShareable(jsi::Runtime &rt, const jsi::Value &value) {
   if (value.isObject()) {
     auto object = value.asObject(rt);
-    if (object.isArray(rt)) {
+    if (!object.getProperty(rt, "__workletHash").isUndefined()) {
+      return std::make_shared<ShareableWorklet>(rt, object);
+    } else if (object.isArray(rt)) {
       return std::make_shared<ShareableArray>(rt, object.asArray(rt));
     } else {
       return std::make_shared<ShareableObject>(rt, object);
@@ -306,69 +355,19 @@ std::shared_ptr<Shareable> Shareable::newShareable(jsi::Runtime &rt, const jsi::
   } else if (value.isNumber()) {
     return std::make_shared<ShareableScalar>(value.getNumber());
   } else {
-    throw new std::string("something wacky");
+    throw "something wacky";
   }
 }
 
 
 void NativeReanimatedModule::scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow(rt, worklet);
+  assert(shareableWorklet->valueType == Shareable::WorkletType && "only worklets can be scheduled to run on UI");
+  auto runtimeManager = shared_from_this();
   scheduler->scheduleOnUI([=] {
-
-//    auto runtimeManager = this->runtimeManager;
-//    auto &frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
-//
-//      auto jsThis = std::make_shared<jsi::Object>(
-//          frozenObject->shallowClone(*runtimeManager->runtime));
-//      std::shared_ptr<jsi::Function> funPtr(
-//          runtimeManager->workletsCache->getFunction(rt, frozenObject));
-//      auto name = funPtr->getProperty(rt, "name").asString(rt).utf8(rt);
-//
-//      auto clb = [=](jsi::Runtime &rt,
-//                     const jsi::Value &thisValue,
-//                     const jsi::Value *args,
-//                     size_t count) mutable -> jsi::Value {
-//        const jsi::String jsThisName =
-//            jsi::String::createFromAscii(rt, "jsThis");
-//        jsi::Object global = rt.global();
-//        jsi::Value oldJSThis = global.getProperty(rt, jsThisName);
-//        global.setProperty(rt, jsThisName, *jsThis); // set jsThis
-//
-//        jsi::Value res = jsi::Value::undefined();
-//        try {
-//          if (thisValue.isObject()) {
-//            res =
-//                funPtr->callWithThis(rt, thisValue.asObject(rt), args, count);
-//          } else {
-//            res = funPtr->call(rt, args, count);
-//          }
-//        } catch (jsi::JSError &e) {
-//          throw e;
-//        } catch (std::exception &e) {
-//          std::string str = e.what();
-//          runtimeManager->errorHandler->setError(str);
-//          runtimeManager->errorHandler->raise();
-//        } catch (...) {
-//          if (demangleExceptionName(
-//                  abi::__cxa_current_exception_type()->name()) ==
-//              "facebook::jsi::JSError") {
-//            throw jsi::JSError(rt, "Javascript worklet error");
-//          }
-//          // TODO find out a way to get the error's message on hermes
-//          jsi::Value location = jsThis->getProperty(rt, "__location");
-//          std::string str = "Javascript worklet error";
-//          if (location.isString()) {
-//            str += "\nIn file: " + location.asString(rt).utf8(rt);
-//          }
-//          runtimeManager->errorHandler->setError(str);
-//          runtimeManager->errorHandler->raise();
-//        }
-//        global.setProperty(rt, jsThisName, oldJSThis); // clean jsThis
-//        return res;
-//      };
-//      return jsi::Function::createFromHostFunction(
-//          rt, jsi::PropNameID::forAscii(rt, name.c_str()), 0, clb);
-//    }
+    jsi::Runtime &rt = *runtimeManager->runtime;
+    auto workletValue = shareableWorklet->toJSValue(runtimeManager);
+    workletValue.asObject(rt).asFunction(rt).call(rt);
   });
 }
 

@@ -65,6 +65,7 @@ const globals = new Set([
   'Map',
   'Set',
   '_log',
+  'eval',
   '_updatePropsPaper',
   '_updatePropsFabric',
   '_removeShadowNodeFromRegistry',

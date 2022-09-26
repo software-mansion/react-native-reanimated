@@ -21,13 +21,12 @@ public:
   CoreUIFunction(jsi::Runtime &rt, const jsi::Value &workletObject) {
     functionBody = workletObject.asObject(rt).getProperty(rt, "asString").asString(rt).utf8(rt);
   }
-  template <typename... Args>
-  jsi::Value call(jsi::Runtime &rt, Args&&... args) {
+  jsi::Value call(jsi::Runtime &rt, const jsi::Value &arg0) {
     if (uiFunction == nullptr) {
       auto codeBuffer = std::make_shared<const jsi::StringBuffer>("(" + functionBody + ")");
       uiFunction = std::make_shared<jsi::Function>(rt.evaluateJavaScript(codeBuffer, "__TODO").asObject(rt).asFunction(rt));
     }
-    return uiFunction->call(rt, &args...);
+   return uiFunction->call(rt, arg0);
   }
   
 };
@@ -61,9 +60,9 @@ class RuntimeManager {
    */
   std::shared_ptr<ShareableValue> valueSetter;
   /**
-   Holds the jsi::Function that creates worklet functions.
+   Holds the jsi::Function that unpacks shareable value on the UI thread and converts them to JS objects
    */
-  std::shared_ptr<CoreUIFunction> workletMaker;
+  std::shared_ptr<CoreUIFunction> valueUnpacker;
   /**
    Holds the jsi::Runtime this RuntimeManager is managing.
    */
