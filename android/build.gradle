@@ -1,10 +1,7 @@
 import com.android.Version
-
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.Path
 import org.apache.tools.ant.filters.ReplaceTokens
-import java.util.stream.Stream
+
+import java.nio.file.Paths
 
 /**
  * Finds the path of the installed npm package with the given name using Node's
@@ -154,6 +151,7 @@ def downloadsDir = customDownloadsDir ? new File(customDownloadsDir) : new File(
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
+def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
 def _stackProtectorFlag = true
 
@@ -389,8 +387,57 @@ task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
     thirdPartyNdkDir.mkdirs()
 }
 
-task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
+def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
+    return tasks.create(name: taskName, dependsOn: createNativeDepsDirectories, type: Copy) {
+        from reactNativeAndroidDownloadDir
+        include artifactLocalName
+        into reanimatedDownloadDir
+
+        onlyIf {
+            // First we check whether the file is already in our download directory
+            if (file("$reanimatedDownloadDir/$artifactLocalName").isFile()) {
+                return false
+            }
+
+            // If it is not the case we check whether it was downloaded by ReactAndroid project
+            if (file("$reactNativeAndroidDownloadDir/$artifactLocalName").isFile()) {
+                return true
+            }
+
+            return false
+        }
+    }
+}
+
+Task resolveBoost = resolveTaskFactory("resolveBoost", "boost_${BOOST_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveDoubleConversion = resolveTaskFactory("resolveDoubleConversion", "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveFolly = resolveTaskFactory("resolveFolly", "folly-${FOLLY_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveGlog = resolveTaskFactory("resolveGlog", "glog-${GLOG_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+
+if (isNewArchitectureEnabled()) {
+    def reactNativeAndroidProject = findProject(":ReactAndroid")
+    if (reactNativeAndroidProject != null) {
+        reactNativeAndroidProject.afterEvaluate {
+            def resolveTasks = [resolveBoost, resolveGlog, resolveDoubleConversion, resolveFolly]
+            resolveTasks.forEach({ task ->
+                String reactAndroidDownloadTaskName = "download" + task.name.replace("resolve", "")
+                def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName(reactAndroidDownloadTaskName)
+                if (reactAndroidDownloadTask != null) {
+                    task.dependsOn(reactAndroidDownloadTask)
+                } else {
+                    logger.warn("[Reanimated] Failed to find task named `$reactAndroidDownloadTaskName` in `:ReactAndroid` project." +
+                            " Explicit dependency between it and $task.name task can not be set.")
+                }
+            })
+        }
+    } else {
+        throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks can not be set.")
+    }
+}
+
+task downloadBoost(dependsOn: resolveBoost, type: Download) {
     def transformedVersion = BOOST_VERSION.replace("_", ".")
+    def artifactLocalName = "boost_${BOOST_VERSION}.tar.gz"
     def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
     if (REACT_NATIVE_MINOR_VERSION < 69) {
         srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
@@ -398,7 +445,7 @@ task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
     src(srcUrl)
     onlyIfNewer(true)
     overwrite(false)
-    dest(new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz"))
+    dest(new File(downloadsDir, artifactLocalName))
 }
 
 task prepareBoost(dependsOn: boostPath ? [] : [downloadBoost], type: Copy) {
@@ -412,7 +459,7 @@ task prepareBoost(dependsOn: boostPath ? [] : [downloadBoost], type: Copy) {
     }
 }
 
-task downloadDoubleConversion(dependsOn: createNativeDepsDirectories, type: Download) {
+task downloadDoubleConversion(dependsOn: resolveDoubleConversion, type: Download) {
     src("https://github.com/google/double-conversion/archive/v${DOUBLE_CONVERSION_VERSION}.tar.gz")
     onlyIfNewer(true)
     overwrite(false)
@@ -428,7 +475,7 @@ task prepareDoubleConversion(dependsOn: dependenciesPath ? [] : [downloadDoubleC
     into("$thirdPartyNdkDir/double-conversion")
 }
 
-task downloadFolly(dependsOn: createNativeDepsDirectories, type: Download) {
+task downloadFolly(dependsOn: resolveFolly, type: Download) {
     src("https://github.com/facebook/folly/archive/v${FOLLY_VERSION}.tar.gz")
     onlyIfNewer(true)
     overwrite(false)
@@ -447,7 +494,7 @@ task prepareFolly(dependsOn: dependenciesPath ? [] : [downloadFolly], type: Copy
     into("$thirdPartyNdkDir/folly")
 }
 
-task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
+task downloadGlog(dependsOn: resolveGlog, type: Download) {
     src("https://github.com/google/glog/archive/v${GLOG_VERSION}.tar.gz")
     onlyIfNewer(true)
     overwrite(false)
