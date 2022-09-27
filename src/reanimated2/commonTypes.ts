@@ -43,7 +43,8 @@ export interface AnimatedStyle
   transform?: Array<Record<string, Animation<AnimationObject>>>;
 }
 export interface SharedValue<T> {
-  value: T;
+  get value(): T;
+  set value(value: any);
 }
 
 export type Context = Record<string, unknown>;
