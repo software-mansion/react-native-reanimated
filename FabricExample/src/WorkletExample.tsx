@@ -35,6 +35,7 @@ export default function WorkletExample() {
   };
 
   useDerivedValue(() => {
+    console.log(_WORKLET, x.value);
     runOnJS(someFunction)(x.value);
   });
 
@@ -75,7 +76,7 @@ export default function WorkletExample() {
 
   useAnimatedStyle(() => {
     if (_WORKLET && sv.value >= 1) {
-      throw new Error('Hello world from useAnimatedStyle!');
+      throw new Error('Hello world from useAnimatedStyle! ' + Math.random());
     }
     return {};
   });

@@ -238,21 +238,25 @@ public class NodesManager implements EventDispatcherListener {
       handleEvent(copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
     }
 
-    if (!mFrameCallbacks.isEmpty()) {
-      List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
-      mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
-      for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
-        frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+    try {
+      if (!mFrameCallbacks.isEmpty()) {
+        List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
+        mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
+        for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
+          frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+        }
       }
-    }
 
-    performOperations();
+      performOperations(); // TODO: leave here or move to finally?
+    } finally {
+      // execute this block even if exception was thrown in onAnimationFrame
 
-    mCallbackPosted.set(false);
+      mCallbackPosted.set(false);
 
-    if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
-      // enqueue next frame
-      startUpdatingOnAnimationFrame();
+      if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
+        // enqueue next frame
+        startUpdatingOnAnimationFrame();
+      }
     }
   }
 
