@@ -4,92 +4,229 @@ STATE: OK
 
 import * as React from 'react';
 import {
-  Button,
   View,
   Image,
-  Text
+  Text,
+  StyleSheet,
+  Pressable,
+  Dimensions,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-} from 'react-native-screens/native-stack';
-import Animated from 'react-native-reanimated';
-import photo from './assets/image.jpg';
-import {
-  TouchableNativeFeedback,
-} from 'react-native-gesture-handler';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import florence from './assets/florence.jpg';
+import countryside from './assets/countryside.jpg';
+import dawn from './assets/dawn.jpg';
 
-const Stack = createNativeStackNavigator();
-const AnimatedButton = Animated.createAnimatedComponent(Button);
+type StackParamList = {
+  Home: undefined;
+  Details: { tag: Tag };
+};
+
+const Stack = createNativeStackNavigator<StackParamList>();
 const AnimatedImage = Animated.createAnimatedComponent(Image);
+const AnimatedText = Animated.createAnimatedComponent(Text);
 
-/*
-This example doesnt works
-*/
+const gallery = {
+  florence: {
+    image: florence,
+    title: 'Beautiful city of Florence',
+    description:
+      'Florence was a centre of medieval European trade and finance and one of the wealthiest cities of that era.',
+  },
+  countryside: {
+    image: countryside,
+    title: 'Tuscan countryside',
+    description:
+      "Tuscany's picturesque hills attract millions of tourists each year craving postcard-perfect views.",
+  },
+  dawn: {
+    image: dawn,
+    title: 'Tuscany at dawn',
+    description:
+      'Tuscany is known for its magical mists in the morning and at sunset.',
+  },
+};
 
-function Screen1({ navigation }) {
-  const goNext = (sharedTransitionTag: string) => {
-    navigation.navigate('Screen2', {
-      sharedTransitionTag: sharedTransitionTag,
-    });
-  }
+type Tag = keyof typeof gallery;
+
+function HomeScreen({
+  navigation,
+}: NativeStackScreenProps<StackParamList, 'Home'>) {
+  const chips = ['Italy', 'Tourism', 'Nature'];
+  const goToDetails = (tag: Tag) => {
+    navigation.navigate('Details', { tag });
+  };
+
+  const { width } = Dimensions.get('screen');
+
   return (
-    <Animated.ScrollView style={{ flex: 1, marginTop: 50 }}>
-      <Text style={{fontSize: 30, fontWeight: 'bold', marginLeft: 30}}>Gallery</Text>
-      <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-evenly'}}>
-        {
-          [...Array(6)].map((_, i) => 
-            <TouchableNativeFeedback key={i} onPress={() => { goNext("mleko" + i) }}>
-              <AnimatedImage 
-                sharedTransitionTag={"mleko" + i}
-                source={photo} 
-                style={{width: 150, height: 150, marginTop: 20 }}
-              />
-            </TouchableNativeFeedback>
-          )
-        }
+    <Animated.ScrollView style={styles.homeContainer}>
+      <Pressable onPress={() => goToDetails('countryside')}>
+        <AnimatedImage
+          sharedTransitionTag={'countryside'}
+          source={gallery.countryside.image}
+          style={{
+            width: '100%',
+            height: 160,
+            marginTop: 20,
+            borderRadius: 15,
+          }}
+        />
+      </Pressable>
+      <View style={styles.row}>
+        <Pressable onPress={() => goToDetails('florence')}>
+          <AnimatedImage
+            sharedTransitionTag={'florence'}
+            source={gallery.florence.image}
+            style={{
+              width: width / 2 - 35,
+              height: 250,
+              marginTop: 20,
+              borderRadius: 15,
+            }}
+          />
+        </Pressable>
+        <Pressable onPress={() => goToDetails('dawn')}>
+          <AnimatedImage
+            sharedTransitionTag={'dawn'}
+            source={gallery.dawn.image}
+            style={{
+              width: width / 2 - 35,
+              height: 250,
+              marginTop: 20,
+              marginLeft: 20,
+              borderRadius: 15,
+            }}
+          />
+        </Pressable>
       </View>
+      <Text style={{ ...styles.header, fontSize: 40 }}>Tuscany</Text>
+      <View style={styles.row}>
+        {chips.map((chip) => (
+          <Text key={chip} style={styles.chip}>
+            {chip}
+          </Text>
+        ))}
+      </View>
+      <Text style={styles.text}>
+        Tuscany is known for its landscapes, history, artistic legacy, and its
+        influence on high culture. It is regarded as the birthplace of the
+        Italian Renaissance and of the foundations of the Italian language.
+      </Text>
     </Animated.ScrollView>
   );
 }
 
-function Screen2({ route, navigation }) {
-  const { sharedTransitionTag } = route.params;
+function DetailsScreen({
+  route,
+  navigation,
+}: NativeStackScreenProps<StackParamList, 'Details'>) {
+  const { tag } = route.params;
 
   return (
-    <View style={{ flex: 1 }}>
-      <Text style={{marginTop: 50, textAlign: 'justify'}}>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id egestas nunc. Fusce molestie, libero a lacinia mollis, nisi nisi porttitor tortor, eget vestibulum lectus mauris id mi. Aenean imperdiet tempor est eu auctor. Praesent vitae mi at risus dapibus vulputate ac quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et. Maecenas at fermentum eros, sed accumsan enim. Nam diam est, dapibus malesuada volutpat non, vehicula at mauris.</Text>
+    <View style={styles.detailContainer}>
       <AnimatedImage
-        sharedTransitionTag={sharedTransitionTag}
-        source={photo} 
-        style={{width: '100%', height: 500}}
+        sharedTransitionTag={tag}
+        source={gallery[tag].image}
+        style={styles.detailsImage}
       />
-      <AnimatedButton
-        title="go back"
-        onPress={() => navigation.navigate('Screen1')}
-      />
+      <View style={styles.wrapper}>
+        <AnimatedText
+          entering={FadeIn.delay(150).duration(1000)}
+          style={{ ...styles.header, fontSize: 28 }}>
+          {gallery[tag].title}
+        </AnimatedText>
+        <AnimatedText
+          entering={FadeIn.delay(300).duration(1000)}
+          style={styles.text}>
+          {gallery[tag].description}
+        </AnimatedText>
+        <Animated.View
+          entering={FadeIn.delay(500).duration(1000)}
+          style={styles.callToActionWrapper}>
+          <Pressable
+            style={styles.callToAction}
+            onPress={() => navigation.goBack()}>
+            <Text style={styles.callToActionText}>see for yourself</Text>
+          </Pressable>
+        </Animated.View>
+      </View>
     </View>
   );
 }
 
-export default function SimpleSharedElementTransition() {
+export default function Gallery() {
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'fade',
+          headerShown: false,
         }}>
-        <Stack.Screen
-          name="Screen1"
-          component={Screen1}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Screen2"
-          component={Screen2}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Details" component={DetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  homeContainer: {
+    flex: 1,
+    marginHorizontal: 25,
+    marginTop: 50,
+  },
+  detailContainer: {
+    flex: 1,
+  },
+  wrapper: {
+    flex: 1,
+    marginHorizontal: 25,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  header: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    marginTop: 25,
+    marginBottom: 12,
+  },
+  text: {
+    fontSize: 16,
+    marginTop: 8,
+  },
+  chip: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    width: 90,
+    borderRadius: 5,
+    textAlign: 'center',
+    marginRight: 8,
+  },
+  detailsImage: {
+    width: '100%',
+    height: 500,
+  },
+  callToActionWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+  },
+  callToAction: {
+    backgroundColor: '#add8e6',
+    padding: 16,
+    width: 250,
+    borderRadius: 5,
+  },
+  callToActionText: {
+    color: '#015571',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
