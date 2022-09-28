@@ -282,13 +282,12 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private int registerSharedTransitionTag(String sharedTransitionTag, int viewTag) {
+  private void registerSharedTransitionTag(String sharedTransitionTag, int viewTag) {
     if (screensTransitionDelegate != null) {
-      return screensTransitionDelegate.registerSharedTransitionTag(sharedTransitionTag, viewTag);
+      screensTransitionDelegate.registerSharedTransitionTag(sharedTransitionTag, viewTag);
     }
     else {
       Log.w("[Reanimated]", "screensTransitionDelegate not initialized");
-      return -1;
     }
   }
 

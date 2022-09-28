@@ -537,21 +537,17 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
-int NativeProxy::registerSharedTransitionTag(
+void NativeProxy::registerSharedTransitionTag(
   std::string sharedTransitionTag,
   int viewTag) {
-  static auto method =
-    javaPart_->getClass()->getMethod<int(std::string, int)>("registerSharedTransitionTag");
-  return method(
-    javaPart_.get(),
-    sharedTransitionTag,
-    viewTag);
+  static auto method = javaPart_->getClass()->getMethod<void(std::string, int)>("registerSharedTransitionTag");
+  method(javaPart_.get(), sharedTransitionTag, viewTag);
 }
 void NativeProxy::unregisterSharedTransitionTag(
   std::string sharedTransitionTag,
   int viewTag) {
-//  auto method = javaPart_->getClass()->getMethod<void(JString, int)>("unregisterSharedTransitionTag");
-//  method(javaPart_.get(), sharedTransitionTag, viewTag);
+  static auto method = javaPart_->getClass()->getMethod<void(std::string, int)>("unregisterSharedTransitionTag");
+  method(javaPart_.get(), sharedTransitionTag, viewTag);
 }
 
 } // namespace reanimated

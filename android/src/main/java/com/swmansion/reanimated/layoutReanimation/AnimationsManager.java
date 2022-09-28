@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.app.Activity;
+import android.content.res.Resources;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -204,9 +205,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    Snapshot beforeSnapshot = new Snapshot(before, getReanimatedNativeHierarchyManager());
-    Snapshot afterSnapshot = new Snapshot(after, getReanimatedNativeHierarchyManager());
-    Integer tag = after.getId();
+    Snapshot beforeSnapshot = new Snapshot(before);
+    Snapshot afterSnapshot = new Snapshot(after);
     HashMap<String, Object> targetValues = afterSnapshot.toTargetMap();
     HashMap<String, Object> startValues = beforeSnapshot.toCurrentMap();
 
@@ -216,9 +216,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    // we dont want any other transitions to start on this view
-    mStates.put(after.getId(), null);
-    mNativeMethodsHolder.startAnimationForTag(tag, "sharedElementTransition", preparedValues);
+//    mNativeMethodsHolder.startAnimationForTag(before.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimationForTag(after.getId(), "sharedElementTransition", preparedValues);
   }
 
   public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
@@ -413,28 +412,69 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder = nativeMethods;
   }
 
+//  public void setNewProps_(
+//      Map<String, Object> props,
+//      View view,
+//      ViewManager viewManager,
+//      ViewManager parentViewManager,
+//      Integer parentTag) {
+//    float x =
+//        (props.get(Snapshot.ORIGIN_X) != null)
+//            ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
+//            : PixelUtil.toDIPFromPixel(view.getLeft());
+//    float y =
+//        (props.get(Snapshot.ORIGIN_Y) != null)
+//            ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
+//            : PixelUtil.toDIPFromPixel(view.getTop());
+//    float width =
+//        (props.get(Snapshot.WIDTH) != null)
+//            ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
+//            : PixelUtil.toDIPFromPixel(view.getWidth());
+//    float height =
+//        (props.get(Snapshot.HEIGHT) != null)
+//            ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
+//            : PixelUtil.toDIPFromPixel(view.getHeight());
+//    updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
+//    props.remove(Snapshot.ORIGIN_X);
+//    props.remove(Snapshot.ORIGIN_Y);
+//    props.remove(Snapshot.WIDTH);
+//    props.remove(Snapshot.HEIGHT);
+//
+//    if (props.size() == 0) {
+//      return;
+//    }
+//
+//    JavaOnlyMap javaOnlyMap = new JavaOnlyMap();
+//    for (String key : props.keySet()) {
+//      addProp(javaOnlyMap, key, props.get(key));
+//    }
+//
+//    viewManager.updateProperties(view, new ReactStylesDiffMap(javaOnlyMap));
+//  }
+
   public void setNewProps(
-      Map<String, Object> props,
-      View view,
-      ViewManager viewManager,
-      ViewManager parentViewManager,
-      Integer parentTag) {
+          Map<String, Object> props,
+          View view,
+          ViewManager viewManager,
+          ViewManager parentViewManager,
+          Integer parentTag) {
     float x =
-        (props.get(Snapshot.ORIGIN_X) != null)
-            ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
-            : PixelUtil.toDIPFromPixel(view.getLeft());
+            (props.get(Snapshot.ORIGIN_X) != null)
+                    ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
+                    : PixelUtil.toDIPFromPixel(view.getLeft());
     float y =
-        (props.get(Snapshot.ORIGIN_Y) != null)
-            ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
-            : PixelUtil.toDIPFromPixel(view.getTop());
+            (props.get(Snapshot.ORIGIN_Y) != null)
+                    ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
+                    : PixelUtil.toDIPFromPixel(view.getTop());
     float width =
-        (props.get(Snapshot.WIDTH) != null)
-            ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
-            : PixelUtil.toDIPFromPixel(view.getWidth());
+            (props.get(Snapshot.WIDTH) != null)
+                    ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
+                    : PixelUtil.toDIPFromPixel(view.getWidth());
     float height =
-        (props.get(Snapshot.HEIGHT) != null)
-            ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
-            : PixelUtil.toDIPFromPixel(view.getHeight());
+            (props.get(Snapshot.HEIGHT) != null)
+                    ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
+                    : PixelUtil.toDIPFromPixel(view.getHeight());
+
     updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);

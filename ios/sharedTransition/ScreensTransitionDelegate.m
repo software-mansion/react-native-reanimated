@@ -46,12 +46,12 @@
   return self;
 }
 
-- (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
-                                         fromView:(UIView *)fromView
-                                fromViewConverter:(UIView *)startingViewConverter
-                                           toView:(UIView *)toView
-                                  toViewConverter:(UIView *)toViewConverter
-                                   transitionType:(NSString *)transitionType
+- (void)runTransitionWithConverterView:(UIView *)converter
+                              fromView:(UIView *)fromView
+                     fromViewConverter:(UIView *)startingViewConverter
+                                toView:(UIView *)toView
+                       toViewConverter:(UIView *)toViewConverter
+                        transitionType:(NSString *)transitionType
 {
   if ([transitionType isEqualToString:@"sharedElementTransition"]) {
     [_toRestore addObject:fromView.reactTag];

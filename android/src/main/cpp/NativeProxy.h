@@ -212,7 +212,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   int subscribeForKeyboardEvents(
       std::function<void(int, int)> keyboardEventDataUpdater);
   void unsubscribeFromKeyboardEvents(int listenerId);
-  int registerSharedTransitionTag(
+  void registerSharedTransitionTag(
       std::string sharedTransitionTag,
       int viewTag);
   void unregisterSharedTransitionTag(

@@ -8,6 +8,7 @@ import {
   View,
   Image,
   LogBox,
+  TouchableNativeFeedback
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import {
@@ -15,7 +16,7 @@ import {
 } from 'react-native-screens/native-stack';
 import Animated from 'react-native-reanimated';
 import {
-  TouchableNativeFeedback,
+  // TouchableNativeFeedback,
 } from 'react-native-gesture-handler';
 import photo from './assets/image.jpg'
 LogBox.ignoreLogs(['Looks']); // soooooo anoying 😡
@@ -32,38 +33,45 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
   }
   
   return <TouchableNativeFeedback onPress={() => { goNext(isOpen ? 'Screen1' : 'Screen2') }}>
-    <Animated.View sharedTransitionTag={transitionTag + "1"}>
-    <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 30, backgroundColor: 'green' }}
+    {/* <Animated.View 
       sharedTransitionTag={transitionTag + "1_"}
+      style={{backgroundColor: 'red'}}
+    > */}
+    <Animated.View 
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 30, backgroundColor: 'red' }}
+      sharedTransitionTag={transitionTag + "1"}
     >
-      <Animated.Text
+      {/* <Animated.Text
         sharedTransitionTag={transitionTag + "2"}
         style={{ width: '100%', height: 20 }}
       >
         {title}
-      </Animated.Text>
-      <AnimatedImage 
+      </Animated.Text> */}
+      {/* <AnimatedImage 
         sharedTransitionTag={transitionTag + "3"}
         source={photo} 
         style={{ width: '100%', height: isOpen ? 300 : 100 }}
-      />
-      <Animated.Text
+      /> */}
+      {/* <Animated.View
+        style={{ width: '100%', backgroundColor: 'green', height: isOpen ? 300 : 100 }}
+        sharedTransitionTag={transitionTag + "XD"}
+      /> */}
+      {/* <Animated.Text
         sharedTransitionTag={transitionTag + "4"}
         style={{ width: '100%', height: isOpen ? 100 : 0 }}
       >
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid, earum non, dignissimos fugit rerum exercitationem ab consequatur, error animi veritatis delectus. Nostrum sapiente distinctio possimus vel nam facilis ut?
-      </Animated.Text>
+      </Animated.Text> */}
     </Animated.View>
-    </Animated.View>
+    {/* </Animated.View> */}
   </TouchableNativeFeedback>
 }
 
 function Screen1({ navigation }) {
   return (
-    <Animated.ScrollView style={{ flex: 1, marginTop: 37 }}>
+    <Animated.ScrollView style={{ flex: 1, marginTop: 200 }}>
       {
-        [...Array(5)].map((_, i) => 
+        [...Array(1)].map((_, i) => 
           <Card 
             key={i} 
             navigation={navigation} 
@@ -97,6 +105,7 @@ export default function SimpleSharedElementTransition() {
       <Stack.Navigator
         screenOptions={{
           // stackAnimation: 'fade_from_bottom',
+          // stackAnimation: 'slide_from_right',
           stackAnimation: 'fade',
           // stackAnimation: 'none',
         }}>
