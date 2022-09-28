@@ -1,6 +1,6 @@
 {
   "name": "@exodus/react-native-reanimated",
-  "version": "2.4.1-exodus.7",
+  "version": "2.4.1-exodus.8",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -34,6 +34,7 @@
   "files": [
     "Common/",
     "lib/",
+    "!lib/reanimated2/jestUtils.js",
     "libSo/",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",

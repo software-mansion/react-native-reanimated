@@ -31,7 +31,7 @@ runOnUI(() => {
       } else if (type === 'layout' && enteringAnimationForTag[tag] !== null) {
         const entryAniamtion = enteringAnimationForTag[tag].animations;
         const layoutAnimation = style.animations;
-        currentAnimation = {};
+        currentAnimation = Object.create(null);
         for (const key in entryAniamtion) {
           currentAnimation[key] = entryAniamtion[key];
         }
@@ -53,7 +53,11 @@ runOnUI(() => {
         }
       }
 
-      sv.value = Object.assign({}, sv._value, style.initialValues);
+      sv.value = Object.assign(
+        Object.create(null),
+        sv._value,
+        style.initialValues
+      );
       _stopObservingProgress(tag, false);
       const animation = withStyleAnimation(currentAnimation);
 

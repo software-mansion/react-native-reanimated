@@ -7,7 +7,7 @@
     // change to true after we transition to TS
     "declaration": false,
     "preserveSymlinks": true,
-    "target": "es6",
+    "target": "es2019",
     "module": "es6",
     "jsx": "react-native",
     "skipLibCheck": true,
