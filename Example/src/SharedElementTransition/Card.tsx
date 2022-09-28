@@ -38,7 +38,7 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
       style={{backgroundColor: 'red'}}
     > */}
     <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 30, backgroundColor: 'red' }}
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 50, backgroundColor: 'red' }}
       sharedTransitionTag={transitionTag + "1"}
     >
       {/* <Animated.Text
@@ -47,15 +47,11 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
       >
         {title}
       </Animated.Text> */}
-      {/* <AnimatedImage 
+      <AnimatedImage 
         sharedTransitionTag={transitionTag + "3"}
         source={photo} 
-        style={{ width: '100%', height: isOpen ? 300 : 100 }}
-      /> */}
-      {/* <Animated.View
-        style={{ width: '100%', backgroundColor: 'green', height: isOpen ? 300 : 100 }}
-        sharedTransitionTag={transitionTag + "XD"}
-      /> */}
+        style={{ width: '100%', height: isOpen ? 300 : 100, opacity: 0.5 }}
+      />
       {/* <Animated.Text
         sharedTransitionTag={transitionTag + "4"}
         style={{ width: '100%', height: isOpen ? 100 : 0 }}
@@ -69,7 +65,7 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
 
 function Screen1({ navigation }) {
   return (
-    <Animated.ScrollView style={{ flex: 1, marginTop: 200 }}>
+    <Animated.ScrollView style={{ flex: 1, /* marginTop: 200*/ }}>
       {
         [...Array(1)].map((_, i) => 
           <Card 

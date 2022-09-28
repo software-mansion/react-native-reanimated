@@ -26,7 +26,12 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
 
     @Override
     public void runTransition(View before, View after) {
-        animationsManager.onViewTransition(before, after);
+        animationsManager.onViewTransition(
+            before,
+            after,
+            snapshotRegistry.get(before.getId()),
+            snapshotRegistry.get(after.getId())
+        );
     }
 
     @Override

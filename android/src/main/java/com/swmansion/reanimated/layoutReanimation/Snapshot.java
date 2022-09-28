@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -74,6 +75,7 @@ public class Snapshot {
     view.getLocationOnScreen(location);
     originX = location[0];
     originY = location[1];
+    Log.w("rea", "" + view.getClass() + ", " + view.getId() + ", " + originY);
     initKeys();
   }
 

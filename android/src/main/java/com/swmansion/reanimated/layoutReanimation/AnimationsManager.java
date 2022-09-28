@@ -2,6 +2,7 @@ package com.swmansion.reanimated.layoutReanimation;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -21,6 +22,7 @@ import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
+import com.swmansion.reanimated.R;
 import com.swmansion.reanimated.Scheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -200,13 +202,20 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
   }
 
-  public void onViewTransition(View before, View after) {
+  public int getStatusBarHeight() {
+    int result = 0;
+    int resourceId = Resources.getSystem().getIdentifier("status_bar_height", "dimen", "android");
+    if (resourceId > 0) {
+      result = Resources.getSystem().getDimensionPixelSize(resourceId);
+    }
+    return result;
+  }
+
+  public void onViewTransition(View before, View after, Snapshot beforeSnapshot, Snapshot afterSnapshot) {
     if (isCatalystInstanceDestroyed) {
       return;
     }
 
-    Snapshot beforeSnapshot = new Snapshot(before);
-    Snapshot afterSnapshot = new Snapshot(after);
     HashMap<String, Object> targetValues = afterSnapshot.toTargetMap();
     HashMap<String, Object> startValues = beforeSnapshot.toCurrentMap();
 
@@ -216,6 +225,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
+    float statusBarHeight = PixelUtil.toDIPFromPixel(getStatusBarHeight());
+    preparedValues.put("currentOriginY", preparedValues.get("currentOriginY") - statusBarHeight);
+    preparedValues.put("targetOriginY", preparedValues.get("targetOriginY") - statusBarHeight);
 //    mNativeMethodsHolder.startAnimationForTag(before.getId(), "sharedElementTransition", preparedValues);
     mNativeMethodsHolder.startAnimationForTag(after.getId(), "sharedElementTransition", preparedValues);
   }
@@ -579,9 +591,27 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
+//      Rect newRect = new Rect(x, y, x + width, y + height);
+//      Rect convertedRect = convertRect(newRect);
+      Log.w("rea", "" + viewToUpdate.getParent().getClass());
       viewToUpdate.layout(x, y, x + width, y + height);
     }
   }
+
+//  public static Rect convertRect(Rect fromRect, View fromView, View toView){
+//    int[] fromCoord = new int[2];
+//    int[] toCoord = new int[2];
+//    fromView.getLocationOnScreen(fromCoord);
+//    toView.getLocationOnScreen(toCoord);
+//
+//    int xShift = fromCoord[0] - toCoord[0];
+//    int yShift = fromCoord[1] - toCoord[1];
+//
+//    Rect toRect = new Rect(fromRect.left + xShift, fromRect.top + yShift,
+//            fromRect.right + xShift, fromRect.bottom + yShift);
+//
+//    return toRect;
+//  }
 
   public boolean isLayoutAnimationEnabled() {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
