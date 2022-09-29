@@ -277,6 +277,8 @@ android {
     packagingOptions {
         doNotStrip resolveBuildType() == 'debug' ? "**/**/*.so" : ''
         excludes = [
+                "META-INF",
+                "META-INF/**",
                 "**/libc++_shared.so",
                 "**/libfbjni.so",
                 "**/libjsi.so",
