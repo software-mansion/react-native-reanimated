@@ -241,7 +241,7 @@ PODS:
     - glog
   - react-native-pager-view (5.4.1):
     - React-Core
-  - react-native-safe-area-context (4.3.3):
+  - react-native-safe-area-context (4.4.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -533,7 +533,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 1363be638eccfe1aea1b10dd42e632b0397e5ec8
   React-logger: 7bd569e3857d74ed412ce0a5c51f421ff7d4ca7f
   react-native-pager-view: 43f51f45f37ec9715f6c188e4af46ccdf79872e8
-  react-native-safe-area-context: b456e1c40ec86f5593d58b275bd0e9603169daca
+  react-native-safe-area-context: 646452837a27753136982377b1b945df58b31b08
   react-native-slider: 269d81247e2a87358ee03241da55b00c919e4d7a
   React-perflogger: 48c6b363e867d64b682e84f80ca45636bd65e19c
   React-RCTActionSheet: 33c74fe5c754835e3715c300618da9aa2f7203fa
@@ -550,7 +550,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
   RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
   RNGestureHandler: 920eb17f5b1e15dae6e5ed1904045f8f90e0b11e
-  RNReanimated: ff1dba9450916aff36779c4e0d79fbcd38b2bbb6
+  RNReanimated: c3dfd2903fcc1de702c6213980d2b7ffe862b564
   RNScreens: 0df01424e9e0ed7827200d6ed1087ddd06c493f9
   RNSVG: 07037623c36f12e41312730622d5f6b3656227ca
   Yoga: 6c8252e38d65aa387daee699eacf027e055e0b31
