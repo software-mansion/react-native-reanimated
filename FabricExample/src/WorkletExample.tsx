@@ -76,7 +76,7 @@ export default function WorkletExample() {
 
   useAnimatedStyle(() => {
     if (_WORKLET && sv.value >= 1) {
-      throw new Error('Hello world from useAnimatedStyle! ' + Math.random());
+      throw new Error('Hello world from useAnimatedStyle!');
     }
     return {};
   });
