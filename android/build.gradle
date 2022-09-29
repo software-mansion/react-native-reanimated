@@ -790,6 +790,11 @@ afterEvaluate {
             def buildType = task.name.endsWith('Debug') ? 'Debug' : 'Release'
             task.dependsOn(":react-native-v8:copy${buildType}JniLibsProjectOnly")
         }
+    } else if (JS_RUNTIME == "jsc") {
+      extractAARHeaders.dependsOn(prepareJSC)
+      extractSOFiles.dependsOn(prepareJSC)
+    } else {
+      throw GradleScriptException("Unknown JS runtime ${JS_RUNTIME}.")
     }
 }
 

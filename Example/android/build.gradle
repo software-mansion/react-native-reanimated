@@ -25,8 +25,6 @@ buildscript {
 
 allprojects {
     repositories {
-        mavenCentral()
-        mavenLocal()
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
             url("$rootDir/../node_modules/react-native/android")
@@ -34,9 +32,18 @@ allprojects {
         maven {
             // Android JSC is installed from npm
             url("$rootDir/../node_modules/jsc-android/dist")
-            url "$rootDir/../node_modules/detox/Detox-android"
         }
-        maven { url 'https://www.jitpack.io' }
+        maven {
+            url("$rootDir/../node_modules/detox/Detox-android")
+        }
+        mavenCentral {
+            // We don't want to fetch react-native from Maven Central as there are
+            // older versions over there.
+            content {
+                excludeGroup "com.facebook.react"
+            }
+        }
         google()
+        maven { url 'https://www.jitpack.io' }
     }
 }
