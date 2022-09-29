@@ -23,10 +23,14 @@ std::shared_ptr<jsi::Function> WorkletsCache::getFunction(
   long long workletHash =
       ValueWrapper::asNumber(frozenObj->map["__workletHash"]->valueContainer);
   if (worklets.count(workletHash) == 0) {
+    // We need to add a newline before the closing bracket, because in debug
+    // builds the last line will be a source map, which is a comment and that
+    // would make the bracket part of the comment and cause an error due to a
+    // missing closing bracket.
     auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
         "(" +
         ValueWrapper::asString(frozenObj->map["asString"]->valueContainer) +
-        ")");
+        "\n)");
     auto func = rt.evaluateJavaScript(
                       codeBuffer,
                       ValueWrapper::asString(

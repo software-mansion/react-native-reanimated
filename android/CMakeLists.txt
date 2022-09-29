@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DRNVERSION=${RNVERSION} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall -Werror")
+set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DANDROID -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall -Werror")
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     set (ALL_FLAGS "${DEFAULT_FLAGS} -DRCT_NEW_ARCH_ENABLED")
 else()
@@ -46,7 +46,7 @@ file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
         set (
                 INCLUDE_JSI_CPP
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
@@ -86,6 +86,7 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/hermes"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/react/renderer/graphics/platform/cxx"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/runtimeexecutor"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
@@ -95,6 +96,7 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/SpecTools"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
         "${COMMON_SRC_DIR}/cpp/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
         "${COMMON_SRC_DIR}/cpp/Registries"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
@@ -126,7 +128,7 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
     find_library(
             FOLLY_LIB
             folly_json
@@ -142,7 +144,7 @@ else()
     )
 endif()
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
     set (JSI_LIB "")
 else()
     find_library(
@@ -234,7 +236,7 @@ target_link_libraries(
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-    if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+    if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
         # From `hermes-engine` npm package
         target_include_directories(
             ${PACKAGE_NAME}
@@ -248,6 +250,18 @@ if(${JS_RUNTIME} STREQUAL "hermes")
             PRIVATE
             "${JS_RUNTIME_DIR}/API"
             "${JS_RUNTIME_DIR}/public"
+        )
+    endif()
+    if (${HERMES_ENABLE_DEBUGGER})
+        find_library(
+                HERMES_EXECUTOR_LIB
+                hermes-executor-debug
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+        target_link_libraries(
+                ${PACKAGE_NAME}
+                ${HERMES_EXECUTOR_LIB}
         )
     endif()
     target_link_libraries(
@@ -302,7 +316,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
     )
 endif()
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
+if(${REACT_NATIVE_MINOR_VERSION} LESS 64)
     add_library(
             turbomodulejsijni
             # Sets the library as a shared library.

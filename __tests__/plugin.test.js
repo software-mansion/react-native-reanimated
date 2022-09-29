@@ -12,6 +12,10 @@ function runPlugin(input, opts = {}) {
 }
 
 describe('babel plugin', () => {
+  beforeAll(() => {
+    process.env.REANIMATED_PLUGIN_TESTS = 'jest';
+  });
+
   it('transforms', () => {
     const input = `
       import Animated, {

@@ -16,6 +16,12 @@ export default function ArticleProgressExample() {
     const measuredText = measure(textRef);
     const measuredScroll = measure(scrollViewRef);
 
+    if (!measuredText || !measuredScroll) {
+      return {
+        width: 0,
+      };
+    }
+
     const maxOffset = measuredText.height - measuredScroll.height;
 
     // We need this, because the useScrollViewOffset hook reports the offset of
