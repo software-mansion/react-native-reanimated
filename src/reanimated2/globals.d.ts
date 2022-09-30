@@ -13,7 +13,6 @@ declare global {
   const __reanimatedModuleProxy: NativeReanimated;
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const _log: (s: string) => void;
-  const _setGestureState: (handlerTag: number, newState: number) => void;
   const _getCurrentTime: () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _startObservingProgress: (
@@ -67,7 +66,6 @@ declare global {
       __reanimatedModuleProxy: NativeReanimated;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
-      _setGestureState: (handlerTag: number, newState: number) => void;
       _getCurrentTime: () => number;
       _stopObservingProgress: (tag: number, flag: boolean) => void;
       _startObservingProgress: (
