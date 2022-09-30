@@ -385,9 +385,13 @@ function isHermes() {
   return 'HermesInternal' in global;
 }
 
+function isDev() {
+  return '__DEV__' in global;
+}
+
 // If we are in debug mode on Hermes we want to always run a simple frame callback
 // to keep the runtime (and debugger console) responsive.
-if (__DEV__ && isHermes()) {
+if (isDev() && isHermes()) {
   function loop() {
     'worklet';
     // Inspired by
