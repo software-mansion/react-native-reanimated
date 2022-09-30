@@ -8,12 +8,12 @@ import { NativeReanimated } from './NativeReanimated/NativeReanimated';
 declare global {
   const _WORKLET: boolean;
   const _IS_FABRIC: boolean;
-  const _frameTimestamp: number;
+  const _frameTimestamp: number | null;
   const _eventTimestamp: number;
   const __reanimatedModuleProxy: NativeReanimated;
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const _log: (s: string) => void;
-  const _setGestureState: () => void;
+  const _setGestureState: (handlerTag: number, newState: number) => void;
   const _getCurrentTime: () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _startObservingProgress: (
@@ -62,12 +62,12 @@ declare global {
     interface Global {
       _WORKLET: boolean;
       _IS_FABRIC: boolean;
-      _frameTimestamp: number;
+      _frameTimestamp: number | null;
       _eventTimestamp: number;
       __reanimatedModuleProxy: NativeReanimated;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
-      _setGestureState: () => void;
+      _setGestureState: (handlerTag: number, newState: number) => void;
       _getCurrentTime: () => number;
       _stopObservingProgress: (tag: number, flag: boolean) => void;
       _startObservingProgress: (
