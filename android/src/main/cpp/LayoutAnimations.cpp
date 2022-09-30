@@ -87,6 +87,19 @@ bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
 
+void LayoutAnimations::stopAnimation(int tag) {
+  auto layoutAnimationProxyPtr = layoutAnimationProxy_.lock();
+  if (layoutAnimationProxyPtr != nullptr) {
+    layoutAnimationProxyPtr->stopObserving(tag, true);
+  }
+}
+
+void LayoutAnimations::setLayoutAnimationsProxy(
+  std::weak_ptr<LayoutAnimationsProxy> layoutAnimationProxy
+) {
+  layoutAnimationProxy_ = layoutAnimationProxy;
+}
+
 void LayoutAnimations::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
@@ -97,6 +110,7 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),
+      makeNativeMethod("stopAnimation", LayoutAnimations::stopAnimation),
   });
 }
 

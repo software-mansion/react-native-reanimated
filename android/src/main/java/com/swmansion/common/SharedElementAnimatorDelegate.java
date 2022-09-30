@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface SharedElementAnimatorDelegate {
   void runTransition(View before, View after);
-  void onNativeAnimationEnd(View screen);
+  void onNativeAnimationEnd(View screen, List<View> toRemove);
   void makeSnapshot(View view);
   Map<String, List<SharedViewConfig>> getSharedTransitionItems();
   List<String> getSharedElementsIterationOrder();

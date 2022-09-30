@@ -259,6 +259,7 @@ void NativeProxy::installJSIBindings(
           notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   layoutAnimations->cthis()->setWeakUIRuntime(wrt);
+  layoutAnimations->cthis()->setLayoutAnimationsProxy(layoutAnimationsProxy);
 
   // Layout Animations End
 

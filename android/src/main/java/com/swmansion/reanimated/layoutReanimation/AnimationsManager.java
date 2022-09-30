@@ -2,6 +2,7 @@ package com.swmansion.reanimated.layoutReanimation;
 
 import android.app.Activity;
 import android.content.res.Resources;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -26,6 +27,7 @@ import com.swmansion.reanimated.R;
 import com.swmansion.reanimated.Scheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -219,16 +221,22 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> targetValues = afterSnapshot.toTargetMap();
     HashMap<String, Object> startValues = beforeSnapshot.toCurrentMap();
 
-    HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues, false);
-    HashMap<String, Float> preparedTargetValues =
-        prepareDataForAnimationWorklet(targetValues, true);
+    HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(
+      startValues,
+      false
+    );
+    HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(
+      targetValues,
+      true
+    );
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    float statusBarHeight = PixelUtil.toDIPFromPixel(getStatusBarHeight());
-    preparedValues.put("currentOriginY", preparedValues.get("currentOriginY") - statusBarHeight);
-    preparedValues.put("targetOriginY", preparedValues.get("targetOriginY") - statusBarHeight);
-//    mNativeMethodsHolder.startAnimationForTag(before.getId(), "sharedElementTransition", preparedValues);
+//    float statusBarHeight = PixelUtil.toDIPFromPixel(getStatusBarHeight());
+//    preparedValues.put("currentOriginY", preparedValues.get("currentOriginY") - statusBarHeight);
+//    preparedValues.put("targetOriginY", preparedValues.get("targetOriginY") - statusBarHeight);
+
+    mNativeMethodsHolder.startAnimationForTag(before.getId(), "sharedElementTransition", preparedValues);
     mNativeMethodsHolder.startAnimationForTag(after.getId(), "sharedElementTransition", preparedValues);
   }
 
@@ -591,29 +599,28 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
-//      Rect newRect = new Rect(x, y, x + width, y + height);
-//      Rect convertedRect = convertRect(newRect);
-      Log.w("rea", "" + viewToUpdate.getParent().getClass());
+      Point newPoint = new Point(x, y);
+      Point convertedPoint = convertPoint(newPoint, (View)viewToUpdate.getParent(), (int)viewToUpdate.getId());
+      x = convertedPoint.x;
+      y = convertedPoint.y;
       viewToUpdate.layout(x, y, x + width, y + height);
     }
   }
 
-//  public static Rect convertRect(Rect fromRect, View fromView, View toView){
-//    int[] fromCoord = new int[2];
-//    int[] toCoord = new int[2];
-//    fromView.getLocationOnScreen(fromCoord);
-//    toView.getLocationOnScreen(toCoord);
-//
-//    int xShift = fromCoord[0] - toCoord[0];
-//    int yShift = fromCoord[1] - toCoord[1];
-//
-//    Rect toRect = new Rect(fromRect.left + xShift, fromRect.top + yShift,
-//            fromRect.right + xShift, fromRect.bottom + yShift);
-//
-//    return toRect;
-//  }
+  public static Point convertPoint(Point fromPoint, View parentView, int tag){
+    int[] toCord = new int[2];
+    parentView.getLocationOnScreen(toCord);
+    return new Point(
+      fromPoint.x - toCord[0],
+      fromPoint.y - toCord[1]
+    );
+  }
 
   public boolean isLayoutAnimationEnabled() {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
+  }
+
+  public void stopAnimation(int tag) {
+    mNativeMethodsHolder.stopAnimation(tag);
   }
 }
