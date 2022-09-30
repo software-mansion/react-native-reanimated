@@ -36,12 +36,14 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
 
     @Override
     public void onNativeAnimationEnd(View screen, List<View> toRemove) {
-        // restore state if you animate two objects
-//        snapshotRegistry.get()
-//        animationsManager.setNewProps();
-        // przeiterować i usunąć wszystkie configi z toRemove == true
+        // TODO: restore state and clear registry (toRemove == true)
         for (View view : toRemove) {
-            animationsManager.stopAnimation(view.getId());
+            int viewTag = view.getId();
+            animationsManager.stopAnimation(viewTag);
+            Snapshot snapshot = snapshotRegistry.get(viewTag);
+            if (snapshot != null) {
+                animationsManager.updateProps(snapshot.toBasicMap(), viewTag);
+            }
         }
     }
 

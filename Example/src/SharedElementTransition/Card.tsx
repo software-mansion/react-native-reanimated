@@ -38,26 +38,26 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
       style={{backgroundColor: 'red'}}
     > */}
     <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 20, backgroundColor: 'red' }}
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 20, backgroundColor: 'green' }}
       sharedTransitionTag={transitionTag + "1"}
     >
-      {/* <Animated.Text
+      <Animated.Text
         sharedTransitionTag={transitionTag + "2"}
         style={{ width: '100%', height: 20 }}
       >
         {title}
-      </Animated.Text> */}
+      </Animated.Text>
       <AnimatedImage 
         sharedTransitionTag={transitionTag + "3"}
         source={photo} 
         style={{ width: '100%', height: isOpen ? 300 : 100 }}
       />
-      {/* <Animated.Text
-        // sharedTransitionTag={transitionTag + "4"}
+      <Animated.Text
+        sharedTransitionTag={transitionTag + "4"}
         style={{ width: '100%', height: isOpen ? 100 : 0 }}
       >
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid, earum non, dignissimos fugit rerum exercitationem ab consequatur, error animi veritatis delectus. Nostrum sapiente distinctio possimus vel nam facilis ut?
-      </Animated.Text> */}
+      </Animated.Text>
     </Animated.View>
     {/* </Animated.View> */}
   </TouchableNativeFeedback>
@@ -67,7 +67,7 @@ function Screen1({ navigation }) {
   return (
     <Animated.ScrollView style={{ flex: 1, /* marginTop: 200 */ }}>
       {
-        [...Array(1)].map((_, i) => 
+        [...Array(6)].map((_, i) => 
           <Card 
             key={i} 
             navigation={navigation} 

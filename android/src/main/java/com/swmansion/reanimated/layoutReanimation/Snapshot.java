@@ -120,6 +120,15 @@ public class Snapshot {
     data.put(Snapshot.CURRENT_WIDTH, width);
   }
 
+  private void addBasicConfig(HashMap<String, Object> data) {
+    data.put(Snapshot.ORIGIN_Y, originY);
+    data.put(Snapshot.ORIGIN_X, originX);
+    data.put(Snapshot.GLOBAL_ORIGIN_Y, globalOriginY);
+    data.put(Snapshot.GLOBAL_ORIGIN_X, globalOriginX);
+    data.put(Snapshot.HEIGHT, height);
+    data.put(Snapshot.WIDTH, width);
+  }
+
   public HashMap<String, Object> toTargetMap() {
     HashMap<String, Object> data = new HashMap<>();
     addTargetConfig(data);
@@ -135,6 +144,12 @@ public class Snapshot {
   public HashMap<String, Object> toLayoutMap(Snapshot target) {
     HashMap<String, Object> data = target.toTargetMap();
     addCurrentConfig(data);
+    return data;
+  }
+
+  public HashMap<String, Object> toBasicMap() {
+    HashMap<String, Object> data = new HashMap<>();
+    addBasicConfig(data);
     return data;
   }
 }

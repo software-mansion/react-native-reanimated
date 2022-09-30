@@ -472,6 +472,22 @@ public class AnimationsManager implements ViewHierarchyObserver {
 //    viewManager.updateProperties(view, new ReactStylesDiffMap(javaOnlyMap));
 //  }
 
+  public void updateProps(HashMap<String, Object> newStyle, Integer tag) {
+    HashMap<String, Object> preparedValues = new HashMap<>();
+    for (String key : newStyle.keySet()) {
+      Object value = newStyle.get(key);
+      preparedValues.put(key, (double)PixelUtil.toDIPFromPixel((int) value));
+    }
+
+    setNewProps(
+      preparedValues,
+      mViewForTag.get(tag),
+      mViewManager.get(tag),
+      mParentViewManager.get(tag),
+      mParent.get(tag).getId()
+    );
+  }
+
   public void setNewProps(
           Map<String, Object> props,
           View view,
@@ -608,8 +624,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public static Point convertPoint(Point fromPoint, View parentView, int tag){
-    int[] toCord = new int[2];
-    parentView.getLocationOnScreen(toCord);
+    int[] toCord = {0, 0};
+    if (parentView != null) {
+      parentView.getLocationOnScreen(toCord);
+    }
+    // int[] toCord = new int[2];
+    // parentView.getLocationOnScreen(toCord);
     return new Point(
       fromPoint.x - toCord[0],
       fromPoint.y - toCord[1]
