@@ -1,5 +1,5 @@
 {
-  "name": "react-native-reanimated",
+  "name": "@paladin-analytics/react-native-reanimated",
   "version": "3.0.0-rc.3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
@@ -59,7 +59,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
+    "url": "git://github.com/Paladin-Analytics/react-native-reanimated.git"
   },
   "author": {
     "email": "krzys.magiera@gmail.com",
