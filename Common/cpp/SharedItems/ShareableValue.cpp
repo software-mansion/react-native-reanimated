@@ -24,10 +24,10 @@ const char *CALLBACK_ERROR_SUFFIX =
     "b) If you want to execute this method on the JS thread, wrap it using runOnJS";
 
 class ShareableValueRef : public jsi::HostObject {
-public:
+ public:
   std::shared_ptr<ShareableValue> value;
-  ShareableValueRef(std::shared_ptr<ShareableValue> _value) : value(_value) {};
-  ~ShareableValueRef() {};
+  ShareableValueRef(std::shared_ptr<ShareableValue> _value) : value(_value){};
+  ~ShareableValueRef(){};
 };
 
 void addHiddenProperty(
@@ -55,7 +55,6 @@ void ShareableValue::adapt(
     jsi::Runtime &rt,
     const jsi::Value &value,
     ValueType objectType) {
-
   if (objectType == ValueType::MutableValueType) {
     type = ValueType::MutableValueType;
     valueContainer =
@@ -151,15 +150,18 @@ void ShareableValue::adapt(
 
 static int counter;
 
-ShareableValue::ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s) : StoreUser(s, *runtimeManager), runtimeManager(runtimeManager) {
+ShareableValue::ShareableValue(
+    RuntimeManager *runtimeManager,
+    std::shared_ptr<Scheduler> s)
+    : StoreUser(s, *runtimeManager), runtimeManager(runtimeManager) {
   counter++;
-  Logger::log("Create shareable value");
+  // Logger::log("Create shareable value");
 }
 
 ShareableValue::~ShareableValue() {
   counter--;
-  Logger::log("DESTROY SHAREABLE VALUE");
-  Logger::log(counter);
+  // Logger::log("DESTROY SHAREABLE VALUE");
+  // Logger::log(counter);
 }
 
 std::shared_ptr<ShareableValue> ShareableValue::adapt(
@@ -167,7 +169,8 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(
     const jsi::Value &value,
     RuntimeManager *runtimeManager,
     ValueType valueType) {
-  auto sv = std::make_shared<ShareableValue>(runtimeManager, runtimeManager->scheduler);
+  auto sv = std::make_shared<ShareableValue>(
+      runtimeManager, runtimeManager->scheduler);
   sv->adapt(rt, value, valueType);
   return sv;
 }

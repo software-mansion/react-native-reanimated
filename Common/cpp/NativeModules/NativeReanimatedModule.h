@@ -29,10 +29,10 @@ class ShareableValue;
 class MutableValue;
 class MapperRegistry;
 class EventHandlerRegistry;
+class JSRuntimeHelper;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec,
-                               public RuntimeManager,
-                               public std::enable_shared_from_this<RuntimeManager> {
+                               public RuntimeManager {
   friend ShareableValue;
   friend MutableValue;
 
@@ -51,18 +51,25 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper;
+
   void installCoreFunctions(
       jsi::Runtime &rt,
       const jsi::Value &valueSetter,
       const jsi::Value &workletMaker) override;
 
-  jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value) override;
+  jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
+      override;
   jsi::Value makeShareable(jsi::Runtime &rt, const jsi::Value &value) override;
   jsi::Value makeMutable(jsi::Runtime &rt, const jsi::Value &value) override;
   jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   void scheduleOnJS(jsi::Runtime &rt, const jsi::Value &function) override;
+
+  jsi::Value makeReactiveValue(
+      jsi::Runtime &rt,
+      const jsi::Value &initialShareable) override;
 
   jsi::Value startMapper(
       jsi::Runtime &rt,

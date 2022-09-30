@@ -171,17 +171,81 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
+class CoreFunction;
+
+class JSRuntimeHelper {
+ public:
+  jsi::Runtime *uiRuntime; // UI runtime created by Reanimated
+  jsi::Runtime *rnRuntime; // React-Naitve's main JS runtime
+
+  JSRuntimeHelper(jsi::Runtime *_rnRuntime, jsi::Runtime *_uiRuntime)
+      : rnRuntime(_rnRuntime), uiRuntime(_uiRuntime) {}
+
+  std::shared_ptr<CoreFunction> valueUnpacker;
+
+  inline bool isUIRuntime(const jsi::Runtime &rt) const {
+    return &rt == uiRuntime;
+  }
+
+  inline bool isRNRuntime(const jsi::Runtime &rt) const {
+    return &rt == rnRuntime;
+  }
+};
+
+// Core functions are not allowed to captrue oputside variables, otherwise the'd
+// try to access _closure variable which is something we want to avoid for
+// simplicity reasons.
+class CoreFunction {
+ private:
+  std::shared_ptr<jsi::Function> rnFunction;
+  std::shared_ptr<jsi::Function> uiFunction;
+  std::string functionBody;
+  JSRuntimeHelper
+      *runtimeHelper; // runtime helper holds core function references, so we
+                      // use normal pointer here to avoid ref cycles.
+ public:
+  CoreFunction(JSRuntimeHelper *_runtimeHelper, const jsi::Value &workletObject)
+      : runtimeHelper(_runtimeHelper) {
+    jsi::Runtime &rt = *_runtimeHelper->rnRuntime;
+    rnFunction = std::make_shared<jsi::Function>(
+        workletObject.asObject(rt).asFunction(rt));
+    functionBody = workletObject.asObject(rt)
+                       .getProperty(rt, "asString")
+                       .asString(rt)
+                       .utf8(rt);
+  }
+  jsi::Value call(jsi::Runtime &rt, const jsi::Value &arg0) {
+    if (runtimeHelper->isUIRuntime(rt)) {
+      if (uiFunction == nullptr) {
+        // maybe need to initialize UI Function
+        auto codeBuffer =
+            std::make_shared<const jsi::StringBuffer>("(" + functionBody + ")");
+        uiFunction = std::make_shared<jsi::Function>(
+            rt.evaluateJavaScript(codeBuffer, "__TODO")
+                .asObject(rt)
+                .asFunction(rt));
+      }
+      return uiFunction->call(rt, arg0);
+    } else {
+      // running on the main RN runtime
+      return rnFunction->call(rt, arg0);
+    }
+  }
+};
+
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueSetter,
     const jsi::Value &valueUnpacker) {
   this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
-  this->valueUnpacker = std::make_shared<CoreUIFunction>(rt, valueUnpacker);
+  runtimeHelper = std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get());
+  runtimeHelper->valueUnpacker =
+      std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
 
 class Shareable {
-public:
-  virtual ~Shareable() {};
+ public:
+  virtual ~Shareable(){};
 
   enum ValueType {
     UndefinedType,
@@ -195,42 +259,82 @@ public:
     ObjectType,
     ArrayType,
     WorkletType,
+    ReactiveType,
   };
 
-  Shareable(ValueType valueType_) : valueType(valueType_) {};
-  virtual jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) = 0;
+  Shareable(ValueType valueType_) : valueType(valueType_){};
+  virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
 
   ValueType valueType;
 
-  static std::shared_ptr<Shareable> newShareable(jsi::Runtime &rt, const jsi::Value &value);
+  static std::shared_ptr<Shareable> newShareable(
+      jsi::Runtime &rt,
+      const jsi::Value &value);
 };
 
 class ShareableJSRef : public jsi::HostObject {
-public:
+ public:
   std::shared_ptr<Shareable> value;
-  ShareableJSRef(std::shared_ptr<Shareable> _value) : value(_value) {};
-  virtual ~ShareableJSRef() {};
+  ShareableJSRef(std::shared_ptr<Shareable> _value) : value(_value){};
+  virtual ~ShareableJSRef(){};
 
-  static jsi::Object newHostObject(jsi::Runtime &rt, std::shared_ptr<Shareable> value) {
-    return jsi::Object::createFromHostObject(rt, std::make_shared<ShareableJSRef>(value));
+  static jsi::Object newHostObject(
+      jsi::Runtime &rt,
+      const std::shared_ptr<Shareable> &value) {
+    return jsi::Object::createFromHostObject(
+        rt, std::make_shared<ShareableJSRef>(value));
   }
 };
 
-static std::shared_ptr<Shareable> extractShareableOrThrow(jsi::Runtime &rt, const jsi::Value &maybeShareableValue) {
+static std::shared_ptr<Shareable> extractShareableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Value &maybeShareableValue) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
     if (object.isHostObject<ShareableJSRef>(rt)) {
       return object.getHostObject<ShareableJSRef>(rt)->value;
     }
   } else if (maybeShareableValue.isNumber()) {
-
   }
   throw std::string("value is not shareable");
 }
 
+class ShareableReactiveHostObject : public jsi::HostObject {
+ public:
+  std::shared_ptr<RuntimeManager> runtimeManager;
+  std::shared_ptr<Shareable> value;
+  jsi::Value rnValue;
+  jsi::Value uiValue;
+  ShareableReactiveHostObject(std::shared_ptr<Shareable> _value)
+      : value(_value){};
+  virtual ~ShareableReactiveHostObject(){};
+
+  jsi::Value get(jsi::Runtime &, const jsi::PropNameID &name) override {
+    return jsi::Value();
+  }
+
+  void set(
+      jsi::Runtime &rt,
+      const jsi::PropNameID &name,
+      const jsi::Value &jsValue) override {
+    if (name.utf8(rt) == "value") {
+      value = extractShareableOrThrow(rt, jsValue);
+      // TODO: mutex + notify + schedule sth on UI?
+    }
+  }
+
+  static jsi::Object newHostObject(
+      jsi::Runtime &rt,
+      const std::shared_ptr<Shareable> &value) {
+    return jsi::Object::createFromHostObject(
+        rt, std::make_shared<ShareableReactiveHostObject>(value));
+  }
+};
+
 class ShareableArray : public Shareable {
-public:
-  ShareableArray(jsi::Runtime &rt, const jsi::Array &array) : Shareable(ArrayType) {
+ public:
+  ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
+      : Shareable(ArrayType) {
     const size_t count = array.size(rt);
     data.reserve(count);
     for (size_t i = 0; i < count; i++) {
@@ -238,21 +342,22 @@ public:
     }
   }
 
-  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
-    jsi::Runtime &rt = *runtimeManager->runtime;
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
     auto ary = jsi::Array(rt, data.size());
     for (size_t i = 0; i < data.size(); i++) {
-      ary.setValueAtIndex(rt, i, data[i]->toJSValue(runtimeManager));
+      ary.setValueAtIndex(rt, i, data[i]->toJSValue(rt));
     }
     return ary;
   }
-protected:
+
+ protected:
   std::vector<std::shared_ptr<Shareable>> data;
 };
 
 class ShareableObject : public Shareable {
-public:
-  ShareableObject(jsi::Runtime &rt, const jsi::Object &object) : Shareable(ObjectType) {
+ public:
+  ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
+      : Shareable(ObjectType) {
     auto propertyNames = object.getPropertyNames(rt);
     const size_t count = propertyNames.size(rt);
     data.reserve(count);
@@ -262,45 +367,71 @@ public:
       data.push_back(std::make_pair(key.utf8(rt), value));
     }
   }
-  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
-    jsi::Runtime &rt = *runtimeManager->runtime;
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
     auto obj = jsi::Object(rt);
     for (size_t i = 0; i < data.size(); i++) {
-      obj.setProperty(rt, data[i].first.c_str(), data[i].second->toJSValue(runtimeManager));
+      obj.setProperty(rt, data[i].first.c_str(), data[i].second->toJSValue(rt));
     }
     return obj;
   }
-protected:
-  std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data;
 
+ protected:
+  std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data;
 };
 
 class ShareableWorklet : public ShareableObject {
-public:
-  ShareableWorklet(jsi::Runtime & rt, const jsi::Object &worklet) : ShareableObject(rt, worklet) {
+ public:
+  JSRuntimeHelper *runtimeHelper;
+  ShareableWorklet(
+      JSRuntimeHelper *_runtimeHelper,
+      jsi::Runtime &rt,
+      const jsi::Object &worklet)
+      : ShareableObject(rt, worklet), runtimeHelper(_runtimeHelper) {
     valueType = WorkletType;
   }
-  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
-    jsi::Value obj = ShareableObject::toJSValue(runtimeManager);
-    return runtimeManager->valueUnpacker->call(*runtimeManager->runtime, obj);
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    jsi::Value obj = ShareableObject::toJSValue(rt);
+    return runtimeHelper->valueUnpacker->call(rt, obj);
   }
 };
 
+class ShareableReactive : public Shareable {
+ public:
+  ShareableReactive(jsi::Runtime &rt, const jsi::Value &initial)
+      : Shareable(ReactiveType) {
+    value = extractShareableOrThrow(rt, initial);
+  }
+  void updateAndNotify(jsi::Runtime &rt, const jsi::Value &newValue) {}
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    //    jsi::Runtime &rt = *runtimeManager->runtime;
+    //    auto obj = jsi::Object(rt);
+    //    for (size_t i = 0; i < data.size(); i++) {
+    //      obj.setProperty(rt, data[i].first.c_str(),
+    //      data[i].second->toJSValue(runtimeManager));
+    //    }
+    return jsi::Value();
+  }
+
+ protected:
+  std::shared_ptr<Shareable> value;
+};
+
 class ShareableString : public Shareable {
-public:
-  ShareableString(jsi::Runtime &rt, const jsi::String &string) : Shareable(StringType) {
+ public:
+  ShareableString(jsi::Runtime &rt, const jsi::String &string)
+      : Shareable(StringType) {
     data = string.utf8(rt);
   }
-  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
-    return jsi::String::createFromUtf8(*runtimeManager->runtime, data);
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    return jsi::String::createFromUtf8(rt, data);
   }
-protected:
+
+ protected:
   std::string data;
 };
 
 class ShareableScalar : public Shareable {
-public:
-
+ public:
   ShareableScalar(double number) : Shareable(NumberType) {
     data.number = number;
   };
@@ -310,7 +441,7 @@ public:
   ShareableScalar() : Shareable(UndefinedType) {}
   ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
-  jsi::Value toJSValue(std::shared_ptr<RuntimeManager> runtimeManager) override {
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
     switch (valueType) {
       case Shareable::UndefinedType:
         return jsi::Value();
@@ -325,7 +456,7 @@ public:
     }
   }
 
-protected:
+ protected:
   union Data {
     bool boolean;
     double number;
@@ -334,51 +465,61 @@ protected:
   Data data;
 };
 
-std::shared_ptr<Shareable> Shareable::newShareable(jsi::Runtime &rt, const jsi::Value &value) {
-  if (value.isObject()) {
-    auto object = value.asObject(rt);
-    if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      return std::make_shared<ShareableWorklet>(rt, object);
-    } else if (object.isArray(rt)) {
-      return std::make_shared<ShareableArray>(rt, object.asArray(rt));
-    } else {
-      return std::make_shared<ShareableObject>(rt, object);
-    }
-  } else if (value.isString()) {
-    return std::make_shared<ShareableString>(rt, value.asString(rt));
-  } else if (value.isUndefined()) {
-    return std::make_shared<ShareableScalar>();
-  } else if (value.isNull()) {
-    return std::make_shared<ShareableScalar>(nullptr);
-  } else if (value.isBool()) {
-    return std::make_shared<ShareableScalar>(value.getBool());
-  } else if (value.isNumber()) {
-    return std::make_shared<ShareableScalar>(value.getNumber());
-  } else {
-    throw "something wacky";
-  }
-}
-
-
-void NativeReanimatedModule::scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) {
+void NativeReanimatedModule::scheduleOnUI(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow(rt, worklet);
-  assert(shareableWorklet->valueType == Shareable::WorkletType && "only worklets can be scheduled to run on UI");
-  auto runtimeManager = shared_from_this();
+  assert(
+      shareableWorklet->valueType == Shareable::WorkletType &&
+      "only worklets can be scheduled to run on UI");
+  auto uiRuntime = runtimeHelper->uiRuntime;
   scheduler->scheduleOnUI([=] {
-    jsi::Runtime &rt = *runtimeManager->runtime;
-    auto workletValue = shareableWorklet->toJSValue(runtimeManager);
+    jsi::Runtime &rt = *uiRuntime;
+    auto workletValue = shareableWorklet->toJSValue(rt);
     workletValue.asObject(rt).asFunction(rt).call(rt);
   });
 }
 
-void NativeReanimatedModule::scheduleOnJS(jsi::Runtime &rt, const jsi::Value &function) {
+void NativeReanimatedModule::scheduleOnJS(
+    jsi::Runtime &rt,
+    const jsi::Value &function) {
   // do nothing
+}
+
+jsi::Value NativeReanimatedModule::makeReactiveValue(
+    jsi::Runtime &rt,
+    const jsi::Value &initialShareable) {
+  return jsi::Value();
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value) {
-  return ShareableJSRef::newHostObject(rt, Shareable::newShareable(rt, value));
+  std::shared_ptr<Shareable> shareable;
+  if (value.isObject()) {
+    auto object = value.asObject(rt);
+    if (!object.getProperty(rt, "__workletHash").isUndefined()) {
+      shareable =
+          std::make_shared<ShareableWorklet>(runtimeHelper.get(), rt, object);
+    } else if (object.isArray(rt)) {
+      shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
+    } else {
+      shareable = std::make_shared<ShareableObject>(rt, object);
+    }
+  } else if (value.isString()) {
+    shareable = std::make_shared<ShareableString>(rt, value.asString(rt));
+  } else if (value.isUndefined()) {
+    shareable = std::make_shared<ShareableScalar>();
+  } else if (value.isNull()) {
+    shareable = std::make_shared<ShareableScalar>(nullptr);
+  } else if (value.isBool()) {
+    shareable = std::make_shared<ShareableScalar>(value.getBool());
+  } else if (value.isNumber()) {
+    shareable = std::make_shared<ShareableScalar>(value.getNumber());
+  } else {
+    throw "something wacky";
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value NativeReanimatedModule::makeShareable(

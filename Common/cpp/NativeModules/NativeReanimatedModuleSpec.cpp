@@ -66,6 +66,17 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
   return jsi::Value::undefined();
 }
 
+// reactive
+
+static jsi::Value SPEC_PREFIX(makeReactiveValue)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->makeReactiveValue(rt, std::move(args[0]));
+}
+
 // mappers
 
 static jsi::Value SPEC_PREFIX(startMapper)(
@@ -188,7 +199,10 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["installCoreFunctions"] =
       MethodMetadata{2, SPEC_PREFIX(installCoreFunctions)};
 
-  methodMap_["makeShareableClone"] = MethodMetadata{1, SPEC_PREFIX(makeShareableClone)};
+  methodMap_["makeShareableClone"] =
+      MethodMetadata{1, SPEC_PREFIX(makeShareableClone)};
+  methodMap_["makeReactiveValue"] =
+      MethodMetadata{1, SPEC_PREFIX(makeReactiveValue)};
   methodMap_["makeShareable"] = MethodMetadata{1, SPEC_PREFIX(makeShareable)};
   methodMap_["makeMutable"] = MethodMetadata{1, SPEC_PREFIX(makeMutable)};
   methodMap_["makeRemote"] = MethodMetadata{1, SPEC_PREFIX(makeRemote)};
