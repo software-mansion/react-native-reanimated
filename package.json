@@ -68,9 +68,9 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/software-mansion/react-native-reanimated/issues"
+    "url": "https://github.com/Paladin-Analytics/react-native-reanimated/issues"
   },
-  "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
+  "homepage": "https://github.com/Paladin-Analytics/react-native-reanimated#readme",
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
