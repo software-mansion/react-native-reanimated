@@ -3,8 +3,8 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <utility>
-#include "SharedParent.h"
 #include "Logger.h"
+#include "SharedParent.h"
 
 using namespace facebook;
 
@@ -18,8 +18,8 @@ class MutableValueSetterProxy : public jsi::HostObject {
  public:
   explicit MutableValueSetterProxy(std::shared_ptr<MutableValue> mutableValue)
       : mutableValue(std::move(mutableValue)) {
-        Logger::log("Create MVSP");
-      }
+    Logger::log("Create MVSP");
+  }
   ~MutableValueSetterProxy() {
     Logger::log("Destroy MVSP");
   }

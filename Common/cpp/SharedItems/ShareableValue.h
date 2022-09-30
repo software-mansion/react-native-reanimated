@@ -44,8 +44,8 @@ class ShareableValue : public std::enable_shared_from_this<ShareableValue>,
   std::string demangleExceptionName(std::string toDemangle);
 
  public:
-                         ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s);
-                         ~ShareableValue();
+  ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s);
+  ~ShareableValue();
   ValueType type = ValueType::UndefinedType;
   static std::shared_ptr<ShareableValue> adapt(
       jsi::Runtime &rt,
