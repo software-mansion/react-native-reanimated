@@ -18,8 +18,12 @@ void AndroidErrorHandler::raiseSpec() {
   }
 
   static const auto cls = javaClassStatic();
-  static auto method = cls->getStaticMethod<void()>("raise");
-  method(cls);
+  static auto setMessage =
+      cls->getStaticMethod<void(std::string)>("setMessage");
+  setMessage(cls, this->error->message);
+  static auto raise = cls->getStaticMethod<void()>("raise");
+  raise(cls);
+
   this->error->handled = true;
 }
 
