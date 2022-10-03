@@ -65,10 +65,8 @@ jobs:
       - name: Restore build artifacts from cache
         uses: actions/cache@v3
         with:
-          path: |
-            ${{ matrix.working-directory }}/ios/build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-ios-build-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-ios-derived-data-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}
