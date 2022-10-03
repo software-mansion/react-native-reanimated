@@ -1,301 +1,297 @@
-/* eslint-disable react-native/no-inline-styles */
-/* global _WORKLET */
-import Animated, {
-  runOnJS,
-  runOnUI,
-  useAnimatedGestureHandler,
-  useAnimatedRef,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useDerivedValue,
-  useFrameCallback,
-  useScrollViewOffset,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
-import { Button, Text, View } from 'react-native';
+import React from 'react';
 import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-  PanGestureHandler,
-} from 'react-native-gesture-handler';
-import React, { useEffect } from 'react';
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  LogBox,
+  Platform,
+  UIManager,
+  ScrollView,
+} from 'react-native';
+import { RectButton } from 'react-native-gesture-handler';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+import {
+  Carousel,
+  CustomLayoutAnimationScreen,
+  DefaultAnimations,
+  Modal,
+  ModalNewAPI,
+  MountingUnmounting,
+  SpringLayoutAnimation,
+  SwipeableList,
+  NativeModals,
+} from './LayoutReanimation';
 
-import { Screen } from 'react-native-screens';
+import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import AnimatedTabBarExample from './AnimatedTabBarExample';
+import ChatHeadsExample from './ChatHeadsExample';
+import { PagerExample } from './CustomHandler';
+import DragAndSnapExample from './DragAndSnapExample';
+import ExtrapolationExample from './ExtrapolationExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import FrameCallbackExample from './FrameCallbackExample';
+import LightboxExample from './LightboxExample';
+import LiquidSwipe from './LiquidSwipe';
+import MeasureExample from './MeasureExample';
+import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import { ReactionsCounterExample } from './ReactionsCounterExample';
+import ScrollEventExample from './ScrollEventExample';
+import ScrollExample from './AnimatedScrollExample';
+import ScrollToExample from './ScrollToExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SwipeableListExample from './SwipeableListExample';
+import WobbleExample from './WobbleExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 
-declare global {
-  const _WORKLET: boolean;
+LogBox.ignoreLogs(['Calling `getNode()`']);
+
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
 }
 
-function RunOnUIDemo() {
-  const someWorklet = (x: number) => {
-    'worklet';
-    console.log(_WORKLET, x); // _WORKLET should be true
-  };
+type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
-  const handlePress = () => {
-    runOnUI(someWorklet)(Math.random());
-  };
+const SCREENS: Screens = {
+  DefaultAnimations: {
+    screen: DefaultAnimations,
+    title: '🆕 Default layout animations',
+  },
+  AnimatedKeyboard: {
+    screen: AnimatedKeyboardExample,
+    title: '🆕 Use Animated Keyboard',
+  },
+  AnimatedSensor: {
+    screen: AnimatedSensorExample,
+    title: '🆕 Use Animated Sensor',
+  },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: '🆕 Frame callback example',
+  },
+  DefaultTransistions: {
+    screen: WaterfallGridExample,
+    title: '🆕 Default layout transitions',
+  },
+  KeyframeAnimation: {
+    screen: KeyframeAnimation,
+    title: '🆕 Keyframe animation',
+  },
+  ParticipantList: {
+    screen: AnimatedListExample,
+    title: '🆕 Participant List',
+  },
+  OlympicAnimation: {
+    screen: OlympicAnimation,
+    title: '🆕 Olympic animation',
+  },
+  CustomLayoutAnimation: {
+    screen: CustomLayoutAnimationScreen,
+    title: '🆕 Custom layout animation',
+  },
+  ModalNewAPI: {
+    title: '🆕 ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    title: '🆕 Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    title: '🆕 Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  ReactionsCounterExample: {
+    screen: ReactionsCounterExample,
+    title: '🆕 Reactions counter',
+  },
+  SwipeableList: {
+    title: '🆕 Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    title: '🆕 Modal',
+    screen: Modal,
+  },
+  NativeModals: {
+    title: '🆕 Native modals (RN and Screens)',
+    screen: NativeModals,
+  },
+  Carousel: {
+    title: 'Carousel',
+    screen: Carousel,
+  },
+  PagerExample: {
+    screen: PagerExample,
+    title: 'Custom Handler Example - Pager',
+  },
+  AnimatedStyleUpdate: {
+    screen: AnimatedStyleUpdateExample,
+    title: 'Animated Style Update',
+  },
+  AnimatedSharedStyle: {
+    screen: AnimatedSharedStyleExample,
+    title: 'Animated Shared Style',
+  },
+  WobbleExample: {
+    screen: WobbleExample,
+    title: 'Animation Modifiers (Wobble Effect)',
+  },
+  DragAndSnapExample: {
+    screen: DragAndSnapExample,
+    title: 'Drag and Snap',
+  },
+  MeasureExample: {
+    screen: MeasureExample,
+    title: 'Synchronous Measure',
+  },
+  ScrollEventExample: {
+    screen: ScrollEventExample,
+    title: 'Scroll Events',
+  },
+  ScrollViewOffsetExample: {
+    screen: ScrollViewOffsetExample,
+    title: 'ScrollView offset',
+  },
+  ChatHeadsExample: {
+    screen: ChatHeadsExample,
+    title: 'Chat Heads',
+  },
+  ScrollableToExample: {
+    screen: ScrollToExample,
+    title: 'scrollTo',
+  },
+  SwipeableListExample: {
+    screen: SwipeableListExample,
+    title: '(advanced) Swipeable List',
+  },
+  LightboxExample: {
+    screen: LightboxExample,
+    title: '(advanced) Lightbox',
+  },
+  ScrollableViewExample: {
+    screen: ScrollableViewExample,
+    title: '(advanced) ScrollView imitation',
+  },
+  AnimatedTabBarExample: {
+    screen: AnimatedTabBarExample,
+    title: '(advanced) Tab Bar Example',
+  },
+  LiquidSwipe: {
+    screen: LiquidSwipe,
+    title: 'Liquid Swipe Example',
+  },
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: 'Extrapolation Example',
+  },
+  ScrollExample: {
+    screen: ScrollExample,
+    title: 'Scroll Example',
+  },
+};
 
-  return <Button onPress={handlePress} title="runOnUI demo" />;
-}
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
+};
 
-function RunOnUIRunOnJSDemo() {
-  const someFunction = (x: number) => {
-    console.log(_WORKLET, x); // _WORKLET should be false
-  };
-
-  const someWorklet = (x: number) => {
-    'worklet';
-    console.log(_WORKLET, x); // _WORKLET should be true
-    runOnJS(someFunction)(x);
-  };
-
-  const handlePress = () => {
-    runOnUI(someWorklet)(Math.random());
-  };
-
-  return <Button onPress={handlePress} title="runOnUI + runOnJS demo" />;
-}
-
-function UseDerivedValueRunOnJSDemo() {
-  const sv = useSharedValue(0);
-
-  const someFunction = (x: number) => {
-    console.log(_WORKLET, x); // _WORKLET should be false
-  };
-
-  useDerivedValue(() => {
-    console.log(_WORKLET, sv.value);
-    runOnJS(someFunction)(sv.value);
-  });
-
-  const handlePress = () => {
-    sv.value = 1 + Math.random();
-  };
-
+function MainScreen({ navigation }: MainScreenProps) {
+  const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
-    <Button onPress={handlePress} title="useDerivedValue + runOnJS demo" />
-  );
-}
-
-function ThrowErrorDemo() {
-  const handlePress = () => {
-    throw new Error('Hello world from React Native JS!');
-  };
-
-  return <Button onPress={handlePress} title="Throw error on JS" />;
-}
-
-function ThrowErrorWorkletDemo() {
-  const someWorklet = () => {
-    'worklet';
-    throw new Error('Hello world from worklet!');
-  };
-
-  const handlePress = () => {
-    runOnUI(someWorklet)();
-  };
-
-  return <Button onPress={handlePress} title="Throw error from worklet" />;
-}
-
-function ThrowErrorNestedWorkletDemo() {
-  const innerWorklet = () => {
-    'worklet';
-    throw new Error('Hello world from nested worklet!');
-  };
-
-  const outerWorklet = () => {
-    'worklet';
-    innerWorklet();
-  };
-
-  const handlePress = () => {
-    runOnUI(outerWorklet)();
-  };
-
-  return (
-    <Button onPress={handlePress} title="Throw error from nested worklet" />
-  );
-}
-
-function ThrowErrorFromUseAnimatedStyle() {
-  const sv = useSharedValue(0);
-
-  useAnimatedStyle(() => {
-    if (!_WORKLET || sv.value === 0) {
-      return {}; // prevent throwing error on first render or from JS context
-    }
-    throw new Error('Hello world from useAnimatedStyle!');
-  });
-
-  const handlePress = () => {
-    sv.value = 1 + Math.random();
-  };
-
-  return (
-    <Button onPress={handlePress} title="Throw error from useAnimatedStyle" />
-  );
-}
-
-function ThrowErrorFromUseDerivedValue() {
-  const sv = useSharedValue(0);
-
-  useDerivedValue(() => {
-    if (!_WORKLET || sv.value === 0) {
-      return {}; // prevent throwing error on first render or from JS context
-    }
-    throw new Error('Hello world from useDerivedValue!');
-  }, [sv]);
-
-  const handlePress = () => {
-    sv.value = 1 + Math.random();
-  };
-
-  return (
-    <Button onPress={handlePress} title="Throw error from useDerivedValue" />
-  );
-}
-
-function ThrowErrorFromUseFrameCallback() {
-  const sv = useSharedValue(false);
-
-  useFrameCallback(() => {
-    if (sv.value) {
-      sv.value = false;
-      throw new Error('Hello world from useFrameCallback!');
-    }
-  }, true);
-
-  const handlePress = () => {
-    sv.value = true;
-  };
-
-  return (
-    <Button onPress={handlePress} title="Throw error from useFrameCallback" />
-  );
-}
-
-function ThrowErrorFromGestureDetector() {
-  const gesture = Gesture.Pan().onChange(() => {
-    throw Error('Hello world from GestureDetector callback!');
-  });
-
-  return (
-    <GestureDetector gesture={gesture}>
-      <View style={{ width: 100, height: 100, backgroundColor: 'tomato' }}>
-        <Text>GestureDetector</Text>
-      </View>
-    </GestureDetector>
-  );
-}
-
-function ThrowErrorFromUseAnimatedGestureHandler() {
-  const gestureHandler = useAnimatedGestureHandler({
-    onActive: () => {
-      throw Error('Hello world from useAnimatedGestureHandler');
-    },
-  });
-
-  return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
-      <Animated.View
-        style={{ width: 100, height: 100, backgroundColor: 'gold' }}>
-        <Text>PanGestureHandler + useAnimatedGestureHandler</Text>
-      </Animated.View>
-    </PanGestureHandler>
-  );
-}
-
-function ThrowErrorFromUseAnimatedScrollHandler() {
-  const scrollHandler = useAnimatedScrollHandler(() => {
-    throw Error('Hello world from useAnimatedScrollHandler');
-  });
-
-  return (
-    <View style={{ height: 100 }}>
-      <Animated.ScrollView scrollEventThrottle={16} onScroll={scrollHandler}>
-        <View
-          style={{
-            width: 100,
-            height: 500,
-            backgroundColor: 'lime',
-          }}>
-          <Text>useAnimatedScrollHandler</Text>
-        </View>
-      </Animated.ScrollView>
-    </View>
-  );
-}
-
-function ThrowErrorFromUseScrollViewOffset() {
-  const aref = useAnimatedRef<Animated.ScrollView>();
-
-  const offset = useScrollViewOffset(aref);
-
-  useAnimatedStyle(() => {
-    if (_WORKLET && offset.value > 0) {
-      throw Error('Hello world from useScrollViewOffset');
-    }
-    return {};
-  });
-
-  return (
-    <View style={{ height: 100 }}>
-      <Animated.ScrollView scrollEventThrottle={16} ref={aref}>
-        <View
-          style={{
-            width: 100,
-            height: 500,
-            backgroundColor: 'cyan',
-          }}>
-          <Text>useScrollViewOffset + useAnimatedStyle</Text>
-        </View>
-      </Animated.ScrollView>
-    </View>
-  );
-}
-
-function Animation() {
-  const sv = useSharedValue(0);
-
-  useEffect(() => {
-    sv.value = 0;
-    sv.value = withRepeat(withTiming(300), -1, true);
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({ width: sv.value }));
-
-  return (
-    <Animated.View
-      style={[{ height: 15, backgroundColor: 'black' }, animatedStyle]}
+    <FlatList
+      style={styles.list}
+      data={data}
+      ItemSeparatorComponent={ItemSeparator}
+      renderItem={(props) => (
+        <MainScreenItem
+          {...props}
+          screens={SCREENS}
+          onPressItem={({ key }) => navigation.navigate(key)}
+        />
+      )}
+      renderScrollComponent={(props) => <ScrollView {...props} />}
     />
   );
 }
 
-export default function WorkletExample() {
+export function ItemSeparator(): React.ReactElement {
+  return <View style={styles.separator} />;
+}
+
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export function MainScreenItem({
+  item,
+  onPressItem,
+  screens,
+}: MainScreenItemProps): React.ReactElement {
+  const { key } = item;
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Screen
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <RunOnUIDemo />
-        <RunOnUIRunOnJSDemo />
-        <UseDerivedValueRunOnJSDemo />
-        <ThrowErrorDemo />
-        <ThrowErrorWorkletDemo />
-        <ThrowErrorNestedWorkletDemo />
-        <ThrowErrorFromUseAnimatedStyle />
-        <ThrowErrorFromUseDerivedValue />
-        <ThrowErrorFromUseFrameCallback />
-        <ThrowErrorFromGestureDetector />
-        <ThrowErrorFromUseAnimatedGestureHandler />
-        <ThrowErrorFromUseAnimatedScrollHandler />
-        <ThrowErrorFromUseScrollViewOffset />
-        <Animation />
-      </Screen>
-    </GestureHandlerRootView>
+    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+      <Text style={styles.buttonText}>{screens[key].title || key}</Text>
+    </RectButton>
   );
 }
+
+const Stack = createStackNavigator();
+
+const Reanimated2 = () => (
+  <Stack.Navigator detachInactiveScreens={false}>
+    <Stack.Screen
+      name="Home"
+      options={{ title: '🎬 Reanimated 2.x Examples' }}
+      children={(props) => <MainScreen {...props} />}
+    />
+    {Object.keys(SCREENS).map((name) => (
+      <Stack.Screen
+        key={name}
+        name={name}
+        getComponent={() => SCREENS[name].screen}
+        options={{ title: SCREENS[name].title || name }}
+      />
+    ))}
+  </Stack.Navigator>
+);
+
+function App(): React.ReactElement {
+  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
+}
+
+export const styles = StyleSheet.create({
+  list: {
+    backgroundColor: '#EFEFF4',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#DBDBE0',
+  },
+  buttonText: {
+    backgroundColor: 'transparent',
+  },
+  button: {
+    flex: 1,
+    height: 60,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+});
+
+export default App;
