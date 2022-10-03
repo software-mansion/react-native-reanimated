@@ -2,7 +2,7 @@ package com.swmansion.reanimated;
 
 public class AndroidErrorHandler {
 
-  public static void raise(String message) {
-    throw new RuntimeException(message);
+  public static void raise() {
+    throw new RuntimeException("Something went wrong.");
   }
 }
