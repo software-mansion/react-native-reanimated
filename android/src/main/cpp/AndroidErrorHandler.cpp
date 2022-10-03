@@ -17,12 +17,13 @@ void AndroidErrorHandler::raiseSpec() {
     return;
   }
 
+  this->error->handled =
+      true; // mark error as handled before this method throws exception
+
   static const auto cls = javaClassStatic();
   static auto method =
       cls->getStaticMethod<void(jni::alias_ref<jstring>)>("raise");
   method(cls, make_jstring(this->error->message));
-
-  this->error->handled = true;
 }
 
 std::shared_ptr<Scheduler> AndroidErrorHandler::getScheduler() {
