@@ -414,13 +414,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             } else {
               res = funPtr->call(rt, args, count);
             }
-            // } catch (jsi::JSError &e) {
-            //   // For some reason (most likely due to duplicated symbols),
-            //   this
-            //   // block doesn't catch `jsi::JSError` on iOS.
-            //   throw e;
           } catch (std::exception &e) {
-            // This block catches `jsi::JSError` on iOS.
             std::string str = e.what();
             runtimeManager->errorHandler->setError(str);
             runtimeManager->errorHandler->raise();
@@ -483,13 +477,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                   rt,
                   static_cast<const jsi::Value *>(args),
                   static_cast<size_t>(params.size()));
-              // } catch (jsi::JSError &e) {
-              //   // For some reason (most likely due to duplicated symbols),
-              //   this
-              //   // block doesn't catch `jsi::JSError` on iOS.
-              //   throw e;
             } catch (std::exception &e) {
-              // This block catches `jsi::JSError` on iOS.
               std::string str = e.what();
               runtimeManager->errorHandler->setError(str);
               runtimeManager->errorHandler->raise();

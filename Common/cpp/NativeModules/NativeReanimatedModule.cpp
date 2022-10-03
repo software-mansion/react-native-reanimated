@@ -355,8 +355,6 @@ void NativeReanimatedModule::onEvent(
     if (mapperRegistry->needRunOnRender()) {
       maybeRequestRender();
     }
-    // } catch (jsi::JSError &e) {
-    //   throw e; // TODO: use AndroidErrorHandler here?
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
@@ -392,14 +390,6 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     if (mapperRegistry->needRunOnRender()) {
       maybeRequestRender();
     }
-    // } catch (jsi::JSError &e) {
-    //   // This block is executed when `useAnimatedStyle` worklet throws a
-    //   // JavaScript error on Android. The exception is passed to Java via
-    //   // `translatePendingCppExceptionToJavaException` and then gets handled
-    //   and
-    //   // shown on the UI by React Native internals.
-    //   // TODO: explain what happens on iOS
-    //   throw e;
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
