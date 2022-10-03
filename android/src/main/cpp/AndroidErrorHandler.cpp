@@ -1,5 +1,6 @@
 #include "AndroidErrorHandler.h"
 #include <fbjni/fbjni.h>
+#include <exception>
 #include <string>
 #include "Logger.h"
 
@@ -17,13 +18,9 @@ void AndroidErrorHandler::raiseSpec() {
     return;
   }
 
-  this->error->handled =
-      true; // mark error as handled before this method throws exception
-
-  static const auto cls = javaClassStatic();
-  static auto method =
-      cls->getStaticMethod<void(jni::alias_ref<jstring>)>("raise");
-  method(cls, make_jstring(this->error->message));
+  // mark error as handled before this method throws exception
+  this->error->handled = true;
+  throw std::runtime_error(this->error->message);
 }
 
 std::shared_ptr<Scheduler> AndroidErrorHandler::getScheduler() {

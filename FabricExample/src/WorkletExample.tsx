@@ -16,12 +16,10 @@ import { Button, Text, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
-  GestureHandlerRootView,
   PanGestureHandler,
 } from 'react-native-gesture-handler';
 
 import React from 'react';
-import { Screen } from 'react-native-screens';
 
 declare global {
   const _WORKLET: boolean;
@@ -259,23 +257,20 @@ function ThrowErrorFromUseScrollViewOffset() {
 
 export default function WorkletExample() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Screen
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <RunOnUIDemo />
-        <RunOnUIRunOnJSDemo />
-        <UseDerivedValueRunOnJSDemo />
-        <ThrowErrorDemo />
-        <ThrowErrorWorkletDemo />
-        <ThrowErrorNestedWorkletDemo />
-        <ThrowErrorFromUseAnimatedStyle />
-        <ThrowErrorFromUseDerivedValue />
-        <ThrowErrorFromUseFrameCallback />
-        <ThrowErrorFromGestureDetector />
-        <ThrowErrorFromUseAnimatedGestureHandler />
-        <ThrowErrorFromUseAnimatedScrollHandler />
-        <ThrowErrorFromUseScrollViewOffset />
-      </Screen>
-    </GestureHandlerRootView>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <RunOnUIDemo />
+      <RunOnUIRunOnJSDemo />
+      <UseDerivedValueRunOnJSDemo />
+      <ThrowErrorDemo />
+      <ThrowErrorWorkletDemo />
+      <ThrowErrorNestedWorkletDemo />
+      <ThrowErrorFromUseAnimatedStyle />
+      <ThrowErrorFromUseDerivedValue />
+      <ThrowErrorFromUseFrameCallback />
+      <ThrowErrorFromGestureDetector />
+      <ThrowErrorFromUseAnimatedGestureHandler />
+      <ThrowErrorFromUseAnimatedScrollHandler />
+      <ThrowErrorFromUseScrollViewOffset />
+    </View>
   );
 }
