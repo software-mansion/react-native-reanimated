@@ -17,11 +17,12 @@ void AndroidErrorHandler::raiseSpec() {
     return;
   }
 
-  static const auto cls = javaClassStatic();
-  static auto method = cls->getStaticMethod<void(std::string)>("raise");
-  method(cls, error->message);
+  //  static const auto cls = javaClassStatic();
+  //  static auto method = cls->getStaticMethod<void(std::string)>("raise");
+  //  method(cls, error->message);
 
   this->error->handled = true;
+  throw std::runtime_error(error->message);
 }
 
 std::shared_ptr<Scheduler> AndroidErrorHandler::getScheduler() {
