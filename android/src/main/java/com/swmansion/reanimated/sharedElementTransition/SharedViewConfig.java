@@ -29,7 +29,7 @@ public class SharedViewConfig {
 
     public View getParent() {
         View viewTmpReference = parentBackup;
-//        parentBackup = null;
+        parentBackup = null;
         return viewTmpReference;
     }
 

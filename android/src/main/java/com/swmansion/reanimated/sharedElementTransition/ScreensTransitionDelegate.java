@@ -45,13 +45,17 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
                 animationsManager.updateProps(snapshot.toBasicMap(), viewTag);
             }
         }
-        // TODO
-//        for (SharedViewConfig config : transitionItems) {
-//            if (config.viewTag == viewTag) {
-//                config.toRemove = true;
-//            }
-//            sharedElementsTags.remove(viewTag);
-//        }
+        for (Map.Entry<String, List<SharedViewConfig>> tagGroupEntry : sharedTransitionsItems.entrySet()) {
+            List<SharedViewConfig> tagGroup = tagGroupEntry.getValue();
+            for (SharedViewConfig sharedViewConfig : tagGroup) {
+                if (sharedViewConfig.toRemove) {
+                    tagGroup.remove(sharedViewConfig);
+                }
+            }
+            if (tagGroup.isEmpty()) {
+                sharedTransitionsItems.remove(tagGroupEntry.getKey());
+            }
+        }
     }
 
     @Override
