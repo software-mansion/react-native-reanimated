@@ -204,15 +204,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
   }
 
-  public int getStatusBarHeight() {
-    int result = 0;
-    int resourceId = Resources.getSystem().getIdentifier("status_bar_height", "dimen", "android");
-    if (resourceId > 0) {
-      result = Resources.getSystem().getDimensionPixelSize(resourceId);
-    }
-    return result;
-  }
-
   public void onViewTransition(View before, View after, Snapshot beforeSnapshot, Snapshot afterSnapshot) {
     if (isCatalystInstanceDestroyed) {
       return;
@@ -231,10 +222,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     );
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
-
-//    float statusBarHeight = PixelUtil.toDIPFromPixel(getStatusBarHeight());
-//    preparedValues.put("currentOriginY", preparedValues.get("currentOriginY") - statusBarHeight);
-//    preparedValues.put("targetOriginY", preparedValues.get("targetOriginY") - statusBarHeight);
 
     mNativeMethodsHolder.startAnimationForTag(before.getId(), "sharedElementTransition", preparedValues);
     mNativeMethodsHolder.startAnimationForTag(after.getId(), "sharedElementTransition", preparedValues);

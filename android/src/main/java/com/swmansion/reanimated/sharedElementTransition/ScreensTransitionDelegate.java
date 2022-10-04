@@ -18,7 +18,7 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
     private final Map<String, List<SharedViewConfig>> sharedTransitionsItems = new HashMap<>();
     private final List<String> sharedElementsIterationOrder = new ArrayList<>();
     private final Map<Integer, Snapshot> snapshotRegistry = new HashMap<>();
-    private final Set<Integer> toRestore = new HashSet<>();
+    private final Set<Integer> sharedElementsTags = new HashSet<>();
 
     public ScreensTransitionDelegate(AnimationsManager animationsManager) {
         this.animationsManager = animationsManager;
@@ -45,6 +45,13 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
                 animationsManager.updateProps(snapshot.toBasicMap(), viewTag);
             }
         }
+        // TODO
+//        for (SharedViewConfig config : transitionItems) {
+//            if (config.viewTag == viewTag) {
+//                config.toRemove = true;
+//            }
+//            sharedElementsTags.remove(viewTag);
+//        }
     }
 
     @Override
@@ -62,6 +69,11 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
         return sharedElementsIterationOrder;
     }
 
+    @Override
+    public boolean isTagUnderTransition(int viewTag) {
+        return sharedElementsTags.contains(viewTag);
+    }
+
     public void registerSharedTransitionTag(String sharedTransitionTag, int viewTag) {
         if (!sharedTransitionsItems.containsKey(sharedTransitionTag)) {
             sharedElementsIterationOrder.add(sharedTransitionTag);
@@ -70,6 +82,7 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
         List<SharedViewConfig> transitionItems = sharedTransitionsItems.get(sharedTransitionTag);
         assert transitionItems != null;
         transitionItems.add(new SharedViewConfig(viewTag));
+        sharedElementsTags.add(viewTag);
     }
 
     public void unregisterSharedTransitionTag(String sharedTransitionTag, int viewTag) {

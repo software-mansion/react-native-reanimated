@@ -33,41 +33,40 @@ function Card({ navigation, title, transitionTag, isOpen = false }) {
   }
   
   return <TouchableNativeFeedback onPress={() => { goNext(isOpen ? 'Screen1' : 'Screen2') }}>
-    {/* <Animated.View 
-      sharedTransitionTag={transitionTag + "1_"}
-      style={{backgroundColor: 'red'}}
-    > */}
     <Animated.View 
-      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 20, backgroundColor: 'green' }}
+      style={isOpen ? { height: 500, marginTop: 50, backgroundColor: 'green' } : { height: 120, marginTop: 20, backgroundColor: 'red' }}
       sharedTransitionTag={transitionTag + "1"}
     >
-      <Animated.Text
+      {/* <Animated.Text
         sharedTransitionTag={transitionTag + "2"}
         style={{ width: '100%', height: 20 }}
       >
         {title}
-      </Animated.Text>
-      <AnimatedImage 
+      </Animated.Text> */}
+      {/* <AnimatedImage 
         sharedTransitionTag={transitionTag + "3"}
         source={photo} 
         style={{ width: '100%', height: isOpen ? 300 : 100 }}
+      /> */}
+      <Animated.View
+        sharedTransitionTag={transitionTag + "3"}
+        style={{ width: '100%', borderWidth: 5, opacity: 0.5, backgroundColor: isOpen ? 'olive' : 'purple', height: isOpen ? 200 : 100 }}
       />
-      <Animated.Text
+      {/* <Animated.Text
         sharedTransitionTag={transitionTag + "4"}
         style={{ width: '100%', height: isOpen ? 100 : 0 }}
       >
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid, earum non, dignissimos fugit rerum exercitationem ab consequatur, error animi veritatis delectus. Nostrum sapiente distinctio possimus vel nam facilis ut?
-      </Animated.Text>
+      </Animated.Text> */}
     </Animated.View>
-    {/* </Animated.View> */}
   </TouchableNativeFeedback>
 }
 
 function Screen1({ navigation }) {
   return (
-    <Animated.ScrollView style={{ flex: 1, /* marginTop: 200 */ }}>
+    <Animated.ScrollView style={{ flex: 1, marginTop: 200 }}>
       {
-        [...Array(6)].map((_, i) => 
+        [...Array(1)].map((_, i) => 
           <Card 
             key={i} 
             navigation={navigation} 

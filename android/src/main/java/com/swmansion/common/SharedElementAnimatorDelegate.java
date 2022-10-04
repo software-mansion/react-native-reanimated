@@ -13,4 +13,5 @@ public interface SharedElementAnimatorDelegate {
   void makeSnapshot(View view);
   Map<String, List<SharedViewConfig>> getSharedTransitionItems();
   List<String> getSharedElementsIterationOrder();
+  boolean isTagUnderTransition(int viewTag);
 }

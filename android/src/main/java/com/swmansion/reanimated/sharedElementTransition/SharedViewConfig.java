@@ -7,7 +7,8 @@ public class SharedViewConfig {
     public Integer viewTag;
     public boolean toRemove;
     public View parentScreen;
-    private View view;
+    public View view;
+    public View parentBackup;
 
     SharedViewConfig(Integer viewTag) {
         this.viewTag = viewTag;
@@ -16,10 +17,19 @@ public class SharedViewConfig {
     public void setView(View view) {
         this.view = view;
     }
+    public void setParent(View parent) {
+        parentBackup = parent;
+    }
 
     public View getView() {
         View viewTmpReference = view;
         view = null;
+        return viewTmpReference;
+    }
+
+    public View getParent() {
+        View viewTmpReference = parentBackup;
+//        parentBackup = null;
         return viewTmpReference;
     }
 
