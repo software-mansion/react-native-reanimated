@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
-    "@react-navigation/native": "^6.0.10",
-    "@react-navigation/native-stack": "^6.6.2",
-    "react": "18.2.0",
+    "@react-navigation/native": "^6.0.13",
+    "@react-navigation/native-stack": "^6.9.0",
+    "react": "18.1.0",
     "react-native": "0.70.2",
     "react-native-gesture-handler": "^2.7.0",
     "react-native-reanimated": "link:../",
@@ -39,7 +39,7 @@
     "metro-react-native-babel-preset": "0.72.3",
     "patch-package": "^6.4.7",
     "prettier": "^2.6.1",
-    "react-test-renderer": "18.2.0",
+    "react-test-renderer": "18.1.0",
     "typescript": "^4.6.2"
   },
   "jest": {
