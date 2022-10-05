@@ -3,10 +3,16 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  Gesture,
+  GestureDetector,
+  enableExperimentalWebImplementation,
+} from 'react-native-gesture-handler';
 import { StyleSheet, View } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
+
+enableExperimentalWebImplementation(true);
 
 export default function App() {
   const isPressed = useSharedValue(false);
@@ -20,6 +26,7 @@ export default function App() {
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
       backgroundColor: isPressed.value ? 'blue' : 'navy',
+      cursor: isPressed.value ? 'grabbing' : 'grab',
     };
   });
 
