@@ -1,33 +1,55 @@
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
-  withTiming,
+  withSpring,
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { StyleSheet, View } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 
 export default function App() {
-  const sv = useSharedValue(0);
-
-  useEffect(() => {
-    sv.value = 0;
-    sv.value = withRepeat(withTiming(1), -1, true);
-  });
+  const isPressed = useSharedValue(false);
+  const offset = useSharedValue({ x: 0, y: 0 });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      width: 100 + sv.value * 100,
-      height: 200 - sv.value * 100,
+      transform: [
+        { translateX: offset.value.x },
+        { translateY: offset.value.y },
+        { scale: withSpring(isPressed.value ? 1.2 : 1) },
+      ],
+      backgroundColor: isPressed.value ? 'blue' : 'navy',
     };
   });
 
+  const gesture = Gesture.Pan()
+    .manualActivation(true)
+    .onBegin(() => {
+      'worklet';
+      isPressed.value = true;
+    })
+    .onChange((e) => {
+      'worklet';
+      offset.value = {
+        x: e.changeX + offset.value.x,
+        y: e.changeY + offset.value.y,
+      };
+    })
+    .onFinalize(() => {
+      'worklet';
+      isPressed.value = false;
+    })
+    .onTouchesMove((_, state) => {
+      state.activate();
+    });
+
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, animatedStyle]} />
       <StatusBar style="auto" />
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={[styles.ball, animatedStyle]} />
+      </GestureDetector>
     </View>
   );
 }
@@ -39,7 +61,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  box: {
-    backgroundColor: 'black',
+  ball: {
+    width: 100,
+    height: 100,
+    borderRadius: 100,
+    backgroundColor: 'blue',
+    alignSelf: 'center',
   },
 });

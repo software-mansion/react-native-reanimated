@@ -3,7 +3,14 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      '@babel/plugin-proposal-export-namespace-from',
+      [
+        'module-resolver',
+        {
+          alias: {
+            react: './node_modules/react',
+          },
+        },
+      ],
       '../plugin',
     ],
   };
