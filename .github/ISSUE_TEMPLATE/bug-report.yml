@@ -24,7 +24,7 @@ body:
     id: description
     attributes:
       label: Description
-      description: Please provide a clear, concise and descriptive explaination of what the bug is. Include screenshots or a video if needed. Tell us what were you expecting to happen instead of what is happening now.
+      description: Please provide a clear, concise and descriptive explanation of what the bug is. Include screenshots or a video if needed. Tell us what were you expecting to happen instead of what is happening now.
     validations:
       required: true
 
