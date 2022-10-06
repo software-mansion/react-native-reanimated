@@ -118,7 +118,7 @@ function CreateAnimatedFlatListTest1() {
       if (Math.random()) {
         return null;
       }
-      return <View style={{ width: 100 }} />;
+      return <View style={{ width: 100 }}></View>;
     },
     []
   );
