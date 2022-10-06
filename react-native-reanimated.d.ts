@@ -157,10 +157,21 @@ declare module 'react-native-reanimated' {
       ? T['style']
       : Record<string, unknown>;
 
+    type PickStyles<T> = Pick<
+      T,
+      {
+        [Key in keyof T]-?: T[Key] extends StyleProp<ViewStyle> ? Key : never;
+      }[keyof T]
+    >;
+
     export type AnimateProps<P extends object> = {
-      [K in keyof Omit<P, 'style'>]: P[K] | AnimatedNode<P[K]>;
+      [K in keyof Omit<P, keyof PickStyles<P> | 'style'>]:
+        | P[K]
+        | AnimatedNode<P[K]>;
     } & {
       style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
+    } & {
+      [K in keyof PickStyles<P>]: StyleProp<AnimateStyle<P[K]>>;
     } & {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?:
