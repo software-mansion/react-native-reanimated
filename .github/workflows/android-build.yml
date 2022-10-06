@@ -11,15 +11,13 @@ on:
   push:
     branches:
       - Reanimated2
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        working-directory: [Example]
+    env:
+      WORKING_DIRECTORY: Example
     concurrency:
-      group: rea2-android-${{ matrix.working-directory }}-${{ github.ref }}
+      group: android-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout
@@ -45,7 +43,7 @@ jobs:
       - name: Install root node dependencies
         run: yarn
       - name: Install example app node dependencies
-        working-directory: ${{ matrix.working-directory }}
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
       - name: Cache hermes build
         uses: actions/cache@v3
@@ -62,5 +60,5 @@ jobs:
           path: ${{ matrix.working-directory }}/android/app/build/react-ndk
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.working-directory }}-${{ hashFiles('**/react-native/package.json') }}
       - name: Build app
-        working-directory: ${{ matrix.working-directory }}/android
-        run: ./gradlew assembleDebug --console=plain -PreactNativeArchitectures=arm64-v8a
+        working-directory: ${{ env.WORKING_DIRECTORY }}/android
+        run: ./gradlew assembleDebug --console=plain
