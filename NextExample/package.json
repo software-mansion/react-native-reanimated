@@ -4,8 +4,7 @@
     "dev": "next",
     "build": "next build",
     "start": "next start",
-    "analyze": "ANALYZE=true next build",
-    "postinstall": "cp -R node_modules/react-native-reanimated lib && cd lib/react-native-reanimated && rm -rf lib android ios Common RNReanimated.podspec"
+    "check-package-size": "rm -rf node_modules yarn.lock .expo .next && yarn && next build"
   },
   "dependencies": {
     "@expo/next-adapter": "4.0.4",
