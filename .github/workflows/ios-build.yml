@@ -10,7 +10,7 @@ on:
       - Example/ios/**
   push:
     branches:
-      - main
+      - Reanimated2
 
 jobs:
   build:
