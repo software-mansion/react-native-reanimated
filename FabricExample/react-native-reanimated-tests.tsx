@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState, useCallback, forwardRef } from 'react';
@@ -120,7 +118,7 @@ function CreateAnimatedFlatListTest1() {
       if (Math.random()) {
         return null;
       }
-      return <View style={{ width: 100 }}></View>;
+      return <View style={{ width: 100 }} />;
     },
     []
   );
@@ -156,6 +154,22 @@ function CreateAnimatedFlatListTest2() {
         renderItem={({ item, index }) => <View key={item.id} />}
       />
     </>
+  );
+}
+
+function CreateAnimatedFlatListTest3(
+  contentContainerStyle: React.ComponentProps<
+    typeof AnimatedFlatList
+  >['contentContainerStyle']
+) {
+  const newContentContainerStyle = [contentContainerStyle, { flex: 1 }];
+
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={newContentContainerStyle}
+    />
   );
 }
 
