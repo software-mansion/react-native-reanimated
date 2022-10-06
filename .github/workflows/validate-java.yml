@@ -1,8 +1,6 @@
 name: Java Lint
 on:
   pull_request:
-    branches:
-      - Reanimated2
     paths:
       - 'android/src/main/java/**'
   push:
@@ -12,7 +10,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     concurrency:
-      group: static-root-${{ github.ref }}
+      group: validate-java-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout
