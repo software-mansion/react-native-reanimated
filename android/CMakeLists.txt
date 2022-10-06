@@ -1,17 +1,20 @@
 project(Reanimated)
-cmake_minimum_required(VERSION 3.12.0)
+cmake_minimum_required(VERSION 3.8)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)
-set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DON_ANDROID -DONANDROID -DANDROID -DRNVERSION=${RNVERSION} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall -Werror")
+set (DEFAULT_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1 -DANDROID -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare -std=c++17 -Wall -Werror")
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     set (ALL_FLAGS "${DEFAULT_FLAGS} -DRCT_NEW_ARCH_ENABLED")
 else()
     set (ALL_FLAGS ${DEFAULT_FLAGS})
 endif()
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set (ALL_FLAGS "${ALL_FLAGS} -DDEBUG")
+endif()
 set (CMAKE_CXX_FLAGS ${ALL_FLAGS})
 
-if(${NATIVE_DEBUG})
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 endif()
@@ -23,13 +26,7 @@ set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-set (ignoreMe "${PLAYGROUND_APP_NAME}")
-
-if(${CLIENT_SIDE_BUILD})
-    set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
-else()
-    set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
-endif()
+set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
@@ -49,26 +46,15 @@ file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
-    set (
-            INCLUDE_JSI_CPP
-            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
-    )
-    set (
-            INCLUDE_JSIDYNAMIC_CPP
-            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
-    )
-endif()
-
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-    set(
-            FABRIC_UTILS_CPP
-            "${COMMON_SRC_DIR}/cpp/Fabric/FabricUtils.cpp"
-    )
-    set(
-            REANIMATED_UI_MANAGER_BINDING_CPP
-            "${COMMON_SRC_DIR}/cpp/Fabric/ReanimatedUIManagerBinding.cpp"
-    )
+if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
+        set (
+                INCLUDE_JSI_CPP
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+        )
+        set (
+                INCLUDE_JSIDYNAMIC_CPP
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
+        )
 endif()
 
 add_library(
@@ -78,8 +64,6 @@ add_library(
         ${SOURCES_ANDROID}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
-        ${FABRIC_UTILS_CPP}
-        ${REANIMATED_UI_MANAGER_BINDING_CPP}
 )
 
 # includes
@@ -107,16 +91,16 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/yoga"
-        "${COMMON_SRC_DIR}/cpp/headers/Tools"
-        "${COMMON_SRC_DIR}/cpp/headers/SpecTools"
-        "${COMMON_SRC_DIR}/cpp/headers/NativeModules"
-        "${COMMON_SRC_DIR}/cpp/headers/SharedItems"
-        "${COMMON_SRC_DIR}/cpp/headers/Registries"
-        "${COMMON_SRC_DIR}/cpp/headers/LayoutAnimations"
-        "${COMMON_SRC_DIR}/cpp/headers/AnimatedSensor"
-        "${COMMON_SRC_DIR}/cpp/headers/Fabric"
+        "${COMMON_SRC_DIR}/cpp/Tools"
+        "${COMMON_SRC_DIR}/cpp/SpecTools"
+        "${COMMON_SRC_DIR}/cpp/NativeModules"
+        "${COMMON_SRC_DIR}/cpp/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/Registries"
+        "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
+        "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
+        "${COMMON_SRC_DIR}/cpp/Fabric"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
-        "${SRC_DIR}/main/cpp/headers"
+        "${SRC_DIR}/main/cpp"
 )
 
 find_library(
@@ -142,7 +126,7 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
     find_library(
             FOLLY_LIB
             folly_json
@@ -158,7 +142,7 @@ else()
     )
 endif()
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
     set (JSI_LIB "")
 else()
     find_library(
@@ -250,7 +234,7 @@ target_link_libraries(
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-    if(${REACT_NATIVE_TARGET_VERSION} LESS 69)
+    if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
         # From `hermes-engine` npm package
         target_include_directories(
                 ${PACKAGE_NAME}
@@ -289,7 +273,6 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
             ${V8EXECUTOR_LIB}
     )
 else()
-    set (ignoreMe "${JS_RUNTIME_DIR}")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
     find_library(
             JSEXECUTOR_LIB
@@ -319,7 +302,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
     )
 endif()
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
+if(${REACT_NATIVE_MINOR_VERSION} LESS 64)
     add_library(
             turbomodulejsijni
             # Sets the library as a shared library.
@@ -328,3 +311,9 @@ if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
             ./empty.cpp
     )
 endif()
+
+# Resolves "CMake Warning: Manually-specified variables were not used by the project"
+# when any of the following variables is not used in some build configuration.
+set (ignoreMe "${CLIENT_SIDE_BUILD}")
+set (ignoreMe "${JS_RUNTIME_DIR}")
+set (ignoreMe "${PLAYGROUND_APP_NAME}")

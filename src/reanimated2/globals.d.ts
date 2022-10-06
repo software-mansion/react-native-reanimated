@@ -20,7 +20,7 @@ declare global {
     name: string,
     updates: StyleProps | AnimatedStyle
   ) => void;
-  const _measure: (viewTag: number) => MeasuredDimensions;
+  const _measure: (viewTag: number) => MeasuredDimensions | null;
   const _scrollTo: (
     viewTag: number,
     x: number,
@@ -40,7 +40,7 @@ declare global {
       _WORKLET: boolean;
       __reanimatedModuleProxy: NativeReanimated;
       _frameTimestamp: number | null;
-      _measure: () => MeasuredDimensions;
+      _measure: () => MeasuredDimensions | null;
       _scrollTo: () => void;
       _chronoNow: () => number;
       performance: { now: () => number };

@@ -447,7 +447,7 @@ function makeWorklet(t, fun, state) {
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
-  if (state.opts.relativeSourceLocation) {
+  if (state.opts && state.opts.relativeSourceLocation) {
     const path = require('path');
     location = path.relative(state.cwd, location);
   }

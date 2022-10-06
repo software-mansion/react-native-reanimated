@@ -2,6 +2,8 @@
 #include <functional>
 #include <memory>
 #include <thread>
+#include <unordered_map>
+
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "FrozenObject.h"

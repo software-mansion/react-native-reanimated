@@ -21,6 +21,18 @@ new Promise((resolve, reject) => {
 });
 ```
 
+If you call `measure()` inside [`useAnimatedStyle()`](../hooks/useAnimatedStyle)
+you may get a warning that `measure()` was called from the wrong thread. This
+is safe to ignore, but if you don't want this error to appear then wrap the call
+like this:
+
+```js
+if (_WORKLET) {
+  const measure = measure(animatedRef);
+  // ...
+}
+```
+
 ### Arguments
 
 #### animatedRef
@@ -29,7 +41,7 @@ The product of [`useAnimatedRef`](../hooks/useAnimatedRef) which is Reanimated's
 
 ### Returns
 
-Object which contains following fields
+An object of type `MeasuredDimensions`, which contains these fields:
 
 - `x`
 - `y`
@@ -37,6 +49,10 @@ Object which contains following fields
 - `height`
 - `pageX`
 - `pageY`
+
+If the measurement could not be performed, returns `null`.
+
+You can use `measure()` only on rendered components. For example, calling `measure()` on an offscreen `FlatList` item will return `null`. It is therefore a good practice to perform a `null`-check before using the response.
 
 ### Example
 
@@ -46,13 +62,14 @@ const Comp = () => {
 
   useDerivedValue(() => {
     const measured = measure(aref);
-    // ...
+    if (measured !== null) {
+      const { x, y, width, height, pageX, pageY } = measured;
+      console.log({ x, y, width, height, pageX, pageY });
+    } else {
+      console.warn('measure: could not measure view');
+    }
   });
 
   return <View ref={aref} />;
 };
 ```
-
-### Note
-
-You can use `measure()` only on rendered components. A good practice is to wrap the function call with a `try{} catch{}` block if there is a risk of calling the function on an item which is not rendered, for example: an invisible off screen item from FlatList.

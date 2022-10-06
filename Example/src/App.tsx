@@ -53,6 +53,7 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -160,6 +161,10 @@ const SCREENS: Screens = {
   ScrollEventExample: {
     screen: ScrollEventExample,
     title: 'Scroll Events',
+  },
+  ScrollViewOffsetExample: {
+    screen: ScrollViewOffsetExample,
+    title: 'ScrollView offset',
   },
   ChatHeadsExample: {
     screen: ChatHeadsExample,
