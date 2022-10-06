@@ -118,7 +118,7 @@ function ThrowErrorNestedWorkletDemo() {
   );
 }
 
-function ThrowErrorFromUseAnimatedStyle() {
+function ThrowErrorFromUseAnimatedStyleDemo() {
   const sv = useSharedValue(0);
 
   useAnimatedStyle(() => {
@@ -137,7 +137,7 @@ function ThrowErrorFromUseAnimatedStyle() {
   );
 }
 
-function ThrowErrorFromUseDerivedValue() {
+function ThrowErrorFromUseDerivedValueDemo() {
   const sv = useSharedValue(0);
 
   useDerivedValue(() => {
@@ -156,7 +156,7 @@ function ThrowErrorFromUseDerivedValue() {
   );
 }
 
-function ThrowErrorFromUseFrameCallback() {
+function ThrowErrorFromUseFrameCallbackDemo() {
   const sv = useSharedValue(false);
 
   useFrameCallback(() => {
@@ -175,7 +175,7 @@ function ThrowErrorFromUseFrameCallback() {
   );
 }
 
-function ThrowErrorFromGestureDetector() {
+function ThrowErrorFromGestureDetectorDemo() {
   const gesture = Gesture.Pan().onChange(() => {
     throw Error('Hello world from GestureDetector callback!');
   });
@@ -189,7 +189,7 @@ function ThrowErrorFromGestureDetector() {
   );
 }
 
-function ThrowErrorFromUseAnimatedGestureHandler() {
+function ThrowErrorFromUseAnimatedGestureHandlerDemo() {
   const gestureHandler = useAnimatedGestureHandler({
     onActive: () => {
       throw Error('Hello world from useAnimatedGestureHandler');
@@ -206,7 +206,7 @@ function ThrowErrorFromUseAnimatedGestureHandler() {
   );
 }
 
-function ThrowErrorFromUseAnimatedScrollHandler() {
+function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
   const scrollHandler = useAnimatedScrollHandler(() => {
     throw Error('Hello world from useAnimatedScrollHandler');
   });
@@ -227,7 +227,7 @@ function ThrowErrorFromUseAnimatedScrollHandler() {
   );
 }
 
-function ThrowErrorFromUseScrollViewOffset() {
+function ThrowErrorFromUseScrollViewOffsetDemo() {
   const aref = useAnimatedRef<Animated.ScrollView>();
 
   const offset = useScrollViewOffset(aref);
@@ -264,13 +264,13 @@ export default function WorkletExample() {
       <ThrowErrorDemo />
       <ThrowErrorWorkletDemo />
       <ThrowErrorNestedWorkletDemo />
-      <ThrowErrorFromUseAnimatedStyle />
-      <ThrowErrorFromUseDerivedValue />
-      <ThrowErrorFromUseFrameCallback />
-      <ThrowErrorFromGestureDetector />
-      <ThrowErrorFromUseAnimatedGestureHandler />
-      <ThrowErrorFromUseAnimatedScrollHandler />
-      <ThrowErrorFromUseScrollViewOffset />
+      <ThrowErrorFromUseAnimatedStyleDemo />
+      <ThrowErrorFromUseDerivedValueDemo />
+      <ThrowErrorFromUseFrameCallbackDemo />
+      <ThrowErrorFromGestureDetectorDemo />
+      <ThrowErrorFromUseAnimatedGestureHandlerDemo />
+      <ThrowErrorFromUseAnimatedScrollHandlerDemo />
+      <ThrowErrorFromUseScrollViewOffsetDemo />
     </View>
   );
 }
