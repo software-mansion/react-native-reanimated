@@ -5,7 +5,7 @@ on:
       - 'Example/**'
   push:
     branches:
-      - main
+      - Reanimated2
 jobs:
   check:
     runs-on: ubuntu-latest
