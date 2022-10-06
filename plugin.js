@@ -282,8 +282,16 @@ function isRelease() {
   return process.env.BABEL_ENV === 'release';
 }
 
+function isProduction() {
+  return process.env.NODE_ENV === 'production'; // for web
+}
+
 function shouldGenerateSourceMap() {
   if (isRelease()) {
+    return false;
+  }
+
+  if (isProduction()) {
     return false;
   }
 
