@@ -194,6 +194,145 @@ def reactNativeArchitectures() {
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
+def detectAAR(Integer rnMinorVersion, String engine) { // Reanimated2 only
+    def rnMinorVersionCopy = rnMinorVersion
+    def aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
+
+    if (aar.exists()) {
+        println "AAR for react-native-reanimated has been found\n$aar"
+        return aar
+    } else {
+        while (!aar.exists() && rnMinorVersionCopy >= 63) {
+            rnMinorVersionCopy -= 1
+            aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
+        }
+
+        if (rnMinorVersionCopy < 63) {
+            println "No AAR for react-native-reanimated found. Attempting to build from source."
+        } else { // aar exists, but was build for lower react-native version
+            println "\n\n\n"
+            println "****************************************************************************************"
+            println "\n\n\n"
+            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $minor found."
+            println "Falling back to AAR for react-native version $rnMinorVersionCopy."
+            println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
+            println "Please post a pull request to implement support for react-native version $minor to the reanimated repo."
+            println "Thanks!"
+            println "\n\n\n"
+            println "****************************************************************************************"
+
+            return aar
+        }
+    }
+    return null
+}
+
+def isUserDemandToBuildFromSource() { // Reanimated2 only
+    def buildFromSourceConf = false
+    rootProject.getSubprojects().forEach({project ->
+        if (project.plugins.hasPlugin("com.android.application")) {
+            if (
+            project.ext.has("reanimated")
+                    && project.ext.reanimated.buildFromSource
+            ) {
+                buildFromSourceConf = true
+            }
+        }
+    })
+    return buildFromSourceConf
+}
+
+def shouldBuildFromSource(aar, jsRuntimeName) { // Reanimated2 only
+    if (jsRuntimeName == "v8") {
+        return true
+    }
+    else if (isDeveloperMode()) {
+        // Example app
+        return true
+    }
+    else if (isUserDemandToBuildFromSource()) {
+        // on user demand
+        return true
+    }
+    else if (aar != null) {
+        // when binary exist
+        return false
+    }
+    // when binary is not found
+    return true
+}
+
+def getTaskByPath(
+        project,
+        String appName,
+        String secondPart,
+        String flavorString,
+        String lastPart
+) {  // Reanimated2 only
+    String pathName = "${appName}:${secondPart}${flavorString}${lastPart}"
+    Task task = project.getTasks().findByPath(pathName)
+    if (task != null) {
+        return task
+    }
+    pathName = "${appName}:${secondPart}${flavorString.capitalize()}${lastPart}"
+    return project.getTasks().findByPath(pathName)
+}
+
+def aar = detectAAR(REACT_NATIVE_MINOR_VERSION, JS_RUNTIME)
+boolean BUILD_FROM_SOURCE = shouldBuildFromSource(aar, JS_RUNTIME)
+
+if (!BUILD_FROM_SOURCE && !isNewArchitectureEnabled()) { // Reanimated2 only
+    if (REACT_NATIVE_MINOR_VERSION < 65) {
+        tasks.register("replaceSoTaskDebug", replaceSoTask)
+        tasks.register("replaceSoTaskRelease", replaceSoTask)
+        Task replaceSoTaskDebug = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskDebug")
+        Task replaceSoTaskRelease = project.getTasks().findByPath(":react-native-reanimated:replaceSoTaskRelease")
+
+        if (replaceSoTaskDebug != null && replaceSoTaskRelease != null) {
+            rootProject.getSubprojects().forEach({project ->
+                if (project.plugins.hasPlugin("com.android.application") && project.getProperties().get("android")) {
+                    def projectProperties = project.getProperties()
+                    def flavorString = getCurrentFlavor()
+                    def reanimatedConf = projectProperties.get("reanimated")
+
+                    if (
+                    flavorString != "NOT-FOUND"
+                            && (!reanimatedConf || (reanimatedConf && !reanimatedConf.get("enablePackagingOptions")))
+                    ) {
+                        replaceSoTask.appName = projectProperties.path
+                        replaceSoTask.buildDir = projectProperties.buildDir
+                        def appName = projectProperties.path
+
+                        Task debugNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "DebugNativeLibs")
+                        Task debugDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "DebugDebugSymbols")
+                        Task releaseNativeLibsTask = getTaskByPath(project, appName, "merge", flavorString, "ReleaseNativeLibs")
+                        Task releaseDebugSymbolsTask = getTaskByPath(project, appName, "strip", flavorString, "ReleaseDebugSymbols")
+                        Task debugTask = getTaskByPath(project, appName, "package", flavorString, "Debug")
+                        Task releaseTask = getTaskByPath(project, appName, "package", flavorString, "Release")
+
+                        if (
+                        debugNativeLibsTask != null && debugDebugSymbolsTask != null
+                                && releaseNativeLibsTask != null && releaseDebugSymbolsTask != null
+                                && debugTask != null && releaseTask != null
+                        ) {
+                            replaceSoTaskDebug.dependsOn(debugNativeLibsTask, debugDebugSymbolsTask)
+                            debugTask.dependsOn(replaceSoTaskDebug)
+                            replaceSoTaskRelease.dependsOn(releaseNativeLibsTask, releaseDebugSymbolsTask)
+                            releaseTask.dependsOn(replaceSoTaskRelease)
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    artifacts.add("default", aar)
+}
+
+// end if already loaded aar
+if (!BUILD_FROM_SOURCE) {
+    return
+}
 // You need to have following folders in this directory:
 //   - boost_1_63_0
 //   - double-conversion-1.1.6
@@ -800,7 +939,7 @@ afterEvaluate {
 
 if (CLIENT_SIDE_BUILD) {
     def aarDir = "${buildDir}/outputs"
-    def aar = file("${aarDir}/android-${resolveBuildType()}.aar") // e.g. android-debug.aar
+    aar = file("${aarDir}/android-${resolveBuildType()}.aar") // e.g. android-debug.aar
     if (aar == null) {
         throw GradleScriptException("AAR build failed. No AAR found in ${aarDir}.")
     }
