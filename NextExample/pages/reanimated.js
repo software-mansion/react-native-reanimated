@@ -1,31 +1,43 @@
-import Animated from 'react-native-reanimated'
-import { StyleSheet } from 'react-native'
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated'
+import { StyleSheet, View } from 'react-native'
 
-export default function Reanimated() {
+import { useEffect } from 'react'
+
+export default function App() {
+  const sv = useSharedValue(0)
+
+  useEffect(() => {
+    sv.value = 0
+    sv.value = withRepeat(withTiming(1), -1, true)
+  })
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: sv.value * 200 + 10,
+    }
+  })
+
   return (
-    <Animated.View style={styles.container}>
-      <Animated.Text accessibilityRole="header" style={styles.text}>
-        Reanimated Page
-      </Animated.Text>
-      <Animated.Text style={styles.link} accessibilityRole="link" href={`/`}>
-        Go Back
-      </Animated.Text>
-    </Animated.View>
+    <View style={styles.container}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: '#fff',
     alignItems: 'center',
-    flexGrow: 1,
     justifyContent: 'center',
   },
-  text: {
-    alignItems: 'center',
-    fontSize: 24,
-    marginBottom: 24,
-  },
-  link: {
-    color: 'blue',
+  box: {
+    height: 100,
+    backgroundColor: 'blue',
   },
 })
