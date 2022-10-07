@@ -1,0 +1,42 @@
+name: Test monorepo build
+on:
+  pull_request:
+    paths:
+      - .github/workflows/monorepo-check.yml
+      - android/build.gradle
+      - android/CMakeList.txt
+      - RNReanimated.podspec
+  push:
+    branches:
+      - main
+
+jobs:
+  prepare_monorepo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone monorepo
+        run: git clone git@github.com:Devographics/Monorepo.git monorepo
+      - name: Install dependencies
+        run: cd monorepo && yarn
+      - name: Add reanimated
+        run: cd monorepo && yarn add react-native-reanimated -W
+
+  build_android:
+    needs: prepare_monorepo
+    runs-on: ubuntu-latest
+    concurrency:
+      group: monorepo-android-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: A
+        run: ls
+
+  build_ios:
+    needs: prepare_monorepo
+    runs-on: macos-12
+    concurrency:
+      group: monorepo-ios-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: A
+        run: ls
