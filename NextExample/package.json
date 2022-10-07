@@ -4,7 +4,7 @@
     "dev": "next",
     "build": "next build",
     "start": "next start",
-    "check-package-size": "rm -rf node_modules yarn.lock .expo .next && yarn && next build"
+    "check-package-size": "rm -rf yarn.lock .expo .next node_modules/.cache && yarn && next build"
   },
   "dependencies": {
     "@expo/next-adapter": "4.0.4",
