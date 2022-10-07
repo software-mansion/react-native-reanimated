@@ -15,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone monorepo
-        run: git clone git@github.com:Devographics/Monorepo.git monorepo
+        uses: actions/checkout@v3
+        with:
+          repository: mmazzarolo/react-native-universal-monorepo
+          path: monorepo
       - name: Install dependencies
         run: cd monorepo && yarn
       - name: Add reanimated
