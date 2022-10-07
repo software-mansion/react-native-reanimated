@@ -279,7 +279,7 @@ class ClosureGenerator {
 }
 
 function isRelease() {
-  return process.env.BABEL_ENV === 'release';
+  return ['production', 'release'].includes(process.env.BABEL_ENV);
 }
 
 function shouldGenerateSourceMap() {
