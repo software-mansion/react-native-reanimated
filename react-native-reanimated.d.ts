@@ -160,7 +160,7 @@ declare module 'react-native-reanimated' {
     type PickStyles<T> = Pick<
       T,
       {
-        [Key in keyof T]-?: T[Key] extends StyleProp<ViewStyle> ? Key : never;
+        [Key in keyof T]-?: Key extends `${string}Style` ? Key : never;
       }[keyof T]
     >;
 
