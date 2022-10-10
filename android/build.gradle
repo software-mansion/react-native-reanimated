@@ -85,12 +85,7 @@ def resolveReactNativeDirectory() {
         return file(userReactNativeLocalization)
     }
     else if (isDeveloperMode()) {
-        def reactNativeInExampleApp = file(
-            "$projectDir/../${getPlaygroundAppName()}/node_modules/react-native"
-        )
-        if (reactNativeInExampleApp.exists()) {
-            return reactNativeInExampleApp
-        }
+        return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
     }
     // monorepo workaround
     // react native can be hoisted or in project onw node_modules
