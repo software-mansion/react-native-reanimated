@@ -1,0 +1,35 @@
+name: Check bundle size on web
+on:
+  pull_request:
+    paths:
+      - .github/workflows/check-bundle-size.yml
+      - 'src/**'
+      - 'NextExample/**'
+      - '*'
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: check-bundle-size-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Reanimated node_modules
+        run: yarn install --frozen-lockfile
+
+      - name: Build package
+        run: ./createNPMPackage.sh nightly
+
+      - name: Install NextExample node_modules and Reanimated package
+        working-directory: NextExample
+        run: yarn add file:`find .. -name "react-native-reanimated-*.tgz"`
+
+      - name: Check package size
+        working-directory: NextExample
+        run: yarn check-package-size

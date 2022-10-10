@@ -15,8 +15,8 @@
     "react-native-web": "^0.18.9"
   },
   "devDependencies": {
-    "@expo/next-adapter": "^4.0.12",
     "@expo/config": "^7.0.1",
+    "@expo/next-adapter": "^4.0.12",
     "@next/bundle-analyzer": "^12.3.1",
     "babel-plugin-react-native-web": "^0.18.9",
     "next-compose-plugins": "^2.2.1",
