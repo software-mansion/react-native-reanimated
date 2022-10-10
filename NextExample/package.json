@@ -7,7 +7,6 @@
     "check-package-size": "rm -rf yarn.lock .expo .next node_modules/.cache && yarn && next build"
   },
   "dependencies": {
-    "@expo/next-adapter": "4.0.11",
     "next": "latest",
     "raf": "^3.4.1",
     "react": "^18.2.0",
@@ -16,6 +15,8 @@
     "react-native-web": "^0.18.9"
   },
   "devDependencies": {
+    "@expo/next-adapter": "^4.0.12",
+    "@expo/config": "^7.0.1",
     "@next/bundle-analyzer": "^12.3.1",
     "babel-plugin-react-native-web": "^0.18.9",
     "next-compose-plugins": "^2.2.1",
