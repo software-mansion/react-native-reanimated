@@ -31,7 +31,7 @@ set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported") # TODO
-        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../../react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers" # TODO
+        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../../react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers") # TODO
     else()
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/android/app/build/react-ndk/exported") # TODO
         set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers") # TODO

@@ -68,7 +68,7 @@ def resolveClientSideBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return file("$projectDir/../node_modules/react-native/package.json").exists()
+    return !projectDir.getPath().contains("/node_modules/")
 }
 
 def isNewArchitectureEnabled() {
@@ -85,7 +85,12 @@ def resolveReactNativeDirectory() {
         return file(userReactNativeLocalization)
     }
     else if (isDeveloperMode()) {
-        return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
+        def reactNativeInExampleApp = file(
+            "$projectDir/../${getPlaygroundAppName()}/node_modules/react-native"
+        )
+        if (reactNativeInExampleApp.exists()) {
+            return reactNativeInExampleApp
+        }
     }
     // monorepo workaround
     // react native can be hoisted or in project onw node_modules

@@ -23,6 +23,8 @@ jobs:
         run: cd monorepo && yarn
       - name: Add reanimated
         run: cd monorepo && yarn add react-native-reanimated -W
+      - name: Pod install
+        run: cd monorepo && yarn ios:pods
 
   build_android:
     needs: prepare_monorepo
