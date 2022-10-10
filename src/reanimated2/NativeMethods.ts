@@ -96,7 +96,19 @@ export let scrollTo: (
   animated: boolean
 ) => void;
 
-if (global._IS_FABRIC) {
+if (isWeb()) {
+  scrollTo = (
+    animatedRef: RefObjectFunction<Component>,
+    x: number,
+    y: number,
+    animated: boolean
+  ) => {
+    'worklet';
+    const element = animatedRef() as unknown as Element;
+    // @ts-ignore trust me bro
+    element.scrollTo({ x, y, animated });
+  };
+} else if (isNative && global._IS_FABRIC) {
   scrollTo = (
     animatedRef: RefObjectFunction<Component>,
     x: number,
@@ -106,7 +118,7 @@ if (global._IS_FABRIC) {
     'worklet';
     dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
   };
-} else {
+} else if (isNative) {
   scrollTo = (
     animatedRef: RefObjectFunction<Component>,
     x: number,
@@ -114,11 +126,19 @@ if (global._IS_FABRIC) {
     animated: boolean
   ) => {
     'worklet';
-    if (!_WORKLET || !isNative) {
+    if (!_WORKLET) {
       return;
     }
     const viewTag = animatedRef();
     _scrollTo(viewTag, x, y, animated);
+  };
+} else {
+  scrollTo = (
+    _animatedRef: RefObjectFunction<Component>,
+    _x: number,
+    _y: number
+  ) => {
+    // no-op
   };
 }
 
