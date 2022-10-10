@@ -3,7 +3,7 @@ import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
 import { MeasuredDimensions } from './commonTypes';
 import { RefObjectFunction } from './hook/commonTypes';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isChromeDebugger, isWeb, shouldBeUseWeb } from './PlatformChecker';
 
 export function getTag(
   view: null | number | React.Component<any, any> | React.ComponentClass<any>
@@ -17,10 +17,21 @@ export function measure(
   animatedRef: RefObjectFunction<Component>
 ): MeasuredDimensions | null {
   'worklet';
-  if (!isNative) {
-    console.warn(
-      '[Reanimated] measure() cannot be used on web or Chrome Debugger'
-    );
+  if (isWeb()) {
+    const element = animatedRef() as unknown as HTMLElement; // TODO: fix typing of animated refs on web
+    const viewportOffset = element.getBoundingClientRect();
+    return {
+      width: element.offsetWidth,
+      height: element.offsetHeight,
+      x: element.offsetLeft,
+      y: element.offsetTop,
+      pageX: viewportOffset.left,
+      pageY: viewportOffset.top,
+    };
+  }
+
+  if (isChromeDebugger()) {
+    console.warn('[Reanimated] measure() cannot be used with Chrome Debugger');
     return null;
   }
 
