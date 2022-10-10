@@ -4,7 +4,8 @@
     "dev": "next",
     "build": "next build",
     "start": "next start",
-    "check-package-size": "rm -rf yarn.lock .expo .next node_modules/.cache && yarn && next build"
+    "analyze": "ANALYZE=true next build",
+    "cache:clear": "rm -rf .expo .next node_modules/.cache"
   },
   "dependencies": {
     "next": "latest",

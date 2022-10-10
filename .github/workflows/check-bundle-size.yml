@@ -10,6 +10,9 @@ on:
     branches:
       - main
 
+env:
+  MAX_SIZE_KB: 30
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -23,13 +26,21 @@ jobs:
       - name: Install Reanimated node_modules
         run: yarn install --frozen-lockfile
 
-      - name: Build package
+      - name: Build Reanimated package
         run: ./createNPMPackage.sh nightly
 
-      - name: Install NextExample node_modules and Reanimated package
+      - name: Install NextExample node_modules
         working-directory: NextExample
-        run: yarn add file:`find .. -name "react-native-reanimated-*.tgz"`
+        run: yarn install --frozen-lockfile
 
-      - name: Check package size
+      - name: Install Reanimated package
         working-directory: NextExample
-        run: yarn check-package-size
+        run: yarn add file:..`find .. -name "react-native-reanimated-*.tgz"`
+
+      - name: Compile production build
+        working-directory: NextExample
+        run: yarn next build | tee output.txt
+
+      - name: Check bundle size
+        working-directory: NextExample
+        run: if [[ $SIZE_KB -gt $MAX_SIZE_KB ]] then ; false || echo "Bundle size is greater than $MAX_SIZE_KB kB." ; fi
