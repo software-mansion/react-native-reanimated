@@ -21,67 +21,72 @@ jobs:
         with:
           repository: mmazzarolo/react-native-universal-monorepo
           path: monorepo
-      - name: Install dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn
-      - name: Add reanimated to workspace
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn add react-native-reanimated -W
-      - name: Add reanimated to `mobile` app
-        working-directory: ${{ env.WORKING_DIRECTORY }}/packages/mobile
-        run: yarn add react-native-reanimated
-      - name: Add reanimated to `web` app
-        working-directory: ${{ env.WORKING_DIRECTORY }}/packages/web
-        run: yarn add react-native-reanimated
-      - name: Pod install
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn ios:pods
+      # - name: Install dependencies
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}
+      #   run: yarn
+      # - name: Add reanimated to workspace
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}
+      #   run: yarn add react-native-reanimated -W
+      # - name: Add reanimated to `mobile` app
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}/packages/mobile
+      #   run: yarn add react-native-reanimated
+      # - name: Add reanimated to `web` app
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}/packages/web
+      #   run: yarn add react-native-reanimated
+      # - name: Pod install
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}
+      #   run: yarn ios:pods
 
-  build_android_v1:
-    needs: prepare_monorepo_v1
-    runs-on: ubuntu-latest
-    concurrency:
-      group: monorepo-android-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - name: A
-        run: ls
+  # build_android_v1:
+  #   needs: prepare_monorepo_v1
+  #   runs-on: ubuntu-latest
+  #   concurrency:
+  #     group: monorepo-android-${{ github.ref }}
+  #     cancel-in-progress: true
+  #   steps:
+  #     - name: A
+  #       run: ls
 
-  build_ios_v1:
-    needs: prepare_monorepo_v1
-    runs-on: macos-12
-    concurrency:
-      group: monorepo-ios-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - name: A
-        run: ls
+  # build_ios_v1:
+  #   needs: prepare_monorepo_v1
+  #   runs-on: macos-12
+  #   concurrency:
+  #     group: monorepo-ios-${{ github.ref }}
+  #     cancel-in-progress: true
+  #   steps:
+  #     - name: A
+  #       run: ls
 
   prepare_monorepo_v2:
-    needs: [prepare_monorepo_v1, build_android_v1, build_ios_v1]
+    # needs: [prepare_monorepo_v1, build_android_v1, build_ios_v1]
+    needs: [prepare_monorepo_v1]
     runs-on: ubuntu-latest
     steps:
-      - name: Remove reanimated from workspace
-        run: cd monorepo && yarn remove react-native-reanimated -W
-      - name: Pod install
-        run: cd monorepo && yarn ios:pods
+      - name: Test
+        run: ls -la
+      - name: Test 2
+        run: pwd
+      # - name: Remove reanimated from workspace
+      #   run: cd monorepo && yarn remove react-native-reanimated -W
+      # - name: Pod install
+      #   run: cd monorepo && yarn ios:pods
 
-  build_android_v2:
-    needs: prepare_monorepo_v2
-    runs-on: ubuntu-latest
-    concurrency:
-      group: monorepo-android-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - name: A
-        run: ls
+  # build_android_v2:
+  #   needs: prepare_monorepo_v2
+  #   runs-on: ubuntu-latest
+  #   concurrency:
+  #     group: monorepo-android-${{ github.ref }}
+  #     cancel-in-progress: true
+  #   steps:
+  #     - name: A
+  #       run: ls
 
-  build_ios_v2:
-    needs: prepare_monorepo_v2
-    runs-on: macos-12
-    concurrency:
-      group: monorepo-ios-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - name: A
-        run: ls
+  # build_ios_v2:
+  #   needs: prepare_monorepo_v2
+  #   runs-on: macos-12
+  #   concurrency:
+  #     group: monorepo-ios-${{ github.ref }}
+  #     cancel-in-progress: true
+  #   steps:
+  #     - name: A
+  #       run: ls
