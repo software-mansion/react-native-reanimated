@@ -15,10 +15,10 @@ env:
   REANIMATED_CURRENT_VERSION: github:software-mansion/react-native-reanimated#${{ github.sha }}
 
 jobs:
-  prepare_monorepos:
+  build_android_v1:
     runs-on: ubuntu-latest
     concurrency:
-      group: monorepo-prepare-${{ github.ref }}
+      group: monorepo-android-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Clone monorepo
@@ -26,9 +26,6 @@ jobs:
         with:
           repository: mmazzarolo/react-native-universal-monorepo
           path: monorepo
-      - name: Remove unused projects
-        working-directory: ${{ env.WORKING_DIRECTORY }}/packages
-        run: rm -rf browser-ext electron macos next tv
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
@@ -41,44 +38,33 @@ jobs:
       - name: Add reanimated to `web` app
         working-directory: ${{ env.WORKING_DIRECTORY }}/packages/web
         run: yarn add ${{ env.REANIMATED_CURRENT_VERSION }}
-      - uses: actions/upload-artifact@v3
-        with:
-          name: monorepo_v1
-          path: monorepo
-      - name: Remove Reanimated from workspace
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn remove react-native-reanimated -W
-      - uses: actions/upload-artifact@v3
-        with:
-          name: monorepo_v2
-          path: monorepo
-
-  build_android_v1:
-    needs: prepare_monorepos
-    runs-on: ubuntu-latest
-    concurrency:
-      group: monorepo-android-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: monorepo_v1
-          path: monorepo
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn android:start
 
   build_ios_v1:
-    needs: prepare_monorepos
     runs-on: macos-12
     concurrency:
       group: monorepo-ios-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Clone monorepo
+        uses: actions/checkout@v3
         with:
-          name: monorepo_v1
+          repository: mmazzarolo/react-native-universal-monorepo
           path: monorepo
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn
+      - name: Add Reanimated to workspace
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn add ${{ env.REANIMATED_CURRENT_VERSION }} -W
+      - name: Add Reanimated to `mobile` app
+        working-directory: ${{ env.WORKING_DIRECTORY }}/packages/mobile
+        run: yarn add ${{ env.REANIMATED_CURRENT_VERSION }}
+      - name: Add reanimated to `web` app
+        working-directory: ${{ env.WORKING_DIRECTORY }}/packages/web
+        run: yarn add ${{ env.REANIMATED_CURRENT_VERSION }}
       - name: Pod install
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn ios:pods
