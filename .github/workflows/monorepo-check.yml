@@ -58,7 +58,7 @@ jobs:
         run: ls
 
   prepare_monorepo_v2:
-    needs: [build_android_v1, build_ios_v1]
+    needs: [prepare_monorepo_v1, build_android_v1, build_ios_v1]
     runs-on: ubuntu-latest
     steps:
       - name: Remove reanimated from workspace
