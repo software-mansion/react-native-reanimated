@@ -17,7 +17,7 @@ jobs:
       WORKING_DIRECTORY: monorepo
     steps:
       - name: Test
-        run: echo ${{ github.ref }}
+        run: echo ${{ github.sha }}
       # - name: Clone monorepo
       #   uses: actions/checkout@v3
       #   with:
