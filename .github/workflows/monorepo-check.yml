@@ -11,16 +11,21 @@ on:
       - main
 
 jobs:
-  prepare_monorepo_v1:
+  prepare_monorepos:
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: monorepo
     steps:
-      - name: Clone monorepo
-        uses: actions/checkout@v3
-        with:
-          repository: mmazzarolo/react-native-universal-monorepo
-          path: monorepo
+      - name: Test
+        run: echo ${{ github.ref }}
+      # - name: Clone monorepo
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: mmazzarolo/react-native-universal-monorepo
+      #     path: monorepo
+      # - name: Remove unused projects
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}/packages
+      #   run: rm -rf browser-ext electron macos next tv
       # - name: Install dependencies
       #   working-directory: ${{ env.WORKING_DIRECTORY }}
       #   run: yarn
@@ -57,15 +62,15 @@ jobs:
   #     - name: A
   #       run: ls
 
-  prepare_monorepo_v2:
+  # prepare_monorepo_v2:
     # needs: [prepare_monorepo_v1, build_android_v1, build_ios_v1]
-    needs: prepare_monorepo_v1
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test
-        run: ls -la
-      - name: Test 2
-        run: pwd
+    # needs: prepare_monorepo_v1
+    # runs-on: ubuntu-latest
+    # steps:
+    #   - name: Test
+    #     run: ls -la
+    #   - name: Test 2
+    #     run: pwd
       # - name: Remove reanimated from workspace
       #   run: cd monorepo && yarn remove react-native-reanimated -W
       # - name: Pod install
