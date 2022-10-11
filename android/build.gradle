@@ -42,6 +42,11 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
+def safeAppExtGet(prop, fallback) {
+    def appProject = project(":app")
+    appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
+}
+
 def resolveBuildType() {
     Gradle gradle = getGradle()
     String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
@@ -68,7 +73,7 @@ def resolveClientSideBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return !projectDir.getPath().contains("/node_modules/")
+    return safeAppExtGet("reaDevMode", false)
 }
 
 def isNewArchitectureEnabled() {
@@ -80,7 +85,7 @@ def isNewArchitectureEnabled() {
 }
 
 def resolveReactNativeDirectory() {
-    def userReactNativeLocalization = safeExtGet("reanimatedReactNativeLocalization", null)
+    def userReactNativeLocalization = safeAppExtGet("rn_location", null)
     if (userReactNativeLocalization != null) {
         return file(userReactNativeLocalization)
     }
