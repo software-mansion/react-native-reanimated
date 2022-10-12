@@ -107,7 +107,7 @@ def resolveReactNativeDirectory() {
     }
 
     throw new Exception(
-        "[react-native-reaniamted] Unable to resolve react-native localization in " +
+        "[Reanimated] Unable to resolve react-native location in " +
         "node_modules. You should project extension property (in app/build.gradle) " +
         "`REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
     )
@@ -145,7 +145,7 @@ def findReanimatedInstancesForPath(String path) {
     }.files
 }
 
-def noMultipleInstancesAssertion() {
+def assertNoMultipleInstances() {
     // Assert there are no multiple installations of Reanimated
     Set<File> files
     if (projectDir.path.contains(rootDir.parent)) {
@@ -530,10 +530,10 @@ android {
     }
 }
 
-def assertionTask = task assertNoMultipleInstances {
+def assertionTask = task assertNoMultipleInstancesTask {
     onlyIf { shouldAssertNoMultipleInstances() && CLIENT_SIDE_BUILD }
     doFirst {
-        noMultipleInstancesAssertion()
+        assertNoMultipleInstances()
     }
 }
 
