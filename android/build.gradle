@@ -105,7 +105,7 @@ def resolveReactNativeDirectory() {
     throw new Exception(
         "[react-native-reaniamted] Unable to resolve react-native localization in " +
         "node_modules. You should project extension property (in app/build.gradle) " +
-        "`reanimatedReactNativeLocalization` with path to react-native."
+        "`rn_location` with path to react-native."
     )
 }
 
