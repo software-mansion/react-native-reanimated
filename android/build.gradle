@@ -42,6 +42,11 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
+def safeAppExtGet(prop, fallback) {
+    def appProject = project(":app")
+    appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
+}
+
 def resolveBuildType() {
     Gradle gradle = getGradle()
     String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
@@ -68,7 +73,7 @@ def resolveClientSideBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return file("$projectDir/../node_modules/react-native/package.json").exists()
+    return safeAppExtGet("isReanimatedExampleApp", false)
 }
 
 def isNewArchitectureEnabled() {
@@ -80,10 +85,32 @@ def isNewArchitectureEnabled() {
 }
 
 def resolveReactNativeDirectory() {
+    def reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocation != null) {
+        return file(reactNativeLocation)
+    }
+
     if (isDeveloperMode()) {
         return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
     }
-    return file("$projectDir/../../react-native")
+
+    // monorepo workaround
+    // react-native can be hoisted or in project's own node_modules
+    def reactNativeFromProjectNodeModules = file("${rootProject.projectDir}/../node_modules/react-native")
+    if (reactNativeFromProjectNodeModules.exists()) {
+        return reactNativeFromProjectNodeModules
+    }
+    
+    def reactNativeFromNodeModulesWithReanimated = file("${projectDir}/../../react-native")
+    if (reactNativeFromNodeModulesWithReanimated.exists()) {
+        return reactNativeFromNodeModulesWithReanimated
+    }
+
+    throw new Exception(
+        "[Reanimated] Unable to resolve react-native location in " +
+        "node_modules. You should project extension property (in app/build.gradle) " +
+        "`REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
+    )
 }
 
 def getPlaygroundAppName() { // only for the development
@@ -110,16 +137,37 @@ def shouldAssertNoMultipleInstances() {
   }
 }
 
-def noMultipleInstancesAssertion() {
-    // Assert there are no multiple installations of Reanimated
-    Set<File> files = fileTree(rootDir.parent) {
+def findReanimatedInstancesForPath(String path) {
+    return fileTree(path) {
         include "**/react-native-reanimated/package.json"
         exclude "**/.yarn/**"
+        exclude {{ file, attr -> attr.isSymbolicLink() }}
     }.files
+}
 
+def assertNoMultipleInstances() {
+    // Assert there are no multiple installations of Reanimated
+    Set<File> files
+    if (projectDir.path.contains(rootDir.parent)) {
+        // standard app
+        files = findReanimatedInstancesForPath(rootDir.parent + "/node_modules")
+    } else {
+        // monorepo
+        files = findReanimatedInstancesForPath(rootDir.parent + "/node_modules")
+        files.addAll(
+            findReanimatedInstancesForPath(file(projectDir.parent).parent)
+        )
+    }
     if (files.size() > 1) {
-        String parsedLocation = files.stream().map({ File file -> "- " + file.toString().replace("/package.json", "") }).collect().join("\n")
-        String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation + "\n";
+        String parsedLocation = files.stream().map({
+            File file -> "- " + file.toString().replace("/package.json", "")
+        }).collect().join("\n")
+        String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one " +
+            "instance of react-native-reanimated can be installed in a project. You need to " +
+            "resolve the conflict manually. Check out the documentation: " +
+            "https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/" +
+            "troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict " +
+            "between: \n" + parsedLocation + "\n";
         throw new Exception(exceptionMessage)
     }
 }
@@ -155,10 +203,6 @@ def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/b
 
 def _stackProtectorFlag = true
 
-def CMAKE_NODE_MODULES_DIR = CLIENT_SIDE_BUILD
-    ? project.getProjectDir().getParentFile().getParent()
-    : Paths.get(project.getProjectDir().getParent(), getPlaygroundAppName(), "node_modules").toString()
-
 def JS_RUNTIME = {
     // Returns the js runtime explicitly requested in the environment variable
     if (System.getenv("JS_RUNTIME")) {
@@ -178,14 +222,14 @@ def JS_RUNTIME = {
 def jsRuntimeDir = {
     if (JS_RUNTIME == "hermes") {
         if (REACT_NATIVE_MINOR_VERSION >= 69) {
-            return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "sdks", "hermes")
+            return Paths.get(reactNativeRootDir.path, "sdks", "hermes")
         } else {
-            return Paths.get(CMAKE_NODE_MODULES_DIR, "hermes-engine")
+            return Paths.get(reactNativeRootDir.path, "..", "hermes-engine")
         }
     } else if (JS_RUNTIME == "v8") {
         return findProject(":react-native-v8").getProjectDir().getParent()
     } else {
-        return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "ReactCommon", "jsi")
+        return Paths.get(reactNativeRootDir.path, "ReactCommon", "jsi")
     }
 }.call()
 
@@ -390,7 +434,7 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
-                        "-DNODE_MODULES_DIR=${CMAKE_NODE_MODULES_DIR}",
+                        "-DREACT_NATIVE_DIR=${reactNativeRootDir.path}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
@@ -486,10 +530,10 @@ android {
     }
 }
 
-def assertionTask = task assertNoMultipleInstances {
+def assertionTask = task assertNoMultipleInstancesTask {
     onlyIf { shouldAssertNoMultipleInstances() && CLIENT_SIDE_BUILD }
     doFirst {
-        noMultipleInstancesAssertion()
+        assertNoMultipleInstances()
     }
 }
 
@@ -551,7 +595,12 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
 }
 
 Task resolveBoost = resolveTaskFactory("resolveBoost", "boost_${BOOST_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
-Task resolveDoubleConversion = resolveTaskFactory("resolveDoubleConversion", "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
+Task resolveDoubleConversion = resolveTaskFactory(
+    "resolveDoubleConversion",
+    "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz",
+    reactNativeAndroidDownloadDir,
+    downloadsDir
+)
 Task resolveFolly = resolveTaskFactory("resolveFolly", "folly-${FOLLY_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
 Task resolveGlog = resolveTaskFactory("resolveGlog", "glog-${GLOG_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
 
@@ -719,7 +768,7 @@ if (REACT_NATIVE_MINOR_VERSION >= 69 && !isNewArchitectureEnabled()) {
                 // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
                 // folder at the top level.
                 if (file.relativePath.segments.size() > 1) {
-                    file.relativePath = new org.gradle.api.file.RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
+                    file.relativePath = new RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
                 }
             }
         }
@@ -734,7 +783,12 @@ task prepareHermes() {
         }
 
         doLast {
-            def hermesAAR = file("$reactNativeRootDir/android/com/facebook/react/hermes-engine/${REACT_NATIVE_VERSION}/hermes-engine-${REACT_NATIVE_VERSION}-${resolveBuildType()}.aar") // e.g. hermes-engine-0.70.0-rc.1-debug.aar
+            // e.g. hermes-engine-0.70.0-rc.1-debug.aar
+            def hermesAAR = file(
+                "$reactNativeRootDir/android/com/facebook/react/hermes-engine/" +
+                "${REACT_NATIVE_VERSION}/hermes-engine-${REACT_NATIVE_VERSION}-" +
+                "${resolveBuildType()}.aar"
+            )
             if (!hermesAAR.exists()) {
                 throw new GradleScriptException("Could not find hermes-engine AAR", null)
             }
@@ -896,8 +950,14 @@ task downloadNdkBuildDependencies {
     dependsOn(downloadGlog)
 }
 
-task prepareThirdPartyNdkHeaders(dependsOn:[downloadNdkBuildDependencies, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog, unpackReactNativeAAR]) {
-}
+task prepareThirdPartyNdkHeaders(dependsOn:[
+    downloadNdkBuildDependencies,
+    prepareBoost,
+    prepareDoubleConversion,
+    prepareFolly,
+    prepareGlog,
+    unpackReactNativeAAR]
+) {}
 
 def nativeBuildDependsOn(dependsOnTask) {
     def buildTasks = tasks.findAll({ task ->
