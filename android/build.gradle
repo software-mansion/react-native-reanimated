@@ -73,7 +73,7 @@ def resolveClientSideBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return safeAppExtGet("reaDevMode", false)
+    return safeAppExtGet("isReanimatedExampleApp", false)
 }
 
 def isNewArchitectureEnabled() {
@@ -85,27 +85,31 @@ def isNewArchitectureEnabled() {
 }
 
 def resolveReactNativeDirectory() {
-    def userReactNativeLocalization = safeAppExtGet("rn_location", null)
-    if (userReactNativeLocalization != null) {
-        return file(userReactNativeLocalization)
+    def reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocation != null) {
+        return file(reactNativeLocation)
     }
-    else if (isDeveloperMode()) {
+
+    if (isDeveloperMode()) {
         return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
     }
+
     // monorepo workaround
-    // react native can be hoisted or in project onw node_modules
-    def reactNativeFromProjectNodeModules = file("$rootProject.projectDir/../node_modules/react-native")
-    def reactNativeFromNodeModulesWithReanimated = file("$projectDir/../../react-native")
+    // react-native can be hoisted or in project's own node_modules
+    def reactNativeFromProjectNodeModules = file("${rootProject.projectDir}/../node_modules/react-native")
     if (reactNativeFromProjectNodeModules.exists()) {
         return reactNativeFromProjectNodeModules
     }
-    else if (reactNativeFromNodeModulesWithReanimated.exists()) {
+    
+    def reactNativeFromNodeModulesWithReanimated = file("${projectDir}/../../react-native")
+    if (reactNativeFromNodeModulesWithReanimated.exists()) {
         return reactNativeFromNodeModulesWithReanimated
     }
+
     throw new Exception(
         "[react-native-reaniamted] Unable to resolve react-native localization in " +
         "node_modules. You should project extension property (in app/build.gradle) " +
-        "`rn_location` with path to react-native."
+        "`REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
     )
 }
 
@@ -218,8 +222,6 @@ def JS_RUNTIME = {
 def jsRuntimeDir = {
     if (JS_RUNTIME == "hermes") {
         if (REACT_NATIVE_MINOR_VERSION >= 69) {
-            println("MLEKOOOOO")
-            println(Paths.get(reactNativeRootDir.path, "sdks", "hermes"))
             return Paths.get(reactNativeRootDir.path, "sdks", "hermes")
         } else {
             return Paths.get(reactNativeRootDir.path, "..", "hermes-engine")

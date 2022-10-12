@@ -1,13 +1,13 @@
 require "json"
-require_relative './scripts/reanimated_pods'
+require_relative './scripts/reanimated_utils'
 
 reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
-rn_info = find_config()
-no_multiple_instances_assertion(rn_info)
+config = find_config()
+assert_no_multiple_instances(config)
 
 fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-folly_prefix = rn_info[:react_native_minor_version] >= 64 ? 'RCT-' : ''
-folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=' + rn_info[:react_native_minor_version].to_s
+folly_prefix = config[:react_native_minor_version] >= 64 ? 'RCT-' : ''
+folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=' + config[:react_native_minor_version].to_s
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = fabric_enabled ? '-DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED' : ''
@@ -43,7 +43,7 @@ Pod::Spec.new do |s|
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
   s.xcconfig               = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"#{rn_info[:react_native_common_dir]}\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"#{config[:react_native_common_dir]}\"",
                                "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
 
   s.requires_arc = true
@@ -64,7 +64,7 @@ Pod::Spec.new do |s|
   s.dependency 'React-Core'
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
-  if !rn_info[:is_tv_os_target]
+  if !config[:is_tvos_target]
     s.dependency 'React-RCTActionSheet'
   end
   s.dependency 'React-RCTNetwork'
@@ -83,7 +83,7 @@ Pod::Spec.new do |s|
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
 
-  if rn_info[:react_native_minor_version] == 62
+  if config[:react_native_minor_version] == 62
     s.dependency 'ReactCommon/callinvoker'
   else
     s.dependency 'React-callinvoker'
