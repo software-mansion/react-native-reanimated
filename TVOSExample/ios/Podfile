@@ -5,6 +5,8 @@ source 'https://github.com/react-native-tvos/react-native-tvos-podspecs.git'
 source 'https://cdn.cocoapods.org/'
 install! 'cocoapods', :deterministic_uuids => false
 
+ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'TVOSExample'
+
 target 'TVOSExample' do
 
   platform :ios, '12.0'
