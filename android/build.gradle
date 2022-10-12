@@ -218,14 +218,16 @@ def JS_RUNTIME = {
 def jsRuntimeDir = {
     if (JS_RUNTIME == "hermes") {
         if (REACT_NATIVE_MINOR_VERSION >= 69) {
-            return Paths.get(reactNativeRootDir.path, "react-native", "sdks", "hermes")
+            println("MLEKOOOOO")
+            println(Paths.get(reactNativeRootDir.path, "sdks", "hermes"))
+            return Paths.get(reactNativeRootDir.path, "sdks", "hermes")
         } else {
-            return Paths.get(reactNativeRootDir.path, "hermes-engine")
+            return Paths.get(reactNativeRootDir.path, "..", "hermes-engine")
         }
     } else if (JS_RUNTIME == "v8") {
         return findProject(":react-native-v8").getProjectDir().getParent()
     } else {
-        return Paths.get(reactNativeRootDir.path, "react-native", "ReactCommon", "jsi")
+        return Paths.get(reactNativeRootDir.path, "ReactCommon", "jsi")
     }
 }.call()
 
