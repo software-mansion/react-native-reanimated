@@ -87,7 +87,6 @@ target_include_directories(
         "${REACT_NATIVE_DIR}/ReactCommon"
         "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
         "${REACT_NATIVE_DIR}/ReactCommon/jsi"
-        "${REACT_NATIVE_DIR}/ReactCommon/hermes"
         "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
         "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
         "${REACT_NATIVE_DIR}/ReactCommon/turbomodule/core"
