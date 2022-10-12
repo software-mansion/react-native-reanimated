@@ -43,7 +43,12 @@ def safeExtGet(prop, fallback) {
 }
 
 def safeAppExtGet(prop, fallback) {
-    def appProject = project(":app")
+    def appProject = null
+    try {
+        appProject = project(":app")
+    } catch(Exception e) {
+        return fallback
+    }
     appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
 }
 
