@@ -199,11 +199,6 @@ def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/b
 
 def _stackProtectorFlag = true
 
-// TODO: CMAKE_NODE_MODULES_DIR will fail in monorepo
-def CMAKE_NODE_MODULES_DIR = CLIENT_SIDE_BUILD
-    ? project.getProjectDir().getParentFile().getParent()
-    : Paths.get(project.getProjectDir().getParent(), getPlaygroundAppName(), "node_modules").toString()
-
 def JS_RUNTIME = {
     // Returns the js runtime explicitly requested in the environment variable
     if (System.getenv("JS_RUNTIME")) {
@@ -223,14 +218,14 @@ def JS_RUNTIME = {
 def jsRuntimeDir = {
     if (JS_RUNTIME == "hermes") {
         if (REACT_NATIVE_MINOR_VERSION >= 69) {
-            return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "sdks", "hermes")
+            return Paths.get(reactNativeRootDir.path, "react-native", "sdks", "hermes")
         } else {
-            return Paths.get(CMAKE_NODE_MODULES_DIR, "hermes-engine")
+            return Paths.get(reactNativeRootDir.path, "hermes-engine")
         }
     } else if (JS_RUNTIME == "v8") {
         return findProject(":react-native-v8").getProjectDir().getParent()
     } else {
-        return Paths.get(CMAKE_NODE_MODULES_DIR, "react-native", "ReactCommon", "jsi")
+        return Paths.get(reactNativeRootDir.path, "react-native", "ReactCommon", "jsi")
     }
 }.call()
 
