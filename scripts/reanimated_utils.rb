@@ -46,11 +46,14 @@ def assert_no_multiple_instances(react_native_info)
     return
   end
 
-  lib_instances_in_react_native_node_modules = %x[find #{react_native_info[:react_native_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
-  lib_instances_in_reanimated_node_modules = %x[find #{react_native_info[:reanimated_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
-  lib_instances_in_react_native_node_modules_array = lib_instances_in_react_native_node_modules.split("\n")
-  lib_instances_in_reanimated_node_modules_array = lib_instances_in_reanimated_node_modules.split("\n")
-  reanimated_instances = lib_instances_in_react_native_node_modules_array.length() + lib_instances_in_reanimated_node_modules_array.length()
+  lib_instances_in_node_modules = %x[find #{react_native_info[:react_native_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
+  lib_instances_in_node_modules_array = lib_instances_in_node_modules.split("\n")
+  reanimated_instances = lib_instances_in_node_modules_array.length()
+  if react_native_info[:react_native_node_modules_dir] != react_native_info[:reanimated_node_modules_dir]
+    lib_instances_in_node_modules = %x[find #{react_native_info[:reanimated_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
+    lib_instances_in_node_modules_array = lib_instances_in_node_modules.split("\n")
+    reanimated_instances += lib_instances_in_node_modules_array.length()
+  end
   if reanimated_instances > 1
     parsed_location = ''
     for location in lib_instances_in_react_native_node_modules_array + lib_instances_in_reanimated_node_modules_array
