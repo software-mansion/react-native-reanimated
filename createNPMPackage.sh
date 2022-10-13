@@ -43,7 +43,7 @@ do
 
     ./gradlew clean
 
-    CLIENT_SIDE_BUILD="False" JS_RUNTIME=${engine} REA_PACKAGE_BUILD="1" ./gradlew :assembleDebug --no-build-cache --rerun-tasks
+    CLIENT_SIDE_BUILD="False" JS_RUNTIME=${engine} REANIMATED_PACKAGE_BUILD="1" ./gradlew :assembleDebug --no-build-cache --rerun-tasks
 
     cd ./rnVersionPatch/$versionNumber
     if [ $(find . | grep 'java') ];
@@ -68,7 +68,7 @@ done
 yarn add react-native@"${versions[0]}" --dev
 
 cp -R android/build build_output
-cd android && REA_PACKAGE_BUILD="1" ./gradlew clean && cd ..
+cd android && REANIMATED_PACKAGE_BUILD="1" ./gradlew clean && cd ..
 yarn run type:generate
 npm pack
 

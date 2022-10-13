@@ -78,7 +78,7 @@ def resolveClientSideBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false) || System.getenv("REA_PACKAGE_BUILD")
+    return safeAppExtGet("isReanimatedExampleApp", false) || REANIMATED_PACKAGE_BUILD
 }
 
 def isNewArchitectureEnabled() {
@@ -194,6 +194,7 @@ def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def FBJNI_VERSION = "0.3.0"
+def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -411,9 +412,9 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.2.2"
-        classpath "de.undercouch:gradle-download-task:4.1.2"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
+        classpath "com.android.tools.build:gradle:7.3.0"
+        classpath "de.undercouch:gradle-download-task:5.0.1"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.11.0"
     }
 }
 
@@ -445,6 +446,7 @@ android {
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}"
+                        "-DREANIMATED_PACKAGE_BUILD"=${REANIMATED_PACKAGE_BUILD}
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
