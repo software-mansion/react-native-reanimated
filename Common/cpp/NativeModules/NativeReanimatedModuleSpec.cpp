@@ -104,6 +104,32 @@ static jsi::Value SPEC_PREFIX(stopMapper)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(startMapper2)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->startMapper(
+          rt,
+          std::move(args[0]),
+          std::move(args[1]),
+          std::move(args[2]),
+          std::move(args[3]),
+          std::move(args[4]));
+}
+
+static jsi::Value SPEC_PREFIX(stopMapper2)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->stopMapper(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -211,6 +237,9 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["startMapper"] = MethodMetadata{5, SPEC_PREFIX(startMapper)};
   methodMap_["stopMapper"] = MethodMetadata{1, SPEC_PREFIX(stopMapper)};
+
+  methodMap_["startMapper2"] = MethodMetadata{5, SPEC_PREFIX(startMapper2)};
+  methodMap_["stopMapper2"] = MethodMetadata{1, SPEC_PREFIX(stopMapper2)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{2, SPEC_PREFIX(registerEventHandler)};

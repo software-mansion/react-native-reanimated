@@ -27,6 +27,7 @@
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
+#include "Shareables.h"
 #include "WorkletEventHandler.h"
 
 using namespace facebook;
@@ -171,339 +172,15 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
-class CoreFunction;
-
-class JSRuntimeHelper {
- public:
-  jsi::Runtime *uiRuntime; // UI runtime created by Reanimated
-  jsi::Runtime *rnRuntime; // React-Naitve's main JS runtime
-
-  JSRuntimeHelper(jsi::Runtime *_rnRuntime, jsi::Runtime *_uiRuntime)
-      : rnRuntime(_rnRuntime), uiRuntime(_uiRuntime) {}
-
-  std::shared_ptr<CoreFunction> valueUnpacker;
-
-  inline bool isUIRuntime(const jsi::Runtime &rt) const {
-    return &rt == uiRuntime;
-  }
-
-  inline bool isRNRuntime(const jsi::Runtime &rt) const {
-    return &rt == rnRuntime;
-  }
-};
-
-// Core functions are not allowed to captrue oputside variables, otherwise the'd
-// try to access _closure variable which is something we want to avoid for
-// simplicity reasons.
-class CoreFunction {
- private:
-  std::shared_ptr<jsi::Function> rnFunction;
-  std::shared_ptr<jsi::Function> uiFunction;
-  std::string functionBody;
-  JSRuntimeHelper
-      *runtimeHelper; // runtime helper holds core function references, so we
-                      // use normal pointer here to avoid ref cycles.
- public:
-  CoreFunction(JSRuntimeHelper *_runtimeHelper, const jsi::Value &workletObject)
-      : runtimeHelper(_runtimeHelper) {
-    jsi::Runtime &rt = *_runtimeHelper->rnRuntime;
-    rnFunction = std::make_shared<jsi::Function>(
-        workletObject.asObject(rt).asFunction(rt));
-    functionBody = workletObject.asObject(rt)
-                       .getProperty(rt, "asString")
-                       .asString(rt)
-                       .utf8(rt);
-  }
-  jsi::Value call(jsi::Runtime &rt, const jsi::Value &arg0) {
-    if (runtimeHelper->isUIRuntime(rt)) {
-      if (uiFunction == nullptr) {
-        // maybe need to initialize UI Function
-        auto codeBuffer =
-            std::make_shared<const jsi::StringBuffer>("(" + functionBody + ")");
-        uiFunction = std::make_shared<jsi::Function>(
-            rt.evaluateJavaScript(codeBuffer, "__TODO")
-                .asObject(rt)
-                .asFunction(rt));
-      }
-      return uiFunction->call(rt, arg0);
-    } else {
-      // running on the main RN runtime
-      return rnFunction->call(rt, arg0);
-    }
-  }
-};
-
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueSetter,
     const jsi::Value &valueUnpacker) {
   this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
-  runtimeHelper = std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get());
+  runtimeHelper = std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
   runtimeHelper->valueUnpacker =
       std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
-
-class Shareable {
-protected:
-  virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
- public:
-  virtual ~Shareable() {};
-
-  enum ValueType {
-    UndefinedType,
-    NullType,
-    BooleanType,
-    NumberType,
-    // SymbolType, TODO
-    // BigIntType, TODO
-    StringType,
-    FunctionType,
-    ObjectType,
-    ArrayType,
-    WorkletType,
-    ReactiveType,
-  };
-
-  Shareable(ValueType valueType_) : valueType(valueType_){};
-  virtual jsi::Value getJSValue(jsi::Runtime &rt) {
-    return toJSValue(rt);
-  }
-
-  ValueType valueType;
-
-  static std::shared_ptr<Shareable> newShareable(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
-};
-
-class RetainingShareable : public Shareable {
-public:
-  jsi::Runtime *hostRuntime;
-  std::shared_ptr<jsi::WeakObject> remoteValue;
-
-  RetainingShareable(jsi::Runtime &rt, ValueType valueType) : Shareable(valueType), hostRuntime(&rt) {}
-
-  jsi::Value getJSValue(jsi::Runtime &rt) override final {
-    jsi::Value value;
-    if (&rt == hostRuntime) {
-      // TODO: it is suboptimal to generate new object every time getJS is called on host runtime – the
-      // object we are generating already exists and we should possibly just grab a hold of that object
-      // and use it here instead of creating a new JS representation.
-      // As far as I understand the only caase where this can be realistically called this way is when
-      // a shared value is created and then accessed on the same runtime
-      return toJSValue(rt);
-    } else if (remoteValue == nullptr || (value = remoteValue->lock(rt)).isUndefined()) {
-      value = toJSValue(rt);
-      remoteValue = std::make_shared<jsi::WeakObject>(rt, value.asObject(rt));
-    }
-    return value;
-  }
-
-};
-
-class ShareableJSRef : public jsi::HostObject {
- public:
-  std::shared_ptr<Shareable> value;
-  ShareableJSRef(std::shared_ptr<Shareable> _value) : value(_value){};
-  virtual ~ShareableJSRef(){};
-
-  static jsi::Object newHostObject(
-      jsi::Runtime &rt,
-      const std::shared_ptr<Shareable> &value) {
-    return jsi::Object::createFromHostObject(
-        rt, std::make_shared<ShareableJSRef>(value));
-  }
-};
-
-static std::shared_ptr<Shareable> extractShareableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &maybeShareableValue);
-
-class ShareableArray : public RetainingShareable {
- public:
-  ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
-      : RetainingShareable(rt, ArrayType) {
-    const size_t count = array.size(rt);
-    data.reserve(count);
-    for (size_t i = 0; i < count; i++) {
-      data.push_back(extractShareableOrThrow(rt, array.getValueAtIndex(rt, i)));
-    }
-  }
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto ary = jsi::Array(rt, data.size());
-    for (size_t i = 0; i < data.size(); i++) {
-      ary.setValueAtIndex(rt, i, data[i]->getJSValue(rt));
-    }
-    return ary;
-  }
-
- protected:
-  std::vector<std::shared_ptr<Shareable>> data;
-};
-
-class ShareableObject : public RetainingShareable {
- public:
-  ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
-      : RetainingShareable(rt, ObjectType) {
-    auto propertyNames = object.getPropertyNames(rt);
-    const size_t count = propertyNames.size(rt);
-    data.reserve(count);
-    for (size_t i = 0; i < count; i++) {
-      auto key = propertyNames.getValueAtIndex(rt, i).asString(rt);
-      auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
-      data.push_back(std::make_pair(key.utf8(rt), value));
-    }
-  }
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto obj = jsi::Object(rt);
-    for (size_t i = 0; i < data.size(); i++) {
-      obj.setProperty(rt, data[i].first.c_str(), data[i].second->getJSValue(rt));
-    }
-    return obj;
-  }
-
- protected:
-  std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data;
-};
-
-class ShareableWorklet : public ShareableObject {
- public:
-  JSRuntimeHelper *runtimeHelper;
-  ShareableWorklet(
-      JSRuntimeHelper *_runtimeHelper,
-      jsi::Runtime &rt,
-      const jsi::Object &worklet)
-      : ShareableObject(rt, worklet), runtimeHelper(_runtimeHelper) {
-    valueType = WorkletType;
-  }
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    jsi::Value obj = ShareableObject::toJSValue(rt);
-    return runtimeHelper->valueUnpacker->call(rt, obj);
-  }
-};
-
-class ShareableReactive : public RetainingShareable, public std::enable_shared_from_this<ShareableReactive> {
- public:
-  ShareableReactive(jsi::Runtime &rt, const jsi::Value &initial)
-      : RetainingShareable(rt, ReactiveType) {
-    value = extractShareableOrThrow(rt, initial);
-  }
-  void updateAndNotify(jsi::Runtime &rt, const jsi::Value &newValue) {}
-
-  jsi::Value getReactiveValue(jsi::Runtime &rt) {
-    return value->getJSValue(rt);
-  }
-
-  void setReactiveValue(jsi::Runtime &rt, const jsi::Value &newValue) {
-    // TODO: mutex + notify + schedule sth on UI?
-    value = extractShareableOrThrow(rt, newValue);
-  }
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-
-  std::shared_ptr<Shareable> value;
-};
-
-class ShareableReactiveHostObject : public jsi::HostObject {
-public:
- std::shared_ptr<RuntimeManager> runtimeManager;
- std::shared_ptr<ShareableReactive> shareable;
-
- ShareableReactiveHostObject(const std::shared_ptr<ShareableReactive> &_shareable)
-     : shareable(_shareable){};
- virtual ~ShareableReactiveHostObject(){};
-
- jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) override {
-   if (name.utf8(rt) == "value") {
-     return shareable->getReactiveValue(rt);
-   }
-   throw "unknown key";
- }
-
- void set(
-     jsi::Runtime &rt,
-     const jsi::PropNameID &name,
-     const jsi::Value &jsValue) override {
-   if (name.utf8(rt) == "value") {
-     shareable->setReactiveValue(rt, jsValue);
-   }
- }
-
- static jsi::Object newHostObject(
-     jsi::Runtime &rt,
-     const std::shared_ptr<ShareableReactive> &value) {
-   return jsi::Object::createFromHostObject(
-       rt, std::make_shared<ShareableReactiveHostObject>(value));
- }
-};
-
-jsi::Value ShareableReactive::toJSValue(jsi::Runtime &rt) {
-  return ShareableReactiveHostObject::newHostObject(rt, shared_from_this());
-}
-
-static std::shared_ptr<Shareable> extractShareableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &maybeShareableValue) {
-  if (maybeShareableValue.isObject()) {
-    auto object = maybeShareableValue.asObject(rt);
-    if (object.isHostObject<ShareableReactiveHostObject>(rt)) {
-      return object.getHostObject<ShareableReactiveHostObject>(rt)->shareable;
-    } else if (object.isHostObject<ShareableJSRef>(rt)) {
-      return object.getHostObject<ShareableJSRef>(rt)->value;
-    }
-  }
-  throw std::string("value is not shareable");
-}
-
-class ShareableString : public Shareable {
- public:
-  ShareableString(jsi::Runtime &rt, const jsi::String &string)
-      : Shareable(StringType) {
-    data = string.utf8(rt);
-  }
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return jsi::String::createFromUtf8(rt, data);
-  }
-
- protected:
-  std::string data;
-};
-
-class ShareableScalar : public Shareable {
- public:
-  ShareableScalar(double number) : Shareable(NumberType) {
-    data.number = number;
-  };
-  ShareableScalar(bool boolean) : Shareable(BooleanType) {
-    data.boolean = boolean;
-  };
-  ShareableScalar() : Shareable(UndefinedType) {}
-  ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    switch (valueType) {
-      case Shareable::UndefinedType:
-        return jsi::Value();
-      case Shareable::NullType:
-        return jsi::Value(nullptr);
-      case Shareable::BooleanType:
-        return jsi::Value(data.boolean);
-      case Shareable::NumberType:
-        return jsi::Value(data.number);
-      default:
-        throw "invalid scalar type";
-    }
-  }
-
- protected:
-  union Data {
-    bool boolean;
-    double number;
-  };
-
-  Data data;
-};
 
 void NativeReanimatedModule::scheduleOnUI(
     jsi::Runtime &rt,
@@ -640,6 +317,55 @@ void NativeReanimatedModule::stopMapper(
     mapperRegistry->stopMapper(id);
     maybeRequestRender();
   });
+}
+
+jsi::Value NativeReanimatedModule::startMapper2(
+    jsi::Runtime &rt,
+    const jsi::Value &_worklet,
+    const jsi::Value &_inputs,
+    const jsi::Value &outputs,
+    const jsi::Value &updater,
+    const jsi::Value &viewDescriptors) {
+
+  static unsigned long MAPPER_ID = 1e8;
+
+  unsigned long newMapperId = MAPPER_ID++;
+
+  auto shareableWorklet = extractShareableOrThrow(rt, _worklet);
+  auto updaterWorklet = extractShareableOrThrow(rt, _worklet);
+
+  std::vector<std::shared_ptr<ShareableReactive>> inputs;
+  auto inputsAry = _inputs.asObject(rt).asArray(rt);
+  for (int i = 0, size = inputsAry.size(rt); i < size; i++) {
+    inputs.push_back(std::dynamic_pointer_cast<ShareableReactive>(
+        extractShareableOrThrow(rt, inputsAry.getValueAtIndex(rt, i))
+    ));
+  }
+
+  auto uiRuntime = runtimeHelper->uiRuntime;
+  scheduler->scheduleOnUI([=] {
+    jsi::Runtime &rt = *uiRuntime;
+    auto mapperFunction = std::make_shared<jsi::Function>(shareableWorklet->getJSValue(rt).asObject(rt).asFunction(rt));
+    auto mapper = std::make_shared<Mapper>(
+        this,
+        newMapperId,
+        mapperFunction,
+        inputs);
+    mapperRegistry->startMapper(mapper);
+    maybeRequestRender();
+  });
+
+  return jsi::Value(static_cast<double>(newMapperId));
+}
+
+void NativeReanimatedModule::stopMapper2(
+    jsi::Runtime &rt,
+    const jsi::Value &mapperId) {
+  unsigned long id = mapperId.asNumber();
+//  scheduler->scheduleOnUI([=] {
+//    mapperRegistry->stopMapper(id);
+//    maybeRequestRender();
+//  });
 }
 
 jsi::Value NativeReanimatedModule::registerEventHandler(

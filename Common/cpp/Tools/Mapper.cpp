@@ -20,6 +20,21 @@ Mapper::Mapper(
   }
 }
 
+Mapper::Mapper(
+    NativeReanimatedModule *module,
+    unsigned long id,
+    std::shared_ptr<jsi::Function> mapper,
+    std::vector<std::shared_ptr<ShareableReactive>> inputs)
+    : id(id), module(module), mapper(mapper), inputs2(inputs) {
+  auto markDirty = [this, module]() {
+    this->dirty = true;
+    module->maybeRequestRender();
+  };
+  for (auto input : inputs) {
+    input->addListener(id, markDirty);
+  }
+}
+
 void Mapper::execute(jsi::Runtime &rt) {
   dirty = false;
   if (optimalizationLvl == 0) {

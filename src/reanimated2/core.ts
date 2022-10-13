@@ -283,7 +283,6 @@ function valueUnpacker(objectToUnpack) {
     workletsCache.set(objectToUnpack.__workletHash, workletFun);
   }
   return () => {
-    _log('run worklet for realz ' + JSON.stringify(objectToUnpack));
     jsThis = objectToUnpack;
     workletFun();
   };
@@ -317,24 +316,37 @@ function makeShareableCloneRecursive(value) {
 }
 
 export function doSomething() {
-  // const data = makeShareableCloneRecursive({
+  // const before = {
   //   a: 14,
   //   b: 'hello',
   //   c: [1, 2, { x: 8 }, 'yollo'],
-  // });
+  // };
+  // const data = makeShareableCloneRecursive(before);
 
-  function anotherWork() {
-    'worklet';
-    console.log('Can run me too');
-  }
+  // function anotherWork() {
+  //   'worklet';
+  //   console.log('Can run me too');
+  // }
+
+  const reactive = NativeReanimatedModule.makeReactiveValue(
+    makeShareableCloneRecursive(7)
+  );
+  _adaptCache.set(reactive, reactive);
+  console.log('reactio', Object.getPrototypeOf(reactive));
 
   function work() {
     'worklet';
-    console.log('hellow from the UI thread');
-    anotherWork();
+    console.log('hellow from the UI thread', reactive.value);
+    // anotherWork();
   }
   const shareableWork = makeShareableCloneRecursive(work);
   NativeReanimatedModule.scheduleOnUI(shareableWork);
+  setTimeout(() => {
+    reactive.value = makeShareableCloneRecursive(8);
+    NativeReanimatedModule.scheduleOnUI(shareableWork);
+  }, 500);
+
+  // console.log('DATA', before, reacitve.value);
 }
 
 export function makeMutable<T>(value: T): SharedValue<T> {

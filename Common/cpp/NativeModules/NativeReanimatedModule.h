@@ -20,6 +20,7 @@
 #include "RuntimeManager.h"
 #include "Scheduler.h"
 #include "SingleInstanceChecker.h"
+#include "Shareables.h"
 
 namespace reanimated {
 
@@ -29,7 +30,6 @@ class ShareableValue;
 class MutableValue;
 class MapperRegistry;
 class EventHandlerRegistry;
-class JSRuntimeHelper;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec,
                                public RuntimeManager {
@@ -79,6 +79,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &updater,
       const jsi::Value &viewDescriptors) override;
   void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
+
+  jsi::Value startMapper2(
+     jsi::Runtime &rt,
+     const jsi::Value &worklet,
+     const jsi::Value &inputs,
+     const jsi::Value &outputs,
+     const jsi::Value &updater,
+     const jsi::Value &viewDescriptors) override;
+  void stopMapper2(jsi::Runtime &rt, const jsi::Value &mapperId) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
