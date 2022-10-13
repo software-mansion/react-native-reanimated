@@ -6,10 +6,10 @@ ROOT=$(pwd)
 
 unset CI
 
-versions=("0.70.2" "0.69.4" "0.68.3" "0.67.4" "0.66.4")
+versions=("0.70.2" "0.69.6" "0.68.4" "0.67.4" "0.66.4")
 version_name=("70" "69" "68" "67" "66")
 
-for index in {0..0}
+for index in {0..4}
 do
   yarn add react-native@"${versions[$index]}"
   for for_hermes in "True" "False"
@@ -43,7 +43,7 @@ do
 
     ./gradlew clean
 
-    CLIENT_SIDE_BUILD="False" JS_RUNTIME=${engine} ./gradlew :assembleDebug --no-build-cache --rerun-tasks
+    CLIENT_SIDE_BUILD="False" JS_RUNTIME=${engine} REA_PACKAGE_BUILD="1" ./gradlew :assembleDebug --no-build-cache --rerun-tasks
 
     cd ./rnVersionPatch/$versionNumber
     if [ $(find . | grep 'java') ];
@@ -68,7 +68,7 @@ done
 yarn add react-native@"${versions[0]}" --dev
 
 cp -R android/build build_output
-cd android && ./gradlew clean && cd ..
+cd android && REA_PACKAGE_BUILD="1" ./gradlew clean && cd ..
 yarn run type:generate
 npm pack
 

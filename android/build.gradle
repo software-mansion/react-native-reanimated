@@ -78,7 +78,7 @@ def resolveClientSideBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false)
+    return safeAppExtGet("isReanimatedExampleApp", false) || System.getenv("REA_PACKAGE_BUILD")
 }
 
 def isNewArchitectureEnabled() {
