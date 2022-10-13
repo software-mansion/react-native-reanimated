@@ -50,6 +50,7 @@
     "!ios/build/",
     "!android/build/",
     "RNReanimated.podspec",
+    "scripts/reanimated_utils.rb",
     "README.md",
     "react-native-reanimated.d.ts",
     "mock.js",
