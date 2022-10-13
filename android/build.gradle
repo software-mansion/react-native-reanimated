@@ -78,7 +78,7 @@ def resolveClientSideBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false) || REANIMATED_PACKAGE_BUILD
+    return safeAppExtGet("isReanimatedExampleApp", false) || System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
 }
 
 def isNewArchitectureEnabled() {
@@ -445,8 +445,8 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
-                        "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}"
-                        "-DREANIMATED_PACKAGE_BUILD"=${REANIMATED_PACKAGE_BUILD}
+                        "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
+                        "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
