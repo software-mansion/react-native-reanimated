@@ -6,7 +6,7 @@ on:
       - 'android/build.gradle'
   push:
     branches:
-      - Reanimated2
+      - main
 jobs:
   check:
     runs-on: ubuntu-latest
