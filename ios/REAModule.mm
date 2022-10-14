@@ -14,6 +14,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
+#import <RNReanimated/ReanimatedCommitHook.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 #endif
 
@@ -46,6 +47,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
   std::shared_ptr<EventListener> eventListener_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
@@ -67,6 +69,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   [scheduler removeEventListener:eventListener_];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self.bridge.surfacePresenter removeObserver:self];
 #endif
   [_nodesManager invalidate];
   [super invalidate];
@@ -110,6 +113,10 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
   newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
+#ifdef RCT_NEW_ARCH_ENABLED
+  commitHook_ = std::make_shared<ReanimatedCommitHook>();
+  uiManager->registerCommitHook(*commitHook_);
+#endif // RCT_NEW_ARCH_ENABLED
   [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
   [self setUpNativeReanimatedModule:uiManager];
 }
@@ -169,7 +176,12 @@ RCT_EXPORT_MODULE(ReanimatedModule);
                                              object:nil];
 
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  [bridge.surfacePresenter addObserver:self];
+#else
   [bridge.uiManager.observerCoordinator addObserver:self];
+#endif
 
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
@@ -244,7 +256,11 @@ RCT_EXPORT_METHOD(installTurboModule)
   _nodesManager = [[REANodesManager alloc] initWithModule:self uiManager:self.bridge.uiManager];
   _operations = [NSMutableArray new];
 
+#ifdef RN_FABRIC_ENABLED
+  [bridge.surfacePresenter addObserver:self];
+#else
   [bridge.uiManager.observerCoordinator addObserver:self];
+#endif // RN_FABRIC_ENABLED
 }
 
 #pragma mark-- Batch handling
@@ -290,5 +306,18 @@ RCT_EXPORT_METHOD(installTurboModule)
   // Events can be dispatched from any queue
   [_nodesManager dispatchEvent:event];
 }
+
+#pragma mark - RCTSurfacePresenterObserver
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+- (void)didMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+
+  // TODO: start animation for tag
+}
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end
