@@ -4,12 +4,15 @@ import { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI
 import { ShadowNodeWrapper } from './hook/commonTypes';
 import { MeasuredDimensions } from './NativeMethods';
 import { NativeReanimated } from './NativeReanimated/NativeReanimated';
+
 declare global {
   const _WORKLET: boolean;
   const _IS_FABRIC: boolean;
-  const _frameTimestamp: number;
+  const _frameTimestamp: number | null;
   const _eventTimestamp: number;
+  const __reanimatedModuleProxy: NativeReanimated;
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
+  const _log: (s: string) => void;
   const _getCurrentTime: () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _startObservingProgress: (
@@ -29,7 +32,7 @@ declare global {
   const _removeShadowNodeFromRegistry: (
     shadowNodeWrapper: ShadowNodeWrapper
   ) => void;
-  const _measure: (viewTag: number) => MeasuredDimensions | null;
+  const _measure: (viewTag: number) => MeasuredDimensions;
   const _scrollTo: (
     viewTag: number,
     x: number,
@@ -42,22 +45,58 @@ declare global {
     args: Array<unknown>
   ) => void;
   const _chronoNow: () => number;
+  const performance: { now: () => number };
+  const LayoutAnimationRepository: {
+    configs: Record<string, unknown>;
+    registerConfig(tag: number, config: Record<string, unknown>): void;
+    removeConfig(tag: number): void;
+    startAnimationForTag(tag: number, type: string, yogaValues: unknown): void;
+  };
   const ReanimatedDataMock: {
     now: () => number;
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
+
   namespace NodeJS {
     interface Global {
-      _setGlobalConsole: (console?: ReanimatedConsole) => void;
-      _log: (s: string) => void;
-      _setGestureState: () => void;
       _WORKLET: boolean;
       _IS_FABRIC: boolean;
-      __reanimatedModuleProxy: NativeReanimated;
       _frameTimestamp: number | null;
-      _measure: () => MeasuredDimensions | null;
-      _scrollTo: () => void;
-      _dispatchCommand: () => void;
+      _eventTimestamp: number;
+      __reanimatedModuleProxy: NativeReanimated;
+      _setGlobalConsole: (console?: ReanimatedConsole) => void;
+      _log: (s: string) => void;
+      _getCurrentTime: () => number;
+      _stopObservingProgress: (tag: number, flag: boolean) => void;
+      _startObservingProgress: (
+        tag: number,
+        flag: { value: boolean; _value: boolean }
+      ) => void;
+      _setGestureState: (handlerTag: number, newState: number) => void;
+      _updatePropsPaper: (
+        tag: number,
+        name: string,
+        updates: StyleProps | AnimatedStyle
+      ) => void;
+      _updatePropsFabric: (
+        shadowNodeWrapper: ShadowNodeWrapper,
+        props: StyleProps | AnimatedStyle
+      ) => void;
+      _removeShadowNodeFromRegistry: (
+        shadowNodeWrapper: ShadowNodeWrapper
+      ) => void;
+      _measure: (viewTag: number) => MeasuredDimensions;
+      _scrollTo: (
+        viewTag: number,
+        x: number,
+        y: number,
+        animated: boolean
+      ) => void;
+      _dispatchCommand: (
+        shadowNodeWrapper: ShadowNodeWrapper,
+        commandName: string,
+        args: Array<unknown>
+      ) => void;
       _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationRepository: {
