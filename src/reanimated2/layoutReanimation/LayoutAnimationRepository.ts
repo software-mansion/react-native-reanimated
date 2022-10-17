@@ -26,7 +26,7 @@ runOnUI(() => {
       }
       const style = configs[tag][type](yogaValues);
       let currentAnimation = style.animations;
-      if (Object.keys(currentAnimation).length == 0) {
+      if (Object.keys(currentAnimation).length === 0) {
         return;
       }
       if (type === 'entering') {

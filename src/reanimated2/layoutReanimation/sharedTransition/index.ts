@@ -1,4 +1,4 @@
-import { withTiming } from "../../animation";
+import { withTiming } from '../../animation';
 import {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -13,17 +13,17 @@ const supportedProps = [
   'originY',
   // 'globalOriginX',
   // 'globalOriginY',
-]
+];
 
 type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
 
 export class SharedTransition implements ILayoutAnimationBuilder {
-  animationFactory: AnimationFactoryType;
+  animationFactory: AnimationFactoryType | null = null;
 
   static createInstance(): SharedTransition {
     return new SharedTransition();
   }
-  
+
   static custom(animationFactory: AnimationFactoryType): SharedTransition {
     return this.createInstance().custom(animationFactory);
   }
@@ -39,11 +39,15 @@ export class SharedTransition implements ILayoutAnimationBuilder {
 
   build(): LayoutAnimationFunction {
     const animationFactory = this.animationFactory;
-    return (values) => {
+    return (values: LayoutAnimationsValues) => {
       'worklet';
-      let animations = {};
-      const initialValues = {};
-      
+      let animations: {
+        [key: string]: any;
+      } = {};
+      const initialValues: {
+        [key: string]: any;
+      } = {};
+
       if (animationFactory) {
         animations = animationFactory(values);
         for (const key in animations) {
@@ -53,8 +57,11 @@ export class SharedTransition implements ILayoutAnimationBuilder {
         }
       } else {
         for (const propName of supportedProps) {
-          const keyToTargetValue = 'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
-          animations[propName] = withTiming(values[keyToTargetValue], { duration: 1000 });
+          const keyToTargetValue =
+            'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
+          animations[propName] = withTiming(values[keyToTargetValue], {
+            duration: 1000,
+          });
         }
       }
 
@@ -64,7 +71,8 @@ export class SharedTransition implements ILayoutAnimationBuilder {
       // ];
 
       for (const propName in animations) {
-        const keyToCurrentValue = 'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
+        const keyToCurrentValue =
+          'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
         initialValues[propName] = values[keyToCurrentValue];
       }
 

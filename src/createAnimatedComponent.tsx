@@ -29,8 +29,9 @@ import {
   DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
-import {
+import type {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
@@ -161,7 +162,7 @@ export default function createAnimatedComponent(
     sv: SharedValue<null | Record<string, unknown>> | null;
     _component: ComponentRef | null = null;
     static displayName: string;
-    _sharedTransitionTag: string;
+    _sharedTransitionTag = '';
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -446,7 +447,9 @@ export default function createAnimatedComponent(
           }
 
           if (has('build', sharedElementTransition)) {
-            sharedElementTransition = sharedElementTransition.build();
+            sharedElementTransition = (
+              sharedElementTransition as ILayoutAnimationBuilder
+            ).build() as LayoutAnimationFunction;
           }
           if (this.props.sharedTransitionTag) {
             this._sharedTransitionTag = this.props.sharedTransitionTag;
@@ -454,11 +457,11 @@ export default function createAnimatedComponent(
           }
 
           if (has('build', reappearing)) {
-            reappearing = reappearing.build();
+            reappearing = (reappearing as ILayoutAnimationBuilder).build();
           }
 
           if (has('build', hiding)) {
-            hiding = hiding.build();
+            hiding = (hiding as ILayoutAnimationBuilder).build();
           }
 
           const config = {
