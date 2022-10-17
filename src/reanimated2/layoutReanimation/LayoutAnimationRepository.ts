@@ -1,13 +1,14 @@
+import { ColorProperties } from '../UpdateProps';
+import { processColor } from '../Colors';
 /* global _stopObservingProgress, _startObservingProgress */
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
-import { ColorProperties } from '../UpdateProps';
-import { processColor } from '../Colors';
 
 runOnUI(() => {
   'worklet';
 
   const configs: Record<string, any> = Object.create(null);
+  const yogaValuesRegistry: Record<string, any> = Object.create(null);
   const enteringAnimationForTag: Record<string, any> = {};
 
   global.LayoutAnimationRepository = {
@@ -16,6 +17,10 @@ runOnUI(() => {
       console.log('registerConfig', tag);
       configs[tag] = config;
       enteringAnimationForTag[tag] = null;
+      if (configs[tag].entering) {
+        this.startAnimationForTag(tag, 'entering2', yogaValuesRegistry);
+        configs[tag].entering = null;
+      }
     },
     removeConfig(tag) {
       console.log('removeConfig', tag);
@@ -23,11 +28,14 @@ runOnUI(() => {
       delete enteringAnimationForTag[tag];
     },
     startAnimationForTag(tag, type, yogaValues) {
-      if (type === 'entering') {
-        // yes, this is a hack
-        tag -= 2;
-      }
       console.log('startAnimationForTag', tag, type);
+      if (type === 'entering') {
+        yogaValuesRegistry[tag] = yogaValues;
+        return;
+      }
+      if (type === 'entering2') {
+        type = 'entering';
+      }
       if (configs[tag] == null) {
         return; // :(
       }
