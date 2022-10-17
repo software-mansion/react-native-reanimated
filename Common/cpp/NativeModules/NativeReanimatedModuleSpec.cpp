@@ -110,7 +110,7 @@ static jsi::Value SPEC_PREFIX(startMapper2)(
     const jsi::Value *args,
     size_t count) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->startMapper(
+      ->startMapper2(
           rt,
           std::move(args[0]),
           std::move(args[1]),
@@ -125,7 +125,7 @@ static jsi::Value SPEC_PREFIX(stopMapper2)(
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->stopMapper(rt, std::move(args[0]));
+      ->stopMapper2(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 

@@ -12,13 +12,13 @@ using namespace facebook;
 namespace reanimated {
 
 class MapperRegistry;
+class ShareableValue;
+class ShareableReactive;
 
 struct ViewDescriptor {
   int tag;
   jsi::Value name;
 };
-
-class ShareableReactive;
 
 class Mapper : public std::enable_shared_from_this<Mapper> {
   friend MapperRegistry;

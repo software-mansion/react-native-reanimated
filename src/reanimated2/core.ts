@@ -334,16 +334,31 @@ export function doSomething() {
   _adaptCache.set(reactive, reactive);
   console.log('reactio', Object.getPrototypeOf(reactive));
 
-  function work() {
+  // function work() {
+  //   'worklet';
+  //   console.log('hellow from the UI thread', reactive.value);
+  //   // anotherWork();
+  // }
+  // const shareableWork = makeShareableCloneRecursive(work);
+  // NativeReanimatedModule.scheduleOnUI(shareableWork);
+  // setTimeout(() => {
+  //   reactive.value = makeShareableCloneRecursive(8);
+  //   NativeReanimatedModule.scheduleOnUI(shareableWork);
+  // }, 500);
+
+  const work = makeShareableCloneRecursive(() => {
     'worklet';
-    console.log('hellow from the UI thread', reactive.value);
-    // anotherWork();
-  }
-  const shareableWork = makeShareableCloneRecursive(work);
-  NativeReanimatedModule.scheduleOnUI(shareableWork);
+    _log('yollo');
+  });
+  const updater = makeShareableCloneRecursive(() => {
+    'worklet';
+    _log('updtaer');
+  });
+
+  NativeReanimatedModule.startMapper2(work, [reactive], [], updater, undefined);
+
   setTimeout(() => {
     reactive.value = makeShareableCloneRecursive(8);
-    NativeReanimatedModule.scheduleOnUI(shareableWork);
   }, 500);
 
   // console.log('DATA', before, reacitve.value);

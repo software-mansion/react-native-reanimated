@@ -1,7 +1,8 @@
 #include "Shareables.h"
 
 using namespace facebook;
-using namespace reanimated;
+
+namespace reanimated {
 
 CoreFunction::CoreFunction(JSRuntimeHelper *_runtimeHelper, const jsi::Value &workletObject)
 : runtimeHelper(_runtimeHelper) {
@@ -46,6 +47,9 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
   throw std::string("value is not shareable");
 }
 
+Shareable::~Shareable() {
+}
+
 jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
   jsi::Value value;
   if (&rt == hostRuntime) {
@@ -62,7 +66,11 @@ jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
   return value;
 }
 
-void ShareableReactive::setReactiveValue(jsi::Runtime &rt, const jsi::Value &newValue, const std::shared_ptr<JSRuntimeHelper> &rtHelper) {
+ShareableReactive::ShareableReactive(JSRuntimeHelper *runtimeHelper, jsi::Runtime &rt, const jsi::Value &initial)
+    : RetainingShareable(rt, ReactiveType), runtimeHelper(runtimeHelper), value(extractShareableOrThrow(rt, initial)) {
+}
+
+void ShareableReactive::setReactiveValue(jsi::Runtime &rt, const jsi::Value &newValue, JSRuntimeHelper *rtHelper) {
   value = extractShareableOrThrow(rt, newValue);
 
   // notify listeners
@@ -78,3 +86,30 @@ void ShareableReactive::setReactiveValue(jsi::Runtime &rt, const jsi::Value &new
     rtHelper->scheduleOnUI([notifyListeners] { notifyListeners(); });
   }
 }
+
+jsi::Value ShareableReactive::toJSValue(jsi::Runtime &rt) {
+  return ShareableReactiveHostObject::newHostObject(runtimeHelper, rt, shared_from_this());
+}
+
+ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
+    : RetainingShareable(rt, ArrayType) {
+  const size_t count = array.size(rt);
+  data.reserve(count);
+  for (size_t i = 0; i < count; i++) {
+    data.push_back(extractShareableOrThrow(rt, array.getValueAtIndex(rt, i)));
+  }
+}
+
+ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
+    : RetainingShareable(rt, ObjectType) {
+  auto propertyNames = object.getPropertyNames(rt);
+  const size_t count = propertyNames.size(rt);
+  data.reserve(count);
+  for (size_t i = 0; i < count; i++) {
+    auto key = propertyNames.getValueAtIndex(rt, i).asString(rt);
+    auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
+    data.push_back(std::make_pair(key.utf8(rt), value));
+  }
+}
+
+} /* namespace reanimated */

@@ -1,6 +1,7 @@
 #include "Mapper.h"
 #include "MutableValue.h"
 #include "SharedParent.h"
+#include "Shareables.h"
 
 namespace reanimated {
 

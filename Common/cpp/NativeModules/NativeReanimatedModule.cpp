@@ -158,7 +158,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       layoutAnimationsProxy);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
-    this->onRender(timestampMs);
+    this->onRender(timestampMs); 
   };
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -206,8 +206,8 @@ void NativeReanimatedModule::scheduleOnJS(
 jsi::Value NativeReanimatedModule::makeReactiveValue(
     jsi::Runtime &rt,
     const jsi::Value &initialShareable) {
-  auto shared = std::make_shared<ShareableReactive>(rt, initialShareable);
-  return ShareableReactiveHostObject::newHostObject(rt, shared);
+  auto shared = std::make_shared<ShareableReactive>(runtimeHelper.get(), rt, initialShareable);
+  return shared->toJSValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(
