@@ -24,6 +24,8 @@
 
 #import "SingleInstanceChecker.h"
 
+#include <algorithm>
+
 using namespace facebook::react;
 using namespace reanimated;
 
@@ -392,7 +394,6 @@ static UIView *removedView;
         UIView *windowView = UIApplication.sharedApplication.keyWindow;
         [windowView addSubview:removedView];
         removedView.reactTag = @(tag);
-        // TODO: make snapshot of view (because it's prepared for view recycling)
         [self.nodesManager.animationsManager onViewRemoval:removedView before:beforeSnapshot];
       }
       reanimatedModule->layoutAnimationsProxy->tagsOfRemovedViews_.clear();
