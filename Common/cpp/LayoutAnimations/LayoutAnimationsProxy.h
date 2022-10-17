@@ -29,6 +29,7 @@ class LayoutAnimationsProxy {
 
   std::vector<Tag> tagsOfCreatedViews_;
   std::vector<Tag> tagsOfUpdatedViews_;
+  std::vector<Tag> tagsOfRemovedViews_;
 
  private:
   std::function<void(int, jsi::Object newProps)> notifyAboutProgress;

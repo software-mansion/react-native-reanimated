@@ -137,7 +137,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   }
   if (!cannotStripe) {
     if (view.reactSuperview != nil) {
-      [_reaUiManager unregisterView:view];
+      //      [_reaUiManager unregisterView:view];
     }
     [_states removeObjectForKey:tag];
     [_viewForTag removeObjectForKey:tag];
@@ -296,16 +296,17 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     return;
   }
   NSMutableDictionary<NSString *, NSObject *> *startValues = before.values;
-  if (state == Inactive) {
-    if (startValues != nil) {
-      _states[tag] = [NSNumber numberWithInt:ToRemove];
-      [_toRemove addObject:tag];
-      [self scheduleCleaning];
-    }
-    return;
-  }
+  //  if (state == Inactive) {
+  //    if (startValues != nil) {
+  //      _states[tag] = [NSNumber numberWithInt:ToRemove];
+  //      [_toRemove addObject:tag];
+  //      [self scheduleCleaning];
+  //    }
+  //    return;
+  //  }
   _states[tag] = [NSNumber numberWithInt:Disappearing];
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:startValues frameConfig:ExitingFrame];
+  _viewForTag[tag] = view;
   _startAnimationForTag(tag, @"exiting", preparedValues, @(0));
 }
 

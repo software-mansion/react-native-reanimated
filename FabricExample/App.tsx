@@ -1,6 +1,6 @@
 import Animated, {
   BounceInLeft,
-  BounceOutRight,
+  FadeOutRight,
   Layout,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
@@ -19,7 +19,10 @@ export default function EmptyExample() {
         <Animated.View
           entering={BounceInLeft}
           layout={Layout.springify()}
-          exiting={BounceOutRight}
+          exiting={FadeOutRight.duration(500).withCallback(() => {
+            'worklet';
+            console.log('finished exiting');
+          })}
           style={{
             width: 100,
             height: 100,

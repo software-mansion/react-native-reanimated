@@ -319,20 +319,40 @@ RCT_EXPORT_METHOD(installTurboModule)
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
+// TODO: generalize for more instances
 static REASnapshot *beforeSnapshot;
+static UIView *removedView;
 
 - (void)willMountComponentsWithRootTag:(NSInteger)rootTag
 {
   RCTAssertMainQueue();
 
-  // TODO: start nested CATransaction?
+  [CATransaction begin];
+  // this transaction wraps transaction inside RCTPerformMountInstructions
+  // because we don't want to splash view for a single frame before entering/layout animations starts
 
   if (auto reanimatedModule = reanimatedModule_.lock()) {
-    const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_;
-    for (auto tag : tags) {
-      UIView *view = [_uiManager viewForReactTag:@(tag)];
-      REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-      beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
+    // layout animations
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_;
+      for (auto tag : tags) {
+        UIView *view = [_uiManager viewForReactTag:@(tag)];
+        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+        beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
+      }
+    }
+
+    // exiting animations
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfRemovedViews_;
+      for (auto tag : tags) {
+        UIView *view = [_uiManager viewForReactTag:@(tag)];
+        view.reactTag = @(tag);
+        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+        beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
+        removedView = [view snapshotViewAfterScreenUpdates:NO];
+        removedView.frame = view.frame;
+      }
     }
   }
 }
@@ -364,7 +384,22 @@ static REASnapshot *beforeSnapshot;
       }
       reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_.clear();
     }
+
+    // exiting animations
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfRemovedViews_;
+      for (auto tag : tags) {
+        UIView *windowView = UIApplication.sharedApplication.keyWindow;
+        [windowView addSubview:removedView];
+        removedView.reactTag = @(tag);
+        // TODO: make snapshot of view (because it's prepared for view recycling)
+        [self.nodesManager.animationsManager onViewRemoval:removedView before:beforeSnapshot];
+      }
+      reanimatedModule->layoutAnimationsProxy->tagsOfRemovedViews_.clear();
+    }
   }
+
+  [CATransaction commit];
 }
 
 #endif // RCT_NEW_ARCH_ENABLED

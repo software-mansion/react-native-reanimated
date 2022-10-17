@@ -18,6 +18,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   std::vector<Tag> tagsOfCreatedViews;
   std::vector<Tag> tagsOfUpdatedViews;
+  std::vector<Tag> tagsOfRemovedViews;
 
   for (const auto &mutation : mutations) {
     switch (mutation.type) {
@@ -31,8 +32,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
         tagsOfUpdatedViews.push_back(mutation.newChildShadowView.tag);
         break;
 
+      case ShadowViewMutation::Remove:
+        tagsOfRemovedViews.push_back(mutation.oldChildShadowView.tag);
+        break;
+
       default:
-        // TODO: handle other cases
+        // TODO: handle RemoveTree
         break;
     }
   }
@@ -40,6 +45,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // TODO: schedule on UI
   layoutAnimationsProxy_->tagsOfCreatedViews_ = tagsOfCreatedViews;
   layoutAnimationsProxy_->tagsOfUpdatedViews_ = tagsOfUpdatedViews;
+  layoutAnimationsProxy_->tagsOfRemovedViews_ = tagsOfRemovedViews;
 
   return newRootShadowNode;
 }
