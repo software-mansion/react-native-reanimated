@@ -662,3 +662,7 @@ section > .contaner > .row {
 .imageHolder-sponsor {
   max-width: 100px;
 }
+
+* {
+  scroll-behavior: smooth;
+}
