@@ -965,8 +965,13 @@ task prepareThirdPartyNdkHeaders(dependsOn:[
 ) {}
 
 def nativeBuildDependsOn(dependsOnTask) {
-    def buildTasks = tasks.findAll({ task ->
-        !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake")) })
+    def buildTasks = tasks.findAll({ task -> (
+        !task.name.contains("Clean")
+        && (task.name.contains("externalNative")
+            || task.name.contains("CMake")
+            || task.name.contains("generateJsonModel")
+        )
+    ) })
     buildTasks.forEach { task -> task.dependsOn(dependsOnTask) }
 }
 
