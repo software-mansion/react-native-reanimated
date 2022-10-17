@@ -523,13 +523,30 @@ android {
     sourceSets.main {
         java {
             if (isNewArchitectureEnabled()) {
-                srcDirs += [
-                        "src/fabric/java",
-                ]
+                srcDirs += "src/fabric/java"
             } else {
-                srcDirs += [
-                        "src/paper/java",
-                ]
+                srcDirs += "src/paper/java"
+            }
+
+            // messageQueueThread
+            if (REACT_NATIVE_MINOR_VERSION <= 67) {
+                srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
+            }
+
+            // UIImplementation
+            if (REACT_NATIVE_MINOR_VERSION <= 64) {
+                srcDirs += "src/reactNativeVersionPatch/UIImplementation/64"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/UIImplementation/latest"
+            }
+
+            // nativeHierarchyManager
+            if (REACT_NATIVE_MINOR_VERSION <= 62) {
+                srcDirs += "src/reactNativeVersionPatch/nativeHierarchyManager/62"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/nativeHierarchyManager/latest"
             }
         }
     }
@@ -558,21 +575,7 @@ task printVersions {
     println "Gradle: ${project.gradle.gradleVersion}"
 }
 
-task Log {
-    println("building Reanimated2")
-}
-
-task applyJavaPatches(type: Copy) {
-    def patchDirectory = file("${projectDir}/rnVersionPatch/${REACT_NATIVE_MINOR_VERSION}")
-    if (patchDirectory.exists()) {
-        from ("${patchDirectory}") {
-            include "**/*.java"
-        }
-        into ("${projectDir}/src/main/java/com/swmansion/reanimated")
-    }
-}
-
-task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
+task createNativeDepsDirectories() {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
 }
