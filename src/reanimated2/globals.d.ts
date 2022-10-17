@@ -1,9 +1,12 @@
-import { AnimatedStyle, StyleProps } from './commonTypes';
-import { ReanimatedConsole } from './core';
-import { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import { ShadowNodeWrapper } from './hook/commonTypes';
-import { MeasuredDimensions } from './NativeMethods';
-import { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type {
+  AnimatedStyle,
+  StyleProps,
+  MeasuredDimensions,
+} from './commonTypes';
+import type { ReanimatedConsole } from './core';
+import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
+import type { ShadowNodeWrapper } from './hook/commonTypes';
+import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 
 declare global {
   const _WORKLET: boolean;
