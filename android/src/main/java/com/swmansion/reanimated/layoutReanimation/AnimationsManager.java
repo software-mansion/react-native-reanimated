@@ -106,6 +106,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     Integer tag = view.getId();
     HashMap<String, Object> currentValues = before.toCurrentMap();
+
+    if (!mStates.containsKey(view.getId())) {
+      registerView(view, before, ViewState.Layout);
+    }
     ViewState state = mStates.get(view.getId());
 
     if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
@@ -148,11 +152,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       strongScheduler.triggerUI();
     }
     if (!mStates.containsKey(view.getId())) {
-      mStates.put(view.getId(), ViewState.Inactive);
-      mViewForTag.put(view.getId(), view);
-      mViewManager.put(view.getId(), after.viewManager);
-      mParentViewManager.put(view.getId(), after.parentViewManager);
-      mParent.put(view.getId(), after.parent);
+      registerView(view, after, ViewState.Inactive);
     }
     Integer tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
@@ -173,14 +173,19 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
     Integer tag = view.getId();
-    HashMap<String, Object> targetValues = after.toTargetMap();
-    HashMap<String, Object> startValues = before.toCurrentMap();
-    ViewState state = mStates.get(view.getId());
 
     if (!hasAnimationForTag(tag, "layout")) {
       return;
     }
 
+    HashMap<String, Object> targetValues = after.toTargetMap();
+    HashMap<String, Object> startValues = before.toCurrentMap();
+
+    if (!mStates.containsKey(view.getId())) {
+      registerView(view, after, ViewState.Layout);
+    }
+
+    ViewState state = mStates.get(view.getId());
     if (state == null
         || state == ViewState.Disappearing
         || state == ViewState.ToRemove
@@ -546,5 +551,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public boolean isLayoutAnimationEnabled() {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
+  }
+
+  private void registerView(View view, Snapshot after, ViewState state) {
+    mStates.put(view.getId(), state);
+    mViewForTag.put(view.getId(), view);
+    mViewManager.put(view.getId(), after.viewManager);
+    mParentViewManager.put(view.getId(), after.parentViewManager);
+    mParent.put(view.getId(), after.parent);
   }
 }
