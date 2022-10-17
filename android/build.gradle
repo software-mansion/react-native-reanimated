@@ -544,7 +544,7 @@ android {
 
             // nativeHierarchyManager
             if (REACT_NATIVE_MINOR_VERSION <= 62) {
-                srcDirs += "src/reactNativeVersionPatch/nativeHierarchyManager/67"
+                srcDirs += "src/reactNativeVersionPatch/nativeHierarchyManager/62"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/nativeHierarchyManager/latest"
             }
