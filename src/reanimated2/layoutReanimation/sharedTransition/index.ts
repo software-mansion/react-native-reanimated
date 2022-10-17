@@ -6,14 +6,7 @@ import {
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
 
-const supportedProps = [
-  'width',
-  'height',
-  'originX',
-  'originY',
-  // 'globalOriginX',
-  // 'globalOriginY',
-];
+const supportedProps = ['width', 'height', 'originX', 'originY'];
 
 type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
 
@@ -65,21 +58,11 @@ export class SharedTransition implements ILayoutAnimationBuilder {
         }
       }
 
-      // animations['transform'] = [
-      //   { translateX: withTiming(values['targetTranslateX'], { duration: 1000 }) },
-      //   { translateY: withTiming(values['targetTranslateY'], { duration: 1000 }) },
-      // ];
-
       for (const propName in animations) {
         const keyToCurrentValue =
           'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
         initialValues[propName] = values[keyToCurrentValue];
       }
-
-      // initialValues['transform'] = [
-      //   { translateX: values['currentTranslateX'] },
-      //   { translateY: values['currentTranslateY'] },
-      // ];
 
       return { initialValues, animations };
     };
