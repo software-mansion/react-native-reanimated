@@ -158,7 +158,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
   std::function<void(double)> onRenderCallback;
+
+ public:
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+
+ private:
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
 

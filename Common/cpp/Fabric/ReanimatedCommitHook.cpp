@@ -26,6 +26,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     }
   }
 
+  layoutAnimationsProxy_->tagsOfUpdatedViews_ =
+      tagsOfUpdatedViews; // TODO: schedule on UI
+
   return newRootShadowNode;
 }
 

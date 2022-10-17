@@ -20,6 +20,7 @@
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REASnapshot.h>
 
 #import "SingleInstanceChecker.h"
 
@@ -44,6 +45,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
+  __weak RCTUIManager *_uiManager;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
   std::shared_ptr<EventListener> eventListener_;
@@ -114,7 +116,12 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   react_native_assert(uiManager.get() != nil);
   newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
 #ifdef RCT_NEW_ARCH_ENABLED
-  commitHook_ = std::make_shared<ReanimatedCommitHook>();
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+  if (auto reanimatedModule = reanimatedModule_.lock()) {
+    layoutAnimationsProxy = reanimatedModule->layoutAnimationsProxy;
+  }
+  assert(layoutAnimationsProxy != nullptr);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(layoutAnimationsProxy);
   uiManager->registerCommitHook(*commitHook_);
 #endif // RCT_NEW_ARCH_ENABLED
   [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
@@ -179,6 +186,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   [bridge.surfacePresenter addObserver:self];
+  _uiManager = bridge.uiManager;
 #else
   [bridge.uiManager.observerCoordinator addObserver:self];
 #endif
@@ -311,11 +319,40 @@ RCT_EXPORT_METHOD(installTurboModule)
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
+static REASnapshot *beforeSnapshot;
+
+- (void)willMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+
+  // TODO: start nested CATransaction?
+
+  if (auto reanimatedModule = reanimatedModule_.lock()) {
+    const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_;
+    for (auto tag : tags) {
+      UIView *view = [_uiManager viewForReactTag:@(tag)];
+      REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+      beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
+    }
+  }
+}
+
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
 {
   RCTAssertMainQueue();
 
-  // TODO: start animation for tag
+  if (auto reanimatedModule = reanimatedModule_.lock()) {
+    const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_;
+    for (auto tag : tags) {
+      UIView *view = [_uiManager viewForReactTag:@(tag)];
+      REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+      (void)beforeSnapshot;
+      (void)afterSnapshot;
+      // TODO: start animation for tag
+    }
+
+    reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_.clear();
+  }
 }
 
 #endif // RCT_NEW_ARCH_ENABLED
