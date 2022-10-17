@@ -7,7 +7,7 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <vector>
+#include <set>
 
 namespace reanimated {
 
@@ -27,9 +27,9 @@ class LayoutAnimationsProxy {
   void stopObserving(int tag, bool finished);
   void notifyAboutCancellation(int tag);
 
-  std::vector<Tag> tagsOfCreatedViews_;
-  std::vector<Tag> tagsOfUpdatedViews_;
-  std::vector<Tag> tagsOfRemovedViews_;
+  std::set<Tag> tagsOfCreatedViews_;
+  std::set<Tag> tagsOfUpdatedViews_;
+  std::set<Tag> tagsOfRemovedViews_;
 
  private:
   std::function<void(int, jsi::Object newProps)> notifyAboutProgress;
