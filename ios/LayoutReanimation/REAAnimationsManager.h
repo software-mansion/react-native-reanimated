@@ -27,6 +27,8 @@ typedef NS_ENUM(NSInteger, ViewState) {
 - (void)setToBeRemovedRegistry:(NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *)toBeRemovedRegister;
 - (void)removeLeftovers;
 
+@property (nonatomic, copy) void (^flushUiOperations)();
+
 @end
 
 NS_ASSUME_NONNULL_END

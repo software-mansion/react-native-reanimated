@@ -224,80 +224,87 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>([](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled) {});
+  // std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
+  //     std::make_shared<LayoutAnimationsProxy>([](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled)
+  //     {});
 #endif // RCT_NEW_ARCH_ENABLED
 
   // Layout Animations start
-  //   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
+  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
 
-  //  ((REAUIManager *)uiManager).flushUiOperations = ^void() {
-  //    std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
-  //    if (scheduler != nullptr) {
-  //      scheduler->triggerUI();
-  //    }
-  //  };
+  REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[RCTUIManager class]];
+  RCTUIManager *reaUiManager = reaUiManagerNoCast;
+  REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
 
-  //   REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
-  //   RCTUIManager *reaUiManager = reaUiManagerNoCast;
-  //   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
-  //   [reaUiManagerNoCast setUp:animationsManager];
+  animationsManager.flushUiOperations = ^void() {
+    std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
+    if (scheduler != nullptr) {
+      scheduler->triggerUI();
+    }
+  };
 
-  //   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
-  //     if (animationsManager) {
-  //       NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
-  //       [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
-  //     }
-  //   };
+  auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
+    if (animationsManager) {
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
+      [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
+    }
+  };
 
-  //   auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-  //     if (animationsManager) {
-  //       [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
-  //     }
-  //   };
+  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
+    if (animationsManager) {
+      [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
+    }
+  };
 
-  //   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-  //       std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
-  //   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  //   [animationsManager setAnimationStartingBlock:^(
-  //                          NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
-  //     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-  //     if (wrt.expired()) {
-  //       return;
-  //     }
-  //     jsi::Object yogaValues(*rt);
-  //     for (NSString *key in values.allKeys) {
-  //       NSNumber *value = values[key];
-  //       yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
-  //     }
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
+      std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  [animationsManager setAnimationStartingBlock:^(
+                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
+    scheduler->triggerUI();
+    scheduler->scheduleOnUI([scheduler, wrt, values, tag, type, depth]() {
+      scheduler->triggerUI();
 
-  //     jsi::Value layoutAnimationRepositoryAsValue =
-  //         rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
-  //     if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-  //       jsi::Function startAnimationForTag =
-  //           layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
-  //       startAnimationForTag.call(
-  //           *rt,
-  //           jsi::Value([tag intValue]),
-  //           jsi::String::createFromAscii(*rt, std::string([type UTF8String])),
-  //           yogaValues,
-  //           jsi::Value([depth intValue]));
-  //     }
-  //   }];
+      std::shared_ptr<jsi::Runtime> rt = wrt.lock();
+      if (wrt.expired()) {
+        return;
+      }
+      jsi::Object yogaValues(*rt);
+      for (NSString *key in values.allKeys) {
+        NSNumber *value = values[key];
+        yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
+      }
 
-  //   [animationsManager setRemovingConfigBlock:^(NSNumber *_Nonnull tag) {
-  //     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-  //     if (wrt.expired()) {
-  //       return;
-  //     }
-  //     jsi::Value layoutAnimationRepositoryAsValue =
-  //         rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
-  //     if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-  //       jsi::Function removeConfig =
-  //           layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
-  //       removeConfig.call(*rt, jsi::Value([tag intValue]));
-  //     }
-  //   }];
+      jsi::Value layoutAnimationRepositoryAsValue =
+          rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
+      if (!layoutAnimationRepositoryAsValue.isUndefined()) {
+        jsi::Function startAnimationForTag =
+            layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
+        startAnimationForTag.call(
+            *rt,
+            jsi::Value([tag intValue]),
+            jsi::String::createFromAscii(*rt, std::string([type UTF8String])),
+            yogaValues,
+            jsi::Value([depth intValue]));
+      }
+    });
+  }];
+
+  [animationsManager setRemovingConfigBlock:^(NSNumber *_Nonnull tag) {
+    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
+    if (wrt.expired()) {
+      return;
+    }
+    jsi::Value layoutAnimationRepositoryAsValue =
+        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
+    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
+      jsi::Function removeConfig =
+          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
+      removeConfig.call(*rt, jsi::Value([tag intValue]));
+    }
+  }];
+
+  nodesManager.animationsManager = animationsManager;
 
   // Layout Animations end
 

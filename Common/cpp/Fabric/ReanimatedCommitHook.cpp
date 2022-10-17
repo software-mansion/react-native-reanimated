@@ -16,18 +16,30 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   auto mutations =
       calculateShadowViewMutations(*oldRootShadowNode, *newRootShadowNode);
 
+  std::vector<Tag> tagsOfCreatedViews;
   std::vector<Tag> tagsOfUpdatedViews;
 
   for (const auto &mutation : mutations) {
-    if (mutation.type == ShadowViewMutation::Update) {
-      assert(
-          mutation.oldChildShadowView.tag == mutation.newChildShadowView.tag);
-      tagsOfUpdatedViews.push_back(mutation.newChildShadowView.tag);
+    switch (mutation.type) {
+      case ShadowViewMutation::Create:
+        tagsOfCreatedViews.push_back(mutation.newChildShadowView.tag);
+        break;
+
+      case ShadowViewMutation::Update:
+        assert(
+            mutation.oldChildShadowView.tag == mutation.newChildShadowView.tag);
+        tagsOfUpdatedViews.push_back(mutation.newChildShadowView.tag);
+        break;
+
+      default:
+        // TODO: handle other cases
+        break;
     }
   }
 
-  layoutAnimationsProxy_->tagsOfUpdatedViews_ =
-      tagsOfUpdatedViews; // TODO: schedule on UI
+  // TODO: schedule on UI
+  layoutAnimationsProxy_->tagsOfCreatedViews_ = tagsOfCreatedViews;
+  layoutAnimationsProxy_->tagsOfUpdatedViews_ = tagsOfUpdatedViews;
 
   return newRootShadowNode;
 }

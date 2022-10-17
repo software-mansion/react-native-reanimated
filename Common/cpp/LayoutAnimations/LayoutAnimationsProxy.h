@@ -27,6 +27,7 @@ class LayoutAnimationsProxy {
   void stopObserving(int tag, bool finished);
   void notifyAboutCancellation(int tag);
 
+  std::vector<Tag> tagsOfCreatedViews_;
   std::vector<Tag> tagsOfUpdatedViews_;
 
  private:

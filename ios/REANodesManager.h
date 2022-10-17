@@ -5,6 +5,8 @@
 #import <React/RCTSurfacePresenterStub.h>
 #endif
 
+#import "REAAnimationsManager.h"
+
 @class REAModule;
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
@@ -20,6 +22,7 @@ typedef void (^REAPerformOperations)();
 @property (nonatomic, weak, nullable) RCTUIManager *uiManager;
 @property (nonatomic, weak, nullable) REAModule *reanimatedModule;
 @property (nonatomic, readonly) CFTimeInterval currentAnimationTimestamp;
+@property (nonatomic, weak, nullable) REAAnimationsManager *animationsManager;
 
 @property (nonatomic, nullable) NSSet<NSString *> *uiProps;
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;

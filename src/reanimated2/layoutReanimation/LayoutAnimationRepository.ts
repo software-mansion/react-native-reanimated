@@ -13,14 +13,21 @@ runOnUI(() => {
   global.LayoutAnimationRepository = {
     configs,
     registerConfig(tag, config) {
+      console.log('registerConfig', tag);
       configs[tag] = config;
       enteringAnimationForTag[tag] = null;
     },
     removeConfig(tag) {
+      console.log('removeConfig', tag);
       delete configs[tag];
       delete enteringAnimationForTag[tag];
     },
     startAnimationForTag(tag, type, yogaValues) {
+      if (type === 'entering') {
+        // yes, this is a hack
+        tag -= 2;
+      }
+      console.log('startAnimationForTag', tag, type);
       if (configs[tag] == null) {
         return; // :(
       }

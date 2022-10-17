@@ -342,16 +342,28 @@ static REASnapshot *beforeSnapshot;
   RCTAssertMainQueue();
 
   if (auto reanimatedModule = reanimatedModule_.lock()) {
-    const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_;
-    for (auto tag : tags) {
-      UIView *view = [_uiManager viewForReactTag:@(tag)];
-      REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
-      (void)beforeSnapshot;
-      (void)afterSnapshot;
-      // TODO: start animation for tag
+    // entering animations
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfCreatedViews_;
+      for (auto tag : tags) {
+        UIView *view = [_uiManager viewForReactTag:@(tag)];
+        view.reactTag = @(tag);
+        REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+        [self.nodesManager.animationsManager onViewCreate:view after:afterSnapshot];
+      }
+      reanimatedModule->layoutAnimationsProxy->tagsOfCreatedViews_.clear();
     }
 
-    reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_.clear();
+    // layout animations
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_;
+      for (auto tag : tags) {
+        UIView *view = [_uiManager viewForReactTag:@(tag)];
+        REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+        [self.nodesManager.animationsManager onViewUpdate:view before:beforeSnapshot after:afterSnapshot];
+      }
+      reanimatedModule->layoutAnimationsProxy->tagsOfUpdatedViews_.clear();
+    }
   }
 }
 
