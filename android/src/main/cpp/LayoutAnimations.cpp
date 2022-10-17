@@ -17,10 +17,17 @@ void LayoutAnimations::setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt) {
   this->weakUIRuntime = wrt;
 }
 
+void LayoutAnimations::setAnimationStartingBlock(
+    AnimationStartingBlock animationStartingBlock) {
+  this->animationStartingBlock = animationStartingBlock;
+}
+
 void LayoutAnimations::startAnimationForTag(
     int tag,
     alias_ref<JString> type,
-    alias_ref<JMap<jstring, jstring>> values) {}
+    alias_ref<JMap<jstring, jstring>> values) {
+  this->animationStartingBlock(tag, type, values);
+}
 
 void LayoutAnimations::progressLayoutAnimation(
     int tag,
@@ -43,6 +50,15 @@ void LayoutAnimations::endLayoutAnimation(int tag, bool cancelled) {
   method(javaPart_.get(), tag, cancelled);
 }
 
+void LayoutAnimations::setHasAnimationBlock(
+    HasAnimationBlock hasAnimationBlock) {
+  this->hasAnimationBlock = hasAnimationBlock;
+}
+
+bool LayoutAnimations::hasAnimationForTag(int tag, std::string type) {
+  return hasAnimationBlock(tag, type);
+}
+
 bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
@@ -52,6 +68,8 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
       makeNativeMethod(
           "startAnimationForTag", LayoutAnimations::startAnimationForTag),
+      makeNativeMethod(
+          "hasAnimationForTag", LayoutAnimations::hasAnimationForTag),
       makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),

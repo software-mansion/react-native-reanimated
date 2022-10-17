@@ -275,6 +275,11 @@ public class NativeProxy {
           public boolean isLayoutAnimationEnabled() {
             return LayoutAnimations.isLayoutAnimationEnabled();
           }
+
+          @Override
+          public boolean hasAnimationForTag(int tag, String type) {
+            return LayoutAnimations.hasAnimationForTag(tag, type);
+          }
         });
   }
 }

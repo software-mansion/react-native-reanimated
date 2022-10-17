@@ -111,6 +111,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
       return;
     }
+
     mCallbacks.put(tag, callback);
     if (state == ViewState.Inactive || state == null) {
       if (currentValues != null) {
@@ -122,6 +123,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     mStates.put(tag, ViewState.Disappearing);
     HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues, false);
+
+    if (!hasAnimationForTag(view.getId(), "exiting")) {
+      mStates.put(tag, ViewState.ToRemove);
+      mToRemove.add(tag);
+      scheduleCleaning();
+      return;
+    }
     mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
   }
 
@@ -130,6 +138,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (isCatalystInstanceDestroyed) {
       return;
     }
+
+    if (!hasAnimationForTag(view.getId(), "entering")) {
+      return;
+    }
+
     Scheduler strongScheduler = mScheduler.get();
     if (strongScheduler != null) {
       strongScheduler.triggerUI();
@@ -163,6 +176,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
     ViewState state = mStates.get(view.getId());
+
+    if (!hasAnimationForTag(tag, "layout")) {
+      return;
+    }
+
     if (state == null
         || state == ViewState.Disappearing
         || state == ViewState.ToRemove
@@ -200,6 +218,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
+    View view = mViewForTag.get(tag);
+    if (view == null) {
+      return;
+    }
+
     ViewState state = mStates.get(tag);
     if (state == ViewState.Inactive) {
       mStates.put(tag, ViewState.Appearing);
@@ -207,7 +230,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     setNewProps(
         newStyle,
-        mViewForTag.get(tag),
+        view,
         mViewManager.get(tag),
         mParentViewManager.get(tag),
         mParent.get(tag).getId());
@@ -515,6 +538,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else {
       viewToUpdate.layout(x, y, x + width, y + height);
     }
+  }
+
+  public boolean hasAnimationForTag(int tag, String type) {
+    return mNativeMethodsHolder.hasAnimationForTag(tag, type);
   }
 
   public boolean isLayoutAnimationEnabled() {

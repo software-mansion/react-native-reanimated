@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 
 namespace reanimated {
 
@@ -42,6 +43,7 @@ class LayoutAnimationsProxy {
   std::map<int, std::shared_ptr<ShareableValue>> enteringAnimations;
   std::map<int, std::shared_ptr<ShareableValue>> exitingAnimations;
   std::map<int, std::shared_ptr<ShareableValue>> layoutAnimations;
+  std::mutex animationsLock;
 };
 
 } // namespace reanimated

@@ -144,7 +144,12 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->configureLayoutAnimation(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]), std::move(args[3]));
+      ->configureLayoutAnimation(
+          rt,
+          std::move(args[0]),
+          std::move(args[1]),
+          std::move(args[2]),
+          std::move(args[3]));
   return jsi::Value::undefined();
 }
 
@@ -174,6 +179,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};
   methodMap_["configureProps"] = MethodMetadata{2, SPEC_PREFIX(configureProps)};
 
-  methodMap_["configureLayoutAnimation"] = MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};
+  methodMap_["configureLayoutAnimation"] =
+      MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};
 }
 } // namespace reanimated

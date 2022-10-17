@@ -168,7 +168,38 @@ void NativeProxy::installJSIBindings() {
       std::make_shared<LayoutAnimationsProxy>(
           progressLayoutAnimation, endLayoutAnimation);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  std::weak_ptr<LayoutAnimationsProxy> weakLayoutAnimationsProxy =
+      layoutAnimationsProxy;
   layoutAnimations->cthis()->setWeakUIRuntime(wrt);
+
+  layoutAnimations->cthis()->setAnimationStartingBlock(
+      [wrt, weakLayoutAnimationsProxy](
+          int tag,
+          alias_ref<JString> type,
+          alias_ref<JMap<jstring, jstring>> values) {
+        auto rt = wrt.lock();
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        if (!rt || !layoutAnimationsProxy) {
+          return;
+        }
+        jsi::Object yogaValues(*rt);
+        for (const auto &entry : *values) {
+          auto key =
+              jsi::String::createFromAscii(*rt, entry.first->toStdString());
+          auto value = stod(entry.second->toStdString());
+          yogaValues.setProperty(*rt, key, value);
+        }
+
+        layoutAnimationsProxy->startLayoutAnimation(
+            *rt, tag, type->toStdString(), yogaValues);
+      });
+
+  layoutAnimations->cthis()->setHasAnimationBlock(
+      [weakLayoutAnimationsProxy](int tag, std::string type) {
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        return layoutAnimationsProxy &&
+            layoutAnimationsProxy->hasLayoutAnimation(tag, type);
+      });
 
   // Layout Animations End
 
