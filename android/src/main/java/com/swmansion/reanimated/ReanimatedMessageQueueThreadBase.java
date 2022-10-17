@@ -14,21 +14,16 @@ import java.util.concurrent.Future;
 // The only method that has changed is `quitSynchronous()` (see comment above
 // function implementation for details).
 @DoNotStrip
-public class ReanimatedMessageQueueThread implements MessageQueueThread {
-  private final MessageQueueThreadImpl messageQueueThread;
+public abstract class ReanimatedMessageQueueThreadBase implements MessageQueueThread {
+  protected final MessageQueueThreadImpl messageQueueThread;
 
-  public ReanimatedMessageQueueThread() {
+  public ReanimatedMessageQueueThreadBase() {
     messageQueueThread =
         MessageQueueThreadImpl.create(
             MessageQueueThreadSpec.mainThreadSpec(),
             exception -> {
               throw new RuntimeException(exception);
             });
-  }
-
-  @Override
-  public boolean runOnQueue(Runnable runnable) {
-    return messageQueueThread.runOnQueue(runnable);
   }
 
   @Override
