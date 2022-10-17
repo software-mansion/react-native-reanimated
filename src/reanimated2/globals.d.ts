@@ -1,6 +1,11 @@
-import { AnimatedStyle, StyleProps, MeasuredDimensions } from './commonTypes';
-import { ReanimatedConsole } from './core';
-import { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type {
+  AnimatedStyle,
+  StyleProps,
+  MeasuredDimensions,
+} from './commonTypes';
+import type { ReanimatedConsole } from './core';
+import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 
 declare global {
   const _WORKLET: boolean;
@@ -39,7 +44,7 @@ declare global {
   const ReanimatedDataMock: {
     now: () => number;
   };
-
+  const _frameCallbackRegistry: FrameCallbackRegistryUI;
   namespace NodeJS {
     interface Global {
       _WORKLET: boolean;
@@ -78,6 +83,7 @@ declare global {
       ReanimatedDataMock: {
         now: () => number;
       };
+      _frameCallbackRegistry: FrameCallbackRegistryUI;
     }
   }
 }
