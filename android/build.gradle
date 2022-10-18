@@ -165,9 +165,9 @@ def assertNoMultipleInstances() {
         String parsedLocation = files.stream().map({
             File file -> "- " + file.toString().replace("/package.json", "")
         }).collect().join("\n")
-        String exceptionMessage = "\nMultiple versions of Reanimated were detected. Only one " +
-            "instance of react-native-reanimated can be installed in a project. You need to " +
-            "resolve the conflict manually. Check out the documentation: " +
+        String exceptionMessage = "\n[react-native-reanimated] Multiple versions of Reanimated " +
+            "were detected. Only one instance of react-native-reanimated can be installed in a " +
+            "project. You need to resolve the conflict manually. Check out the documentation: " +
             "https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/" +
             "troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict " +
             "between: \n" + parsedLocation + "\n";
@@ -568,8 +568,19 @@ def assertionTask = task assertNoMultipleInstancesTask {
     }
 }
 
+def assertReanimated2WithNewArchitecture = task assertReanimated2WithNewArchitectureTask {
+    onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION < 3 }
+    doFirst {
+        throw new Exception(
+            "\n[react-native-reanimated] Reanimated 2.x does not support Fabric. " +
+            "Please upgrade to 3.x to use Reanimated with the New Architecture. " +
+            "For details, see https://blog.swmansion.com/announcing-reanimated-3-16167428c5f7"
+        )
+    }
+}
+
 tasks.preBuild {
-    dependsOn assertionTask
+    dependsOn assertionTask, assertReanimated2WithNewArchitecture
 }
 
 task cleanCmakeCache() {
