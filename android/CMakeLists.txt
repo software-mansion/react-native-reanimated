@@ -27,18 +27,19 @@ set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
 set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
-
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
-        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../../react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+        set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
     else()
+        # Reanimated Playground app
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/android/app/build/react-ndk/exported")
-        set (FBJNI_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+        set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+
     endif()
 else()
-    set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
-    set (FBJNI_HEADERS_DIR "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+    set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
+    set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
 endif()
 
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
@@ -49,11 +50,11 @@ file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp"
 if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
         set (
                 INCLUDE_JSI_CPP
-                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+                "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/jsi.cpp"
         )
         set (
                 INCLUDE_JSIDYNAMIC_CPP
-                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
+                "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/JSIDynamic.cpp"
         )
 endif()
 
@@ -78,20 +79,20 @@ target_include_directories(
         "${BUILD_DIR}/third-party-ndk/double-conversion"
         "${BUILD_DIR}/third-party-ndk/folly"
         "${BUILD_DIR}/third-party-ndk/glog/exported"
-        "${NODE_MODULES_DIR}/react-native/React"
-        "${NODE_MODULES_DIR}/react-native/React/Base"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/fabric/jni"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/hermes"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/react/renderer/graphics/platform/cxx"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/runtimeexecutor"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/yoga"
+        "${REACT_NATIVE_DIR}/React"
+        "${REACT_NATIVE_DIR}/React/Base"
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/fabric/jni"
+        "${REACT_NATIVE_DIR}/ReactCommon"
+        "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
+        "${REACT_NATIVE_DIR}/ReactCommon/jsi"
+        "${REACT_NATIVE_DIR}/ReactCommon/hermes"
+        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+        "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+        "${REACT_NATIVE_DIR}/ReactCommon/turbomodule/core"
+        "${REACT_NATIVE_DIR}/ReactCommon/turbomodule"
+        "${REACT_NATIVE_DIR}/ReactCommon/yoga"
         "${COMMON_SRC_DIR}/cpp/Tools"
         "${COMMON_SRC_DIR}/cpp/SpecTools"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
