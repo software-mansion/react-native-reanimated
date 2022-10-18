@@ -71,6 +71,7 @@ ShareableReactive::ShareableReactive(JSRuntimeHelper *runtimeHelper, jsi::Runtim
 }
 
 void ShareableReactive::setReactiveValue(jsi::Runtime &rt, const jsi::Value &newValue, JSRuntimeHelper *rtHelper) {
+//  assert(rtHelper->isUIRuntime(rt));
   value = extractShareableOrThrow(rt, newValue);
 
   // notify listeners

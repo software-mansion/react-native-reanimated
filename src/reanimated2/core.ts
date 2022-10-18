@@ -271,26 +271,61 @@ function workletValueSetterJS<T extends WorkletValue>(
 
 function valueUnpacker(objectToUnpack) {
   'worklet';
-  _log('unpak');
   let workletsCache = global.__workletsCache;
+  let reactiveCache = global.__reactiveCache;
   if (workletsCache === undefined) {
     // init
     workletsCache = global.__workletsCache = new Map();
+    reactiveCache = global.__reactiveCache = new WeakMap();
   }
-  let workletFun = workletsCache.get(objectToUnpack.__workletHash);
-  if (workletFun === undefined) {
-    workletFun = eval('(' + objectToUnpack.asString + ')');
-    workletsCache.set(objectToUnpack.__workletHash, workletFun);
+  if (objectToUnpack.__workletHash) {
+    let workletFun = workletsCache.get(objectToUnpack.__workletHash);
+    if (workletFun === undefined) {
+      _log(objectToUnpack.asString);
+      workletFun = eval('(' + objectToUnpack.asString + ')');
+      workletsCache.set(objectToUnpack.__workletHash, workletFun);
+    }
+    return () => {
+      jsThis = objectToUnpack;
+      try {
+        workletFun();
+      } catch (e) {
+        _log('error');
+        _log(e.toString());
+      }
+    };
+  } else {
+    // reactive?
+    let reactive = reactiveCache.get(objectToUnpack);
+    if (reactive !== undefined) {
+      const data = {
+        value: objectToUnpack.__initial,
+        weakReactiveHandle: new WeakRef(objectToUnpack),
+        revision: 1,
+      };
+
+      reactive = {
+        set value(newValue) {
+          data.value = newValue;
+          data.revision += 1;
+          const reactiveHandle = data.weakReactiveHandle.deref();
+          if (reactiveHandle) {
+            // _notifyReactiveUpdate(reactiveHandle);
+          }
+        },
+        get value() {
+          return data.value;
+        },
+      };
+      reactiveCache.set(objectToUnpack, reactive);
+    }
   }
-  return () => {
-    jsThis = objectToUnpack;
-    workletFun();
-  };
 }
 
 const _adaptCache = new WeakMap();
 
 function makeShareableCloneRecursive(value) {
+  // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
   if ((type === 'object' || type === 'function') && value !== null) {
     const cached = _adaptCache.get(value);
@@ -315,6 +350,27 @@ function makeShareableCloneRecursive(value) {
   return NativeReanimatedModule.makeShareableClone(value);
 }
 
+function makeSharedValue(initial) {
+  const data = {
+    value: initial,
+    revision: 1,
+    reactive: NativeReanimatedModule.makeReactiveValue(
+      makeShareableCloneRecursive(initial)
+    ),
+  };
+  return {
+    set value(newValue) {
+      NativeReanimatedModule.updateReactiveValue(
+        data.reactive,
+        makeShareableCloneRecursive(newValue)
+      );
+    },
+    get value() {
+      return undefined;
+    },
+  };
+}
+
 export function doSomething() {
   // const before = {
   //   a: 14,
@@ -328,11 +384,9 @@ export function doSomething() {
   //   console.log('Can run me too');
   // }
 
-  const reactive = NativeReanimatedModule.makeReactiveValue(
-    makeShareableCloneRecursive(7)
-  );
-  _adaptCache.set(reactive, reactive);
-  console.log('reactio', Object.getPrototypeOf(reactive));
+  const sv = makeSharedValue(7);
+  // _adaptCache.set(reactive, reactive);
+  // console.log('reactio', Object.getPrototypeOf(reactive));
 
   // function work() {
   //   'worklet';
@@ -349,16 +403,30 @@ export function doSomething() {
   const work = makeShareableCloneRecursive(() => {
     'worklet';
     _log('yollo');
-  });
-  const updater = makeShareableCloneRecursive(() => {
-    'worklet';
-    _log('updtaer');
+    const u = {
+      set something(sth) {
+        _log('setting' + sth);
+      },
+    };
+    // class Sth {
+    // set something(sth) {
+    //   _log('setting' + sth);
+    // }
+    // }
+    // const u = new Sth();
+    u.something = 7;
   });
 
-  NativeReanimatedModule.startMapper2(work, [reactive], [], updater, undefined);
+  NativeReanimatedModule.startMapper2(
+    work,
+    [reactive],
+    [],
+    undefined,
+    undefined
+  );
 
   setTimeout(() => {
-    reactive.value = makeShareableCloneRecursive(8);
+    sv.value = 8;
   }, 500);
 
   // console.log('DATA', before, reacitve.value);

@@ -178,6 +178,7 @@ void NativeReanimatedModule::installCoreFunctions(
     const jsi::Value &valueUnpacker) {
   this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
   runtimeHelper = std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
+  runtimeHelper->valueSetter = std::make_shared<CoreFunction>(runtimeHelper.get(), valueSetter);
   runtimeHelper->valueUnpacker =
       std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }

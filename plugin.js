@@ -63,6 +63,8 @@ const globals = new Set([
   'parseInt',
   'parseFloat',
   'Map',
+  'WeakMap',
+  'WeakRef',
   'Set',
   '_log',
   'eval',
