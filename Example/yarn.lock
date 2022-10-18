@@ -10278,10 +10278,10 @@ react-native-safe-area-context@^4.4.1:
   resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-4.4.1.tgz#239c60b8a9a80eac70a38a822b04c0f1d15ffc01"
   integrity sha512-N9XTjiuD73ZpVlejHrUWIFZc+6Z14co1K/p1IFMkImU7+avD69F3y+lhkqA2hN/+vljdZrBSiOwXPkuo43nFQA==
 
-react-native-screens@^3.18.1:
-  version "3.18.1"
-  resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-3.18.1.tgz#19059f34a29a2ff4247ebb1bf0c2f9beacec1ec4"
-  integrity sha512-GtEC1AbvpvtKDJldavuONF/hXW1aEZO7qz8SioyHrV9L9/nDiy+iTviMFmeEoix9KwmEHHxoYxc0xiDrFxKHyA==
+react-native-screens@^3.18.2:
+  version "3.18.2"
+  resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-3.18.2.tgz#d7ab2d145258d3db9fa630fa5379dc4474117866"
+  integrity sha512-ANUEuvMUlsYJ1QKukEhzhfrvOUO9BVH9Nzg+6eWxpn3cfD/O83yPBOF8Mx6x5H/2+sMy+VS5x/chWOOo/U7QJw==
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
@@ -10314,10 +10314,10 @@ react-native-web@^0.14.7:
     prop-types "^15.6.0"
     react-timer-mixin "^0.13.4"
 
-react-native@0.70.2:
-  version "0.70.2"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.70.2.tgz#d16c2b961c05d55439e8fc999825899257b18509"
-  integrity sha512-c0Usl1Lc4pApDI66wpHwX8SGBUqXouQ8Z8Q9gX4jBjnmO5E8Vmlv6IM0CWDqbX/tn+aKNHCBLqV5phnCqusGbw==
+react-native@0.70.3:
+  version "0.70.3"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.70.3.tgz#a5315ce14dd3f51f9ef97827af5b0a470ade1d9c"
+  integrity sha512-EiJxOonyvpSWa3Eik7a6YAD6QU8lK2W9M/DDdYlpWmIlGLCd5110rIpEZjxttsyrohxlRJAYRgJ9Tx2mMXqtfw==
   dependencies:
     "@jest/create-cache-key-function" "^27.0.1"
     "@react-native-community/cli" "9.1.3"
