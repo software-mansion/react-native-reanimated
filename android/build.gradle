@@ -1,6 +1,6 @@
 import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
-
+import groovy.json.JsonSlurper
 import java.nio.file.Paths
 
 /**
@@ -175,6 +175,14 @@ def assertNoMultipleInstances() {
     }
 }
 
+def getReanimatedVersion() {
+    def inputFile = file(projectDir.path + '/../package.json')
+    def json = new JsonSlurper().parseText(inputFile.text)
+    String reanimatedVersion = json.version
+    def (major, minor, patch) = reanimatedVersion.tokenize('.')
+    return major.toInteger()
+}
+
 boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
@@ -193,6 +201,7 @@ def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def FBJNI_VERSION = "0.3.0"
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
+def REANIMATED_MAJOR_VERSION = getReanimatedVersion()
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -529,7 +538,7 @@ android {
             }
 
             // messageQueueThread
-            if (REACT_NATIVE_MINOR_VERSION <= 67) {
+            if (REACT_NATIVE_MINOR_VERSION <= 67 && REANIMATED_MAJOR_VERSION > 2) {
                 srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
