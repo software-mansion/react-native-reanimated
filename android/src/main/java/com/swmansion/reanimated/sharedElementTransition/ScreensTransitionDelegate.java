@@ -2,7 +2,12 @@ package com.swmansion.reanimated.sharedElementTransition;
 
 import android.view.View;
 
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.UIManager;
+import com.facebook.react.uimanager.UIManagerHelper;
+import com.facebook.react.uimanager.common.UIManagerType;
 import com.swmansion.common.SharedElementAnimatorDelegate;
+import com.swmansion.common.SharedTransitionConfig;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.Snapshot;
 
@@ -76,6 +81,77 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
     @Override
     public boolean isTagUnderTransition(int viewTag) {
         return sharedElementsTags.contains(viewTag);
+    }
+
+    @Override
+    public List<SharedTransitionConfig> getSharedElementsForCurrentTransition(View currentScreen, View targetScreen) {
+        List<SharedTransitionConfig> sharedElements = new ArrayList<>();
+        UIManager uiManager = UIManagerHelper.getUIManager(
+            (ReactContext)currentScreen.getContext(),
+            UIManagerType.DEFAULT
+        );
+        if (uiManager == null) {
+            return sharedElements;
+        }
+        int listSize = sharedElementsIterationOrder.size();
+        for (int i = listSize - 1; i >= 0; i--) {
+            String sharedTransitionTag = sharedElementsIterationOrder.get(i);
+            List<SharedViewConfig> transitionGroup = sharedTransitionsItems.get(sharedTransitionTag);
+            if (transitionGroup == null) {
+                continue;
+            }
+            View fromView = null;
+            View toView = null;
+            View fromViewParent = null;
+            for (SharedViewConfig viewConfig : transitionGroup) {
+                boolean isInViewTree = true;
+                View view;
+                try {
+                    view = uiManager.resolveView(viewConfig.viewTag);
+                    viewConfig.view = view;
+                } catch (Exception e) {
+                    view = viewConfig.view;
+                    isInViewTree = false;
+                }
+                if (view.getParent() != null) {
+                    viewConfig.setParent((View)view.getParent());
+                }
+                if (isInSubtreeOf(view, currentScreen, viewConfig.parentScreen)) {
+                    fromView = view;
+                    viewConfig.parentScreen = currentScreen;
+                    if (view.getParent() != null) {
+                        fromViewParent = (View)view.getParent();
+                    } else {
+                        fromViewParent = viewConfig.getParent();
+                    }
+                    if (isInViewTree) {
+                        makeSnapshot(view);
+                    }
+                }
+                else if (isInSubtreeOf(view, targetScreen, viewConfig.parentScreen)) {
+                    toView = view;
+                    viewConfig.parentScreen = targetScreen;
+                }
+            }
+
+            if (fromView != null && toView != null && fromViewParent != null) {
+                sharedElements.add(
+                    new SharedTransitionConfig(fromView, toView, fromViewParent)
+                );
+            }
+        }
+
+        return sharedElements;
+    }
+
+    private boolean isInSubtreeOf(View child, View root, View parentScreen) {
+        if (root == null || child == null) {
+            return false;
+        }
+        if (child.getParent() == null && parentScreen != null && root == parentScreen) {
+            return true;
+        }
+        return (child.getParent() == root) || isInSubtreeOf((View)child.getParent(), root, null);
     }
 
     public void registerSharedTransitionTag(String sharedTransitionTag, int viewTag) {
