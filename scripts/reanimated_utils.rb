@@ -64,10 +64,10 @@ def assert_no_multiple_instances(react_native_info)
   end
 end
 
-def assert_reanimated2_with_new_architecture(reanimated_package_json)
+def assert_no_reanimated2_with_new_architecture(reanimated_package_json)
   reanimated_major_version = reanimated_package_json['version'].split('.')[0].to_i
   fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-  if fabric_enabled && reanimated_major_version < 3
+  if fabric_enabled && reanimated_major_version == 2
     raise "[react-native-reanimated] Reanimated 2.x does not support Fabric. Please upgrade to 3.x to use Reanimated with the New Architecture. For details, see https://blog.swmansion.com/announcing-reanimated-3-16167428c5f7"
   end
 end

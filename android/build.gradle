@@ -538,12 +538,14 @@ android {
             }
 
             // messageQueueThread
-            if (REACT_NATIVE_MINOR_VERSION <= 67 && REANIMATED_MAJOR_VERSION > 2) {
-                srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
+            if (REANIMATED_MAJOR_VERSION > 2) {
+                if (REACT_NATIVE_MINOR_VERSION <= 67) {
+                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/67"
+                } else {
+                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
+                }
             }
-
+            
             // UIImplementation
             if (REACT_NATIVE_MINOR_VERSION <= 64) {
                 srcDirs += "src/reactNativeVersionPatch/UIImplementation/64"
@@ -568,8 +570,8 @@ def assertionTask = task assertNoMultipleInstancesTask {
     }
 }
 
-def assertReanimated2WithNewArchitecture = task assertReanimated2WithNewArchitectureTask {
-    onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION < 3 }
+def assertNoReanimated2WithNewArchitecture = task assertNoReanimated2WithNewArchitectureTask {
+    onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION == 2 }
     doFirst {
         throw new Exception(
             "\n[react-native-reanimated] Reanimated 2.x does not support Fabric. " +
@@ -580,7 +582,7 @@ def assertReanimated2WithNewArchitecture = task assertReanimated2WithNewArchitec
 }
 
 tasks.preBuild {
-    dependsOn assertionTask, assertReanimated2WithNewArchitecture
+    dependsOn assertionTask, assertNoReanimated2WithNewArchitecture
 }
 
 task cleanCmakeCache() {
