@@ -38,10 +38,6 @@ export class NativeReanimated {
     return this.InnerNativeModule.makeShareableClone(value);
   }
 
-  makeReactiveValue(value) {
-    return this.InnerNativeModule.makeReactiveValue(value);
-  }
-
   scheduleOnUI(shareable: Shareable) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
@@ -90,28 +86,8 @@ export class NativeReanimated {
     );
   }
 
-  startMapper2(
-    mapper: () => void,
-    inputs: any[] = [],
-    outputs: any[] = [],
-    updater: () => void,
-    viewDescriptors: Descriptor[] | SharedValue<Descriptor[]>
-  ): number {
-    return this.InnerNativeModule.startMapper2(
-      mapper,
-      inputs,
-      outputs,
-      updater,
-      viewDescriptors
-    );
-  }
-
   stopMapper(mapperId: number): void {
     return this.InnerNativeModule.stopMapper(mapperId);
-  }
-
-  stopMappe2r(mapperId: number): void {
-    return this.InnerNativeModule.stopMapper2(mapperId);
   }
 
   registerEventHandler<T>(

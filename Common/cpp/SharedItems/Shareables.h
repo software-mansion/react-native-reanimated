@@ -71,7 +71,6 @@ protected:
     ObjectType,
     ArrayType,
     WorkletType,
-    ReactiveType,
     HandleType,
   };
 
@@ -172,67 +171,6 @@ public:
     initializer = nullptr; // we can release ref to initializer as this method should be called at most once
     return value;
   }
-};
-
-typedef std::function<void()> ShareableReactiveListener;
-
-class ShareableReactive : public RetainingShareable, public std::enable_shared_from_this<ShareableReactive> {
- private:
-  std::map<unsigned long, ShareableReactiveListener> listeners;
-  std::shared_ptr<Shareable> value;
-  JSRuntimeHelper *runtimeHelper;
- public:
-  ShareableReactive(JSRuntimeHelper *runtimeHelper, jsi::Runtime &rt, const jsi::Value &initial);
-  inline unsigned long addListener(unsigned long listenerId, ShareableReactiveListener listener) {
-    listeners.insert({listenerId, listener});
-    return listenerId;
-  }
-  inline void removeListener(unsigned long listenerId) {
-    listeners.erase(listenerId);
-  }
-
-  inline jsi::Value getReactiveValue(jsi::Runtime &rt) {
-    return value->getJSValue(rt);
-  }
-
-  void setReactiveValue(jsi::Runtime &rt, const jsi::Value &newValue, JSRuntimeHelper *rtHelper);
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-};
-
-class ShareableReactiveHostObject : public jsi::HostObject {
-public:
- JSRuntimeHelper *runtimeHelper;
- std::shared_ptr<ShareableReactive> shareable;
-
- ShareableReactiveHostObject(JSRuntimeHelper *_rtHelper,
-                             const std::shared_ptr<ShareableReactive> &_shareable)
-     : runtimeHelper(_rtHelper), shareable(_shareable){};
- virtual ~ShareableReactiveHostObject(){};
-
- jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) override {
-   if (name.utf8(rt) == "value") {
-     return shareable->getReactiveValue(rt);
-   }
-   throw "unknown key";
- }
-
- void set(
-     jsi::Runtime &rt,
-     const jsi::PropNameID &name,
-     const jsi::Value &jsValue) override {
-   if (name.utf8(rt) == "value") {
-     shareable->setReactiveValue(rt, jsValue, runtimeHelper);
-   }
- }
-
- static jsi::Object newHostObject(
-     JSRuntimeHelper *runtimeHelper,
-     jsi::Runtime &rt,
-     const std::shared_ptr<ShareableReactive> &value) {
-   return jsi::Object::createFromHostObject(
-       rt, std::make_shared<ShareableReactiveHostObject>(runtimeHelper, value));
- }
 };
 
 class ShareableString : public Shareable {

@@ -38,9 +38,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
     const jsi::Value &maybeShareableValue) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
-    if (object.isHostObject<ShareableReactiveHostObject>(rt)) {
-      return object.getHostObject<ShareableReactiveHostObject>(rt)->shareable;
-    } else if (object.isHostObject<ShareableJSRef>(rt)) {
+    if (object.isHostObject<ShareableJSRef>(rt)) {
       return object.getHostObject<ShareableJSRef>(rt)->value;
     }
   }
@@ -64,32 +62,6 @@ jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
     remoteValue = std::make_shared<jsi::WeakObject>(rt, value.asObject(rt));
   }
   return value;
-}
-
-ShareableReactive::ShareableReactive(JSRuntimeHelper *runtimeHelper, jsi::Runtime &rt, const jsi::Value &initial)
-    : RetainingShareable(rt, ReactiveType), runtimeHelper(runtimeHelper), value(extractShareableOrThrow(rt, initial)) {
-}
-
-void ShareableReactive::setReactiveValue(jsi::Runtime &rt, const jsi::Value &newValue, JSRuntimeHelper *rtHelper) {
-//  assert(rtHelper->isUIRuntime(rt));
-  value = extractShareableOrThrow(rt, newValue);
-
-  // notify listeners
-  std::shared_ptr<ShareableReactive> thiz = shared_from_this();
-  auto notifyListeners = [thiz]() {
-    for (auto listener : thiz->listeners) {
-      listener.second();
-    }
-  };
-  if (rtHelper->isUIRuntime(rt)) {
-    notifyListeners();
-  } else {
-    rtHelper->scheduleOnUI([notifyListeners] { notifyListeners(); });
-  }
-}
-
-jsi::Value ShareableReactive::toJSValue(jsi::Runtime &rt) {
-  return ShareableReactiveHostObject::newHostObject(runtimeHelper, rt, shared_from_this());
 }
 
 ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)

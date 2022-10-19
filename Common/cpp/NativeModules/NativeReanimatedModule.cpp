@@ -204,13 +204,6 @@ void NativeReanimatedModule::scheduleOnJS(
   // do nothing
 }
 
-jsi::Value NativeReanimatedModule::makeReactiveValue(
-    jsi::Runtime &rt,
-    const jsi::Value &initialShareable) {
-  auto shared = std::make_shared<ShareableReactive>(runtimeHelper.get(), rt, initialShareable);
-  return shared->toJSValue(rt);
-}
-
 jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value) {
@@ -321,55 +314,6 @@ void NativeReanimatedModule::stopMapper(
     mapperRegistry->stopMapper(id);
     maybeRequestRender();
   });
-}
-
-jsi::Value NativeReanimatedModule::startMapper2(
-    jsi::Runtime &rt,
-    const jsi::Value &_worklet,
-    const jsi::Value &_inputs,
-    const jsi::Value &outputs,
-    const jsi::Value &updater,
-    const jsi::Value &viewDescriptors) {
-
-  static unsigned long MAPPER_ID = 1e8;
-
-  unsigned long newMapperId = MAPPER_ID++;
-
-  auto shareableWorklet = extractShareableOrThrow(rt, _worklet);
-  auto updaterWorklet = extractShareableOrThrow(rt, _worklet);
-
-  std::vector<std::shared_ptr<ShareableReactive>> inputs;
-  auto inputsAry = _inputs.asObject(rt).asArray(rt);
-  for (int i = 0, size = inputsAry.size(rt); i < size; i++) {
-    inputs.push_back(std::dynamic_pointer_cast<ShareableReactive>(
-        extractShareableOrThrow(rt, inputsAry.getValueAtIndex(rt, i))
-    ));
-  }
-
-  auto uiRuntime = runtimeHelper->uiRuntime;
-  scheduler->scheduleOnUI([=] {
-    jsi::Runtime &rt = *uiRuntime;
-    auto mapperFunction = std::make_shared<jsi::Function>(shareableWorklet->getJSValue(rt).asObject(rt).asFunction(rt));
-    auto mapper = std::make_shared<Mapper>(
-        this,
-        newMapperId,
-        mapperFunction,
-        inputs);
-    mapperRegistry->startMapper(mapper);
-    maybeRequestRender();
-  });
-
-  return jsi::Value(static_cast<double>(newMapperId));
-}
-
-void NativeReanimatedModule::stopMapper2(
-    jsi::Runtime &rt,
-    const jsi::Value &mapperId) {
-  unsigned long id = mapperId.asNumber();
-//  scheduler->scheduleOnUI([=] {
-//    mapperRegistry->stopMapper(id);
-//    maybeRequestRender();
-//  });
 }
 
 jsi::Value NativeReanimatedModule::registerEventHandler(

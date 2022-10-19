@@ -67,10 +67,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   void scheduleOnJS(jsi::Runtime &rt, const jsi::Value &function) override;
 
-  jsi::Value makeReactiveValue(
-      jsi::Runtime &rt,
-      const jsi::Value &initialShareable) override;
-
   jsi::Value startMapper(
       jsi::Runtime &rt,
       const jsi::Value &worklet,
@@ -79,15 +75,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &updater,
       const jsi::Value &viewDescriptors) override;
   void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
-
-  jsi::Value startMapper2(
-      jsi::Runtime &rt,
-      const jsi::Value &worklet,
-      const jsi::Value &inputs,
-      const jsi::Value &outputs,
-      const jsi::Value &updater,
-      const jsi::Value &viewDescriptors) override;
-  void stopMapper2(jsi::Runtime &rt, const jsi::Value &mapperId) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,

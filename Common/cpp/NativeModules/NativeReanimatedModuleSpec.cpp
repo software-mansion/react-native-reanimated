@@ -66,17 +66,6 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
   return jsi::Value::undefined();
 }
 
-// reactive
-
-static jsi::Value SPEC_PREFIX(makeReactiveValue)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeReactiveValue(rt, std::move(args[0]));
-}
-
 // mappers
 
 static jsi::Value SPEC_PREFIX(startMapper)(
@@ -103,32 +92,6 @@ static jsi::Value SPEC_PREFIX(stopMapper)(
       ->stopMapper(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
-
-static jsi::Value SPEC_PREFIX(startMapper2)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->startMapper2(
-          rt,
-          std::move(args[0]),
-          std::move(args[1]),
-          std::move(args[2]),
-          std::move(args[3]),
-          std::move(args[4]));
-}
-
-static jsi::Value SPEC_PREFIX(stopMapper2)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->stopMapper2(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
 
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
@@ -227,8 +190,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["makeShareableClone"] =
       MethodMetadata{1, SPEC_PREFIX(makeShareableClone)};
-  methodMap_["makeReactiveValue"] =
-      MethodMetadata{1, SPEC_PREFIX(makeReactiveValue)};
   methodMap_["makeShareable"] = MethodMetadata{1, SPEC_PREFIX(makeShareable)};
   methodMap_["makeMutable"] = MethodMetadata{1, SPEC_PREFIX(makeMutable)};
   methodMap_["makeRemote"] = MethodMetadata{1, SPEC_PREFIX(makeRemote)};
@@ -237,9 +198,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["startMapper"] = MethodMetadata{5, SPEC_PREFIX(startMapper)};
   methodMap_["stopMapper"] = MethodMetadata{1, SPEC_PREFIX(stopMapper)};
-
-  methodMap_["startMapper2"] = MethodMetadata{5, SPEC_PREFIX(startMapper2)};
-  methodMap_["stopMapper2"] = MethodMetadata{1, SPEC_PREFIX(stopMapper2)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{2, SPEC_PREFIX(registerEventHandler)};

@@ -1,7 +1,6 @@
 #include "Mapper.h"
 #include "MutableValue.h"
 #include "SharedParent.h"
-#include "Shareables.h"
 
 namespace reanimated {
 
@@ -12,21 +11,6 @@ Mapper::Mapper(
     std::vector<std::shared_ptr<MutableValue>> inputs,
     std::vector<std::shared_ptr<MutableValue>> outputs)
     : id(id), module(module), mapper(mapper), inputs(inputs), outputs(outputs) {
-  auto markDirty = [this, module]() {
-    this->dirty = true;
-    module->maybeRequestRender();
-  };
-  for (auto input : inputs) {
-    input->addListener(id, markDirty);
-  }
-}
-
-Mapper::Mapper(
-    NativeReanimatedModule *module,
-    unsigned long id,
-    std::shared_ptr<jsi::Function> mapper,
-    std::vector<std::shared_ptr<ShareableReactive>> inputs)
-    : id(id), module(module), mapper(mapper), inputs2(inputs) {
   auto markDirty = [this, module]() {
     this->dirty = true;
     module->maybeRequestRender();
