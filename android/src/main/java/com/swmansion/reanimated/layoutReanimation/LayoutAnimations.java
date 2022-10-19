@@ -29,29 +29,29 @@ public class LayoutAnimations {
   // LayoutReanimation
   public native void startAnimationForTag(int tag, String type, Map<String, String> values);
 
-  public native void removeConfigForTag(int tag);
+  public native boolean hasAnimationForTag(int tag, String type);
 
   public native boolean isLayoutAnimationEnabled();
 
-  private void notifyAboutEnd(int tag, int cancelledInt) {
+  private void endLayoutAnimation(int tag, boolean cancelled) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {
       context
           .getNativeModule(ReanimatedModule.class)
           .getNodesManager()
           .getAnimationsManager()
-          .notifyAboutEnd(tag, (cancelledInt == 0) ? false : true);
+          .endLayoutAnimation(tag, cancelled);
     }
   }
 
-  private void notifyAboutProgress(Map<String, Object> newStyle, int tag) {
+  private void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {
       context
           .getNativeModule(ReanimatedModule.class)
           .getNodesManager()
           .getAnimationsManager()
-          .notifyAboutProgress(newStyle, tag);
+          .progressLayoutAnimation(tag, newStyle);
     }
   }
 }

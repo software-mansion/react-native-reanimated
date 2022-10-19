@@ -106,11 +106,16 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     Integer tag = view.getId();
     HashMap<String, Object> currentValues = before.toCurrentMap();
+
+    if (!mStates.containsKey(view.getId())) {
+      registerView(view, before, ViewState.Layout);
+    }
     ViewState state = mStates.get(view.getId());
 
     if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
       return;
     }
+
     mCallbacks.put(tag, callback);
     if (state == ViewState.Inactive || state == null) {
       if (currentValues != null) {
@@ -122,6 +127,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     mStates.put(tag, ViewState.Disappearing);
     HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues, false);
+
+    if (!hasAnimationForTag(view.getId(), "exiting")) {
+      mStates.put(tag, ViewState.ToRemove);
+      mToRemove.add(tag);
+      scheduleCleaning();
+      return;
+    }
     mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
   }
 
@@ -130,16 +142,17 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (isCatalystInstanceDestroyed) {
       return;
     }
+
+    if (!hasAnimationForTag(view.getId(), "entering")) {
+      return;
+    }
+
     Scheduler strongScheduler = mScheduler.get();
     if (strongScheduler != null) {
       strongScheduler.triggerUI();
     }
     if (!mStates.containsKey(view.getId())) {
-      mStates.put(view.getId(), ViewState.Inactive);
-      mViewForTag.put(view.getId(), view);
-      mViewManager.put(view.getId(), after.viewManager);
-      mParentViewManager.put(view.getId(), after.parentViewManager);
-      mParent.put(view.getId(), after.parent);
+      registerView(view, after, ViewState.Inactive);
     }
     Integer tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
@@ -160,8 +173,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
     Integer tag = view.getId();
+
+    if (!hasAnimationForTag(tag, "layout")) {
+      return;
+    }
+
     HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
+
+    if (!mStates.containsKey(view.getId())) {
+      registerView(view, after, ViewState.Layout);
+    }
+
     ViewState state = mStates.get(view.getId());
     if (state == null
         || state == ViewState.Disappearing
@@ -199,7 +222,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
   }
 
-  public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
+  public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
+    View view = mViewForTag.get(tag);
+    if (view == null) {
+      return;
+    }
+
     ViewState state = mStates.get(tag);
     if (state == ViewState.Inactive) {
       mStates.put(tag, ViewState.Appearing);
@@ -207,13 +235,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     setNewProps(
         newStyle,
-        mViewForTag.get(tag),
+        view,
         mViewManager.get(tag),
         mParentViewManager.get(tag),
         mParent.get(tag).getId());
   }
 
-  public void notifyAboutEnd(int tag, boolean cancelled) {
+  public void endLayoutAnimation(int tag, boolean cancelled) {
     if (!cancelled) {
       ViewState state = mStates.get(tag);
       if (state == ViewState.Appearing) {
@@ -353,7 +381,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mViewManager.remove(curView.getId());
       mParentViewManager.remove(curView.getId());
       mParent.remove(curView.getId());
-      mNativeMethodsHolder.removeConfigForTag(curView.getId());
       mToRemove.remove(view.getId());
     }
     return cannotStripe;
@@ -521,7 +548,19 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
+  public boolean hasAnimationForTag(int tag, String type) {
+    return mNativeMethodsHolder.hasAnimationForTag(tag, type);
+  }
+
   public boolean isLayoutAnimationEnabled() {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
+  }
+
+  private void registerView(View view, Snapshot after, ViewState state) {
+    mStates.put(view.getId(), state);
+    mViewForTag.put(view.getId(), view);
+    mViewManager.put(view.getId(), after.viewManager);
+    mParentViewManager.put(view.getId(), after.parentViewManager);
+    mParent.put(view.getId(), after.parent);
   }
 }

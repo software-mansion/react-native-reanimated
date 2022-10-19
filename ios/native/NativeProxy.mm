@@ -241,16 +241,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
   [reaUiManagerNoCast setUp:animationsManager];
 
-  auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
+  __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
+  auto progressLayoutAnimation = [=](int tag, jsi::Object newStyle) {
+    REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
       NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
-      [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
+      [animationsManager progressLayoutAnimationWithStyle:propsDict forTag:@(tag)];
     }
   };
 
-  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
+  auto endLayoutAnimation = [=](int tag, bool isCancelled) {
+    REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
-      [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
+      [animationsManager endLayoutAnimnationForTag:@(tag) cancelled:isCancelled];
     }
   };
 
@@ -262,47 +265,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
+      std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  [animationsManager setAnimationStartingBlock:^(
-                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
-    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-    if (wrt.expired()) {
-      return;
-    }
-    jsi::Object yogaValues(*rt);
-    for (NSString *key in values.allKeys) {
-      NSNumber *value = values[key];
-      yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
-    }
-
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function startAnimationForTag =
-          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
-      startAnimationForTag.call(
-          *rt,
-          jsi::Value([tag intValue]),
-          jsi::String::createFromAscii(*rt, std::string([type UTF8String])),
-          yogaValues,
-          jsi::Value([depth intValue]));
-    }
-  }];
-
-  [animationsManager setRemovingConfigBlock:^(NSNumber *_Nonnull tag) {
-    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-    if (wrt.expired()) {
-      return;
-    }
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function removeConfig =
-          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
-      removeConfig.call(*rt, jsi::Value([tag intValue]));
-    }
-  }];
 
   // Layout Animations end
 #endif
@@ -409,7 +373,28 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       module->performOperations();
     }
   }];
+#else
+  // Layout Animation callbacks setup
+  [animationsManager setAnimationStartingBlock:^(
+                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
+    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
+    if (wrt.expired()) {
+      return;
+    }
+    jsi::Object yogaValues(*rt);
+    for (NSString *key in values.allKeys) {
+      NSNumber *value = values[key];
+      yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
+    }
+
+    layoutAnimationsProxy->startLayoutAnimation(*rt, [tag intValue], std::string([type UTF8String]), yogaValues);
+  }];
+
+  [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
+    return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
+  }];
 #endif
+
   return module;
 }
 

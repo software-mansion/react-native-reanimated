@@ -103,13 +103,12 @@ declare global {
       _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationRepository: {
-        configs: Record<string, unknown>;
-        registerConfig(tag: number, config: Record<string, unknown>): void;
-        removeConfig(tag: number): void;
         startAnimationForTag(
           tag: number,
           type: string,
-          yogaValues: unknown
+          yogaValues: unknown,
+          config: (yogaValues: any) => any,
+          viewSharedValue: any
         ): void;
       };
       ReanimatedDataMock: {

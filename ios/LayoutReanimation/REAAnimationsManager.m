@@ -5,28 +5,35 @@
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
 
-@interface REAAnimationsManager ()
-
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
-@property (atomic, nullable) void (^startAnimationForTag)(NSNumber *, NSString *, NSDictionary *, NSNumber *);
-@property (atomic, nullable) void (^removeConfigForTag)(NSNumber *);
+static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
+{
+  if (view.reactTag) {
+    if (block(view)) {
+      return YES;
+    }
 
-- (void)removeLeftovers;
-- (void)scheduleCleaning;
-- (double)getDoubleOrZero:(NSNumber *)number;
-
-@end
+    for (id<RCTComponent> subview in view.reactSubviews) {
+      if (REANodeFind(subview, block)) {
+        return YES;
+      }
+    }
+  }
+  return NO;
+}
 
 @implementation REAAnimationsManager {
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
-  NSMutableDictionary<NSNumber *, NSNumber *> *_states;
-  NSMutableDictionary<NSNumber *, UIView *> *_viewForTag;
-  NSMutableSet<NSNumber *> *_toRemove;
+  NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_ancestorsOfExitingViews;
+  NSMutableSet<NSNumber *> *_ancestorsToRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
+  REAAnimationStartingBlock _startAnimationForTag;
+  REAHasAnimationBlock _hasAnimationForTag;
 }
 
 + (NSArray *)layoutKeys
@@ -44,9 +51,9 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (self = [super init]) {
     _uiManager = uiManager;
     _reaUiManager = (REAUIManager *)uiManager;
-    _states = [NSMutableDictionary new];
-    _viewForTag = [NSMutableDictionary new];
-    _toRemove = [NSMutableSet new];
+    _exitingViews = [NSMutableDictionary new];
+    _ancestorsOfExitingViews = [NSMutableDictionary new];
+    _ancestorsToRemove = [NSMutableSet new];
     _cleaningScheduled = false;
 
     _targetKeys = [NSMutableArray new];
@@ -61,26 +68,24 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 - (void)invalidate
 {
+  // TODO: perhaps want to unmount
   _startAnimationForTag = nil;
-  _removeConfigForTag = nil;
+  _hasAnimationForTag = nil;
   _uiManager = nil;
-  _states = nil;
-  _viewForTag = nil;
-  _toRemove = nil;
+  _exitingViews = nil;
   _cleaningScheduled = false;
   _targetKeys = nil;
   _currentKeys = nil;
 }
 
-- (void)setAnimationStartingBlock:
-    (void (^)(NSNumber *tag, NSString *type, NSDictionary *yogaValues, NSNumber *depth))startAnimation
+- (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation
 {
   _startAnimationForTag = startAnimation;
 }
 
-- (void)setRemovingConfigBlock:(void (^)(NSNumber *tag))block
+- (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation
 {
-  _removeConfigForTag = block;
+  _hasAnimationForTag = hasAnimation;
 }
 
 - (void)scheduleCleaning
@@ -100,99 +105,28 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   });
 }
 
-- (void)findRoot:(UIView *)view roots:(NSMutableSet<NSNumber *> *)roots
+- (UIView *)viewForTag:(NSNumber *)tag
 {
-  UIView *currentView = view;
-  NSNumber *lastToRemoveTag = nil;
-  while (currentView != nil) {
-    ViewState state = [_states[currentView.reactTag] intValue];
-    if (state == Disappearing) {
-      return;
-    }
-    if (state == ToRemove) {
-      lastToRemoveTag = currentView.reactTag;
-    }
-    currentView = currentView.superview;
+  UIView *view = [_reaUiManager viewForReactTag:tag];
+  if (view == nil) {
+    return [_exitingViews objectForKey:tag];
   }
-  if (lastToRemoveTag != nil) {
-    [roots addObject:lastToRemoveTag];
-  }
+  return view;
 }
 
-- (BOOL)dfs:(UIView *)root view:(UIView *)view cands:(NSMutableSet<NSNumber *> *)cands
+- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled
 {
-  NSNumber *tag = view.reactTag;
-  if (tag == nil) {
-    return true;
-  }
-  if (![cands containsObject:tag] && _states[tag] != nil) {
-    return true;
-  }
-  BOOL cannotStripe = false;
-  NSArray<UIView *> *toRemoveCopy = [view.reactSubviews copy];
-  for (UIView *child in toRemoveCopy) {
-    if (![view isKindOfClass:[RCTTextView class]]) {
-      cannotStripe |= [self dfs:root view:child cands:cands];
-    }
-  }
-  if (!cannotStripe) {
-    if (view.reactSuperview != nil) {
-      [_reaUiManager unregisterView:view];
-    }
-    [_states removeObjectForKey:tag];
-    [_viewForTag removeObjectForKey:tag];
-    [_toRemove removeObject:tag];
-  }
-  return cannotStripe;
+  UIView *view = [_exitingViews objectForKey:tag];
+  [_exitingViews removeObjectForKey:tag];
+  [self maybeDropAncestors:view];
+  [view removeFromSuperview];
 }
 
-- (void)removeLeftovers
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag
 {
-  NSMutableSet<NSNumber *> *roots = [NSMutableSet new];
-  for (NSNumber *viewTag in _toRemove) {
-    UIView *view = _viewForTag[viewTag];
-    if (view == nil) {
-      view = [_reaUiManager viewForReactTag:viewTag];
-      _viewForTag[viewTag] = view;
-    }
-    [self findRoot:view roots:roots];
-  }
-  for (NSNumber *viewTag in roots) {
-    UIView *view = _viewForTag[viewTag];
-    [self dfs:view view:view cands:_toRemove];
-  }
-}
-
-- (void)notifyAboutEnd:(NSNumber *)tag cancelled:(BOOL)cancelled
-{
-  if (!cancelled) {
-    ViewState state = [_states[tag] intValue];
-    if (state == Appearing) {
-      _states[tag] = [NSNumber numberWithInt:Layout];
-    }
-    if (state == Disappearing) {
-      _states[tag] = [NSNumber numberWithInt:ToRemove];
-      if (tag != nil) {
-        [_toRemove addObject:tag];
-      }
-      [self scheduleCleaning];
-    }
-  }
-}
-
-- (void)notifyAboutProgress:(NSDictionary *)newStyle tag:(NSNumber *)tag
-{
-  if (_states[tag] == nil) {
-    return;
-  }
-  ViewState state = [_states[tag] intValue];
-  if (state == Inactive) {
-    _states[tag] = [NSNumber numberWithInt:Appearing];
-  }
-
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  [self setNewProps:[newStyle mutableCopy] forView:_viewForTag[tag] withComponentData:componentData];
+  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] withComponentData:componentData];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -288,73 +222,131 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   return preparedData;
 }
 
-- (void)onViewRemoval:(UIView *)view before:(REASnapshot *)before
+- (BOOL)wantsHandleRemovalOfView:(UIView *)view
 {
-  NSNumber *tag = view.reactTag;
-  ViewState state = [_states[tag] intValue];
-  if (state == Disappearing || state == ToRemove || tag == nil) {
-    return;
-  }
-  NSMutableDictionary<NSString *, NSObject *> *startValues = before.values;
-  if (state == Inactive) {
-    if (startValues != nil) {
-      _states[tag] = [NSNumber numberWithInt:ToRemove];
-      [_toRemove addObject:tag];
-      [self scheduleCleaning];
+  return REANodeFind(view, ^(id<RCTComponent> view) {
+    return [self->_ancestorsOfExitingViews objectForKey:view.reactTag] != nil ||
+        self->_hasAnimationForTag(view.reactTag, @"exiting");
+  });
+}
+
+- (void)registerExitingAncestors:(UIView *)child
+{
+  UIView *parent = child.superview;
+  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+    if (parent.reactTag != nil) {
+      _ancestorsOfExitingViews[parent.reactTag] = @([_ancestorsOfExitingViews[parent.reactTag] intValue] + 1);
     }
-    return;
+    parent = parent.superview;
   }
-  _states[tag] = [NSNumber numberWithInt:Disappearing];
-  NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:startValues frameConfig:ExitingFrame];
-  _startAnimationForTag(tag, @"exiting", preparedValues, @(0));
+}
+
+- (void)maybeDropAncestors:(UIView *)child
+{
+  UIView *parent = child.superview;
+  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+    UIView *view = parent;
+    parent = parent.superview;
+    if (view.reactTag != nil) {
+      int trackingCount = [_ancestorsOfExitingViews[view.reactTag] intValue] - 1;
+      if (trackingCount <= 0) {
+        if ([_ancestorsToRemove containsObject:view.reactTag]) {
+          [view removeFromSuperview];
+          [_ancestorsToRemove removeObject:view.reactTag];
+        }
+        [_ancestorsOfExitingViews removeObjectForKey:view.reactTag];
+      } else {
+        _ancestorsOfExitingViews[parent.reactTag] = @(trackingCount);
+      }
+    }
+  }
+}
+
+- (BOOL)removeRecursive:(UIView *)view fromContainer:(UIView *)container;
+{
+  if (view.reactTag) {
+    BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting");
+    BOOL wantAnimateExit = hasExitAnimation;
+    if (!wantAnimateExit) {
+      for (UIView *subview in view.reactSubviews) {
+        if ([self removeRecursive:subview fromContainer:view]) {
+          wantAnimateExit = YES;
+          break;
+        }
+      }
+    }
+
+    if (wantAnimateExit) {
+      REASnapshot *before;
+      if (hasExitAnimation) {
+        before = [[REASnapshot alloc] init:view];
+      }
+      // start exit animation
+      UIView *originalSuperview = view.superview;
+      NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:view];
+      [container removeReactSubview:view];
+      view.userInteractionEnabled = NO;
+      [originalSuperview insertSubview:view atIndex:originalIndex];
+      if (hasExitAnimation) {
+        NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
+        [_exitingViews setObject:view forKey:view.reactTag];
+        [self registerExitingAncestors:view];
+        _startAnimationForTag(view.reactTag, @"exiting", preparedValues, @(0));
+      } else {
+        [_ancestorsToRemove addObject:view.reactTag];
+      }
+      return YES;
+    } else {
+      [container removeReactSubview:view];
+    }
+  }
+  return NO;
+}
+
+- (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container
+{
+  for (UIView *removedChild in children) {
+    if (![self removeRecursive:removedChild fromContainer:container]) {
+      [removedChild removeFromSuperview];
+    }
+  }
 }
 
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after
 {
-  _reaUiManager.flushUiOperations();
-  NSNumber *tag = view.reactTag;
-  if (_states[tag] == nil) {
-    _states[tag] = [NSNumber numberWithInt:Inactive];
-    _viewForTag[tag] = view;
-  }
   NSMutableDictionary *targetValues = after.values;
-  ViewState state = [_states[tag] intValue];
-  if (state == Inactive) {
-    if (targetValues != nil) {
-      NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
-      _startAnimationForTag(tag, @"entering", preparedValues, @(0));
-    }
-    return;
-  }
+  NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
+  _startAnimationForTag(view.reactTag, @"entering", preparedValues, @(0));
 }
 
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
 {
-  NSNumber *tag = view.reactTag;
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
-  if (_states[tag] == nil) {
-    return;
-  }
-  ViewState state = [_states[tag] intValue];
-  if (state == Disappearing || state == ToRemove || state == Inactive) {
-    return;
-  }
-  if (state == Appearing) {
-    BOOL doNotStartLayout = true;
-    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
-      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
-          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
-        doNotStartLayout = false;
-      }
-    }
-    if (doNotStartLayout) {
-      return;
-    }
-  }
-  _states[view.reactTag] = [NSNumber numberWithInt:Layout];
+
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
+}
+
+- (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view
+{
+  if (_hasAnimationForTag(view.reactTag, @"layout")) {
+    return [[REASnapshot alloc] init:view];
+  }
+  return nil;
+}
+
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)snapshot
+{
+  NSString *type = snapshot == nil ? @"entering" : @"layout";
+  if (_hasAnimationForTag(view.reactTag, type)) {
+    REASnapshot *after = [[REASnapshot alloc] init:view];
+    if (snapshot == nil) {
+      [self onViewCreate:view after:after];
+    } else {
+      [self onViewUpdate:view before:snapshot after:after];
+    }
+  }
 }
 
 @end

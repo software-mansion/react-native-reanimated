@@ -17,70 +17,46 @@ void LayoutAnimations::setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt) {
   this->weakUIRuntime = wrt;
 }
 
+void LayoutAnimations::setAnimationStartingBlock(
+    AnimationStartingBlock animationStartingBlock) {
+  this->animationStartingBlock = animationStartingBlock;
+}
+
 void LayoutAnimations::startAnimationForTag(
     int tag,
     alias_ref<JString> type,
     alias_ref<JMap<jstring, jstring>> values) {
-  if (auto rt = this->weakUIRuntime.lock()) {
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt->global()
-            .getPropertyAsObject(*rt, "global")
-            .getProperty(*rt, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function startAnimationForTag =
-          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(
-              *rt, "startAnimationForTag");
-      jsi::Object target(*rt);
-
-      for (const auto &entry : *values) {
-        target.setProperty(
-            *rt,
-            entry.first->toStdString().c_str(),
-            std::stof(entry.second->toStdString()));
-      }
-      startAnimationForTag.call(
-          *rt,
-          jsi::Value(tag),
-          jsi::String::createFromUtf8(*rt, type->toStdString()),
-          target);
-    }
-  }
+  this->animationStartingBlock(tag, type, values);
 }
 
-void LayoutAnimations::removeConfigForTag(int tag) {
-  if (auto rt = this->weakUIRuntime.lock()) {
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt->global()
-            .getPropertyAsObject(*rt, "global")
-            .getProperty(*rt, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function removeConfig =
-          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(
-              *rt, "removeConfig");
-      removeConfig.call(*rt, jsi::Value(tag));
-    }
-  }
-}
-
-void LayoutAnimations::notifyAboutProgress(
-    const jsi::Value &progress,
-    int tag) {
+void LayoutAnimations::progressLayoutAnimation(
+    int tag,
+    const jsi::Value &progress) {
   if (auto rt = this->weakUIRuntime.lock()) {
     static const auto method =
         javaPart_->getClass()
-            ->getMethod<void(JMap<JString, JObject>::javaobject, int)>(
-                "notifyAboutProgress");
+            ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+                "progressLayoutAnimation");
     method(
         javaPart_.get(),
-        JNIHelper::ConvertToPropsMap(*rt, progress.asObject(*rt)).get(),
-        tag);
+        tag,
+        JNIHelper::ConvertToPropsMap(*rt, progress.asObject(*rt)).get());
   }
 }
 
-void LayoutAnimations::notifyAboutEnd(int tag, int cancelled) {
+void LayoutAnimations::endLayoutAnimation(int tag, bool cancelled) {
   static const auto method =
-      javaPart_->getClass()->getMethod<void(int, int)>("notifyAboutEnd");
+      javaPart_->getClass()->getMethod<void(int, bool)>("endLayoutAnimation");
   method(javaPart_.get(), tag, cancelled);
+}
+
+void LayoutAnimations::setHasAnimationBlock(
+    HasAnimationBlock hasAnimationBlock) {
+  this->hasAnimationBlock = hasAnimationBlock;
+}
+
+bool LayoutAnimations::hasAnimationForTag(int tag, std::string type) {
+  return hasAnimationBlock(tag, type);
 }
 
 bool LayoutAnimations::isLayoutAnimationEnabled() {
@@ -93,7 +69,7 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "startAnimationForTag", LayoutAnimations::startAnimationForTag),
       makeNativeMethod(
-          "removeConfigForTag", LayoutAnimations::removeConfigForTag),
+          "hasAnimationForTag", LayoutAnimations::hasAnimationForTag),
       makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),

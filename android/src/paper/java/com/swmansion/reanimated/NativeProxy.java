@@ -310,16 +310,13 @@ public class NativeProxy {
           }
 
           @Override
-          public void removeConfigForTag(int tag) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              LayoutAnimations.removeConfigForTag(tag);
-            }
+          public boolean isLayoutAnimationEnabled() {
+            return LayoutAnimations.isLayoutAnimationEnabled();
           }
 
           @Override
-          public boolean isLayoutAnimationEnabled() {
-            return LayoutAnimations.isLayoutAnimationEnabled();
+          public boolean hasAnimationForTag(int tag, String type) {
+            return LayoutAnimations.hasAnimationForTag(tag, type);
           }
         });
   }
