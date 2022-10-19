@@ -220,6 +220,9 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
       shareable =
           std::make_shared<ShareableWorklet>(runtimeHelper.get(), rt, object);
+    } else if (!object.getProperty(rt, "__init").isUndefined()) {
+      shareable =
+          std::make_shared<ShareableHandle>(runtimeHelper.get(), rt, object);
     } else if (object.isArray(rt)) {
       shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
     } else {

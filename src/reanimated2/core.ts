@@ -148,15 +148,15 @@ export function getTimestamp(): number {
   return _getTimestamp();
 }
 
-function workletValueSetter<T extends WorkletValue>(
-  this: WorkletValueSetterContext,
+function valueSetter<T extends WorkletValue>(
+  sv: WorkletValueSetterContext,
   value: T
 ): void {
   'worklet';
-  const previousAnimation = this._animation;
+  const previousAnimation = sv._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
-    this._animation = null;
+    sv._animation = null;
   }
   if (
     typeof value === 'function' ||
@@ -172,13 +172,13 @@ function workletValueSetter<T extends WorkletValue>(
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
     // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
-    if (this._value === animation.current && !animation.isHigherOrder) {
+    if (sv._value === animation.current && !animation.isHigherOrder) {
       animation.callback && animation.callback(true);
       return;
     }
     // animated set
     const initializeAnimation = (timestamp: number) => {
-      animation.onStart(animation, this.value, timestamp, previousAnimation);
+      animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
     initializeAnimation(getTimestamp());
     const step = (timestamp: number) => {
@@ -189,7 +189,7 @@ function workletValueSetter<T extends WorkletValue>(
       const finished = animation.onFrame(animation, timestamp);
       animation.finished = true;
       animation.timestamp = timestamp;
-      this._value = animation.current;
+      sv._value = animation.current;
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -197,7 +197,7 @@ function workletValueSetter<T extends WorkletValue>(
       }
     };
 
-    this._animation = animation;
+    sv._animation = animation;
 
     if (_frameTimestamp) {
       // frame
@@ -208,11 +208,19 @@ function workletValueSetter<T extends WorkletValue>(
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
-    if (this._value === value) {
+    if (sv._value === value) {
       return;
     }
-    this._value = value as Descriptor | AnimatableValue;
+    sv._value = value as Descriptor | AnimatableValue;
   }
+}
+
+function workletValueSetter<T extends WorkletValue>(
+  this: WorkletValueSetterContext,
+  value: T
+): void {
+  'worklet';
+  return valueSetter(this, value);
 }
 
 // We cannot use pushFrame
@@ -272,11 +280,11 @@ function workletValueSetterJS<T extends WorkletValue>(
 function valueUnpacker(objectToUnpack) {
   'worklet';
   let workletsCache = global.__workletsCache;
-  let reactiveCache = global.__reactiveCache;
+  let handleCache = global.__handleCache;
   if (workletsCache === undefined) {
     // init
     workletsCache = global.__workletsCache = new Map();
-    reactiveCache = global.__reactiveCache = new WeakMap();
+    handleCache = global.__handleCache = new WeakMap();
   }
   if (objectToUnpack.__workletHash) {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
@@ -285,40 +293,26 @@ function valueUnpacker(objectToUnpack) {
       workletFun = eval('(' + objectToUnpack.asString + ')');
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
     }
-    return () => {
+    return (...args) => {
       jsThis = objectToUnpack;
       try {
-        workletFun();
+        return workletFun(...args);
       } catch (e) {
         _log('error');
         _log(e.toString());
       }
     };
-  } else {
+  } else if (objectToUnpack.__init) {
     // reactive?
-    let reactive = reactiveCache.get(objectToUnpack);
-    if (reactive !== undefined) {
-      const data = {
-        value: objectToUnpack.__initial,
-        weakReactiveHandle: new WeakRef(objectToUnpack),
-        revision: 1,
-      };
-
-      reactive = {
-        set value(newValue) {
-          data.value = newValue;
-          data.revision += 1;
-          const reactiveHandle = data.weakReactiveHandle.deref();
-          if (reactiveHandle) {
-            // _notifyReactiveUpdate(reactiveHandle);
-          }
-        },
-        get value() {
-          return data.value;
-        },
-      };
-      reactiveCache.set(objectToUnpack, reactive);
+    let value = handleCache.get(objectToUnpack);
+    if (value === undefined) {
+      value = objectToUnpack.__init();
+      handleCache.set(objectToUnpack, value);
     }
+    return value;
+  } else {
+    _log('Nothing to unpack');
+    throw new Error('data type not recognized by unpack method');
   }
 }
 
@@ -331,6 +325,13 @@ function makeShareableCloneRecursive(value) {
     const cached = _adaptCache.get(value);
     if (cached !== undefined) {
       return cached;
+    } else if (value.__handle) {
+      // "handle objects" as on the RN side they represent a handle to an object that
+      // lives on the JS side. Here they are represented by an object with __handle field
+      // while we want the UI thread to see the actual value constructed on the UI side.
+      // We therefore return the handle object expecting it already has been transformed
+      // into a shareable of the HandleType.
+      return value.__handle;
     } else {
       let toAdapt;
       if (Array.isArray(value)) {
@@ -342,94 +343,111 @@ function makeShareableCloneRecursive(value) {
         }
       }
       Object.freeze(value);
-      const adapted = NativeReanimatedModule.makeShareableClone(toAdapt);
-      _adaptCache.set(value, adapted);
-      return adapted;
+      const adopted = NativeReanimatedModule.makeShareableClone(toAdapt);
+      _adaptCache.set(value, adopted);
+      return adopted;
     }
   }
   return NativeReanimatedModule.makeShareableClone(value);
 }
 
 function makeSharedValue(initial) {
-  const data = {
-    value: initial,
-    revision: 1,
-    reactive: NativeReanimatedModule.makeReactiveValue(
-      makeShareableCloneRecursive(initial)
-    ),
-  };
-  return {
+  const handle = makeShareableCloneRecursive({
+    __init: () => {
+      'worklet';
+
+      const listeners = new Map();
+
+      const self = {
+        set value(newValue) {
+          valueSetter(self, newValue);
+          listeners.forEach((listener) => listener());
+        },
+        get value() {
+          return self._value;
+        },
+        addListener: (id, listener) => {
+          listeners.set(id, listener);
+        },
+        removeListener: (id) => {
+          listeners.delete(id);
+        },
+        _value: initial,
+        _animation: null,
+      };
+      return self;
+    },
+  });
+  const sv = {
     set value(newValue) {
-      NativeReanimatedModule.updateReactiveValue(
-        data.reactive,
-        makeShareableCloneRecursive(newValue)
+      NativeReanimatedModule.scheduleOnUI(
+        makeShareableCloneRecursive(() => {
+          'worklet';
+          sv.value = newValue;
+        })
       );
     },
     get value() {
       return undefined;
     },
+    __handle: handle,
   };
+  return sv;
+}
+
+let MAPPER_ID = 9999;
+
+function startMapperz(worklet, inputs) {
+  const mapperID = (MAPPER_ID += 1);
+  NativeReanimatedModule.scheduleOnUI(
+    makeShareableCloneRecursive(() => {
+      'worklet';
+      let mapperRegistry = global.__mapperRegistry;
+      if (mapperRegistry === undefined) {
+        mapperRegistry = global.__mapperRegistry = new Map();
+      }
+      const mapper = {
+        dirty: false,
+        worklet,
+      };
+      mapperRegistry.set(mapperID, mapper);
+      function listener() {
+        _log('listener fire');
+        mapper.dirty = true;
+        if (!global.__mapperRequestedFrame) {
+          global.__mapperRequestedFrame = true;
+          requestAnimationFrame(() => {
+            _log('anim frame');
+            mapperRegistry.forEach((mapper) => {
+              _log('there is mapper ' + mapper);
+              mapper.worklet();
+            });
+            global.__mapperRequestedFrame = false;
+          });
+        }
+      }
+      for (const input of inputs) {
+        _log('add l;istener');
+        input.addListener(mapperID, listener);
+      }
+    })
+  );
 }
 
 export function doSomething() {
-  // const before = {
-  //   a: 14,
-  //   b: 'hello',
-  //   c: [1, 2, { x: 8 }, 'yollo'],
-  // };
-  // const data = makeShareableCloneRecursive(before);
-
-  // function anotherWork() {
-  //   'worklet';
-  //   console.log('Can run me too');
-  // }
-
   const sv = makeSharedValue(7);
-  // _adaptCache.set(reactive, reactive);
-  // console.log('reactio', Object.getPrototypeOf(reactive));
 
-  // function work() {
-  //   'worklet';
-  //   console.log('hellow from the UI thread', reactive.value);
-  //   // anotherWork();
-  // }
-  // const shareableWork = makeShareableCloneRecursive(work);
-  // NativeReanimatedModule.scheduleOnUI(shareableWork);
-  // setTimeout(() => {
-  //   reactive.value = makeShareableCloneRecursive(8);
-  //   NativeReanimatedModule.scheduleOnUI(shareableWork);
-  // }, 500);
-
-  const work = makeShareableCloneRecursive(() => {
+  const work = () => {
     'worklet';
     _log('yollo');
-    const u = {
-      set something(sth) {
-        _log('setting' + sth);
-      },
-    };
-    // class Sth {
-    // set something(sth) {
-    //   _log('setting' + sth);
-    // }
-    // }
-    // const u = new Sth();
-    u.something = 7;
-  });
+    _log('SVSV ' + JSON.stringify(sv));
+  };
 
-  NativeReanimatedModule.startMapper2(
-    work,
-    [reactive],
-    [],
-    undefined,
-    undefined
-  );
+  startMapperz(work, [sv]);
 
   setTimeout(() => {
-    sv.value = 8;
+    sv.value = 9;
   }, 500);
-
-  // console.log('DATA', before, reacitve.value);
 }
 
 export function makeMutable<T>(value: T): SharedValue<T> {

@@ -21,7 +21,7 @@ class JSRuntimeHelper {
   JSRuntimeHelper(jsi::Runtime *_rnRuntime, jsi::Runtime *_uiRuntime, const std::shared_ptr<Scheduler> &_scheduler)
       : rnRuntime(_rnRuntime), uiRuntime(_uiRuntime), scheduler(_scheduler) {}
 
-  std::shared_ptr<CoreFunction> valueSetter; 
+  std::shared_ptr<CoreFunction> valueSetter;
   std::shared_ptr<CoreFunction> valueUnpacker;
 
   inline bool isUIRuntime(const jsi::Runtime &rt) const {
@@ -72,6 +72,7 @@ protected:
     ArrayType,
     WorkletType,
     ReactiveType,
+    HandleType,
   };
 
   Shareable(ValueType valueType_) : valueType(valueType_) {};
@@ -154,6 +155,22 @@ class ShareableWorklet : public ShareableObject {
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     jsi::Value obj = ShareableObject::toJSValue(rt);
     return runtimeHelper->valueUnpacker->call(rt, obj);
+  }
+};
+
+class ShareableHandle : public RetainingShareable {
+private:
+  JSRuntimeHelper *runtimeHelper;
+  std::shared_ptr<ShareableObject> initializer;
+public:
+  ShareableHandle(JSRuntimeHelper *runtimeHelper, jsi::Runtime &rt, const jsi::Object &initializerObject) : RetainingShareable(rt, HandleType), runtimeHelper(runtimeHelper) {
+    initializer = std::make_shared<ShareableObject>(rt, initializerObject);
+  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    auto initObj = initializer->getJSValue(rt);
+    auto value = runtimeHelper->valueUnpacker->call(rt, initObj);
+    initializer = nullptr; // we can release ref to initializer as this method should be called at most once
+    return value;
   }
 };
 
