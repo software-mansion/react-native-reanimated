@@ -148,7 +148,7 @@ def findReanimatedInstancesForPath(String path) {
     }.files
 }
 
-def assertNoMultipleInstances() {
+def checkNoMultipleInstances() {
     // Assert there are no multiple installations of Reanimated
     Set<File> files
     if (projectDir.path.contains(rootDir.parent)) {
@@ -545,7 +545,7 @@ android {
                     srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
                 }
             }
-            
+
             // UIImplementation
             if (REACT_NATIVE_MINOR_VERSION <= 64) {
                 srcDirs += "src/reactNativeVersionPatch/UIImplementation/64"
@@ -563,10 +563,10 @@ android {
     }
 }
 
-def assertionTask = task assertNoMultipleInstancesTask {
+def assertNoMultipleInstances = task assertNoMultipleInstancesTask {
     onlyIf { shouldAssertNoMultipleInstances() && CLIENT_SIDE_BUILD }
     doFirst {
-        assertNoMultipleInstances()
+        checkNoMultipleInstances()
     }
 }
 
@@ -582,7 +582,7 @@ def assertNoReanimated2WithNewArchitecture = task assertNoReanimated2WithNewArch
 }
 
 tasks.preBuild {
-    dependsOn assertionTask, assertNoReanimated2WithNewArchitecture
+    dependsOn assertNoMultipleInstances, assertNoReanimated2WithNewArchitecture
 }
 
 task cleanCmakeCache() {
