@@ -121,6 +121,8 @@ void RuntimeDecorator::decorateUIRuntime(
     const ScrollToFunction scrollTo,
 #endif
     const RequestFrameFunction requestFrame,
+    const ScheduleOnJSFunction scheduleOnJS,
+    const MakeShareableCloneFunction makeShareableClone,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
     const UnregisterSensorFunction unregisterSensor,
@@ -247,6 +249,29 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
   rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
+
+  auto clb4 = [scheduleOnJS](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    scheduleOnJS(rt, args[0], args[1]);
+    return jsi::Value::undefined();
+  };
+  jsi::Value scheduleOnJSFun = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_scheduleOnJS"), 2, clb4);
+  rt.global().setProperty(rt, "_scheduleOnJS", scheduleOnJSFun);
+
+  auto clb5 = [makeShareableClone](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    return makeShareableClone(rt, args[0]);
+  };
+  jsi::Value makeShareableCloneFun = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_makeShareableClone"), 1, clb5);
+  rt.global().setProperty(rt, "_makeShareableClone", makeShareableCloneFun);
 
   auto clb6 = [getCurrentTime](
                   jsi::Runtime &rt,

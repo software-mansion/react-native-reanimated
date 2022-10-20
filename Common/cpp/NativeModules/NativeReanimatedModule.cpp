@@ -110,6 +110,37 @@ NativeReanimatedModule::NativeReanimatedModule(
     maybeRequestRender();
   };
 
+  auto scheduleOnJS = [this](
+                             jsi::Runtime &rt,
+                             const jsi::Value &remoteFun,
+                             const jsi::Value &argsValue) {
+    auto shareableRemoteFun = extractShareableOrThrow(rt, remoteFun);
+    auto shareableArgs = argsValue.isUndefined() ? nullptr : extractShareableOrThrow(rt, argsValue);
+    auto jsRuntime = this->runtimeHelper->rnRuntime;
+    this->scheduler->scheduleOnJS([=] {
+      jsi::Runtime &rt = *jsRuntime;
+      auto remoteFun = shareableRemoteFun->getJSValue(rt);
+      if (shareableArgs == nullptr) {
+        // fast path for remote function w/o arguments
+        remoteFun.asObject(rt).asFunction(rt).call(rt);
+      } else {
+        auto argsAry = shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
+        auto argsSize = argsAry.size(rt);
+        jsi::Value args[argsSize];
+        for (size_t i = 0; i < argsSize; i++) {
+          args[i] = argsAry.getValueAtIndex(rt, i);
+        }
+        remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
+      }
+    });
+  };
+
+  auto makeShareableClone = [this](
+                             jsi::Runtime &rt,
+                             const jsi::Value &value) {
+    return this->makeShareableClone(rt, value);
+  };
+
   this->layoutAnimationsProxy = layoutAnimationsProxy;
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -151,6 +182,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.scrollToFunction,
 #endif
       requestAnimationFrame,
+      scheduleOnJS,
+      makeShareableClone,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
@@ -198,12 +231,6 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
-void NativeReanimatedModule::scheduleOnJS(
-    jsi::Runtime &rt,
-    const jsi::Value &function) {
-  // do nothing
-}
-
 jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value) {
@@ -216,6 +243,8 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       shareable =
           std::make_shared<ShareableHandle>(runtimeHelper.get(), rt, object);
+    } else if (object.isFunction(rt)) {
+      shareable = std::make_shared<ShareableRemoteFunction>(runtimeHelper.get(), rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
       shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
     } else {
@@ -235,85 +264,6 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     throw "something wacky";
   }
   return ShareableJSRef::newHostObject(rt, shareable);
-}
-
-jsi::Value NativeReanimatedModule::makeShareable(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this)->getValue(rt);
-}
-
-jsi::Value NativeReanimatedModule::makeMutable(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this, ValueType::MutableValueType)
-      ->getValue(rt);
-}
-
-jsi::Value NativeReanimatedModule::makeRemote(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)
-      ->getValue(rt);
-}
-
-jsi::Value NativeReanimatedModule::startMapper(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet,
-    const jsi::Value &inputs,
-    const jsi::Value &outputs,
-    const jsi::Value &updater,
-    const jsi::Value &viewDescriptors) {
-  static unsigned long MAPPER_ID = 1;
-
-  unsigned long newMapperId = MAPPER_ID++;
-  auto mapperShareable = ShareableValue::adapt(rt, worklet, this);
-  auto inputMutables =
-      extractMutablesFromArray(rt, inputs.asObject(rt).asArray(rt), this);
-  auto outputMutables =
-      extractMutablesFromArray(rt, outputs.asObject(rt).asArray(rt), this);
-
-  int optimalizationLvl = 0;
-  auto optimalization =
-      updater.asObject(rt).getProperty(rt, "__optimalization");
-  if (optimalization.isNumber()) {
-    optimalizationLvl = optimalization.asNumber();
-  }
-  auto updaterSV = ShareableValue::adapt(rt, updater, this);
-  auto viewDescriptorsSV = ShareableValue::adapt(rt, viewDescriptors, this);
-
-  scheduler->scheduleOnUI([=] {
-    auto mapperFunction =
-        mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(
-            *runtime);
-    std::shared_ptr<jsi::Function> mapperFunctionPointer =
-        std::make_shared<jsi::Function>(std::move(mapperFunction));
-
-    std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(
-        this,
-        newMapperId,
-        mapperFunctionPointer,
-        inputMutables,
-        outputMutables);
-    if (optimalizationLvl > 0) {
-      mapperPointer->enableFastMode(
-          optimalizationLvl, updaterSV, viewDescriptorsSV);
-    }
-    mapperRegistry->startMapper(mapperPointer);
-    maybeRequestRender();
-  });
-
-  return jsi::Value(static_cast<double>(newMapperId));
-}
-
-void NativeReanimatedModule::stopMapper(
-    jsi::Runtime &rt,
-    const jsi::Value &mapperId) {
-  unsigned long id = mapperId.asNumber();
-  scheduler->scheduleOnUI([=] {
-    mapperRegistry->stopMapper(id);
-    maybeRequestRender();
-  });
 }
 
 jsi::Value NativeReanimatedModule::registerEventHandler(

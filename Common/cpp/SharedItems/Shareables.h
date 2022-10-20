@@ -35,6 +35,10 @@ class JSRuntimeHelper {
   void scheduleOnUI(std::function<void()> job) {
     scheduler->scheduleOnUI(job);
   }
+
+  void scheduleOnJS(std::function<void()> job) {
+    scheduler->scheduleOnJS(job);
+  }
 };
 
 // Core functions are not allowed to captrue oputside variables, otherwise the'd
@@ -67,10 +71,10 @@ protected:
     // SymbolType, TODO
     // BigIntType, TODO
     StringType,
-    FunctionType,
     ObjectType,
     ArrayType,
     WorkletType,
+    RemoteFunctionType,
     HandleType,
   };
 
@@ -154,6 +158,27 @@ class ShareableWorklet : public ShareableObject {
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     jsi::Value obj = ShareableObject::toJSValue(rt);
     return runtimeHelper->valueUnpacker->call(rt, obj);
+  }
+};
+
+class ShareableRemoteFunction : public RetainingShareable,
+                                public std::enable_shared_from_this<ShareableRemoteFunction> {
+ public:
+  JSRuntimeHelper *runtimeHelper;
+  jsi::Function function;
+  ShareableRemoteFunction(
+      JSRuntimeHelper *runtimeHelper,
+      jsi::Runtime &rt,
+      jsi::Function &&function)
+      : RetainingShareable(rt, RemoteFunctionType),
+        runtimeHelper(runtimeHelper),
+        function(std::move(function)) {}
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    if (runtimeHelper->isUIRuntime(rt)) {
+      return ShareableJSRef::newHostObject(rt, shared_from_this());
+    } else {
+      return jsi::Value(rt, function);
+    }
   }
 };
 

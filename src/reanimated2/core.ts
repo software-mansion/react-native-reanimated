@@ -79,7 +79,7 @@ export function requestFrame(frame: (timestamp: Timestamp) => void): void {
   if (NativeReanimatedModule.native) {
     requestAnimationFrame(frame);
   } else {
-    pushFrame(frame);
+    // pushFrame(frame);
   }
 }
 
@@ -340,6 +340,10 @@ function makeShareableCloneRecursive(value) {
       let toAdapt;
       if (Array.isArray(value)) {
         toAdapt = value.map((element) => makeShareableCloneRecursive(element));
+      } else if (type === 'function' && value.__workletHash === undefined) {
+        // this is a remote function
+        // throw new Error('adapt remote fun ' + value.name);
+        toAdapt = value;
       } else {
         toAdapt = {};
         for (const [key, element] of Object.entries(value)) {
@@ -477,6 +481,50 @@ export function stopMapper(mapperId: number): void {
 export interface RunOnJSFunction<A extends any[], R> {
   __callAsync?: (...args: A) => void;
   (...args: A): R;
+}
+
+function makeShareableCloneOnUIRecursive(value) {
+  'worklet';
+  function cloneRecursive(value) {
+    const type = typeof value;
+    if ((type === 'object' || type === 'function') && value !== null) {
+      let toAdapt;
+      if (Array.isArray(value)) {
+        toAdapt = value.map((element) => cloneRecursive(element));
+      } else {
+        toAdapt = {};
+        for (const [key, element] of Object.entries(value)) {
+          toAdapt[key] = cloneRecursive(element);
+        }
+      }
+      Object.freeze(value);
+      return _makeShareableClone(toAdapt);
+    }
+    return _makeShareableClone(value);
+  }
+  return cloneRecursive(value);
+}
+
+function newRunOnJS(fun) {
+  'worklet';
+  return (...args) => {
+    _scheduleOnJS(
+      fun,
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+    );
+  };
+}
+
+export function doSomething() {
+  function remoteFunction() {
+    console.log('yollo');
+  }
+  const share = makeShareableCloneRecursive(remoteFunction);
+  runOnUI(() => {
+    'worklet';
+    // _log('who dis ' + remoteFunction);
+    newRunOnJS(remoteFunction)(1, 2, 3);
+  })();
 }
 
 export function runOnJS<A extends any[], R>(

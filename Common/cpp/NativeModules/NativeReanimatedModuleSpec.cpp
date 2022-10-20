@@ -27,33 +27,6 @@ static jsi::Value SPEC_PREFIX(makeShareableClone)(
       ->makeShareableClone(rt, std::move(args[0]));
 }
 
-static jsi::Value SPEC_PREFIX(makeShareable)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeShareable(rt, std::move(args[0]));
-}
-
-static jsi::Value SPEC_PREFIX(makeMutable)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeMutable(rt, std::move(args[0]));
-}
-
-static jsi::Value SPEC_PREFIX(makeRemote)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeRemote(rt, std::move(args[0]));
-}
-
 // scheduler
 
 static jsi::Value SPEC_PREFIX(scheduleOnUI)(
@@ -63,33 +36,6 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->scheduleOnUI(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-// mappers
-
-static jsi::Value SPEC_PREFIX(startMapper)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->startMapper(
-          rt,
-          std::move(args[0]),
-          std::move(args[1]),
-          std::move(args[2]),
-          std::move(args[3]),
-          std::move(args[4]));
-}
-
-static jsi::Value SPEC_PREFIX(stopMapper)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->stopMapper(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -190,14 +136,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["makeShareableClone"] =
       MethodMetadata{1, SPEC_PREFIX(makeShareableClone)};
-  methodMap_["makeShareable"] = MethodMetadata{1, SPEC_PREFIX(makeShareable)};
-  methodMap_["makeMutable"] = MethodMetadata{1, SPEC_PREFIX(makeMutable)};
-  methodMap_["makeRemote"] = MethodMetadata{1, SPEC_PREFIX(makeRemote)};
 
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
-
-  methodMap_["startMapper"] = MethodMetadata{5, SPEC_PREFIX(startMapper)};
-  methodMap_["stopMapper"] = MethodMetadata{1, SPEC_PREFIX(stopMapper)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{2, SPEC_PREFIX(registerEventHandler)};

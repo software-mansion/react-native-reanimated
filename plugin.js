@@ -67,6 +67,8 @@ const globals = new Set([
   'WeakRef',
   'Set',
   '_log',
+  '_scheduleOnJS',
+  '_makeShareableClone',
   'eval',
   '_updatePropsPaper',
   '_updatePropsFabric',

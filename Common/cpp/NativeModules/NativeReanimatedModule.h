@@ -60,21 +60,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
       override;
-  jsi::Value makeShareable(jsi::Runtime &rt, const jsi::Value &value) override;
-  jsi::Value makeMutable(jsi::Runtime &rt, const jsi::Value &value) override;
-  jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
-  void scheduleOnJS(jsi::Runtime &rt, const jsi::Value &function) override;
-
-  jsi::Value startMapper(
-      jsi::Runtime &rt,
-      const jsi::Value &worklet,
-      const jsi::Value &inputs,
-      const jsi::Value &outputs,
-      const jsi::Value &updater,
-      const jsi::Value &viewDescriptors) override;
-  void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,

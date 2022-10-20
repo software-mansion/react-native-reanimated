@@ -527,11 +527,11 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     }
     const mapperId = startMapper(
       fun,
-      inputs,
-      [],
-      updaterFn,
-      // TODO fix this
-      sharableViewDescriptors
+      inputs
+      // [],
+      // updaterFn,
+      // // TODO fix this
+      // sharableViewDescriptors
     );
     return () => {
       stopMapper(mapperId);
