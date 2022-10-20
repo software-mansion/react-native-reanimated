@@ -10,7 +10,7 @@
     "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
-    "lint:ios": "./scripts/lint-ios.sh",
+    "lint:ios": "./scripts/validate-ios.sh",
     "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
     "format:js": "prettier --write --list-different './src/'",
     "format:java": "node ./scripts/format-java.js",
