@@ -2,7 +2,6 @@ package com.swmansion.reanimated;
 
 import android.os.SystemClock;
 import android.util.Log;
-import android.view.View;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -22,7 +21,6 @@ import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
 import com.swmansion.common.SharedElementAnimator;
-import com.swmansion.common.SharedElementAnimatorDelegate;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
@@ -318,7 +316,7 @@ public class NativeProxy {
             .getAnimationsManager();
     try {
       Class<NativeModule> sharedElementAnimatorClass =
-          (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.SharedElementAnimatorClass");
+          (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.sharedElementTransition.SharedElementAnimatorClass");
       SharedElementAnimator sharedElementAnimator =
           (SharedElementAnimator) mContext.get().getNativeModule(sharedElementAnimatorClass);
       if (sharedElementAnimator != null) {
@@ -326,7 +324,7 @@ public class NativeProxy {
         sharedElementAnimator.setDelegate(screensTransitionDelegate);
       }
       else {
-        Log.w("[Reaniamted]", "Unable to get com.swmansion.rnscreens.SharedElementAnimatorClass class");
+        Log.w("[Reaniamted]", "Unable to get com.swmansion.rnscreens.sharedElementTransition.SharedElementAnimatorClass class");
       }
     } catch (ClassCastException | ClassNotFoundException e) {
       e.printStackTrace();

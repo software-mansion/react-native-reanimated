@@ -1,11 +1,15 @@
 package com.swmansion.reanimated.sharedElementTransition;
 
+import android.content.Context;
 import android.view.View;
+
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
+import com.swmansion.common.ScreenStackFragmentCommon;
 import com.swmansion.common.SharedElementAnimatorDelegate;
 import com.swmansion.common.SharedTransitionConfig;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
@@ -41,7 +45,6 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
 
     @Override
     public void onNativeAnimationEnd(View screen, List<View> toRemove) {
-        // TODO: restore state and clear registry (toRemove == true)
         for (View view : toRemove) {
             int viewTag = view.getId();
             animationsManager.stopAnimation(viewTag);
@@ -66,11 +69,6 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
     @Override
     public void makeSnapshot(View view) {
         snapshotRegistry.put(view.getId(), new Snapshot(view));
-    }
-
-    @Override
-    public Map<String, List<SharedViewConfig>> getSharedTransitionItems() {
-        return sharedTransitionsItems;
     }
 
     @Override
@@ -142,6 +140,19 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
         }
 
         return sharedElements;
+    }
+
+    @Override
+    public CoordinatorLayout getTransitionContainer(Context context) {
+        return new ReanimatedCoordinatorLayout(context);
+    }
+
+    @Override
+    public CoordinatorLayout getAnimationCoordinatorLayout(
+        Context context,
+        ScreenStackFragmentCommon fragment
+    ) {
+        return new ScreensCoordinatorLayout(context, fragment, this);
     }
 
     private boolean isInSubtreeOf(View child, View root, View parentScreen) {
