@@ -62,6 +62,15 @@ jobs:
         working-directory: ${{ matrix.working-directory }}/ios
         run: pod install
 
+      - name: Detect changes in Podfile.lock
+        working-directory: ${{ matrix.working-directory }}/ios
+        run: |
+          if ! git diff --quiet Podfile.lock ; then
+            echo "Detected changes in Podfile.lock. Perhaps you forgot to run \`pod install\` or commit the lockfile."
+            git diff Podfile.lock
+            exit 1 ;
+          fi
+
       - name: Restore build artifacts from cache
         uses: actions/cache@v3
         with:
