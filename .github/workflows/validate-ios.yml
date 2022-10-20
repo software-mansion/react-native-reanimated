@@ -13,8 +13,7 @@ on:
       - 'ios/**'
 
 jobs:
-  lint:
-    name: Validate iOS
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
