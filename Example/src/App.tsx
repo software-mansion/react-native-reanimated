@@ -1,8 +1,11 @@
-import {
+import Animated, {
   runOnJS,
   runOnUI,
   useSharedValue,
   doSomething,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
 } from 'react-native-reanimated';
 import { View, Text, Button } from 'react-native';
 import React, { useEffect, useState } from 'react';
@@ -21,23 +24,6 @@ import React, { useEffect, useState } from 'react';
 export default function AnimatedStyleUpdateExample(props) {
   const [obj, setObj] = useState();
 
-  const randomObject = () => {
-    const arr = [];
-    for (let i = 0; i < 100; i++) {
-      arr.push({
-        key: i,
-        value: Math.random(),
-      });
-    }
-
-    return {
-      id: Math.random(),
-      arr,
-    };
-  };
-
-  const test = useSharedValue();
-
   // useEffect(() => {
   //   const interval = setInterval(() => {
   //     setObj(randomObject());
@@ -46,15 +32,35 @@ export default function AnimatedStyleUpdateExample(props) {
   //   return () => clearInterval(interval);
   // }, []);
 
-  useEffect(() => {
-    test.value = obj;
-  }, [obj, test]);
+  // useEffect(() => {
+  //   test.value = obj;
+  // }, [obj, test]);
+  const opacity = useSharedValue(0.5);
+  const translateX = useSharedValue(0);
+  const stylez = useAnimatedStyle(() => {
+    // _log('hello');
+    console.log('OPACTIY ' + opacity.value);
+    return {
+      width: 50,
+      height: 50,
+      opacity: opacity.value,
+      transform: [{ translateX: translateX.value }],
+      backgroundColor: 'red',
+    };
+  });
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>Hello World</Text>
-      <Text>{test.value ? test.value.id : ''}</Text>
+      <Animated.View style={stylez} />
       <Button title="do something" onPress={() => doSomething()} />
+      <Button
+        onPress={() => {
+          opacity.value = withTiming(1);
+          translateX.value = withSpring(100);
+        }}
+        title="animate"
+      />
       <Button
         onPress={() => {
           setObj(randomObject());

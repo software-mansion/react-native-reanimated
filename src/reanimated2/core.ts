@@ -91,14 +91,38 @@ global._log = function (s: string) {
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  return makeShareable(worklet);
+  // console.log('RUN ON UI');
+  return (...args) => {
+    NativeReanimatedModule.scheduleOnUI(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        return worklet(...args);
+      })
+    );
+  };
+  // return makeShareable(worklet);
+}
+
+function newMakeShareable(value) {
+  const handle = makeShareableCloneRecursive({
+    __init: () => {
+      'worklet';
+      return value;
+    },
+  });
+  if (typeof value !== 'object') {
+    throw new Error('whyyyy');
+  }
+  value.__handle = handle;
+  return value;
 }
 
 export function makeShareable<T>(value: T): T {
   if (__DEV__) {
     isConfiguredCheck();
   }
-  return NativeReanimatedModule.makeShareable(value);
+  return newMakeShareable(value);
+  // return NativeReanimatedModule.makeShareable(value);
 }
 
 export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
@@ -196,7 +220,6 @@ function valueSetter<T extends WorkletValue>(
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
-        _log('request animation from there');
         requestAnimationFrame(step);
       }
     };
@@ -207,7 +230,6 @@ function valueSetter<T extends WorkletValue>(
       // frame
       step(_frameTimestamp);
     } else {
-      _log('request animation from hrtr');
       requestAnimationFrame(step);
     }
   } else {
@@ -347,7 +369,7 @@ function makeShareableCloneRecursive(value) {
           toAdapt[key] = makeShareableCloneRecursive(element);
         }
       }
-      Object.freeze(value);
+      // Object.freeze(value);
       const adopted = NativeReanimatedModule.makeShareableClone(toAdapt);
       _adaptCache.set(value, adopted);
       return adopted;
@@ -356,7 +378,7 @@ function makeShareableCloneRecursive(value) {
   return NativeReanimatedModule.makeShareableClone(value);
 }
 
-function makeSharedValue(initial) {
+function newMakeMutable(initial) {
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
@@ -389,22 +411,22 @@ function makeSharedValue(initial) {
       return self;
     },
   });
-  const sv = {
+  const mutable = {
     set value(newValue) {
       NativeReanimatedModule.scheduleOnUI(
         makeShareableCloneRecursive(() => {
           'worklet';
           _log('setting new value for realz');
-          sv.value = newValue;
+          mutable.value = newValue;
         })
       );
     },
     get value() {
-      return undefined;
+      return initial;
     },
     __handle: handle,
   };
-  return sv;
+  return mutable;
 }
 
 function newMakeRemote(initial) {
@@ -419,10 +441,77 @@ function newMakeRemote(initial) {
   };
 }
 
+function runOnUIz<A extends any[], R>(
+  worklet: ComplexWorkletFunction<A, R>
+): (...args: A) => void {
+  return (...args) => {
+    NativeReanimatedModule.scheduleOnUI(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        return worklet(...args);
+      })
+    );
+  };
+}
+
+export function doSomething() {
+  // const sv = makeSharedValue(7);
+
+  const work = () => {
+    'worklet';
+    _log('yollo');
+    // _log('SVSV ' + JSON.stringify(sv));
+  };
+
+  runOnUIz(work)();
+
+  // startMapperz(work, [sv]);
+
+  // NativeReanimatedModule.scheduleOnUI(
+  //   makeShareableCloneRecursive(() => {
+  //     'worklet';
+  //     withTiming(10);
+  //   })
+  // );
+
+  // setTimeout(() => {
+  //   // const tt = withTiming(10);
+  //   // console.log('TTT', tt);
+  //   sv.value = withTiming(10);
+  // }, 500);
+}
+
+export function makeMutable<T>(value: T): SharedValue<T> {
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
+  return newMakeMutable(value);
+}
+
+export function makeRemote<T>(object = {}): T {
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
+  return newMakeRemote(object);
+}
+
 let MAPPER_ID = 9999;
 
-function startMapperz(worklet, inputs) {
+export function startMapper(
+  worklet: () => void,
+  inputs: any[] = [],
+  outputs: any[] = [],
+  updater: () => void = () => {
+    // noop
+  },
+  viewDescriptors: Descriptor[] | SharedValue<Descriptor[]> = []
+): number {
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
+
   const mapperID = (MAPPER_ID += 1);
+
   NativeReanimatedModule.scheduleOnUI(
     makeShareableCloneRecursive(() => {
       'worklet';
@@ -457,68 +546,8 @@ function startMapperz(worklet, inputs) {
   );
 }
 
-export function doSomething() {
-  const sv = makeSharedValue(7);
-
-  const work = () => {
-    'worklet';
-    _log('yollo');
-    _log('SVSV ' + JSON.stringify(sv));
-  };
-
-  startMapperz(work, [sv]);
-
-  // NativeReanimatedModule.scheduleOnUI(
-  //   makeShareableCloneRecursive(() => {
-  //     'worklet';
-  //     withTiming(10);
-  //   })
-  // );
-
-  setTimeout(() => {
-    // const tt = withTiming(10);
-    // console.log('TTT', tt);
-    sv.value = withTiming(10);
-  }, 500);
-}
-
-export function makeMutable<T>(value: T): SharedValue<T> {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  return NativeReanimatedModule.makeMutable(value);
-}
-
-export function makeRemote<T>(object = {}): T {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  return newMakeRemote(object);
-}
-
-export function startMapper(
-  mapper: () => void,
-  inputs: any[] = [],
-  outputs: any[] = [],
-  updater: () => void = () => {
-    // noop
-  },
-  viewDescriptors: Descriptor[] | SharedValue<Descriptor[]> = []
-): number {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  return NativeReanimatedModule.startMapper(
-    mapper,
-    inputs,
-    outputs,
-    updater,
-    viewDescriptors
-  );
-}
-
 export function stopMapper(mapperId: number): void {
-  NativeReanimatedModule.stopMapper(mapperId);
+  // NativeReanimatedModule.stopMapper(mapperId);
 }
 
 export interface RunOnJSFunction<A extends any[], R> {
@@ -553,12 +582,20 @@ if (!isWeb() && isConfigured()) {
   const capturableConsole = console;
   runOnUI(() => {
     'worklet';
+    function log(message) {
+      _log(message);
+    }
     const console = {
-      debug: runOnJS(capturableConsole.debug),
-      log: runOnJS(capturableConsole.log),
-      warn: runOnJS(capturableConsole.warn),
-      error: runOnJS(capturableConsole.error),
-      info: runOnJS(capturableConsole.info),
+      // debug: runOnJS(capturableConsole.debug),
+      // log: runOnJS(capturableConsole.log),
+      // warn: runOnJS(capturableConsole.warn),
+      // error: runOnJS(capturableConsole.error),
+      // info: runOnJS(capturableConsole.info),
+      debug: log,
+      log: log,
+      warn: log,
+      error: log,
+      info: log,
     };
     _setGlobalConsole(console);
   })();

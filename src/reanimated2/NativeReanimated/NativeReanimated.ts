@@ -43,14 +43,17 @@ export class NativeReanimated {
   }
 
   makeShareable<T>(value: T): T {
+    throw new Error('who dis');
     return this.InnerNativeModule.makeShareable(value);
   }
 
   makeMutable<T>(value: T): SharedValue<T> {
+    throw new Error('who dis');
     return this.InnerNativeModule.makeMutable(value);
   }
 
   makeRemote<T>(object = {}): T {
+    throw new Error('who dis');
     return this.InnerNativeModule.makeRemote(object);
   }
 
@@ -77,6 +80,7 @@ export class NativeReanimated {
     updater: () => void,
     viewDescriptors: Descriptor[] | SharedValue<Descriptor[]>
   ): number {
+    throw new Error('who dis');
     return this.InnerNativeModule.startMapper(
       mapper,
       inputs,
@@ -87,6 +91,7 @@ export class NativeReanimated {
   }
 
   stopMapper(mapperId: number): void {
+    throw new Error('who dis');
     return this.InnerNativeModule.stopMapper(mapperId);
   }
 
