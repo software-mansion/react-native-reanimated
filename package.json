@@ -5,11 +5,12 @@
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
-    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java && yarn lint:docs",
+    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
+    "lint:ios": "./scripts/validate-ios.sh",
     "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
     "format:js": "prettier --write --list-different './src/'",
     "format:java": "node ./scripts/format-java.js",
