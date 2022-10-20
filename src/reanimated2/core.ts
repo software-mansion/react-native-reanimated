@@ -12,6 +12,7 @@ import {
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
+import { withTiming } from './animation';
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
@@ -164,6 +165,7 @@ function valueSetter<T extends WorkletValue>(
       typeof value === 'object' &&
       (value as AnimationObject).onFrame !== undefined)
   ) {
+    _log('setting animation');
     const animation: AnimationObject =
       typeof value === 'function'
         ? (value as () => AnimationObject)()
@@ -178,6 +180,7 @@ function valueSetter<T extends WorkletValue>(
     }
     // animated set
     const initializeAnimation = (timestamp: number) => {
+      _log('starting animation');
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
     initializeAnimation(getTimestamp());
@@ -193,6 +196,7 @@ function valueSetter<T extends WorkletValue>(
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
+        _log('request animation from there');
         requestAnimationFrame(step);
       }
     };
@@ -203,6 +207,7 @@ function valueSetter<T extends WorkletValue>(
       // frame
       step(_frameTimestamp);
     } else {
+      _log('request animation from hrtr');
       requestAnimationFrame(step);
     }
   } else {
@@ -357,14 +362,21 @@ function makeSharedValue(initial) {
       'worklet';
 
       const listeners = new Map();
+      let value = initial;
 
       const self = {
         set value(newValue) {
           valueSetter(self, newValue);
-          listeners.forEach((listener) => listener());
         },
         get value() {
           return self._value;
+        },
+        set _value(newValue) {
+          value = newValue;
+          listeners.forEach((listener) => listener());
+        },
+        get _value() {
+          return value;
         },
         addListener: (id, listener) => {
           listeners.set(id, listener);
@@ -372,7 +384,6 @@ function makeSharedValue(initial) {
         removeListener: (id) => {
           listeners.delete(id);
         },
-        _value: initial,
         _animation: null,
       };
       return self;
@@ -383,6 +394,7 @@ function makeSharedValue(initial) {
       NativeReanimatedModule.scheduleOnUI(
         makeShareableCloneRecursive(() => {
           'worklet';
+          _log('setting new value for realz');
           sv.value = newValue;
         })
       );
@@ -393,6 +405,18 @@ function makeSharedValue(initial) {
     __handle: handle,
   };
   return sv;
+}
+
+function newMakeRemote(initial) {
+  const handle = makeShareableCloneRecursive({
+    __init: () => {
+      'worklet';
+      return initial;
+    },
+  });
+  return {
+    __handle: handle,
+  };
 }
 
 let MAPPER_ID = 9999;
@@ -427,7 +451,6 @@ function startMapperz(worklet, inputs) {
         }
       }
       for (const input of inputs) {
-        _log('add l;istener');
         input.addListener(mapperID, listener);
       }
     })
@@ -445,8 +468,17 @@ export function doSomething() {
 
   startMapperz(work, [sv]);
 
+  // NativeReanimatedModule.scheduleOnUI(
+  //   makeShareableCloneRecursive(() => {
+  //     'worklet';
+  //     withTiming(10);
+  //   })
+  // );
+
   setTimeout(() => {
-    sv.value = 9;
+    // const tt = withTiming(10);
+    // console.log('TTT', tt);
+    sv.value = withTiming(10);
   }, 500);
 }
 
@@ -461,7 +493,7 @@ export function makeRemote<T>(object = {}): T {
   if (__DEV__) {
     isConfiguredCheck();
   }
-  return NativeReanimatedModule.makeRemote(object);
+  return newMakeRemote(object);
 }
 
 export function startMapper(
