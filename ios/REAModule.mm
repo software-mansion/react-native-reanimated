@@ -2,8 +2,7 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REATransitionManager.h>
-
-#import "SingleInstanceChecker.h"
+#import <RNReanimated/SingleInstanceChecker.h>
 
 using namespace reanimated;
 
