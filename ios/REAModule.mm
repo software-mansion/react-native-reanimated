@@ -19,8 +19,7 @@
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-
-#import "SingleInstanceChecker.h"
+#import <RNReanimated/SingleInstanceChecker.h>
 
 using namespace facebook::react;
 using namespace reanimated;
