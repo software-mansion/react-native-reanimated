@@ -299,7 +299,7 @@ function buildWorkletString(t, fun, closureVariables, name) {
               )
             )
           ),
-          t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
+          t.memberExpression(t.identifier('this'), t.identifier('_closure'))
         ),
       ]),
       body,

@@ -91,7 +91,6 @@ global._log = function (s: string) {
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  // console.log('RUN ON UI');
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
       makeShareableCloneRecursive(() => {
@@ -100,29 +99,20 @@ export function runOnUI<A extends any[], R>(
       })
     );
   };
-  // return makeShareable(worklet);
-}
-
-function newMakeShareable(value) {
-  const handle = makeShareableCloneRecursive({
-    __init: () => {
-      'worklet';
-      return value;
-    },
-  });
-  if (typeof value !== 'object') {
-    throw new Error('whyyyy');
-  }
-  value.__handle = handle;
-  return value;
 }
 
 export function makeShareable<T>(value: T): T {
   if (__DEV__) {
     isConfiguredCheck();
   }
-  return newMakeShareable(value);
-  // return NativeReanimatedModule.makeShareable(value);
+  const handle = makeShareableCloneRecursive({
+    __init: () => {
+      'worklet';
+      return value;
+    },
+  });
+  value.__handle = handle;
+  return value;
 }
 
 export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
@@ -189,7 +179,6 @@ function valueSetter<T extends WorkletValue>(
       typeof value === 'object' &&
       (value as AnimationObject).onFrame !== undefined)
   ) {
-    _log('setting animation');
     const animation: AnimationObject =
       typeof value === 'function'
         ? (value as () => AnimationObject)()
@@ -204,7 +193,6 @@ function valueSetter<T extends WorkletValue>(
     }
     // animated set
     const initializeAnimation = (timestamp: number) => {
-      _log('starting animation');
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
     initializeAnimation(getTimestamp());
@@ -247,7 +235,7 @@ function workletValueSetter<T extends WorkletValue>(
   value: T
 ): void {
   'worklet';
-  return valueSetter(this, value);
+  // TODO: we should be able to remove this as this is not being used anymore
 }
 
 // We cannot use pushFrame
@@ -316,21 +304,11 @@ function valueUnpacker(objectToUnpack) {
   if (objectToUnpack.__workletHash) {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
     if (workletFun === undefined) {
-      _log(objectToUnpack.asString);
       workletFun = eval('(' + objectToUnpack.asString + ')');
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
     }
-    return (...args) => {
-      jsThis = objectToUnpack;
-      try {
-        return workletFun(...args);
-      } catch (e) {
-        _log('error');
-        _log(e.toString());
-      }
-    };
+    return workletFun.bind(objectToUnpack);
   } else if (objectToUnpack.__init) {
-    // reactive?
     let value = handleCache.get(objectToUnpack);
     if (value === undefined) {
       value = objectToUnpack.__init();
@@ -338,7 +316,6 @@ function valueUnpacker(objectToUnpack) {
     }
     return value;
   } else {
-    _log('Nothing to unpack');
     throw new Error('data type not recognized by unpack method');
   }
 }
@@ -369,6 +346,8 @@ function makeShareableCloneRecursive(value) {
           toAdapt[key] = makeShareableCloneRecursive(element);
         }
       }
+      // TODO: we want to freeze here actually but can't becayse makeShareable set's __handle field on a converted object
+      // This case should be made available in some other way and allow for Object.freeze to be called here.
       // Object.freeze(value);
       const adopted = NativeReanimatedModule.makeShareableClone(toAdapt);
       _adaptCache.set(value, adopted);
@@ -378,7 +357,10 @@ function makeShareableCloneRecursive(value) {
   return NativeReanimatedModule.makeShareableClone(value);
 }
 
-function newMakeMutable(initial) {
+export function makeMutable<T>(initial: T): SharedValue<T> {
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
@@ -413,13 +395,10 @@ function newMakeMutable(initial) {
   });
   const mutable = {
     set value(newValue) {
-      NativeReanimatedModule.scheduleOnUI(
-        makeShareableCloneRecursive(() => {
-          'worklet';
-          _log('setting new value for realz');
-          mutable.value = newValue;
-        })
-      );
+      runOnUI(() => {
+        'worklet';
+        mutable.value = newValue;
+      })();
     },
     get value() {
       return initial;
@@ -429,7 +408,10 @@ function newMakeMutable(initial) {
   return mutable;
 }
 
-function newMakeRemote(initial) {
+export function makeRemote<T>(initial = {}): T {
+  if (__DEV__) {
+    isConfiguredCheck();
+  }
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
@@ -439,60 +421,6 @@ function newMakeRemote(initial) {
   return {
     __handle: handle,
   };
-}
-
-function runOnUIz<A extends any[], R>(
-  worklet: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
-  return (...args) => {
-    NativeReanimatedModule.scheduleOnUI(
-      makeShareableCloneRecursive(() => {
-        'worklet';
-        return worklet(...args);
-      })
-    );
-  };
-}
-
-export function doSomething() {
-  // const sv = makeSharedValue(7);
-
-  const work = () => {
-    'worklet';
-    _log('yollo');
-    // _log('SVSV ' + JSON.stringify(sv));
-  };
-
-  runOnUIz(work)();
-
-  // startMapperz(work, [sv]);
-
-  // NativeReanimatedModule.scheduleOnUI(
-  //   makeShareableCloneRecursive(() => {
-  //     'worklet';
-  //     withTiming(10);
-  //   })
-  // );
-
-  // setTimeout(() => {
-  //   // const tt = withTiming(10);
-  //   // console.log('TTT', tt);
-  //   sv.value = withTiming(10);
-  // }, 500);
-}
-
-export function makeMutable<T>(value: T): SharedValue<T> {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  return newMakeMutable(value);
-}
-
-export function makeRemote<T>(object = {}): T {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  return newMakeRemote(object);
 }
 
 let MAPPER_ID = 9999;
@@ -512,38 +440,34 @@ export function startMapper(
 
   const mapperID = (MAPPER_ID += 1);
 
-  NativeReanimatedModule.scheduleOnUI(
-    makeShareableCloneRecursive(() => {
-      'worklet';
-      let mapperRegistry = global.__mapperRegistry;
-      if (mapperRegistry === undefined) {
-        mapperRegistry = global.__mapperRegistry = new Map();
-      }
-      const mapper = {
-        dirty: false,
-        worklet,
-      };
-      mapperRegistry.set(mapperID, mapper);
-      function listener() {
-        _log('listener fire');
-        mapper.dirty = true;
-        if (!global.__mapperRequestedFrame) {
-          global.__mapperRequestedFrame = true;
-          requestAnimationFrame(() => {
-            _log('anim frame');
-            mapperRegistry.forEach((mapper) => {
-              _log('there is mapper ' + mapper);
-              mapper.worklet();
-            });
-            global.__mapperRequestedFrame = false;
+  runOnUI(() => {
+    'worklet';
+    let mapperRegistry = global.__mapperRegistry;
+    if (mapperRegistry === undefined) {
+      mapperRegistry = global.__mapperRegistry = new Map();
+    }
+    const mapper = {
+      dirty: false,
+      worklet,
+      inputs,
+    };
+    mapperRegistry.set(mapperID, mapper);
+    function listener() {
+      mapper.dirty = true;
+      if (!global.__mapperRequestedFrame) {
+        global.__mapperRequestedFrame = true;
+        requestAnimationFrame(() => {
+          mapperRegistry.forEach((mapper) => {
+            mapper.worklet();
           });
-        }
+          global.__mapperRequestedFrame = false;
+        });
       }
-      for (const input of inputs) {
-        input.addListener(mapperID, listener);
-      }
-    })
-  );
+    }
+    for (const input of inputs) {
+      input.addListener(mapperID, listener);
+    }
+  })();
 }
 
 export function stopMapper(mapperId: number): void {
