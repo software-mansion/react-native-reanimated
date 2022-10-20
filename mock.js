@@ -17,7 +17,7 @@ const {
   Platform,
   processColor,
 } = require('react-native');
-const ReanimatedV2 = require('./src/reanimated2/mock');
+const ReanimatedV2 = require('./lib/reanimated2/mock');
 
 function NOOP() {
   // noop
@@ -73,9 +73,9 @@ function createMockComponent(name) {
 
 function createTransitioningComponent(Component) {
   return class extends React.Component {
-    static displayName = `Transitioning.${Component.displayName ||
-      Component.name ||
-      'Component'}`;
+    static displayName = `Transitioning.${
+      Component.displayName || Component.name || 'Component'
+    }`;
 
     setNativeProps() {
       // noop
