@@ -274,12 +274,11 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   unsigned long newRegistrationId = EVENT_HANDLER_ID++;
   auto eventName = eventHash.asString(rt).utf8(rt);
-  auto handlerShareable = ShareableValue::adapt(rt, worklet, this);
+  auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
   scheduler->scheduleOnUI([=] {
-    auto handlerFunction =
-        handlerShareable->getValue(*runtime).asObject(*runtime).asFunction(
-            *runtime);
+    jsi::Runtime &rt = *runtimeHelper->uiRuntime;
+    auto handlerFunction = handlerShareable->getJSValue(rt).asObject(rt).asFunction(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventName, std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(handler);

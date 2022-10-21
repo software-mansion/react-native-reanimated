@@ -12,7 +12,6 @@ import {
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
-import { withTiming } from './animation';
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
@@ -541,6 +540,20 @@ export function runOnJS<A extends any[], R>(
   } else {
     return fun.__callAsync;
   }
+}
+
+export function registerEventHandler<T>(
+  eventHash: string,
+  eventHandler: (event: T) => void
+): string {
+  return NativeReanimatedModule.registerEventHandler(
+    eventHash,
+    makeShareableCloneRecursive(eventHandler)
+  );
+}
+
+export function unregisterEventHandler(id: string): void {
+  return NativeReanimatedModule.unregisterEventHandler(id);
 }
 
 NativeReanimatedModule.installCoreFunctions(

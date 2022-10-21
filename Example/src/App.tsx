@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withSpring,
+  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import { View, Text, Button } from 'react-native';
 import React, { useEffect, useState } from 'react';
@@ -49,10 +50,30 @@ export default function AnimatedStyleUpdateExample(props) {
     };
   });
 
+  const scrollHandler = useAnimatedScrollHandler((e) => {
+    opacity.value = Math.min(Math.max(0, e.contentOffset.y), 100) / 100;
+  });
+
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>Hello World</Text>
       <Animated.View style={stylez} />
+      <View
+        style={{
+          width: 100,
+          height: 150,
+          borderColor: 'black',
+          borderWidth: 1,
+        }}>
+        <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={1}>
+          <View style={{ width: 100, height: 50, backgroundColor: 'red' }} />
+          <View style={{ width: 100, height: 50, backgroundColor: 'blue' }} />
+          <View style={{ width: 100, height: 50, backgroundColor: 'yellow' }} />
+          <View style={{ width: 100, height: 50, backgroundColor: 'brown' }} />
+          <View style={{ width: 100, height: 50, backgroundColor: 'plum' }} />
+          <View style={{ width: 100, height: 50, backgroundColor: 'orange' }} />
+        </Animated.ScrollView>
+      </View>
       <Button title="do something" onPress={() => doSomething()} />
       <Button
         onPress={() => {
