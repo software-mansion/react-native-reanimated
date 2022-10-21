@@ -104,10 +104,9 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction),
 #endif
       registerTransitionTagPlatformFunction(
-        platformDepMethodsHolder.registerTransitionTag),
+          platformDepMethodsHolder.registerTransitionTag),
       unregisterTransitionTagPlatformFunction(
-        platformDepMethodsHolder.unregisterTransitionTag)
-{
+          platformDepMethodsHolder.unregisterTransitionTag) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
