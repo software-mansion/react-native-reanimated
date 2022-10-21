@@ -504,16 +504,6 @@ function makeShareableCloneOnUIRecursive(value) {
   return cloneRecursive(value);
 }
 
-function newRunOnJS(fun) {
-  'worklet';
-  return (...args) => {
-    _scheduleOnJS(
-      fun,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
-    );
-  };
-}
-
 export function doSomething() {
   function remoteFunction() {
     console.log('yollo');
@@ -522,7 +512,7 @@ export function doSomething() {
   runOnUI(() => {
     'worklet';
     // _log('who dis ' + remoteFunction);
-    newRunOnJS(remoteFunction)(1, 2, 3);
+    runOnJS(remoteFunction)(1, 2, 3);
   })();
 }
 
@@ -533,13 +523,12 @@ export function runOnJS<A extends any[], R>(
   if (!_WORKLET) {
     return fun;
   }
-  if (!fun.__callAsync) {
-    throw new Error(
-      "Attempting to call runOnJS with an object that is not a host function. Using runOnJS is only possible with methods that are defined on the main React-Native Javascript thread and that aren't marked as worklets"
+  return (...args) => {
+    _scheduleOnJS(
+      fun,
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
-  } else {
-    return fun.__callAsync;
-  }
+  };
 }
 
 export function registerEventHandler<T>(
@@ -567,20 +556,12 @@ if (!isWeb() && isConfigured()) {
   const capturableConsole = console;
   runOnUI(() => {
     'worklet';
-    function log(message) {
-      _log(message);
-    }
     const console = {
-      // debug: runOnJS(capturableConsole.debug),
-      // log: runOnJS(capturableConsole.log),
-      // warn: runOnJS(capturableConsole.warn),
-      // error: runOnJS(capturableConsole.error),
-      // info: runOnJS(capturableConsole.info),
-      debug: log,
-      log: log,
-      warn: log,
-      error: log,
-      info: log,
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
     };
     _setGlobalConsole(console);
   })();
