@@ -419,46 +419,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder = nativeMethods;
   }
 
-//  public void setNewProps_(
-//      Map<String, Object> props,
-//      View view,
-//      ViewManager viewManager,
-//      ViewManager parentViewManager,
-//      Integer parentTag) {
-//    float x =
-//        (props.get(Snapshot.ORIGIN_X) != null)
-//            ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
-//            : PixelUtil.toDIPFromPixel(view.getLeft());
-//    float y =
-//        (props.get(Snapshot.ORIGIN_Y) != null)
-//            ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
-//            : PixelUtil.toDIPFromPixel(view.getTop());
-//    float width =
-//        (props.get(Snapshot.WIDTH) != null)
-//            ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
-//            : PixelUtil.toDIPFromPixel(view.getWidth());
-//    float height =
-//        (props.get(Snapshot.HEIGHT) != null)
-//            ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
-//            : PixelUtil.toDIPFromPixel(view.getHeight());
-//    updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
-//    props.remove(Snapshot.ORIGIN_X);
-//    props.remove(Snapshot.ORIGIN_Y);
-//    props.remove(Snapshot.WIDTH);
-//    props.remove(Snapshot.HEIGHT);
-//
-//    if (props.size() == 0) {
-//      return;
-//    }
-//
-//    JavaOnlyMap javaOnlyMap = new JavaOnlyMap();
-//    for (String key : props.keySet()) {
-//      addProp(javaOnlyMap, key, props.get(key));
-//    }
-//
-//    viewManager.updateProperties(view, new ReactStylesDiffMap(javaOnlyMap));
-//  }
-
   public void updateProps(HashMap<String, Object> newStyle, Integer tag) {
     HashMap<String, Object> preparedValues = new HashMap<>();
     for (String key : newStyle.keySet()) {
@@ -476,27 +436,24 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void setNewProps(
-          Map<String, Object> props,
-          View view,
-          ViewManager viewManager,
-          ViewManager parentViewManager,
-          Integer parentTag) {
-    float x =
-            (props.get(Snapshot.ORIGIN_X) != null)
-                    ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getLeft());
-    float y =
-            (props.get(Snapshot.ORIGIN_Y) != null)
-                    ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getTop());
-    float width =
-            (props.get(Snapshot.WIDTH) != null)
-                    ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getWidth());
-    float height =
-            (props.get(Snapshot.HEIGHT) != null)
-                    ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
-                    : PixelUtil.toDIPFromPixel(view.getHeight());
+    Map<String, Object> props,
+    View view,
+    ViewManager viewManager,
+    ViewManager parentViewManager,
+    Integer parentTag
+  ) {
+    float x = (props.get(Snapshot.ORIGIN_X) != null)
+      ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
+      : PixelUtil.toDIPFromPixel(view.getLeft());
+    float y = (props.get(Snapshot.ORIGIN_Y) != null)
+      ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
+      : PixelUtil.toDIPFromPixel(view.getTop());
+    float width = (props.get(Snapshot.WIDTH) != null)
+      ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
+      : PixelUtil.toDIPFromPixel(view.getWidth());
+    float height = (props.get(Snapshot.HEIGHT) != null)
+      ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
+      : PixelUtil.toDIPFromPixel(view.getHeight());
 
     updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
     props.remove(Snapshot.ORIGIN_X);
@@ -539,48 +496,46 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void updateLayout(
-      View viewToUpdate,
-      ViewManager parentViewManager,
-      int parentTag,
-      int tag,
-      float xf,
-      float yf,
-      float widthf,
-      float heightf) {
+    View viewToUpdate,
+    ViewManager parentViewManager,
+    int parentTag,
+    int tag,
+    float xf,
+    float yf,
+    float widthf,
+    float heightf
+  ) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
     int width = Math.round(PixelUtil.toPixelFromDIP(widthf));
     int height = Math.round(PixelUtil.toPixelFromDIP(heightf));
-    // Even though we have exact dimensions, we still call measure because some platform views
-    // (e.g.
-    // Switch) assume that method will always be called before onLayout and onDraw. They use it to
-    // calculate and cache information used in the draw pass. For most views, onMeasure can be
-    // stubbed out to only call setMeasuredDimensions. For ViewGroups, onLayout should be stubbed
-    // out to not recursively call layout on its children: React Native already handles doing
-    // that.
-    //
-    // Also, note measure and layout need to be called *after* all View properties have been
-    // updated
-    // because of caching and calculation that may occur in onMeasure and onLayout. Layout
-    // operations should also follow the native view hierarchy and go top to bottom for
-    // consistency
-    // with standard layout passes (some views may depend on this).
+    /*
+      Even though we have exact dimensions, we still call measure because some platform views
+      (e.g. Switch) assume that method will always be called before onLayout and onDraw. They use
+      it to calculate and cache information used in the draw pass. For most views, onMeasure can be
+      stubbed out to only call setMeasuredDimensions. For ViewGroups, onLayout should be stubbed
+      out to not recursively call layout on its children: React Native already handles doing
+      that.
+
+      Also, note measure and layout need to be called *after* all View properties have been
+      updated because of caching and calculation that may occur in onMeasure and onLayout. Layout
+      operations should also follow the native view hierarchy and go top to bottom for
+      consistency with standard layout passes (some views may depend on this).
+    */
 
     viewToUpdate.measure(
         View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
         View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
+    /*
+      We update the layout of the ReactRootView when there is a change in the layout of its child.
+      This is required to re-measure the size of the native View container (usually a FrameLayout)
+      that is configured with layout_height = WRAP_CONTENT or layout_width = WRAP_CONTENT
 
-    // We update the layout of the ReactRootView when there is a change in the layout of its
-    // child.
-    // This is required to re-measure the size of the native View container (usually a
-    // FrameLayout) that is configured with layout_height = WRAP_CONTENT or layout_width =
-    // WRAP_CONTENT
-    //
-    // This code is going to be executed ONLY when there is a change in the size of the Root
-    // View defined in the js side. Changes in the layout of inner views will not trigger an
-    // update
-    // on the layout of the Root View.
+      This code is going to be executed ONLY when there is a change in the size of the RootView
+      defined in the js side. Changes in the layout of inner views will not trigger an update
+      on the layout of the Root View.
+    */
     ViewParent parent = viewToUpdate.getParent();
     if (parent instanceof RootView) {
       parent.requestLayout();
@@ -602,6 +557,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
+      // TODO: create new version AnimationManager after merge Layout Animation rewrite
       Point newPoint = new Point(x, y);
       Point convertedPoint = convertPoint(newPoint, (View)viewToUpdate.getParent(), (int)viewToUpdate.getId());
       x = convertedPoint.x;
@@ -611,12 +567,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public static Point convertPoint(Point fromPoint, View parentView, int tag){
-    int[] toCord = {0, 0};
+    int[] toCord = { 0, 0 };
     if (parentView != null) {
       parentView.getLocationOnScreen(toCord);
     }
-    // int[] toCord = new int[2];
-    // parentView.getLocationOnScreen(toCord);
     return new Point(
       fromPoint.x - toCord[0],
       fromPoint.y - toCord[1]
@@ -628,6 +582,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void stopAnimation(int tag) {
-    mNativeMethodsHolder.stopAnimation(tag);
+    if (mNativeMethodsHolder != null) {
+      mNativeMethodsHolder.stopAnimation(tag);
+    }
   }
 }

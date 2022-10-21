@@ -6,9 +6,9 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
-public class ReanimatedCoordinatorLayout extends CoordinatorLayout {
+public class PreventLayoutCoordinatorLayout extends CoordinatorLayout {
 
-    public ReanimatedCoordinatorLayout(Context context) {
+    public PreventLayoutCoordinatorLayout(Context context) {
         super(context);
     }
 

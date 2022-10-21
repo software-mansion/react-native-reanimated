@@ -26,7 +26,7 @@ import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
-import com.swmansion.reanimated.sharedElementTransition.ScreensTransitionDelegate;
+import com.swmansion.reanimated.sharedElementTransition.ScreensSharedTransitionDelegate;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -116,7 +116,7 @@ public class NativeProxy {
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
-  private ScreensTransitionDelegate screensTransitionDelegate;
+  private ScreensSharedTransitionDelegate screensTransitionDelegate;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
 
@@ -320,7 +320,7 @@ public class NativeProxy {
       SharedElementAnimator sharedElementAnimator =
           (SharedElementAnimator) mContext.get().getNativeModule(sharedElementAnimatorClass);
       if (sharedElementAnimator != null) {
-        screensTransitionDelegate = new ScreensTransitionDelegate(animationsManager);
+        screensTransitionDelegate = new ScreensSharedTransitionDelegate(animationsManager);
         sharedElementAnimator.setDelegate(screensTransitionDelegate);
       }
       else {

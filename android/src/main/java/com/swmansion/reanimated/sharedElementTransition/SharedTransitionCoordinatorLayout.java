@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.sharedElementTransition;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
@@ -16,21 +17,22 @@ import com.swmansion.common.ScreenStackFragmentCommon;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ScreensCoordinatorLayout extends CoordinatorLayout {
+@SuppressLint("ViewConstructor")
+public class SharedTransitionCoordinatorLayout extends CoordinatorLayout {
 
-    private final ScreenStackFragmentCommon mFragment;
-    private final ScreensTransitionDelegate delegate;
+    private final ScreenStackFragmentCommon fragment;
+    private final SharedTransitionAnimationManager sharedTransitionAnimationManager;
     private final CoordinatorLayout transitionContainer;
 
-    ScreensCoordinatorLayout(
+    SharedTransitionCoordinatorLayout(
         Context context,
-        ScreenStackFragmentCommon mFragment,
-        ScreensTransitionDelegate delegate
+        ScreenStackFragmentCommon fragment,
+        SharedTransitionAnimationManager sharedTransitionAnimationManager
     ) {
         super(context);
-        this.mFragment = mFragment;
-        this.delegate = delegate;
-        transitionContainer = new ReanimatedCoordinatorLayout(context);
+        this.fragment = fragment;
+        this.sharedTransitionAnimationManager = sharedTransitionAnimationManager;
+        transitionContainer = new PreventLayoutCoordinatorLayout(context);
     }
 
     public Integer getStatusBarHeight() {
@@ -49,8 +51,8 @@ public class ScreensCoordinatorLayout extends CoordinatorLayout {
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
-        if (delegate.shouldPerformSharedElementTransition(mFragment.getFragmentScreen())) {
-            ViewGroup rootView = (ViewGroup) mFragment.tryGetActivity().getWindow().getDecorView().getRootView();
+        if (sharedTransitionAnimationManager.shouldPerformSharedElementTransition(fragment.getFragmentScreen())) {
+            ViewGroup rootView = (ViewGroup) fragment.tryGetActivity().getWindow().getDecorView().getRootView();
             rootView.addView(transitionContainer);
             MarginLayoutParams transitionLayoutParams = (MarginLayoutParams)transitionContainer.getLayoutParams();
             transitionLayoutParams.topMargin = getStatusBarHeight();
@@ -60,25 +62,26 @@ public class ScreensCoordinatorLayout extends CoordinatorLayout {
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        ViewGroup rootView = (ViewGroup) mFragment.tryGetActivity().getWindow().getDecorView().getRootView();
+        ViewGroup rootView = (ViewGroup) fragment.tryGetActivity().getWindow().getDecorView().getRootView();
         if (transitionContainer.getParent() == rootView) {
             rootView.removeView(transitionContainer);
         }
     }
 
-    private Animation.AnimationListener mAnimationListener = new Animation.AnimationListener() {
+    private final Animation.AnimationListener mAnimationListener = new Animation.AnimationListener() {
         @Override
         public void onAnimationStart(Animation animation) {
-            mFragment.onViewAnimationStart();
-            Activity activity = mFragment.tryGetActivity();
-            List<SharedTransitionConfig> sharedElements = delegate.getScreenSharedElementsRegistry(mFragment.getFragmentScreen());
+            fragment.onViewAnimationStart();
+            Activity activity = fragment.tryGetActivity();
+            List<SharedTransitionConfig> sharedElements =
+                    sharedTransitionAnimationManager.getScreenSharedElementsRegistry(fragment.getFragmentScreen());
             if ((sharedElements != null && activity != null
                 && transitionContainer.getParent() != null)
-                && !delegate.getTransitionState(mFragment.getFragmentScreen())
+                && !sharedTransitionAnimationManager.getTransitionState(fragment.getFragmentScreen())
             ) {
-                delegate.setTransitionState(mFragment.getFragmentScreen(), true);
+                sharedTransitionAnimationManager.setTransitionState(fragment.getFragmentScreen(), true);
                 for (SharedTransitionConfig sharedTransitionConfig : sharedElements) {
-                    delegate.makeSnapshot(sharedTransitionConfig.toView);
+                    sharedTransitionAnimationManager.makeSnapshot(sharedTransitionConfig.toView);
                 }
 
                 for (SharedTransitionConfig sharedTransitionConfig : sharedElements) {
@@ -92,7 +95,7 @@ public class ScreensCoordinatorLayout extends CoordinatorLayout {
                 }
 
                 for (SharedTransitionConfig sharedTransitionConfig : sharedElements) {
-                    delegate.runTransition(
+                    sharedTransitionAnimationManager.runTransition(
                         sharedTransitionConfig.fromView,
                         sharedTransitionConfig.toView
                     );
@@ -102,10 +105,11 @@ public class ScreensCoordinatorLayout extends CoordinatorLayout {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            mFragment.onViewAnimationEnd();
-            List<SharedTransitionConfig> sharedElements = delegate.getScreenSharedElementsRegistry(
-                mFragment.getFragmentScreen()
-            );
+            fragment.onViewAnimationEnd();
+            List<SharedTransitionConfig> sharedElements =
+                sharedTransitionAnimationManager.getScreenSharedElementsRegistry(
+                    fragment.getFragmentScreen()
+                );
             if (sharedElements != null && transitionContainer.getParent() != null) {
                 ArrayList<View> toRemove = new ArrayList<>();
                 for (SharedTransitionConfig sharedTransitionConfig : sharedElements) {
@@ -119,10 +123,10 @@ public class ScreensCoordinatorLayout extends CoordinatorLayout {
                     toRemove.add(fromView);
                 }
 
-                delegate.onNativeAnimationEnd(mFragment.getFragmentScreen(), toRemove);
-                delegate.setTransitionState(mFragment.getFragmentScreen(), false);
+                sharedTransitionAnimationManager.onNativeAnimationEnd(fragment.getFragmentScreen(), toRemove);
+                sharedTransitionAnimationManager.setTransitionState(fragment.getFragmentScreen(), false);
             }
-            delegate.removeScreenSharedElementsRegistry(mFragment.getFragmentScreen());
+            sharedTransitionAnimationManager.removeScreenSharedElementsRegistry(fragment.getFragmentScreen());
         }
 
         @Override
@@ -140,12 +144,12 @@ public class ScreensCoordinatorLayout extends CoordinatorLayout {
         // and also this is not necessary when going back since the lifecycle methods
         // are correctly dispatched then.
         // We also add fakeAnimation to the set of animations, which sends the progress of animation
-        ScreensAnimation fakeAnimation = new ScreensAnimation(mFragment);
+        ScreensAnimation fakeAnimation = new ScreensAnimation(fragment);
         animation.setDuration(2000);
         fakeAnimation.setDuration(animation.getDuration());
         // val fakeAnimation = ScreensAnimation(mFragment).apply { duration = animation.duration }
 
-        if (animation instanceof AnimationSet && !((Fragment)mFragment).isRemoving()) {
+        if (animation instanceof AnimationSet && !((Fragment) fragment).isRemoving()) {
             ((AnimationSet) animation).addAnimation(fakeAnimation);
             animation.setAnimationListener(mAnimationListener);
             super.startAnimation(animation);

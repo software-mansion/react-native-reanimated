@@ -1,16 +1,11 @@
 package com.swmansion.reanimated.sharedElementTransition;
 
-import android.content.Context;
 import android.view.View;
-
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
-import com.swmansion.common.ScreenStackFragmentCommon;
-import com.swmansion.common.SharedElementAnimatorDelegate;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.Snapshot;
 
@@ -21,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate {
+public class SharedTransitionAnimationManager {
+
     private final AnimationsManager animationsManager;
     private final Map<String, List<SharedViewConfig>> sharedTransitionsItems = new HashMap<>();
     private final List<String> sharedElementsIterationOrder = new ArrayList<>();
@@ -30,20 +26,10 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
     private final Map<Integer, List<SharedTransitionConfig>> screenSharedElementsRegistry = new HashMap<>();
     private final Map<Integer, Boolean> screenTransitionStateRegistry = new HashMap<>();
 
-    public ScreensTransitionDelegate(AnimationsManager animationsManager) {
+    SharedTransitionAnimationManager(AnimationsManager animationsManager) {
         this.animationsManager = animationsManager;
     }
 
-    public void runTransition(View before, View after) {
-        animationsManager.onViewTransition(
-            before,
-            after,
-            snapshotRegistry.get(before.getId()),
-            snapshotRegistry.get(after.getId())
-        );
-    }
-
-    @Override
     public boolean shouldStartDefaultTransitionForView(View view) {
         boolean isUnderTransition = isTagUnderTransition(view.getId());
         if (isUnderTransition) {
@@ -52,7 +38,6 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
         return !isUnderTransition;
     }
 
-    @Override
     public void onNativeAnimationEnd(View screen, List<View> toRemove) {
         for (View view : toRemove) {
             int viewTag = view.getId();
@@ -73,6 +58,23 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
                 sharedTransitionsItems.remove(tagGroupEntry.getKey());
             }
         }
+    }
+
+    public void onScreenTransitionCreate(View currentScreen, View targetScreen) {
+        screenSharedElementsRegistry.put(
+            targetScreen.getId(),
+            getSharedElementsForCurrentTransition(currentScreen, targetScreen)
+        );
+        screenTransitionStateRegistry.put(targetScreen.getId(), false);
+    }
+
+    public void runTransition(View before, View after) {
+        animationsManager.onViewTransition(
+            before,
+            after,
+            snapshotRegistry.get(before.getId()),
+            snapshotRegistry.get(after.getId())
+        );
     }
 
     public void makeSnapshot(View view) {
@@ -147,15 +149,6 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
         return sharedElements;
     }
 
-    @Override
-    public void onScreenTransitionCreate(View currentScreen, View targetScreen) {
-        screenSharedElementsRegistry.put(
-            targetScreen.getId(),
-            getSharedElementsForCurrentTransition(currentScreen, targetScreen)
-        );
-        screenTransitionStateRegistry.put(targetScreen.getId(), false);
-    }
-
     public List<SharedTransitionConfig> getScreenSharedElementsRegistry(View screen) {
         return screenSharedElementsRegistry.get(screen.getId());
     }
@@ -174,14 +167,6 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
 
     public boolean getTransitionState(View screen) {
         return Boolean.TRUE.equals(screenTransitionStateRegistry.get(screen.getId()));
-    }
-
-    @Override
-    public CoordinatorLayout makeAnimationCoordinatorLayout(
-        Context context,
-        ScreenStackFragmentCommon fragment
-    ) {
-        return new ScreensCoordinatorLayout(context, fragment, this);
     }
 
     private boolean isInSubtreeOf(View child, View root, View parentScreen) {
