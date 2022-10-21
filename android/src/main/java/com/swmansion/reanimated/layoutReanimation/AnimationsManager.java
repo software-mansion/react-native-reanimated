@@ -37,7 +37,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private NativeMethodsHolder mNativeMethodsHolder;
 
   private HashMap<Integer, ViewState> mStates;
-  private HashMap<Integer, View> mViewForTag;
+  private HashMap<Integer, View> mExitingViews;
   private HashSet<Integer> mToRemove;
   private HashMap<Integer, Runnable> mCallbacks;
   private boolean mCleaningScheduled = false;
@@ -70,7 +70,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mContext = context;
     mUIManager = uiManagerModule;
     mStates = new HashMap<>();
-    mViewForTag = new HashMap<>();
+    mExitingViews = new HashMap<>();
     mToRemove = new HashSet<>();
     mCallbacks = new HashMap<>();
     isCatalystInstanceDestroyed = false;
@@ -83,7 +83,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mUIManager = null;
     mStates = null;
     mToRemove = null;
-    mViewForTag = null;
+    mExitingViews = null;
     mCallbacks = null;
   }
 
@@ -95,10 +95,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     Integer tag = view.getId();
     HashMap<String, Object> currentValues = before.toCurrentMap();
 
-    if (!mStates.containsKey(view.getId())) {
+    if (!mStates.containsKey(tag)) {
       registerView(view, ViewState.Layout);
     }
-    ViewState state = mStates.get(view.getId());
+    ViewState state = mStates.get(tag);
 
     if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
       return;
@@ -107,8 +107,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mCallbacks.put(tag, callback);
     if (state == ViewState.Inactive || state == null) {
       if (currentValues != null) {
-        mStates.put(view.getId(), ViewState.ToRemove);
-        mToRemove.add(view.getId());
+        mStates.put(tag, ViewState.ToRemove);
+        mToRemove.add(tag);
         scheduleCleaning();
       }
       return;
@@ -116,12 +116,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mStates.put(tag, ViewState.Disappearing);
     HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues, false);
 
-    if (!hasAnimationForTag(view.getId(), "exiting")) {
+    if (!hasAnimationForTag(tag, "exiting")) {
       mStates.put(tag, ViewState.ToRemove);
       mToRemove.add(tag);
       scheduleCleaning();
       return;
     }
+    mExitingViews.put(tag, view);
     mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
   }
 
@@ -210,7 +211,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
-    View view = mViewForTag.get(tag);
+    View view = resolveView(tag);
 
     if (view == null) {
       return;
@@ -230,6 +231,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled) {
+    mExitingViews.remove(tag);
     if (!cancelled) {
       ViewState state = mStates.get(tag);
       if (state == ViewState.Appearing) {
@@ -250,19 +252,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
       HashSet<Integer> roots = new HashSet<>();
       // go through ready to remove from bottom to top
       for (int tag : mToRemove) {
-        View view = mViewForTag.get(tag);
-        if (view == null) {
-          try {
-            view = mUIManager.resolveView(tag);
-            mViewForTag.put(tag, view);
-          } catch (IllegalViewOperationException ignored) {
-            continue;
-          }
-        }
+        View view = resolveView(tag);
         findRoot(view, roots);
       }
       for (int tag : roots) {
-        View view = mViewForTag.get(tag);
+        View view = resolveView(tag);
         if (view != null) {
           dfs(view, mToRemove);
         }
@@ -364,8 +358,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
 
       mStates.remove(view.getId());
-      mViewForTag.remove(view.getId());
       mToRemove.remove(view.getId());
+      mExitingViews.remove(view.getId());
     }
     return cannotStripe;
   }
@@ -541,13 +535,26 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private void registerView(View view, ViewState state) {
     mStates.put(view.getId(), state);
-    mViewForTag.put(view.getId(), view);
+  }
+
+  private View resolveView(int tag) {
+    if (mExitingViews.containsKey(tag)) {
+      return mExitingViews.get(tag);
+    }
+    try {
+      return mUIManager.resolveView(tag);
+    } catch (IllegalViewOperationException e) {
+      // view has been removed already
+      e.printStackTrace();
+      return null;
+    }
   }
 
   private ViewManager resolveViewManager(int tag) {
     try {
       return mReanimatedNativeHierarchyManager.resolveViewManager(tag);
     } catch (Exception e) {
+      e.printStackTrace();
       return null;
     }
   }
