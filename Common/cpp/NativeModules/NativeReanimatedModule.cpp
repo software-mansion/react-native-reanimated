@@ -19,59 +19,15 @@
 
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
-#include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
-#include "Mapper.h"
-#include "MapperRegistry.h"
-#include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
-#include "ShareableValue.h"
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
 
 using namespace facebook;
 
 namespace reanimated {
-
-void extractMutables(
-    jsi::Runtime &rt,
-    std::shared_ptr<ShareableValue> sv,
-    std::vector<std::shared_ptr<MutableValue>> &res) {
-  switch (sv->type) {
-    case ValueType::MutableValueType: {
-      auto &mutableValue = ValueWrapper::asMutableValue(sv->valueContainer);
-      res.push_back(mutableValue);
-      break;
-    }
-    case ValueType::FrozenArrayType:
-      for (auto &it : ValueWrapper::asFrozenArray(sv->valueContainer)) {
-        extractMutables(rt, it, res);
-      }
-      break;
-    case ValueType::RemoteObjectType:
-    case ValueType::FrozenObjectType:
-      for (auto &it : ValueWrapper::asFrozenObject(sv->valueContainer)->map) {
-        extractMutables(rt, it.second, res);
-      }
-      break;
-    default:
-      break;
-  }
-}
-
-std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(
-    jsi::Runtime &rt,
-    const jsi::Array &array,
-    NativeReanimatedModule *module) {
-  std::vector<std::shared_ptr<MutableValue>> res;
-  for (size_t i = 0, size = array.size(rt); i < size; i++) {
-    auto shareable =
-        ShareableValue::adapt(rt, array.getValueAtIndex(rt, i), module);
-    extractMutables(rt, shareable, res);
-  }
-  return res;
-}
 
 NativeReanimatedModule::NativeReanimatedModule(
     std::shared_ptr<CallInvoker> jsInvoker,
@@ -88,7 +44,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
-      mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -209,9 +164,7 @@ void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueSetter,
     const jsi::Value &valueUnpacker) {
-  this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
   runtimeHelper = std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
-  runtimeHelper->valueSetter = std::make_shared<CoreFunction>(runtimeHelper.get(), valueSetter);
   runtimeHelper->valueUnpacker =
       std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
@@ -360,10 +313,10 @@ void NativeReanimatedModule::onEvent(
 #else
     eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
 #endif
-    mapperRegistry->execute(*runtime);
-    if (mapperRegistry->needRunOnRender()) {
-      maybeRequestRender();
-    }
+//    mapperRegistry->execute(*runtime);
+//    if (mapperRegistry->needRunOnRender()) {
+//      maybeRequestRender();
+//    }
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
@@ -393,11 +346,6 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     frameCallbacks.clear();
     for (auto &callback : callbacks) {
       callback(timestampMs);
-    }
-    mapperRegistry->execute(*runtime);
-
-    if (mapperRegistry->needRunOnRender()) {
-      maybeRequestRender();
     }
   } catch (std::exception &e) {
     std::string str = e.what();
@@ -636,29 +584,30 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &keyboardEventContainer) {
-  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
-  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
-      sharedProperties;
-  std::shared_ptr<ShareableValue> keyboardStateShared = ShareableValue::adapt(
-      rt, keyboardEventObj.getProperty(rt, "state"), this);
-  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
-      rt, keyboardEventObj.getProperty(rt, "height"), this);
-
-  auto keyboardEventDataUpdater =
-      [this, &rt, keyboardStateShared, heightShared](
-          int keyboardState, int height) {
-        auto &keyboardStateValue =
-            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
-        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
-
-        auto &heightMutableValue =
-            ValueWrapper::asMutableValue(heightShared->valueContainer);
-        heightMutableValue->setValue(rt, jsi::Value(height));
-
-        this->mapperRegistry->execute(*this->runtime);
-      };
-
-  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+//  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
+//  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
+//      sharedProperties;
+//  std::shared_ptr<ShareableValue> keyboardStateShared = ShareableValue::adapt(
+//      rt, keyboardEventObj.getProperty(rt, "state"), this);
+//  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
+//      rt, keyboardEventObj.getProperty(rt, "height"), this);
+//
+//  auto keyboardEventDataUpdater =
+//      [this, &rt, keyboardStateShared, heightShared](
+//          int keyboardState, int height) {
+//        auto &keyboardStateValue =
+//            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
+//        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
+//
+//        auto &heightMutableValue =
+//            ValueWrapper::asMutableValue(heightShared->valueContainer);
+//        heightMutableValue->setValue(rt, jsi::Value(height));
+//
+//        this->mapperRegistry->execute(*this->runtime);
+//      };
+//
+//  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+  return jsi::Value::undefined();
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(

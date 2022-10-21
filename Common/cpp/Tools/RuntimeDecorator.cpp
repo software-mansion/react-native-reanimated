@@ -4,7 +4,6 @@
 #include <memory>
 #include <unordered_map>
 #include "LayoutAnimationsProxy.h"
-#include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
 
 namespace reanimated {
@@ -294,14 +293,14 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
-    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
-    if (layoutProxy.expired()) {
-      return jsi::Value::undefined();
-    }
-    proxy->startObserving(
-        args[0].asNumber(),
-        args[1].asObject(rt).getHostObject<MutableValue>(rt),
-        rt);
+//    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
+//    if (layoutProxy.expired()) {
+//      return jsi::Value::undefined();
+//    }
+//    proxy->startObserving(
+//        args[0].asNumber(),
+//        args[1].asObject(rt).getHostObject<MutableValue>(rt),
+//        rt);
     return jsi::Value::undefined();
   };
   jsi::Value _startObservingProgress = jsi::Function::createFromHostFunction(

@@ -21,7 +21,6 @@ class JSRuntimeHelper {
   JSRuntimeHelper(jsi::Runtime *_rnRuntime, jsi::Runtime *_uiRuntime, const std::shared_ptr<Scheduler> &_scheduler)
       : rnRuntime(_rnRuntime), uiRuntime(_uiRuntime), scheduler(_scheduler) {}
 
-  std::shared_ptr<CoreFunction> valueSetter;
   std::shared_ptr<CoreFunction> valueUnpacker;
 
   inline bool isUIRuntime(const jsi::Runtime &rt) const {

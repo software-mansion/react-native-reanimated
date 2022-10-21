@@ -6,8 +6,6 @@
 #include "JSIStoreValueUser.h"
 #include "RuntimeDecorator.h"
 #include "Scheduler.h"
-#include "ShareableValue.h"
-#include "WorkletsCache.h"
 
 namespace reanimated {
 
@@ -26,7 +24,6 @@ class RuntimeManager {
       : runtime(runtime),
         errorHandler(errorHandler),
         scheduler(scheduler),
-        workletsCache(std::make_unique<WorkletsCache>()),
         storeUserData(std::make_shared<StaticStoreUser>()) {
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
@@ -36,11 +33,6 @@ class RuntimeManager {
   }
 
  public:
-  /**
-   Holds the jsi::Function worklet that is responsible for updating values in
-   JS. Can be null.
-   */
-  std::shared_ptr<ShareableValue> valueSetter;
   /**
    Holds the jsi::Runtime this RuntimeManager is managing.
    */
@@ -54,11 +46,6 @@ class RuntimeManager {
    React-JS Thread.
    */
   std::shared_ptr<Scheduler> scheduler;
-  /**
-   Holds a list of adapted Worklets which are cached to avoid unneccessary
-   recreation.
-   */
-  std::unique_ptr<WorkletsCache> workletsCache;
   /**
    Holds the JSI-Value Store where JSI::Values are cached on a
    per-RuntimeManager basis.
