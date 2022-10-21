@@ -28,13 +28,31 @@
 
 @end
 
+@implementation SharedElementConfig
+
+- (instancetype)initWithFromView:(UIView *)fromView
+                          toView:(UIView *)toView
+                   fromContainer:(UIView *)fromContainer
+                   fromViewFrame:(CGRect)fromViewFrame
+{
+  if (self = [super init]) {
+    _fromView = fromView;
+    _toView = toView;
+    _fromContainer = fromContainer;
+    _fromViewFrame = fromViewFrame;
+  }
+
+  return self;
+}
+
+@end
+
 @implementation ScreensTransitionDelegate {
   NSMutableDictionary *_snapshotRegistry;
   NSMutableSet<NSNumber *> *_toRestore;
+  NSMutableDictionary<NSString *, NSMutableArray<SharedViewConfig *> *> *sharedTransitionsItems;
+  NSMutableArray<NSString *> *sharedElementsIterationOrder;
 }
-
-@synthesize sharedTransitionsItems;
-@synthesize sharedElementsIterationOrder;
 
 - (instancetype)init
 {
@@ -100,18 +118,6 @@
       [sharedElementsIterationOrder removeObject:transitionTag];
     }
   }
-}
-
-- (void)notifyAboutViewDidDisappear:(UIView *)screeen
-{
-  REANodesManager *reanimatedNodeManager = [_animationsManager getNodeManager];
-  for (NSNumber *viewTag in _toRestore) {
-    // _snapshotRegistry containst last snapshot of component state before transition start
-    REASnapshot *initialState = _snapshotRegistry[viewTag];
-    [_animationsManager stopAnimation:viewTag];
-    [reanimatedNodeManager updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];
-  }
-  [_toRestore removeAllObjects];
 }
 
 - (void)makeSnapshot:(UIView *)view withViewController:(UIView *)viewController
@@ -255,6 +261,18 @@
                          toViewConverter:endingView.superview
                           transitionType:@"sharedElementTransition"];
   }
+}
+
+- (void)onNativeAnimationEnd:(UIView *)screeen
+{
+  REANodesManager *reanimatedNodeManager = [_animationsManager getNodeManager];
+  for (NSNumber *viewTag in _toRestore) {
+    // _snapshotRegistry containst last snapshot of component state before transition start
+    REASnapshot *initialState = _snapshotRegistry[viewTag];
+    [_animationsManager stopAnimation:viewTag];
+    [reanimatedNodeManager updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];
+  }
+  [_toRestore removeAllObjects];
 }
 
 @end
