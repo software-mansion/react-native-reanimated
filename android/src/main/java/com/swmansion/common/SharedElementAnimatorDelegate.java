@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.View;
 
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-
 import java.util.List;
 
 /*
@@ -12,17 +11,13 @@ import java.util.List;
 */
 
 public interface SharedElementAnimatorDelegate {
-  void runTransition(View before, View after);
+  boolean shouldStartDefaultTransitionForView(View view);
   void onNativeAnimationEnd(View screen, List<View> toRemove);
-  void makeSnapshot(View view);
-  List<String> getSharedElementsIterationOrder();
-  boolean isTagUnderTransition(int viewTag);
-  List<SharedTransitionConfig> getSharedElementsForCurrentTransition(
+  void onScreenTransitionCreate(
     View currentScreen,
     View targetScreen
   );
-  CoordinatorLayout getTransitionContainer(Context context);
-  CoordinatorLayout getAnimationCoordinatorLayout(
+  CoordinatorLayout makeAnimationCoordinatorLayout(
     Context context,
     ScreenStackFragmentCommon mFragment
   );

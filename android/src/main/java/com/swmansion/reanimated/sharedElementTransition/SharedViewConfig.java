@@ -2,9 +2,7 @@ package com.swmansion.reanimated.sharedElementTransition;
 
 import android.view.View;
 
-import com.swmansion.common.SharedViewConfigCommon;
-
-public class SharedViewConfig implements SharedViewConfigCommon {
+public class SharedViewConfig {
 
     public Integer viewTag;
     public boolean toRemove;

@@ -2,14 +2,12 @@ package com.swmansion.common;
 
 import android.app.Activity;
 import android.view.View;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import java.util.List;
+
+/*
+  Common part with react-native-screens for Shared Element Transition
+*/
 
 public interface ScreenStackFragmentCommon {
-  CoordinatorLayout getFragmentTransitionContainer();
-
-  List<SharedTransitionConfig> getFragmentSharedElements();
-
   Activity tryGetActivity();
 
   void onViewAnimationStart();
@@ -17,14 +15,6 @@ public interface ScreenStackFragmentCommon {
   void onViewAnimationEnd();
 
   void dispatchTransitionProgress(float interpolatedTime, boolean isResumed);
-
-  boolean getIsActiveTransition();
-
-  void setIsActiveTransition(boolean state);
-
-  boolean getShouldPerformSET();
-
-  void setShouldPerformSET(boolean state);
 
   View getFragmentScreen();
 }

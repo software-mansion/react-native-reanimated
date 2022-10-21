@@ -1,4 +1,4 @@
-package com.swmansion.common;
+package com.swmansion.reanimated.sharedElementTransition;
 
 import android.view.View;
 

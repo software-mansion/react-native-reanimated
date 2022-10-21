@@ -11,7 +11,6 @@ import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.swmansion.common.ScreenStackFragmentCommon;
 import com.swmansion.common.SharedElementAnimatorDelegate;
-import com.swmansion.common.SharedTransitionConfig;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.Snapshot;
 
@@ -28,12 +27,13 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
     private final List<String> sharedElementsIterationOrder = new ArrayList<>();
     private final Map<Integer, Snapshot> snapshotRegistry = new HashMap<>();
     private final Set<Integer> sharedElementsTags = new HashSet<>();
+    private final Map<Integer, List<SharedTransitionConfig>> screenSharedElementsRegistry = new HashMap<>();
+    private final Map<Integer, Boolean> screenTransitionStateRegistry = new HashMap<>();
 
     public ScreensTransitionDelegate(AnimationsManager animationsManager) {
         this.animationsManager = animationsManager;
     }
 
-    @Override
     public void runTransition(View before, View after) {
         animationsManager.onViewTransition(
             before,
@@ -41,6 +41,15 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
             snapshotRegistry.get(before.getId()),
             snapshotRegistry.get(after.getId())
         );
+    }
+
+    @Override
+    public boolean shouldStartDefaultTransitionForView(View view) {
+        boolean isUnderTransition = isTagUnderTransition(view.getId());
+        if (isUnderTransition) {
+            makeSnapshot(view);
+        }
+        return !isUnderTransition;
     }
 
     @Override
@@ -66,22 +75,18 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
         }
     }
 
-    @Override
     public void makeSnapshot(View view) {
         snapshotRegistry.put(view.getId(), new Snapshot(view));
     }
 
-    @Override
     public List<String> getSharedElementsIterationOrder() {
         return sharedElementsIterationOrder;
     }
 
-    @Override
     public boolean isTagUnderTransition(int viewTag) {
         return sharedElementsTags.contains(viewTag);
     }
 
-    @Override
     public List<SharedTransitionConfig> getSharedElementsForCurrentTransition(View currentScreen, View targetScreen) {
         List<SharedTransitionConfig> sharedElements = new ArrayList<>();
         UIManager uiManager = UIManagerHelper.getUIManager(
@@ -143,12 +148,36 @@ public class ScreensTransitionDelegate implements SharedElementAnimatorDelegate 
     }
 
     @Override
-    public CoordinatorLayout getTransitionContainer(Context context) {
-        return new ReanimatedCoordinatorLayout(context);
+    public void onScreenTransitionCreate(View currentScreen, View targetScreen) {
+        screenSharedElementsRegistry.put(
+            targetScreen.getId(),
+            getSharedElementsForCurrentTransition(currentScreen, targetScreen)
+        );
+        screenTransitionStateRegistry.put(targetScreen.getId(), false);
+    }
+
+    public List<SharedTransitionConfig> getScreenSharedElementsRegistry(View screen) {
+        return screenSharedElementsRegistry.get(screen.getId());
+    }
+
+    public void removeScreenSharedElementsRegistry(View screen) {
+        screenSharedElementsRegistry.remove(screen.getId());
+    }
+
+    public boolean shouldPerformSharedElementTransition(View screen) {
+        return screenSharedElementsRegistry.get(screen.getId()) != null;
+    }
+
+    public void setTransitionState(View screen, boolean state) {
+        screenTransitionStateRegistry.put(screen.getId(), state);
+    }
+
+    public boolean getTransitionState(View screen) {
+        return Boolean.TRUE.equals(screenTransitionStateRegistry.get(screen.getId()));
     }
 
     @Override
-    public CoordinatorLayout getAnimationCoordinatorLayout(
+    public CoordinatorLayout makeAnimationCoordinatorLayout(
         Context context,
         ScreenStackFragmentCommon fragment
     ) {
