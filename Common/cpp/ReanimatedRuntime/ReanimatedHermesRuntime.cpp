@@ -17,7 +17,12 @@
 #include <hermes/hermes.h>
 #endif
 
+#if __APPLE__
+#include <React-hermes/reacthermes/RuntimeAdapter.h>
+#else
 #include <hermes/inspector/RuntimeAdapter.h>
+#endif
+
 #include <hermes/inspector/chrome/Registration.h>
 
 namespace reanimated {

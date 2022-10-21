@@ -49,14 +49,14 @@ jobs:
         working-directory: ${{ matrix.working-directory }}
         run: yarn install --frozen-lockfile
 
-      - name: Restore Pods from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ matrix.working-directory }}/ios/Pods
-            ~/Library/Caches/CocoaPods
-            ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
+      # - name: Restore Pods from cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ${{ matrix.working-directory }}/ios/Pods
+      #       ~/Library/Caches/CocoaPods
+      #       ~/.cocoapods
+      #     key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
