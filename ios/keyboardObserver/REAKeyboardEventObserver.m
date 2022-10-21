@@ -99,13 +99,21 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
   CGFloat keyboardHeight = [self computeKeyboardHeight:keyboardView];
   for (NSString *key in _listeners.allKeys) {
-    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
+    KeyboardEventListenerBlock listener = _listeners[key];
+    if (listener) {
+      listener(_state, keyboardHeight);
+    }
   }
 }
 
 - (CGFloat)computeKeyboardHeight:(UIView *)keyboardView
 {
-  CGFloat keyboardFrameY = [keyboardView.layer presentationLayer].frame.origin.y;
+  CALayer *presentationLayer = [keyboardView.layer presentationLayer];
+  BOOL hasSize = presentationLayer.frame.size.width && presentationLayer.frame.size.height;
+  if (!hasSize) {
+    return 0;
+  }
+  CGFloat keyboardFrameY = presentationLayer.frame.origin.y;
   CGFloat keyboardWindowH = keyboardView.window.bounds.size.height;
   CGFloat keyboardHeight = keyboardWindowH - keyboardFrameY;
   return keyboardHeight;
