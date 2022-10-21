@@ -1,9 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.app.Activity;
-import android.content.res.Resources;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -23,11 +21,9 @@ import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.R;
 import com.swmansion.reanimated.Scheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -204,7 +200,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
   }
 
-  public void onViewTransition(View before, View after, Snapshot beforeSnapshot, Snapshot afterSnapshot) {
+  public void onViewTransition(
+      View before, View after, Snapshot beforeSnapshot, Snapshot afterSnapshot) {
     if (isCatalystInstanceDestroyed) {
       return;
     }
@@ -212,19 +209,16 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> targetValues = afterSnapshot.toTargetMap();
     HashMap<String, Object> startValues = beforeSnapshot.toCurrentMap();
 
-    HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(
-      startValues,
-      false
-    );
-    HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(
-      targetValues,
-      true
-    );
+    HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues, false);
+    HashMap<String, Float> preparedTargetValues =
+        prepareDataForAnimationWorklet(targetValues, true);
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    mNativeMethodsHolder.startAnimationForTag(before.getId(), "sharedElementTransition", preparedValues);
-    mNativeMethodsHolder.startAnimationForTag(after.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimationForTag(
+        before.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimationForTag(
+        after.getId(), "sharedElementTransition", preparedValues);
   }
 
   public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
@@ -423,37 +417,39 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> preparedValues = new HashMap<>();
     for (String key : newStyle.keySet()) {
       Object value = newStyle.get(key);
-      preparedValues.put(key, (double)PixelUtil.toDIPFromPixel((int) value));
+      preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
     }
 
     setNewProps(
-      preparedValues,
-      mViewForTag.get(tag),
-      mViewManager.get(tag),
-      mParentViewManager.get(tag),
-      mParent.get(tag).getId()
-    );
+        preparedValues,
+        mViewForTag.get(tag),
+        mViewManager.get(tag),
+        mParentViewManager.get(tag),
+        mParent.get(tag).getId());
   }
 
   public void setNewProps(
-    Map<String, Object> props,
-    View view,
-    ViewManager viewManager,
-    ViewManager parentViewManager,
-    Integer parentTag
-  ) {
-    float x = (props.get(Snapshot.ORIGIN_X) != null)
-      ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
-      : PixelUtil.toDIPFromPixel(view.getLeft());
-    float y = (props.get(Snapshot.ORIGIN_Y) != null)
-      ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
-      : PixelUtil.toDIPFromPixel(view.getTop());
-    float width = (props.get(Snapshot.WIDTH) != null)
-      ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
-      : PixelUtil.toDIPFromPixel(view.getWidth());
-    float height = (props.get(Snapshot.HEIGHT) != null)
-      ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
-      : PixelUtil.toDIPFromPixel(view.getHeight());
+      Map<String, Object> props,
+      View view,
+      ViewManager viewManager,
+      ViewManager parentViewManager,
+      Integer parentTag) {
+    float x =
+        (props.get(Snapshot.ORIGIN_X) != null)
+            ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getLeft());
+    float y =
+        (props.get(Snapshot.ORIGIN_Y) != null)
+            ? ((Double) props.get(Snapshot.ORIGIN_Y)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getTop());
+    float width =
+        (props.get(Snapshot.WIDTH) != null)
+            ? ((Double) props.get(Snapshot.WIDTH)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getWidth());
+    float height =
+        (props.get(Snapshot.HEIGHT) != null)
+            ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
+            : PixelUtil.toDIPFromPixel(view.getHeight());
 
     updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
     props.remove(Snapshot.ORIGIN_X);
@@ -496,15 +492,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void updateLayout(
-    View viewToUpdate,
-    ViewManager parentViewManager,
-    int parentTag,
-    int tag,
-    float xf,
-    float yf,
-    float widthf,
-    float heightf
-  ) {
+      View viewToUpdate,
+      ViewManager parentViewManager,
+      int parentTag,
+      int tag,
+      float xf,
+      float yf,
+      float widthf,
+      float heightf) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
@@ -559,22 +554,20 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else {
       // TODO: create new version AnimationManager after merge Layout Animation rewrite
       Point newPoint = new Point(x, y);
-      Point convertedPoint = convertPoint(newPoint, (View)viewToUpdate.getParent(), (int)viewToUpdate.getId());
+      Point convertedPoint =
+          convertPoint(newPoint, (View) viewToUpdate.getParent(), (int) viewToUpdate.getId());
       x = convertedPoint.x;
       y = convertedPoint.y;
       viewToUpdate.layout(x, y, x + width, y + height);
     }
   }
 
-  public static Point convertPoint(Point fromPoint, View parentView, int tag){
-    int[] toCord = { 0, 0 };
+  public static Point convertPoint(Point fromPoint, View parentView, int tag) {
+    int[] toCord = {0, 0};
     if (parentView != null) {
       parentView.getLocationOnScreen(toCord);
     }
-    return new Point(
-      fromPoint.x - toCord[0],
-      fromPoint.y - toCord[1]
-    );
+    return new Point(fromPoint.x - toCord[0], fromPoint.y - toCord[1]);
   }
 
   public boolean isLayoutAnimationEnabled() {

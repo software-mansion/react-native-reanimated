@@ -28,8 +28,11 @@ public class LayoutAnimations {
 
   // LayoutReanimation
   public native void startAnimationForTag(int tag, String type, Map<String, String> values);
+
   public native void removeConfigForTag(int tag);
+
   public native boolean isLayoutAnimationEnabled();
+
   public native void stopAnimation(int tag);
 
   private void notifyAboutEnd(int tag, int cancelledInt) {

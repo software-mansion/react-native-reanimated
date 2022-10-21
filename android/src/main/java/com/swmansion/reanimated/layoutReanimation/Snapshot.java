@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.layoutReanimation;
 
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -82,23 +81,23 @@ public class Snapshot {
     // TODO: refactor it! this is static map! why?!
     if (targetKeysToTransform == null || currentKeysToTransform == null) {
       targetKeysToTransform =
-              new ArrayList<>(
-                      Arrays.asList(
-                              Snapshot.TARGET_WIDTH,
-                              Snapshot.TARGET_HEIGHT,
-                              Snapshot.TARGET_ORIGIN_X,
-                              Snapshot.TARGET_ORIGIN_Y,
-                              Snapshot.TARGET_GLOBAL_ORIGIN_X,
-                              Snapshot.TARGET_GLOBAL_ORIGIN_Y));
+          new ArrayList<>(
+              Arrays.asList(
+                  Snapshot.TARGET_WIDTH,
+                  Snapshot.TARGET_HEIGHT,
+                  Snapshot.TARGET_ORIGIN_X,
+                  Snapshot.TARGET_ORIGIN_Y,
+                  Snapshot.TARGET_GLOBAL_ORIGIN_X,
+                  Snapshot.TARGET_GLOBAL_ORIGIN_Y));
       currentKeysToTransform =
-              new ArrayList<>(
-                      Arrays.asList(
-                              Snapshot.CURRENT_WIDTH,
-                              Snapshot.CURRENT_HEIGHT,
-                              Snapshot.CURRENT_ORIGIN_X,
-                              Snapshot.CURRENT_ORIGIN_Y,
-                              Snapshot.CURRENT_GLOBAL_ORIGIN_X,
-                              Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
+          new ArrayList<>(
+              Arrays.asList(
+                  Snapshot.CURRENT_WIDTH,
+                  Snapshot.CURRENT_HEIGHT,
+                  Snapshot.CURRENT_ORIGIN_X,
+                  Snapshot.CURRENT_ORIGIN_Y,
+                  Snapshot.CURRENT_GLOBAL_ORIGIN_X,
+                  Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
     }
   }
 
