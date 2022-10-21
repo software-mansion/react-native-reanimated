@@ -33,20 +33,16 @@ public class AnimationsManager implements ViewHierarchyObserver {
   };
   private WeakReference<Scheduler> mScheduler;
   private ReactContext mContext;
-  private UIImplementation mUIImplementation;
   private UIManagerModule mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
 
   private HashMap<Integer, ViewState> mStates;
   private HashMap<Integer, View> mViewForTag;
   private HashSet<Integer> mToRemove;
-  private HashMap<Integer, ViewManager> mViewManager;
-  private HashMap<Integer, ViewManager> mParentViewManager;
-  private HashMap<Integer, View> mParent;
   private HashMap<Integer, Runnable> mCallbacks;
   private boolean mCleaningScheduled = false;
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
-  private boolean isCatalystInstanceDestroyed = false;
+  private boolean isCatalystInstanceDestroyed;
 
   public void setReanimatedNativeHierarchyManager(
       ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
@@ -66,20 +62,16 @@ public class AnimationsManager implements ViewHierarchyObserver {
     Appearing,
     Disappearing,
     Layout,
-    ToRemove;
+    ToRemove
   }
 
   public AnimationsManager(
       ReactContext context, UIImplementation uiImplementation, UIManagerModule uiManagerModule) {
     mContext = context;
-    mUIImplementation = uiImplementation;
     mUIManager = uiManagerModule;
     mStates = new HashMap<>();
     mViewForTag = new HashMap<>();
     mToRemove = new HashSet<>();
-    mViewManager = new HashMap<>();
-    mParentViewManager = new HashMap<>();
-    mParent = new HashMap();
     mCallbacks = new HashMap<>();
     isCatalystInstanceDestroyed = false;
   }
@@ -88,14 +80,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     isCatalystInstanceDestroyed = true;
     mNativeMethodsHolder = null;
     mContext = null;
-    mUIImplementation = null;
     mUIManager = null;
     mStates = null;
     mToRemove = null;
     mViewForTag = null;
-    mViewManager = null;
-    mParent = null;
-    mParentViewManager = null;
     mCallbacks = null;
   }
 
@@ -108,7 +96,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> currentValues = before.toCurrentMap();
 
     if (!mStates.containsKey(view.getId())) {
-      registerView(view, before, ViewState.Layout);
+      registerView(view, ViewState.Layout);
     }
     ViewState state = mStates.get(view.getId());
 
@@ -152,9 +140,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       strongScheduler.triggerUI();
     }
     if (!mStates.containsKey(view.getId())) {
-      registerView(view, after, ViewState.Inactive);
+      registerView(view, ViewState.Inactive);
     }
-    Integer tag = view.getId();
+    int tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
     ViewState state = mStates.get(view.getId());
 
@@ -163,7 +151,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
         HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues, true);
         mNativeMethodsHolder.startAnimationForTag(tag, "entering", preparedValues);
       }
-      return;
     }
   }
 
@@ -172,7 +159,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (isCatalystInstanceDestroyed) {
       return;
     }
-    Integer tag = view.getId();
+    int tag = view.getId();
 
     if (!hasAnimationForTag(tag, "layout")) {
       return;
@@ -182,7 +169,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> startValues = before.toCurrentMap();
 
     if (!mStates.containsKey(view.getId())) {
-      registerView(view, after, ViewState.Layout);
+      registerView(view, ViewState.Layout);
     }
 
     ViewState state = mStates.get(view.getId());
@@ -224,21 +211,22 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
     View view = mViewForTag.get(tag);
+
     if (view == null) {
       return;
     }
+
+    ViewGroup parent = (ViewGroup) view.getParent();
+
+    ViewManager viewManager = resolveViewManager(tag);
+    ViewManager parentViewManager = resolveViewManager(parent.getId());
 
     ViewState state = mStates.get(tag);
     if (state == ViewState.Inactive) {
       mStates.put(tag, ViewState.Appearing);
     }
 
-    setNewProps(
-        newStyle,
-        view,
-        mViewManager.get(tag),
-        mParentViewManager.get(tag),
-        mParent.get(tag).getId());
+    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId());
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled) {
@@ -276,7 +264,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       for (int tag : roots) {
         View view = mViewForTag.get(tag);
         if (view != null) {
-          dfs(view, view, mToRemove);
+          dfs(view, mToRemove);
         }
       }
     }
@@ -345,20 +333,20 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private boolean dfs(View root, View view, HashSet<Integer> cands) {
+  private boolean dfs(View view, HashSet<Integer> cands) {
     if ((!cands.contains(view.getId())) && (mStates.containsKey(view.getId()))) {
       return true;
     }
     boolean cannotStripe = false;
-    if (view instanceof ViewGroup && mViewManager.get(view.getId()) instanceof ViewGroupManager) {
+    if (view instanceof ViewGroup && resolveViewManager(view.getId()) instanceof ViewGroupManager) {
       ViewGroup vg = (ViewGroup) view;
-      ViewGroupManager vgm = (ViewGroupManager) mViewManager.get(vg.getId());
+      ViewGroupManager vgm = (ViewGroupManager) resolveViewManager(vg.getId());
       ArrayList<View> children = new ArrayList<>();
       for (int i = 0; i < vgm.getChildCount(vg); ++i) {
         children.add(vgm.getChildAt(vg, i));
       }
       for (View child : children) {
-        cannotStripe = cannotStripe || dfs(root, child, cands);
+        cannotStripe = cannotStripe || dfs(child, cands);
       }
     }
 
@@ -369,18 +357,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
         mCallbacks.remove(view.getId());
         runnable.run();
       }
-      if (mParent.containsKey(view.getId())) {
-        ViewGroup parent = (ViewGroup) mParent.get(view.getId());
-        if (parent != null) {
-          parent.removeView(view);
-        }
+
+      ViewGroup parent = (ViewGroup) parentView;
+      if (parent != null) {
+        parent.removeView(view);
       }
-      View curView = view;
-      mStates.remove(curView.getId());
-      mViewForTag.remove(curView.getId());
-      mViewManager.remove(curView.getId());
-      mParentViewManager.remove(curView.getId());
-      mParent.remove(curView.getId());
+
+      mStates.remove(view.getId());
+      mViewForTag.remove(view.getId());
       mToRemove.remove(view.getId());
     }
     return cannotStripe;
@@ -476,7 +460,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else if (value instanceof ReadableMap) {
       propMap.putMap(key, (ReadableMap) value);
     } else {
-      throw new IllegalStateException("Unknown type of animated value [Layout Aniamtions]");
+      throw new IllegalStateException("Unknown type of animated value [Layout Animations]");
     }
   }
 
@@ -539,8 +523,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
                 + parentTag
                 + " as a parent, but its Manager doesn't implement IViewManagerWithChildren");
       }
-      if (parentViewManagerWithChildren != null
-          && !parentViewManagerWithChildren.needsCustomLayoutForChildren()) {
+      if (!parentViewManagerWithChildren.needsCustomLayoutForChildren()) {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
@@ -556,11 +539,16 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
   }
 
-  private void registerView(View view, Snapshot after, ViewState state) {
+  private void registerView(View view, ViewState state) {
     mStates.put(view.getId(), state);
     mViewForTag.put(view.getId(), view);
-    mViewManager.put(view.getId(), after.viewManager);
-    mParentViewManager.put(view.getId(), after.parentViewManager);
-    mParent.put(view.getId(), after.parent);
+  }
+
+  private ViewManager resolveViewManager(int tag) {
+    try {
+      return mReanimatedNativeHierarchyManager.resolveViewManager(tag);
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
