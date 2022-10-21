@@ -27,7 +27,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
-  REANodesManager * _nodeManager;
+  REANodesManager *_nodeManager;
   std::weak_ptr<reanimated::LayoutAnimationsProxy> _layoutAnimationsProxy;
 }
 
@@ -224,7 +224,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     view.center = CGPointMake(view.center.x + view.bounds.size.width / 2.0 - oldWidth / 2.0, view.center.y);
     [newProps removeObjectForKey:@"width"];
   }
-  
+
   bool updateViewPosition = false;
   double originX = 0, originY = 0;
   if (newProps[@"originX"]) {
@@ -238,10 +238,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     [newProps removeObjectForKey:@"originY"];
   }
   if (updateViewPosition) {
-    CGPoint newCenter = CGPointMake(
-      originX + view.bounds.size.width / 2.0, 
-      originY + view.bounds.size.height / 2.0
-    );
+    CGPoint newCenter = CGPointMake(originX + view.bounds.size.width / 2.0, originY + view.bounds.size.height / 2.0);
     UIView *window = UIApplication.sharedApplication.keyWindow;
     CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
     view.center = convertedCenter;
@@ -281,7 +278,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 }
 
 - (NSDictionary<NSString *, NSNumber *> *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
-                                          targetValues:(NSMutableDictionary *)targetValues
+                                                                  targetValues:(NSMutableDictionary *)targetValues
 {
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
   NSDictionary *preparedData = @{
@@ -409,7 +406,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 - (void)stopAnimation:(NSNumber *)tag
 {
-  if(_layoutAnimationsProxy.lock() != nullptr) {
+  if (_layoutAnimationsProxy.lock() != nullptr) {
     _layoutAnimationsProxy.lock()->stopObserving([tag intValue], true);
   }
 }

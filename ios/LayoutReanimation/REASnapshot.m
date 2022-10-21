@@ -40,7 +40,7 @@
   _values[@"globalOriginY"] = _values[@"originY"];
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
-  
+
   return self;
 }
 

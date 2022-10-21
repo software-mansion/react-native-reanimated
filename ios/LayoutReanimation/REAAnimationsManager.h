@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASnapshot.h>
 #import <React/RCTUIManager.h>
-#import <RNReanimated/REANodesManager.h>
 #if __cplusplus
 #import <RNReanimated/LayoutAnimationsProxy.h>
 #endif // __cplusplus

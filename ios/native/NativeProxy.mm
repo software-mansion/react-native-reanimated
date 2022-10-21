@@ -316,7 +316,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       removeConfig.call(*rt, jsi::Value([tag intValue]));
     }
   }];
-  
+
   [animationsManager setLayoutAnimationProxy:layoutAnimationsProxy];
 
   // Layout Animations end
@@ -356,19 +356,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [delegate setAnimationsManager:animationsManager];
   [RNSSharedElementAnimator setDelegate:delegate];
   auto registerTransitionTag = [delegate](
-    jsi::Runtime &rt, 
-    const jsi::Value &transitionTag, 
-    const jsi::Value &viewTag
-  ) {
+                                   jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {
     auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
     auto viewTagNS = @(viewTag.asNumber());
     [delegate registerTransitionTag:transitionTagNS viewTag:viewTagNS];
   };
   auto unregisterTransitionTag = [delegate](
-    jsi::Runtime &rt, 
-    const jsi::Value &transitionTag, 
-    const jsi::Value &viewTag
-  ) {
+                                     jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {
     auto transitionTagNS = @(transitionTag.asString(rt).utf8(rt).c_str());
     auto viewTagNS = @(viewTag.asNumber());
     [delegate unregisterTransitionTag:transitionTagNS viewTag:viewTagNS];
