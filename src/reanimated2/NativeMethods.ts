@@ -32,7 +32,7 @@ if (isWeb()) {
   };
 } else if (isChromeDebugger()) {
   measure = (_animatedRef: RefObjectFunction<Component>) => {
-    console.warn('[Reanimated] measure() cannot be used with Chrome Debugger');
+    console.warn('[Reanimated] measure() cannot be used with Chrome Debugger.');
     return null;
   };
 } else {
@@ -66,7 +66,7 @@ if (isWeb()) {
       return null;
     } else if (measured.x === -1234567) {
       console.warn(
-        `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response`
+        `[Reanimated] The view with tag ${viewTag} returned an invalid measurement response.`
       );
       return null;
     } else if (isNaN(measured.x)) {
