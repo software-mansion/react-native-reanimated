@@ -104,8 +104,8 @@ if (isWeb()) {
     animated: boolean
   ) => {
     'worklet';
-    const element = animatedRef() as unknown as Element;
-    // @ts-ignore trust me bro
+    const element = animatedRef() as unknown as HTMLElement;
+    // @ts-ignore same call as in react-native-web
     element.scrollTo({ x, y, animated });
   };
 } else if (isNative && global._IS_FABRIC) {
