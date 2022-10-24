@@ -31,8 +31,8 @@ if (_WORKLET) {
 :::
 
 :::info
-`measure` is not available in Chrome Debugger.
-:::
+`measure` is not available when Chrome Debugger (remote debugger) is attached. However, the recommended debugger is Chrome DevTools/Flipper which supports `measure`. See more details [here](../../guide/debugging).
+::: 
 
 ### Arguments
 
