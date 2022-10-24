@@ -28,9 +28,8 @@ import java.util.Set;
 class ReaLayoutAnimator extends LayoutAnimationController {
   private AnimationsManager mAnimationsManager = null;
   private volatile boolean mInitialized = false;
-  private ReactApplicationContext mContext;
-  private WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManage =
-      new WeakReference<>(null);
+  private final ReactApplicationContext mContext;
+  private final WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManage;
 
   ReaLayoutAnimator(
       ReactApplicationContext context, NativeViewHierarchyManager nativeViewHierarchyManager) {
@@ -150,43 +149,6 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
         view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
-//    if (viewManager instanceof ViewGroupManager) {
-//      ViewGroupManager vgm = (ViewGroupManager) viewManager;
-//      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
-//        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
-//      }
-//    }
-  }
-
-  private void dfs(View view, NativeViewHierarchyManager nativeViewHierarchyManager) {
-    int tag = view.getId();
-    if (tag == -1) {
-      return;
-    }
-    ViewManager vm;
-    try {
-      vm = nativeViewHierarchyManager.resolveViewManager(tag);
-    } catch (IllegalViewOperationException e) {
-      // (IllegalViewOperationException) == (vm == null)
-      e.printStackTrace();
-      return;
-    }
-    Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
-    mAnimationsManager.onViewRemoval(
-      view,
-      (ViewGroup) view.getParent(),
-      before,
-      () -> {
-        ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
-                (ReanimatedNativeHierarchyManager) nativeViewHierarchyManager;
-        reanimatedNativeHierarchyManager.publicDropView(view);
-    });
-    if (vm instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) vm;
-      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
-        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
-      }
-    }
   }
 
   public boolean isLayoutAnimationEnabled() {

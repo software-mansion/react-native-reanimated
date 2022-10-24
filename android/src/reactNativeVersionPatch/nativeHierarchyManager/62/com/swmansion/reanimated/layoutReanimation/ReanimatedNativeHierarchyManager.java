@@ -150,42 +150,6 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
         view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
-//    if (viewManager instanceof ViewGroupManager) {
-//      ViewGroupManager vgm = (ViewGroupManager) viewManager;
-//      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
-//        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
-//      }
-//    }
-  }
-
-  private void dfs(View view, NativeViewHierarchyManager nativeViewHierarchyManager) {
-    int tag = view.getId();
-    if (tag == -1) {
-      return;
-    }
-    ViewManager vm = null;
-    try {
-      vm = nativeViewHierarchyManager.resolveViewManager(tag);
-      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
-      mAnimationsManager.onViewRemoval(
-          view,
-          (ViewGroup) view.getParent(),
-          before,
-          () -> {
-            ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
-                (ReanimatedNativeHierarchyManager) nativeViewHierarchyManager;
-            reanimatedNativeHierarchyManager.publicDropView(view);
-          });
-    } catch (IllegalViewOperationException e) {
-      // (IllegalViewOperationException) == (vm == null)
-      e.printStackTrace();
-    }
-    if (vm instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) vm;
-      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
-        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
-      }
-    }
   }
 
   public boolean isLayoutAnimationEnabled() {
