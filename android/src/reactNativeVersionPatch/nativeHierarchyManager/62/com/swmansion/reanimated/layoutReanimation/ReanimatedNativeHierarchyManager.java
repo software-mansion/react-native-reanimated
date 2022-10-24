@@ -150,12 +150,12 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
         view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
-    if (viewManager instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) viewManager;
-      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
-        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
-      }
-    }
+//    if (viewManager instanceof ViewGroupManager) {
+//      ViewGroupManager vgm = (ViewGroupManager) viewManager;
+//      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
+//        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
+//      }
+//    }
   }
 
   private void dfs(View view, NativeViewHierarchyManager nativeViewHierarchyManager) {

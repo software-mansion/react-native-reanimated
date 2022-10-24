@@ -18,7 +18,6 @@ import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.Scheduler;
 import java.lang.ref.WeakReference;
@@ -36,11 +35,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private UIManagerModule mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
 
-  private HashMap<Integer, ViewState> mStates;
-  private HashMap<Integer, View> mExitingViews;
-  private HashSet<Integer> mToRemove;
-  private HashMap<Integer, Runnable> mCallbacks;
-  private boolean mCleaningScheduled = false;
+  private HashMap<Integer, View> mExitingViews = new HashMap<>();
+  private HashMap<Integer, Integer> mExitingSubviewCountMap = new HashMap<>();
+  private HashSet<Integer> mAncestorsToRemove = new HashSet<>();
+  private HashMap<Integer, Runnable> mCallbacks = new HashMap<>();
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
   private boolean isCatalystInstanceDestroyed;
 
@@ -57,22 +55,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mScheduler = new WeakReference<>(scheduler);
   }
 
-  public enum ViewState {
-    Inactive,
-    Appearing,
-    Disappearing,
-    Layout,
-    ToRemove
-  }
-
   public AnimationsManager(
       ReactContext context, UIImplementation uiImplementation, UIManagerModule uiManagerModule) {
     mContext = context;
     mUIManager = uiManagerModule;
-    mStates = new HashMap<>();
-    mExitingViews = new HashMap<>();
-    mToRemove = new HashSet<>();
-    mCallbacks = new HashMap<>();
     isCatalystInstanceDestroyed = false;
   }
 
@@ -81,8 +67,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder = null;
     mContext = null;
     mUIManager = null;
-    mStates = null;
-    mToRemove = null;
     mExitingViews = null;
     mCallbacks = null;
   }
@@ -93,37 +77,22 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
     Integer tag = view.getId();
-    HashMap<String, Object> currentValues = before.toCurrentMap();
-
-    if (!mStates.containsKey(tag)) {
-      registerView(view, ViewState.Layout);
-    }
-    ViewState state = mStates.get(tag);
-
-    if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
-      return;
-    }
-
     mCallbacks.put(tag, callback);
-    if (state == ViewState.Inactive || state == null) {
-      if (currentValues != null) {
-        mStates.put(tag, ViewState.ToRemove);
-        mToRemove.add(tag);
-        scheduleCleaning();
-      }
-      return;
-    }
-    mStates.put(tag, ViewState.Disappearing);
-    HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues, false);
-
-    if (!hasAnimationForTag(tag, "exiting")) {
-      mStates.put(tag, ViewState.ToRemove);
-      mToRemove.add(tag);
-      scheduleCleaning();
-      return;
-    }
-    mExitingViews.put(tag, view);
-    mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
+    removeRecursive(view, parent);
+    //    if (hasAnimationForTag(tag, "exiting")) {
+    //      mExitingViews.put(tag, view);
+    //      registerExitingAncestors(view);
+    //      HashMap<String, Object> currentValues = before.toCurrentMap();
+    //      HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues,
+    // false);
+    //      mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
+    //    } else {
+    //      if (!mAncestorsOfExitingView.containsKey(tag)) {
+    //        removeView(view, parent);
+    //      } else {
+    //        mAncestorsToRemove.add(tag);
+    //      }
+    //    }
   }
 
   @Override
@@ -140,18 +109,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (strongScheduler != null) {
       strongScheduler.triggerUI();
     }
-    if (!mStates.containsKey(view.getId())) {
-      registerView(view, ViewState.Inactive);
-    }
     int tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
-    ViewState state = mStates.get(view.getId());
 
-    if (state == ViewState.Inactive) { // it can be a fresh view
-      if (targetValues != null) {
-        HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues, true);
-        mNativeMethodsHolder.startAnimationForTag(tag, "entering", preparedValues);
-      }
+    if (targetValues != null) {
+      HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues, true);
+      mNativeMethodsHolder.startAnimationForTag(tag, "entering", preparedValues);
     }
   }
 
@@ -169,37 +132,23 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
 
-    if (!mStates.containsKey(view.getId())) {
-      registerView(view, ViewState.Layout);
-    }
-
-    ViewState state = mStates.get(view.getId());
-    if (state == null
-        || state == ViewState.Disappearing
-        || state == ViewState.ToRemove
-        || state == ViewState.Inactive) {
-      return;
-    }
     // If startValues are equal to targetValues it means that there was no UI Operation changing
     // layout of the View. So dirtiness of that View is false positive
-    if (state == ViewState.Appearing) {
-      boolean doNotStartLayout = true;
-      for (int i = 0; i < Snapshot.targetKeysToTransform.size(); ++i) {
-        double startV =
-            ((Number) startValues.get(Snapshot.currentKeysToTransform.get(i))).doubleValue();
-        double targetV =
-            ((Number) targetValues.get(Snapshot.targetKeysToTransform.get(i))).doubleValue();
-        if (startV != targetV) {
-          doNotStartLayout = false;
-        }
+    boolean doNotStartLayout = true;
+    for (int i = 0; i < Snapshot.targetKeysToTransform.size(); ++i) {
+      double startV =
+          ((Number) startValues.get(Snapshot.currentKeysToTransform.get(i))).doubleValue();
+      double targetV =
+          ((Number) targetValues.get(Snapshot.targetKeysToTransform.get(i))).doubleValue();
+      if (startV != targetV) {
+        doNotStartLayout = false;
       }
-      if (doNotStartLayout) {
-        return;
-      }
+    }
+    if (doNotStartLayout) {
+      return;
     }
 
     // View must be in Layout state
-    mStates.put(view.getId(), ViewState.Layout);
     HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues, false);
     HashMap<String, Float> preparedTargetValues =
         prepareDataForAnimationWorklet(targetValues, true);
@@ -219,46 +168,27 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     ViewGroup parent = (ViewGroup) view.getParent();
 
+    if (parent == null) {
+      return;
+    }
+
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
-
-    ViewState state = mStates.get(tag);
-    if (state == ViewState.Inactive) {
-      mStates.put(tag, ViewState.Appearing);
-    }
 
     setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId());
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled) {
-    mExitingViews.remove(tag);
-    if (!cancelled) {
-      ViewState state = mStates.get(tag);
-      if (state == ViewState.Appearing) {
-        mStates.put(tag, ViewState.Layout);
-      }
-
-      if (state == ViewState.Disappearing) {
-        mStates.put(tag, ViewState.ToRemove);
-        mToRemove.add(tag);
-        scheduleCleaning();
-      }
-    }
-  }
-
-  private void removeLeftovers() {
-    // mToRemove may be null if onCatalystInstanceDestroy was called first
-    if (mToRemove != null) {
-      HashSet<Integer> roots = new HashSet<>();
-      // go through ready to remove from bottom to top
-      for (int tag : mToRemove) {
-        View view = resolveView(tag);
-        findRoot(view, roots);
-      }
-      for (int tag : roots) {
-        View view = resolveView(tag);
-        if (view != null) {
-          dfs(view, mToRemove);
+    View exitingView = mExitingViews.get(tag);
+    if (exitingView != null) {
+      mExitingViews.remove(tag);
+      maybeDropAncestors(exitingView);
+      if (mExitingSubviewCountMap.containsKey(tag)) {
+        mAncestorsToRemove.add(tag);
+      } else {
+        ViewGroup parent = (ViewGroup) exitingView.getParent();
+        if (parent != null) {
+          removeView(exitingView, parent);
         }
       }
     }
@@ -277,8 +207,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     out.append(" TAG:");
     out.append(view.getId());
-    out.append(" STATE:");
-    out.append(this.mStates.get(view.getId()));
     out.append(" CLASS:");
     out.append(view.getClass().getSimpleName());
     Log.v("rea", out.toString());
@@ -288,80 +216,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
         printSubTree(((ViewGroup) view).getChildAt(i), level + 1);
       }
     }
-  }
-
-  private void scheduleCleaning() {
-    if (mCleaningScheduled) return;
-    mCleaningScheduled = true;
-    WeakReference<AnimationsManager> animationsManagerWeakReference = new WeakReference<>(this);
-    mContext.runOnUiQueueThread(
-        () -> {
-          mCleaningScheduled = false;
-          AnimationsManager thiz = animationsManagerWeakReference.get();
-          if (thiz == null) {
-            return;
-          }
-          removeLeftovers();
-        });
-  }
-
-  private void findRoot(View view, HashSet<Integer> roots) {
-    View currentView = view;
-    int lastToRemoveTag = -1;
-    while (currentView != null) {
-      ViewState state = mStates.get(currentView.getId());
-      if (state == ViewState.Disappearing) {
-        return;
-      }
-      if (state == ViewState.ToRemove) {
-        lastToRemoveTag = currentView.getId();
-      }
-      if (currentView.getParent() instanceof View) {
-        currentView = (View) currentView.getParent();
-      } else {
-        break;
-      }
-    }
-    if (lastToRemoveTag != -1) {
-      roots.add(lastToRemoveTag);
-    }
-  }
-
-  private boolean dfs(View view, HashSet<Integer> cands) {
-    if ((!cands.contains(view.getId())) && (mStates.containsKey(view.getId()))) {
-      return true;
-    }
-    boolean cannotStripe = false;
-    if (view instanceof ViewGroup && resolveViewManager(view.getId()) instanceof ViewGroupManager) {
-      ViewGroup vg = (ViewGroup) view;
-      ViewGroupManager vgm = (ViewGroupManager) resolveViewManager(vg.getId());
-      ArrayList<View> children = new ArrayList<>();
-      for (int i = 0; i < vgm.getChildCount(vg); ++i) {
-        children.add(vgm.getChildAt(vg, i));
-      }
-      for (View child : children) {
-        cannotStripe = cannotStripe || dfs(child, cands);
-      }
-    }
-
-    if (!cannotStripe) {
-      View parentView = (View) view.getParent();
-      if (mCallbacks.containsKey(view.getId())) {
-        Runnable runnable = mCallbacks.get(view.getId());
-        mCallbacks.remove(view.getId());
-        runnable.run();
-      }
-
-      ViewGroup parent = (ViewGroup) parentView;
-      if (parent != null) {
-        parent.removeView(view);
-      }
-
-      mStates.remove(view.getId());
-      mToRemove.remove(view.getId());
-      mExitingViews.remove(view.getId());
-    }
-    return cannotStripe;
   }
 
   public HashMap<String, Float> prepareDataForAnimationWorklet(
@@ -533,8 +387,93 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
   }
 
-  private void registerView(View view, ViewState state) {
-    mStates.put(view.getId(), state);
+  private boolean removeRecursive(View view, ViewGroup parent) {
+    int tag = view.getId();
+    boolean hasExitAnimation = hasAnimationForTag(tag, "exiting");
+    boolean wantAnimateExit = hasExitAnimation;
+
+    // we might want to keep this view around
+    // because one of the (children's) children
+    // has an exiting animation
+    if (!wantAnimateExit) {
+      if (view instanceof ViewGroup) {
+        ViewGroup viewGroup = (ViewGroup) view;
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+          View child = viewGroup.getChildAt(i);
+          if (removeRecursive(child, viewGroup)) {
+            wantAnimateExit = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (wantAnimateExit) {
+      if (hasExitAnimation) {
+        Snapshot before = new Snapshot(view, mReanimatedNativeHierarchyManager);
+        HashMap<String, Object> currentValues = before.toCurrentMap();
+        HashMap<String, Float> preparedValues =
+            prepareDataForAnimationWorklet(currentValues, false);
+        if (!mExitingViews.containsKey(tag)) {
+          mExitingViews.put(tag, view);
+          registerExitingAncestors(view);
+          mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
+        }
+      } else {
+        mAncestorsToRemove.add(tag);
+      }
+      return true;
+    } else {
+      removeView(view, parent);
+    }
+    return false;
+  }
+
+  private void registerExitingAncestors(View view) {
+    View parent = (View) view.getParent();
+    while (parent != null && !(parent instanceof RootView)) {
+      int tag = parent.getId();
+      Integer previousValue = mExitingSubviewCountMap.get(tag);
+      int newValue = previousValue != null ? previousValue + 1 : 1;
+      mExitingSubviewCountMap.put(tag, newValue);
+
+      parent = (View) parent.getParent();
+    }
+  }
+
+  private void maybeDropAncestors(View exitingView) {
+    View parent = (View) exitingView.getParent();
+    while (parent != null && !(parent instanceof RootView)) {
+      View view = parent;
+      parent = (View) view.getParent();
+      int tag = view.getId();
+      Integer ancestorOfCount = mExitingSubviewCountMap.get(tag);
+      ancestorOfCount = ancestorOfCount != null ? ancestorOfCount - 1 : 0;
+      if (ancestorOfCount <= 0) {
+        if (mAncestorsToRemove.contains(tag)) {
+          mAncestorsToRemove.remove(tag);
+          removeView(view, (ViewGroup) parent);
+        }
+        mExitingSubviewCountMap.remove(tag);
+      } else {
+        mExitingSubviewCountMap.put(tag, ancestorOfCount);
+      }
+    }
+  }
+
+  private void removeView(View view, ViewGroup parent) {
+    int tag = view.getId();
+    if (mCallbacks.containsKey(tag)) {
+      Runnable callback = mCallbacks.get(tag);
+      mCallbacks.remove(tag);
+      if (callback != null) {
+        callback.run();
+      }
+    } else {
+      // we're here
+      mCallbacks.remove(tag);
+    }
+    parent.removeView(view);
   }
 
   private View resolveView(int tag) {
