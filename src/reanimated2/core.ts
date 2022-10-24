@@ -544,6 +544,18 @@ export function unregisterEventHandler(id: string): void {
   return NativeReanimatedModule.unregisterEventHandler(id);
 }
 
+export function subscribeForKeyboardEvents(
+  eventHandler: (state: number, height: number) => void
+): number {
+  return NativeReanimatedModule.subscribeForKeyboardEvents(
+    makeShareableCloneRecursive(eventHandler)
+  );
+}
+
+export function unsubscribeFromKeyboardEvents(listenerId: number): void {
+  return NativeReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
+}
+
 NativeReanimatedModule.installCoreFunctions(
   NativeReanimatedModule.native
     ? (workletValueSetter as <T>(value: T) => void)
