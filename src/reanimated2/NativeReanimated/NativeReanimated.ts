@@ -5,7 +5,6 @@ import {
   SensorValueRotation,
   AnimatedKeyboardInfo,
 } from '../commonTypes';
-import { Descriptor } from '../hook/commonTypes';
 
 type Shareable = {
   __thereIsNothingHereImJustMakingTypescriptHappy: number;
@@ -42,21 +41,6 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  makeShareable<T>(value: T): T {
-    throw new Error('who dis');
-    return this.InnerNativeModule.makeShareable(value);
-  }
-
-  makeMutable<T>(value: T): SharedValue<T> {
-    throw new Error('who dis');
-    return this.InnerNativeModule.makeMutable(value);
-  }
-
-  makeRemote<T>(object = {}): T {
-    throw new Error('who dis');
-    return this.InnerNativeModule.makeRemote(object);
-  }
-
   registerSensor(
     sensorType: number,
     interval: number,
@@ -71,28 +55,6 @@ export class NativeReanimated {
 
   unregisterSensor(sensorId: number) {
     return this.InnerNativeModule.unregisterSensor(sensorId);
-  }
-
-  startMapper(
-    mapper: () => void,
-    inputs: any[] = [],
-    outputs: any[] = [],
-    updater: () => void,
-    viewDescriptors: Descriptor[] | SharedValue<Descriptor[]>
-  ): number {
-    throw new Error('who dis');
-    return this.InnerNativeModule.startMapper(
-      mapper,
-      inputs,
-      outputs,
-      updater,
-      viewDescriptors
-    );
-  }
-
-  stopMapper(mapperId: number): void {
-    throw new Error('who dis');
-    return this.InnerNativeModule.stopMapper(mapperId);
   }
 
   registerEventHandler<T>(

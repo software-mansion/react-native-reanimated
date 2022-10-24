@@ -447,16 +447,115 @@ export function makeRemote<T>(initial = {}): T {
   };
 }
 
+function createMapperRegistry() {
+  'worklet';
+  const mappers = new Map();
+  let sortedMappers = [];
+
+  let frameRequested = false;
+
+  function updateMappersOrder() {
+    // sort mappers topologically
+    // const deg = Map();
+    // function up(obj, v) {
+    //   const n = deg.get(obj);
+    //   if (n === undefined) {
+    //     deg.set(obj, v);
+    //     return v;
+    //   } else {
+    //     deg.set(obj, n + v);
+    //     return n + v;
+    //   }
+    // }
+    // mappers.forEach((mapper) => {
+    //   up(sv, mapper.inputs.length);
+    //   if (mapper.outputs) {
+    //     for (const output of mapper.outputs) {
+    //       up(output, 1);
+    //     }
+    //   }
+    // });
+    // const zeroDeg = [];
+    // deg.forEach((obj, value) => {
+    //   if (value === 0) {
+    //     zeroDeg.push(obj);
+    //   }
+    // });
+    // for (let i = 0; i < zeroDeg.length; i++) {
+    //   const obj = zeroDeg[i];
+    // }
+    sortedMappers = mappers.values();
+  }
+
+  function mapperFrame() {
+    if (mappers.size !== sortedMappers.length) {
+      updateMappersOrder();
+    }
+    for (const mapper of sortedMappers) {
+      mapper.worklet();
+    }
+    frameRequested = false;
+  }
+
+  function maybeRequestUpdates() {
+    if (!frameRequested) {
+      requestAnimationFrame(mapperFrame);
+      frameRequested = true;
+    }
+  }
+
+  function extractInputs(inputs, resultArray) {
+    if (Array.isArray(inputs)) {
+      for (const input of inputs) {
+        extractInputs(input, resultArray);
+      }
+    } else if (inputs.addListener) {
+      resultArray.push(inputs);
+    } else if (typeof inputs === 'object') {
+      for (const [key, element] of Object.entries(inputs)) {
+        extractInputs(element, resultArray);
+      }
+    }
+    return resultArray;
+  }
+
+  return {
+    start: (mapperID, worklet, inputs, outputs) => {
+      const mapper = {
+        id: mapperID,
+        dirty: true,
+        worklet,
+        inputs: extractInputs(inputs, []),
+        outputs,
+      };
+      mappers.set(mapper.id, mapper);
+      sortedMappers = [];
+      for (const sv of mapper.inputs) {
+        sv.addListener(mapper.id, () => {
+          mapper.dirty = true;
+          maybeRequestUpdates();
+        });
+      }
+    },
+    stop: (mapperID) => {
+      const mapper = mappers.get(mapperID);
+      if (mapper) {
+        mappers.delete(mapper.id);
+        sortedMappers = [];
+        for (const sv of mapper.inputs) {
+          sv.removeListener(mapper.id);
+        }
+      }
+    },
+  };
+}
+
 let MAPPER_ID = 9999;
 
 export function startMapper(
   worklet: () => void,
   inputs: any[] = [],
-  outputs: any[] = [],
-  updater: () => void = () => {
-    // noop
-  },
-  viewDescriptors: Descriptor[] | SharedValue<Descriptor[]> = []
+  outputs: any[] = []
 ): number {
   if (__DEV__) {
     isConfiguredCheck();
@@ -468,48 +567,19 @@ export function startMapper(
     'worklet';
     let mapperRegistry = global.__mapperRegistry;
     if (mapperRegistry === undefined) {
-      mapperRegistry = global.__mapperRegistry = new Map();
+      mapperRegistry = global.__mapperRegistry = createMapperRegistry();
     }
-    const mapper = {
-      dirty: false,
-      worklet,
-      inputs,
-    };
-    mapperRegistry.set(mapperID, mapper);
-    function listener() {
-      mapper.dirty = true;
-      if (!global.__mapperRequestedFrame) {
-        global.__mapperRequestedFrame = true;
-        requestAnimationFrame(() => {
-          mapperRegistry.forEach((mapper) => {
-            mapper.worklet();
-          });
-          global.__mapperRequestedFrame = false;
-        });
-      }
-    }
-    function registerListenersRecursively(inputs) {
-      if (Array.isArray(inputs)) {
-        for (const input of inputs) {
-          registerListenersRecursively(input);
-        }
-      } else if (inputs.addListener) {
-        inputs.addListener(mapperID, listener);
-      } else if (typeof inputs === 'object') {
-        for (const [key, element] of Object.entries(inputs)) {
-          registerListenersRecursively(element);
-        }
-      }
-    }
-    registerListenersRecursively(inputs);
+    mapperRegistry.start(mapperID, worklet, inputs, outputs);
   })();
+
+  return mapperID;
 }
 
 export function stopMapper(mapperID: number): void {
   runOnUI(() => {
     'worklet';
     let mapperRegistry = global.__mapperRegistry;
-    mapperRegistry.delete(mapperID);
+    mapperRegistry?.stop(mapperID);
   });
 }
 
