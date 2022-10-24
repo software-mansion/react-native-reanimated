@@ -40,7 +40,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
         propObtainer,
 #endif
-    std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
@@ -66,11 +65,13 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
 
   auto scheduleOnJS = [this](
-                             jsi::Runtime &rt,
-                             const jsi::Value &remoteFun,
-                             const jsi::Value &argsValue) {
+                          jsi::Runtime &rt,
+                          const jsi::Value &remoteFun,
+                          const jsi::Value &argsValue) {
     auto shareableRemoteFun = extractShareableOrThrow(rt, remoteFun);
-    auto shareableArgs = argsValue.isUndefined() ? nullptr : extractShareableOrThrow(rt, argsValue);
+    auto shareableArgs = argsValue.isUndefined()
+        ? nullptr
+        : extractShareableOrThrow(rt, argsValue);
     auto jsRuntime = this->runtimeHelper->rnRuntime;
     this->scheduler->scheduleOnJS([=] {
       jsi::Runtime &rt = *jsRuntime;
@@ -90,13 +91,9 @@ NativeReanimatedModule::NativeReanimatedModule(
     });
   };
 
-  auto makeShareableClone = [this](
-                             jsi::Runtime &rt,
-                             const jsi::Value &value) {
+  auto makeShareableClone = [this](jsi::Runtime &rt, const jsi::Value &value) {
     return this->makeShareableClone(rt, value);
   };
-
-  this->layoutAnimationsProxy = layoutAnimationsProxy;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](
@@ -143,10 +140,11 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
-      layoutAnimationsProxy);
+      platformDepMethodsHolder.notifyAboutProgressFunction,
+      platformDepMethodsHolder.notifyAboutEndFunction);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
-    this->onRender(timestampMs); 
+    this->onRender(timestampMs);
   };
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -164,7 +162,8 @@ void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueSetter,
     const jsi::Value &valueUnpacker) {
-  runtimeHelper = std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
+  runtimeHelper =
+      std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
   runtimeHelper->valueUnpacker =
       std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
@@ -197,7 +196,8 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       shareable =
           std::make_shared<ShareableHandle>(runtimeHelper.get(), rt, object);
     } else if (object.isFunction(rt)) {
-      shareable = std::make_shared<ShareableRemoteFunction>(runtimeHelper.get(), rt, object.asFunction(rt));
+      shareable = std::make_shared<ShareableRemoteFunction>(
+          runtimeHelper.get(), rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
       shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
     } else {
@@ -231,7 +231,8 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime;
-    auto handlerFunction = handlerShareable->getJSValue(rt).asObject(rt).asFunction(rt);
+    auto handlerFunction =
+        handlerShareable->getJSValue(rt).asObject(rt).asFunction(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventName, std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(handler);
@@ -313,10 +314,10 @@ void NativeReanimatedModule::onEvent(
 #else
     eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
 #endif
-//    mapperRegistry->execute(*runtime);
-//    if (mapperRegistry->needRunOnRender()) {
-//      maybeRequestRender();
-//    }
+    //    mapperRegistry->execute(*runtime);
+    //    if (mapperRegistry->needRunOnRender()) {
+    //      maybeRequestRender();
+    //    }
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
@@ -584,29 +585,30 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &keyboardEventContainer) {
-//  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
-//  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
-//      sharedProperties;
-//  std::shared_ptr<ShareableValue> keyboardStateShared = ShareableValue::adapt(
-//      rt, keyboardEventObj.getProperty(rt, "state"), this);
-//  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
-//      rt, keyboardEventObj.getProperty(rt, "height"), this);
-//
-//  auto keyboardEventDataUpdater =
-//      [this, &rt, keyboardStateShared, heightShared](
-//          int keyboardState, int height) {
-//        auto &keyboardStateValue =
-//            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
-//        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
-//
-//        auto &heightMutableValue =
-//            ValueWrapper::asMutableValue(heightShared->valueContainer);
-//        heightMutableValue->setValue(rt, jsi::Value(height));
-//
-//        this->mapperRegistry->execute(*this->runtime);
-//      };
-//
-//  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+  //  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
+  //  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
+  //      sharedProperties;
+  //  std::shared_ptr<ShareableValue> keyboardStateShared =
+  //  ShareableValue::adapt(
+  //      rt, keyboardEventObj.getProperty(rt, "state"), this);
+  //  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
+  //      rt, keyboardEventObj.getProperty(rt, "height"), this);
+  //
+  //  auto keyboardEventDataUpdater =
+  //      [this, &rt, keyboardStateShared, heightShared](
+  //          int keyboardState, int height) {
+  //        auto &keyboardStateValue =
+  //            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
+  //        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
+  //
+  //        auto &heightMutableValue =
+  //            ValueWrapper::asMutableValue(heightShared->valueContainer);
+  //        heightMutableValue->setValue(rt, jsi::Value(height));
+  //
+  //        this->mapperRegistry->execute(*this->runtime);
+  //      };
+  //
+  //  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
   return jsi::Value::undefined();
 }
 

@@ -467,9 +467,20 @@ export function startMapper(
         });
       }
     }
-    for (const input of inputs) {
-      input.addListener(mapperID, listener);
+    function registerListenersRecursively(inputs) {
+      if (Array.isArray(inputs)) {
+        for (const input of inputs) {
+          registerListenersRecursively(input);
+        }
+      } else if (inputs.addListener) {
+        inputs.addListener(mapperID, listener);
+      } else if (typeof inputs === 'object') {
+        for (const [key, element] of Object.entries(inputs)) {
+          registerListenersRecursively(element);
+        }
+      }
     }
+    registerListenersRecursively(inputs);
   })();
 }
 
@@ -502,18 +513,6 @@ function makeShareableCloneOnUIRecursive(value) {
     return _makeShareableClone(value);
   }
   return cloneRecursive(value);
-}
-
-export function doSomething() {
-  function remoteFunction() {
-    console.log('yollo');
-  }
-  const share = makeShareableCloneRecursive(remoteFunction);
-  runOnUI(() => {
-    'worklet';
-    // _log('who dis ' + remoteFunction);
-    runOnJS(remoteFunction)(1, 2, 3);
-  })();
 }
 
 export function runOnJS<A extends any[], R>(

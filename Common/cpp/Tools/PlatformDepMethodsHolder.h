@@ -53,6 +53,9 @@ using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using TimeProviderFunction = std::function<double(void)>;
 
+using NotifyAboutProgressFunction = std::function<void(int, jsi::Object newProps)>;
+using NotifyAboutEndFunction = std::function<void(int, bool)>;
+
 using RegisterSensorFunction =
     std::function<int(int, int, std::function<void(double[])>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
@@ -76,6 +79,8 @@ struct PlatformDepMethodsHolder {
   ConfigurePropsFunction configurePropsFunction;
 #endif
   TimeProviderFunction getCurrentTime;
+  NotifyAboutProgressFunction notifyAboutProgressFunction;
+  NotifyAboutEndFunction notifyAboutEndFunction;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;

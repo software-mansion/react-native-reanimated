@@ -18,7 +18,6 @@
 #include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
-#include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 
@@ -254,9 +253,6 @@ void NativeProxy::installJSIBindings(
     this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
   };
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(
-          notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   layoutAnimations->cthis()->setWeakUIRuntime(wrt);
 
@@ -290,7 +286,6 @@ void NativeProxy::installJSIBindings(
 #else
       propObtainer,
 #endif
-      layoutAnimationsProxy,
       platformDepMethodsHolder);
 
   _nativeReanimatedModule = module;

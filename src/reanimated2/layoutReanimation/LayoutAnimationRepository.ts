@@ -4,6 +4,19 @@ import { withStyleAnimation } from '../animation/styleAnimation';
 import { ColorProperties } from '../UpdateProps';
 import { processColor } from '../Colors';
 
+function startObservingProgress(tag, sharedValue) {
+  'worklet';
+  sharedValue.addListener(tag + 1e9, () => {
+    _notifyAboutProgress(tag, sharedValue.value);
+  });
+}
+
+function stopObservingProgress(tag, sharedValue, finished) {
+  'worklet';
+  sharedValue.removeListener(tag + 1e9);
+  _notifyAboutEnd(tag, finished);
+}
+
 runOnUI(() => {
   'worklet';
 
@@ -41,8 +54,8 @@ runOnUI(() => {
       }
 
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
-      _stopObservingProgress(tag, false);
-      _startObservingProgress(tag, sv);
+      stopObservingProgress(tag, sv, false);
+      startObservingProgress(tag, sv);
 
       const backupColor: Record<string, string> = {};
       for (const key in style.initialValues) {
@@ -54,12 +67,12 @@ runOnUI(() => {
       }
 
       sv.value = Object.assign({}, sv._value, style.initialValues);
-      _stopObservingProgress(tag, false);
+      stopObservingProgress(tag, sv, false);
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
         if (finished) {
-          _stopObservingProgress(tag, finished);
+          stopObservingProgress(tag, sv, finished);
         }
         style.callback && style.callback(finished);
       };
@@ -69,7 +82,7 @@ runOnUI(() => {
       }
 
       configs[tag].sv.value = animation;
-      _startObservingProgress(tag, sv);
+      startObservingProgress(tag, sv);
     },
   };
 })();

@@ -13,7 +13,6 @@
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
-#include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
@@ -30,7 +29,6 @@ class JSRuntimeHelper;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec,
                                public RuntimeManager {
-
  public:
   NativeReanimatedModule(
       std::shared_ptr<CallInvoker> jsInvoker,
@@ -43,7 +41,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
           propObtainer,
 #endif
-      std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
   std::shared_ptr<JSRuntimeHelper> runtimeHelper;
@@ -149,7 +146,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
   std::function<void(double)> onRenderCallback;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
 
