@@ -76,6 +76,8 @@ project.ext.react = [
         entryFile   : "index.js",
         enableHermes: true,
 ]
+project.ext["isReanimatedExampleApp"] = true
+
 def enableHermes = project.ext.react.get("enableHermes", false);
 
 /**

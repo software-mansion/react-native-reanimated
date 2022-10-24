@@ -19,8 +19,7 @@
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-
-#import "SingleInstanceChecker.h"
+#import <RNReanimated/SingleInstanceChecker.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -56,10 +55,12 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
+#ifdef RCT_NEW_ARCH_ENABLED
 + (BOOL)requiresMainQueueSetup
 {
   return YES;
 }
+#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)invalidate
 {
