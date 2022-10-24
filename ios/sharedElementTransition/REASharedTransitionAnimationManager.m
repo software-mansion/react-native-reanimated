@@ -21,27 +21,6 @@
   return self;
 }
 
-- (void)setAnimationsManager:(REAAnimationsManager *)animationsManager
-{
-  _animationsManager = animationsManager;
-}
-
-- (void)runTransitionWithConverterView:(UIView *)converter
-                              fromView:(UIView *)fromView
-                     fromViewConverter:(UIView *)startingViewConverter
-                                toView:(UIView *)toView
-                       toViewConverter:(UIView *)toViewConverter
-                        transitionType:(NSString *)transitionType
-{
-  if ([transitionType isEqualToString:@"sharedElementTransition"]) {
-    [_toRestore addObject:fromView.reactTag];
-    REASnapshot *before = _snapshotRegistry[fromView.reactTag];
-    REASnapshot *after = _snapshotRegistry[toView.reactTag];
-    [_animationsManager onViewTransition:fromView before:before after:after];
-    [_animationsManager onViewTransition:toView before:before after:after];
-  }
-}
-
 - (void)registerTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
   if (!sharedTransitionsItems[transitionTag]) {
@@ -59,6 +38,67 @@
     if (currentViewTag == viewTag) {
       config.toRemove = true;
     }
+  }
+}
+
+- (void)onScreenTransitionCreate:(id)currentScreen
+{
+  RNSScreen *screen = currentScreen;
+  if (screen.transitionCoordinator != nil) {
+    screen.fakeView.alpha = 0.0;
+    NSMutableArray<REASharedTransitionConfig *> *sharedElements;
+    if (screen.closing) {
+      UIViewController *targetViewController =
+          [screen.transitionCoordinator viewControllerForKey:UITransitionContextToViewControllerKey];
+      sharedElements = [self getSharedElementsForCurrentTransition:screen targetViewController:targetViewController];
+      [self runTransitions:screen.transitionCoordinator sharedElements:sharedElements];
+    }
+
+    [screen.transitionCoordinator
+        animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+          [[context containerView] addSubview:screen.fakeView];
+          screen.fakeView.alpha = 1.0;
+          if (screen.closing && sharedElements != nil) {
+            // right order is important, first parent then children, to keep right z-index order
+            for (REASharedTransitionConfig *sharedElement in sharedElements) {
+              [[context containerView] addSubview:sharedElement.fromView];
+            }
+          }
+
+          screen.animationTimer = [CADisplayLink displayLinkWithTarget:screen selector:@selector(handleAnimation)];
+          [screen.animationTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        }
+        completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+          [self cleanupAfterTransition:sharedElements screen:screen];
+        }];
+  }
+}
+
+- (void)onNativeAnimationEnd:(UIView *)screeen
+{
+  REANodesManager *reanimatedNodeManager = [_animationsManager getNodeManager];
+  for (NSNumber *viewTag in _toRestore) {
+    // _snapshotRegistry containst last snapshot of component state before transition start
+    REASnapshot *initialState = _snapshotRegistry[viewTag];
+    [_animationsManager stopAnimation:viewTag];
+    [reanimatedNodeManager updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];
+  }
+  [_toRestore removeAllObjects];
+}
+
+- (void)setAnimationsManager:(REAAnimationsManager *)animationsManager
+{
+  _animationsManager = animationsManager;
+}
+
+- (void)runTransitionFromView:(UIView *)fromView toView:(UIView *)toView transitionType:(NSString *)transitionType
+{
+  if ([transitionType isEqualToString:@"sharedElementTransition"]) {
+    [_toRestore addObject:fromView.reactTag];
+    REASnapshot *before = _snapshotRegistry[fromView.reactTag];
+    REASnapshot *after = _snapshotRegistry[toView.reactTag];
+    [_animationsManager onViewTransition:fromView before:before after:after];
+    [_animationsManager onViewTransition:toView before:before after:after];
   }
 }
 
@@ -120,27 +160,27 @@
     }
 
     if (fromView != nil && toView != nil) {
-      REASharedTransitionConfig *sharedElementConfig =
+      REASharedTransitionConfig *sharedTransitionConfig =
           [[REASharedTransitionConfig alloc] initWithFromView:fromView
                                                        toView:toView
                                                 fromContainer:fromView.reactSuperview
                                                 fromViewFrame:fromView.frame];
-      [sharedTransitionConfigArray addObject:sharedElementConfig];
+      [sharedTransitionConfigArray addObject:sharedTransitionConfig];
     }
   }
 
   // we reparent starting view and animate it, then reparent it back after the transition
-  for (REASharedTransitionConfig *sharedElementConfig in [sharedTransitionConfigArray reverseObjectEnumerator]) {
-    UIView *start = sharedElementConfig.fromView;
-    UIView *end = sharedElementConfig.toView;
-    [self makeSnapshot:start withViewController:sharedElementConfig.fromContainer];
+  for (REASharedTransitionConfig *sharedTransitionConfig in [sharedTransitionConfigArray reverseObjectEnumerator]) {
+    UIView *start = sharedTransitionConfig.fromView;
+    UIView *end = sharedTransitionConfig.toView;
+    [self makeSnapshot:start withViewController:sharedTransitionConfig.fromContainer];
     [self makeSnapshot:end withViewController:end.superview];
 
     UIView *startContainer = start.reactSuperview;
     int startIndex = (int)[[startContainer reactSubviews] indexOfObject:start];
     [start removeFromSuperview];
     end.hidden = YES;
-    sharedElementConfig.fromViewIndex = startIndex;
+    sharedTransitionConfig.fromViewIndex = startIndex;
   }
 
   [self afterPreparingCallback];
@@ -148,52 +188,17 @@
   return sharedTransitionConfigArray;
 }
 
-- (void)onScreenTransitionCreate:(id)screen_
+- (void)cleanupAfterTransition:(NSMutableArray<REASharedTransitionConfig *> *)sharedTransitionConfigs
+                        screen:(RNSScreen *)screen
 {
-  RNSScreen *screen = screen_;
-  if (screen.transitionCoordinator != nil) {
-    screen.fakeView.alpha = 0.0;
-    NSMutableArray<REASharedTransitionConfig *> *sharedElements;
-    if (screen.closing) {
-      UIViewController *targetViewController =
-          [screen.transitionCoordinator viewControllerForKey:UITransitionContextToViewControllerKey];
-      sharedElements = [self getSharedElementsForCurrentTransition:screen targetViewController:targetViewController];
-      [self asignEndingValuesWithTransitionContext:screen.transitionCoordinator
-                                    sharedElements:sharedElements
-                                      goingForward:screen.goingForward];
-    }
-
-    [screen.transitionCoordinator
-        animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-          [[context containerView] addSubview:screen.fakeView];
-          screen.fakeView.alpha = 1.0;
-          if (screen.closing && sharedElements != nil) {
-            // right order is important, first parent then children, to keep right z-index order
-            for (REASharedTransitionConfig *sharedElement in sharedElements) {
-              [[context containerView] addSubview:sharedElement.fromView];
-            }
-          }
-
-          screen.animationTimer = [CADisplayLink displayLinkWithTarget:screen selector:@selector(handleAnimation)];
-          [screen.animationTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        }
-        completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-          [self cleanupAfterTransitionWithSharedElements:sharedElements screen:screen];
-        }];
-  }
-}
-
-- (void)cleanupAfterTransitionWithSharedElements:(NSMutableArray<REASharedTransitionConfig *> *)sharedElements
-                                          screen:(RNSScreen *)screen
-{
-  for (REASharedTransitionConfig *sharedElement in sharedElements) {
-    UIView *startingView = sharedElement.fromView;
+  for (REASharedTransitionConfig *sharedTransitionConfig in sharedTransitionConfigs) {
+    UIView *startingView = sharedTransitionConfig.fromView;
     [startingView removeFromSuperview];
-    UIView *startContainer = sharedElement.fromContainer;
-    int index = sharedElement.fromViewIndex;
+    UIView *startContainer = sharedTransitionConfig.fromContainer;
+    int index = sharedTransitionConfig.fromViewIndex;
     [startContainer insertSubview:startingView atIndex:index];
-    startingView.frame = sharedElement.fromViewFrame;
-    UIView *endingView = sharedElement.toView;
+    startingView.frame = sharedTransitionConfig.fromViewFrame;
+    UIView *endingView = sharedTransitionConfig.toView;
     endingView.hidden = NO;
   }
 
@@ -202,38 +207,19 @@
   [screen.fakeView removeFromSuperview];
 }
 
-- (void)asignEndingValuesWithTransitionContext:(id<UIViewControllerTransitionCoordinator> _Nonnull)context
-                                sharedElements:(NSMutableArray<REASharedTransitionConfig *> *)sharedElements
-                                  goingForward:(BOOL)goingForward
+- (void)runTransitions:(id<UIViewControllerTransitionCoordinator> _Nonnull)transitionContainer
+        sharedElements:(NSMutableArray<REASharedTransitionConfig *> *)sharedTransitionConfigs
 {
-  UIViewController *toViewController = [context viewControllerForKey:UITransitionContextToViewControllerKey];
+  UIViewController *toViewController =
+      [transitionContainer viewControllerForKey:UITransitionContextToViewControllerKey];
   [toViewController.view setNeedsLayout];
   [toViewController.view layoutIfNeeded];
 
-  for (REASharedTransitionConfig *sharedElement in sharedElements) {
-    UIView *startingView = sharedElement.fromView;
-    UIView *startingViewParent = sharedElement.fromContainer;
-    UIView *endingView = sharedElement.toView;
-
-    [self runTransitionWithConverterView:[context containerView]
-                                fromView:startingView
-                       fromViewConverter:startingViewParent
-                                  toView:endingView
-                         toViewConverter:endingView.superview
-                          transitionType:@"sharedElementTransition"];
+  for (REASharedTransitionConfig *sharedTransitionConfig in sharedTransitionConfigs) {
+    [self runTransitionFromView:sharedTransitionConfig.fromView
+                         toView:sharedTransitionConfig.toView
+                 transitionType:@"sharedElementTransition"];
   }
-}
-
-- (void)onNativeAnimationEnd:(UIView *)screeen
-{
-  REANodesManager *reanimatedNodeManager = [_animationsManager getNodeManager];
-  for (NSNumber *viewTag in _toRestore) {
-    // _snapshotRegistry containst last snapshot of component state before transition start
-    REASnapshot *initialState = _snapshotRegistry[viewTag];
-    [_animationsManager stopAnimation:viewTag];
-    [reanimatedNodeManager updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];
-  }
-  [_toRestore removeAllObjects];
 }
 
 @end
