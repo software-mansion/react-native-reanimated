@@ -1,11 +1,12 @@
 #import <RNReanimated/REAAnimationsManager.h>
+//#if __has_include(<RNScreens/RNSScreen.h>)
+//#endif
+#import <RNScreens/RNSSharedElementAnimator.h>
 
-@interface REASharedTransitionAnimationManager : NSObject
+@interface REASharedElementAnimatorDelegate : NSObject <RNSSharedElementAnimatorDelegate>
 
 - (void)registerTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
 - (void)unregisterTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag;
-- (void)onScreenTransitionCreate:(id)screen;
-- (void)onNativeAnimationEnd:(UIView *)screeen;
 - (void)setAnimationsManager:(REAAnimationsManager *)animationsManager;
 
 @end

@@ -40,7 +40,7 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
-#import <RNReanimated/ScreensTransitionDelegate.h>
+#import <RNReanimated/REASharedElementAnimatorDelegate.h>
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSSharedElementAnimator.h>
 
@@ -352,7 +352,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
   // end keyboard events
 
-  ScreensTransitionDelegate *delegate = [ScreensTransitionDelegate new];
+  REASharedElementAnimatorDelegate *delegate = [REASharedElementAnimatorDelegate new];
   [delegate setAnimationsManager:animationsManager];
   [RNSSharedElementAnimator setDelegate:delegate];
   auto registerTransitionTag = [delegate](
