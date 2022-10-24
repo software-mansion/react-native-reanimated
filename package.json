@@ -20,7 +20,7 @@
     "release": "npm login && release-it",
     "type:check": "yarn tsc --noEmit",
     "prepare": "bob build && husky install",
-    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
+    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
     "clean": "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
     "reset": "yarn clean && yarn setup",
