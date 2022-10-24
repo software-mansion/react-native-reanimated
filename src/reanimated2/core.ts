@@ -362,9 +362,23 @@ function makeShareableCloneRecursive(value) {
   return NativeReanimatedModule.makeShareableClone(value);
 }
 
-export function makeMutable<T>(initial: T): SharedValue<T> {
+export function makeMutable<T>(
+  initial: T,
+  needSynchronousReadsFromReact = false
+): SharedValue<T> {
   if (__DEV__) {
     isConfiguredCheck();
+  }
+  let value = initial;
+  let baseListener;
+  if (needSynchronousReadsFromReact) {
+    function updateOnJS(newValue) {
+      value = newValue;
+    }
+    baseListener = (newValue) => {
+      'worklet';
+      runOnJS(updateOnJS)(newValue);
+    };
   }
   const handle = makeShareableCloneRecursive({
     __init: () => {
@@ -372,6 +386,10 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
 
       const listeners = new Map();
       let value = initial;
+
+      if (baseListener) {
+        listeners.set(0, baseListener);
+      }
 
       const self = {
         set value(newValue) {
@@ -382,7 +400,7 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
         },
         set _value(newValue) {
           value = newValue;
-          listeners.forEach((listener) => listener());
+          listeners.forEach((listener) => listener(newValue));
         },
         get _value() {
           return value;
@@ -400,13 +418,14 @@ export function makeMutable<T>(initial: T): SharedValue<T> {
   });
   const mutable = {
     set value(newValue) {
+      value = newValue;
       runOnUI(() => {
         'worklet';
         mutable.value = newValue;
       })();
     },
     get value() {
-      return initial;
+      return value;
     },
     __handle: handle,
   };
@@ -486,8 +505,12 @@ export function startMapper(
   })();
 }
 
-export function stopMapper(mapperId: number): void {
-  // NativeReanimatedModule.stopMapper(mapperId);
+export function stopMapper(mapperID: number): void {
+  runOnUI(() => {
+    'worklet';
+    let mapperRegistry = global.__mapperRegistry;
+    mapperRegistry.delete(mapperID);
+  });
 }
 
 export interface RunOnJSFunction<A extends any[], R> {

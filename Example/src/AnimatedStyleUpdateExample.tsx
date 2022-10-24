@@ -3,12 +3,13 @@ import Animated, {
   withTiming,
   useAnimatedStyle,
   Easing,
+  runOnUI,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
 
 function AnimatedStyleUpdateExample(): React.ReactElement {
-  const randomWidth = useSharedValue(10);
+  const randomWidth = useSharedValue(10, true);
 
   const config = {
     duration: 500,
@@ -36,7 +37,11 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = withTiming(Math.random() * 350);
+          console.warn('VALUE', randomWidth.value);
+          runOnUI(() => {
+            'worklet';
+            randomWidth.value = withTiming(Math.random() * 350);
+          })();
         }}
       />
     </View>
