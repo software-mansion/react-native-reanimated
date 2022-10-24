@@ -10,6 +10,8 @@ namespace reanimated {
 
 using namespace facebook;
 
+class JSRuntimeHelper;
+
 enum SensorType {
   ACCELEROMETER = 1,
   GYROSCOPE = 2,
@@ -22,16 +24,14 @@ class AnimatedSensorModule {
   std::unordered_set<int> sensorsIds_;
   RegisterSensorFunction platformRegisterSensorFunction_;
   UnregisterSensorFunction platformUnregisterSensorFunction_;
-  RuntimeManager *runtimeManager_;
 
  public:
-  AnimatedSensorModule(
-      const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      RuntimeManager *runtimeManager);
+  AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
   ~AnimatedSensorModule();
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
+      JSRuntimeHelper *runtimeHelper,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer);

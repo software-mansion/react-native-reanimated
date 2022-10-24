@@ -50,7 +50,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
       propObtainer(propObtainer),
 #endif
-      animatedSensorModule(platformDepMethodsHolder, this),
+      animatedSensorModule(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
@@ -363,9 +363,9 @@ jsi::Value NativeReanimatedModule::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
     const jsi::Value &interval,
-    const jsi::Value &sensorDataContainer) {
+    const jsi::Value &sensorDataHandler) {
   return animatedSensorModule.registerSensor(
-      rt, sensorType, interval, sensorDataContainer);
+      rt, runtimeHelper.get(), sensorType, interval, sensorDataHandler);
 }
 
 void NativeReanimatedModule::unregisterSensor(

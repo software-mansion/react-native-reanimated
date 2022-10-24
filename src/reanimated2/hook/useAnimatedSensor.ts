@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { makeMutable } from '../core';
-import NativeReanimated from '../NativeReanimated';
+import { makeMutable, registerSensor, unregisterSensor } from '../core';
 import { SensorValue3D, SensorValueRotation } from '../commonTypes';
 
 export enum SensorType {
@@ -62,15 +61,19 @@ export function useAnimatedSensor(
 
   useEffect(() => {
     ref.current.config = { interval: 'auto', ...userConfig };
-    const id = NativeReanimated.registerSensor(
+    const sensorData = ref.current.sensor;
+    const id = registerSensor(
       sensorType,
       ref.current.config.interval === 'auto' ? -1 : ref.current.config.interval,
-      ref.current.sensor as any
+      (data) => {
+        'worklet';
+        sensorData.value = data;
+      }
     );
 
     if (id !== -1) {
       // if sensor is available
-      ref.current.unregister = () => NativeReanimated.unregisterSensor(id);
+      ref.current.unregister = () => unregisterSensor(id);
       ref.current.isAvailable = true;
     } else {
       // if sensor is unavailable

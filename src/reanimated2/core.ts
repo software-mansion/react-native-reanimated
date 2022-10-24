@@ -9,6 +9,8 @@ import {
   AnimationObject,
   AnimatableValue,
   Timestamp,
+  SensorValue3D,
+  SensorValueRotation,
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
@@ -554,6 +556,22 @@ export function subscribeForKeyboardEvents(
 
 export function unsubscribeFromKeyboardEvents(listenerId: number): void {
   return NativeReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
+}
+
+export function registerSensor(
+  sensorType: number,
+  interval: number,
+  eventHandler: (data: SensorValue3D | SensorValueRotation) => void
+): number {
+  return NativeReanimatedModule.registerSensor(
+    sensorType,
+    interval,
+    makeShareableCloneRecursive(eventHandler)
+  );
+}
+
+export function unregisterSensor(listenerId: number): void {
+  return NativeReanimatedModule.unregisterSensor(listenerId);
 }
 
 NativeReanimatedModule.installCoreFunctions(
