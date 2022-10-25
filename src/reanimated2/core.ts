@@ -363,6 +363,12 @@ export function makeMutable<T>(
     get value() {
       return value;
     },
+    modify: (modifier: (value: T) => T) => {
+      runOnUI(() => {
+        'worklet';
+        mutable._value = modifier(mutable.value);
+      })();
+    },
     __handle: handle,
   };
   return mutable;

@@ -20,24 +20,24 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const data: ViewDescriptorsSet = {
     sharableViewDescriptors,
     add: (item: Descriptor) => {
-      runOnUI(() => {
+      sharableViewDescriptors.modify((descriptors) => {
         'worklet';
-        sharableViewDescriptors.value.push(item);
-        sharableViewDescriptors.value = sharableViewDescriptors.value; // trigger listeners
-      })();
+        descriptors.push(item);
+        return descriptors;
+      });
     },
 
     remove: (viewTag: number) => {
-      runOnUI(() => {
+      sharableViewDescriptors.modify((descriptors) => {
         'worklet';
-        const index = sharableViewDescriptors.value.findIndex(
-          (descriptor) => descriptor.tag === viewTag
+        const index = descriptors.findIndex(
+          (descriptor) => descriptor.viewTag === viewTag
         );
-        if (index >= 0) {
-          sharableViewDescriptors.value.splice(index, 1);
-          sharableViewDescriptors.value = sharableViewDescriptors.value; // trigger listeners
+        if (index !== -1) {
+          descriptors.splice(index, 1);
         }
-      })();
+        return descriptors;
+      });
     },
   };
   return data;
