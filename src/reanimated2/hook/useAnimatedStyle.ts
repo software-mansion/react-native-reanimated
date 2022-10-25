@@ -407,7 +407,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
-  const viewDescriptors: ViewDescriptorsSet = makeViewDescriptorsSet();
   const initRef = useRef<AnimationRef>();
   const inputs = Object.values(updater._closure ?? {});
   const adaptersArray: AdapterWorkletFunction[] = adapters
@@ -438,17 +437,14 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         updater: updater,
       },
       remoteState: makeRemote({ last: initialStyle }),
-      sharableViewDescriptors: makeMutable([]),
+      viewDescriptors: makeViewDescriptorsSet(),
     };
-    viewDescriptors.rebuildsharableViewDescriptors(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      initRef.current!.sharableViewDescriptors
-    );
   }
-  dependencies.push(initRef.current?.sharableViewDescriptors.value);
+  dependencies.push(initRef.current?.sharableViewDescriptors);
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
+  const { initial, remoteState, viewDescriptors } = initRef.current!;
+  const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
   useEffect(() => {
@@ -525,14 +521,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         );
       };
     }
-    const mapperId = startMapper(
-      fun,
-      inputs
-      // [],
-      // updaterFn,
-      // // TODO fix this
-      // sharableViewDescriptors
-    );
+    const mapperId = startMapper(fun, inputs);
     return () => {
       stopMapper(mapperId);
     };

@@ -37,11 +37,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       <Button
         title="toggle"
         onPress={() => {
-          console.warn('VALUE', randomWidth.value);
-          runOnUI(() => {
-            'worklet';
-            randomWidth.value = withTiming(Math.random() * 350);
-          })();
+          randomWidth.value = withTiming(Math.random() * 350);
         }}
       />
     </View>

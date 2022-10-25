@@ -456,35 +456,60 @@ function createMapperRegistry() {
 
   function updateMappersOrder() {
     // sort mappers topologically
-    // const deg = Map();
-    // function up(obj, v) {
-    //   const n = deg.get(obj);
-    //   if (n === undefined) {
-    //     deg.set(obj, v);
-    //     return v;
-    //   } else {
-    //     deg.set(obj, n + v);
-    //     return n + v;
-    //   }
-    // }
-    // mappers.forEach((mapper) => {
-    //   up(sv, mapper.inputs.length);
-    //   if (mapper.outputs) {
-    //     for (const output of mapper.outputs) {
-    //       up(output, 1);
-    //     }
-    //   }
-    // });
-    // const zeroDeg = [];
-    // deg.forEach((obj, value) => {
-    //   if (value === 0) {
-    //     zeroDeg.push(obj);
-    //   }
-    // });
-    // for (let i = 0; i < zeroDeg.length; i++) {
-    //   const obj = zeroDeg[i];
-    // }
-    sortedMappers = mappers.values();
+    // the algorithm here takes adventage of a fact that the topological order
+    // of a transposed graph is a reverse topological order of the original graph
+    // The graph in our case consists of mappers and an edge between two mappers
+    // A and B exists if there is a shared value that's on A's output lists and on
+    // B's input list.
+    //
+    // We don't need however to calculate that graph as it is easier to work with
+    // the transposed version of it that can be calculated ad-hoc. For the transposed
+    // version to be traversed we use "pre" map that maps share value to mappers that
+    // output that shared value. Then we can infer all the outgoing edges for a given
+    // mapper simply by scanning it's input list and checking if any of the shared values
+    // from that list exists in the "pre" map. If they do, then we have an edge between
+    // that mapper and the mappers from the "pre" list for the given shared value.
+    //
+    // For topological sorting we use a dfs-based approach that requires the graph to
+    // be traversed in dfs order and each node after being processed lands at the
+    // beginning of the topological order list. Since we traverse a transposed graph,
+    // instead of reversing that order we can use a normal array and push processed
+    // mappers to the end. There is no need to reverse that array after we are done.
+    const pre = new Map(); // map from sv -> mapper that outputs that sv
+    mappers.forEach((mapper) => {
+      if (mapper.outputs) {
+        for (const output of mapper.outputs) {
+          let preMappers = pre.get(output);
+          if (preMappers === undefined) {
+            pre.set(output, [mapper]);
+          } else {
+            preMappers.push(mapper);
+          }
+        }
+      }
+    });
+    const visited = new Set();
+    const newOrder = [];
+    function dfs(mapper) {
+      visited.add(mapper);
+      for (const input of mapper.inputs) {
+        const preMappers = pre.get(mapper);
+        if (preMappers) {
+          for (const preMapper of preMappers) {
+            if (!visited.has(preMapper)) {
+              dfs(preMapper);
+            }
+          }
+        }
+      }
+      newOrder.push(mapper);
+    }
+    mappers.forEach((mapper) => {
+      if (!visited.has(mapper)) {
+        dfs(mapper);
+      }
+    });
+    sortedMappers = newOrder;
   }
 
   function mapperFrame() {
