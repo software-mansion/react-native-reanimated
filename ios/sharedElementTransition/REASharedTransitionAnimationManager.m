@@ -5,35 +5,40 @@
 
 @implementation REASharedTransitionAnimationManager {
   NSMutableDictionary *_snapshotRegistry;
-  NSMutableSet<NSNumber *> *_toRestore;
-  NSMutableDictionary<NSString *, NSMutableArray<REASharedViewConfig *> *> *sharedTransitionsItems;
-  NSMutableArray<NSString *> *sharedElementsIterationOrder;
+  NSMutableSet<NSNumber *> *_viewTagsToRestoreStyle;
+  NSMutableDictionary<NSString *, NSMutableArray<REASharedViewConfig *> *> *_sharedTransitionsItems;
+  NSMutableArray<NSString *> *_sharedElementsIterationOrder;
   REAAnimationsManager *_animationsManager;
+  NSMutableSet<NSNumber *> *_viewTagsWithSharedTransition;
+  NSMutableDictionary<NSNumber *, UIView *> *_transactionViewRegistry;
 }
 
 - (instancetype)init
 {
   self = [super init];
-  sharedTransitionsItems = [NSMutableDictionary<NSString *, NSMutableArray<REASharedViewConfig *> *> new];
-  sharedElementsIterationOrder = [NSMutableArray<NSString *> new];
+  _sharedTransitionsItems = [NSMutableDictionary<NSString *, NSMutableArray<REASharedViewConfig *> *> new];
+  _sharedElementsIterationOrder = [NSMutableArray<NSString *> new];
   _snapshotRegistry = [NSMutableDictionary new];
-  _toRestore = [NSMutableSet<NSNumber *> new];
+  _viewTagsToRestoreStyle = [NSMutableSet<NSNumber *> new];
+  _viewTagsWithSharedTransition = [NSMutableSet<NSNumber *> new];
+  _transactionViewRegistry = [NSMutableDictionary<NSNumber *, UIView *> new];
   return self;
 }
 
 - (void)registerTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
-  if (!sharedTransitionsItems[transitionTag]) {
-    [sharedElementsIterationOrder addObject:transitionTag];
-    sharedTransitionsItems[transitionTag] = [NSMutableArray<REASharedViewConfig *> new];
+  if (!_sharedTransitionsItems[transitionTag]) {
+    [_sharedElementsIterationOrder addObject:transitionTag];
+    _sharedTransitionsItems[transitionTag] = [NSMutableArray<REASharedViewConfig *> new];
   }
   REASharedViewConfig *sharedViewConfig = [[REASharedViewConfig new] initWithTag:viewTag];
-  [self->sharedTransitionsItems[transitionTag] addObject:sharedViewConfig];
+  [self->_sharedTransitionsItems[transitionTag] addObject:sharedViewConfig];
+  [_viewTagsWithSharedTransition addObject:viewTag];
 }
 
 - (void)unregisterTransitionTag:(NSString *)transitionTag viewTag:(NSNumber *)viewTag
 {
-  for (REASharedViewConfig *config in sharedTransitionsItems[transitionTag]) {
+  for (REASharedViewConfig *config in _sharedTransitionsItems[transitionTag]) {
     NSNumber *currentViewTag = config.viewTag;
     if (currentViewTag == viewTag) {
       config.toRemove = true;
@@ -77,13 +82,18 @@
 - (void)onNativeAnimationEnd:(UIView *)screeen
 {
   REANodesManager *reanimatedNodeManager = [_animationsManager getNodeManager];
-  for (NSNumber *viewTag in _toRestore) {
-    // _snapshotRegistry containst last snapshot of component state before transition start
-    REASnapshot *initialState = _snapshotRegistry[viewTag];
+  for (NSNumber *viewTag in _viewTagsToRestoreStyle) {
     [_animationsManager stopAnimation:viewTag];
+    REASnapshot *initialState = _snapshotRegistry[viewTag];
+    [_snapshotRegistry removeObjectForKey:viewTag];
     [reanimatedNodeManager updateProps:initialState.values ofViewWithTag:viewTag withName:@"UIView"];
   }
-  [_toRestore removeAllObjects];
+  [_viewTagsToRestoreStyle removeAllObjects];
+}
+
+- (void)onScreenRemoving:(UIView *)screen
+{
+  [self saveSharedTransitionItemsUnderTree:screen];
 }
 
 - (void)setAnimationsManager:(REAAnimationsManager *)animationsManager
@@ -91,10 +101,20 @@
   _animationsManager = animationsManager;
 }
 
+- (void)saveSharedTransitionItemsUnderTree:(UIView *)view
+{
+  if ([_viewTagsWithSharedTransition containsObject:view.reactTag]) {
+    _transactionViewRegistry[view.reactTag] = view;
+  }
+  for (UIView *child in view.subviews) {
+    [self saveSharedTransitionItemsUnderTree:child];
+  }
+}
+
 - (void)runTransitionFromView:(UIView *)fromView toView:(UIView *)toView transitionType:(NSString *)transitionType
 {
   if ([transitionType isEqualToString:@"sharedElementTransition"]) {
-    [_toRestore addObject:fromView.reactTag];
+    [_viewTagsToRestoreStyle addObject:fromView.reactTag];
     REASnapshot *before = _snapshotRegistry[fromView.reactTag];
     REASnapshot *after = _snapshotRegistry[toView.reactTag];
     [_animationsManager onViewTransition:fromView before:before after:after];
@@ -102,20 +122,22 @@
   }
 }
 
-- (void)afterPreparingCallback
+- (void)cleanRegisters
 {
-  for (NSString *transitionTag in sharedTransitionsItems) {
-    NSMutableArray<REASharedViewConfig *> *sharedViewConfigs = sharedTransitionsItems[transitionTag];
+  [_transactionViewRegistry removeAllObjects];
+  for (NSString *transitionTag in _sharedTransitionsItems) {
+    NSMutableArray<REASharedViewConfig *> *sharedViewConfigs = _sharedTransitionsItems[transitionTag];
     NSMutableArray *discardedItems = [NSMutableArray array];
     for (REASharedViewConfig *config in sharedViewConfigs) {
       if (config.toRemove) {
         [discardedItems addObject:config];
+        [_viewTagsWithSharedTransition removeObject:config.viewTag];
       }
     }
     [sharedViewConfigs removeObjectsInArray:discardedItems];
-    if ([sharedTransitionsItems[transitionTag] count] == 0) {
-      [sharedTransitionsItems removeObjectForKey:transitionTag];
-      [sharedElementsIterationOrder removeObject:transitionTag];
+    if ([_sharedTransitionsItems[transitionTag] count] == 0) {
+      [_sharedTransitionsItems removeObjectForKey:transitionTag];
+      [_sharedElementsIterationOrder removeObject:transitionTag];
     }
   }
 }
@@ -134,15 +156,13 @@
 
   RCTUIManager *uiManager = [screenView bridge].uiManager;
   NSNumber *rootTag = screenView.rootTag;
-  for (NSString *key in [sharedElementsIterationOrder reverseObjectEnumerator]) {
-    NSArray<REASharedViewConfig *> *sharedViewConfigs = sharedTransitionsItems[key];
+  for (NSString *key in [_sharedElementsIterationOrder reverseObjectEnumerator]) {
+    NSArray<REASharedViewConfig *> *sharedViewConfigs = _sharedTransitionsItems[key];
     UIView *fromView, *toView;
     for (REASharedViewConfig *sharedViewConfig in sharedViewConfigs) {
       UIView *view = [uiManager viewForReactTag:sharedViewConfig.viewTag];
       if (view == nil) {
-        view = [sharedViewConfig getView];
-      } else {
-        [sharedViewConfig setView:view];
+        view = _transactionViewRegistry[sharedViewConfig.viewTag];
       }
       UIViewController *viewViewController = view.reactViewController;
       if (viewViewController == currentViewController) {
@@ -183,7 +203,7 @@
     sharedTransitionConfig.fromViewIndex = startIndex;
   }
 
-  [self afterPreparingCallback];
+  [self cleanRegisters];
 
   return sharedTransitionConfigArray;
 }

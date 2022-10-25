@@ -40,4 +40,9 @@
   [_sharedTransitionAnimationManager setAnimationsManager:animationsManager];
 }
 
+- (void)onScreenRemoving:(UIView *)screen
+{
+  [_sharedTransitionAnimationManager onScreenRemoving:screen];
+}
+
 @end

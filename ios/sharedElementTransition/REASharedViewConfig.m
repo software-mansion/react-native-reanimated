@@ -1,8 +1,6 @@
 #import <RNReanimated/REASharedViewConfig.h>
 
-@implementation REASharedViewConfig {
-  UIView *_view;
-}
+@implementation REASharedViewConfig
 
 - (instancetype)initWithTag:(NSNumber *)viewTag
 {
@@ -10,20 +8,6 @@
   _viewTag = viewTag;
   _toRemove = false;
   return self;
-}
-
-- (void)setView:(UIView *)view;
-{
-  _view = view;
-  _toRemove = false;
-}
-
-- (UIView *)getView;
-{
-  _toRemove = true;
-  UIView *viewPtr = _view;
-  _view = nil;
-  return viewPtr;
 }
 
 @end
