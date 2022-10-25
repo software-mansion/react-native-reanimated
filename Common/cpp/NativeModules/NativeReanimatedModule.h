@@ -47,7 +47,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void installCoreFunctions(
       jsi::Runtime &rt,
-      const jsi::Value &valueSetter,
       const jsi::Value &workletMaker) override;
 
   jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)

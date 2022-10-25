@@ -1,6 +1,5 @@
 import { NativeModules } from 'react-native';
 import {
-  SharedValue,
   SensorValue3D,
   SensorValueRotation,
   AnimatedKeyboardInfo,
@@ -23,14 +22,8 @@ export class NativeReanimated {
     this.native = native;
   }
 
-  installCoreFunctions(
-    valueSetter: <T>(value: T) => void,
-    valueUnpacker
-  ): void {
-    return this.InnerNativeModule.installCoreFunctions(
-      valueSetter,
-      valueUnpacker
-    );
+  installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
+    return this.InnerNativeModule.installCoreFunctions(valueUnpacker);
   }
 
   makeShareableClone<T>(value: T): Shareable {

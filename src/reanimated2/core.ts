@@ -36,7 +36,6 @@ interface WorkletValueSetterContext {
   _animation?: AnimationObject | null;
   _value?: AnimatableValue | Descriptor;
   value?: AnimatableValue;
-  _setValue?: (val: AnimatableValue | Descriptor) => void;
 }
 
 const testWorklet: BasicWorkletFunction<void> = () => {
@@ -70,10 +69,6 @@ export const isConfigured: (throwError?: boolean) => boolean = (
 export const isConfiguredCheck: () => void = () => {
   checkPluginState(true);
 };
-
-function pushFrame(frame: (timestamp: Timestamp) => void): void {
-  (NativeReanimatedModule as JSReanimated).pushFrame(frame);
-}
 
 export function requestFrame(frame: (timestamp: Timestamp) => void): void {
   'worklet';
@@ -231,69 +226,7 @@ function valueSetter<T extends WorkletValue>(
   }
 }
 
-function workletValueSetter<T extends WorkletValue>(
-  this: WorkletValueSetterContext,
-  value: T
-): void {
-  'worklet';
-  // TODO: we should be able to remove this as this is not being used anymore
-}
-
-// We cannot use pushFrame
-// so we use own implementation for js
-function workletValueSetterJS<T extends WorkletValue>(
-  this: WorkletValueSetterContext,
-  value: T
-): void {
-  const previousAnimation = this._animation;
-  if (previousAnimation) {
-    previousAnimation.cancelled = true;
-    this._animation = null;
-  }
-  if (
-    typeof value === 'function' ||
-    (value !== null &&
-      typeof value === 'object' &&
-      (value as AnimationObject).onFrame)
-  ) {
-    // animated set
-    const animation: AnimationObject =
-      typeof value === 'function'
-        ? (value as () => AnimationObject)()
-        : (value as AnimationObject);
-    let initializeAnimation: ((timestamp: number) => void) | null = (
-      timestamp: number
-    ) => {
-      animation.onStart(animation, this.value, timestamp, previousAnimation);
-    };
-    const step = (timestamp: number) => {
-      if (animation.cancelled) {
-        animation.callback && animation.callback(false /* finished */);
-        return;
-      }
-      if (initializeAnimation) {
-        initializeAnimation(timestamp);
-        initializeAnimation = null; // prevent closure from keeping ref to previous animation
-      }
-      const finished = animation.onFrame(animation, timestamp);
-      animation.timestamp = timestamp;
-      this._setValue && this._setValue(animation.current as AnimatableValue);
-      if (finished) {
-        animation.callback && animation.callback(true /* finished */);
-      } else {
-        requestFrame(step);
-      }
-    };
-
-    this._animation = animation;
-
-    requestFrame(step);
-  } else {
-    this._setValue && this._setValue(value as AnimatableValue | Descriptor);
-  }
-}
-
-function valueUnpacker(objectToUnpack) {
+function valueUnpacker<T>(objectToUnpack): T {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -305,6 +238,7 @@ function valueUnpacker(objectToUnpack) {
   if (objectToUnpack.__workletHash) {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
     if (workletFun === undefined) {
+      // eslint-disable-next-line no-eval
       workletFun = eval('(' + objectToUnpack.asString + ')');
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
     }
@@ -370,12 +304,12 @@ export function makeMutable<T>(
     isConfiguredCheck();
   }
   let value = initial;
-  let baseListener;
+  let baseListener: (value: T) => void | undefined;
   if (needSynchronousReadsFromReact) {
-    function updateOnJS(newValue) {
+    function updateOnJS(newValue: T) {
       value = newValue;
     }
-    baseListener = (newValue) => {
+    baseListener = (newValue: T) => {
       'worklet';
       runOnJS(updateOnJS)(newValue);
     };
@@ -395,20 +329,22 @@ export function makeMutable<T>(
         set value(newValue) {
           valueSetter(self, newValue);
         },
-        get value() {
+        get value(): T {
           return self._value;
         },
-        set _value(newValue) {
+        set _value(newValue: T) {
           value = newValue;
-          listeners.forEach((listener) => listener(newValue));
+          listeners.forEach((listener) => {
+            listener(newValue);
+          });
         },
-        get _value() {
+        get _value(): T {
           return value;
         },
-        addListener: (id, listener) => {
+        addListener: (id: number, listener: (newValue: T) => void) => {
           listeners.set(id, listener);
         },
-        removeListener: (id) => {
+        removeListener: (id: number) => {
           listeners.delete(id);
         },
         _animation: null,
@@ -479,7 +415,7 @@ function createMapperRegistry() {
     mappers.forEach((mapper) => {
       if (mapper.outputs) {
         for (const output of mapper.outputs) {
-          let preMappers = pre.get(output);
+          const preMappers = pre.get(output);
           if (preMappers === undefined) {
             pre.set(output, [mapper]);
           } else {
@@ -493,7 +429,7 @@ function createMapperRegistry() {
     function dfs(mapper) {
       visited.add(mapper);
       for (const input of mapper.inputs) {
-        const preMappers = pre.get(mapper);
+        const preMappers = pre.get(input);
         if (preMappers) {
           for (const preMapper of preMappers) {
             if (!visited.has(preMapper)) {
@@ -537,7 +473,7 @@ function createMapperRegistry() {
     } else if (inputs.addListener) {
       resultArray.push(inputs);
     } else if (typeof inputs === 'object') {
-      for (const [key, element] of Object.entries(inputs)) {
+      for (const element of Object.values(inputs)) {
         extractInputs(element, resultArray);
       }
     }
@@ -603,14 +539,9 @@ export function startMapper(
 export function stopMapper(mapperID: number): void {
   runOnUI(() => {
     'worklet';
-    let mapperRegistry = global.__mapperRegistry;
+    const mapperRegistry = global.__mapperRegistry;
     mapperRegistry?.stop(mapperID);
   });
-}
-
-export interface RunOnJSFunction<A extends any[], R> {
-  __callAsync?: (...args: A) => void;
-  (...args: A): R;
 }
 
 function makeShareableCloneOnUIRecursive(value) {
@@ -636,8 +567,8 @@ function makeShareableCloneOnUIRecursive(value) {
 }
 
 export function runOnJS<A extends any[], R>(
-  fun: RunOnJSFunction<A, R>
-): () => void {
+  fun: ComplexWorkletFunction<A, R>
+): (...args: A) => void {
   'worklet';
   if (!_WORKLET) {
     return fun;
@@ -692,12 +623,7 @@ export function unregisterSensor(listenerId: number): void {
   return NativeReanimatedModule.unregisterSensor(listenerId);
 }
 
-NativeReanimatedModule.installCoreFunctions(
-  NativeReanimatedModule.native
-    ? (workletValueSetter as <T>(value: T) => void)
-    : (workletValueSetterJS as <T>(value: T) => void),
-  valueUnpacker
-);
+NativeReanimatedModule.installCoreFunctions(valueUnpacker);
 
 if (!isWeb() && isConfigured()) {
   const capturableConsole = console;

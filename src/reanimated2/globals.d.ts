@@ -12,11 +12,11 @@ declare global {
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const _getCurrentTime: () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
-  const _startObservingProgress: (
-    tag: number,
-    flag: { value: boolean; _value: boolean }
-  ) => void;
+  const _notifyAboutProgress: (tag: number, value: number) => void;
+  const _notifyAboutEnd: (tag: number, finished: boolean) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
+  const _makeShareableClone: (value: any) => any;
+  const _scheduleOnJS: (value: any) => void;
   const _updatePropsPaper: (
     tag: number,
     name: string,

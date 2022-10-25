@@ -1,19 +1,28 @@
-/* global _stopObservingProgress, _startObservingProgress */
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import { ColorProperties } from '../UpdateProps';
 import { processColor } from '../Colors';
+import { SharedValue } from '../commonTypes';
 
-function startObservingProgress(tag, sharedValue) {
+const TAG_OFFSET = 1e9;
+
+function startObservingProgress(
+  tag: number,
+  sharedValue: SharedValue<number>
+): void {
   'worklet';
-  sharedValue.addListener(tag + 1e9, () => {
+  sharedValue.addListener(tag + TAG_OFFSET, () => {
     _notifyAboutProgress(tag, sharedValue.value);
   });
 }
 
-function stopObservingProgress(tag, sharedValue, finished) {
+function stopObservingProgress(
+  tag: number,
+  sharedValue: SharedValue<number>,
+  finished: boolean
+): void {
   'worklet';
-  sharedValue.removeListener(tag + 1e9);
+  sharedValue.removeListener(tag + TAG_OFFSET);
   _notifyAboutEnd(tag, finished);
 }
 

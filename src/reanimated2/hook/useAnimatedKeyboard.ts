@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import NativeReanimated from '../NativeReanimated';
 import {
   makeMutable,
   subscribeForKeyboardEvents,

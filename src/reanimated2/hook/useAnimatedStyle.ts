@@ -7,7 +7,6 @@ import {
   makeRemote,
   requestFrame,
   getTimestamp,
-  makeMutable,
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
@@ -61,7 +60,7 @@ interface AnimationRef {
     updater: () => AnimatedStyle;
   };
   remoteState: AnimatedState;
-  sharableViewDescriptors: SharedValue<Descriptor[]>;
+  viewDescriptors: ViewDescriptorsSet;
 }
 
 function prepareAnimation(
@@ -440,12 +439,13 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       viewDescriptors: makeViewDescriptorsSet(),
     };
   }
-  dependencies.push(initRef.current?.sharableViewDescriptors);
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { initial, remoteState, viewDescriptors } = initRef.current!;
   const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
+
+  dependencies.push(sharableViewDescriptors);
 
   useEffect(() => {
     let fun;

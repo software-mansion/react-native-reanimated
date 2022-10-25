@@ -160,7 +160,6 @@ NativeReanimatedModule::NativeReanimatedModule(
 
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
-    const jsi::Value &valueSetter,
     const jsi::Value &valueUnpacker) {
   runtimeHelper =
       std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);

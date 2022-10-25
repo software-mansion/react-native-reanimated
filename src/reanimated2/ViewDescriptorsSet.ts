@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { makeMutable, runOnUI } from './core';
 import { SharedValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
-import { shouldBeUseWeb } from './PlatformChecker';
 
 export interface ViewRefSet<T> {
   items: Set<T>;
@@ -21,7 +20,6 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const data: ViewDescriptorsSet = {
     sharableViewDescriptors,
     add: (item: Descriptor) => {
-      console.log('ADD', item);
       runOnUI(() => {
         'worklet';
         sharableViewDescriptors.value.push(item);
