@@ -1,13 +1,5 @@
 import { NativeModules } from 'react-native';
-import {
-  SensorValue3D,
-  SensorValueRotation,
-  AnimatedKeyboardInfo,
-} from '../commonTypes';
-
-type Shareable = {
-  __thereIsNothingHereImJustMakingTypescriptHappy: number;
-};
+import { ShareableRef } from '../commonTypes';
 
 export class NativeReanimated {
   native: boolean;
@@ -26,34 +18,23 @@ export class NativeReanimated {
     return this.InnerNativeModule.installCoreFunctions(valueUnpacker);
   }
 
-  makeShareableClone<T>(value: T): Shareable {
+  makeShareableClone<T>(value: T): ShareableRef {
     return this.InnerNativeModule.makeShareableClone(value);
   }
 
-  scheduleOnUI(shareable: Shareable) {
+  scheduleOnUI(shareable: ShareableRef) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  registerSensor(
-    sensorType: number,
-    interval: number,
-    sensorData: SensorValue3D | SensorValueRotation
-  ) {
-    return this.InnerNativeModule.registerSensor(
-      sensorType,
-      interval,
-      sensorData
-    );
+  registerSensor(sensorType: number, interval: number, handler: ShareableRef) {
+    return this.InnerNativeModule.registerSensor(sensorType, interval, handler);
   }
 
   unregisterSensor(sensorId: number) {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  registerEventHandler<T>(
-    eventHash: string,
-    eventHandler: (event: T) => void
-  ): string {
+  registerEventHandler(eventHash: string, eventHandler: ShareableRef): string {
     return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
   }
 
@@ -77,8 +58,8 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  subscribeForKeyboardEvents(keyboardEventData: AnimatedKeyboardInfo): number {
-    return this.InnerNativeModule.subscribeForKeyboardEvents(keyboardEventData);
+  subscribeForKeyboardEvents(handler: ShareableRef): number {
+    return this.InnerNativeModule.subscribeForKeyboardEvents(handler);
   }
 
   unsubscribeFromKeyboardEvents(listenerId: number): void {

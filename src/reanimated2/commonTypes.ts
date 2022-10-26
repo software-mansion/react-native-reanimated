@@ -44,7 +44,15 @@ export interface AnimatedStyle
 }
 export interface SharedValue<T> {
   value: T;
+  addListener: (listenerID: number, listener: (value: T) => void) => void;
+  removeListener: (listenerID: number) => void;
+  modify: (modifier: <S extends T>(value: S) => S) => void;
 }
+
+export type ShareableRef = {
+  __thereIsNothingHereImJustMakingTypescriptHappy?: boolean;
+  __handle: ShareableRef;
+};
 
 export type Context = Record<string, unknown>;
 
@@ -133,8 +141,6 @@ export type Value3D = {
   z: number;
 };
 
-export type SensorValue3D = SharedValue<Value3D>;
-
 export type ValueRotation = {
   qw: number;
   qx: number;
@@ -144,8 +150,6 @@ export type ValueRotation = {
   pitch: number;
   roll: number;
 };
-
-export type SensorValueRotation = SharedValue<ValueRotation>;
 
 export type ShadowNodeWrapper = object;
 

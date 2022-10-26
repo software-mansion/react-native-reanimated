@@ -62,7 +62,7 @@ runOnUI(() => {
         }
       }
 
-      const sv: { value: boolean; _value: boolean } = configs[tag].sv;
+      const sv: SharedValue<number> & { _value: number } = configs[tag].sv;
       stopObservingProgress(tag, sv, false);
       startObservingProgress(tag, sv);
 

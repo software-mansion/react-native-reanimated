@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { makeMutable, runOnUI } from './core';
+import { makeMutable } from './core';
 import { SharedValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 
@@ -16,11 +16,11 @@ export interface ViewDescriptorsSet {
 }
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
-  const sharableViewDescriptors = makeMutable([]);
+  const sharableViewDescriptors = makeMutable<Descriptor[]>([]);
   const data: ViewDescriptorsSet = {
     sharableViewDescriptors,
     add: (item: Descriptor) => {
-      sharableViewDescriptors.modify((descriptors) => {
+      sharableViewDescriptors.modify((descriptors: Descriptor[]) => {
         'worklet';
         descriptors.push(item);
         return descriptors;
@@ -28,10 +28,10 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
     },
 
     remove: (viewTag: number) => {
-      sharableViewDescriptors.modify((descriptors) => {
+      sharableViewDescriptors.modify((descriptors: Descriptor[]) => {
         'worklet';
         const index = descriptors.findIndex(
-          (descriptor) => descriptor.viewTag === viewTag
+          (descriptor) => descriptor.tag === viewTag
         );
         if (index !== -1) {
           descriptors.splice(index, 1);

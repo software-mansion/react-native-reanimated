@@ -9,8 +9,9 @@ import {
   AnimationObject,
   AnimatableValue,
   Timestamp,
-  SensorValue3D,
-  SensorValueRotation,
+  ShareableRef,
+  Value3D,
+  ValueRotation,
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
@@ -32,11 +33,14 @@ export type WorkletValue =
   | AnimationObject
   | AnimatableValue
   | Descriptor;
+
 interface WorkletValueSetterContext {
   _animation?: AnimationObject | null;
   _value?: AnimatableValue | Descriptor;
   value?: AnimatableValue;
 }
+
+// interface SharedValuePrivate<T> extends SharedValue<T> {}
 
 const testWorklet: BasicWorkletFunction<void> = () => {
   'worklet';
@@ -255,9 +259,9 @@ function valueUnpacker<T>(objectToUnpack): T {
   }
 }
 
-const _adaptCache = new WeakMap();
+const _adaptCache = new WeakMap<object, ShareableRef>();
 
-function makeShareableCloneRecursive(value) {
+function makeShareableCloneRecursive<T>(value: T): ShareableRef {
   // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
   if ((type === 'object' || type === 'function') && value !== null) {
@@ -366,15 +370,21 @@ export function makeMutable<T>(
     modify: (modifier: (value: T) => T) => {
       runOnUI(() => {
         'worklet';
-        mutable._value = modifier(mutable.value);
+        mutable.value = modifier(mutable.value);
       })();
+    },
+    addListener: (listenerId: number, listener: (value: T) => void) => {
+      throw new Error('adding listeners is only possible on the UI runtime');
+    },
+    removeListener: (listenerId: number) => {
+      throw new Error('removing listeners is only possible on the UI runtime');
     },
     __handle: handle,
   };
   return mutable;
 }
 
-export function makeRemote<T>(initial = {}): T {
+export function makeRemote<T extends object>(initial = {}): T {
   if (__DEV__) {
     isConfiguredCheck();
   }
@@ -389,10 +399,18 @@ export function makeRemote<T>(initial = {}): T {
   };
 }
 
+type Mapper = {
+  id: number;
+  dirty: boolean;
+  worklet: () => void;
+  inputs: SharedValue[];
+  outputs?: SharedValue[];
+};
+
 function createMapperRegistry() {
   'worklet';
   const mappers = new Map();
-  let sortedMappers = [];
+  let sortedMappers: Mapper[] = [];
 
   let frameRequested = false;
 
@@ -431,8 +449,8 @@ function createMapperRegistry() {
       }
     });
     const visited = new Set();
-    const newOrder = [];
-    function dfs(mapper) {
+    const newOrder: Mapper[] = [];
+    function dfs(mapper: Mapper) {
       visited.add(mapper);
       for (const input of mapper.inputs) {
         const preMappers = pre.get(input);
@@ -471,7 +489,7 @@ function createMapperRegistry() {
     }
   }
 
-  function extractInputs(inputs, resultArray) {
+  function extractInputs(inputs: any, resultArray: SharedValue[]) {
     if (Array.isArray(inputs)) {
       for (const input of inputs) {
         extractInputs(input, resultArray);
@@ -487,7 +505,12 @@ function createMapperRegistry() {
   }
 
   return {
-    start: (mapperID, worklet, inputs, outputs) => {
+    start: (
+      mapperID: number,
+      worklet: () => void,
+      inputs: SharedValue[],
+      outputs?: SharedValue[]
+    ) => {
       const mapper = {
         id: mapperID,
         dirty: true,
@@ -504,7 +527,7 @@ function createMapperRegistry() {
         });
       }
     },
-    stop: (mapperID) => {
+    stop: (mapperID: number) => {
       const mapper = mappers.get(mapperID);
       if (mapper) {
         mappers.delete(mapper.id);
@@ -616,7 +639,7 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 export function registerSensor(
   sensorType: number,
   interval: number,
-  eventHandler: (data: SensorValue3D | SensorValueRotation) => void
+  eventHandler: (data: Value3D | ValueRotation) => void
 ): number {
   return NativeReanimatedModule.registerSensor(
     sensorType,
