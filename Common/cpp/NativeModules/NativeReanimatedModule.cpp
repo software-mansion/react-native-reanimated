@@ -96,17 +96,18 @@ NativeReanimatedModule::NativeReanimatedModule(
       propObtainer(propObtainer),
 #endif
       animatedSensorModule(platformDepMethodsHolder, this),
-#ifdef RCT_NEW_ARCH_ENABLED
-      synchronouslyUpdateUIPropsFunction(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
-#else
-      configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction),
-#endif
       registerTransitionTagPlatformFunction(
           platformDepMethodsHolder.registerTransitionTag),
       unregisterTransitionTagPlatformFunction(
-          platformDepMethodsHolder.unregisterTransitionTag) {
+          platformDepMethodsHolder.unregisterTransitionTag),
+#ifdef RCT_NEW_ARCH_ENABLED
+      synchronouslyUpdateUIPropsFunction(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
+#else
+      configurePropsPlatformFunction(
+          platformDepMethodsHolder.configurePropsFunction)
+#endif
+{
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();

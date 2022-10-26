@@ -22,12 +22,15 @@ import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
+import com.swmansion.common.SharedElementAnimator;
 import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
+import com.swmansion.reanimated.sharedElementTransition.ScreensSharedTransitionDelegate;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -116,6 +119,7 @@ public class NativeProxy {
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
+  private ScreensSharedTransitionDelegate screensTransitionDelegate;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
 
@@ -283,6 +287,23 @@ public class NativeProxy {
     reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
   }
 
+  @DoNotStrip
+  private void registerSharedTransitionTag(String sharedTransitionTag, int viewTag) {
+    if (screensTransitionDelegate != null) {
+      screensTransitionDelegate.registerSharedTransitionTag(sharedTransitionTag, viewTag);
+    }
+    else {
+      Log.w("[Reanimated]", "screensTransitionDelegate not initialized");
+    }
+  }
+
+  @DoNotStrip
+  private void unregisterSharedTransitionTag(String sharedTransitionTag, int viewTag) {
+    if (screensTransitionDelegate != null) {
+      screensTransitionDelegate.unregisterSharedTransitionTag(sharedTransitionTag, viewTag);
+    }
+  }
+
   public void onCatalystInstanceDestroy() {
     mScheduler.deactivate();
     mHybridData.resetNative();
@@ -304,6 +325,21 @@ public class NativeProxy {
             .getNativeModule(ReanimatedModule.class)
             .getNodesManager()
             .getAnimationsManager();
+    try {
+      Class<NativeModule> sharedElementAnimatorClass =
+              (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.sharedElementTransition.SharedElementAnimatorClass");
+      SharedElementAnimator sharedElementAnimator =
+              (SharedElementAnimator) mContext.get().getNativeModule(sharedElementAnimatorClass);
+      if (sharedElementAnimator != null) {
+        screensTransitionDelegate = new ScreensSharedTransitionDelegate(animationsManager);
+        sharedElementAnimator.setDelegate(screensTransitionDelegate);
+      }
+      else {
+        Log.w("[react-native-reanimated]", "Unable to get com.swmansion.rnscreens.sharedElementTransition.SharedElementAnimatorClass class");
+      }
+    } catch (ClassCastException | ClassNotFoundException e) {
+      e.printStackTrace();
+    }
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
     animationsManager.setNativeMethods(
@@ -331,6 +367,11 @@ public class NativeProxy {
           @Override
           public boolean isLayoutAnimationEnabled() {
             return LayoutAnimations.isLayoutAnimationEnabled();
+          }
+
+          @Override
+          public void stopAnimation(int tag) {
+            LayoutAnimations.stopAnimation(tag);
           }
         });
   }

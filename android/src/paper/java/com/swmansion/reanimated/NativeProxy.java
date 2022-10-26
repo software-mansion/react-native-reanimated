@@ -324,7 +324,7 @@ public class NativeProxy {
         sharedElementAnimator.setDelegate(screensTransitionDelegate);
       }
       else {
-        Log.w("[Reaniamted]", "Unable to get com.swmansion.rnscreens.sharedElementTransition.SharedElementAnimatorClass class");
+        Log.w("[react-native-reanimated]", "Unable to get com.swmansion.rnscreens.sharedElementTransition.SharedElementAnimatorClass class");
       }
     } catch (ClassCastException | ClassNotFoundException e) {
       e.printStackTrace();
