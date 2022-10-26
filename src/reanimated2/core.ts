@@ -12,6 +12,7 @@ import {
   ShareableRef,
   Value3D,
   ValueRotation,
+  WorkletFunction,
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
@@ -230,7 +231,7 @@ function valueSetter<T extends WorkletValue>(
   }
 }
 
-function valueUnpacker<T>(objectToUnpack): T {
+function valueUnpacker(objectToUnpack: any): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -243,15 +244,17 @@ function valueUnpacker<T>(objectToUnpack): T {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
     if (workletFun === undefined) {
       // eslint-disable-next-line no-eval
-      workletFun = eval('(' + objectToUnpack.asString + ')');
+      workletFun = eval('(' + objectToUnpack.asString + ')') as (
+        ...args: any[]
+      ) => any;
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
     }
     return workletFun.bind(objectToUnpack);
   } else if (objectToUnpack.__init) {
-    let value = handleCache.get(objectToUnpack);
+    let value = handleCache!.get(objectToUnpack);
     if (value === undefined) {
-      value = objectToUnpack.__init();
-      handleCache.set(objectToUnpack, value);
+      value = objectToUnpack.__init() as object;
+      handleCache!.set(objectToUnpack, value);
     }
     return value;
   } else {

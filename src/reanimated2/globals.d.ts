@@ -1,3 +1,4 @@
+import { WorkletFunction } from 'lib/typescript';
 import { AnimatedStyle, StyleProps } from './commonTypes';
 import { ReanimatedConsole } from './core';
 import { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
@@ -74,6 +75,8 @@ declare global {
         now: () => number;
       };
       _frameCallbackRegistry: FrameCallbackRegistryUI;
+      __workletsCache?: Map<string, (...args: any[]) => any>;
+      __handleCache?: WeakMap<object, object>;
     }
   }
 }
