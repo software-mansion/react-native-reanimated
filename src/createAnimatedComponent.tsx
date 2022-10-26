@@ -534,12 +534,11 @@ export default function createAnimatedComponent(
         // TODO update config
         const tag = findNodeHandle(ref);
         if (
+          !shouldBeUseWeb() &&
           (this.props.layout || this.props.entering || this.props.exiting) &&
           tag != null
         ) {
-          if (!shouldBeUseWeb()) {
-            enableLayoutAnimations(true, false);
-          }
+          enableLayoutAnimations(true, false);
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
           let entering = this.props.entering
             ? this.props.entering
