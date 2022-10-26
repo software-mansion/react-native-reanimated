@@ -1,3 +1,5 @@
+#if __has_include(<RNScreens/RNSScreen.h>)
+
 #import <RNReanimated/REASharedTransitionAnimationManager.h>
 #import <RNReanimated/REASharedTransitionConfig.h>
 #import <RNReanimated/REASharedViewConfig.h>
@@ -243,3 +245,5 @@
 }
 
 @end
+
+#endif

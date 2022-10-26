@@ -1,6 +1,6 @@
+#if __has_include(<RNScreens/RNSScreen.h>)
+
 #import <RNReanimated/REAAnimationsManager.h>
-//#if __has_include(<RNScreens/RNSScreen.h>)
-//#endif
 #import <RNScreens/RNSSharedElementAnimator.h>
 
 @interface REASharedElementAnimatorDelegate : NSObject <RNSSharedElementAnimatorDelegate>
@@ -10,3 +10,5 @@
 - (void)setAnimationsManager:(REAAnimationsManager *)animationsManager;
 
 @end
+
+#endif

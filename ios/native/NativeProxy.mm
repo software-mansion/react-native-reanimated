@@ -40,9 +40,11 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
+#if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNReanimated/REASharedElementAnimatorDelegate.h>
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSSharedElementAnimator.h>
+#endif
 
 namespace reanimated {
 
@@ -352,6 +354,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
   // end keyboard events
 
+#if __has_include(<RNScreens/RNSScreen.h>)
   REASharedElementAnimatorDelegate *delegate = [REASharedElementAnimatorDelegate new];
   [delegate setAnimationsManager:animationsManager];
   [RNSSharedElementAnimator setDelegate:delegate];
@@ -367,6 +370,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     auto viewTagNS = @(viewTag.asNumber());
     [delegate unregisterTransitionTag:transitionTagNS viewTag:viewTagNS];
   };
+#else
+  auto registerTransitionTag = [](jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {};
+  auto unregisterTransitionTag = [](jsi::Runtime &rt, const jsi::Value &transitionTag, const jsi::Value &viewTag) {};
+#endif
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,

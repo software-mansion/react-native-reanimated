@@ -1,8 +1,9 @@
+#if __has_include(<RNScreens/RNSScreen.h>)
+
 #import <RNReanimated/REASharedElementAnimatorDelegate.h>
 #import <RNReanimated/REASharedTransitionAnimationManager.h>
 #import <RNReanimated/REASharedTransitionConfig.h>
 #import <RNReanimated/REASharedViewConfig.h>
-#import <RNScreens/RNSScreen.h>
 
 @implementation REASharedElementAnimatorDelegate {
   REASharedTransitionAnimationManager *_sharedTransitionAnimationManager;
@@ -46,3 +47,5 @@
 }
 
 @end
+
+#endif
