@@ -11,7 +11,7 @@
 #import <React/RCTRootViewInternal.h>
 #import <React/RCTUIManagerObserverCoordinator.h>
 
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
 #import <RNScreens/RNSScreen.h>
 #endif
 
@@ -123,7 +123,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         lastIndex = 0;
       }
       if ([toRemoveChild isKindOfClass:[RCTModalHostView class]]
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
           || ([toRemoveChild isKindOfClass:[RNSScreenView class]])
 #endif
       ) {
@@ -376,7 +376,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
     [parentView removeReactSubview:view];
   } @catch (id anException) {
   }
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
   if ([view isKindOfClass:[RNSScreenView class]]) {
     [parentView didUpdateReactSubviews];
   }

@@ -1,4 +1,4 @@
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
 
 #import <RNReanimated/REASharedTransitionAnimationManager.h>
 #import <RNReanimated/REASharedTransitionConfig.h>

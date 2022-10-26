@@ -40,7 +40,7 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
 #import <RNReanimated/REASharedElementAnimatorDelegate.h>
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSSharedElementAnimator.h>
@@ -354,7 +354,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
   // end keyboard events
 
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
   REASharedElementAnimatorDelegate *delegate = [REASharedElementAnimatorDelegate new];
   [delegate setAnimationsManager:animationsManager];
   [RNSSharedElementAnimator setDelegate:delegate];
