@@ -4,36 +4,28 @@ title: scrollTo
 sidebar_label: scrollTo
 ---
 
-Provides synchronous scroll on the UI thread to a given offset using an animated ref to a scroll view. This allows performing smooth scrolling without lags(which might occur when it would be asynchronous and based on a lot of events).
-
-This function is implemented on native platforms only. On the web it's sufficient to use a standard version of the `scrollTo` which comes with a `ScrollView` component(it's [here](https://github.com/facebook/react-native/blob/aebccd3f923c920bd85fb9e5fbdd2a8a75d3ad3d/Libraries/Components/ScrollView/ScrollView.js#L834)). In such a case it should be invoked in the following way:
-
-```javascript
-const aref = useAnimatedRef();
-aref.current.scrollTo({ x, y });
-```
-
+Provides synchronous scroll on the UI thread to a given offset using an animated ref to a scroll view. This allows performing smooth scrolling without lags (which might have otherwise occured when it was asynchronous and based on lots of events).
 ### Arguments
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](../hooks/useAnimatedRef) which is a Reanimated's extension of a standard React's ref(delivers view tag on the UI thread).
+The product of [`useAnimatedRef`](../hooks/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
 
-#### `x-cord` [Float]
+#### `x` [Float]
 
 Corresponds to the pixel along the horizontal axis of the element that you want displayed in the upper left.
 
-#### `y-cord` [Float]
+#### `y` [Float]
 
 Corresponds to the pixel along the vertical axis of the element that you want displayed in the upper left.
 
 #### `animated` [Boolean]
 
-Indicates whether the scroll should be smooth.
+Indicates whether the scroll should be smooth (`true`) or instant (`false`).
 
 ### Returns
 
-void
+`void`
 
 ### Example
 

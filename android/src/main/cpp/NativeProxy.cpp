@@ -1,24 +1,20 @@
+#include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 
 #include <memory>
 #include <string>
 
-#if FOR_HERMES
-#include <hermes/hermes.h>
-#else
-#include <jsi/JSCRuntime.h>
-#endif
-
-#include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
+#include "ReanimatedRuntime.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <JFabricUIManager.h>
@@ -65,10 +61,6 @@ NativeProxy::NativeProxy(
 }
 
 NativeProxy::~NativeProxy() {
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Value::undefined());
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
 }
@@ -103,7 +95,9 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 void NativeProxy::installJSIBindings(
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
+    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager
 #endif
@@ -132,11 +126,10 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto getCurrentTime = [this]() {
-    auto method =
-        javaPart_->getClass()->getMethod<local_ref<JString>()>("getUptime");
-    local_ref<JString> output = method(javaPart_.get());
-    return static_cast<double>(
-        std::strtoll(output->toStdString().c_str(), NULL, 10));
+    static const auto method =
+        javaPart_->getClass()->getMethod<jlong()>("getCurrentTime");
+    jlong output = method(javaPart_.get());
+    return static_cast<double>(output);
   };
 
   auto requestRender = [this, getCurrentTime](
@@ -198,15 +191,20 @@ void NativeProxy::installJSIBindings(
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
-#if FOR_HERMES
-  auto config =
-      ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
+
+  auto subscribeForKeyboardEventsFunction =
+      [this](std::function<void(int, int)> keyboardEventDataUpdater) -> int {
+    return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
+  };
+
+  auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
+    unsubscribeFromKeyboardEvents(listenerId);
+  };
+
+  auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::hermes::makeHermesRuntime(config.build());
-#else
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::jsc::makeJSCRuntime();
-#endif
+      ReanimatedRuntime::make(jsQueue);
+
   auto workletRuntimeValue =
       runtime_->global()
           .getProperty(*runtime_, "ArrayBuffer")
@@ -261,7 +259,10 @@ void NativeProxy::installJSIBindings(
       getCurrentTime,
       registerSensorFunction,
       unregisterSensorFunction,
-      setGestureStateFunction};
+      setGestureStateFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
+  };
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -477,6 +478,24 @@ void NativeProxy::configureProps(
       ReadableNativeArray::newObjectCxxArgs(
           jsi::dynamicFromValue(rt, nativeProps))
           .get());
+}
+
+int NativeProxy::subscribeForKeyboardEvents(
+    std::function<void(int, int)> keyboardEventDataUpdater) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
+                        "subscribeForKeyboardEvents");
+  return method(
+      javaPart_.get(),
+      KeyboardEventDataUpdater::newObjectCxxArgs(
+          std::move(keyboardEventDataUpdater))
+          .get());
+}
+
+void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>(
+      "unsubscribeFromKeyboardEvents");
+  method(javaPart_.get(), listenerId);
 }
 
 } // namespace reanimated

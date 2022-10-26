@@ -1,15 +1,16 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.0.0-rc.0",
+  "version": "3.0.0-rc.3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
-    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java",
+    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
+    "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
+    "lint:ios": "./scripts/validate-ios.sh",
     "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
     "format:js": "prettier --write --list-different './src/'",
     "format:java": "node ./scripts/format-java.js",
@@ -18,24 +19,16 @@
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "release": "npm login && release-it",
     "type:check": "yarn tsc --noEmit",
-    "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc && yarn type:generate:tsc:declaration && yarn type:generate:remove.ts && yarn type:generate:remove.tsx && yarn type:generate:remove.js:from-src",
-    "type:generate:clean": "rm -rf lib/ && mkdir lib/",
-    "type:generate:cp-js-src": "cp -RL src/* lib/",
-    "type:generate:tsc": "yarn tsc",
-    "type:generate:tsc:declaration": "yarn tsc --project tsconfig.json --pretty --declaration --emitDeclarationOnly --outDir lib/types",
-    "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
-    "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
-    "type:generate:remove.js:from-src": "find ./src/reanimated2 -type f -name \"*.js\" -delete",
-    "prepare": "husky install",
-    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
+    "prepare": "bob build && husky install",
+    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
     "clean": "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
     "reset": "yarn clean && yarn setup",
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep && yarn setup"
   },
-  "main": "lib/index.js",
-  "module": "lib/index",
+  "main": "lib/commonjs/index",
+  "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
   "types": "react-native-reanimated.d.ts",
@@ -43,6 +36,11 @@
     "Common/",
     "src/",
     "lib/",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
+    "!lib/typescript",
+    "react-native-reanimated.d.ts",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
@@ -53,8 +51,8 @@
     "!android/.cxx/",
     "!android/.gradle/",
     "RNReanimated.podspec",
+    "scripts/reanimated_utils.rb",
     "README.md",
-    "react-native-reanimated.d.ts",
     "mock.js",
     "plugin.js",
     "!__snapshots__",
@@ -76,7 +74,6 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
-    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
     "@types/invariant": "^2.2.35",
@@ -96,7 +93,6 @@
     "@babel/plugin-proposal-class-properties": "^7.16.7",
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "@babel/preset-env": "^7.16.11",
-    "@react-native-community/bob": "^0.17.1",
     "@react-native-community/eslint-config": "^0.0.5",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
@@ -127,7 +123,8 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.68.0",
+    "react-native": "0.70.3",
+    "react-native-builder-bob": "^0.18.3",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",
@@ -143,7 +140,8 @@
     "android/src/**/*.java": "yarn format:java",
     "android/src/**/*.{h,cpp}": "yarn format:android",
     "ios/**/*.{h,m,mm,cpp}": "yarn format:ios",
-    "Common/**/*.{h,cpp}": "yarn format:common"
+    "Common/**/*.{h,cpp}": "yarn format:common",
+    "docs/**/*.{md,mdx}": "yarn lint:docs"
   },
   "release-it": {
     "hooks": {
@@ -152,12 +150,18 @@
       ]
     }
   },
-  "@react-native-community/bob": {
+  "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
     "targets": [
       "commonjs",
-      "module"
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.json"
+        }
+      ]
     ]
   },
   "sideEffects": [

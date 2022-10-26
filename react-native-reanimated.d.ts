@@ -54,6 +54,8 @@ declare module 'react-native-reanimated' {
     import('./lib/types/lib/reanimated2/animation/index').StyleLayoutAnimation;
   export type Animation<T> =
     import('./lib/types/lib/reanimated2/commonTypes').Animation<T>;
+  export type MeasuredDimensions =
+    import('./lib/types/lib/reanimated2/commonTypes').MeasuredDimensions;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;
@@ -156,7 +158,7 @@ declare module 'react-native-reanimated' {
       : Record<string, unknown>;
 
     export type AnimateProps<P extends object> = {
-      [K in keyof P]: P[K] | AnimatedNode<P[K]>;
+      [K in keyof Omit<P, 'style'>]: P[K] | AnimatedNode<P[K]>;
     } & {
       style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
@@ -495,20 +497,80 @@ declare module 'react-native-reanimated' {
   }
 
   export type SensorConfig = {
-    interval: number;
+    interval: number | 'auto';
   };
 
-  export type AnimatedSensor = {
-    sensor: SensorValue3D | SensorValueRotation | null;
+  export type Value3D = {
+    x: number;
+    y: number;
+    z: number;
+  };
+
+  export type SensorValue3D = SharedValue<Value3D>;
+
+  export type ValueRotation = {
+    qw: number;
+    qx: number;
+    qy: number;
+    qz: number;
+    yaw: number;
+    pitch: number;
+    roll: number;
+  };
+
+  export type SensorValueRotation = SharedValue<ValueRotation>;
+
+  export type AnimatedSensor<SensorValueType> = {
+    sensor: SensorValueType;
     unregister: () => void;
     isAvailable: boolean;
     config: SensorConfig;
   };
 
   export function useAnimatedSensor(
+    sensorType: SensorType.ROTATION,
+    userConfig?: SensorConfig
+  ): AnimatedSensor<SensorValueRotation>;
+  export function useAnimatedSensor(
+    sensorType: Exclude<SensorType, SensorType.ROTATION>,
+    userConfig?: SensorConfig
+  ): AnimatedSensor<SensorValue3D>;
+  export function useAnimatedSensor(
     sensorType: SensorType,
     userConfig?: SensorConfig
-  ): AnimatedSensor;
+  ): AnimatedSensor<any>;
+
+  export type FrameCallback = {
+    setActive: (isActive: boolean) => void;
+    isActive: boolean;
+    callbackId: number;
+  };
+  export type FrameInfo = {
+    timestamp: number;
+    timeSincePreviousFrame: number | null;
+    timeSinceFirstFrame: number;
+  };
+  export function useFrameCallback(
+    callback: (frameInfo: FrameInfo) => void,
+    autostart?: boolean
+  ): FrameCallback;
+
+  export enum KeyboardState {
+    UNKNOWN = 0,
+    OPENING = 1,
+    OPEN = 2,
+    CLOSING = 3,
+    CLOSED = 4,
+  }
+  export type AnimatedKeyboardInfo = {
+    height: SharedValue<number>;
+    state: SharedValue<KeyboardState>;
+  };
+  export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
+
+  export function useScrollViewOffset(
+    aref: RefObject<Animated.ScrollView>
+  ): SharedValue<number>;
 
   export interface ExitAnimationsValues {
     currentOriginX: number;
@@ -754,14 +816,7 @@ declare module 'react-native-reanimated' {
   export function defineAnimation<T>(starting: any, factory: () => T): number;
   export function measure<T extends Component>(
     ref: RefObject<T>
-  ): {
-    width: number;
-    height: number;
-    x: number;
-    y: number;
-    pageX: number;
-    pageY: number;
-  };
+  ): MeasuredDimensions | null;
 
   export function getRelativeCoords(
     ref: RefObject<Component>,

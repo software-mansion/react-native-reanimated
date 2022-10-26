@@ -8,11 +8,13 @@
 #include <functional>
 #include <memory>
 #include <thread>
+#include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
+#include "ShadowTreeCloner.h"
 #endif
 
 #include "EventHandlerRegistry.h"
@@ -163,6 +165,10 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
 #endif
+  subscribeForKeyboardEventsFunction =
+      platformDepMethodsHolder.subscribeForKeyboardEvents;
+  unsubscribeFromKeyboardEventsFunction =
+      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -503,56 +509,42 @@ void NativeReanimatedModule::performOperations() {
 
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  auto contextContainer = getContextContainerFromUIManager(
-      &*uiManager_); // TODO: use Scheduler::getContextContainer
-  PropsParserContext propsParserContext{surfaceId_, *contextContainer};
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
-      // lock once due to performance reasons
-      auto lock = newestShadowNodesRegistry_->createLock();
-
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-      for (const auto &pair : copiedOperationsQueue) {
-        const ShadowNodeFamily &family = pair.first->getFamily();
-        react_native_assert(family.getSurfaceId() == surfaceId_);
+      ShadowTreeCloner shadowTreeCloner{
+          newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
-        auto newRootNode =
-            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto newest =
-                  newestShadowNodesRegistry_->get(oldShadowNode.getTag());
+      {
+        // lock once due to performance reasons
+        auto lock = newestShadowNodesRegistry_->createLock();
 
-              const auto &source = newest == nullptr ? oldShadowNode : *newest;
+        for (const auto &pair : copiedOperationsQueue) {
+          const ShadowNodeFamily &family = pair.first->getFamily();
+          react_native_assert(family.getSurfaceId() == surfaceId_);
 
-              const auto newProps = source.getComponentDescriptor().cloneProps(
-                  propsParserContext,
-                  source.getProps(),
-                  RawProps(rt, *pair.second));
+          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+              rootNode, family, RawProps(rt, *pair.second));
 
-              return source.clone({/* .props = */ newProps});
-            });
-
-        if (newRootNode == nullptr) {
-          // this happens when React removed the component but Reanimated still
-          // tries to animate it, let's skip update for this specific component
-          continue;
+          if (newRootNode == nullptr) {
+            // this happens when React removed the component but Reanimated
+            // still tries to animate it, let's skip update for this specific
+            // component
+            continue;
+          }
+          rootNode = newRootNode;
         }
-        rootNode = newRootNode;
 
-        auto ancestors = family.getAncestors(*rootNode);
-        for (const auto &pair : ancestors) {
-          const auto &parent = pair.first.get();
-          const auto &child = parent.getChildren().at(pair.second);
-          newestShadowNodesRegistry_->set(child, parent.getTag());
+        // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+        for (auto tag : copiedTagsToRemove) {
+          newestShadowNodesRegistry_->remove(tag);
         }
       }
 
-      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-      for (auto tag : copiedTagsToRemove) {
-        newestShadowNodesRegistry_->remove(tag);
-      }
+      shadowTreeCloner.updateYogaChildren();
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });
@@ -592,7 +584,11 @@ jsi::Value NativeReanimatedModule::measure(
       uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
-    return jsi::Value::undefined();
+    // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
+    // likely due to the type of measure callback function which accepts just an
+    // array of numbers (not null). In Reanimated, `measure` returns
+    // `MeasuredDimensions | null`.
+    return jsi::Value::null();
   }
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
@@ -631,5 +627,39 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
   newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
+
+jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &keyboardEventContainer) {
+  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
+  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
+      sharedProperties;
+  std::shared_ptr<ShareableValue> keyboardStateShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "state"), this);
+  std::shared_ptr<ShareableValue> heightShared = ShareableValue::adapt(
+      rt, keyboardEventObj.getProperty(rt, "height"), this);
+
+  auto keyboardEventDataUpdater =
+      [this, &rt, keyboardStateShared, heightShared](
+          int keyboardState, int height) {
+        auto &keyboardStateValue =
+            ValueWrapper::asMutableValue(keyboardStateShared->valueContainer);
+        keyboardStateValue->setValue(rt, jsi::Value(keyboardState));
+
+        auto &heightMutableValue =
+            ValueWrapper::asMutableValue(heightShared->valueContainer);
+        heightMutableValue->setValue(rt, jsi::Value(height));
+
+        this->mapperRegistry->execute(*this->runtime);
+      };
+
+  return subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+}
+
+void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &listenerId) {
+  unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
+}
 
 } // namespace reanimated

@@ -229,24 +229,27 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void removeLeftovers() {
-    HashSet<Integer> roots = new HashSet<>();
-    // go through ready to remove from bottom to top
-    for (int tag : mToRemove) {
-      View view = mViewForTag.get(tag);
-      if (view == null) {
-        try {
-          view = mUIManager.resolveView(tag);
-          mViewForTag.put(tag, view);
-        } catch (IllegalViewOperationException ignored) {
-          continue;
+    // mToRemove may be null if onCatalystInstanceDestroy was called first
+    if (mToRemove != null) {
+      HashSet<Integer> roots = new HashSet<>();
+      // go through ready to remove from bottom to top
+      for (int tag : mToRemove) {
+        View view = mViewForTag.get(tag);
+        if (view == null) {
+          try {
+            view = mUIManager.resolveView(tag);
+            mViewForTag.put(tag, view);
+          } catch (IllegalViewOperationException ignored) {
+            continue;
+          }
         }
+        findRoot(view, roots);
       }
-      findRoot(view, roots);
-    }
-    for (int tag : roots) {
-      View view = mViewForTag.get(tag);
-      if (view != null) {
-        dfs(view, view, mToRemove);
+      for (int tag : roots) {
+        View view = mViewForTag.get(tag);
+        if (view != null) {
+          dfs(view, view, mToRemove);
+        }
       }
     }
   }

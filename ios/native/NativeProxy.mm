@@ -5,10 +5,13 @@
 #import <RNReanimated/REAIOSErrorHandler.h>
 #import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
+#import <RNReanimated/REAKeyboardEventObserver.h>
+#import <RNReanimated/REAMessageThread.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
+#import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -27,14 +30,6 @@
 
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
-#endif
-
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#import <reacthermes/HermesExecutorFactory.h>
-#elif __has_include(<hermes/hermes.h>)
-#import <hermes/hermes.h>
-#else
-#import <jsi/JSCRuntime.h>
 #endif
 
 namespace reanimated {
@@ -200,20 +195,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 #endif
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
-#elif __has_include(<hermes/hermes.h>)
-  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
-#else
-  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
-#endif
+  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
+  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(jsQueue);
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
   std::shared_ptr<NativeReanimatedModule> module;
 
-  auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
-    [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
+  auto nodesManager = reanimatedModule.nodesManager;
+
+  auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
+    [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
       jsi::Object global = rt.global();
       jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
@@ -224,10 +218,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto synchronouslyUpdateUIPropsFunction = [reanimatedModule](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
     NSNumber *viewTag = @(tag);
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
-    [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+    [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
@@ -328,6 +322,21 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
   // end sensors
 
+  // keyboard events
+
+  static REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
+  auto subscribeForKeyboardEventsFunction =
+      [](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater) {
+        return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
+          keyboardEventDataUpdater(keyboardState, height);
+        }];
+      };
+
+  auto unsubscribeFromKeyboardEventsFunction = [](int listenerId) {
+    [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
+  };
+  // end keyboard events
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -342,6 +351,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(

@@ -4,7 +4,7 @@ title: cancelAnimation
 sidebar_label: cancelAnimation
 ---
 
-Cancels animation linked with given shared value.
+Cancels animation linked to given shared value.
 
 ### Arguments
 

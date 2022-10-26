@@ -235,6 +235,9 @@ h6 {
 .github-navbar-logo>span{
   display: none;
 }
+.github-navbar-logo>svg{
+  display: none;
+}
 
 /* .githubStarLink {
   display: flex;
@@ -658,4 +661,8 @@ section > .contaner > .row {
 }
 .imageHolder-sponsor {
   max-width: 100px;
+}
+
+* {
+  scroll-behavior: smooth;
 }

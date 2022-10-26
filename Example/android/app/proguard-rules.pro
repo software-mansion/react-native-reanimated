@@ -71,3 +71,8 @@
 
 # hermes
 -keep class com.facebook.hermes.unicode.** { *; }
+
+# Reanimated 2
+# https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation/#proguard
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.react.turbomodule.** { *; }

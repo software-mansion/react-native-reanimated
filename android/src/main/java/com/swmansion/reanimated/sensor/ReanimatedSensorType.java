@@ -3,7 +3,7 @@ package com.swmansion.reanimated.sensor;
 import android.hardware.Sensor;
 
 public enum ReanimatedSensorType {
-  ACCELEROMETER(Sensor.TYPE_ACCELEROMETER),
+  ACCELEROMETER(Sensor.TYPE_LINEAR_ACCELERATION),
   GYROSCOPE(Sensor.TYPE_GYROSCOPE),
   GRAVITY(Sensor.TYPE_GRAVITY),
   MAGNETIC_FIELD(Sensor.TYPE_MAGNETIC_FIELD),
