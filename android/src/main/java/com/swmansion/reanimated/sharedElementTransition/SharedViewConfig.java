@@ -1,7 +1,5 @@
 package com.swmansion.reanimated.sharedElementTransition;
 
-import android.view.View;
-
 public class SharedViewConfig {
 
   public Integer viewTag;

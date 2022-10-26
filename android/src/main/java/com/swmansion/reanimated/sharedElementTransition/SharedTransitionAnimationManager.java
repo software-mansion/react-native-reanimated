@@ -2,7 +2,6 @@ package com.swmansion.reanimated.sharedElementTransition;
 
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.uimanager.UIManagerHelper;
@@ -82,7 +81,7 @@ public class SharedTransitionAnimationManager {
       removedViewParentRegistry.put(viewTag, (View) view.getParent());
     }
     if (view instanceof ViewGroup) {
-      ViewGroup viewGroup = (ViewGroup)view;
+      ViewGroup viewGroup = (ViewGroup) view;
       for (int i = 0; i < viewGroup.getChildCount(); i++) {
         View child = viewGroup.getChildAt(i);
         saveSharedTransitionItemsUnderTree(child);
