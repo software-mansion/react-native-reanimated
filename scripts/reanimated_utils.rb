@@ -36,7 +36,11 @@ def find_config()
   result[:react_native_minor_version] = react_native_json['version'].split('.')[1].to_i
   result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
   result[:reanimated_node_modules_dir] = File.expand_path(File.join(__dir__, '..', '..'))
-  result[:react_native_common_dir] = File.join(react_native_node_modules_dir, 'react-native', 'ReactCommon')
+
+  pods_root = Pod::Config.instance.project_pods_root
+  react_native_common_dir_absolute = File.join(react_native_node_modules_dir, 'react-native', 'ReactCommon')
+  react_native_common_dir_relative = Pathname.new(react_native_common_dir_absolute).relative_path_from(pods_root).to_s
+  result[:react_native_common_dir] = react_native_common_dir_relative
 
   return result
 end
