@@ -12,7 +12,7 @@ use std::{env, panic::set_hook, sync::Arc};
 
 use backtrace::Backtrace;
 use swc::Compiler;
-use swc_common::{self, sync::Lazy, FilePathMapping, SourceMap};
+use swc_common::{self, sync::Lazy, FilePathMapping, Globals, SourceMap, GLOBALS};
 use swc_reanimated_worklets_visitor::{create_worklets_visitor, WorkletsOptions};
 
 use std::path::Path;
@@ -76,28 +76,30 @@ pub fn transform_sync(s: String, _is_module: bool, opts: Buffer) -> napi::Result
         c.cm.clone(),
         !options.config.error.filename.into_bool(),
         |handler| {
-            c.run(|| {
-                let filename = if options.filename.is_empty() {
-                    FileName::Anon
-                } else {
-                    FileName::Real(options.filename.clone().into())
-                };
+            GLOBALS.set(&Globals::default(), || {
+                c.run(|| {
+                    let filename = if options.filename.is_empty() {
+                        FileName::Anon
+                    } else {
+                        FileName::Real(options.filename.clone().into())
+                    };
 
-                let fm = c.cm.new_source_file(filename.clone(), s);
-                c.process_js_with_custom_pass(
-                    fm,
-                    None,
-                    handler,
-                    &options,
-                    |_program, comments| {
-                        as_folder(create_worklets_visitor(
-                            WorkletsOptions::new(None, filename.clone(), None),
-                            c.cm.clone(),
-                            comments.clone(),
-                        ))
-                    },
-                    |_, _| noop(),
-                )
+                    let fm = c.cm.new_source_file(filename.clone(), s);
+                    c.process_js_with_custom_pass(
+                        fm,
+                        None,
+                        handler,
+                        &options,
+                        |_program, comments| {
+                            as_folder(create_worklets_visitor(
+                                WorkletsOptions::new(None, filename.clone(), None),
+                                c.cm.clone(),
+                                comments.clone(),
+                            ))
+                        },
+                        |_, _| noop(),
+                    )
+                })
             })
         },
     )

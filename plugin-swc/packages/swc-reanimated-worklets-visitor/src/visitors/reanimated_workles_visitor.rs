@@ -110,7 +110,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
                 })
                 .collect();
 
-            let s = Stmt::Decl(Decl::Var(VarDecl {
+            let s = Stmt::Decl(Decl::Var(Box::new(VarDecl {
                 kind: VarDeclKind::Const,
                 decls: vec![VarDeclarator {
                     name: Pat::Object(ObjectPat {
@@ -127,7 +127,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
                     ..VarDeclarator::dummy()
                 }],
                 ..VarDecl::dummy()
-            }));
+            })));
 
             let old = Stmt::Block(BlockStmt {
                 span: DUMMY_SP,
@@ -139,11 +139,11 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
 
         let transformed_function = FnExpr {
             ident: Some(fn_name),
-            function: Function {
+            function: Box::new(Function {
                 params,
                 body: Some(body),
                 ..Function::dummy()
-            },
+            }),
             ..FnExpr::dummy()
         };
 
@@ -185,10 +185,10 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
         params: Vec<Param>,
         is_generator: bool,
         is_async: bool,
-        type_params: Option<TsTypeParamDecl>,
-        return_type: Option<TsTypeAnn>,
+        type_params: Option<Box<TsTypeParamDecl>>,
+        return_type: Option<Box<TsTypeAnn>>,
         decorators: Option<Vec<Decorator>>,
-    ) -> Function {
+    ) -> Box<Function> {
         let function_name = if let Some(ident) = &worklet_name {
             ident.clone()
         } else {
@@ -279,7 +279,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
         let func_expr = match body.take() {
             BlockStmtOrExpr::BlockStmt(body) => Expr::Fn(FnExpr {
                 ident: Some(private_fn_name.clone()),
-                function: Function {
+                function: Box::new(Function {
                     params,
                     decorators,
                     span: DUMMY_SP,
@@ -288,7 +288,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
                     is_async,
                     type_params,
                     return_type,
-                },
+                }),
             }),
             BlockStmtOrExpr::Expr(e) => {
                 // This is based on assumption if fn body is not a blockstmt
@@ -303,7 +303,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
 
                 Expr::Fn(FnExpr {
                     ident: Some(private_fn_name.clone()),
-                    function: Function {
+                    function: Box::new(Function {
                         params,
                         decorators,
                         span: DUMMY_SP,
@@ -318,7 +318,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
                         is_async,
                         type_params,
                         return_type,
-                    },
+                    }),
                 })
             }
         };
@@ -326,7 +326,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
         let mut stmts = vec![
             // a function closure wraps original,
             // const _f = function () { .. }
-            Stmt::Decl(Decl::Var(VarDecl {
+            Stmt::Decl(Decl::Var(Box::new(VarDecl {
                 span: DUMMY_SP,
                 declare: false,
                 kind: VarDeclKind::Const,
@@ -336,7 +336,7 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
                     name: Pat::Ident(BindingIdent::from(private_fn_name.clone())),
                     init: Some(Box::new(func_expr)),
                 }],
-            })),
+            }))),
             // _f._closure = {...}
             Stmt::Expr(ExprStmt {
                 span: DUMMY_SP,
@@ -432,17 +432,17 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
             stmts,
         };
 
-        Function {
+        Box::new(Function {
             body: Some(body),
             ..Function::dummy()
-        }
+        })
     }
 
     fn make_worklet_from_fn(
         &mut self,
         ident: &mut Option<Ident>,
-        function: &mut Function,
-    ) -> Function {
+        function: &mut Box<Function>,
+    ) -> Box<Function> {
         self.make_worklet_inner(
             ident.clone(),
             // Have to clone to run transform preprocessor without changing original codes
@@ -466,11 +466,11 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
         )
     }
 
-    fn make_worklet_from_fn_expr(&mut self, fn_expr: &mut FnExpr) -> Function {
+    fn make_worklet_from_fn_expr(&mut self, fn_expr: &mut FnExpr) -> Box<Function> {
         self.make_worklet_from_fn(&mut fn_expr.ident, &mut fn_expr.function)
     }
 
-    fn make_worklet_from_arrow(&mut self, arrow_expr: &mut ArrowExpr) -> Function {
+    fn make_worklet_from_arrow(&mut self, arrow_expr: &mut ArrowExpr) -> Box<Function> {
         self.make_worklet_inner(
             None,
             Expr::Arrow(arrow_expr.clone()),
@@ -559,11 +559,11 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
                 ..VarDeclarator::dummy()
             };
 
-            *decl = Decl::Var(VarDecl {
+            *decl = Decl::Var(Box::new(VarDecl {
                 kind: VarDeclKind::Const,
                 decls: vec![declarator],
                 ..VarDecl::dummy()
-            });
+            }));
         }
     }
 
