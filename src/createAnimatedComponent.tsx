@@ -410,17 +410,11 @@ export default function createAnimatedComponent(
         // TODO update config
         const tag = findNodeHandle(ref);
         if (
-          (this.props.layout ||
-            this.props.entering ||
-            this.props.exiting ||
-            this.props.sharedTransitionTag ||
-            this.props.reappearing ||
-            this.props.hiding) &&
+          !shouldBeUseWeb() &&
+          (this.props.layout || this.props.entering || this.props.exiting || this.props.sharedTransitionTag) &&
           tag != null
         ) {
-          if (!shouldBeUseWeb()) {
-            enableLayoutAnimations(true, false);
-          }
+          enableLayoutAnimations(true, false);
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
           let entering = this.props.entering
             ? this.props.entering
