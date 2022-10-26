@@ -17,6 +17,8 @@ public interface SharedElementAnimatorDelegate {
 
   void onScreenTransitionCreate(View currentScreen, View targetScreen);
 
+  void onScreenRemoving(View screen);
+
   CoordinatorLayout makeAnimationCoordinatorLayout(
       Context context, ScreenStackFragmentCommon mFragment);
 }

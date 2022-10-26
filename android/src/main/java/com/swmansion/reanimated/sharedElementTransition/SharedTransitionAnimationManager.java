@@ -1,6 +1,8 @@
 package com.swmansion.reanimated.sharedElementTransition;
 
 import android.view.View;
+import android.view.ViewGroup;
+
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.uimanager.UIManagerHelper;
@@ -20,10 +22,12 @@ public class SharedTransitionAnimationManager {
   private final Map<String, List<SharedViewConfig>> sharedTransitionsItems = new HashMap<>();
   private final List<String> sharedElementsIterationOrder = new ArrayList<>();
   private final Map<Integer, Snapshot> snapshotRegistry = new HashMap<>();
-  private final Set<Integer> sharedElementsTags = new HashSet<>();
   private final Map<Integer, List<SharedTransitionConfig>> screenSharedElementsRegistry =
       new HashMap<>();
   private final Map<Integer, Boolean> screenTransitionStateRegistry = new HashMap<>();
+  private final Set<Integer> viewTagsWithSharedTransition = new HashSet<>();
+  private final Map<Integer, View> removedViewRegistry = new HashMap<>();
+  private final Map<Integer, View> removedViewParentRegistry = new HashMap<>();
 
   SharedTransitionAnimationManager(AnimationsManager animationsManager) {
     this.animationsManager = animationsManager;
@@ -52,6 +56,7 @@ public class SharedTransitionAnimationManager {
       for (SharedViewConfig sharedViewConfig : tagGroup) {
         if (sharedViewConfig.toRemove) {
           tagGroup.remove(sharedViewConfig);
+          viewTagsWithSharedTransition.remove(sharedViewConfig.viewTag);
         }
       }
       if (tagGroup.isEmpty()) {
@@ -64,6 +69,25 @@ public class SharedTransitionAnimationManager {
     screenSharedElementsRegistry.put(
         targetScreen.getId(), getSharedElementsForCurrentTransition(currentScreen, targetScreen));
     screenTransitionStateRegistry.put(targetScreen.getId(), false);
+  }
+
+  public void onScreenRemoving(View screen) {
+    saveSharedTransitionItemsUnderTree(screen);
+  }
+
+  private void saveSharedTransitionItemsUnderTree(View view) {
+    int viewTag = view.getId();
+    if (viewTagsWithSharedTransition.contains(viewTag)) {
+      removedViewRegistry.put(viewTag, view);
+      removedViewParentRegistry.put(viewTag, (View) view.getParent());
+    }
+    if (view instanceof ViewGroup) {
+      ViewGroup viewGroup = (ViewGroup)view;
+      for (int i = 0; i < viewGroup.getChildCount(); i++) {
+        View child = viewGroup.getChildAt(i);
+        saveSharedTransitionItemsUnderTree(child);
+      }
+    }
   }
 
   public void runTransition(View before, View after) {
@@ -80,7 +104,7 @@ public class SharedTransitionAnimationManager {
   }
 
   public boolean isTagUnderTransition(int viewTag) {
-    return sharedElementsTags.contains(viewTag);
+    return viewTagsWithSharedTransition.contains(viewTag);
   }
 
   public List<SharedTransitionConfig> getSharedElementsForCurrentTransition(
@@ -107,28 +131,27 @@ public class SharedTransitionAnimationManager {
         View view;
         try {
           view = uiManager.resolveView(viewConfig.viewTag);
-          viewConfig.view = view;
         } catch (Exception e) {
-          view = viewConfig.view;
+          view = removedViewRegistry.get(viewConfig.viewTag);
           isInViewTree = false;
         }
-        if (view.getParent() != null) {
-          viewConfig.setParent((View) view.getParent());
+        if (view != null && view.getParent() != null) {
+          viewConfig.parentTag = ((View) view.getParent()).getId();
         }
-        if (isInSubtreeOf(view, currentScreen, viewConfig.parentScreen)) {
+        if (isInSubtreeOf(view, currentScreen.getId(), viewConfig.parentScreenTag)) {
           fromView = view;
-          viewConfig.parentScreen = currentScreen;
+          viewConfig.parentScreenTag = currentScreen.getId();
           if (view.getParent() != null) {
             fromViewParent = (View) view.getParent();
           } else {
-            fromViewParent = viewConfig.getParent();
+            fromViewParent = removedViewParentRegistry.get(view.getId());
           }
           if (isInViewTree) {
             makeSnapshot(view);
           }
-        } else if (isInSubtreeOf(view, targetScreen, viewConfig.parentScreen)) {
+        } else if (isInSubtreeOf(view, targetScreen.getId(), viewConfig.parentScreenTag)) {
           toView = view;
-          viewConfig.parentScreen = targetScreen;
+          viewConfig.parentScreenTag = targetScreen.getId();
         }
       }
 
@@ -136,6 +159,9 @@ public class SharedTransitionAnimationManager {
         sharedElements.add(new SharedTransitionConfig(fromView, toView, fromViewParent));
       }
     }
+
+    removedViewRegistry.clear();
+    removedViewParentRegistry.clear();
 
     return sharedElements;
   }
@@ -160,14 +186,19 @@ public class SharedTransitionAnimationManager {
     return Boolean.TRUE.equals(screenTransitionStateRegistry.get(screen.getId()));
   }
 
-  private boolean isInSubtreeOf(View child, View root, View parentScreen) {
-    if (root == null || child == null) {
+  private boolean isInSubtreeOf(View child, int rootTag, int screenTag) {
+    if (rootTag == -1 || child == null) {
       return false;
     }
-    if (child.getParent() == null && parentScreen != null && root == parentScreen) {
+    View parent = (View) child.getParent();
+    if (parent == null && screenTag != -1 && rootTag == screenTag) {
       return true;
     }
-    return (child.getParent() == root) || isInSubtreeOf((View) child.getParent(), root, null);
+    int parentTag = -1;
+    if (parent != null) {
+      parentTag = parent.getId();
+    }
+    return (parentTag == rootTag) || isInSubtreeOf((View) child.getParent(), rootTag, screenTag);
   }
 
   public void registerSharedTransitionTag(String sharedTransitionTag, int viewTag) {
@@ -178,7 +209,7 @@ public class SharedTransitionAnimationManager {
     List<SharedViewConfig> transitionItems = sharedTransitionsItems.get(sharedTransitionTag);
     assert transitionItems != null;
     transitionItems.add(new SharedViewConfig(viewTag));
-    sharedElementsTags.add(viewTag);
+    viewTagsWithSharedTransition.add(viewTag);
   }
 
   public void unregisterSharedTransitionTag(String sharedTransitionTag, int viewTag) {

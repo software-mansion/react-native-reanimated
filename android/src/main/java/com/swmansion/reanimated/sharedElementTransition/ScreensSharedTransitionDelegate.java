@@ -31,6 +31,11 @@ public class ScreensSharedTransitionDelegate implements SharedElementAnimatorDel
   }
 
   @Override
+  public void onScreenRemoving(View screen) {
+    sharedTransitionAnimationManager.onScreenRemoving(screen);
+  }
+
+  @Override
   public CoordinatorLayout makeAnimationCoordinatorLayout(
       Context context, ScreenStackFragmentCommon fragment) {
     return new SharedTransitionCoordinatorLayout(

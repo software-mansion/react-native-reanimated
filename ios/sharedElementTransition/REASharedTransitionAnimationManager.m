@@ -10,7 +10,7 @@
   NSMutableArray<NSString *> *_sharedElementsIterationOrder;
   REAAnimationsManager *_animationsManager;
   NSMutableSet<NSNumber *> *_viewTagsWithSharedTransition;
-  NSMutableDictionary<NSNumber *, UIView *> *_transactionViewRegistry;
+  NSMutableDictionary<NSNumber *, UIView *> *_removedViewRegistry;
 }
 
 - (instancetype)init
@@ -21,7 +21,7 @@
   _snapshotRegistry = [NSMutableDictionary new];
   _viewTagsToRestoreStyle = [NSMutableSet<NSNumber *> new];
   _viewTagsWithSharedTransition = [NSMutableSet<NSNumber *> new];
-  _transactionViewRegistry = [NSMutableDictionary<NSNumber *, UIView *> new];
+  _removedViewRegistry = [NSMutableDictionary<NSNumber *, UIView *> new];
   return self;
 }
 
@@ -104,7 +104,7 @@
 - (void)saveSharedTransitionItemsUnderTree:(UIView *)view
 {
   if ([_viewTagsWithSharedTransition containsObject:view.reactTag]) {
-    _transactionViewRegistry[view.reactTag] = view;
+    _removedViewRegistry[view.reactTag] = view;
   }
   for (UIView *child in view.subviews) {
     [self saveSharedTransitionItemsUnderTree:child];
@@ -124,7 +124,7 @@
 
 - (void)cleanRegisters
 {
-  [_transactionViewRegistry removeAllObjects];
+  [_removedViewRegistry removeAllObjects];
   for (NSString *transitionTag in _sharedTransitionsItems) {
     NSMutableArray<REASharedViewConfig *> *sharedViewConfigs = _sharedTransitionsItems[transitionTag];
     NSMutableArray *discardedItems = [NSMutableArray array];
@@ -162,7 +162,7 @@
     for (REASharedViewConfig *sharedViewConfig in sharedViewConfigs) {
       UIView *view = [uiManager viewForReactTag:sharedViewConfig.viewTag];
       if (view == nil) {
-        view = _transactionViewRegistry[sharedViewConfig.viewTag];
+        view = _removedViewRegistry[sharedViewConfig.viewTag];
       }
       UIViewController *viewViewController = view.reactViewController;
       if (viewViewController == currentViewController) {
