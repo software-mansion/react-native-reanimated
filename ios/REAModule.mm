@@ -14,6 +14,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #ifdef DEBUG
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif
+  bool hasListeners;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -192,6 +193,21 @@ RCT_EXPORT_METHOD(triggerRender)
 {
   // Events can be dispatched from any queue
   [_nodesManager dispatchEvent:event];
+}
+
+- (void)startObserving {
+    hasListeners = YES;
+}
+
+- (void)stopObserving {
+    hasListeners = NO;
+}
+
+- (void)sendEventWithName:(NSString *)eventName body:(id)body
+{
+    if (hasListeners) {
+        [super sendEventWithName:eventName body:body];
+    }
 }
 
 @end
