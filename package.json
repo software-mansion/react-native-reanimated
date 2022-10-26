@@ -27,7 +27,7 @@
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.js:from-src": "find ./src/reanimated2 -type f -name \"*.js\" -delete",
     "prepare": "husky install",
-    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
+    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
     "clean": "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
     "reset": "yarn clean && yarn setup",
