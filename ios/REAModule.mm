@@ -305,9 +305,9 @@ RCT_EXPORT_METHOD(installTurboModule)
 
 - (void)sendEventWithName:(NSString *)eventName body:(id)body
 {
-  if (hasListeners) {
-    [super sendEventWithName:eventName body:body];
-  }
+    if (hasListeners) {
+           [super sendEventWithName:eventName body:body];
+      }
 }
 
 @end
