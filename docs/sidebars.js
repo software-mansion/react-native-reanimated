@@ -54,6 +54,7 @@ module.exports = {
             'api/LayoutAnimations/exitAnimations',
             'api/LayoutAnimations/keyframeAnimations',
             'api/LayoutAnimations/layoutTransitions',
+            'api/LayoutAnimations/sharedElementTransition',
           ],
           'Native methods': [
             'api/nativeMethods/measure',
