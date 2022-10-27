@@ -11,15 +11,12 @@
 
 namespace reanimated {
 
-class AndroidErrorHandler : public JavaClass<AndroidErrorHandler>,
-                            public ErrorHandler {
+class AndroidErrorHandler : public ErrorHandler {
   std::shared_ptr<ErrorWrapper> error;
   std::shared_ptr<Scheduler> scheduler;
   void raiseSpec() override;
 
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/AndroidErrorHandler;";
   explicit AndroidErrorHandler(std::shared_ptr<Scheduler> scheduler);
   std::shared_ptr<Scheduler> getScheduler() override;
   std::shared_ptr<ErrorWrapper> getError() override;

@@ -3,7 +3,7 @@
 <!--
 Description and motivation for this PR.
 
-Inlude Fixes #<number> if this is fixing some issue.
+Include Fixes #<number> if this is fixing some issue.
 
 Fixes # .
 -->

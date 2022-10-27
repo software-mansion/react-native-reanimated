@@ -7,6 +7,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
@@ -159,7 +160,9 @@ public class NativeProxy {
       LayoutAnimations LayoutAnimations,
       FabricUIManager fabricUIManager);
 
-  private native void installJSIBindings(FabricUIManager fabricUIManager);
+  private native void installJSIBindings(
+    MessageQueueThread messageQueueThread,
+    FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
@@ -223,14 +226,12 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private String getUptime() {
+  private long getCurrentTime() {
     if (slowAnimationsEnabled) {
       final long ANIMATIONS_DRAG_FACTOR = 10;
-      return Long.toString(
-          this.firstUptime
-              + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+      return this.firstUptime + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR;
     } else {
-      return Long.toString(SystemClock.uptimeMillis());
+      return SystemClock.uptimeMillis();
     }
   }
 
@@ -294,8 +295,9 @@ public class NativeProxy {
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     FabricUIManager fabricUIManager =
-        (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
-    installJSIBindings(fabricUIManager);
+      (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
+    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    installJSIBindings(messageQueueThread, fabricUIManager);
     AnimationsManager animationsManager =
         mContext
             .get()

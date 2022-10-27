@@ -7,6 +7,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
@@ -152,7 +153,7 @@ public class NativeProxy {
       Scheduler scheduler,
       LayoutAnimations LayoutAnimations);
 
-  private native void installJSIBindings();
+  private native void installJSIBindings(MessageQueueThread messageQueueThread);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
@@ -216,14 +217,12 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private String getUptime() {
+  private long getCurrentTime() {
     if (slowAnimationsEnabled) {
       final long ANIMATIONS_DRAG_FACTOR = 10;
-      return Long.toString(
-          this.firstUptime
-              + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+      return this.firstUptime + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR;
     } else {
-      return Long.toString(SystemClock.uptimeMillis());
+      return SystemClock.uptimeMillis();
     }
   }
 
@@ -286,7 +285,8 @@ public class NativeProxy {
       return;
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
-    installJSIBindings();
+    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    installJSIBindings(messageQueueThread);
     AnimationsManager animationsManager =
         mContext
             .get()

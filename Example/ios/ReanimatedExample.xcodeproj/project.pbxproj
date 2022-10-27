@@ -493,7 +493,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.mleko.ReanimatedExample;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.ReanimatedExample;
 				PRODUCT_NAME = ReanimatedExample;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
@@ -522,7 +522,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.mleko.ReanimatedExample;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.ReanimatedExample;
 				PRODUCT_NAME = ReanimatedExample;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
