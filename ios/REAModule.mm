@@ -195,19 +195,21 @@ RCT_EXPORT_METHOD(triggerRender)
   [_nodesManager dispatchEvent:event];
 }
 
-- (void)startObserving {
-    hasListeners = YES;
+- (void)startObserving
+{
+  hasListeners = YES;
 }
 
-- (void)stopObserving {
-    hasListeners = NO;
+- (void)stopObserving
+{
+  hasListeners = NO;
 }
 
 - (void)sendEventWithName:(NSString *)eventName body:(id)body
 {
-    if (hasListeners) {
-        [super sendEventWithName:eventName body:body];
-    }
+  if (hasListeners) {
+    [super sendEventWithName:eventName body:body];
+  }
 }
 
 @end
