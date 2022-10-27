@@ -339,22 +339,22 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (_states[tag] == nil) {
     return;
   }
-  //  ViewState state = [_states[tag] intValue];
-  //  if (state == Disappearing || state == ToRemove || state == Inactive) {
-  //    return;
-  //  }
-  //  if (state == Appearing) {
-  //    BOOL doNotStartLayout = true;
-  //    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
-  //      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
-  //          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
-  //        doNotStartLayout = false;
-  //      }
-  //    }
-  //    if (doNotStartLayout) {
-  //      return;
-  //    }
-  //  }
+  ViewState state = [_states[tag] intValue];
+  if (state == Disappearing || state == ToRemove || state == Inactive) {
+    return;
+  }
+  if (state == Appearing) {
+    BOOL doNotStartLayout = true;
+    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
+      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
+          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
+        doNotStartLayout = false;
+      }
+    }
+    if (doNotStartLayout) {
+      return;
+    }
+  }
   _states[view.reactTag] = [NSNumber numberWithInt:Layout];
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
