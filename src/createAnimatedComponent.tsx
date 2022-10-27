@@ -412,12 +412,17 @@ export default function createAnimatedComponent(
           element.style.opacity = '0';
           element.style.transform = 'translateX(-100px)';
 
+          const width = element.offsetWidth;
+          const height = element.offsetHeight;
+          const x = element.offsetLeft;
+          const y = element.offsetTop;
+
           const start = performance.now();
           const end = start + 800;
           const loop = () => {
             const now = performance.now();
-            const progress = (now - start) / (end - start);
-            const dx = Math.min(-100 + 100 * progress, 0);
+            const progress = Math.min((now - start) / (end - start), 1);
+            const dx = -100 + 100 * progress;
             element.style.opacity = progress.toString();
             element.style.transform = `translateX(${dx}px)`;
             if (now > end) {
@@ -426,6 +431,41 @@ export default function createAnimatedComponent(
             requestAnimationFrame(loop);
           };
           requestAnimationFrame(loop);
+
+          const callback: MutationCallback = (_mutationList, observer) => {
+            console.log({ x, y, width, height });
+            document.body.appendChild(element);
+            element.style.position = 'absolute';
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
+            element.style.width = `${width}px`;
+            element.style.height = `${height}px`;
+            observer.disconnect();
+
+            // TODO: handle case when exiting animation starts when entering animation is still running
+
+            const start = performance.now();
+            const end = start + 800;
+            const loop = () => {
+              const now = performance.now();
+              const progress = Math.min((now - start) / (end - start), 1);
+              const dx = 100 * progress;
+              element.style.opacity = (1 - progress).toString();
+              element.style.transform = `translateX(${dx}px)`;
+              if (now > end) {
+                element.remove();
+                return;
+              }
+              requestAnimationFrame(loop);
+            };
+            requestAnimationFrame(loop);
+          };
+          const observer = new MutationObserver(callback);
+          const targetNode = element?.parentNode;
+          const config = { childList: true };
+          if (targetNode !== null) {
+            observer.observe(targetNode, config);
+          }
         } else {
           // removed
         }
