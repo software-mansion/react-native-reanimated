@@ -53,16 +53,16 @@ import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 
-import ImageSET from './SharedElementTransition/Image';
-import GallerySET from './SharedElementTransition/Gallery';
-import ManyTagsSET from './SharedElementTransition/ManyTags';
-import ParentMarginSET from './SharedElementTransition/ParentMargin';
-import RestoreStateSET from './SharedElementTransition/RestoreState';
-import HeadersSET from './SharedElementTransition/Headers';
+// import ImageSET from './SharedElementTransition/Image';
+// import GallerySET from './SharedElementTransition/Gallery';
+// import ManyTagsSET from './SharedElementTransition/ManyTags';
+// import ParentMarginSET from './SharedElementTransition/ParentMargin';
+// import RestoreStateSET from './SharedElementTransition/RestoreState';
+// import HeadersSET from './SharedElementTransition/Headers';
 import CardSET from './SharedElementTransition/Card';
-import LayoutAnimationSET from './SharedElementTransition/LayoutAnimation';
-import MixedPropsSET from './SharedElementTransition/MixedProps';
-import CustomTransitionSET from './SharedElementTransition/CustomTransition';
+// import LayoutAnimationSET from './SharedElementTransition/LayoutAnimation';
+// import MixedPropsSET from './SharedElementTransition/MixedProps';
+// import CustomTransitionSET from './SharedElementTransition/CustomTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -304,5 +304,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
+
+App(); // TODO: remove
 
 export default CardSET;
