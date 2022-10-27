@@ -15,7 +15,7 @@ class CoreFunction;
 class JSRuntimeHelper {
  public:
   jsi::Runtime *uiRuntime; // UI runtime created by Reanimated
-  jsi::Runtime *rnRuntime; // React-Naitve's main JS runtime
+  jsi::Runtime *rnRuntime; // React-Native's main JS runtime
   std::shared_ptr<Scheduler> scheduler;
 
   JSRuntimeHelper(jsi::Runtime *_rnRuntime, jsi::Runtime *_uiRuntime, const std::shared_ptr<Scheduler> &_scheduler)
@@ -40,7 +40,7 @@ class JSRuntimeHelper {
   }
 };
 
-// Core functions are not allowed to captrue oputside variables, otherwise the'd
+// Core functions are not allowed to capture outside variables, otherwise they'd
 // try to access _closure variable which is something we want to avoid for
 // simplicity reasons.
 class CoreFunction {
@@ -48,6 +48,7 @@ class CoreFunction {
   std::shared_ptr<jsi::Function> rnFunction;
   std::shared_ptr<jsi::Function> uiFunction;
   std::string functionBody;
+  std::string location;
   JSRuntimeHelper
       *runtimeHelper; // runtime helper holds core function references, so we
                       // use normal pointer here to avoid ref cycles.
@@ -233,7 +234,7 @@ class ShareableScalar : public Shareable {
       case Shareable::NumberType:
         return jsi::Value(data.number);
       default:
-        throw "invalid scalar type";
+        throw std::runtime_error("attempted to convert object that's not of a scalar type");
     }
   }
 

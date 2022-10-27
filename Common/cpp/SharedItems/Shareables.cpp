@@ -4,10 +4,12 @@ using namespace facebook;
 
 namespace reanimated {
 
-CoreFunction::CoreFunction(JSRuntimeHelper *_runtimeHelper, const jsi::Value &workletObject) : runtimeHelper(_runtimeHelper) {
+CoreFunction::CoreFunction(JSRuntimeHelper *_runtimeHelper, const jsi::Value &workletValue) : runtimeHelper(_runtimeHelper) {
   jsi::Runtime &rt = *_runtimeHelper->rnRuntime;
-  rnFunction = std::make_shared<jsi::Function>(workletObject.asObject(rt).asFunction(rt));
-  functionBody = workletObject.asObject(rt).getProperty(rt, "asString").asString(rt).utf8(rt);
+  auto workletObject = workletValue.asObject(rt);
+  rnFunction = std::make_shared<jsi::Function>(workletObject.asFunction(rt));
+  functionBody = workletObject.getProperty(rt, "asString").asString(rt).utf8(rt);
+  location = workletObject.getProperty(rt, "__location").asString(rt).utf8(rt);
 }
 
 jsi::Value CoreFunction::call(jsi::Runtime &rt, const jsi::Value &arg0) {
@@ -17,7 +19,7 @@ jsi::Value CoreFunction::call(jsi::Runtime &rt, const jsi::Value &arg0) {
       auto codeBuffer =
           std::make_shared<const jsi::StringBuffer>("(" + functionBody + ")");
       uiFunction = std::make_shared<jsi::Function>(
-          rt.evaluateJavaScript(codeBuffer, "__TODO")
+          rt.evaluateJavaScript(codeBuffer, location)
               .asObject(rt)
               .asFunction(rt));
     }
@@ -37,7 +39,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
       return object.getHostObject<ShareableJSRef>(rt)->value;
     }
   }
-  throw std::string("value is not shareable");
+  throw std::runtime_error("expecing the object to be of type ShareableJSRef");
 }
 
 Shareable::~Shareable() {

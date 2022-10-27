@@ -80,11 +80,11 @@ NativeReanimatedModule::NativeReanimatedModule(
         // fast path for remote function w/o arguments
         remoteFun.asObject(rt).asFunction(rt).call(rt);
       } else {
-        auto argsAry = shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
-        auto argsSize = argsAry.size(rt);
+        auto argsArray = shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
+        auto argsSize = argsArray.size(rt);
         jsi::Value args[argsSize];
         for (size_t i = 0; i < argsSize; i++) {
-          args[i] = argsAry.getValueAtIndex(rt, i);
+          args[i] = argsArray.getValueAtIndex(rt, i);
         }
         remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
       }
@@ -213,7 +213,7 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
   } else if (value.isNumber()) {
     shareable = std::make_shared<ShareableScalar>(value.getNumber());
   } else {
-    throw "something wacky";
+    throw std::runtime_error("attempted to convert an unsuppoerted value type");
   }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
@@ -313,10 +313,6 @@ void NativeReanimatedModule::onEvent(
 #else
     eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
 #endif
-    //    mapperRegistry->execute(*runtime);
-    //    if (mapperRegistry->needRunOnRender()) {
-    //      maybeRequestRender();
-    //    }
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
