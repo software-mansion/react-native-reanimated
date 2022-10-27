@@ -1,40 +1,37 @@
-/*
-STATE: FAIL
-
-desc: przy przejściu na drugi ekran skacze o wysokość headera
-*/
-
 import * as React from 'react';
-import {
-  Button,
-  View,
-} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-} from 'react-native-screens/native-stack';
+import { Button, View } from 'react-native';
+import { NavigationContainer, ParamListBase } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
+import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 
-function Screen1({ navigation }) {
+function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <Animated.View
         style={{ width: '100%', height: 100, backgroundColor: 'green' }}
         sharedTransitionTag="mleko"
       />
-      <Button onPress={() => navigation.navigate('Screen2')} title="go to screen2" />
+      <Button
+        onPress={() => navigation.navigate('Screen2')}
+        title="go to screen2"
+      />
     </Animated.ScrollView>
   );
 }
 
 function Screen2() {
-
   return (
     <View style={{ flex: 1 }}>
       <Animated.View
-        style={{ width: '100%', height: 100, backgroundColor: 'green', marginTop: 0 }}
+        style={{
+          width: '100%',
+          height: 100,
+          backgroundColor: 'green',
+          marginTop: 0,
+        }}
         sharedTransitionTag="mleko"
       />
     </View>
@@ -46,8 +43,7 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'slide_from_right',
-          // stackAnimation: 'none',
+          animation: 'slide_from_right',
         }}>
         <Stack.Screen
           name="Screen1"

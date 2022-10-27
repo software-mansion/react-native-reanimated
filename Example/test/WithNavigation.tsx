@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavigationProp } from '@react-navigation/native';
-import { enableScreens } from 'react-native-screens';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, Button } from 'react-native';
 import {
@@ -11,7 +10,6 @@ import {
   SpringLayoutAnimation,
 } from '../src/LayoutReanimation';
 
-enableScreens(true);
 const Stack = createStackNavigator();
 
 const Screen1 = ({ navigation }: { navigation: NavigationProp<any> }) => {
@@ -65,7 +63,6 @@ const App = () => {
   return (
     <Stack.Navigator
       detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
         animationEnabled: false,
         cardStyle: { backgroundColor: 'white' },
@@ -73,11 +70,31 @@ const App = () => {
         gestureEnabled: true,
         // cardOverlayEnabled: true,
       }}>
-      <Stack.Screen component={Screen1} name="Screen1" />
-      <Stack.Screen component={Screen2} name="Screen2" />
-      <Stack.Screen component={Screen3} name="Screen3" />
-      <Stack.Screen component={Screen4} name="Screen4" />
-      <Stack.Screen component={Screen5} name="Screen5" />
+      <Stack.Screen
+        component={Screen1}
+        name="Screen1"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen2}
+        name="Screen2"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen3}
+        name="Screen3"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen4}
+        name="Screen4"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen5}
+        name="Screen5"
+        options={{ presentation: 'modal' }}
+      />
     </Stack.Navigator>
   );
 };

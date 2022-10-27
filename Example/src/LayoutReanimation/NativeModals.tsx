@@ -3,7 +3,7 @@ import { Alert, Modal, StyleSheet, Text, Pressable, View } from 'react-native';
 import {
   createNativeStackNavigator,
   NativeStackNavigationProp,
-} from 'react-native-screens/native-stack';
+} from '@react-navigation/native-stack';
 import { ParamListBase } from '@react-navigation/native';
 
 // import { createStackNavigator } from "@react-navigation/stack";
@@ -20,7 +20,7 @@ export function NativeModals() {
         name="Modal"
         options={{
           // comment below for native-stack to see if it works with normal screens
-          stackPresentation: 'modal',
+          presentation: 'modal',
         }}
         component={App}
       />

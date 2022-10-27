@@ -1,7 +1,3 @@
-/*
-STATE: OK
-*/
-
 import * as React from 'react';
 import {
   View,
@@ -12,12 +8,13 @@ import {
   Dimensions,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import florence from './assets/florence.jpg';
-import countryside from './assets/countryside.jpg';
-import dawn from './assets/dawn.jpg';
+
+const florence = require('./assets/florence.jpg');
+const countryside = require('./assets/countryside.jpg');
+const dawn = require('./assets/dawn.jpg');
 
 type StackParamList = {
   Home: undefined;

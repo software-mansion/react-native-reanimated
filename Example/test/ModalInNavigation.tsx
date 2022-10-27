@@ -1,11 +1,9 @@
 import React from 'react';
 import { NavigationProp } from '@react-navigation/native';
-import { enableScreens } from 'react-native-screens';
 import { createStackNavigator } from '@react-navigation/stack';
 import Animated, { SlideInLeft, SlideOutDown } from 'react-native-reanimated';
 import { View, Text, Button } from 'react-native';
 
-enableScreens(true);
 const Stack = createStackNavigator();
 
 const Screen1 = ({ navigation }: { navigation: NavigationProp<any> }) => {
@@ -43,7 +41,6 @@ const App = () => {
   return (
     <Stack.Navigator
       detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
         animationEnabled: false,
         cardStyle: { backgroundColor: 'transparent' },
@@ -51,8 +48,16 @@ const App = () => {
         gestureEnabled: true,
         // cardOverlayEnabled: true,
       }}>
-      <Stack.Screen name="Screen1" component={Screen1} />
-      <Stack.Screen name="Screen2" component={Screen2} />
+      <Stack.Screen
+        name="Screen1"
+        component={Screen1}
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="Screen2"
+        component={Screen2}
+        options={{ presentation: 'modal' }}
+      />
     </Stack.Navigator>
   );
 };

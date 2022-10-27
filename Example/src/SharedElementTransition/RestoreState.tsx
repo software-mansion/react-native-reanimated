@@ -1,38 +1,37 @@
-/*
-STATE: OK
-*/
-
 import * as React from 'react';
-import {
-  Button,
-  View,
-} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-} from 'react-native-screens/native-stack';
+import { Button, View } from 'react-native';
+import { NavigationContainer, ParamListBase } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
+import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 
-function Screen1({ navigation }) {
+function Screen1({ navigation }: any) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <Animated.View
         style={{ width: '100%', height: 100, backgroundColor: 'green' }}
         sharedTransitionTag="mleko"
       />
-      <Button onPress={() => navigation.navigate('Screen2')} title="go to screen2" />
+      <Button
+        onPress={() => navigation.navigate('Screen2')}
+        title="go to screen2"
+      />
     </Animated.ScrollView>
   );
 }
 
-function Screen2({ navigation }) {
-
+function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1 }}>
       <Animated.View
-        style={{ width: '100%', height: 200, backgroundColor: 'green', marginTop: 200 }}
+        style={{
+          width: '100%',
+          height: 200,
+          backgroundColor: 'green',
+          marginTop: 200,
+        }}
         sharedTransitionTag="mleko"
       />
       <Button
@@ -48,8 +47,7 @@ function Screen2({ navigation }) {
   );
 }
 
-function Screen3({ navigation }) {
-
+function Screen3({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1, marginTop: 50 }}>
       <Button

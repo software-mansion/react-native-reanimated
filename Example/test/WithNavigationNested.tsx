@@ -76,18 +76,37 @@ const SimpleContainer = () => {
   return (
     <Stack.Navigator
       detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
         animationEnabled: false,
         headerStyle: { backgroundColor: 'red' },
         gestureEnabled: true,
         // cardOverlayEnabled: true,
       }}>
-      <Stack.Screen component={Screen1} name="Screen1" />
-      <Stack.Screen component={Screen2} name="Screen2" />
-      <Stack.Screen component={Screen3} name="Screen3" />
-      <Stack.Screen component={Screen4} name="Screen4" />
-      <Stack.Screen component={Screen5} name="Screen5" />
+      <Stack.Screen
+        component={Screen1}
+        name="Screen1"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen2}
+        name="Screen2"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen3}
+        name="Screen3"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen4}
+        name="Screen4"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        component={Screen5}
+        name="Screen5"
+        options={{ presentation: 'modal' }}
+      />
     </Stack.Navigator>
   );
 };
@@ -96,15 +115,22 @@ const App = () => {
   return (
     <Stack.Navigator
       detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
         animationEnabled: false,
         headerStyle: { backgroundColor: 'red' },
         gestureEnabled: true,
         // cardOverlayEnabled: true,
       }}>
-      <Stack.Screen name="home" component={Home} />
-      <Stack.Screen name="navigation" component={SimpleContainer} />
+      <Stack.Screen
+        name="home"
+        component={Home}
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="navigation"
+        component={SimpleContainer}
+        options={{ presentation: 'modal' }}
+      />
     </Stack.Navigator>
   );
 };

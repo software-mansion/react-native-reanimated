@@ -1,31 +1,21 @@
-/*
-STATE: OK
-*/
-
 import * as React from 'react';
-import {
-  Button,
-  View,
-  Image,
-  Text,
-} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-} from 'react-native-screens/native-stack';
+import { Button, View } from 'react-native';
+import { NavigationContainer, ParamListBase } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
+import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 const AnimatedButton = Animated.createAnimatedComponent(Button);
 
-function Screen1({ navigation }) {
+function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
-      <View style={{display: 'flex', flexDirection: 'column'}}>
+      <View style={{ display: 'flex', flexDirection: 'column' }}>
         <View style={{ marginTop: 50, marginLeft: 10 }}>
           <View style={{ marginTop: 50, marginLeft: 10 }}>
             <View style={{ marginTop: 50, marginLeft: 10 }}>
-              <Animated.View 
+              <Animated.View
                 sharedTransitionTag="mleko"
                 style={{ width: 150, height: 150, backgroundColor: 'green' }}
               />
@@ -33,18 +23,20 @@ function Screen1({ navigation }) {
           </View>
         </View>
       </View>
-      <Button onPress={() => navigation.navigate('Screen2')} title="Go to the next screen" />
+      <Button
+        onPress={() => navigation.navigate('Screen2')}
+        title="Go to the next screen"
+      />
     </Animated.ScrollView>
   );
 }
 
-function Screen2({ navigation }) {
-
+function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1 }}>
       <Animated.View
         sharedTransitionTag="mleko"
-        style={{width: '100%', height: 450, backgroundColor: 'green'}}
+        style={{ width: '100%', height: 450, backgroundColor: 'green' }}
       />
       <AnimatedButton
         title="go back"
@@ -59,7 +51,7 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'fade',
+          animation: 'fade',
         }}>
         <Stack.Screen
           name="Screen1"

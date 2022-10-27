@@ -327,7 +327,7 @@ PODS:
     - React-logger (= 0.70.3)
     - React-perflogger (= 0.70.3)
     - ReactCommon/turbomodule/core (= 0.70.3)
-  - RNCMaskedView (0.1.10):
+  - RNCMaskedView (0.1.11):
     - React
   - RNCPicker (1.8.1):
     - React-Core
@@ -547,7 +547,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: b9a58ffdd18446f43d493a4b0ecd603ee86be847
   React-runtimeexecutor: e9b1f9310158a1e265bcdfdfd8c62d6174b947a2
   ReactCommon: 01064177e66d652192c661de899b1076da962fd9
-  RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
+  RNCMaskedView: 0e1bc4bfa8365eba5fbbb71e07fbdc0555249489
   RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
   RNGestureHandler: b7a872907ee289ada902127f2554fa1d2c076122
   RNReanimated: b977c08bef3a0b733aa0c0044d8cfd04a4254104

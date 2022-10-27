@@ -3,18 +3,14 @@ STATE: OK
 */
 
 import * as React from 'react';
-import {
-  Button,
-  View,
-} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-} from 'react-native-screens/native-stack';
+import { Button, View } from 'react-native';
+import { NavigationContainer, ParamListBase } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
   SharedTransition,
-  withSpring
+  withSpring,
 } from 'react-native-reanimated';
+import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,35 +21,46 @@ const transition = SharedTransition.custom((values: any) => {
     width: withSpring(values.targetWidth),
     originX: withSpring(values.targetOriginX),
     originY: withSpring(values.targetOriginY),
-  }
+  };
 });
 
-function Screen1({ navigation }) {
+function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <Animated.View
-        style={{width: 150, height: 150, marginLeft: 20, marginTop: 50, backgroundColor: 'green' }}
-        sharedTransitionTag="mleko"
-        sharedTransitionStyle={transition}
-      />
-      <Button onPress={() => navigation.navigate('Screen2')} title="go to screen2" />
-    </Animated.ScrollView>
-  );
-}
-
-function Screen2({ navigation }) {
-
-  return (
-    <View style={{ flex: 1 }}>
-      <Animated.View
-        style={{ width: 200, height: 300, marginLeft: 60, marginTop: 100, backgroundColor: 'green'}}
+        style={{
+          width: 150,
+          height: 150,
+          marginLeft: 20,
+          marginTop: 50,
+          backgroundColor: 'green',
+        }}
         sharedTransitionTag="mleko"
         sharedTransitionStyle={transition}
       />
       <Button
-        title="go back"
-        onPress={() => navigation.navigate('Screen1')}
+        onPress={() => navigation.navigate('Screen2')}
+        title="go to screen2"
       />
+    </Animated.ScrollView>
+  );
+}
+
+function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
+  return (
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{
+          width: 200,
+          height: 300,
+          marginLeft: 60,
+          marginTop: 100,
+          backgroundColor: 'green',
+        }}
+        sharedTransitionTag="mleko"
+        sharedTransitionStyle={transition}
+      />
+      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
     </View>
   );
 }
@@ -63,7 +70,7 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'none',
+          animation: 'none',
         }}>
         <Stack.Screen
           name="Screen1"
