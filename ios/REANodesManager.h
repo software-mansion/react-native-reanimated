@@ -5,7 +5,7 @@
 #import <React/RCTSurfacePresenterStub.h>
 #endif
 
-#import "REAAnimationsManager.h"
+#import <RNReanimated/REAAnimationsManager.h>
 
 @class REAModule;
 
