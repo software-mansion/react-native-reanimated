@@ -1,4 +1,4 @@
-#import "REAMessageThread.h"
+#import <RNReanimated/REAMessageThread.h>
 
 #include <condition_variable>
 #include <mutex>

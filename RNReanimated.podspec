@@ -4,6 +4,7 @@ require_relative './scripts/reanimated_utils'
 reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
 config = find_config()
 assert_no_multiple_instances(config)
+assert_no_reanimated2_with_new_architecture(reanimated_package_json)
 
 fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
 folly_prefix = config[:react_native_minor_version] >= 64 ? 'RCT-' : ''
@@ -36,15 +37,17 @@ Pod::Spec.new do |s|
     "Common/cpp/hidden_headers/**"
   ]
 
-  s.pod_target_xcconfig    = {
+  s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\"",
+    "FRAMEWORK_SEARCH_PATHS" => "\"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes\"",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
-  s.xcconfig               = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"#{config[:react_native_common_dir]}\"",
-                               "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
+  s.xcconfig = {
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
+    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags
+  }
 
   s.requires_arc = true
 
