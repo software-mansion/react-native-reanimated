@@ -399,6 +399,36 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
         const tag = findNodeHandle(ref);
+        if (tag !== null) {
+          // added
+          // @ts-ignore trust me bro
+          const element = tag as HTMLElement;
+
+          // TODO: set visibility: hidden during render
+          element.style.visibility = 'hidden';
+
+          // TODO: obtain starting values
+          element.style.visibility = 'visible';
+          element.style.opacity = '0';
+          element.style.transform = 'translateX(-100px)';
+
+          const start = performance.now();
+          const end = start + 800;
+          const loop = () => {
+            const now = performance.now();
+            const progress = (now - start) / (end - start);
+            const dx = Math.min(-100 + 100 * progress, 0);
+            element.style.opacity = progress.toString();
+            element.style.transform = `translateX(${dx}px)`;
+            if (now > end) {
+              return;
+            }
+            requestAnimationFrame(loop);
+          };
+          requestAnimationFrame(loop);
+        } else {
+          // removed
+        }
         if (
           !shouldBeUseWeb() &&
           (this.props.layout || this.props.entering || this.props.exiting) &&
