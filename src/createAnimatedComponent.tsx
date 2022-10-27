@@ -411,7 +411,10 @@ export default function createAnimatedComponent(
         const tag = findNodeHandle(ref);
         if (
           !shouldBeUseWeb() &&
-          (this.props.layout || this.props.entering || this.props.exiting || this.props.sharedTransitionTag) &&
+          (this.props.layout ||
+            this.props.entering ||
+            this.props.exiting ||
+            this.props.sharedTransitionTag) &&
           tag != null
         ) {
           enableLayoutAnimations(true, false);
