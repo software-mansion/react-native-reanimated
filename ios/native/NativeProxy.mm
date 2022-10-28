@@ -224,8 +224,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>([](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled) {});
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(
+      [](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled, std::string type) {});
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
@@ -250,10 +250,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled) {
+  auto endLayoutAnimation = [=](int tag, bool isCancelled, std::string type) {
     REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
-      [animationsManager endLayoutAnimnationForTag:@(tag) cancelled:isCancelled];
+      [animationsManager endLayoutAnimnationForTag:@(tag)
+                                         cancelled:isCancelled
+                                              type:[NSString stringWithUTF8String:type.c_str()]];
     }
   };
 

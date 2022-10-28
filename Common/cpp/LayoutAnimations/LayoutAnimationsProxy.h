@@ -18,11 +18,11 @@ class LayoutAnimationsProxy {
  public:
   LayoutAnimationsProxy(
       std::function<void(int, jsi::Object newProps)> progressHandler,
-      std::function<void(int, bool)> endHandler);
+      std::function<void(int, bool, std::string)> endHandler);
 
   void
   startObserving(int tag, std::shared_ptr<MutableValue> sv, jsi::Runtime &rt);
-  void stopObserving(int tag, bool finished);
+  void stopObserving(int tag, bool finished, std::string type);
   void configureAnimation(
       int tag,
       const std::string &type,
@@ -37,7 +37,7 @@ class LayoutAnimationsProxy {
 
  private:
   std::function<void(int, jsi::Object newProps)> progressHandler;
-  std::function<void(int, bool)> endHandler;
+  std::function<void(int, bool, std::string)> endHandler;
   std::map<int, std::shared_ptr<MutableValue>> observedValues;
   std::map<int, std::shared_ptr<ShareableValue>> viewSharedValues;
   std::map<int, std::shared_ptr<ShareableValue>> enteringAnimations;

@@ -114,10 +114,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return view;
 }
 
-- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled
+- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled type:(NSString *)type
 {
   UIView *view = [_exitingViews objectForKey:tag];
-  if (view != nil) {
+  if ([type isEqualToString:@("exiting")] && view != nil) {
     [self endAnimationsRecursive:view];
   }
 }
@@ -325,9 +325,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container
 {
-  int tag = [container.reactTag intValue];
   for (UIView *removedChild in children) {
-    int tag = [removedChild.reactTag intValue];
     if (![self removeRecursive:removedChild fromContainer:container withoutAnimation:true]) {
       [removedChild removeFromSuperview];
     }
