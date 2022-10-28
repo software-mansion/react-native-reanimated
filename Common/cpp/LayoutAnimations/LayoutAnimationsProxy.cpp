@@ -12,7 +12,7 @@ const long long idOffset = 1e9;
 
 LayoutAnimationsProxy::LayoutAnimationsProxy(
     std::function<void(int, jsi::Object newProps)> progressHandler,
-    std::function<void(int, bool)> endHandler)
+    std::function<void(int, bool, std::string)> endHandler)
     : progressHandler(std::move(progressHandler)),
       endHandler(std::move(endHandler)) {}
 
@@ -27,14 +27,17 @@ void LayoutAnimationsProxy::startObserving(
   });
 }
 
-void LayoutAnimationsProxy::stopObserving(int tag, bool finished) {
+void LayoutAnimationsProxy::stopObserving(
+    int tag,
+    bool finished,
+    std::string type) {
   if (observedValues.count(tag) == 0) {
     return;
   }
   std::shared_ptr<MutableValue> sv = observedValues[tag];
   sv->removeListener(tag + idOffset);
   observedValues.erase(tag);
-  this->endHandler(tag, !finished);
+  this->endHandler(tag, !finished, type);
 }
 
 void LayoutAnimationsProxy::configureAnimation(

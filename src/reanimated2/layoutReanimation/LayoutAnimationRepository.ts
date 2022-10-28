@@ -28,8 +28,6 @@ runOnUI(() => {
         }
       }
 
-      _stopObservingProgress(tag, false);
-
       const backupColor: Record<string, string> = {};
       for (const key in style.initialValues) {
         if (ColorProperties.includes(key)) {
@@ -49,7 +47,7 @@ runOnUI(() => {
       animation.callback = (finished?: boolean) => {
         if (finished) {
           delete enteringAnimationForTag[tag];
-          _stopObservingProgress(tag, finished);
+          _stopObservingProgress(tag, finished, type);
         }
         style.callback && style.callback(finished);
       };
@@ -60,7 +58,7 @@ runOnUI(() => {
       // }
 
       viewSharedValue.value = animation;
-      _startObservingProgress(tag, viewSharedValue);
+      _startObservingProgress(tag, viewSharedValue, type);
     },
   };
 })();

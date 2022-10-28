@@ -26,7 +26,7 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag;
-- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled;
+- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled type:(NSString *)type;
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view;

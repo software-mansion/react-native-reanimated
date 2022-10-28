@@ -234,9 +234,9 @@ void NativeProxy::installJSIBindings(
     this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled) {
+  auto endLayoutAnimation = [=](int tag, bool isCancelled, std::string type) {
     this->layoutAnimations->cthis()->endLayoutAnimation(
-        tag, (isCancelled) ? 1 : 0);
+        tag, (isCancelled) ? 1 : 0, type);
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =

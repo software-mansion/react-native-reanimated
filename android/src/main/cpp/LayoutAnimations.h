@@ -34,14 +34,14 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
 
   void progressLayoutAnimation(int tag, const jsi::Value &progress);
-  void endLayoutAnimation(int tag, bool cancelled);
+  void endLayoutAnimation(int tag, bool cancelled, std::string type);
 
  private:
   friend HybridBase;
   jni::global_ref<LayoutAnimations::javaobject> javaPart_;
   std::weak_ptr<jsi::Runtime> weakUIRuntime;
-  AnimationStartingBlock animationStartingBlock;
-  HasAnimationBlock hasAnimationBlock;
+  AnimationStartingBlock _animationStartingBlock;
+  HasAnimationBlock _hasAnimationBlock;
 
   explicit LayoutAnimations(
       jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
