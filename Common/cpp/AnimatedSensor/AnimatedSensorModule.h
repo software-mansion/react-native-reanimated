@@ -31,7 +31,7 @@ class AnimatedSensorModule {
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
-      JSRuntimeHelper *runtimeHelper,
+      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer);

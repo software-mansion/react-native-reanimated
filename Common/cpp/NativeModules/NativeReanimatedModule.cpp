@@ -189,14 +189,12 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      shareable =
-          std::make_shared<ShareableWorklet>(runtimeHelper.get(), rt, object);
+      shareable = std::make_shared<ShareableWorklet>(runtimeHelper, rt, object);
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      shareable =
-          std::make_shared<ShareableHandle>(runtimeHelper.get(), rt, object);
+      shareable = std::make_shared<ShareableHandle>(runtimeHelper, rt, object);
     } else if (object.isFunction(rt)) {
       shareable = std::make_shared<ShareableRemoteFunction>(
-          runtimeHelper.get(), rt, object.asFunction(rt));
+          runtimeHelper, rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
       shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
     } else {
@@ -360,7 +358,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
     const jsi::Value &interval,
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule.registerSensor(
-      rt, runtimeHelper.get(), sensorType, interval, sensorDataHandler);
+      rt, runtimeHelper, sensorType, interval, sensorDataHandler);
 }
 
 void NativeReanimatedModule::unregisterSensor(
@@ -589,7 +587,8 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
   return subscribeForKeyboardEventsFunction([=](int keyboardState, int height) {
     jsi::Runtime &rt = *uiRuntime;
     auto handler = shareableHandler->getJSValue(rt);
-    handler.asObject(rt).asFunction(rt).call(rt, jsi::Value(keyboardState), jsi::Value(height));
+    handler.asObject(rt).asFunction(rt).call(
+        rt, jsi::Value(keyboardState), jsi::Value(height));
   });
 }
 

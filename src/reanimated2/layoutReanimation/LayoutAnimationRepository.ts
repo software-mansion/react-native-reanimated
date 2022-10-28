@@ -19,11 +19,11 @@ function startObservingProgress(
 function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
-  finished: boolean
+  cancelled: boolean
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
-  _notifyAboutEnd(tag, finished);
+  _notifyAboutEnd(tag, cancelled);
 }
 
 runOnUI(() => {
@@ -63,7 +63,7 @@ runOnUI(() => {
       }
 
       const sv: SharedValue<number> & { _value: number } = configs[tag].sv;
-      stopObservingProgress(tag, sv, false);
+      stopObservingProgress(tag, sv, true);
       startObservingProgress(tag, sv);
 
       const backupColor: Record<string, string> = {};
@@ -76,12 +76,12 @@ runOnUI(() => {
       }
 
       sv.value = Object.assign({}, sv._value, style.initialValues);
-      stopObservingProgress(tag, sv, false);
+      stopObservingProgress(tag, sv, true);
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
         if (finished) {
-          stopObservingProgress(tag, sv, finished);
+          stopObservingProgress(tag, sv, false);
         }
         style.callback && style.callback(finished);
       };
