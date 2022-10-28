@@ -117,8 +117,28 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled
 {
   UIView *view = [_exitingViews objectForKey:tag];
-  [_exitingViews removeObjectForKey:tag];
-  [self maybeDropAncestors:view];
+  if (view != nil) {
+    [self endAnimationsRecursive:view];
+  }
+}
+
+- (void)endAnimationsRecursive:(UIView *)view
+{
+  NSNumber *tag = [view reactTag];
+
+  // we'll remove this view anyway when exiting from recursion,
+  // no need to remove it in `maybeDropAncestors`
+  [_ancestorsToRemove removeObject:tag];
+
+  for (UIView *child in [[view subviews] copy]) {
+    [self endAnimationsRecursive:child];
+  }
+
+  if ([_exitingViews objectForKey:tag]) {
+    [_exitingViews removeObjectForKey:tag];
+    [self maybeDropAncestors:view];
+  }
+
   [view removeFromSuperview];
 }
 
@@ -256,23 +276,21 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
         }
         [_ancestorsOfExitingViews removeObjectForKey:view.reactTag];
       } else {
-        _ancestorsOfExitingViews[parent.reactTag] = @(trackingCount);
+        _ancestorsOfExitingViews[view.reactTag] = @(trackingCount);
       }
     }
   }
 }
 
-- (BOOL)removeRecursive:(UIView *)view fromContainer:(UIView *)container;
+- (BOOL)removeRecursive:(UIView *)view fromContainer:(UIView *)container withoutAnimation:(BOOL)shouldRemove;
 {
   if (view.reactTag) {
     BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting");
     BOOL wantAnimateExit = hasExitAnimation;
-    if (!wantAnimateExit) {
-      for (UIView *subview in view.reactSubviews) {
-        if ([self removeRecursive:subview fromContainer:view]) {
-          wantAnimateExit = YES;
-          break;
-        }
+
+    for (UIView *subview in [view.reactSubviews copy]) {
+      if ([self removeRecursive:subview fromContainer:view withoutAnimation:(shouldRemove && !hasExitAnimation)]) {
+        wantAnimateExit = YES;
       }
     }
 
@@ -288,15 +306,17 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       view.userInteractionEnabled = NO;
       [originalSuperview insertSubview:view atIndex:originalIndex];
       if (hasExitAnimation) {
-        NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
-        [_exitingViews setObject:view forKey:view.reactTag];
-        [self registerExitingAncestors:view];
-        _startAnimationForTag(view.reactTag, @"exiting", preparedValues, @(0));
+        if (![_exitingViews objectForKey:view.reactTag]) {
+          NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
+          [_exitingViews setObject:view forKey:view.reactTag];
+          [self registerExitingAncestors:view];
+          _startAnimationForTag(view.reactTag, @"exiting", preparedValues, @(0));
+        }
       } else {
         [_ancestorsToRemove addObject:view.reactTag];
       }
       return YES;
-    } else {
+    } else if (shouldRemove) {
       [container removeReactSubview:view];
     }
   }
@@ -305,8 +325,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container
 {
+  int tag = [container.reactTag intValue];
   for (UIView *removedChild in children) {
-    if (![self removeRecursive:removedChild fromContainer:container]) {
+    int tag = [removedChild.reactTag intValue];
+    if (![self removeRecursive:removedChild fromContainer:container withoutAnimation:true]) {
       [removedChild removeFromSuperview];
     }
   }

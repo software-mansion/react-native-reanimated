@@ -405,6 +405,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues, false);
       if (!mExitingViews.containsKey(tag)) {
         mExitingViews.put(tag, view);
+        view.setClickable(false);
         registerExitingAncestors(view);
         mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
       }
@@ -413,11 +414,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (wantAnimateExit) {
       mAncestorsToRemove.add(tag);
+      view.setClickable(false);
       return true;
     }
 
     if (shouldRemove) {
       removeView(view, parent);
+    } else {
+      view.setClickable(false);
     }
     return false;
   }
