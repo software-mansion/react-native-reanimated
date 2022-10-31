@@ -72,7 +72,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     auto shareableArgs = argsValue.isUndefined()
         ? nullptr
         : extractShareableOrThrow(rt, argsValue);
-    auto jsRuntime = this->runtimeHelper->rnRuntime;
+    auto jsRuntime = this->runtimeHelper->rnRuntime();
     this->scheduler->scheduleOnJS([=] {
       jsi::Runtime &rt = *jsRuntime;
       auto remoteFun = shareableRemoteFun->getJSValue(rt);
@@ -177,9 +177,9 @@ void NativeReanimatedModule::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow(rt, worklet);
   assert(
-      shareableWorklet->valueType == Shareable::WorkletType &&
+      shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  auto uiRuntime = runtimeHelper->uiRuntime;
+  auto uiRuntime = runtimeHelper->uiRuntime();
   scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *uiRuntime;
     auto workletValue = shareableWorklet->getJSValue(rt);
@@ -247,7 +247,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
   scheduler->scheduleOnUI([=] {
-    jsi::Runtime &rt = *runtimeHelper->uiRuntime;
+    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto handlerFunction =
         handlerShareable->getJSValue(rt).asObject(rt).asFunction(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
@@ -603,7 +603,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
-  auto uiRuntime = runtimeHelper->uiRuntime;
+  auto uiRuntime = runtimeHelper->uiRuntime();
   return subscribeForKeyboardEventsFunction([=](int keyboardState, int height) {
     jsi::Runtime &rt = *uiRuntime;
     auto handler = shareableHandler->getJSValue(rt);

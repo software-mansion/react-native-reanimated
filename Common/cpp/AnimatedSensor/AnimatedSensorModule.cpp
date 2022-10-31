@@ -28,7 +28,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
-  auto uiRuntime = runtimeHelper->uiRuntime;
+  auto uiRuntime = runtimeHelper->uiRuntime();
 
   int sensorId = platformRegisterSensorFunction_(sensorType, interval.asNumber(), [=](double newValues[]) {
     jsi::Runtime &rt = *uiRuntime;

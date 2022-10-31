@@ -13,33 +13,42 @@ namespace reanimated {
 class CoreFunction;
 
 class JSRuntimeHelper {
- public:
-  jsi::Runtime *uiRuntime; // UI runtime created by Reanimated
-  jsi::Runtime *rnRuntime; // React-Native's main JS runtime
-  std::shared_ptr<Scheduler> scheduler;
+ private:
+  jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
+  jsi::Runtime *rnRuntime_; // React-Native's main JS runtime
+  std::shared_ptr<Scheduler> scheduler_;
 
+ public:
   JSRuntimeHelper(
-      jsi::Runtime *_rnRuntime,
-      jsi::Runtime *_uiRuntime,
-      const std::shared_ptr<Scheduler> &_scheduler)
-      : rnRuntime(_rnRuntime), uiRuntime(_uiRuntime), scheduler(_scheduler) {}
+      jsi::Runtime *rnRuntime,
+      jsi::Runtime *uiRuntime,
+      const std::shared_ptr<Scheduler> &scheduler)
+      : rnRuntime_(rnRuntime), uiRuntime_(uiRuntime), scheduler_(scheduler) {}
 
   std::shared_ptr<CoreFunction> valueUnpacker;
 
+  inline jsi::Runtime *uiRuntime() const {
+    return uiRuntime_;
+  }
+
+  inline jsi::Runtime *rnRuntime() const {
+    return rnRuntime_;
+  }
+
   inline bool isUIRuntime(const jsi::Runtime &rt) const {
-    return &rt == uiRuntime;
+    return &rt == uiRuntime_;
   }
 
   inline bool isRNRuntime(const jsi::Runtime &rt) const {
-    return &rt == rnRuntime;
+    return &rt == rnRuntime_;
   }
 
   void scheduleOnUI(std::function<void()> job) {
-    scheduler->scheduleOnUI(job);
+    scheduler_->scheduleOnUI(job);
   }
 
   void scheduleOnJS(std::function<void()> job) {
-    scheduler->scheduleOnJS(job);
+    scheduler_->scheduleOnJS(job);
   }
 };
 
@@ -48,17 +57,15 @@ class JSRuntimeHelper {
 // simplicity reasons.
 class CoreFunction {
  private:
-  std::shared_ptr<jsi::Function> rnFunction;
-  std::shared_ptr<jsi::Function> uiFunction;
-  std::string functionBody;
-  std::string location;
+  std::shared_ptr<jsi::Function> rnFunction_;
+  std::shared_ptr<jsi::Function> uiFunction_;
+  std::string functionBody_;
+  std::string location_;
   JSRuntimeHelper
-      *runtimeHelper; // runtime helper holds core function references, so we
-                      // use normal pointer here to avoid ref cycles.
+      *runtimeHelper_; // runtime helper holds core function references, so we
+                       // use normal pointer here to avoid ref cycles.
  public:
-  CoreFunction(
-      JSRuntimeHelper *_runtimeHelper,
-      const jsi::Value &workletObject);
+  CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
   jsi::Value call(jsi::Runtime &rt, const jsi::Value &arg0);
 };
 
@@ -85,12 +92,17 @@ class Shareable {
     SynchronizedDataHolder,
   };
 
-  Shareable(ValueType valueType_) : valueType(valueType_){};
+  Shareable(ValueType valueType) : valueType_(valueType){};
   virtual jsi::Value getJSValue(jsi::Runtime &rt) {
     return toJSValue(rt);
   }
 
-  ValueType valueType;
+  inline ValueType valueType() const {
+    return valueType_;
+  }
+
+ protected:
+  ValueType valueType_;
 };
 
 class RetainingShareable : public Shareable {
@@ -105,13 +117,14 @@ class RetainingShareable : public Shareable {
 };
 
 class ShareableJSRef : public jsi::HostObject {
- public:
-  std::shared_ptr<Shareable> value;
-  ShareableJSRef(std::shared_ptr<Shareable> _value) : value(_value){};
+ private:
+  std::shared_ptr<Shareable> value_;
 
-//  jsi::Value get(jsi::Runtime&, const jsi::PropNameID& name) {
-//    
-//  }
+ public:
+  ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value){};
+  std::shared_ptr<Shareable> value() const {
+    return value_;
+  }
 
   static jsi::Object newHostObject(
       jsi::Runtime &rt,
@@ -126,10 +139,14 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
     const jsi::Value &maybeShareableValue);
 
 template <typename T>
-std::shared_ptr<T> extractShareableOrThrow(jsi::Runtime &rt, const jsi::Value &shareableRef) {
-  auto res = std::dynamic_pointer_cast<T>(extractShareableOrThrow(rt, shareableRef));
+std::shared_ptr<T> extractShareableOrThrow(
+    jsi::Runtime &rt,
+    const jsi::Value &shareableRef) {
+  auto res =
+      std::dynamic_pointer_cast<T>(extractShareableOrThrow(rt, shareableRef));
   if (!res) {
-    throw new std::runtime_error("provided shareable object is of an incompatible type");
+    throw new std::runtime_error(
+        "provided shareable object is of an incompatible type");
   }
   return res;
 }
@@ -155,32 +172,32 @@ class ShareableObject : public RetainingShareable {
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     auto obj = jsi::Object(rt);
-    for (size_t i = 0; i < data.size(); i++) {
+    for (size_t i = 0; i < data_.size(); i++) {
       obj.setProperty(
-          rt, data[i].first.c_str(), data[i].second->getJSValue(rt));
+          rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
     }
     return obj;
   }
 
  protected:
-  std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data;
+  std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
 };
 
 class ShareableWorklet : public ShareableObject {
  private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper;
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
 
  public:
   ShareableWorklet(
       const std::shared_ptr<JSRuntimeHelper> runtimeHelper,
       jsi::Runtime &rt,
       const jsi::Object &worklet)
-      : ShareableObject(rt, worklet), runtimeHelper(runtimeHelper) {
-    valueType = WorkletType;
+      : ShareableObject(rt, worklet), runtimeHelper_(runtimeHelper) {
+    valueType_ = WorkletType;
   }
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     jsi::Value obj = ShareableObject::toJSValue(rt);
-    return runtimeHelper->valueUnpacker->call(rt, obj);
+    return runtimeHelper_->valueUnpacker->call(rt, obj);
   }
 };
 
@@ -188,58 +205,66 @@ class ShareableRemoteFunction
     : public RetainingShareable,
       public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper;
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
+  jsi::Function function_;
 
  public:
-  jsi::Function function;
   ShareableRemoteFunction(
       const std::shared_ptr<JSRuntimeHelper> runtimeHelper,
       jsi::Runtime &rt,
       jsi::Function &&function)
       : RetainingShareable(rt, RemoteFunctionType),
-        runtimeHelper(runtimeHelper),
-        function(std::move(function)) {}
+        runtimeHelper_(runtimeHelper),
+        function_(std::move(function)) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    if (runtimeHelper->isUIRuntime(rt)) {
+    if (runtimeHelper_->isUIRuntime(rt)) {
       return ShareableJSRef::newHostObject(rt, shared_from_this());
     } else {
-      return jsi::Value(rt, function);
+      return jsi::Value(rt, function_);
     }
   }
 };
 
 class ShareableHandle : public RetainingShareable {
  private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper;
-  std::shared_ptr<ShareableObject> initializer;
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
+  std::shared_ptr<ShareableObject> initializer_;
 
  public:
   ShareableHandle(
       const std::shared_ptr<JSRuntimeHelper> runtimeHelper,
       jsi::Runtime &rt,
       const jsi::Object &initializerObject)
-      : RetainingShareable(rt, HandleType), runtimeHelper(runtimeHelper) {
-    initializer = std::make_shared<ShareableObject>(rt, initializerObject);
+      : RetainingShareable(rt, HandleType), runtimeHelper_(runtimeHelper) {
+    initializer_ = std::make_shared<ShareableObject>(rt, initializerObject);
   }
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto initObj = initializer->getJSValue(rt);
-    auto value = runtimeHelper->valueUnpacker->call(rt, initObj);
-    initializer = nullptr; // we can release ref to initializer as this method
-                           // should be called at most once
+    auto initObj = initializer_->getJSValue(rt);
+    auto value = runtimeHelper_->valueUnpacker->call(rt, initObj);
+    initializer_ = nullptr; // we can release ref to initializer as this method
+                            // should be called at most once
     return value;
   }
 };
 
-class ShareableSynchronizedDataHolder : public Shareable, public std::enable_shared_from_this<ShareableSynchronizedDataHolder> {
-private:
+class ShareableSynchronizedDataHolder
+    : public Shareable,
+      public std::enable_shared_from_this<ShareableSynchronizedDataHolder> {
+ private:
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   std::shared_ptr<Shareable> data_;
   std::shared_ptr<jsi::Value> uiValue_;
   std::shared_ptr<jsi::Value> rnValue_;
   std::mutex dataAccessLock_;
-public:
-  ShareableSynchronizedDataHolder(std::shared_ptr<JSRuntimeHelper> runtimeHelper, jsi::Runtime &rt, const jsi::Value &initialValue) : Shareable(SynchronizedDataHolder), runtimeHelper_(runtimeHelper), data_(extractShareableOrThrow(rt, initialValue)) {
-  }
+
+ public:
+  ShareableSynchronizedDataHolder(
+      std::shared_ptr<JSRuntimeHelper> runtimeHelper,
+      jsi::Runtime &rt,
+      const jsi::Value &initialValue)
+      : Shareable(SynchronizedDataHolder),
+        runtimeHelper_(runtimeHelper),
+        data_(extractShareableOrThrow(rt, initialValue)) {}
 
   jsi::Value get(jsi::Runtime &rt) {
     std::unique_lock<std::mutex> read_lock(dataAccessLock_);
@@ -291,24 +316,24 @@ class ShareableString : public Shareable {
 class ShareableScalar : public Shareable {
  public:
   ShareableScalar(double number) : Shareable(NumberType) {
-    data.number = number;
+    data_.number = number;
   };
   ShareableScalar(bool boolean) : Shareable(BooleanType) {
-    data.boolean = boolean;
+    data_.boolean = boolean;
   };
   ShareableScalar() : Shareable(UndefinedType) {}
   ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    switch (valueType) {
+    switch (valueType_) {
       case Shareable::UndefinedType:
         return jsi::Value();
       case Shareable::NullType:
         return jsi::Value(nullptr);
       case Shareable::BooleanType:
-        return jsi::Value(data.boolean);
+        return jsi::Value(data_.boolean);
       case Shareable::NumberType:
-        return jsi::Value(data.number);
+        return jsi::Value(data_.number);
       default:
         throw std::runtime_error(
             "attempted to convert object that's not of a scalar type");
@@ -321,7 +346,8 @@ class ShareableScalar : public Shareable {
     double number;
   };
 
-  Data data;
+ private:
+  Data data_;
 };
 
 } // namespace reanimated
