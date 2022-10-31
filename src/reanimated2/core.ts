@@ -242,7 +242,7 @@ function valueUnpacker(objectToUnpack: any): any {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
     if (workletFun === undefined) {
       // eslint-disable-next-line no-eval
-      workletFun = eval('(' + objectToUnpack.asString + ')') as (
+      workletFun = eval('(' + objectToUnpack.asString + '\n)') as (
         ...args: any[]
       ) => any;
       workletsCache.set(objectToUnpack.__workletHash, workletFun);

@@ -5,12 +5,11 @@
 
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeManager.h"
+#include "Shareables.h"
 
 namespace reanimated {
 
 using namespace facebook;
-
-class JSRuntimeHelper;
 
 enum SensorType {
   ACCELEROMETER = 1,

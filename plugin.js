@@ -289,7 +289,6 @@ function isRelease() {
 }
 
 function shouldGenerateSourceMap() {
-  return false;
   if (isRelease()) {
     return false;
   }

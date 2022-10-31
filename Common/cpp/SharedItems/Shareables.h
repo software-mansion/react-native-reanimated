@@ -156,15 +156,16 @@ class ShareableArray : public RetainingShareable {
   ShareableArray(jsi::Runtime &rt, const jsi::Array &array);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto ary = jsi::Array(rt, data.size());
-    for (size_t i = 0; i < data.size(); i++) {
-      ary.setValueAtIndex(rt, i, data[i]->getJSValue(rt));
+    auto size = data_.size();
+    auto ary = jsi::Array(rt, size);
+    for (size_t i = 0; i < size; i++) {
+      ary.setValueAtIndex(rt, i, data_[i]->getJSValue(rt));
     }
     return ary;
   }
 
  protected:
-  std::vector<std::shared_ptr<Shareable>> data;
+  std::vector<std::shared_ptr<Shareable>> data_;
 };
 
 class ShareableObject : public RetainingShareable {
@@ -172,7 +173,7 @@ class ShareableObject : public RetainingShareable {
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     auto obj = jsi::Object(rt);
-    for (size_t i = 0; i < data_.size(); i++) {
+    for (size_t i = 0, size = data_.size(); i < size; i++) {
       obj.setProperty(
           rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
     }
