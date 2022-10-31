@@ -3,10 +3,6 @@ import { AnimatedStyle, StyleProps } from '../commonTypes';
 
 const reanimatedJS = new JSReanimated();
 
-global._makeShareableClone = (c) => c;
-global._scheduleOnJS = setImmediate;
-global._getTimestamp = reanimatedJS.getTimestamp.bind(reanimatedJS);
-
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
   setNativeProps: (style: StyleProps) => void;

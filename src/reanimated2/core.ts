@@ -138,9 +138,30 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
+let _getTimestamp: () => number;
+if (nativeShouldBeMock()) {
+  _getTimestamp = () => {
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
+  };
+} else {
+  _getTimestamp = () => {
+    'worklet';
+    if (_frameTimestamp) {
+      return _frameTimestamp;
+    }
+    if (_eventTimestamp) {
+      return _eventTimestamp;
+    }
+    return _getCurrentTime();
+  };
+}
+
 export function getTimestamp(): number {
   'worklet';
-  return global._getTimestamp();
+  if (Platform.OS === 'web') {
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
+  }
+  return _getTimestamp();
 }
 
 function valueSetter<T extends WorkletValue>(
