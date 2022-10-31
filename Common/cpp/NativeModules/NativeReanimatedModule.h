@@ -52,6 +52,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
       override;
 
+  jsi::Value makeSynchronizedDataHolder(jsi::Runtime &rt, const jsi::Value &initialShareable) override;
+  jsi::Value getDataSynchronously(jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef) override;
+  void updateDataSynchronously(jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef, const jsi::Value &newData);
+
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value registerEventHandler(

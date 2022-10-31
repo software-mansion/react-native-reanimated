@@ -16,6 +16,8 @@ using ScheduleOnJSFunction =
     std::function<void(jsi::Runtime &, const jsi::Value &, const jsi::Value &)>;
 using MakeShareableCloneFunction =
     std::function<jsi::Value(jsi::Runtime &, const jsi::Value &)>;
+using UpdateDataSynchronouslyFunction =
+    std::function<void(jsi::Runtime &, const jsi::Value &, const jsi::Value &)>;
 
 enum RuntimeType {
   /**
@@ -45,6 +47,7 @@ class RuntimeDecorator {
       const RequestFrameFunction requestFrame,
       const ScheduleOnJSFunction scheduleOnJS,
       const MakeShareableCloneFunction makeShareableClone,
+      const UpdateDataSynchronouslyFunction updateDataSynchronously,
       const TimeProviderFunction getCurrentTime,
       const RegisterSensorFunction registerSensor,
       const UnregisterSensorFunction unregisterSensor,

@@ -12,7 +12,7 @@ import {
   ShareableRef,
   Value3D,
   ValueRotation,
-  WorkletFunction,
+  ShareableSyncDataHolderRef,
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
@@ -40,8 +40,6 @@ interface WorkletValueSetterContext {
   _value?: AnimatableValue | Descriptor;
   value?: AnimatableValue;
 }
-
-// interface SharedValuePrivate<T> extends SharedValue<T> {}
 
 const testWorklet: BasicWorkletFunction<void> = () => {
   'worklet';
@@ -102,7 +100,7 @@ export function runOnUI<A extends any[], R>(
   };
 }
 
-export function makeShareable<T>(value: T): T {
+export function makeShareable<T extends object>(value: T): T {
   if (__DEV__) {
     isConfiguredCheck();
   }
@@ -112,7 +110,7 @@ export function makeShareable<T>(value: T): T {
       return value;
     },
   });
-  value.__handle = handle;
+  registerShareableMapping(value, handle);
   return value;
 }
 
@@ -138,9 +136,30 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
+let _getTimestamp: () => number;
+if (nativeShouldBeMock()) {
+  _getTimestamp = () => {
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
+  };
+} else {
+  _getTimestamp = () => {
+    'worklet';
+    if (_frameTimestamp) {
+      return _frameTimestamp;
+    }
+    if (_eventTimestamp) {
+      return _eventTimestamp;
+    }
+    return _getCurrentTime();
+  };
+}
+
 export function getTimestamp(): number {
   'worklet';
-  return global._getTimestamp();
+  if (Platform.OS === 'web') {
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
+  }
+  return _getTimestamp();
 }
 
 function valueSetter<T extends WorkletValue>(
@@ -241,22 +260,25 @@ function valueUnpacker(objectToUnpack: any): any {
   }
 }
 
-const _adaptCache = new WeakMap<object, ShareableRef>();
+const _shareableCache = new WeakMap<object, ShareableRef | Symbol>();
+const _shareableFlag = Symbol('shareable flag');
+
+function registerShareableMapping(
+  shareable: object,
+  shareableRef: ShareableRef
+): void {
+  _shareableCache.set(shareable, shareableRef);
+}
 
 function makeShareableCloneRecursive<T>(value: T): ShareableRef {
   // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
   if ((type === 'object' || type === 'function') && value !== null) {
-    const cached = _adaptCache.get(value);
-    if (cached !== undefined) {
+    const cached = _shareableCache.get(value);
+    if (cached === _shareableFlag) {
+      return value;
+    } else if (cached !== undefined) {
       return cached;
-    } else if (value.__handle) {
-      // "handle objects" as on the RN side they represent a handle to an object that
-      // lives on the JS side. Here they are represented by an object with __handle field
-      // while we want the UI thread to see the actual value constructed on the UI side.
-      // We therefore return the handle object expecting it already has been transformed
-      // into a shareable of the HandleType.
-      return value.__handle;
     } else {
       let toAdapt;
       if (Array.isArray(value)) {
@@ -271,11 +293,10 @@ function makeShareableCloneRecursive<T>(value: T): ShareableRef {
           toAdapt[key] = makeShareableCloneRecursive(element);
         }
       }
-      // TODO: we want to freeze here actually but can't becayse makeShareable set's __handle field on a converted object
-      // This case should be made available in some other way and allow for Object.freeze to be called here.
       // Object.freeze(value);
       const adopted = NativeReanimatedModule.makeShareableClone(toAdapt);
-      _adaptCache.set(value, adopted);
+      _shareableCache.set(value, adopted);
+      _shareableCache.set(adopted, _shareableFlag);
       return adopted;
     }
   }
@@ -290,15 +311,12 @@ export function makeMutable<T>(
     isConfiguredCheck();
   }
   let value = initial;
-  let baseListener: (value: T) => void | undefined;
+  let syncDataHolder: ShareableSyncDataHolderRef<T | undefined>;
   if (needSynchronousReadsFromReact) {
-    function updateOnJS(newValue: T) {
-      value = newValue;
-    }
-    baseListener = (newValue: T) => {
-      'worklet';
-      runOnJS(updateOnJS)(newValue);
-    };
+    syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
+      makeShareableCloneRecursive(undefined)
+    );
+    registerShareableMapping(syncDataHolder, _shareableFlag);
   }
   const handle = makeShareableCloneRecursive({
     __init: () => {
@@ -306,10 +324,6 @@ export function makeMutable<T>(
 
       const listeners = new Map();
       let value = initial;
-
-      if (baseListener) {
-        listeners.set(0, baseListener);
-      }
 
       const self = {
         set value(newValue) {
@@ -320,6 +334,12 @@ export function makeMutable<T>(
         },
         set _value(newValue: T) {
           value = newValue;
+          if (syncDataHolder) {
+            _updateDataSynchronously(
+              syncDataHolder,
+              makeShareableCloneOnUIRecursive(newValue)
+            );
+          }
           listeners.forEach((listener) => {
             listener(newValue);
           });
@@ -347,6 +367,9 @@ export function makeMutable<T>(
       })();
     },
     get value() {
+      if (syncDataHolder) {
+        return NativeReanimatedModule.getDataSynchronously(syncDataHolder);
+      }
       return value;
     },
     modify: (modifier: (value: T) => T) => {
@@ -361,8 +384,8 @@ export function makeMutable<T>(
     removeListener: (listenerId: number) => {
       throw new Error('removing listeners is only possible on the UI runtime');
     },
-    __handle: handle,
   };
+  registerShareableMapping(mutable, handle);
   return mutable;
 }
 
@@ -376,9 +399,8 @@ export function makeRemote<T extends object>(initial = {}): T {
       return initial;
     },
   });
-  return {
-    __handle: handle,
-  };
+  registerShareableMapping(initial, handle);
+  return initial;
 }
 
 type Mapper = {

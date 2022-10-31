@@ -1,5 +1,5 @@
 import { NativeModules } from 'react-native';
-import { ShareableRef } from '../commonTypes';
+import { ShareableRef, ShareableSyncDataHolderRef } from '../commonTypes';
 
 export class NativeReanimated {
   native: boolean;
@@ -20,6 +20,21 @@ export class NativeReanimated {
 
   makeShareableClone<T>(value: T): ShareableRef {
     return this.InnerNativeModule.makeShareableClone(value);
+  }
+
+  makeSynchronizedDataHolder<T>(value: T): ShareableSyncDataHolderRef<T> {
+    return this.InnerNativeModule.makeSynchronizedDataHolder(value);
+  }
+
+  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T {
+    return this.InnerNativeModule.getDataSynchronously(ref);
+  }
+
+  updateDataSynchronously<T>(
+    ref: ShareableSyncDataHolderRef<T>,
+    value: T
+  ): void {
+    this.InnerNativeModule.updateDataSynchronously(ref, value);
   }
 
   scheduleOnUI(shareable: ShareableRef) {

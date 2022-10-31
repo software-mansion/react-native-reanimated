@@ -82,6 +82,7 @@ class Shareable {
     WorkletType,
     RemoteFunctionType,
     HandleType,
+    SynchronizedDataHolder,
   };
 
   Shareable(ValueType valueType_) : valueType(valueType_){};
@@ -107,7 +108,10 @@ class ShareableJSRef : public jsi::HostObject {
  public:
   std::shared_ptr<Shareable> value;
   ShareableJSRef(std::shared_ptr<Shareable> _value) : value(_value){};
-  virtual ~ShareableJSRef(){};
+
+//  jsi::Value get(jsi::Runtime&, const jsi::PropNameID& name) {
+//    
+//  }
 
   static jsi::Object newHostObject(
       jsi::Runtime &rt,
@@ -120,6 +124,15 @@ class ShareableJSRef : public jsi::HostObject {
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue);
+
+template <typename T>
+std::shared_ptr<T> extractShareableOrThrow(jsi::Runtime &rt, const jsi::Value &shareableRef) {
+  auto res = std::dynamic_pointer_cast<T>(extractShareableOrThrow(rt, shareableRef));
+  if (!res) {
+    throw new std::runtime_error("provided shareable object is of an incompatible type");
+  }
+  return res;
+}
 
 class ShareableArray : public RetainingShareable {
  public:
@@ -215,6 +228,50 @@ class ShareableHandle : public RetainingShareable {
                            // should be called at most once
     return value;
   }
+};
+
+class ShareableSynchronizedDataHolder : public Shareable, public std::enable_shared_from_this<ShareableSynchronizedDataHolder> {
+private:
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
+  std::shared_ptr<Shareable> data_;
+  std::shared_ptr<jsi::Value> uiValue_;
+  std::shared_ptr<jsi::Value> rnValue_;
+  std::mutex dataAccessLock_;
+public:
+  ShareableSynchronizedDataHolder(std::shared_ptr<JSRuntimeHelper> runtimeHelper, jsi::Runtime &rt, const jsi::Value &initialValue) : Shareable(SynchronizedDataHolder), runtimeHelper_(runtimeHelper), data_(extractShareableOrThrow(rt, initialValue)) {
+  }
+
+  jsi::Value get(jsi::Runtime &rt) {
+    std::unique_lock<std::mutex> read_lock(dataAccessLock_);
+    if (runtimeHelper_->isUIRuntime(rt)) {
+      if (uiValue_ == nullptr) {
+        auto value = data_->getJSValue(rt);
+        uiValue_ = std::make_shared<jsi::Value>(rt, value);
+        return value;
+      } else {
+        return jsi::Value(rt, *uiValue_);
+      }
+    } else {
+      if (rnValue_ == nullptr) {
+        auto value = data_->getJSValue(rt);
+        rnValue_ = std::make_shared<jsi::Value>(rt, value);
+        return value;
+      } else {
+        return jsi::Value(rt, *rnValue_);
+      }
+    }
+  }
+
+  void set(jsi::Runtime &rt, const jsi::Value &data) {
+    std::unique_lock<std::mutex> write_lock(dataAccessLock_);
+    data_ = extractShareableOrThrow(rt, data);
+    uiValue_.reset();
+    rnValue_.reset();
+  }
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    return ShareableJSRef::newHostObject(rt, shared_from_this());
+  };
 };
 
 class ShareableString : public Shareable {

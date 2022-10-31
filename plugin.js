@@ -70,6 +70,7 @@ const globals = new Set([
   '_log',
   '_scheduleOnJS',
   '_makeShareableClone',
+  '_updateDataSynchronously',
   'eval',
   '_updatePropsPaper',
   '_updatePropsFabric',
@@ -288,6 +289,7 @@ function isRelease() {
 }
 
 function shouldGenerateSourceMap() {
+  return false;
   if (isRelease()) {
     return false;
   }

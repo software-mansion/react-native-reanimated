@@ -121,6 +121,7 @@ void RuntimeDecorator::decorateUIRuntime(
     const RequestFrameFunction requestFrame,
     const ScheduleOnJSFunction scheduleOnJS,
     const MakeShareableCloneFunction makeShareableClone,
+    const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
     const UnregisterSensorFunction unregisterSensor,
@@ -266,11 +267,23 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    return makeShareableClone(rt, args[0]);
+    return makeShareableClone(rt, std::move(args[0]));
   };
   jsi::Value makeShareableCloneFun = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_makeShareableClone"), 1, clb5);
   rt.global().setProperty(rt, "_makeShareableClone", makeShareableCloneFun);
+
+  auto clb51 = [updateDataSynchronously](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    updateDataSynchronously(rt, std::move(args[0]), std::move(args[1]));
+    return jsi::Value::undefined();
+  };
+  jsi::Value updateDataSynchronouslyFun = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_updateDataSynchronously"), 1, clb51);
+  rt.global().setProperty(rt, "_updateDataSynchronously", updateDataSynchronouslyFun);
 
   auto clb6 = [getCurrentTime](
                   jsi::Runtime &rt,

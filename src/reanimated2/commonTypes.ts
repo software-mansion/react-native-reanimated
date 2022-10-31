@@ -60,6 +60,10 @@ export type ShareableRef = {
   __hostObjectShareableJSRef: boolean;
 };
 
+export type ShareableSyncDataHolderRef<T> = {
+  __hostObjectShareableJSRefSyncDataHolder: T;
+};
+
 export type Context = Record<string, unknown>;
 
 export interface WorkletFunction {
