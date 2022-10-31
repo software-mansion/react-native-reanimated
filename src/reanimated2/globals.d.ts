@@ -17,6 +17,7 @@ declare global {
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
+  const _getTimestamp: () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _notifyAboutProgress: (tag: number, value: number) => void;
   const _notifyAboutEnd: (tag: number, finished: boolean) => void;
@@ -70,6 +71,7 @@ declare global {
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
       _getCurrentTime: () => number;
+      _getTimestamp: () => number;
       _stopObservingProgress: (tag: number, flag: boolean) => void;
       _startObservingProgress: (
         tag: number,
