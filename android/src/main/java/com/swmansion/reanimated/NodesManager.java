@@ -153,7 +153,7 @@ public class NodesManager implements EventDispatcherListener {
     // registration, creating race condition
     mUIManager.getEventDispatcher().addListener(this);
 
-    mAnimationManager = new AnimationsManager(mContext, mUIImplementation, mUIManager);
+    mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
 
   public void onHostPause() {

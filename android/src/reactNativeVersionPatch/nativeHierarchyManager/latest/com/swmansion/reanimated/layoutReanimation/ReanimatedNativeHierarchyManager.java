@@ -146,9 +146,8 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       }
     }
     maybeInit();
-    Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
-        view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
+        view, (ViewGroup) view.getParent(), listener::onAnimationEnd);
   }
 
   public boolean isLayoutAnimationEnabled() {
@@ -160,8 +159,8 @@ class ReaLayoutAnimator extends LayoutAnimationController {
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
   private final HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap<>();
   private final HashMap<Integer, Runnable> cleanerCallback = new HashMap<>();
-  private LayoutAnimationController mReaLayoutAnimator = null;
-  private HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
+  private final LayoutAnimationController mReaLayoutAnimator;
+  private final HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
   private boolean initOk = true;
 
   public ReanimatedNativeHierarchyManager(
@@ -221,11 +220,6 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     if (initOk) {
       setLayoutAnimationEnabled(true);
     }
-  }
-
-  public ReanimatedNativeHierarchyManager(
-      ViewManagerRegistry viewManagers, RootViewManager manager) {
-    super(viewManagers, manager);
   }
 
   private boolean isLayoutAnimationDisabled() {
@@ -318,14 +312,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
           continue;
         }
         toBeRemovedChildren.add(view);
+        // It's far from optimal but let's leave it as it is for now
         cleanerCallback.put(
             view.getId(),
-            new Runnable() {
-              @Override
-              public void run() {
-                toBeRemovedChildren.remove(view);
-                viewGroupManager.removeView(viewGroup, view);
-              } // It's far from optimal but let's leave it as it is for now
+            () -> {
+              toBeRemovedChildren.remove(view);
+              viewGroupManager.removeView(viewGroup, view);
             });
       }
     }
