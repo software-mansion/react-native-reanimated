@@ -404,71 +404,156 @@ export default function createAnimatedComponent(
           // @ts-ignore trust me bro
           const element = tag as HTMLElement;
 
-          // TODO: set visibility: hidden during render
-          element.style.visibility = 'hidden';
+          let oldX = element.offsetLeft;
+          let oldY = element.offsetTop;
+          let oldWidth = element.offsetWidth;
+          let oldHeight = element.offsetHeight;
 
-          // TODO: obtain starting values
-          element.style.visibility = 'visible';
-          element.style.opacity = '0';
-          element.style.transform = 'translateX(-100px)';
+          let lastSetByReanimatedX = oldX;
+          let lastSetByReanimatedY = oldY;
+          let lastSetByReanimatedWidth = oldWidth;
+          let lastSetByReanimatedHeight = oldHeight;
 
-          const width = element.offsetWidth;
-          const height = element.offsetHeight;
-          const x = element.offsetLeft;
-          const y = element.offsetTop;
-
-          const start = performance.now();
-          const end = start + 800;
-          const loop = () => {
-            const now = performance.now();
-            const progress = Math.min((now - start) / (end - start), 1);
-            const dx = -100 + 100 * progress;
-            element.style.opacity = progress.toString();
-            element.style.transform = `translateX(${dx}px)`;
-            if (now > end) {
-              return;
-            }
-            requestAnimationFrame(loop);
-          };
-          requestAnimationFrame(loop);
-
-          const callback: MutationCallback = (_mutationList, observer) => {
-            console.log({ x, y, width, height });
-            document.body.appendChild(element);
-            element.style.position = 'absolute';
-            element.style.left = `${x}px`;
-            element.style.top = `${y}px`;
-            element.style.width = `${width}px`;
-            element.style.height = `${height}px`;
-            observer.disconnect();
-
-            // TODO: handle case when exiting animation starts when entering animation is still running
-
+          function startAnimation(
+            startX: number,
+            endX: number,
+            startY: number,
+            endY: number,
+            startWidth: number,
+            endWidth: number,
+            startHeight: number,
+            endHeight: number
+          ) {
             const start = performance.now();
             const end = start + 800;
+            const originalPosition = element.style.position;
+            const originalLeft = element.style.left;
+            const originalTop = element.style.top;
+            const originalWidth = element.style.width;
+            const originalHeight = element.style.height;
+            element.style.position = 'absolute';
             const loop = () => {
               const now = performance.now();
-              const progress = Math.min((now - start) / (end - start), 1);
-              const dx = 100 * progress;
-              element.style.opacity = (1 - progress).toString();
-              element.style.transform = `translateX(${dx}px)`;
+              const progress = Math.min(1, (now - start) / (end - start));
+
+              const x = startX * (1 - progress) + endX * progress;
+              const y = startY * (1 - progress) + endY * progress;
+              const width = startWidth * (1 - progress) + endWidth * progress;
+              const height =
+                startHeight * (1 - progress) + endHeight * progress;
+              element.style.left = `${x}px`;
+              element.style.top = `${y}px`;
+              element.style.width = `${width}px`;
+              element.style.height = `${height}px`;
+              lastSetByReanimatedX = element.offsetLeft;
+              lastSetByReanimatedY = element.offsetTop;
+              lastSetByReanimatedWidth = element.offsetWidth;
+              lastSetByReanimatedHeight = element.offsetHeight;
+
               if (now > end) {
-                element.remove();
+                element.style.position = originalPosition;
+                element.style.left = originalLeft;
+                element.style.top = originalTop;
+                element.style.width = originalWidth;
+                element.style.height = originalHeight;
+                lastSetByReanimatedX = element.offsetLeft;
+                lastSetByReanimatedY = element.offsetTop;
+                lastSetByReanimatedWidth = element.offsetWidth;
+                lastSetByReanimatedHeight = element.offsetHeight;
                 return;
               }
               requestAnimationFrame(loop);
             };
-            requestAnimationFrame(loop);
-          };
-          const observer = new MutationObserver(callback);
-          const targetNode = element?.parentNode;
-          const config = { childList: true };
-          if (targetNode !== null) {
-            observer.observe(targetNode, config);
+            loop();
           }
-        } else {
-          // removed
+
+          function observeLayoutChanges(
+            callback: (
+              oldX: number,
+              newX: number,
+              oldY: number,
+              newY: number,
+              oldWidth: number,
+              newWidth: number,
+              oldHeight: number,
+              newHeight: number
+            ) => void
+          ) {
+            const loop = () => {
+              if (!element.parentElement) {
+                // element was unmounted, so let's end loop here
+                return;
+              }
+
+              // schedule for next frame
+              requestAnimationFrame(loop);
+
+              const newX = element.offsetLeft;
+              const newY = element.offsetTop;
+              const newWidth = element.offsetWidth;
+              const newHeight = element.offsetHeight;
+              if (
+                newX === oldX &&
+                newY === oldY &&
+                newWidth === oldWidth &&
+                newHeight === oldHeight
+              ) {
+                return;
+              }
+
+              if (
+                newX === lastSetByReanimatedX &&
+                newY === lastSetByReanimatedY &&
+                newWidth === lastSetByReanimatedWidth &&
+                newHeight === lastSetByReanimatedHeight
+              ) {
+                return;
+              }
+
+              callback(
+                oldX,
+                newX,
+                oldY,
+                newY,
+                oldWidth,
+                newWidth,
+                oldHeight,
+                newHeight
+              );
+
+              oldX = newX;
+              oldY = newY;
+              oldWidth = newWidth;
+              oldHeight = newHeight;
+            };
+            loop();
+          }
+
+          observeLayoutChanges(
+            (
+              oldX,
+              newX,
+              oldY,
+              newY,
+              oldWidth,
+              newWidth,
+              oldHeight,
+              newHeight
+            ) => {
+              startAnimation(
+                oldX,
+                newX,
+                oldY,
+                newY,
+                oldWidth,
+                newWidth,
+                oldHeight,
+                newHeight
+              );
+            }
+          );
         }
+
         if (
           !shouldBeUseWeb() &&
           (this.props.layout || this.props.entering || this.props.exiting) &&
