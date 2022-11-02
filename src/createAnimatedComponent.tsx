@@ -414,6 +414,15 @@ export default function createAnimatedComponent(
           let lastSetByReanimatedWidth = oldWidth;
           let lastSetByReanimatedHeight = oldHeight;
 
+          window.addEventListener('resize', function () {
+            oldX = lastSetByReanimatedX = element.offsetLeft;
+            oldY = lastSetByReanimatedY = element.offsetTop;
+            oldWidth = lastSetByReanimatedWidth = element.offsetWidth;
+            oldHeight = lastSetByReanimatedHeight = element.offsetHeight;
+          });
+
+          // TODO: include margin, padding and borderWidth
+
           function startAnimation(
             startX: number,
             endX: number,
