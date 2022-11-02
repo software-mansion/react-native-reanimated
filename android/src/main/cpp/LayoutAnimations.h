@@ -3,6 +3,7 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
 #include "JNIHelper.h"
 
 namespace reanimated {

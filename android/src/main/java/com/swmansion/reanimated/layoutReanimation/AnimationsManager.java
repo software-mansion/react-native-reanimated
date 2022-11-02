@@ -51,8 +51,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mScheduler = new WeakReference<>(scheduler);
   }
 
-  public AnimationsManager(
-          ReactContext context, UIManagerModule uiManagerModule) {
+  public AnimationsManager(ReactContext context, UIManagerModule uiManagerModule) {
     mContext = context;
     mUIManager = uiManagerModule;
     isCatalystInstanceDestroyed = false;
