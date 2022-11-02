@@ -16,7 +16,6 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
-import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.Scheduler;
@@ -27,9 +26,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class AnimationsManager implements ViewHierarchyObserver {
-  private static final String[] LAYOUT_KEYS = {
-    Snapshot.ORIGIN_X, Snapshot.ORIGIN_Y, Snapshot.WIDTH, Snapshot.HEIGHT
-  };
   private WeakReference<Scheduler> mScheduler;
   private ReactContext mContext;
   private UIManagerModule mUIManager;
@@ -56,7 +52,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public AnimationsManager(
-      ReactContext context, UIImplementation uiImplementation, UIManagerModule uiManagerModule) {
+          ReactContext context, UIManagerModule uiManagerModule) {
     mContext = context;
     mUIManager = uiManagerModule;
     isCatalystInstanceDestroyed = false;
@@ -74,7 +70,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   @Override
-  public void onViewRemoval(View view, ViewGroup parent, Snapshot before, Runnable callback) {
+  public void onViewRemoval(View view, ViewGroup parent, Runnable callback) {
     if (isCatalystInstanceDestroyed) {
       return;
     }
@@ -405,7 +401,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues, false);
       if (!mExitingViews.containsKey(tag)) {
         mExitingViews.put(tag, view);
-        view.setClickable(false);
         registerExitingAncestors(view);
         mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
       }
@@ -414,7 +409,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (wantAnimateExit) {
       mAncestorsToRemove.add(tag);
-      view.setClickable(false);
       return true;
     }
 
