@@ -21,7 +21,7 @@ using namespace react;
 class ReanimatedRuntime {
  public:
   static std::shared_ptr<jsi::Runtime> make(
-      jsi::Runtime *runtime,
+      jsi::Runtime *reactRuntime,
       std::shared_ptr<MessageQueueThread> jsQueue);
 };
 
