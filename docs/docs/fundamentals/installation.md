@@ -67,6 +67,32 @@ or other.
 
 :::
 
+## SWC Plugin
+
+If you're using SWC instead of Babel, add Reanimated's SWC plugin to your `.swcrc` file:
+
+```js {5}
+{
+  "jsc": {
+    "experimental": {
+      "plugins": [
+        ["react-native-reanimated-swc-plugin"]
+      ]
+    }
+  }
+}
+```
+
+If you're using [Next.js](https://nextjs.org/docs/advanced-features/compiler#swc-plugins-experimental), you need to set the plugin in `next.config.js` instead:
+
+```js {3}
+module.exports = {
+  experimental: {
+    swcPlugins: [['react-native-reanimated-swc-plugin']],
+  },
+};
+```
+
 ## Android
 
 No additional steps are necessary.
