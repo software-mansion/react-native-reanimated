@@ -32,8 +32,12 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &value) = 0;
 
   // Synchronized data objects
-  virtual jsi::Value makeSynchronizedDataHolder(jsi::Runtime &rt, const jsi::Value &initialShareable) = 0;
-  virtual jsi::Value getDataSynchronously(jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef) = 0;
+  virtual jsi::Value makeSynchronizedDataHolder(
+      jsi::Runtime &rt,
+      const jsi::Value &initialShareable) = 0;
+  virtual jsi::Value getDataSynchronously(
+      jsi::Runtime &rt,
+      const jsi::Value &synchronizedDataHolderRef) = 0;
 
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;

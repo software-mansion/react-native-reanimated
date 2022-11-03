@@ -274,16 +274,17 @@ void RuntimeDecorator::decorateUIRuntime(
   rt.global().setProperty(rt, "_makeShareableClone", makeShareableCloneFun);
 
   auto clb51 = [updateDataSynchronously](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
+                   jsi::Runtime &rt,
+                   const jsi::Value &thisValue,
+                   const jsi::Value *args,
+                   const size_t count) -> jsi::Value {
     updateDataSynchronously(rt, std::move(args[0]), std::move(args[1]));
     return jsi::Value::undefined();
   };
   jsi::Value updateDataSynchronouslyFun = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_updateDataSynchronously"), 1, clb51);
-  rt.global().setProperty(rt, "_updateDataSynchronously", updateDataSynchronouslyFun);
+  rt.global().setProperty(
+      rt, "_updateDataSynchronously", updateDataSynchronouslyFun);
 
   auto clb6 = [getCurrentTime](
                   jsi::Runtime &rt,

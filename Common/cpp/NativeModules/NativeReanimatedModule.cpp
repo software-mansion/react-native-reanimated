@@ -95,9 +95,14 @@ NativeReanimatedModule::NativeReanimatedModule(
     return this->makeShareableClone(rt, value);
   };
 
-  auto updateDataSynchronously = [this](jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef, const jsi::Value &newData) {
-    return this->updateDataSynchronously(rt, synchronizedDataHolderRef, newData);
-  };
+  auto updateDataSynchronously =
+      [this](
+          jsi::Runtime &rt,
+          const jsi::Value &synchronizedDataHolderRef,
+          const jsi::Value &newData) {
+        return this->updateDataSynchronously(
+            rt, synchronizedDataHolderRef, newData);
+      };
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](
@@ -187,18 +192,28 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
-jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(jsi::Runtime &rt, const jsi::Value &initialShareable) {
-  auto dataHolder = std::make_shared<ShareableSynchronizedDataHolder>(runtimeHelper, rt, initialShareable);
+jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
+    jsi::Runtime &rt,
+    const jsi::Value &initialShareable) {
+  auto dataHolder = std::make_shared<ShareableSynchronizedDataHolder>(
+      runtimeHelper, rt, initialShareable);
   return dataHolder->getJSValue(rt);
 }
 
-void NativeReanimatedModule::updateDataSynchronously(jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef, const jsi::Value &newData) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(rt, synchronizedDataHolderRef);
+void NativeReanimatedModule::updateDataSynchronously(
+    jsi::Runtime &rt,
+    const jsi::Value &synchronizedDataHolderRef,
+    const jsi::Value &newData) {
+  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
+      rt, synchronizedDataHolderRef);
   dataHolder->set(rt, newData);
 }
 
-jsi::Value NativeReanimatedModule::getDataSynchronously(jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(rt, synchronizedDataHolderRef);
+jsi::Value NativeReanimatedModule::getDataSynchronously(
+    jsi::Runtime &rt,
+    const jsi::Value &synchronizedDataHolderRef) {
+  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
+      rt, synchronizedDataHolderRef);
   return dataHolder->get(rt);
 }
 

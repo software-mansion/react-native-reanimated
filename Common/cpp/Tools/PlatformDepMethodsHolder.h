@@ -53,7 +53,8 @@ using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using TimeProviderFunction = std::function<double(void)>;
 
-using NotifyAboutProgressFunction = std::function<void(int, jsi::Object newProps)>;
+using NotifyAboutProgressFunction =
+    std::function<void(int, jsi::Object newProps)>;
 using NotifyAboutEndFunction = std::function<void(int, bool)>;
 
 using RegisterSensorFunction =

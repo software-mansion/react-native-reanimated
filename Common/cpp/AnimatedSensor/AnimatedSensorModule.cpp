@@ -7,9 +7,11 @@
 
 namespace reanimated {
 
-AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder)
+AnimatedSensorModule::AnimatedSensorModule(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
-      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
+      platformUnregisterSensorFunction_(
+          platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
   // It is called during app reload because app reload doesn't call hooks
@@ -30,27 +32,29 @@ jsi::Value AnimatedSensorModule::registerSensor(
   auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
   auto uiRuntime = runtimeHelper->uiRuntime();
 
-  int sensorId = platformRegisterSensorFunction_(sensorType, interval.asNumber(), [=](double newValues[]) {
-    jsi::Runtime &rt = *uiRuntime;
-    auto handler = shareableHandler->getJSValue(rt).asObject(rt).asFunction(rt);
-    if (sensorType == SensorType::ROTATION_VECTOR) {
-      jsi::Object value(rt);
-      value.setProperty(rt, "qx", newValues[0]);
-      value.setProperty(rt, "qy", newValues[1]);
-      value.setProperty(rt, "qz", newValues[2]);
-      value.setProperty(rt, "qw", newValues[3]);
-      value.setProperty(rt, "yaw", newValues[4]);
-      value.setProperty(rt, "pitch", newValues[5]);
-      value.setProperty(rt, "roll", newValues[6]);
-      handler.call(rt, value);
-    } else {
-      jsi::Object value(rt);
-      value.setProperty(rt, "x", newValues[0]);
-      value.setProperty(rt, "y", newValues[1]);
-      value.setProperty(rt, "z", newValues[2]);
-      handler.call(rt, value);
-    }
-  });
+  int sensorId = platformRegisterSensorFunction_(
+      sensorType, interval.asNumber(), [=](double newValues[]) {
+        jsi::Runtime &rt = *uiRuntime;
+        auto handler =
+            shareableHandler->getJSValue(rt).asObject(rt).asFunction(rt);
+        if (sensorType == SensorType::ROTATION_VECTOR) {
+          jsi::Object value(rt);
+          value.setProperty(rt, "qx", newValues[0]);
+          value.setProperty(rt, "qy", newValues[1]);
+          value.setProperty(rt, "qz", newValues[2]);
+          value.setProperty(rt, "qw", newValues[3]);
+          value.setProperty(rt, "yaw", newValues[4]);
+          value.setProperty(rt, "pitch", newValues[5]);
+          value.setProperty(rt, "roll", newValues[6]);
+          handler.call(rt, value);
+        } else {
+          jsi::Object value(rt);
+          value.setProperty(rt, "x", newValues[0]);
+          value.setProperty(rt, "y", newValues[1]);
+          value.setProperty(rt, "z", newValues[2]);
+          handler.call(rt, value);
+        }
+      });
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);
   }

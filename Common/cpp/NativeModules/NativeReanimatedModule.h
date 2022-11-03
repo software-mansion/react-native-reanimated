@@ -45,16 +45,22 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   std::shared_ptr<JSRuntimeHelper> runtimeHelper;
 
-  void installCoreFunctions(
-      jsi::Runtime &rt,
-      const jsi::Value &workletMaker) override;
+  void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &workletMaker)
+      override;
 
   jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
       override;
 
-  jsi::Value makeSynchronizedDataHolder(jsi::Runtime &rt, const jsi::Value &initialShareable) override;
-  jsi::Value getDataSynchronously(jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef) override;
-  void updateDataSynchronously(jsi::Runtime &rt, const jsi::Value &synchronizedDataHolderRef, const jsi::Value &newData);
+  jsi::Value makeSynchronizedDataHolder(
+      jsi::Runtime &rt,
+      const jsi::Value &initialShareable) override;
+  jsi::Value getDataSynchronously(
+      jsi::Runtime &rt,
+      const jsi::Value &synchronizedDataHolderRef) override;
+  void updateDataSynchronously(
+      jsi::Runtime &rt,
+      const jsi::Value &synchronizedDataHolderRef,
+      const jsi::Value &newData);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
