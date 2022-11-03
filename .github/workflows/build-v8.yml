@@ -21,7 +21,6 @@ jobs:
       group: build_v8-${{ matrix.working-directory }}
       cancel-in-progress: true
     steps:
-      steps:
       - name: Create react app
         run: npx react-native init app --version ${{ matrix.working-directory }}
       # - name: Install dependencies
