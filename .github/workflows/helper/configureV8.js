@@ -1,8 +1,8 @@
 fs = require('fs');
 
-const buildGradlePath = 'android/app/build.gradle';
+const buildGradlePath = 'app/android/app/build.gradle';
 const mainApplicationPath =
-  'android/app/src/main/java/com/app/MainApplication.java';
+  'app/android/app/src/main/java/com/app/MainApplication.java';
 
 fs.readFile(buildGradlePath, 'utf8', function (err, data) {
   if (err) {
