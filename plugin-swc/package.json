@@ -1,6 +1,6 @@
 {
-  "name": "swc-plugin-react-native-reanimated",
-  "version": "0.0.1",
+  "name": "react-native-reanimated-swc-plugin",
+  "version": "0.1.0",
   "description": "",
   "main": "./target/wasm32-wasi/release/swc_plugin_reanimated.wasm",
   "napi": {
@@ -22,6 +22,8 @@
     }
   },
   "files": [
+    "packages/",
+    "Cargo.toml",
     "package.json",
     "target/wasm32-wasi/release/swc_plugin_reanimated.wasm"
   ],
@@ -32,7 +34,8 @@
     "build:plugin": "cargo build -p swc-plugin-reanimated --target wasm32-wasi",
     "test": "npm-run-all build:all && jest",
     "test:debug": "npm-run-all build:customtransform && jest --testMatch=\"**/?(*.)+(debug).[tj]s?(x)\"",
-    "test:debug:plugin": "npm-run-all build:plugin && jest --testMatch=\"**/?(*.)+(debug).[tj]s?(x)\""
+    "test:debug:plugin": "npm-run-all build:plugin && jest --testMatch=\"**/?(*.)+(debug).[tj]s?(x)\"",
+    "prepack": "yarn build:plugin --release"
   },
   "repository": {
     "type": "git",

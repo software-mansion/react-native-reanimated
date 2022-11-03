@@ -12,7 +12,10 @@ use std::{env, panic::set_hook, sync::Arc};
 
 use backtrace::Backtrace;
 use swc::Compiler;
-use swc_common::{self, sync::Lazy, FilePathMapping, Globals, SourceMap, GLOBALS};
+use swc_common::{
+    self, comments::SingleThreadedComments, sync::Lazy, FilePathMapping, Globals, SourceMap,
+    GLOBALS,
+};
 use swc_reanimated_worklets_visitor::{create_worklets_visitor, WorkletsOptions};
 
 use std::path::Path;
@@ -90,14 +93,15 @@ pub fn transform_sync(s: String, _is_module: bool, opts: Buffer) -> napi::Result
                         None,
                         handler,
                         &options,
-                        |_program, comments| {
+                        SingleThreadedComments::default(),
+                        |_program| {
                             as_folder(create_worklets_visitor(
                                 WorkletsOptions::new(None, filename.clone(), None),
                                 c.cm.clone(),
-                                comments.clone(),
+                                SingleThreadedComments::default(),
                             ))
                         },
-                        |_, _| noop(),
+                        |_| noop(),
                     )
                 })
             })

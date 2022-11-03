@@ -265,8 +265,10 @@ impl<C: Clone + swc_common::comments::Comments, S: swc_common::SourceMapper + So
             self.filename.to_string()
         };
 
-        let loc = self.source_map.lookup_char_pos(span.lo);
-        let code_location = format!("{} ({}:{})", filename_str, loc.line, loc.col_display);
+        // TODO: figure out why it crashes
+        // let loc = self.source_map.lookup_char_pos(span.lo);
+        // let code_location = format!("{} ({}:{})", filename_str, loc.line, loc.col_display);
+        let code_location = format!("{} ({}:{})", filename_str, 0, 0);
 
         // TODO: need to use closuregenerator
 
