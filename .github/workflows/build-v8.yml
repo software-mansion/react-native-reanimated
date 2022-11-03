@@ -1,0 +1,32 @@
+name: Test V8 on Android
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'Common/**'
+      - 'FabricExample/package.json'
+      - 'Example/package.json'
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        working-directory: [0.70.4]
+      fail-fast: false
+    concurrency:
+      group: build_v8-${{ matrix.working-directory }}
+      cancel-in-progress: true
+    steps:
+      steps:
+      - name: Create react app
+        run: npx react-native init app --version ${{ matrix.working-directory }}
+      - name: Install dependencies
+        working-directory: app
+        run: yarn add github:software-mansion/react-native-reanimated#${GITHUB_SHA} react-native-v8 v8-android-jit
+      - name: Build Android app
+        working-directory: app/android
+        run: ./gradlew assembleDebug --console=plain
