@@ -1,8 +1,6 @@
 /* global _stopObservingProgress, _startObservingProgress */
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
-import { ColorProperties } from '../UpdateProps';
-import { processColor } from '../Colors';
 import { LogBox } from 'react-native';
 
 LogBox.ignoreLogs(['Overriding previous layout animation with']);
@@ -28,16 +26,8 @@ runOnUI(() => {
         }
       }
 
-      const backupColor: Record<string, string> = {};
-      for (const key in style.initialValues) {
-        if (ColorProperties.includes(key)) {
-          const value = style.initialValues[key];
-          backupColor[key] = value;
-          style.initialValues[key] = processColor(value);
-        }
-      }
-
-      viewSharedValue.value = Object.assign(
+      _stopObservingProgress(tag, false, type);
+      viewSharedValue._value = Object.assign(
         {},
         viewSharedValue._value,
         style.initialValues
@@ -51,11 +41,6 @@ runOnUI(() => {
         }
         style.callback && style.callback(finished);
       };
-
-      // TODO: fix color animations
-      // if (backupColor) {
-      //   viewSharedValue._value = { ...viewSharedValue.value, ...backupColor };
-      // }
 
       viewSharedValue.value = animation;
       _startObservingProgress(tag, viewSharedValue, type);

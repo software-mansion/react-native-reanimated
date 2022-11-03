@@ -178,7 +178,8 @@ function workletValueSetter<T extends WorkletValue>(
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
-    initializeAnimation(getTimestamp());
+    const currentTimestamp = getTimestamp();
+    initializeAnimation(currentTimestamp);
     const step = (timestamp: number) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
@@ -196,13 +197,7 @@ function workletValueSetter<T extends WorkletValue>(
     };
 
     this._animation = animation;
-
-    if (_frameTimestamp) {
-      // frame
-      step(_frameTimestamp);
-    } else {
-      requestAnimationFrame(step);
-    }
+    step(currentTimestamp);
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
@@ -260,8 +255,7 @@ function workletValueSetterJS<T extends WorkletValue>(
     };
 
     this._animation = animation;
-
-    requestFrame(step);
+    step(getTimestamp());
   } else {
     this._setValue && this._setValue(value as AnimatableValue | Descriptor);
   }
