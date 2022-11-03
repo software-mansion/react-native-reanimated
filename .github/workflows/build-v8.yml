@@ -24,12 +24,12 @@ jobs:
       steps:
       - name: Create react app
         run: npx react-native init app --version ${{ matrix.working-directory }}
-      - name: Install dependencies
-        working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated#${GITHUB_SHA} react-native-v8 v8-android-jit
+      # - name: Install dependencies
+      #   working-directory: app
+      #   run: yarn add github:software-mansion/react-native-reanimated#${GITHUB_SHA} react-native-v8 v8-android-jit
       - name: Configure V8
         working-directory: app
         run: node .github/helper/configureV8.js
-      - name: Build Android app
-        working-directory: app/android
-        run: ./gradlew assembleDebug --console=plain
+      # - name: Build Android app
+      #   working-directory: app/android
+      #   run: ./gradlew assembleDebug --console=plain
