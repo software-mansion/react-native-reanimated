@@ -83,9 +83,9 @@ ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
 ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     : RetainingShareable(rt, ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);
-  const size_t count = propertyNames.size(rt);
-  data_.reserve(count);
-  for (size_t i = 0; i < count; i++) {
+  auto size = propertyNames.size(rt);
+  data_.reserve(size);
+  for (size_t i = 0; i < size; i++) {
     auto key = propertyNames.getValueAtIndex(rt, i).asString(rt);
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);

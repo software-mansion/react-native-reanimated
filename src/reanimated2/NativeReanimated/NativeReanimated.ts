@@ -14,16 +14,26 @@ export class NativeReanimated {
     this.native = native;
   }
 
+  getTimestamp(): number {
+    throw new Error('stub implementation, used on the web only');
+  }
+
+  jestResetModule() {
+    throw new Error('stub implementation, used on the web only');
+  }
+
   installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
     return this.InnerNativeModule.installCoreFunctions(valueUnpacker);
   }
 
-  makeShareableClone<T>(value: T): ShareableRef {
+  makeShareableClone<T>(value: T): ShareableRef<T> {
     return this.InnerNativeModule.makeShareableClone(value);
   }
 
-  makeSynchronizedDataHolder<T>(value: T): ShareableSyncDataHolderRef<T> {
-    return this.InnerNativeModule.makeSynchronizedDataHolder(value);
+  makeSynchronizedDataHolder<T>(
+    valueRef: ShareableRef<T>
+  ): ShareableSyncDataHolderRef<T> {
+    return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
   }
 
   getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T {
@@ -37,11 +47,15 @@ export class NativeReanimated {
     this.InnerNativeModule.updateDataSynchronously(ref, value);
   }
 
-  scheduleOnUI(shareable: ShareableRef) {
+  scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  registerSensor(sensorType: number, interval: number, handler: ShareableRef) {
+  registerSensor<T>(
+    sensorType: number,
+    interval: number,
+    handler: ShareableRef<T>
+  ) {
     return this.InnerNativeModule.registerSensor(sensorType, interval, handler);
   }
 
@@ -49,7 +63,10 @@ export class NativeReanimated {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  registerEventHandler(eventHash: string, eventHandler: ShareableRef): string {
+  registerEventHandler<T>(
+    eventHash: string,
+    eventHandler: ShareableRef<T>
+  ): string {
     return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
   }
 
@@ -73,7 +90,7 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  subscribeForKeyboardEvents(handler: ShareableRef): number {
+  subscribeForKeyboardEvents(handler: ShareableRef<number>): number {
     return this.InnerNativeModule.subscribeForKeyboardEvents(handler);
   }
 

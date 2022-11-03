@@ -13,7 +13,7 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
 
   if (ref.current === null) {
     const keyboardEventData: AnimatedKeyboardInfo = {
-      state: makeMutable(KeyboardState.UNKNOWN),
+      state: makeMutable<KeyboardState>(KeyboardState.UNKNOWN),
       height: makeMutable(0),
     };
     listenerId.current = subscribeForKeyboardEvents((state, height) => {

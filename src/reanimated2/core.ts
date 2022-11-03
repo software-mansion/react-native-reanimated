@@ -15,7 +15,6 @@ import {
   ShareableSyncDataHolderRef,
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
-import JSReanimated from './js-reanimated/JSReanimated';
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
@@ -28,18 +27,6 @@ export type ReanimatedConsole = Pick<
   Console,
   'debug' | 'log' | 'warn' | 'info' | 'error'
 >;
-
-export type WorkletValue =
-  | (() => AnimationObject)
-  | AnimationObject
-  | AnimatableValue
-  | Descriptor;
-
-interface WorkletValueSetterContext {
-  _animation?: AnimationObject | null;
-  _value?: AnimatableValue | Descriptor;
-  value?: AnimatableValue;
-}
 
 const testWorklet: BasicWorkletFunction<void> = () => {
   'worklet';
@@ -100,7 +87,7 @@ export function runOnUI<A extends any[], R>(
   };
 }
 
-export function makeShareable<T extends object>(value: T): T {
+export function makeShareable<T>(value: T): T {
   if (__DEV__) {
     isConfiguredCheck();
   }
@@ -139,7 +126,7 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
 let _getTimestamp: () => number;
 if (nativeShouldBeMock()) {
   _getTimestamp = () => {
-    return (NativeReanimatedModule as JSReanimated).getTimestamp();
+    return NativeReanimatedModule.getTimestamp();
   };
 } else {
   _getTimestamp = () => {
@@ -157,15 +144,12 @@ if (nativeShouldBeMock()) {
 export function getTimestamp(): number {
   'worklet';
   if (Platform.OS === 'web') {
-    return (NativeReanimatedModule as JSReanimated).getTimestamp();
+    return NativeReanimatedModule.getTimestamp();
   }
   return _getTimestamp();
 }
 
-function valueSetter<T extends WorkletValue>(
-  sv: WorkletValueSetterContext,
-  value: T
-): void {
+function valueSetter(sv: any, value: any): void {
   'worklet';
   const previousAnimation = sv._animation;
   if (previousAnimation) {
@@ -251,7 +235,7 @@ function valueUnpacker(objectToUnpack: any): any {
   } else if (objectToUnpack.__init) {
     let value = handleCache!.get(objectToUnpack);
     if (value === undefined) {
-      value = objectToUnpack.__init() as object;
+      value = objectToUnpack.__init();
       handleCache!.set(objectToUnpack, value);
     }
     return value;
@@ -260,17 +244,20 @@ function valueUnpacker(objectToUnpack: any): any {
   }
 }
 
-const _shareableCache = new WeakMap<object, ShareableRef | Symbol>();
+const _shareableCache = new WeakMap<
+  Record<string, unknown>,
+  ShareableRef<any> | symbol
+>();
 const _shareableFlag = Symbol('shareable flag');
 
 function registerShareableMapping(
-  shareable: object,
-  shareableRef: ShareableRef
+  shareable: any,
+  shareableRef: ShareableRef<any> | symbol
 ): void {
   _shareableCache.set(shareable, shareableRef);
 }
 
-function makeShareableCloneRecursive<T>(value: T): ShareableRef {
+function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
   // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
   if ((type === 'object' || type === 'function') && value !== null) {
@@ -278,9 +265,9 @@ function makeShareableCloneRecursive<T>(value: T): ShareableRef {
     if (cached === _shareableFlag) {
       return value;
     } else if (cached !== undefined) {
-      return cached;
+      return cached as ShareableRef<T>;
     } else {
-      let toAdapt;
+      let toAdapt: any;
       if (Array.isArray(value)) {
         toAdapt = value.map((element) => makeShareableCloneRecursive(element));
       } else if (type === 'function' && value.__workletHash === undefined) {
@@ -293,7 +280,7 @@ function makeShareableCloneRecursive<T>(value: T): ShareableRef {
           toAdapt[key] = makeShareableCloneRecursive(element);
         }
       }
-      // Object.freeze(value);
+      Object.freeze(value);
       const adopted = NativeReanimatedModule.makeShareableClone(toAdapt);
       _shareableCache.set(value, adopted);
       _shareableCache.set(adopted, _shareableFlag);
@@ -310,8 +297,8 @@ export function makeMutable<T>(
   if (__DEV__) {
     isConfiguredCheck();
   }
-  let value = initial;
-  let syncDataHolder: ShareableSyncDataHolderRef<T | undefined>;
+  let value: T = initial;
+  let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
   if (needSynchronousReadsFromReact) {
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
       makeShareableCloneRecursive(undefined)
@@ -329,7 +316,7 @@ export function makeMutable<T>(
         set value(newValue) {
           valueSetter(self, newValue);
         },
-        get value(): T {
+        get value() {
           return self._value;
         },
         set _value(newValue: T) {
@@ -378,10 +365,10 @@ export function makeMutable<T>(
         mutable.value = modifier(mutable.value);
       })();
     },
-    addListener: (listenerId: number, listener: (value: T) => void) => {
+    addListener: (_listenerId: number, _listener: (value: T) => void) => {
       throw new Error('adding listeners is only possible on the UI runtime');
     },
-    removeListener: (listenerId: number) => {
+    removeListener: (_listenerId: number) => {
       throw new Error('removing listeners is only possible on the UI runtime');
     },
   };
@@ -389,7 +376,7 @@ export function makeMutable<T>(
   return mutable;
 }
 
-export function makeRemote<T extends object>(initial = {}): T {
+export function makeRemote<T extends object>(initial: T = {} as T): T {
   if (__DEV__) {
     isConfiguredCheck();
   }
@@ -407,8 +394,8 @@ type Mapper = {
   id: number;
   dirty: boolean;
   worklet: () => void;
-  inputs: SharedValue[];
-  outputs?: SharedValue[];
+  inputs: SharedValue<any>[];
+  outputs?: SharedValue<any>[];
 };
 
 function createMapperRegistry() {
@@ -493,7 +480,10 @@ function createMapperRegistry() {
     }
   }
 
-  function extractInputs(inputs: any, resultArray: SharedValue[]) {
+  function extractInputs(
+    inputs: any,
+    resultArray: SharedValue<any>[]
+  ): SharedValue<any>[] {
     if (Array.isArray(inputs)) {
       for (const input of inputs) {
         extractInputs(input, resultArray);
@@ -512,8 +502,8 @@ function createMapperRegistry() {
     start: (
       mapperID: number,
       worklet: () => void,
-      inputs: SharedValue[],
-      outputs?: SharedValue[]
+      inputs: SharedValue<any>[],
+      outputs?: SharedValue<any>[]
     ) => {
       const mapper = {
         id: mapperID,
@@ -577,12 +567,12 @@ export function stopMapper(mapperID: number): void {
   });
 }
 
-function makeShareableCloneOnUIRecursive(value) {
+function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
   'worklet';
-  function cloneRecursive(value) {
+  function cloneRecursive<T>(value: T): ShareableRef<T> {
     const type = typeof value;
     if ((type === 'object' || type === 'function') && value !== null) {
-      let toAdapt;
+      let toAdapt: any;
       if (Array.isArray(value)) {
         toAdapt = value.map((element) => cloneRecursive(element));
       } else {
@@ -709,5 +699,5 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
 }
 
 export function jestResetJsReanimatedModule() {
-  (NativeReanimatedModule as JSReanimated).jestResetModule();
+  NativeReanimatedModule.jestResetModule();
 }

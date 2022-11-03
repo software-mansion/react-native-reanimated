@@ -2,6 +2,9 @@ import type {
   AnimatedStyle,
   StyleProps,
   MeasuredDimensions,
+  MapperRegistry,
+  ShareableRef,
+  ShareableSyncDataHolderRef,
 } from './commonTypes';
 import type { ReanimatedConsole } from './core';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
@@ -23,7 +26,11 @@ declare global {
   const _notifyAboutEnd: (tag: number, finished: boolean) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
   const _makeShareableClone: (value: any) => any;
-  const _scheduleOnJS: (value: any) => void;
+  const _updateDataSynchronously: (
+    dataHolder: ShareableSyncDataHolderRef,
+    data: ShareableRef
+  ) => void;
+  const _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
   const _updatePropsPaper: (
     tag: number,
     name: string,
@@ -78,6 +85,12 @@ declare global {
         flag: { value: boolean; _value: boolean }
       ) => void;
       _setGestureState: (handlerTag: number, newState: number) => void;
+      _makeShareableClone: (value: any) => any;
+      _updateDataSynchronously: (
+        ShareableSyncDataHolderRef,
+        ShareableRef
+      ) => void;
+      _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
       _updatePropsPaper: (
         tag: number,
         name: string,
@@ -119,7 +132,8 @@ declare global {
       };
       _frameCallbackRegistry: FrameCallbackRegistryUI;
       __workletsCache?: Map<string, (...args: any[]) => any>;
-      __handleCache?: WeakMap<object, object>;
+      __handleCache?: WeakMap<any, any>;
+      __mapperRegistry?: MapperRegistry;
     }
   }
 }

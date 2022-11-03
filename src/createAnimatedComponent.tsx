@@ -162,7 +162,7 @@ export default function createAnimatedComponent(
       if (isJest()) {
         this.animatedStyle = { value: {} };
       }
-      this.sv = makeMutable({});
+      this.sv = makeMutable<null | Record<string, unknown>>({});
     }
 
     componentWillUnmount() {

@@ -435,7 +435,12 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         value: initialStyle,
         updater: updater,
       },
-      remoteState: makeRemote({ last: initialStyle }),
+      remoteState: makeRemote<AnimatedState>({
+        last: initialStyle,
+        animations: {},
+        isAnimationCancelled: false,
+        isAnimationRunning: false,
+      }),
       viewDescriptors: makeViewDescriptorsSet(),
     };
   }

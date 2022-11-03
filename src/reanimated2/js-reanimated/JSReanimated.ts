@@ -1,9 +1,5 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
-import {
-  Timestamp,
-  NestedObjectValues,
-  AnimatedKeyboardInfo,
-} from '../commonTypes';
+import { Timestamp, ShareableRef } from '../commonTypes';
 import { isJest } from '../PlatformChecker';
 
 export default class JSReanimated extends NativeReanimated {
@@ -56,11 +52,15 @@ export default class JSReanimated extends NativeReanimated {
     this._valueUnpacker = valueUnpacker;
   }
 
-  scheduleOnUI(worklet) {
+  scheduleOnUI<T>(worklet: ShareableRef<T>) {
+    // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
     return this.pushFrame(worklet);
   }
 
-  registerEventHandler<T>(_: string, __: (event: T) => void): string {
+  registerEventHandler<T>(
+    _eventHash: string,
+    _eventHandler: ShareableRef<T>
+  ): string {
     // noop
     return '';
   }
@@ -97,7 +97,7 @@ export default class JSReanimated extends NativeReanimated {
     }
   }
 
-  subscribeForKeyboardEvents(_: AnimatedKeyboardInfo): number {
+  subscribeForKeyboardEvents(_: ShareableRef<number>): number {
     console.warn(
       '[Reanimated] useAnimatedKeyboard is not available on web yet.'
     );

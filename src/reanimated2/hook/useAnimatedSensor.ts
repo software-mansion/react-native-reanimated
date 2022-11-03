@@ -25,7 +25,7 @@ function initSensorData(
   sensorType: SensorType
 ): SharedValue<Value3D | ValueRotation> {
   if (sensorType === SensorType.ROTATION) {
-    return makeMutable({
+    return makeMutable<Value3D | ValueRotation>({
       qw: 0,
       qx: 0,
       qy: 0,
@@ -35,7 +35,7 @@ function initSensorData(
       roll: 0,
     });
   } else {
-    return makeMutable({
+    return makeMutable<Value3D | ValueRotation>({
       x: 0,
       y: 0,
       z: 0,
