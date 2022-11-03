@@ -47,7 +47,10 @@
     "react-native",
     "reanimated"
   ],
-  "author": "OJ Kwon <kwon.ohjoong@gmail.com>",
+  "contributors": [
+    "OJ Kwon <kwon.ohjoong@gmail.com>",
+    "Jakub Piasecki <jakub.piasecki@swmansion.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/kwonoj/swc-plugin-react-native-reanimated/issues"
