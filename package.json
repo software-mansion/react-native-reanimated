@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.0.0-rc.3",
+  "version": "3.0.0-rc.4",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
@@ -10,11 +10,11 @@
     "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
-    "lint:ios": "./scripts/validate-ios.sh",
+    "lint:ios": "./scripts/validate-ios.sh && yarn format:ios --dry-run",
     "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
     "format:js": "prettier --write --list-different './src/'",
     "format:java": "node ./scripts/format-java.js",
-    "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i",
+    "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "release": "npm login && release-it",
