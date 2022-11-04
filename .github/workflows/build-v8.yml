@@ -24,18 +24,18 @@ jobs:
       - name: A
         run: pwd && ls -la
       - name: Check out
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
         with:
-          path: 'react-native-reanimated/reanimated_repo'
+          path: 'reanimated_repo'
       - name: B
         run: pwd && ls -la
       - name: Create react app
-        run: npx react-native init app --version ${{ matrix.working-directory }}
+        run: cd .. && npx react-native init app --version ${{ matrix.working-directory }}
       # - name: Install dependencies
       #   working-directory: app
       #   run: yarn add github:software-mansion/react-native-reanimated#${GITHUB_SHA} react-native-v8 v8-android-jit
       - name: Configure V8
-        run: node reanimated_repo/.github/workflows/helper/configureV8.js
+        run: cd .. && node reanimated_repo/.github/workflows/helper/configureV8.js
       # - name: Build Android app
       #   working-directory: app/android
       #   run: ./gradlew assembleDebug --console=plain
