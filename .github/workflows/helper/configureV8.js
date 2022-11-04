@@ -41,6 +41,7 @@ fs.readFile(mainApplicationPath, 'utf8', function (err, data) {
   
   protected String getJSMainModuleName() {`;
 
+  data = data.replace('import java.util.List;', imports);
   data = data.replace(getJSMainModuleName, getJavaScriptExecutorFactory);
 
   fs.writeFile(mainApplicationPath, data, function (err) {
