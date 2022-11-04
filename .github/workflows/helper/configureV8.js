@@ -27,10 +27,10 @@ fs.readFile(mainApplicationPath, 'utf8', function (err, data) {
   import com.facebook.react.modules.systeminfo.AndroidInfoHelpers;
   import io.csie.kudo.reactnative.v8.executor.V8ExecutorFactory;
   `;
+  data = data.replace('import java.util.List;', imports);
 
   const getJSMainModuleName = 'protected String getJSMainModuleName() {';
   const getJavaScriptExecutorFactory = `
-  @Override
   protected JavaScriptExecutorFactory getJavaScriptExecutorFactory() {
     return new V8ExecutorFactory(
         getApplicationContext(),
@@ -39,10 +39,18 @@ fs.readFile(mainApplicationPath, 'utf8', function (err, data) {
         getUseDeveloperSupport());
   }
   
+  @Override
   protected String getJSMainModuleName() {`;
-
-  data = data.replace('import java.util.List;', imports);
   data = data.replace(getJSMainModuleName, getJavaScriptExecutorFactory);
+
+  const packagingOptions = `
+  android {
+    packagingOptions {
+      // Make sure libjsc.so does not packed in APK
+      exclude "**/libjsc.so"
+    }
+  `;
+  data = data.replace('android {', packagingOptions);
 
   fs.writeFile(mainApplicationPath, data, function (err) {
     if (err) {
