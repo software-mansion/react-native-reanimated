@@ -2,10 +2,12 @@ name: Lint SWC plugin
 on:
   pull-request:
     paths:
+      - '.github/workflows/lint-swc-plugin.yml'
       - 'plugin-swc/*'
     push:
       branches:
         - main
+    workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
