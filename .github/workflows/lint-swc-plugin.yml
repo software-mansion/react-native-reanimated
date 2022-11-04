@@ -26,7 +26,7 @@ jobs:
         run: rustup target add wasm32-wasi
       - name: Lint
         uses: actions-rs/cargo@v1
-        working-directory: plugin-swc
         with:
           command: fmt
           args: --all -- --check
+          working-directory: plugin-swc
