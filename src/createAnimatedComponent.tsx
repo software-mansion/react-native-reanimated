@@ -22,6 +22,7 @@ import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
   SharedValue,
@@ -39,11 +40,23 @@ function dummyListener() {
   // event is used.
 }
 
-function maybeBuild(layoutAnimationOrBuilder: any) {
-  if (typeof layoutAnimationOrBuilder.build === 'function') {
+function maybeBuild(
+  layoutAnimationOrBuilder:
+    | ILayoutAnimationBuilder
+    | LayoutAnimationFunction
+    | Keyframe
+): LayoutAnimationFunction | Keyframe {
+  const isAnimationBuilder = (
+    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
+  ): value is ILayoutAnimationBuilder =>
+    'build' in layoutAnimationOrBuilder &&
+    typeof layoutAnimationOrBuilder.build === 'function';
+
+  if (isAnimationBuilder(layoutAnimationOrBuilder)) {
     return layoutAnimationOrBuilder.build();
+  } else {
+    return layoutAnimationOrBuilder;
   }
-  return layoutAnimationOrBuilder;
 }
 
 type NestedArray<T> = T | NestedArray<T>[];

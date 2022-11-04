@@ -9,7 +9,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
-  if (view.reactTag) {
+  if (!view.reactTag) {
     return NO;
   }
 
@@ -265,7 +265,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (BOOL)removeRecursive:(UIView *)view fromContainer:(UIView *)container withoutAnimation:(BOOL)shouldRemove;
+- (BOOL)removeRecursive:(UIView *)view fromContainer:(UIView *)container withoutAnimation:(BOOL)removeImmediately;
 {
   if (!view.reactTag) {
     return NO;
@@ -274,7 +274,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   BOOL wantAnimateExit = hasExitAnimation;
 
   for (UIView *subview in [view.reactSubviews copy]) {
-    if ([self removeRecursive:subview fromContainer:view withoutAnimation:(shouldRemove && !hasExitAnimation)]) {
+    if ([self removeRecursive:subview fromContainer:view withoutAnimation:(removeImmediately && !hasExitAnimation)]) {
       wantAnimateExit = YES;
     }
   }
@@ -302,7 +302,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       [_ancestorsToRemove addObject:view.reactTag];
     }
     return YES;
-  } else if (shouldRemove) {
+  } else if (removeImmediately) {
     [container removeReactSubview:view];
   }
 

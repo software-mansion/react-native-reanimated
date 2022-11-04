@@ -111,9 +111,9 @@ declare global {
         startAnimationForTag(
           tag: number,
           type: string,
-          yogaValues: unknown,
-          config: (yogaValues: any) => any,
-          viewSharedValue: any
+          yogaValues: Record<string, number>,
+          config: LayoutAnimationFunction | Keyframe,
+          viewSharedValue: { value: unknown; _value: unknown }
         ): void;
       };
       ReanimatedDataMock: {
