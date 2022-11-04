@@ -12,6 +12,7 @@ import {
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
+import { LayoutAnimationFunction } from './layoutReanimation';
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
@@ -368,8 +369,8 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: string,
-  config: any,
-  viewSharedValue: any
+  config: LayoutAnimationFunction | Keyframe,
+  viewSharedValue: SharedValue<null | Record<string, unknown>> | null
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
     viewTag,
