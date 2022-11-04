@@ -4,10 +4,10 @@ on:
     paths:
       - '.github/workflows/build-swc-plugin.yml'
       - 'plugin-swc/*'
-    push:
-      branches:
-        - main
-    workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
