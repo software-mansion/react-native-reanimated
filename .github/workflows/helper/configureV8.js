@@ -1,36 +1,42 @@
 fs = require('fs');
 
-const buildGradlePath = 'app/android/app/build.gradle';
-const mainApplicationPath =
-  'app/android/app/src/main/java/com/app/MainApplication.java';
-
-fs.readFile(buildGradlePath, 'utf8', function (err, data) {
-  if (err) {
-    return console.log(err);
-  }
-  data = data.replace('enableHermes: true,', 'enableHermes: false,');
-
-  fs.writeFile(buildGradlePath, data, function (err) {
+function patchFile(path, find, replace) {
+  fs.readFile(path, 'utf8', function (err, data) {
     if (err) {
       return console.log(err);
     }
-  });
-});
+    data = data.replace(find, replace);
 
-fs.readFile(mainApplicationPath, 'utf8', function (err, data) {
-  if (err) {
-    return console.log(err);
-  }
-  const imports = `
-  import java.util.List;
+    fs.writeFile(path, data, function (err) {
+      if (err) {
+        return console.log(err);
+      }
+    });
+  });
+}
+
+patchFile(
+  'app/android/app/build.gradle',
+  'enableHermes: true,',
+  'enableHermes: false,'
+);
+
+const mainApplicationPath =
+  'app/android/app/src/main/java/com/app/MainApplication.java';
+patchFile(
+  mainApplicationPath,
+  'import java.util.List;',
+  `import java.util.List;
   import com.facebook.react.bridge.JavaScriptExecutorFactory;
   import com.facebook.react.modules.systeminfo.AndroidInfoHelpers;
   import io.csie.kudo.reactnative.v8.executor.V8ExecutorFactory;
-  `;
-  data = data.replace('import java.util.List;', imports);
+  `
+);
 
-  const getJSMainModuleName = 'protected String getJSMainModuleName() {';
-  const getJavaScriptExecutorFactory = `
+patchFile(
+  mainApplicationPath,
+  'protected String getJSMainModuleName() {',
+  `
   protected JavaScriptExecutorFactory getJavaScriptExecutorFactory() {
     return new V8ExecutorFactory(
         getApplicationContext(),
@@ -40,21 +46,16 @@ fs.readFile(mainApplicationPath, 'utf8', function (err, data) {
   }
   
   @Override
-  protected String getJSMainModuleName() {`;
-  data = data.replace(getJSMainModuleName, getJavaScriptExecutorFactory);
+  protected String getJSMainModuleName() {`
+);
 
-  const packagingOptions = `
-  android {
+patchFile(
+  mainApplicationPath,
+  'android {',
+  `android {
     packagingOptions {
       // Make sure libjsc.so does not packed in APK
       exclude "**/libjsc.so"
     }
-  `;
-  data = data.replace('android {', packagingOptions);
-
-  fs.writeFile(mainApplicationPath, data, function (err) {
-    if (err) {
-      return console.log(err);
-    }
-  });
-});
+  `
+);
