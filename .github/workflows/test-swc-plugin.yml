@@ -1,4 +1,4 @@
-name: Build SWC plugin
+name: Test SWC plugin
 on:
   pull_request:
     paths:
@@ -29,4 +29,10 @@ jobs:
         run: rustup target add wasm32-wasi
       - name: Build plugin
         working-directory: plugin-swc
-        run: yarn build:plugin --release
+        run: yarn build:plugin
+      - name: Build custom transform
+        working-directory: plugin-swc
+        run: yarn build:customtransform
+      - name: Run tests
+        working-directory: plugin-swc
+        run: yarn test
