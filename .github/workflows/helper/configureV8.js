@@ -1,9 +1,8 @@
 fs = require('fs');
 
-const buildGradlePath =
-  '../../../../app/node_modules/react-native-reanimated/android/app/build.gradle';
+const buildGradlePath = 'app/android/app/build.gradle';
 const mainApplicationPath =
-  '../../../../app/node_modules/react-native-reanimated/android/app/src/main/java/com/app/MainApplication.java';
+  'app/android/app/src/main/java/com/app/MainApplication.java';
 
 const { exec } = require('child_process');
 
@@ -20,7 +19,6 @@ exec('ls -la', (error, stdout, stderr) => {
 });
 
 fs.readFile(buildGradlePath, 'utf8', function (err, data) {
-  console.log(__dirname);
   if (err) {
     return console.log(err);
   }
