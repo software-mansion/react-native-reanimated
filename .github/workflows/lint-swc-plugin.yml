@@ -24,6 +24,7 @@ jobs:
         run: rustup component add rustfmt
       - name: Lint
         uses: actions-rs/cargo@v1
+        working-directory: plugin-swc
         with:
           command: fmt
           args: --all -- --check
