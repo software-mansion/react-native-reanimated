@@ -87,7 +87,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
-      layoutAnimationsProxy(layoutAnimationsProxy),
+      layoutAnimationsProxy_(layoutAnimationsProxy),
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
@@ -110,7 +110,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     maybeRequestRender();
   };
 
-  this->layoutAnimationsProxy = layoutAnimationsProxy;
+  this->layoutAnimationsProxy_ = layoutAnimationsProxy;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](
@@ -344,7 +344,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     const jsi::Value &type,
     const jsi::Value &config,
     const jsi::Value &viewSharedValue) {
-  layoutAnimationsProxy->configureAnimation(
+  layoutAnimationsProxy_->configureAnimation(
       viewTag.asNumber(),
       type.asString(rt).utf8(rt),
       ShareableValue::adapt(rt, config, this),

@@ -19,14 +19,14 @@ void LayoutAnimations::setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt) {
 
 void LayoutAnimations::setAnimationStartingBlock(
     AnimationStartingBlock animationStartingBlock) {
-  this->_animationStartingBlock = animationStartingBlock;
+  this->animationStartingBlock_ = animationStartingBlock;
 }
 
 void LayoutAnimations::startAnimationForTag(
     int tag,
     alias_ref<JString> type,
     alias_ref<JMap<jstring, jstring>> values) {
-  this->_animationStartingBlock(tag, type, values);
+  this->animationStartingBlock_(tag, type, values);
 }
 
 void LayoutAnimations::progressLayoutAnimation(
@@ -47,20 +47,20 @@ void LayoutAnimations::progressLayoutAnimation(
 void LayoutAnimations::endLayoutAnimation(
     int tag,
     bool cancelled,
-    std::string type) {
+    bool removeView) {
   static const auto method =
-      javaPart_->getClass()->getMethod<void(int, bool, std::string)>(
+      javaPart_->getClass()->getMethod<void(int, bool, bool)>(
           "endLayoutAnimation");
-  method(javaPart_.get(), tag, cancelled, type);
+  method(javaPart_.get(), tag, cancelled, removeView);
 }
 
 void LayoutAnimations::setHasAnimationBlock(
     HasAnimationBlock hasAnimationBlock) {
-  this->_hasAnimationBlock = hasAnimationBlock;
+  this->hasAnimationBlock_ = hasAnimationBlock;
 }
 
 bool LayoutAnimations::hasAnimationForTag(int tag, std::string type) {
-  return _hasAnimationBlock(tag, type);
+  return hasAnimationBlock_(tag, type);
 }
 
 bool LayoutAnimations::isLayoutAnimationEnabled() {

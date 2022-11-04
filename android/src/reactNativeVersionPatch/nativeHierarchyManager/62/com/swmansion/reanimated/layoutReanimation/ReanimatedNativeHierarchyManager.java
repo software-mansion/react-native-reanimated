@@ -29,13 +29,13 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   private AnimationsManager mAnimationsManager = null;
   private volatile boolean mInitialized = false;
   private ReactApplicationContext mContext;
-  private WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManage =
+  private WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManager =
       new WeakReference<>(null);
 
   ReaLayoutAnimator(
       ReactApplicationContext context, NativeViewHierarchyManager nativeViewHierarchyManager) {
     mContext = context;
-    mWeakNativeViewHierarchyManage = new WeakReference<>(nativeViewHierarchyManager);
+    mWeakNativeViewHierarchyManager = new WeakReference<>(nativeViewHierarchyManager);
   }
 
   public void maybeInit() {
@@ -44,7 +44,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       ReanimatedModule reanimatedModule = mContext.getNativeModule(ReanimatedModule.class);
       mAnimationsManager = reanimatedModule.getNodesManager().getAnimationsManager();
       mAnimationsManager.setReanimatedNativeHierarchyManager(
-          (ReanimatedNativeHierarchyManager) mWeakNativeViewHierarchyManage.get());
+          (ReanimatedNativeHierarchyManager) mWeakNativeViewHierarchyManager.get());
     }
   }
 
@@ -89,12 +89,12 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         mAnimationsManager.onViewCreate(
             view,
             (ViewGroup) view.getParent(),
-            new Snapshot(view, mWeakNativeViewHierarchyManage.get()));
+            new Snapshot(view, mWeakNativeViewHierarchyManager.get()));
       }
     } else {
-      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
+      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
       view.layout(x, y, x + width, y + height);
-      Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
+      Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
       mAnimationsManager.onViewUpdate(view, before, after);
     }
   }
@@ -113,7 +113,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       return;
     }
     UiThreadUtil.assertOnUiThread();
-    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
+    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManager.get();
     ViewManager viewManager;
     try {
       viewManager = nativeViewHierarchyManager.resolveViewManager(view.getId());
@@ -147,7 +147,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       }
     }
     maybeInit();
-    Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
+    Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
     mAnimationsManager.onViewRemoval(
         view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
   }

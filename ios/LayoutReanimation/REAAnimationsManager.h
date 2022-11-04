@@ -25,18 +25,15 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
-- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag;
-- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled type:(NSString *)type;
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle forTag:(NSNumber *_Nonnull)tag;
+- (void)endLayoutAnimnationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view;
 - (BOOL)wantsHandleRemovalOfView:(UIView *)view;
 - (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container;
-- (void)onViewRemoval:(UIView *)view before:(REASnapshot *)before;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
-- (void)setToBeRemovedRegistry:(NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *)toBeRemovedRegister;
-- (void)removeLeftovers;
 
 @end
 

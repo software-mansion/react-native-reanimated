@@ -278,7 +278,7 @@ void RuntimeDecorator::decorateUIRuntime(
       return jsi::Value::undefined();
     }
     proxy->stopObserving(
-        args[0].asNumber(), args[1].getBool(), args[2].asString(rt).utf8(rt));
+        args[0].asNumber(), args[1].getBool(), args[2].getBool());
     return jsi::Value::undefined();
   };
   jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(

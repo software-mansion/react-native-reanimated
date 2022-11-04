@@ -230,13 +230,13 @@ void NativeProxy::installJSIBindings(
 
   // Layout Animations Start
 
-  auto progressLayoutAnimation = [=](int tag, jsi::Value progress) {
+  auto progressLayoutAnimation = [this](int tag, jsi::Value progress) {
     this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, std::string type) {
+  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
     this->layoutAnimations->cthis()->endLayoutAnimation(
-        tag, (isCancelled) ? 1 : 0, type);
+        tag, isCancelled, removeView);
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
@@ -259,10 +259,14 @@ void NativeProxy::installJSIBindings(
         }
         jsi::Object yogaValues(*rt);
         for (const auto &entry : *values) {
-          auto key =
-              jsi::String::createFromAscii(*rt, entry.first->toStdString());
-          auto value = stod(entry.second->toStdString());
-          yogaValues.setProperty(*rt, key, value);
+          try {
+            auto key =
+                jsi::String::createFromAscii(*rt, entry.first->toStdString());
+            auto value = stod(entry.second->toStdString());
+            yogaValues.setProperty(*rt, key, value);
+          } catch (std::invalid_argument e) {
+            // failed to convert value to number
+          }
         }
 
         layoutAnimationsProxy->startLayoutAnimation(

@@ -224,7 +224,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(
+  auto layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(
       [](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled, std::string type) {});
 #else
   // Layout Animations start
@@ -242,7 +242,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [reaUiManagerNoCast setUp:animationsManager];
 
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
-  auto progressLayoutAnimation = [=](int tag, jsi::Object newStyle) {
+  auto progressLayoutAnimation = [weakAnimationsManager, animatedRuntime](int tag, jsi::Object newStyle) {
     REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
       NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
@@ -250,12 +250,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, std::string type) {
+  auto endLayoutAnimation = [weakAnimationsManager](int tag, bool isCancelled, bool removeView) {
     REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
-      [animationsManager endLayoutAnimnationForTag:@(tag)
-                                         cancelled:isCancelled
-                                              type:[NSString stringWithUTF8String:type.c_str()]];
+      [animationsManager endLayoutAnimnationForTag:@(tag) cancelled:isCancelled removeView:removeView];
     }
   };
 
@@ -266,8 +264,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation);
+  auto layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
   // Layout Animations end
@@ -380,7 +377,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager setAnimationStartingBlock:^(
                          NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-    if (wrt.expired()) {
+    if (rt == nullptr) {
       return;
     }
     jsi::Object yogaValues(*rt);

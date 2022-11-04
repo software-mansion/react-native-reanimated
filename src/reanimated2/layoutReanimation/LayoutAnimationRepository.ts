@@ -18,15 +18,14 @@ runOnUI(() => {
       if (type === 'entering') {
         enteringAnimationForTag[tag] = currentAnimation;
       } else if (type === 'layout') {
-        // When layout animaiton is requested, but entering is still running, we merge
+        // When layout animation is requested, but entering is still running, we merge
         // new layout animation targets into the ongoing animation
         const enteringAnimation = enteringAnimationForTag[tag];
         if (enteringAnimation) {
           currentAnimation = { ...enteringAnimation, ...style.animations };
         }
       }
-
-      _stopObservingProgress(tag, false, type);
+      _stopObservingProgress(tag, false, false);
       viewSharedValue._value = Object.assign(
         {},
         viewSharedValue._value,
@@ -37,7 +36,8 @@ runOnUI(() => {
       animation.callback = (finished?: boolean) => {
         if (finished) {
           delete enteringAnimationForTag[tag];
-          _stopObservingProgress(tag, finished, type);
+          const shouldRemoveView = type === 'exiting';
+          _stopObservingProgress(tag, finished, shouldRemoveView);
         }
         style.callback && style.callback(finished);
       };

@@ -3,10 +3,10 @@
 #include <jsi/jsi.h>
 #include <stdio.h>
 #include <functional>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 namespace reanimated {
 
@@ -19,11 +19,11 @@ class LayoutAnimationsProxy {
  public:
   LayoutAnimationsProxy(
       std::function<void(int, jsi::Object newProps)> progressHandler,
-      std::function<void(int, bool, std::string)> endHandler);
+      std::function<void(int, bool, bool)> endHandler);
 
   void
   startObserving(int tag, std::shared_ptr<MutableValue> sv, jsi::Runtime &rt);
-  void stopObserving(int tag, bool finished, std::string type);
+  void stopObserving(int tag, bool finished, bool removeView);
   void configureAnimation(
       int tag,
       const std::string &type,
@@ -37,14 +37,16 @@ class LayoutAnimationsProxy {
       const jsi::Object &values);
 
  private:
-  std::function<void(int, jsi::Object newProps)> progressHandler;
-  std::function<void(int, bool, std::string)> endHandler;
-  std::map<int, std::shared_ptr<MutableValue>> observedValues;
-  std::map<int, std::shared_ptr<ShareableValue>> viewSharedValues;
-  std::map<int, std::shared_ptr<ShareableValue>> enteringAnimations;
-  std::map<int, std::shared_ptr<ShareableValue>> exitingAnimations;
-  std::map<int, std::shared_ptr<ShareableValue>> layoutAnimations;
-  std::mutex animationsLock;
+  std::function<void(int, jsi::Object newProps)> progressHandler_;
+  std::function<void(int, bool, bool)> endHandler_;
+  std::unordered_map<int, std::shared_ptr<MutableValue>> observedValues;
+  std::unordered_map<int, std::shared_ptr<ShareableValue>> viewSharedValues;
+  std::unordered_map<int, std::shared_ptr<ShareableValue>> enteringAnimations;
+  std::unordered_map<int, std::shared_ptr<ShareableValue>> exitingAnimations;
+  std::unordered_map<int, std::shared_ptr<ShareableValue>> layoutAnimations;
+  mutable std::mutex
+      animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
+                        // `layoutAnimations_` and `viewSharedValues_`.
 };
 
 } // namespace reanimated

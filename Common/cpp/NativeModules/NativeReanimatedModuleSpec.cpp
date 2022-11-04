@@ -164,14 +164,13 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->configureLayoutAnimation(
           rt,
           std::move(args[0]),
           std::move(args[1]),
           std::move(args[2]),
           std::move(args[3]));
-  return jsi::Value::undefined();
 }
 
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(

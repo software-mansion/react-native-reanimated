@@ -162,9 +162,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId());
   }
 
-  public void endLayoutAnimation(int tag, boolean cancelled, String type) {
+  public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     View exitingView = mExitingViews.get(tag);
-    if (exitingView != null && type.equals("exiting")) {
+    if (exitingView != null && removeView) {
       if (exitingView instanceof ViewGroup) {
         removeSubviews((ViewGroup) exitingView);
       }
@@ -382,12 +382,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     // has an exiting animation
     if (view instanceof ViewGroup) {
       ViewGroup viewGroup = (ViewGroup) view;
-      ArrayList<View> children = new ArrayList<>();
-      for (int i = 0; i < viewGroup.getChildCount(); i++) {
+      for (int i = viewGroup.getChildCount() - 1; i >= 0; i--) {
         View child = viewGroup.getChildAt(i);
-        children.add(child);
-      }
-      for (View child : children) {
         if (removeOrAnimateExitRecursive(child, viewGroup, shouldRemove && !hasExitAnimation)) {
           wantAnimateExit = true;
         }
@@ -470,7 +466,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       View child = view.getChildAt(i);
 
       if (mExitingViews.containsKey(child.getId())) {
-        endLayoutAnimation(child.getId(), true, "exiting");
+        endLayoutAnimation(child.getId(), true, true);
         continue;
       }
 

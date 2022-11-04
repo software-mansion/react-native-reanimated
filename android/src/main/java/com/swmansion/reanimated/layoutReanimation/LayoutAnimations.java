@@ -33,14 +33,14 @@ public class LayoutAnimations {
 
   public native boolean isLayoutAnimationEnabled();
 
-  private void endLayoutAnimation(int tag, boolean cancelled, String type) {
+  private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {
       context
           .getNativeModule(ReanimatedModule.class)
           .getNodesManager()
           .getAnimationsManager()
-          .endLayoutAnimation(tag, cancelled, type);
+          .endLayoutAnimation(tag, cancelled, removeView);
     }
   }
 

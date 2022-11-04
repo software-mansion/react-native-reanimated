@@ -151,7 +151,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &config,
       const jsi::Value &viewSharedValue) override;
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -167,7 +167,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
   std::function<void(double)> onRenderCallback;
-
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
 

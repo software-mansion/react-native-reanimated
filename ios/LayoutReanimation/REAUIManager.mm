@@ -145,9 +145,7 @@
 
 - (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag
 {
-  REASnapshot *snapshot = [[REASnapshot alloc] init:view];
   _parentMapper[view.reactTag] = parentTag;
-  [_animationsManager onViewRemoval:view before:snapshot];
 
   for (UIView *subView in view.reactSubviews) {
     [self callAnimationForTree:subView parentTag:view.reactTag];

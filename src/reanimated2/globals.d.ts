@@ -19,12 +19,12 @@ declare global {
   const _getCurrentTime: () => number;
   const _stopObservingProgress: (
     tag: number,
-    flag: boolean,
-    type: string
+    cancelled: boolean,
+    removeView: boolean
   ) => void;
   const _startObservingProgress: (
     tag: number,
-    flag: { value: boolean; _value: boolean },
+    viewSharedValue: { value: boolean; _value: boolean },
     type: string
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
