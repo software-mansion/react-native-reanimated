@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-        concurrency:
+    concurrency:
       group: build-swc-plugin-${{ github.ref }}
       cancel-in-progress: true
     steps:
