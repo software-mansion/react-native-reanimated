@@ -1,0 +1,25 @@
+name: Build SWC plugin
+on:
+  pull-request:
+    paths:
+      - 'plugin-swc/*'
+    push:
+      branches:
+        - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Use rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Use cargo
+        uses: actions-rs/cargo@v1
+      - name: Build plugin
+        working-directory: plugin-swc
+        run: yarn build:plugin --release
