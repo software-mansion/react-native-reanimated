@@ -1,8 +1,9 @@
 fs = require('fs');
 
-const buildGradlePath = 'app/android/app/build.gradle';
+const buildGradlePath =
+  'app/node_modules/react-native-reanimated/android/app/build.gradle';
 const mainApplicationPath =
-  'app/android/app/src/main/java/com/app/MainApplication.java';
+  'app/node_modules/react-native-reanimated/android/app/src/main/java/com/app/MainApplication.java';
 
 fs.readFile(buildGradlePath, 'utf8', function (err, data) {
   if (err) {
