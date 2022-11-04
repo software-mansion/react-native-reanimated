@@ -316,7 +316,10 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
             )
           )
         ),
-        t.memberExpression(t.identifier('this'), t.identifier('_closure'))
+        t.memberExpression(
+          t.memberExpression(t.identifier(name), t.identifier('prototype')),
+          t.identifier('_closure')
+        )
       ),
     ]);
 
