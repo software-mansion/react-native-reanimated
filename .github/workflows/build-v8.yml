@@ -21,14 +21,10 @@ jobs:
       group: build_v8-${{ matrix.working-directory }}
       cancel-in-progress: true
     steps:
-      - name: A
-        run: pwd && ls -la
       - name: Check out
         uses: actions/checkout@v3
         with:
           path: 'reanimated_repo'
-      - name: B
-        run: pwd && ls -la
       - name: Create react app
         run: npx react-native init app --version ${{ matrix.working-directory }}
       - name: Install dependencies
