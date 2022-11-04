@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["OJ Kwon <kwon.ohjoong@gmail.com>"]
 description = ""
 license = "MIT"
-repository = "https://github.com/kwonoj/swc-plugin-react-native-reanimated"
+repository = "https://github.com/software-mansion/react-native-reanimated"
 
 [lib]
 crate-type = ["cdylib"]
