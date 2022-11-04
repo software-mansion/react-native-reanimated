@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ErrorHandler.h>
 #include <jsi/jsi.h>
 #include <stdio.h>
 #include <functional>
@@ -19,7 +20,8 @@ class LayoutAnimationsProxy {
  public:
   LayoutAnimationsProxy(
       std::function<void(int, jsi::Object newProps)> progressHandler,
-      std::function<void(int, bool, bool)> endHandler);
+      std::function<void(int, bool, bool)> endHandler,
+      std::weak_ptr<ErrorHandler> errorHandler);
 
   void
   startObserving(int tag, std::shared_ptr<MutableValue> sv, jsi::Runtime &rt);
@@ -39,6 +41,7 @@ class LayoutAnimationsProxy {
  private:
   std::function<void(int, jsi::Object newProps)> progressHandler_;
   std::function<void(int, bool, bool)> endHandler_;
+  std::weak_ptr<ErrorHandler> weakErrorHandler_;
   std::unordered_map<int, std::shared_ptr<MutableValue>> observedValues;
   std::unordered_map<int, std::shared_ptr<ShareableValue>> viewSharedValues;
   std::unordered_map<int, std::shared_ptr<ShareableValue>> enteringAnimations;

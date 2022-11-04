@@ -225,7 +225,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   auto layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(
-      [](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled, std::string type) {});
+      [](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled, std::string type) {}, errorHandler);
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
@@ -264,7 +264,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
-  auto layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation);
+  auto layoutAnimationsProxy =
+      std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation, errorHandler);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
   // Layout Animations end

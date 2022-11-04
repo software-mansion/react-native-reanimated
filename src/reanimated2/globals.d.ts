@@ -24,7 +24,7 @@ declare global {
   ) => void;
   const _startObservingProgress: (
     tag: number,
-    viewSharedValue: { value: boolean; _value: boolean },
+    viewSharedValue: { value: unknown; _value: unknown },
     type: string
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;

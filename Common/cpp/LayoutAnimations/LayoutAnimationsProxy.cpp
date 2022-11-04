@@ -12,9 +12,11 @@ const long long idOffset = 1e9;
 
 LayoutAnimationsProxy::LayoutAnimationsProxy(
     std::function<void(int, jsi::Object newProps)> progressHandler,
-    std::function<void(int, bool, bool)> endHandler)
+    std::function<void(int, bool, bool)> endHandler,
+    std::weak_ptr<ErrorHandler> errorHandler)
     : progressHandler_(std::move(progressHandler)),
-      endHandler_(std::move(endHandler)) {}
+      endHandler_(std::move(endHandler)),
+      weakErrorHandler_(errorHandler) {}
 
 void LayoutAnimationsProxy::startObserving(
     int tag,
@@ -93,18 +95,25 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       rt.global()
           .getPropertyAsObject(rt, "global")
           .getProperty(rt, "LayoutAnimationRepository");
-  if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-    jsi::Function startAnimationForTag =
-        layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
-            rt, "startAnimationForTag");
-    startAnimationForTag.call(
-        rt,
-        jsi::Value(tag),
-        jsi::String::createFromAscii(rt, type),
-        values,
-        config->toJSValue(rt),
-        viewSharedValue->toJSValue(rt));
+  if (layoutAnimationRepositoryAsValue.isUndefined()) {
+    auto errorHandler = weakErrorHandler_.lock();
+    if (errorHandler != nullptr) {
+      errorHandler->setError(
+          "startLayoutAnimation called before initializing LayoutAnimationRepository");
+      errorHandler->raise();
+    }
+    return;
   }
+  jsi::Function startAnimationForTag =
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
+          rt, "startAnimationForTag");
+  startAnimationForTag.call(
+      rt,
+      jsi::Value(tag),
+      jsi::String::createFromAscii(rt, type),
+      values,
+      config->toJSValue(rt),
+      viewSharedValue->toJSValue(rt));
 }
 
 } // namespace reanimated

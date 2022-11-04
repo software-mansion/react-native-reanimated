@@ -241,7 +241,7 @@ void NativeProxy::installJSIBindings(
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(
-          progressLayoutAnimation, endLayoutAnimation);
+          progressLayoutAnimation, endLayoutAnimation, errorHandler);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   std::weak_ptr<LayoutAnimationsProxy> weakLayoutAnimationsProxy =
       layoutAnimationsProxy;
