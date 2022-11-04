@@ -23,7 +23,7 @@ class SingleInstanceChecker {
   void assertWithMessage(bool condition, std::string message) {
     if (!condition) {
       std::cerr << message << std::endl;
-      assert(condition);
+      //      assert(condition);
     }
   }
 

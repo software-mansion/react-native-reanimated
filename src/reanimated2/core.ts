@@ -1,20 +1,26 @@
-/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp _setGlobalConsole */
+/* global _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
-import { Platform } from 'react-native';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   BasicWorkletFunction,
-  ComplexWorkletFunction,
-  SharedValue,
-  AnimationObject,
-  AnimatableValue,
   Timestamp,
-  ShareableRef,
   Value3D,
   ValueRotation,
-  ShareableSyncDataHolderRef,
 } from './commonTypes';
-import { Descriptor } from './hook/commonTypes';
+import {
+  makeShareableCloneRecursive,
+  makeShareable as makeShareableUnwrapped,
+} from './shareables';
+import { runOnUI, runOnJS } from './threads';
+import { startMapper as startMapperUnwrapped } from './mappers';
+import {
+  makeMutable as makeMutableUnwrapped,
+  makeRemote as makeRemoteUnwrapped,
+} from './mutables';
+
+export { stopMapper } from './mappers';
+export { runOnJS, runOnUI } from './threads';
+export { getTimestamp } from './time';
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
@@ -60,6 +66,31 @@ export const isConfiguredCheck: () => void = () => {
   checkPluginState(true);
 };
 
+const configurationCheckWrapper = __DEV__
+  ? <T extends Array<any>, U>(fn: (...args: T) => U) => {
+      return (...args: T): U => {
+        isConfigured(true);
+        return fn(...args);
+      };
+    }
+  : <T extends Array<any>, U>(fn: (...args: T) => U) => fn;
+
+export const startMapper = __DEV__
+  ? configurationCheckWrapper(startMapperUnwrapped)
+  : startMapperUnwrapped;
+
+export const makeShareable = __DEV__
+  ? configurationCheckWrapper(makeShareableUnwrapped)
+  : makeShareableUnwrapped;
+
+export const makeMutable = __DEV__
+  ? configurationCheckWrapper(makeMutableUnwrapped)
+  : makeMutableUnwrapped;
+
+export const makeRemote = __DEV__
+  ? configurationCheckWrapper(makeRemoteUnwrapped)
+  : makeRemoteUnwrapped;
+
 export function requestFrame(frame: (timestamp: Timestamp) => void): void {
   'worklet';
   if (NativeReanimatedModule.native) {
@@ -73,33 +104,6 @@ global._WORKLET = false;
 global._log = function (s: string) {
   console.log(s);
 };
-
-export function runOnUI<A extends any[], R>(
-  worklet: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
-  return (...args) => {
-    NativeReanimatedModule.scheduleOnUI(
-      makeShareableCloneRecursive(() => {
-        'worklet';
-        return worklet(...args);
-      })
-    );
-  };
-}
-
-export function makeShareable<T>(value: T): T {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  const handle = makeShareableCloneRecursive({
-    __init: () => {
-      'worklet';
-      return value;
-    },
-  });
-  registerShareableMapping(value, handle);
-  return value;
-}
 
 export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   if (global._IS_FABRIC) {
@@ -121,96 +125,6 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
       }
     );
   });
-}
-
-let _getTimestamp: () => number;
-if (nativeShouldBeMock()) {
-  _getTimestamp = () => {
-    return NativeReanimatedModule.getTimestamp();
-  };
-} else {
-  _getTimestamp = () => {
-    'worklet';
-    if (_frameTimestamp) {
-      return _frameTimestamp;
-    }
-    if (_eventTimestamp) {
-      return _eventTimestamp;
-    }
-    return _getCurrentTime();
-  };
-}
-
-export function getTimestamp(): number {
-  'worklet';
-  if (Platform.OS === 'web') {
-    return NativeReanimatedModule.getTimestamp();
-  }
-  return _getTimestamp();
-}
-
-function valueSetter(sv: any, value: any): void {
-  'worklet';
-  const previousAnimation = sv._animation;
-  if (previousAnimation) {
-    previousAnimation.cancelled = true;
-    sv._animation = null;
-  }
-  if (
-    typeof value === 'function' ||
-    (value !== null &&
-      typeof value === 'object' &&
-      (value as AnimationObject).onFrame !== undefined)
-  ) {
-    const animation: AnimationObject =
-      typeof value === 'function'
-        ? (value as () => AnimationObject)()
-        : (value as AnimationObject);
-    // prevent setting again to the same value
-    // and triggering the mappers that treat this value as an input
-    // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
-    // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
-    if (sv._value === animation.current && !animation.isHigherOrder) {
-      animation.callback && animation.callback(true);
-      return;
-    }
-    // animated set
-    const initializeAnimation = (timestamp: number) => {
-      animation.onStart(animation, sv.value, timestamp, previousAnimation);
-    };
-    initializeAnimation(getTimestamp());
-    const step = (timestamp: number) => {
-      if (animation.cancelled) {
-        animation.callback && animation.callback(false /* finished */);
-        return;
-      }
-      const finished = animation.onFrame(animation, timestamp);
-      animation.finished = true;
-      animation.timestamp = timestamp;
-      sv._value = animation.current;
-      if (finished) {
-        animation.callback && animation.callback(true /* finished */);
-      } else {
-        requestAnimationFrame(step);
-      }
-    };
-
-    sv._animation = animation;
-
-    if (_frameTimestamp) {
-      // frame
-      step(_frameTimestamp);
-    } else {
-      requestAnimationFrame(step);
-    }
-  } else {
-    // prevent setting again to the same value
-    // and triggering the mappers that treat this value as an input
-    if (sv._value === value) {
-      return;
-    }
-    sv._value = value as Descriptor | AnimatableValue;
-  }
 }
 
 function valueUnpacker(objectToUnpack: any): any {
@@ -242,366 +156,6 @@ function valueUnpacker(objectToUnpack: any): any {
   } else {
     throw new Error('data type not recognized by unpack method');
   }
-}
-
-const _shareableCache = new WeakMap<
-  Record<string, unknown>,
-  ShareableRef<any> | symbol
->();
-const _shareableFlag = Symbol('shareable flag');
-
-function registerShareableMapping(
-  shareable: any,
-  shareableRef: ShareableRef<any> | symbol
-): void {
-  _shareableCache.set(shareable, shareableRef);
-}
-
-function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
-  // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
-  const type = typeof value;
-  if ((type === 'object' || type === 'function') && value !== null) {
-    const cached = _shareableCache.get(value);
-    if (cached === _shareableFlag) {
-      return value;
-    } else if (cached !== undefined) {
-      return cached as ShareableRef<T>;
-    } else {
-      let toAdapt: any;
-      if (Array.isArray(value)) {
-        toAdapt = value.map((element) => makeShareableCloneRecursive(element));
-      } else if (type === 'function' && value.__workletHash === undefined) {
-        // this is a remote function
-        // throw new Error('adapt remote fun ' + value.name);
-        toAdapt = value;
-      } else {
-        toAdapt = {};
-        for (const [key, element] of Object.entries(value)) {
-          toAdapt[key] = makeShareableCloneRecursive(element);
-        }
-      }
-      Object.freeze(value);
-      const adopted = NativeReanimatedModule.makeShareableClone(toAdapt);
-      _shareableCache.set(value, adopted);
-      _shareableCache.set(adopted, _shareableFlag);
-      return adopted;
-    }
-  }
-  return NativeReanimatedModule.makeShareableClone(value);
-}
-
-export function makeMutable<T>(
-  initial: T,
-  needSynchronousReadsFromReact = false
-): SharedValue<T> {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  let value: T = initial;
-  let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
-  if (needSynchronousReadsFromReact) {
-    syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
-      makeShareableCloneRecursive(undefined)
-    );
-    registerShareableMapping(syncDataHolder, _shareableFlag);
-  }
-  const handle = makeShareableCloneRecursive({
-    __init: () => {
-      'worklet';
-
-      const listeners = new Map();
-      let value = initial;
-
-      const self = {
-        set value(newValue) {
-          valueSetter(self, newValue);
-        },
-        get value() {
-          return self._value;
-        },
-        set _value(newValue: T) {
-          value = newValue;
-          if (syncDataHolder) {
-            _updateDataSynchronously(
-              syncDataHolder,
-              makeShareableCloneOnUIRecursive(newValue)
-            );
-          }
-          listeners.forEach((listener) => {
-            listener(newValue);
-          });
-        },
-        get _value(): T {
-          return value;
-        },
-        addListener: (id: number, listener: (newValue: T) => void) => {
-          listeners.set(id, listener);
-        },
-        removeListener: (id: number) => {
-          listeners.delete(id);
-        },
-        _animation: null,
-      };
-      return self;
-    },
-  });
-  const mutable = {
-    set value(newValue) {
-      value = newValue;
-      runOnUI(() => {
-        'worklet';
-        mutable.value = newValue;
-      })();
-    },
-    get value() {
-      if (syncDataHolder) {
-        return NativeReanimatedModule.getDataSynchronously(syncDataHolder);
-      }
-      return value;
-    },
-    modify: (modifier: (value: T) => T) => {
-      runOnUI(() => {
-        'worklet';
-        mutable.value = modifier(mutable.value);
-      })();
-    },
-    addListener: (_listenerId: number, _listener: (value: T) => void) => {
-      throw new Error('adding listeners is only possible on the UI runtime');
-    },
-    removeListener: (_listenerId: number) => {
-      throw new Error('removing listeners is only possible on the UI runtime');
-    },
-  };
-  registerShareableMapping(mutable, handle);
-  return mutable;
-}
-
-export function makeRemote<T extends object>(initial: T = {} as T): T {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-  const handle = makeShareableCloneRecursive({
-    __init: () => {
-      'worklet';
-      return initial;
-    },
-  });
-  registerShareableMapping(initial, handle);
-  return initial;
-}
-
-type Mapper = {
-  id: number;
-  dirty: boolean;
-  worklet: () => void;
-  inputs: SharedValue<any>[];
-  outputs?: SharedValue<any>[];
-};
-
-function createMapperRegistry() {
-  'worklet';
-  const mappers = new Map();
-  let sortedMappers: Mapper[] = [];
-
-  let frameRequested = false;
-
-  function updateMappersOrder() {
-    // sort mappers topologically
-    // the algorithm here takes adventage of a fact that the topological order
-    // of a transposed graph is a reverse topological order of the original graph
-    // The graph in our case consists of mappers and an edge between two mappers
-    // A and B exists if there is a shared value that's on A's output lists and on
-    // B's input list.
-    //
-    // We don't need however to calculate that graph as it is easier to work with
-    // the transposed version of it that can be calculated ad-hoc. For the transposed
-    // version to be traversed we use "pre" map that maps share value to mappers that
-    // output that shared value. Then we can infer all the outgoing edges for a given
-    // mapper simply by scanning it's input list and checking if any of the shared values
-    // from that list exists in the "pre" map. If they do, then we have an edge between
-    // that mapper and the mappers from the "pre" list for the given shared value.
-    //
-    // For topological sorting we use a dfs-based approach that requires the graph to
-    // be traversed in dfs order and each node after being processed lands at the
-    // beginning of the topological order list. Since we traverse a transposed graph,
-    // instead of reversing that order we can use a normal array and push processed
-    // mappers to the end. There is no need to reverse that array after we are done.
-    const pre = new Map(); // map from sv -> mapper that outputs that sv
-    mappers.forEach((mapper) => {
-      if (mapper.outputs) {
-        for (const output of mapper.outputs) {
-          const preMappers = pre.get(output);
-          if (preMappers === undefined) {
-            pre.set(output, [mapper]);
-          } else {
-            preMappers.push(mapper);
-          }
-        }
-      }
-    });
-    const visited = new Set();
-    const newOrder: Mapper[] = [];
-    function dfs(mapper: Mapper) {
-      visited.add(mapper);
-      for (const input of mapper.inputs) {
-        const preMappers = pre.get(input);
-        if (preMappers) {
-          for (const preMapper of preMappers) {
-            if (!visited.has(preMapper)) {
-              dfs(preMapper);
-            }
-          }
-        }
-      }
-      newOrder.push(mapper);
-    }
-    mappers.forEach((mapper) => {
-      if (!visited.has(mapper)) {
-        dfs(mapper);
-      }
-    });
-    sortedMappers = newOrder;
-  }
-
-  function mapperFrame() {
-    if (mappers.size !== sortedMappers.length) {
-      updateMappersOrder();
-    }
-    for (const mapper of sortedMappers) {
-      mapper.worklet();
-    }
-    frameRequested = false;
-  }
-
-  function maybeRequestUpdates() {
-    if (!frameRequested) {
-      requestAnimationFrame(mapperFrame);
-      frameRequested = true;
-    }
-  }
-
-  function extractInputs(
-    inputs: any,
-    resultArray: SharedValue<any>[]
-  ): SharedValue<any>[] {
-    if (Array.isArray(inputs)) {
-      for (const input of inputs) {
-        extractInputs(input, resultArray);
-      }
-    } else if (inputs.addListener) {
-      resultArray.push(inputs);
-    } else if (typeof inputs === 'object') {
-      for (const element of Object.values(inputs)) {
-        extractInputs(element, resultArray);
-      }
-    }
-    return resultArray;
-  }
-
-  return {
-    start: (
-      mapperID: number,
-      worklet: () => void,
-      inputs: SharedValue<any>[],
-      outputs?: SharedValue<any>[]
-    ) => {
-      const mapper = {
-        id: mapperID,
-        dirty: true,
-        worklet,
-        inputs: extractInputs(inputs, []),
-        outputs,
-      };
-      mappers.set(mapper.id, mapper);
-      sortedMappers = [];
-      for (const sv of mapper.inputs) {
-        sv.addListener(mapper.id, () => {
-          mapper.dirty = true;
-          maybeRequestUpdates();
-        });
-      }
-    },
-    stop: (mapperID: number) => {
-      const mapper = mappers.get(mapperID);
-      if (mapper) {
-        mappers.delete(mapper.id);
-        sortedMappers = [];
-        for (const sv of mapper.inputs) {
-          sv.removeListener(mapper.id);
-        }
-      }
-    },
-  };
-}
-
-let MAPPER_ID = 9999;
-
-export function startMapper(
-  worklet: () => void,
-  inputs: any[] = [],
-  outputs: any[] = []
-): number {
-  if (__DEV__) {
-    isConfiguredCheck();
-  }
-
-  const mapperID = (MAPPER_ID += 1);
-
-  runOnUI(() => {
-    'worklet';
-    let mapperRegistry = global.__mapperRegistry;
-    if (mapperRegistry === undefined) {
-      mapperRegistry = global.__mapperRegistry = createMapperRegistry();
-    }
-    mapperRegistry.start(mapperID, worklet, inputs, outputs);
-  })();
-
-  return mapperID;
-}
-
-export function stopMapper(mapperID: number): void {
-  runOnUI(() => {
-    'worklet';
-    const mapperRegistry = global.__mapperRegistry;
-    mapperRegistry?.stop(mapperID);
-  });
-}
-
-function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
-  'worklet';
-  function cloneRecursive<T>(value: T): ShareableRef<T> {
-    const type = typeof value;
-    if ((type === 'object' || type === 'function') && value !== null) {
-      let toAdapt: any;
-      if (Array.isArray(value)) {
-        toAdapt = value.map((element) => cloneRecursive(element));
-      } else {
-        toAdapt = {};
-        for (const [key, element] of Object.entries(value)) {
-          toAdapt[key] = cloneRecursive(element);
-        }
-      }
-      Object.freeze(value);
-      return _makeShareableClone(toAdapt);
-    }
-    return _makeShareableClone(value);
-  }
-  return cloneRecursive(value);
-}
-
-export function runOnJS<A extends any[], R>(
-  fun: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
-  'worklet';
-  if (!_WORKLET) {
-    return fun;
-  }
-  return (...args) => {
-    _scheduleOnJS(
-      fun,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
-    );
-  };
 }
 
 export function registerEventHandler<T>(

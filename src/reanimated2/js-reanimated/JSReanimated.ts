@@ -27,6 +27,10 @@ export default class JSReanimated extends NativeReanimated {
     return this.timeProvider.now();
   }
 
+  makeShareableClone<T>(value: T): ShareableRef<T> {
+    return { __hostObjectShareableJSRef: value };
+  }
+
   maybeRequestRender(): void {
     if (!this._renderRequested) {
       this._renderRequested = true;
@@ -40,7 +44,7 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   _onRender(timestampMs: number): void {
-    const frames = [...this._frames];
+    const frames = this._frames;
     this._frames = [];
 
     for (let i = 0, len = frames.length; i < len; ++i) {
