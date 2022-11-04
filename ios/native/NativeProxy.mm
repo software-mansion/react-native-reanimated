@@ -225,7 +225,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   auto layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(
-      [](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled, std::string type) {}, errorHandler);
+      [](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled, bool removeView) {}, errorHandler);
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
