@@ -25,6 +25,8 @@ import {
   SpringLayoutAnimation,
   SwipeableList,
   NativeModals,
+  NestedTest,
+  CombinedTest,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -64,6 +66,14 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  NestedLayoutAnimations: {
+    screen: NestedTest,
+    title: '🆕 Nested layout animations',
+  },
+  Krzysiek: {
+    screen: CombinedTest,
+    title: '🆕 Entering and Exiting with Layout',
+  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
