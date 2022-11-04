@@ -2,7 +2,7 @@ name: Test SWC plugin
 on:
   pull_request:
     paths:
-      - '.github/workflows/build-swc-plugin.yml'
+      - '.github/workflows/test-swc-plugin.yml'
       - 'plugin-swc/*'
   push:
     branches:
