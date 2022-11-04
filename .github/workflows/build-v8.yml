@@ -21,13 +21,17 @@ jobs:
       group: build_v8-${{ matrix.working-directory }}
       cancel-in-progress: true
     steps:
+      - name: Check out
+        uses: actions/checkout@v1
+        with:
+          path: 'reanimated_repo'
       - name: Create react app
         run: npx react-native init app --version ${{ matrix.working-directory }}
       # - name: Install dependencies
       #   working-directory: app
       #   run: yarn add github:software-mansion/react-native-reanimated#${GITHUB_SHA} react-native-v8 v8-android-jit
       - name: Configure V8
-        run: node app/node_modules/react-native-reanimated/.github/workflows/helper/configureV8.js
+        run: node reanimated_repo/.github/workflows/helper/configureV8.js
       # - name: Build Android app
       #   working-directory: app/android
       #   run: ./gradlew assembleDebug --console=plain
