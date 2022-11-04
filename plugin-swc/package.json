@@ -39,7 +39,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kwonoj/swc-plugin-react-native-reanimated.git"
+    "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
   },
   "keywords": [
     "SWC",
@@ -53,9 +53,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kwonoj/swc-plugin-react-native-reanimated/issues"
+    "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
-  "homepage": "https://github.com/kwonoj/swc-plugin-react-native-reanimated#readme",
+  "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "devDependencies": {
     "@napi-rs/cli": "^2.7.0",
     "@swc/core": "1.3.10",
