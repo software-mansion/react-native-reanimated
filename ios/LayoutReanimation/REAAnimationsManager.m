@@ -69,7 +69,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)invalidate
 {
-  // TODO: perhaps want to unmount
   _startAnimationForTag = nil;
   _hasAnimationForTag = nil;
   _uiManager = nil;
@@ -249,18 +248,19 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   UIView *parent = child.superview;
   while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
     UIView *view = parent;
-    parent = parent.superview;
-    if (view.reactTag != nil) {
-      int trackingCount = [_exitingSubviewsCountMap[view.reactTag] intValue] - 1;
-      if (trackingCount <= 0) {
-        if ([_ancestorsToRemove containsObject:view.reactTag]) {
-          [view removeFromSuperview];
-          [_ancestorsToRemove removeObject:view.reactTag];
-        }
-        [_exitingSubviewsCountMap removeObjectForKey:view.reactTag];
-      } else {
-        _exitingSubviewsCountMap[view.reactTag] = @(trackingCount);
+    parent = view.superview;
+    if (view.reactTag == nil) {
+      continue;
+    }
+    int trackingCount = [_exitingSubviewsCountMap[view.reactTag] intValue] - 1;
+    if (trackingCount <= 0) {
+      if ([_ancestorsToRemove containsObject:view.reactTag]) {
+        [view removeFromSuperview];
+        [_ancestorsToRemove removeObject:view.reactTag];
       }
+      [_exitingSubviewsCountMap removeObjectForKey:view.reactTag];
+    } else {
+      _exitingSubviewsCountMap[view.reactTag] = @(trackingCount);
     }
   }
 }
