@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+        concurrency:
+      group: build-swc-plugin-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: checkout
         uses: actions/checkout@v2
