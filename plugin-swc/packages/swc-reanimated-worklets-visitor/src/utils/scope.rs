@@ -1,11 +1,8 @@
 use indexmap::IndexMap;
-use swc_common::Mark;
 use std::cell::RefCell;
+use swc_common::Mark;
 
-use swc_ecmascript::{
-  ast::*
-};
-
+use swc_ecmascript::ast::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScopeKind {

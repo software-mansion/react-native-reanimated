@@ -1,25 +1,28 @@
 mod constants;
-pub use visitors::{WorkletsOptions, ReanimatedWorkletsVisitor};
+pub use visitors::{ReanimatedWorkletsVisitor, WorkletsOptions};
 mod utils;
 mod visitors;
 
 use crate::constants::{GLOBALS, LEAST_SIGNIFICANT_32_BITS};
-use swc_ecmascript::{
-    ast::*,
-    visit::VisitMut,
-};
+use swc_ecmascript::{ast::*, visit::VisitMut};
 
 // Reimplemented string-hash-64 used by the original plugin with i32 <-> f64 conversions mimicking those of JS
 fn calculate_hash(value: &str) -> f64 {
     let mut hash1: f64 = 5381.0;
     let mut hash2: f64 = 52711.0;
 
-    for char in value.chars().rev().map(|x| { x as i32 }) {
-        hash1 = i32::from_ne_bytes((((hash1 * 33.0) as i64 & LEAST_SIGNIFICANT_32_BITS) as i32 ^ char).to_ne_bytes()) as f64;
-        hash2 = i32::from_ne_bytes((((hash2 * 33.0) as i64 & LEAST_SIGNIFICANT_32_BITS) as i32 ^ char).to_ne_bytes()) as f64;
+    for char in value.chars().rev().map(|x| x as i32) {
+        hash1 = i32::from_ne_bytes(
+            (((hash1 * 33.0) as i64 & LEAST_SIGNIFICANT_32_BITS) as i32 ^ char).to_ne_bytes(),
+        ) as f64;
+        hash2 = i32::from_ne_bytes(
+            (((hash2 * 33.0) as i64 & LEAST_SIGNIFICANT_32_BITS) as i32 ^ char).to_ne_bytes(),
+        ) as f64;
     }
 
-    return ((u64::from_ne_bytes((hash1 as i64 & LEAST_SIGNIFICANT_32_BITS).to_ne_bytes()) as f64) * 4096.0) + (u64::from_ne_bytes((hash2 as i64 & LEAST_SIGNIFICANT_32_BITS).to_ne_bytes()) as f64);
+    return ((u64::from_ne_bytes((hash1 as i64 & LEAST_SIGNIFICANT_32_BITS).to_ne_bytes()) as f64)
+        * 4096.0)
+        + (u64::from_ne_bytes((hash2 as i64 & LEAST_SIGNIFICANT_32_BITS).to_ne_bytes()) as f64);
 }
 
 pub fn create_worklets_visitor<

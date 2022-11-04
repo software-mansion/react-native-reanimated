@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
+use swc_common::DUMMY_SP;
 use swc_ecmascript::ast::*;
-use swc_common::{DUMMY_SP};
 
 use crate::constants::BLACKLISTED_FUNCTIONS;
 
@@ -17,11 +17,19 @@ pub struct IdentPath {
 
 impl IdentPath {
     pub fn new(base: Ident) -> Self {
-        IdentPath { path: Vec::from_iter([IdentRef { name: base.sym.to_string(), ident: base }]) }
+        IdentPath {
+            path: Vec::from_iter([IdentRef {
+                name: base.sym.to_string(),
+                ident: base,
+            }]),
+        }
     }
 
     pub fn add(&mut self, ident: Ident) {
-        self.path.push(IdentRef { name: ident.sym.to_string(), ident: ident });
+        self.path.push(IdentRef {
+            name: ident.sym.to_string(),
+            ident: ident,
+        });
     }
 
     pub fn pop(&mut self) -> Option<IdentRef> {
@@ -38,7 +46,11 @@ struct ClosureTrie {
 
 impl ClosureTrie {
     pub fn new(ident: Option<IdentRef>) -> Self {
-        ClosureTrie { nodes: IndexMap::new(), is_leaf: false, ident: ident }
+        ClosureTrie {
+            nodes: IndexMap::new(),
+            is_leaf: false,
+            ident: ident,
+        }
     }
 
     pub fn add_path(&mut self, mut path: IdentPath) {
@@ -49,7 +61,10 @@ impl ClosureTrie {
             return;
         };
 
-        let parent = self.nodes.entry(current.name.clone()).or_insert(ClosureTrie::new(Some(current)));
+        let parent = self
+            .nodes
+            .entry(current.name.clone())
+            .or_insert(ClosureTrie::new(Some(current)));
         parent.add_path(path);
     }
 
@@ -85,7 +100,7 @@ impl ClosureTrie {
 
     fn should_be_captured_whole(&self) -> bool {
         for (name, _) in self.nodes.iter() {
-            return name == "value" || BLACKLISTED_FUNCTIONS.iter().any(|x| { *x == name });
+            return name == "value" || BLACKLISTED_FUNCTIONS.iter().any(|x| *x == name);
         }
 
         false
@@ -148,11 +163,15 @@ impl ClosureGenerator {
     }
 
     pub fn get_variables(&self) -> Vec<Ident> {
-        self.trie.nodes.iter().filter_map(|(_, node)| {
-            if let Some(ident) = &node.ident {
-                return Some(ident.ident.clone());
-            }
-            None
-        }).collect()
+        self.trie
+            .nodes
+            .iter()
+            .filter_map(|(_, node)| {
+                if let Some(ident) = &node.ident {
+                    return Some(ident.ident.clone());
+                }
+                None
+            })
+            .collect()
     }
 }
