@@ -22,8 +22,6 @@ jobs:
           override: true
       - name: Add rustfmt
         run: rustup component add rustfmt
-      - name: Add wasm32-wasi target
-        run: rustup target add wasm32-wasi
       - name: Lint
         uses: actions-rs/cargo@v1
         with:
