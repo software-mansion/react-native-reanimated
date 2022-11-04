@@ -1,6 +1,6 @@
 name: Build SWC plugin
 on:
-  pull-request:
+  pull_request:
     paths:
       - '.github/workflows/build-swc-plugin.yml'
       - 'plugin-swc/*'

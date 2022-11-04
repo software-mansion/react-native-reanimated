@@ -1,6 +1,6 @@
 name: Lint SWC plugin
 on:
-  pull-request:
+  pull_request:
     paths:
       - '.github/workflows/lint-swc-plugin.yml'
       - 'plugin-swc/*'
