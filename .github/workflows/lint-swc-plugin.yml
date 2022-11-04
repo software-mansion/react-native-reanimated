@@ -22,9 +22,8 @@ jobs:
           override: true
       - name: Add rustfmt
         run: rustup component add rustfmt
-      - name: Lint
+      - name: Use cargo
         uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-          working-directory: plugin-swc
+      - name: Lint
+        working-directory: plugin-swc
+        run: cargo fmt --all -- --check
