@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/build-monorepo.yml
     with:
       runs_on: ubuntu-latest
-      os: Android
+      os: 'Android'
       concurrency_group: build_monorepo_android_in_app_reanimated
       is_hoisted: false
 
