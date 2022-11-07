@@ -1,24 +1,24 @@
 fs = require('fs');
 
 function patchFile(path, find, replace) {
-  fs.readFile(path, 'utf8', function (err, data) {
-    if (err) {
-      return console.log(err);
-    }
-    data = data.replace(find, replace);
-
-    fs.writeFile(path, data, function (err) {
-      if (err) {
-        return console.log(err);
-      }
-    });
-  });
+  let data = fs.readFileSync(path, 'utf8');
+  data = data.replace(find, replace);
+  fs.writeFileSync(path, data);
 }
 
+const buildGradle = 'app/android/app/build.gradle';
+
+patchFile(buildGradle, 'enableHermes: true,', 'enableHermes: false,');
+
 patchFile(
-  'app/android/app/build.gradle',
-  'enableHermes: true,',
-  'enableHermes: false,'
+  buildGradle,
+  'android {',
+  `android {
+    packagingOptions {
+      // Make sure libjsc.so does not packed in APK
+      exclude "**/libjsc.so"
+    }
+  `
 );
 
 const mainApplicationPath =
@@ -47,15 +47,4 @@ patchFile(
   
   @Override
   protected String getJSMainModuleName() {`
-);
-
-patchFile(
-  mainApplicationPath,
-  'android {',
-  `android {
-    packagingOptions {
-      // Make sure libjsc.so does not packed in APK
-      exclude "**/libjsc.so"
-    }
-  `
 );
