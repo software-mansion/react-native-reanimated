@@ -98,7 +98,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (targetValues != null) {
       HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues, true);
-      mNativeMethodsHolder.startAnimationForTag(tag, "entering", preparedValues);
+      mNativeMethodsHolder.startAnimation(tag, "entering", preparedValues);
     }
   }
 
@@ -140,7 +140,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     for (String key : preparedStartValues.keySet()) {
       preparedValues.put(key, preparedStartValues.get(key));
     }
-    mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
+    mNativeMethodsHolder.startAnimation(tag, "layout", preparedValues);
   }
 
   public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
@@ -365,7 +365,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public boolean hasAnimationForTag(int tag, String type) {
-    return mNativeMethodsHolder.hasAnimationForTag(tag, type);
+    return mNativeMethodsHolder.hasAnimation(tag, type);
   }
 
   public boolean isLayoutAnimationEnabled() {
@@ -397,10 +397,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
       if (!mExitingViews.containsKey(tag)) {
         mExitingViews.put(tag, view);
         registerExitingAncestors(view);
-        mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
+        mNativeMethodsHolder.startAnimation(tag, "exiting", preparedValues);
+        mNativeMethodsHolder.clearAnimationConfig(tag);
       }
       return true;
     }
+
+    mNativeMethodsHolder.clearAnimationConfig(tag);
 
     if (wantAnimateExit) {
       mAncestorsToRemove.add(tag);
@@ -438,7 +441,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       if (ancestorOfCount <= 0) {
         if (mAncestorsToRemove.contains(tag)) {
           mAncestorsToRemove.remove(tag);
-          removeView(view, (ViewGroup) parent);
+          if (!mExitingViews.containsKey(tag)) {
+            removeView(view, (ViewGroup) parent);
+          }
         }
         mExitingSubviewCountMap.remove(tag);
       } else {
@@ -462,7 +467,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void removeSubviews(ViewGroup view) {
-    for (int i = 0; i < view.getChildCount(); i++) {
+    for (int i = view.getChildCount() - 1; i >= 0; i--) {
       View child = view.getChildAt(i);
 
       if (mExitingViews.containsKey(child.getId())) {

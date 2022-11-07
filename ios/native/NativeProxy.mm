@@ -393,6 +393,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
     return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
   }];
+
+  [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
+    layoutAnimationsProxy->clearLayoutAnimationConfig([tag intValue]);
+  }];
 #endif
 
   return module;

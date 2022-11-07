@@ -72,6 +72,14 @@ bool LayoutAnimationsProxy::hasLayoutAnimation(
   return false;
 }
 
+void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag) {
+  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  enteringAnimations.erase(tag);
+  exitingAnimations.erase(tag);
+  layoutAnimations.erase(tag);
+  viewSharedValues.erase(tag);
+}
+
 void LayoutAnimationsProxy::startLayoutAnimation(
     jsi::Runtime &rt,
     int tag,

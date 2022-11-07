@@ -36,6 +36,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableArray<NSString *> *_currentKeys;
   REAAnimationStartingBlock _startAnimationForTag;
   REAHasAnimationBlock _hasAnimationForTag;
+  REAAnimationRemovingBlock _clearAnimationConfigForTag;
 }
 
 + (NSArray *)layoutKeys
@@ -85,6 +86,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation
 {
   _hasAnimationForTag = hasAnimation;
+}
+
+- (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation
+{
+  _clearAnimationConfigForTag = clearAnimation;
 }
 
 - (UIView *)viewForTag:(NSNumber *)tag
@@ -301,9 +307,15 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     } else {
       [_ancestorsToRemove addObject:view.reactTag];
     }
+    // NOTE: even though this view is still visible,
+    // since it's removed from the React tree, we won't
+    // start new animations for it, and might as well remove
+    // the layout animation config now
+    _clearAnimationConfigForTag(view.reactTag);
     return YES;
   } else if (removeImmediately) {
     [container removeReactSubview:view];
+    _clearAnimationConfigForTag(view.reactTag);
   }
 
   return NO;

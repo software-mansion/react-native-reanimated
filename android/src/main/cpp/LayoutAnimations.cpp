@@ -63,6 +63,15 @@ bool LayoutAnimations::hasAnimationForTag(int tag, std::string type) {
   return hasAnimationBlock_(tag, type);
 }
 
+void LayoutAnimations::setClearAnimationConfigBlock(
+    ClearAnimationConfigBlock clearAnimationConfigBlock) {
+  this->clearAnimationConfigBlock_ = clearAnimationConfigBlock;
+}
+
+void LayoutAnimations::clearAnimationConfigForTag(int tag) {
+  clearAnimationConfigBlock_(tag);
+}
+
 bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
@@ -74,6 +83,9 @@ void LayoutAnimations::registerNatives() {
           "startAnimationForTag", LayoutAnimations::startAnimationForTag),
       makeNativeMethod(
           "hasAnimationForTag", LayoutAnimations::hasAnimationForTag),
+      makeNativeMethod(
+          "clearAnimationConfigForTag",
+          LayoutAnimations::clearAnimationConfigForTag),
       makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),

@@ -280,6 +280,14 @@ void NativeProxy::installJSIBindings(
             layoutAnimationsProxy->hasLayoutAnimation(tag, type);
       });
 
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
+      [weakLayoutAnimationsProxy](int tag) {
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        if (layoutAnimationsProxy) {
+          layoutAnimationsProxy->clearLayoutAnimationConfig(tag);
+        }
+      });
+
   // Layout Animations End
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {

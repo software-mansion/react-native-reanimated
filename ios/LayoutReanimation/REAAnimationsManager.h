@@ -25,6 +25,7 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
+- (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation;
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle forTag:(NSNumber *_Nonnull)tag;
 - (void)endLayoutAnimnationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)invalidate;

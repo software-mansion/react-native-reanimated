@@ -37,6 +37,7 @@ class LayoutAnimationsProxy {
       int tag,
       const std::string &type,
       const jsi::Object &values);
+  void clearLayoutAnimationConfig(int tag);
 
  private:
   std::function<void(int, jsi::Object newProps)> progressHandler_;

@@ -31,6 +31,8 @@ public class LayoutAnimations {
 
   public native boolean hasAnimationForTag(int tag, String type);
 
+  public native void clearAnimationConfigForTag(int tag);
+
   public native boolean isLayoutAnimationEnabled();
 
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
