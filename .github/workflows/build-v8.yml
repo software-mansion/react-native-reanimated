@@ -11,13 +11,14 @@ on:
     branches:
       - main
 
+env:
+  REACT_NATIVE_VERSION: "0.70.5"
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      REACT_NATIVE_VERSION: "0.70.5"
     concurrency:
-      group: build_v8-${{ env.REACT_NATIVE_VERSION }}
+      group: build-v8-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out
