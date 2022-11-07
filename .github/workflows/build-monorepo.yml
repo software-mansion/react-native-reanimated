@@ -57,11 +57,11 @@ jobs:
         working-directory: monorepo/packages/PackageApp/ios
         run: pod install
 
-      - name: Build app RootApp
+      - name: Build iOS app RootApp
         if: ${{ inputs.os == 'iOS' }}
         working-directory: monorepo/RootApp
         run: npx react-native run-ios
-      - name: Build app PackageApp
+      - name: Build iOS app PackageApp
         if: ${{ inputs.os == 'iOS' }}
         working-directory: monorepo/packages/PackageApp
         run: npx react-native run-ios
