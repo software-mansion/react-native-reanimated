@@ -1,12 +1,14 @@
 fs = require('fs');
 
-function patchFile(path, find, replace) {
+function patchFile(path, find, replace, debug = false) {
   fs.readFile(path, 'utf8', function (err, data) {
     if (err) {
       return console.log(err);
     }
     data = data.replace(find, replace);
-
+    if (debug) {
+      console.log(data);
+    }
     fs.writeFile(path, data, function (err) {
       if (err) {
         return console.log(err);
@@ -57,5 +59,6 @@ patchFile(
       // Make sure libjsc.so does not packed in APK
       exclude "**/libjsc.so"
     }
-  `
+  `,
+  true
 );
