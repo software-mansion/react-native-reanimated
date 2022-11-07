@@ -1,0 +1,90 @@
+name: Test build in monorepo
+on:
+  pull_request:
+    paths:
+      - .github/workflows/build-monorepo.yml
+      - RNReanimated.podspec
+      - android/build.gradle
+  push:
+    branches:
+      - main
+
+jobs:
+  build_android:
+    runs-on: ubuntu-latest
+    env:
+      REACT_NATIVE_VERSION: "0.70.4"
+    concurrency:
+      group: build_v8-${{ env.REACT_NATIVE_VERSION }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+        with:
+          path: 'reanimated_repo'
+      - name: Create React Native app
+        run: npx react-native init app --version ${{ env.REACT_NATIVE_VERSION }}
+      - name: Install dependencies
+        working-directory: app
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} react-native-v8 v8-android-jit
+      - name: Configure V8
+        run: node reanimated_repo/.github/workflows/helper/configureV8.js
+      - name: Build Android app
+        working-directory: app/android
+        run: ./gradlew assembleDebug --console=plain
+  build_ios:
+    runs-on: macos-12
+    strategy:
+      matrix:
+        working-directory: [Example]
+      fail-fast: false
+    concurrency:
+      group: ios-${{ matrix.working-directory }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      # - name: Restore Reanimated node_modules from cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: node_modules
+      #     key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+      #     restore-keys: ${{ runner.os }}-node-modules-reanimated-
+
+      # - name: Install Reanimated node_modules
+      #   run: yarn install --frozen-lockfile
+
+      # - name: Restore app node_modules from cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{ matrix.working-directory }}/node_modules
+      #     key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
+      #     restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
+
+      # - name: Install app node_modules
+      #   working-directory: ${{ matrix.working-directory }}
+      #   run: yarn install --frozen-lockfile
+
+      # - name: Restore Pods from cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ${{ matrix.working-directory }}/ios/Pods
+      #       ~/Library/Caches/CocoaPods
+      #       ~/.cocoapods
+      #     key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
+
+      # - name: Install Pods
+      #   working-directory: ${{ matrix.working-directory }}/ios
+      #   run: pod install
+
+      # - name: Restore build artifacts from cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/Library/Developer/Xcode/DerivedData
+      #     key: ${{ runner.os }}-ios-derived-data-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
+
+      # - name: Build app
+      #   working-directory: ${{ matrix.working-directory }}
+      #   run: npx react-native run-ios
