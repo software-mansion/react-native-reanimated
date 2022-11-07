@@ -30,35 +30,41 @@ jobs:
           echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
           yarn
           mkdir packages
-      - name: Create PackageApp
-        # working-directory: monorepo/packages
-        run: |
-          pwd
-          ls -la
-          cd monorepo/packages
-          pwd
-          ls -la
-          npx
-          npx -h
-          npx react-native init PackageApp
-      - name: Create RootApp
-        # working-directory: monorepo
-        run: |
-          cd monorepo
-          pwd
-          ls -la
-          echo '--------------------------'
-          ls -la node_modules
-          echo '--------------------------'
-          echo '--------------------------'
-          ls -la node_modules | grep reanimated
-          echo '--------------------------'
-          pwd
-          ls -la
-          npx
-          npx -h
-          npx react-native -h
-          npx react-native init RootApp
+      - name: Create AppA
+        working-directory: monorepo
+        run: npx react-native init AppA
+      - name: Create AppB
+        working-directory: monorepo
+        run: npx react-native init AppB
+      # - name: Create PackageApp
+      #   # working-directory: monorepo/packages
+      #   run: |
+      #     pwd
+      #     ls -la
+      #     cd monorepo/packages
+      #     pwd
+      #     ls -la
+      #     npx
+      #     npx -h
+      #     npx react-native init PackageApp
+      # - name: Create RootApp
+      #   # working-directory: monorepo
+      #   run: |
+      #     cd monorepo
+      #     pwd
+      #     ls -la
+      #     echo '--------------------------'
+      #     ls -la node_modules
+      #     echo '--------------------------'
+      #     echo '--------------------------'
+      #     ls -la node_modules | grep reanimated
+      #     echo '--------------------------'
+      #     pwd
+      #     ls -la
+      #     npx
+      #     npx -h
+      #     npx react-native -h
+      #     npx react-native init RootApp
       
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
