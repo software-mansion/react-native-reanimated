@@ -2,6 +2,7 @@ name: Test V8 on Android
 on:
   pull_request:
     paths:
+      - '.github/workflows/build-v8.yml'
       - 'android/**'
       - 'Common/**'
       - 'FabricExample/package.json'
@@ -14,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      REACT_NATIVE_VERSION: "0.70.4"
+      REACT_NATIVE_VERSION: "0.70.5"
     concurrency:
       group: build_v8-${{ env.REACT_NATIVE_VERSION }}
       cancel-in-progress: true
