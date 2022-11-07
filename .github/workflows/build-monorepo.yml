@@ -42,8 +42,16 @@ jobs:
           npx -h
           npx react-native init PackageApp
       - name: Create RootApp
-        working-directory: monorepo
-        run: npx react-native init RootApp
+        # working-directory: monorepo
+        run: |
+          pwd
+          ls -la
+          cd monorepo
+          pwd
+          ls -la
+          npx
+          npx -h
+          npx react-native init RootApp
       
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
