@@ -35,7 +35,7 @@ jobs:
         run: npx react-native init AppA
       - name: Create AppB
         working-directory: monorepo
-        run: npx react-native init AppB
+        run: npx react-native@next init AppB
       # - name: Create PackageApp
       #   # working-directory: monorepo/packages
       #   run: |
