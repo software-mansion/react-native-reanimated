@@ -33,7 +33,6 @@ jobs:
       - name: Create PackageApp
         # working-directory: monorepo/packages
         run: |
-          npm install -g npx
           pwd
           ls -la
           cd monorepo/packages
@@ -45,6 +44,7 @@ jobs:
       - name: Create RootApp
         # working-directory: monorepo
         run: |
+          npm install -g npx
           pwd
           ls -la
           cd monorepo
