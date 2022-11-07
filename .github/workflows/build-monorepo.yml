@@ -30,12 +30,20 @@ jobs:
           echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
           yarn
           mkdir packages
-      - name: Create RootApp
-        working-directory: monorepo
-        run: npx react-native init RootApp
+      # - name: Create RootApp
+      #   working-directory: monorepo
+      #   run: npx react-native init RootApp
       - name: Create PackageApp
         # working-directory: monorepo/packages
-        run: cd monorepo/packages && npx react-native init PackageApp
+        run: |
+          pwd
+          ls -la
+          cd monorepo/packages
+          pwd
+          ls -la
+          npx
+          npx -h
+          npx react-native init PackageApp
       
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
