@@ -34,8 +34,8 @@ jobs:
         working-directory: monorepo
         run: npx react-native init RootApp
       - name: Create PackageApp
-        working-directory: monorepo/packages
-        run: npx react-native init PackageApp
+        # working-directory: monorepo/packages
+        run: cd monorepo/packages && npx react-native init PackageApp
       
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
@@ -52,7 +52,7 @@ jobs:
         if: ${{ runner.os == 'iOS' }}
         working-directory: monorepo/RootApp/ios
         run: pod install
-      - name: Install Pods for packages/PackageApp
+      - name: Install Pods for PackageApp
         if: ${{ runner.os == 'iOS' }}
         working-directory: monorepo/packages/PackageApp/ios
         run: pod install
@@ -61,7 +61,7 @@ jobs:
         if: ${{ runner.os == 'iOS' }}
         working-directory: monorepo/RootApp
         run: npx react-native run-ios
-      - name: Build app packages/PackageApp
+      - name: Build app PackageApp
         if: ${{ runner.os == 'iOS' }}
         working-directory: monorepo/packages/PackageApp
         run: npx react-native run-ios
@@ -70,7 +70,7 @@ jobs:
         if: ${{ runner.os == 'Android' }}
         working-directory: monorepo/RootApp/android
         run: ./gradlew assembleDebug --console=plain
-      - name: Build Android packages/PackageApp
+      - name: Build Android PackageApp
         if: ${{ runner.os == 'Android' }}
         working-directory: monorepo/packages/PackageApp/android
         run: ./gradlew assembleDebug --console=plain
