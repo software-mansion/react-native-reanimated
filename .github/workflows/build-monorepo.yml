@@ -10,81 +10,120 @@ on:
       - main
 
 jobs:
-  build_android:
+  build_android_reanimated_in_app:
     runs-on: ubuntu-latest
-    env:
-      REACT_NATIVE_VERSION: "0.70.4"
     concurrency:
-      group: build_v8-${{ env.REACT_NATIVE_VERSION }}
+      group: build_monorepo_android_reanimated_in_app
       cancel-in-progress: true
     steps:
-      - name: Check out
+      - name: Clone monorepo
         uses: actions/checkout@v3
         with:
-          path: 'reanimated_repo'
-      - name: Create React Native app
-        run: npx react-native init app --version ${{ env.REACT_NATIVE_VERSION }}
-      - name: Install dependencies
-        working-directory: app
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} react-native-v8 v8-android-jit
-      - name: Configure V8
-        run: node reanimated_repo/.github/workflows/helper/configureV8.js
-      - name: Build Android app
-        working-directory: app/android
+          repository: 'software-mansion-labs/rnos-monorepo-tester'
+          path: 'monorepo'
+      - name: Install dependencies for ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install dependencies for package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Build ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA/android
         run: ./gradlew assembleDebug --console=plain
-  build_ios:
+      - name: Build package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA/android
+        run: ./gradlew assembleDebug --console=plain
+
+  build_ios_reanimated_in_app:
+    runs-on: macos-12
+    concurrency:
+      group: build_monorepo_ios_reanimated_in_app
+      cancel-in-progress: true
+    steps:
+      - name: Clone monorepo
+        uses: actions/checkout@v3
+        with:
+          repository: 'software-mansion-labs/rnos-monorepo-tester'
+          path: 'monorepo'
+      - name: Install dependencies for ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install dependencies for package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install Pods for ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA/ios
+        run: pod install
+      - name: Install Pods for package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA/ios
+        run: pod install
+      - name: Build app ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA
+        run: npx react-native run-ios
+      - name: Build app package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA
+        run: npx react-native run-ios
+
+  build_android_reanimated_hoisted:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build_monorepo_android_reanimated_hoisted
+      cancel-in-progress: true
+    steps:
+      - name: Clone monorepo
+        uses: actions/checkout@v3
+        with:
+          repository: 'software-mansion-labs/rnos-monorepo-tester'
+          path: 'monorepo'
+      - name: Install dependencies for ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install dependencies for package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install Reanimated in workspace
+        working-directory: monorepo
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
+      - name: Build ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA/android
+        run: ./gradlew assembleDebug --console=plain
+      - name: Build package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA/android
+        run: ./gradlew assembleDebug --console=plain
+
+  build_ios_reanimated_hoisted:
     runs-on: macos-12
     strategy:
       matrix:
         working-directory: [Example]
       fail-fast: false
     concurrency:
-      group: ios-${{ matrix.working-directory }}-${{ github.ref }}
+      group: build_monorepo_ios_reanimated_hoisted
       cancel-in-progress: true
     steps:
-      - name: Check out Git repository
+      - name: Clone monorepo
         uses: actions/checkout@v3
-
-      # - name: Restore Reanimated node_modules from cache
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: node_modules
-      #     key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
-      #     restore-keys: ${{ runner.os }}-node-modules-reanimated-
-
-      # - name: Install Reanimated node_modules
-      #   run: yarn install --frozen-lockfile
-
-      # - name: Restore app node_modules from cache
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ${{ matrix.working-directory }}/node_modules
-      #     key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
-      #     restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
-
-      # - name: Install app node_modules
-      #   working-directory: ${{ matrix.working-directory }}
-      #   run: yarn install --frozen-lockfile
-
-      # - name: Restore Pods from cache
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ${{ matrix.working-directory }}/ios/Pods
-      #       ~/Library/Caches/CocoaPods
-      #       ~/.cocoapods
-      #     key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
-
-      # - name: Install Pods
-      #   working-directory: ${{ matrix.working-directory }}/ios
-      #   run: pod install
-
-      # - name: Restore build artifacts from cache
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ~/Library/Developer/Xcode/DerivedData
-      #     key: ${{ runner.os }}-ios-derived-data-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
-
-      # - name: Build app
-      #   working-directory: ${{ matrix.working-directory }}
-      #   run: npx react-native run-ios
+        with:
+          repository: 'software-mansion-labs/rnos-monorepo-tester'
+          path: 'monorepo'
+      - name: Install dependencies for ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install dependencies for package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install Reanimated in workspace
+        working-directory: monorepo
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
+      - name: Install Pods for ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA/ios
+        run: pod install
+      - name: Install Pods for package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA/ios
+        run: pod install
+      - name: Build app ReactNativeRootA
+        working-directory: monorepo/ReactNativeRootA
+        run: npx react-native run-ios
+      - name: Build app package/ReactNativeA
+        working-directory: monorepo/package/ReactNativeA
+        run: npx react-native run-ios
