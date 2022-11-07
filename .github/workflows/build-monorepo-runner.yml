@@ -26,7 +26,7 @@ jobs:
       concurrency_group: build_monorepo_ios_in_app_reanimated
       is_hoisted: false
 
-  build_android_reanimated_in_app:
+  build_android_reanimated_hoisted:
     uses: ./.github/workflows/build-monorepo.yml
     with:
       runs_on: ubuntu-latest
@@ -34,7 +34,7 @@ jobs:
       concurrency_group: build_monorepo_android_reanimated_hoisted
       is_hoisted: true
 
-  build_ios_reanimated_in_app:
+  build_ios_reanimated_hoisted:
     uses: ./.github/workflows/build-monorepo.yml
     with:
       runs_on: macos-12

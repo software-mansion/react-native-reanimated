@@ -46,7 +46,7 @@ jobs:
       
       - name: Setup hoisted Reanimated
         if: ${{ runner.is_hoisted }}
-        run: run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
 
       - name: Install Pods for RootApp
         if: ${{ runner.os == 'iOS' }}
