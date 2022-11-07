@@ -24,14 +24,14 @@ jobs:
       - name: Install dependencies for ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA
+      - name: Install dependencies for packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Build ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA/android
         run: ./gradlew assembleDebug --console=plain
-      - name: Build package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA/android
+      - name: Build packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA/android
         run: ./gradlew assembleDebug --console=plain
 
   build_ios_reanimated_in_app:
@@ -48,20 +48,20 @@ jobs:
       - name: Install dependencies for ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA
+      - name: Install dependencies for packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Install Pods for ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA/ios
         run: pod install
-      - name: Install Pods for package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA/ios
+      - name: Install Pods for packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA/ios
         run: pod install
       - name: Build app ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA
         run: npx react-native run-ios
-      - name: Build app package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA
+      - name: Build app packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA
         run: npx react-native run-ios
 
   build_android_reanimated_hoisted:
@@ -78,8 +78,8 @@ jobs:
       - name: Install dependencies for ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA
+      - name: Install dependencies for packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Install Reanimated in workspace
         working-directory: monorepo
@@ -87,8 +87,8 @@ jobs:
       - name: Build ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA/android
         run: ./gradlew assembleDebug --console=plain
-      - name: Build package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA/android
+      - name: Build packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA/android
         run: ./gradlew assembleDebug --console=plain
 
   build_ios_reanimated_hoisted:
@@ -109,8 +109,8 @@ jobs:
       - name: Install dependencies for ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA
+      - name: Install dependencies for packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Install Reanimated in workspace
         working-directory: monorepo
@@ -118,12 +118,12 @@ jobs:
       - name: Install Pods for ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA/ios
         run: pod install
-      - name: Install Pods for package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA/ios
+      - name: Install Pods for packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA/ios
         run: pod install
       - name: Build app ReactNativeRootA
         working-directory: monorepo/ReactNativeRootA
         run: npx react-native run-ios
-      - name: Build app package/ReactNativeA
-        working-directory: monorepo/package/ReactNativeA
+      - name: Build app packages/ReactNativeA
+        working-directory: monorepo/packages/ReactNativeA
         run: npx react-native run-ios
