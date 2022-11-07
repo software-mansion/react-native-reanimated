@@ -23,6 +23,7 @@ patchFile(
 
 const mainApplicationPath =
   'app/android/app/src/main/java/com/app/MainApplication.java';
+
 patchFile(
   mainApplicationPath,
   'import java.util.List;',
@@ -36,8 +37,7 @@ patchFile(
 patchFile(
   mainApplicationPath,
   'protected String getJSMainModuleName() {',
-  `
-  protected JavaScriptExecutorFactory getJavaScriptExecutorFactory() {
+  `protected JavaScriptExecutorFactory getJavaScriptExecutorFactory() {
     return new V8ExecutorFactory(
         getApplicationContext(),
         getPackageName(),
