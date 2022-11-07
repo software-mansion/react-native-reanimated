@@ -11,119 +11,33 @@ on:
 
 jobs:
   build_android_reanimated_in_app:
-    name: Build Android with in app Reanimated
-    runs-on: ubuntu-latest
-    concurrency:
-      group: build_monorepo_android_in_app_reanimated
-      cancel-in-progress: true
-    steps:
-      - name: Clone monorepo
-        uses: actions/checkout@v3
-        with:
-          repository: 'software-mansion-labs/rnos-monorepo-tester'
-          path: 'monorepo'
-      - name: Install dependencies for ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Build ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA/android
-        run: ./gradlew assembleDebug --console=plain
-      - name: Build packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA/android
-        run: ./gradlew assembleDebug --console=plain
+    uses: ./.github/workflows/build-monorepo.yml
+    with:
+      runs_on: ubuntu-latest
+      os: Android
+      concurrency_group: build_monorepo_android_in_app_reanimated
+      is_hoisted: false
 
   build_ios_reanimated_in_app:
-    name: Build iOS with in app Reanimated
-    runs-on: macos-12
-    concurrency:
-      group: build_monorepo_ios_in_app_reanimated
-      cancel-in-progress: true
-    steps:
-      - name: Clone monorepo
-        uses: actions/checkout@v3
-        with:
-          repository: 'software-mansion-labs/rnos-monorepo-tester'
-          path: 'monorepo'
-      - name: Install dependencies for ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install Pods for ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA/ios
-        run: pod install
-      - name: Install Pods for packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA/ios
-        run: pod install
-      - name: Build app ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA
-        run: npx react-native run-ios
-      - name: Build app packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA
-        run: npx react-native run-ios
+    uses: ./.github/workflows/build-monorepo.yml
+    with:
+      runs_on: macos-12
+      os: iOS
+      concurrency_group: build_monorepo_ios_in_app_reanimated
+      is_hoisted: false
 
-  build_android_reanimated_hoisted:
-    name: Build Android with hoisted Reanimated
-    runs-on: ubuntu-latest
-    concurrency:
-      group: build_monorepo_android_reanimated_hoisted
-      cancel-in-progress: true
-    steps:
-      - name: Clone monorepo
-        uses: actions/checkout@v3
-        with:
-          repository: 'software-mansion-labs/rnos-monorepo-tester'
-          path: 'monorepo'
-      - name: Install dependencies for ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install Reanimated in workspace
-        working-directory: monorepo
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
-      - name: Build ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA/android
-        run: ./gradlew assembleDebug --console=plain
-      - name: Build packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA/android
-        run: ./gradlew assembleDebug --console=plain
+  build_android_reanimated_in_app:
+    uses: ./.github/workflows/build-monorepo.yml
+    with:
+      runs_on: ubuntu-latest
+      os: Android
+      concurrency_group: build_monorepo_android_reanimated_hoisted
+      is_hoisted: true
 
-  build_ios_reanimated_hoisted:
-    name: Build iOS with hoisted Reanimated
-    runs-on: macos-12
-    concurrency:
-      group: build_monorepo_ios_reanimated_hoisted
-      cancel-in-progress: true
-    steps:
-      - name: Clone monorepo
-        uses: actions/checkout@v3
-        with:
-          repository: 'software-mansion-labs/rnos-monorepo-tester'
-          path: 'monorepo'
-      - name: Install dependencies for ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install dependencies for packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Install Reanimated in workspace
-        working-directory: monorepo
-        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
-      - name: Install Pods for ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA/ios
-        run: pod install
-      - name: Install Pods for packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA/ios
-        run: pod install
-      - name: Build app ReactNativeRootA
-        working-directory: monorepo/ReactNativeRootA
-        run: npx react-native run-ios
-      - name: Build app packages/ReactNativeA
-        working-directory: monorepo/packages/ReactNativeA
-        run: npx react-native run-ios
+  build_ios_reanimated_in_app:
+    uses: ./.github/workflows/build-monorepo.yml
+    with:
+      runs_on: macos-12
+      os: iOS
+      concurrency_group: build_monorepo_ios_reanimated_hoisted
+      is_hoisted: true
