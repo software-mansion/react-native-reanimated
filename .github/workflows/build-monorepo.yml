@@ -44,6 +44,7 @@ jobs:
       - name: Create RootApp
         # working-directory: monorepo
         run: |
+          cd monorepo
           pwd
           ls -la
           echo '--------------------------'
@@ -52,7 +53,6 @@ jobs:
           echo '--------------------------'
           ls -la node_modules | grep reanimated
           echo '--------------------------'
-          cd monorepo
           pwd
           ls -la
           npx
