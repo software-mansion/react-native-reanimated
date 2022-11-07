@@ -1,7 +1,7 @@
 fs = require('fs');
 
 function patchFile(path, find, replace) {
-  const data = fs.readFileSync(path, 'utf8');
+  let data = fs.readFileSync(path, 'utf8');
   data = data.replace(find, replace);
   fs.writeFileSync(path, data);
 }
