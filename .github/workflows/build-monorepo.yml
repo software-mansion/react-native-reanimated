@@ -44,14 +44,20 @@ jobs:
       - name: Create RootApp
         # working-directory: monorepo
         run: |
-          npm install -g npx
           pwd
           ls -la
+          echo '--------------------------'
+          ls -la node_modules
+          echo '--------------------------'
+          echo '--------------------------'
+          ls -la node_modules | grep reanimated
+          echo '--------------------------'
           cd monorepo
           pwd
           ls -la
           npx
           npx -h
+          npx react-native -h
           npx react-native init RootApp
       
       - name: Install dependencies for RootApp
