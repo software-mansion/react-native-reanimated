@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     concurrency:
-      group: build_v8-${{ env.REACT_NATIVE_VERSION }}
+      group: build-v8-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out
