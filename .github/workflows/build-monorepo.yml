@@ -11,6 +11,7 @@ on:
 
 jobs:
   build_android_reanimated_in_app:
+    name: Build Android with in app Reanimated
     runs-on: ubuntu-latest
     concurrency:
       group: build_monorepo_android_reanimated_in_app
@@ -35,6 +36,7 @@ jobs:
         run: ./gradlew assembleDebug --console=plain
 
   build_ios_reanimated_in_app:
+    name: Build iOS with in app Reanimated
     runs-on: macos-12
     concurrency:
       group: build_monorepo_ios_reanimated_in_app
@@ -65,6 +67,7 @@ jobs:
         run: npx react-native run-ios
 
   build_android_reanimated_hoisted:
+    name: Build Android with hoisted Reanimated
     runs-on: ubuntu-latest
     concurrency:
       group: build_monorepo_android_reanimated_hoisted
@@ -92,6 +95,7 @@ jobs:
         run: ./gradlew assembleDebug --console=plain
 
   build_ios_reanimated_hoisted:
+    name: Build iOS with hoisted Reanimated
     runs-on: macos-12
     strategy:
       matrix:
