@@ -125,6 +125,7 @@
           _proxyViewRemoval = YES;
           break;
         }
+        [_animationsManager removeAnimationsFromSubtree:removedChild];
       }
     }
     if (!wasProxyRemovalSet && _proxyViewRemoval) {

@@ -367,4 +367,12 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
+- (void)removeAnimationsFromSubtree:(UIView *)view
+{
+  REANodeFind(view, ^int(id<RCTComponent> view) {
+    self->_clearAnimationConfigForTag(view.reactTag);
+    return false;
+  });
+}
+
 @end
