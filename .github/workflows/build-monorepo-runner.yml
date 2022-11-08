@@ -15,8 +15,7 @@ jobs:
     name: Build Android with non-hoisted Reanimated
     uses: ./.github/workflows/build-monorepo.yml
     with:
-      runs_on: ubuntu-latest
-      os: Android
+      platform: Android
       concurrency_group: build_monorepo_android_in_app_reanimated-${{ github.ref }}
       is_hoisted: false
 
@@ -24,8 +23,7 @@ jobs:
     name: Build iOS with non-hoisted Reanimated
     uses: ./.github/workflows/build-monorepo.yml
     with:
-      runs_on: macos-12
-      os: iOS
+      platform: iOS
       concurrency_group: build_monorepo_ios_in_app_reanimated-${{ github.ref }}
       is_hoisted: false
 
@@ -33,8 +31,7 @@ jobs:
     name: Build Android with hoisted Reanimated
     uses: ./.github/workflows/build-monorepo.yml
     with:
-      runs_on: ubuntu-latest
-      os: Android
+      platform: Android
       concurrency_group: build_monorepo_android_reanimated_hoisted-${{ github.ref }}
       is_hoisted: true
 
@@ -42,7 +39,6 @@ jobs:
     name: Build iOS with hoisted Reanimated
     uses: ./.github/workflows/build-monorepo.yml
     with:
-      runs_on: macos-12
-      os: iOS
+      platform: iOS
       concurrency_group: build_monorepo_ios_reanimated_hoisted-${{ github.ref }}
       is_hoisted: true
