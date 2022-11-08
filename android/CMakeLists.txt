@@ -82,6 +82,7 @@ target_include_directories(
         "${REACT_NATIVE_DIR}/React"
         "${REACT_NATIVE_DIR}/React/Base"
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule" # CallInvokerHolder.h on 0.71.0-rc.0
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/fabric/jni"
         "${REACT_NATIVE_DIR}/ReactCommon"

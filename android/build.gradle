@@ -229,7 +229,8 @@ def JS_RUNTIME = {
         return "v8"
     }
     def appProject = findProject(":app") ? project(":app") : null
-    return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
+    // return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
+    return "jsc" // TODO: properly detect Hermes
 }.call()
 
 def jsRuntimeDir = {
@@ -956,12 +957,14 @@ dependencies {
 }
 
 task unpackReactNativeAAR {
-    def buildType = resolveBuildType()
-    def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
-    if (REACT_NATIVE_MINOR_VERSION < 69) {
-        rnAarMatcher = "**/**/*.aar"
-    }
-    def rnAAR = fileTree("$reactNativeRootDir/android").matching({ it.include rnAarMatcher }).singleFile
+//    def buildType = resolveBuildType()
+//    def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
+//    if (REACT_NATIVE_MINOR_VERSION < 69) {
+//        rnAarMatcher = "**/**/*.aar"
+//    }
+//    def rnAAR = fileTree("$reactNativeRootDir/android").matching({ it.include rnAarMatcher }).singleFile
+    // TODO: consume shared libraries from prefabs
+    def rnAAR = file("$reactNativeRootDir/android/react-native-0.71.0-rc.0-debug.aar") // don't forget to run Example/ownload_aar.sh
     def file = rnAAR.absoluteFile
     def packageName = file.name.tokenize('-')[0]
     copy {
