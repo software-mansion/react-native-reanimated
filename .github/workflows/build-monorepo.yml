@@ -32,7 +32,7 @@ jobs:
           mkdir packages
       - name: Create RootApp
         working-directory: monorepo
-        run: npx react-native@next init RootApp ${{ inputs.version && '--version '${{inputs.version}} || '' }}
+        run: npx react-native@next init RootApp ${{ inputs.version && '--version ' || '' }} ${{ inputs.version }}
       - name: Create PackageApp
         working-directory: monorepo/packages
         run: npx react-native@next init PackageApp
