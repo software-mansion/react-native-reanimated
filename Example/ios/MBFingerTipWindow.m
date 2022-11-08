@@ -128,7 +128,7 @@
         
         UIGraphicsBeginImageContextWithOptions(clipPath.bounds.size, NO, 0);
 
-        UIBezierPath *drawPath = [UIBezierPath bezierPathWithArcCenter:CGPointMake(25.0, 25.0) 
+        UIBezierPath *drawPath = [UIBezierPath bezierPathWithArcCenter:CGPointMake(25.0, 25.0)
                                                                 radius:22.0
                                                             startAngle:0
                                                               endAngle:2 * M_PI
@@ -316,9 +316,9 @@
         [UIView setAnimationDuration:self.fadeDuration];
     }
 
-    touchView.frame = CGRectMake(touchView.center.x - touchView.frame.size.width, 
-                                 touchView.center.y - touchView.frame.size.height, 
-                                 touchView.frame.size.width  * 2, 
+    touchView.frame = CGRectMake(touchView.center.x - touchView.frame.size.width,
+                                 touchView.center.y - touchView.frame.size.height,
+                                 touchView.frame.size.width  * 2,
                                  touchView.frame.size.height * 2);
     
     touchView.alpha = 0.0;

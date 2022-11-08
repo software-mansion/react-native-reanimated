@@ -1,0 +1,37 @@
+name: Test V8 on Android
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/build-v8.yml'
+      - 'android/**'
+      - 'Common/**'
+      - 'FabricExample/package.json'
+      - 'Example/package.json'
+  push:
+    branches:
+      - main
+
+env:
+  REACT_NATIVE_VERSION: "0.70.5"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-v8-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+        with:
+          path: 'reanimated_repo'
+      - name: Create React Native app
+        run: npx react-native init app --version ${{ env.REACT_NATIVE_VERSION }}
+      - name: Install dependencies
+        working-directory: app
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} react-native-v8 v8-android-jit
+      - name: Configure V8
+        run: node reanimated_repo/.github/workflows/helper/configureV8.js
+      - name: Build Android app
+        working-directory: app/android
+        run: ./gradlew assembleDebug --console=plain
