@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: Build monorepo with Reanimated
-    runs-on: ${{ inputs.platform == 'iOS' ? 'macos-12' : 'ubuntu-latest' }}
+    runs-on: ${{ inputs.platform == 'iOS' && 'macos-12' || 'ubuntu-latest' }}
     concurrency:
       group: ${{ inputs.concurrency_group }}
       cancel-in-progress: true
