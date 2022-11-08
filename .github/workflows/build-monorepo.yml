@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/build-monorepo.yml
-      - .github/workflows/actions/build-monorepo-action.yml
+      - .github/workflows/build-monorepo-action.yml
       - RNReanimated.podspec
       - android/build.gradle
   push:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   build_android_reanimated_non_hoisted:
-    name: Build Android with non-hoisted Reanimated
+    name: Android (non-hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:
       platform: Android
@@ -20,7 +20,7 @@ jobs:
       is_hoisted: false
 
   build_ios_reanimated_non_hoisted:
-    name: Build iOS with non-hoisted Reanimated
+    name: iOS (non-hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:
       platform: iOS
@@ -28,7 +28,7 @@ jobs:
       is_hoisted: false
 
   build_android_reanimated_hoisted:
-    name: Build Android with hoisted Reanimated
+    name: Android (hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:
       platform: Android
@@ -36,7 +36,7 @@ jobs:
       is_hoisted: true
 
   build_ios_reanimated_hoisted:
-    name: Build iOS with hoisted Reanimated
+    name: iOS (hoisted Reanimated)
     uses: ./.github/workflows/build-monorepo-action.yml
     with:
       platform: iOS

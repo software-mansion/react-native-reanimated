@@ -20,7 +20,6 @@ env:
 
 jobs:
   build:
-    name: Build monorepo with Reanimated
     runs-on: ${{ inputs.platform == 'iOS' && 'macos-12' || 'ubuntu-latest' }}
     concurrency:
       group: ${{ inputs.concurrency_group }}
