@@ -2,10 +2,7 @@ name: Test build in monorepo
 on:
   workflow_call:
     inputs:
-      runs_on:
-        required: true
-        type: string
-      os:
+      platform:
         required: true
         type: string
       concurrency_group:
@@ -18,7 +15,7 @@ on:
 jobs:
   build:
     name: Build monorepo with Reanimated
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: ${{ inputs.platform == 'iOS' ? 'macos-12' : 'ubuntu-latest' }}
     concurrency:
       group: ${{ inputs.concurrency_group }}
       cancel-in-progress: true
@@ -49,28 +46,28 @@ jobs:
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
 
       - name: Install Pods for RootApp
-        if: ${{ inputs.os == 'iOS' }}
+        if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/RootApp/ios
         run: pod install
       - name: Install Pods for PackageApp
-        if: ${{ inputs.os == 'iOS' }}
+        if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/packages/PackageApp/ios
         run: pod install
 
       - name: Build iOS app RootApp
-        if: ${{ inputs.os == 'iOS' }}
+        if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/RootApp
-        run: npx react-native run-ios
+        run: yarn react-native run-ios
       - name: Build iOS app PackageApp
-        if: ${{ inputs.os == 'iOS' }}
+        if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/packages/PackageApp
-        run: npx react-native run-ios
+        run: yarn react-native run-ios
 
       - name: Build Android RootApp
-        if: ${{ inputs.os == 'Android' }}
+        if: ${{ inputs.platform == 'Android' }}
         working-directory: monorepo/RootApp/android
         run: ./gradlew assembleDebug --console=plain
       - name: Build Android PackageApp
-        if: ${{ inputs.os == 'Android' }}
+        if: ${{ inputs.platform == 'Android' }}
         working-directory: monorepo/packages/PackageApp/android
         run: ./gradlew assembleDebug --console=plain

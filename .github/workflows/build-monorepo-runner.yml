@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/build-monorepo.yml
+      - .github/workflows/build-monorepo-runner.yml
       - RNReanimated.podspec
       - android/build.gradle
   push:
@@ -10,22 +11,22 @@ on:
       - main
 
 jobs:
-  build_android_reanimated_in_app:
-    name: Build Android with in app Reanimated
+  build_android_reanimated_non_hoisted:
+    name: Build Android with non-hoisted Reanimated
     uses: ./.github/workflows/build-monorepo.yml
     with:
       runs_on: ubuntu-latest
       os: Android
-      concurrency_group: build_monorepo_android_in_app_reanimated
+      concurrency_group: build_monorepo_android_in_app_reanimated-${{ github.ref }}
       is_hoisted: false
 
-  build_ios_reanimated_in_app:
-    name: Build iOS with in app Reanimated
+  build_ios_reanimated_non_hoisted:
+    name: Build iOS with non-hoisted Reanimated
     uses: ./.github/workflows/build-monorepo.yml
     with:
       runs_on: macos-12
       os: iOS
-      concurrency_group: build_monorepo_ios_in_app_reanimated
+      concurrency_group: build_monorepo_ios_in_app_reanimated-${{ github.ref }}
       is_hoisted: false
 
   build_android_reanimated_hoisted:
@@ -34,7 +35,7 @@ jobs:
     with:
       runs_on: ubuntu-latest
       os: Android
-      concurrency_group: build_monorepo_android_reanimated_hoisted
+      concurrency_group: build_monorepo_android_reanimated_hoisted-${{ github.ref }}
       is_hoisted: true
 
   build_ios_reanimated_hoisted:
@@ -43,5 +44,5 @@ jobs:
     with:
       runs_on: macos-12
       os: iOS
-      concurrency_group: build_monorepo_ios_reanimated_hoisted
+      concurrency_group: build_monorepo_ios_reanimated_hoisted-${{ github.ref }}
       is_hoisted: true
