@@ -41,12 +41,8 @@ class HermesExecutorRuntimeAdapter
     thread_->quitSynchronous();
   }
 
-  facebook::jsi::Runtime &getRuntime() override {
+  facebook::hermes::HermesRuntime &getRuntime() override {
     return hermesRuntime_;
-  }
-
-  facebook::hermes::debugger::Debugger &getDebugger() override {
-    return hermesRuntime_.getDebugger();
   }
 
   // This is not empty in the original implementation, but we decided to tickle
@@ -72,7 +68,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 #if HERMES_ENABLE_DEBUGGER
   auto adapter =
       std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
-  facebook::hermes::inspector::chrome::enableDebugging(
+  debugToken_ = facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #else
   // This is required by iOS, because there is an assertion in the destructor
@@ -84,7 +80,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 #if HERMES_ENABLE_DEBUGGER
   // We have to disable debugging before the runtime is destroyed.
-  facebook::hermes::inspector::chrome::disableDebugging(*runtime_);
+  facebook::hermes::inspector::chrome::disableDebugging(debugToken_);
 #endif
 }
 

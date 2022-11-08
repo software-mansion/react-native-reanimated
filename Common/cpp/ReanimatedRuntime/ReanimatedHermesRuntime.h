@@ -25,6 +25,8 @@
 #include <hermes/hermes.h>
 #endif
 
+#include <hermes/inspector/chrome/Registration.h>
+
 namespace reanimated {
 
 using namespace facebook;
@@ -118,6 +120,7 @@ class ReanimatedHermesRuntime
  private:
   std::shared_ptr<facebook::hermes::HermesRuntime> runtime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
+  facebook::hermes::inspector::chrome::DebugSessionToken debugToken_;
 };
 
 } // namespace reanimated
