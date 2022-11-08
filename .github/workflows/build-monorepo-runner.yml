@@ -18,14 +18,15 @@ jobs:
       platform: Android
       concurrency_group: build_monorepo_android_in_app_reanimated-${{ github.ref }}
       is_hoisted: false
+      react_native_version: '0.68'
 
-  build_ios_reanimated_non_hoisted:
-    name: Build iOS with non-hoisted Reanimated
-    uses: ./.github/workflows/build-monorepo.yml
-    with:
-      platform: iOS
-      concurrency_group: build_monorepo_ios_in_app_reanimated-${{ github.ref }}
-      is_hoisted: false
+  # build_ios_reanimated_non_hoisted:
+  #   name: Build iOS with non-hoisted Reanimated
+  #   uses: ./.github/workflows/build-monorepo.yml
+  #   with:
+  #     platform: iOS
+  #     concurrency_group: build_monorepo_ios_in_app_reanimated-${{ github.ref }}
+  #     is_hoisted: false
 
   build_android_reanimated_hoisted:
     name: Build Android with hoisted Reanimated
@@ -35,10 +36,10 @@ jobs:
       concurrency_group: build_monorepo_android_reanimated_hoisted-${{ github.ref }}
       is_hoisted: true
 
-  build_ios_reanimated_hoisted:
-    name: Build iOS with hoisted Reanimated
-    uses: ./.github/workflows/build-monorepo.yml
-    with:
-      platform: iOS
-      concurrency_group: build_monorepo_ios_reanimated_hoisted-${{ github.ref }}
-      is_hoisted: true
+  # build_ios_reanimated_hoisted:
+  #   name: Build iOS with hoisted Reanimated
+  #   uses: ./.github/workflows/build-monorepo.yml
+  #   with:
+  #     platform: iOS
+  #     concurrency_group: build_monorepo_ios_reanimated_hoisted-${{ github.ref }}
+  #     is_hoisted: true

@@ -11,6 +11,9 @@ on:
       is_hoisted:
         required: true
         type: boolean
+      react_native_version:
+        required: false
+        type: string
 
 jobs:
   build:
@@ -29,7 +32,7 @@ jobs:
           mkdir packages
       - name: Create RootApp
         working-directory: monorepo
-        run: npx react-native@next init RootApp
+        run: npx react-native@next init RootApp ${{ inputs.version && '--version 'inputs.version || '' }}
       - name: Create PackageApp
         working-directory: monorepo/packages
         run: npx react-native@next init PackageApp
