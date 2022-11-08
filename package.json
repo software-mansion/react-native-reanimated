@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.0.0-rc.3",
+  "version": "3.0.0-rc.4",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
@@ -123,7 +123,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.70.3",
+    "react-native": "0.70.5",
     "react-native-builder-bob": "^0.18.3",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^2.4.2",
