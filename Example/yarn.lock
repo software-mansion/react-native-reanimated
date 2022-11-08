@@ -10249,16 +10249,6 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.1.tgz#5b3531bd76a645a4c9fb6e693ed36419e3301339"
   integrity sha512-NAnt2iGDXohE5LI7uBnLnqvLQMtzhkiAOLXTmv+qnF9Ky7xAPcX8Up/xWIhxvLVGJvuLiNc4xQLtuqDRzb4fSA==
 
-react-native-codegen@*:
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/react-native-codegen/-/react-native-codegen-0.0.13.tgz#4cc94546fc75a5dbe9350d59c10108f2efe6bc17"
-  integrity sha512-rCh1P+s0Q4N6vNgS97ckafbhJRztz22+0l0VZoyQC06F07J98kI5cUByH0ATypPRIdpkMbAZc59DoPdDFc01bg==
-  dependencies:
-    "@babel/parser" "^7.14.0"
-    flow-parser "^0.121.0"
-    jscodeshift "^0.13.1"
-    nullthrows "^1.1.1"
-
 react-native-codegen@^0.70.6:
   version "0.70.6"
   resolved "https://registry.yarnpkg.com/react-native-codegen/-/react-native-codegen-0.70.6.tgz#2ce17d1faad02ad4562345f8ee7cbe6397eda5cb"
@@ -10279,13 +10269,6 @@ react-native-gesture-handler@^2.7.1:
     invariant "^2.2.4"
     lodash "^4.17.21"
     prop-types "^15.7.2"
-
-react-native-gradle-plugin@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.0.4.tgz#47adcc4f1e1f2c1558811ad78ad39546007d8667"
-  integrity sha512-D0lFhHy9uSkiPKsGEdEoFtN/jCjS70OxxzBXfq0s9J3ie8GXRBEDHsZuuX/enfRq5fvbCnhKjuYezf+DVYTNnw==
-  dependencies:
-    react-native-codegen "*"
 
 react-native-gradle-plugin@^0.70.3:
   version "0.70.3"
