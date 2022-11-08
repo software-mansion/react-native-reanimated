@@ -15,6 +15,9 @@ on:
         required: false
         type: string
 
+env:
+  REACT_NATIVE_TEMPLATE: ${{ inputs.react_native_version && '--version' || '' }} ${{ inputs.react_native_version }}
+
 jobs:
   build:
     name: Build monorepo with Reanimated
@@ -32,10 +35,10 @@ jobs:
           mkdir packages
       - name: Create RootApp
         working-directory: monorepo
-        run: npx react-native@next init RootApp ${{ inputs.react_native_version && '--version ' || '' }} ${{ inputs.react_native_version }}
+        run: npx react-native@next init RootApp ${{ env.REACT_NATIVE_TEMPLATE }}
       - name: Create PackageApp
         working-directory: monorepo/packages
-        run: npx react-native@next init PackageApp
+        run: npx react-native@next init PackageApp ${{ env.REACT_NATIVE_TEMPLATE }}
       
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
