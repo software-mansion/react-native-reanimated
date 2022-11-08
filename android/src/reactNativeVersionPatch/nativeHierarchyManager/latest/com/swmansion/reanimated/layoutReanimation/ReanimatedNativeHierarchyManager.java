@@ -9,7 +9,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
-import com.facebook.react.uimanager.RootViewManager;
 import com.facebook.react.uimanager.ViewAtIndex;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
@@ -28,14 +27,13 @@ import java.util.Set;
 class ReaLayoutAnimator extends LayoutAnimationController {
   private AnimationsManager mAnimationsManager = null;
   private volatile boolean mInitialized = false;
-  private ReactApplicationContext mContext;
-  private WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManage =
-      new WeakReference<>(null);
+  private final ReactApplicationContext mContext;
+  private final WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManager;
 
   ReaLayoutAnimator(
       ReactApplicationContext context, NativeViewHierarchyManager nativeViewHierarchyManager) {
     mContext = context;
-    mWeakNativeViewHierarchyManage = new WeakReference<>(nativeViewHierarchyManager);
+    mWeakNativeViewHierarchyManager = new WeakReference<>(nativeViewHierarchyManager);
   }
 
   public void maybeInit() {
@@ -44,7 +42,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       ReanimatedModule reanimatedModule = mContext.getNativeModule(ReanimatedModule.class);
       mAnimationsManager = reanimatedModule.getNodesManager().getAnimationsManager();
       mAnimationsManager.setReanimatedNativeHierarchyManager(
-          (ReanimatedNativeHierarchyManager) mWeakNativeViewHierarchyManage.get());
+          (ReanimatedNativeHierarchyManager) mWeakNativeViewHierarchyManager.get());
     }
   }
 
@@ -89,12 +87,12 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         mAnimationsManager.onViewCreate(
             view,
             (ViewGroup) view.getParent(),
-            new Snapshot(view, mWeakNativeViewHierarchyManage.get()));
+            new Snapshot(view, mWeakNativeViewHierarchyManager.get()));
       }
     } else {
-      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
+      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
       view.layout(x, y, x + width, y + height);
-      Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
+      Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
       mAnimationsManager.onViewUpdate(view, before, after);
     }
   }
@@ -113,7 +111,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       return;
     }
     UiThreadUtil.assertOnUiThread();
-    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
+    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManager.get();
     ViewManager viewManager;
     try {
       viewManager = nativeViewHierarchyManager.resolveViewManager(view.getId());
@@ -147,45 +145,8 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       }
     }
     maybeInit();
-    Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
-        view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
-    if (viewManager instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) viewManager;
-      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
-        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
-      }
-    }
-  }
-
-  private void dfs(View view, NativeViewHierarchyManager nativeViewHierarchyManager) {
-    int tag = view.getId();
-    if (tag == -1) {
-      return;
-    }
-    ViewManager vm = null;
-    try {
-      vm = nativeViewHierarchyManager.resolveViewManager(tag);
-      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
-      mAnimationsManager.onViewRemoval(
-          view,
-          (ViewGroup) view.getParent(),
-          before,
-          () -> {
-            ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
-                (ReanimatedNativeHierarchyManager) nativeViewHierarchyManager;
-            reanimatedNativeHierarchyManager.publicDropView(view);
-          });
-    } catch (IllegalViewOperationException e) {
-      // (IllegalViewOperationException) == (vm == null)
-      e.printStackTrace();
-    }
-    if (vm instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) vm;
-      for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
-        dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
-      }
-    }
+        view, (ViewGroup) view.getParent(), listener::onAnimationEnd);
   }
 
   public boolean isLayoutAnimationEnabled() {
@@ -197,8 +158,8 @@ class ReaLayoutAnimator extends LayoutAnimationController {
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
   private final HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap<>();
   private final HashMap<Integer, Runnable> cleanerCallback = new HashMap<>();
-  private LayoutAnimationController mReaLayoutAnimator = null;
-  private HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
+  private final LayoutAnimationController mReaLayoutAnimator;
+  private final HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
   private boolean initOk = true;
 
   public ReanimatedNativeHierarchyManager(
@@ -258,11 +219,6 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     if (initOk) {
       setLayoutAnimationEnabled(true);
     }
-  }
-
-  public ReanimatedNativeHierarchyManager(
-      ViewManagerRegistry viewManagers, RootViewManager manager) {
-    super(viewManagers, manager);
   }
 
   private boolean isLayoutAnimationDisabled() {
@@ -355,14 +311,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
           continue;
         }
         toBeRemovedChildren.add(view);
+        // It's far from optimal but let's leave it as it is for now
         cleanerCallback.put(
             view.getId(),
-            new Runnable() {
-              @Override
-              public void run() {
-                toBeRemovedChildren.remove(view);
-                viewGroupManager.removeView(viewGroup, view);
-              } // It's far from optimal but let's leave it as it is for now
+            () -> {
+              toBeRemovedChildren.remove(view);
+              viewGroupManager.removeView(viewGroup, view);
             });
       }
     }

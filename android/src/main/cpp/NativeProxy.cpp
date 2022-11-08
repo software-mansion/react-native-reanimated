@@ -230,42 +230,86 @@ void NativeProxy::installJSIBindings(
 
   // Layout Animations Start
 
-  auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
+  auto progressLayoutAnimation = [this](int tag, jsi::Value progress) {
+    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
   };
 
-  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-    this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
+  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
+    this->layoutAnimations->cthis()->endLayoutAnimation(
+        tag, isCancelled, removeView);
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(
-          notifyAboutProgress, notifyAboutEnd);
+          progressLayoutAnimation, endLayoutAnimation, errorHandler);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  std::weak_ptr<LayoutAnimationsProxy> weakLayoutAnimationsProxy =
+      layoutAnimationsProxy;
   layoutAnimations->cthis()->setWeakUIRuntime(wrt);
   layoutAnimations->cthis()->setLayoutAnimationsProxy(layoutAnimationsProxy);
+
+  layoutAnimations->cthis()->setAnimationStartingBlock(
+      [wrt, weakLayoutAnimationsProxy](
+          int tag,
+          alias_ref<JString> type,
+          alias_ref<JMap<jstring, jstring>> values) {
+        auto rt = wrt.lock();
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        if (!rt || !layoutAnimationsProxy) {
+          return;
+        }
+        jsi::Object yogaValues(*rt);
+        for (const auto &entry : *values) {
+          try {
+            auto key =
+                jsi::String::createFromAscii(*rt, entry.first->toStdString());
+            auto value = stod(entry.second->toStdString());
+            yogaValues.setProperty(*rt, key, value);
+          } catch (std::invalid_argument e) {
+            // failed to convert value to number
+          }
+        }
+
+        layoutAnimationsProxy->startLayoutAnimation(
+            *rt, tag, type->toStdString(), yogaValues);
+      });
+
+  layoutAnimations->cthis()->setHasAnimationBlock(
+      [weakLayoutAnimationsProxy](int tag, std::string type) {
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        return layoutAnimationsProxy &&
+            layoutAnimationsProxy->hasLayoutAnimation(tag, type);
+      });
+
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
+      [weakLayoutAnimationsProxy](int tag) {
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        if (layoutAnimationsProxy) {
+          layoutAnimationsProxy->clearLayoutAnimationConfig(tag);
+        }
+      });
 
   // Layout Animations End
 
   // Shared Element Transition Start
-  auto registerSharedTransitionTagFunction = [this](
-    jsi::Runtime &rt,
-    const jsi::Value &transitionTag,
-    const jsi::Value &viewTag
-  ) {
-    auto transitionTagString = transitionTag.asString(rt).utf8(rt).c_str();
-    auto viewTagNumber = viewTag.asNumber();
-    return registerSharedTransitionTag(transitionTagString, viewTagNumber);
-  };
-  auto unregisterSharedTransitionTagFunction = [this](
-    jsi::Runtime &rt,
-    const jsi::Value &transitionTag,
-    const jsi::Value &viewTag
-  ) {
-    auto transitionTagString = transitionTag.asString(rt).utf8(rt).c_str();
-    auto viewTagNumber = viewTag.asNumber();
-    unregisterSharedTransitionTag(transitionTagString, viewTagNumber);
-  };
+  auto registerSharedTransitionTagFunction =
+      [this](
+          jsi::Runtime &rt,
+          const jsi::Value &transitionTag,
+          const jsi::Value &viewTag) {
+        auto transitionTagString = transitionTag.asString(rt).utf8(rt).c_str();
+        auto viewTagNumber = viewTag.asNumber();
+        return registerSharedTransitionTag(transitionTagString, viewTagNumber);
+      };
+  auto unregisterSharedTransitionTagFunction =
+      [this](
+          jsi::Runtime &rt,
+          const jsi::Value &transitionTag,
+          const jsi::Value &viewTag) {
+        auto transitionTagString = transitionTag.asString(rt).utf8(rt).c_str();
+        auto viewTagNumber = viewTag.asNumber();
+        unregisterSharedTransitionTag(transitionTagString, viewTagNumber);
+      };
   // Shared Element Transition End
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
@@ -523,15 +567,17 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
 }
 
 void NativeProxy::registerSharedTransitionTag(
-  std::string sharedTransitionTag,
-  int viewTag) {
-  static auto method = javaPart_->getClass()->getMethod<void(std::string, int)>("registerSharedTransitionTag");
+    std::string sharedTransitionTag,
+    int viewTag) {
+  static auto method = javaPart_->getClass()->getMethod<void(std::string, int)>(
+      "registerSharedTransitionTag");
   method(javaPart_.get(), sharedTransitionTag, viewTag);
 }
 void NativeProxy::unregisterSharedTransitionTag(
-  std::string sharedTransitionTag,
-  int viewTag) {
-  static auto method = javaPart_->getClass()->getMethod<void(std::string, int)>("unregisterSharedTransitionTag");
+    std::string sharedTransitionTag,
+    int viewTag) {
+  static auto method = javaPart_->getClass()->getMethod<void(std::string, int)>(
+      "unregisterSharedTransitionTag");
   method(javaPart_.get(), sharedTransitionTag, viewTag);
 }
 

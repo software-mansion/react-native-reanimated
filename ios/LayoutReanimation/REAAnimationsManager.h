@@ -16,6 +16,14 @@ typedef NS_ENUM(NSInteger, ViewState) {
   ToRemove,
 };
 
+typedef BOOL (^REAHasAnimationBlock)(NSNumber *_Nonnull tag, NSString *_Nonnull type);
+typedef void (^REAAnimationStartingBlock)(
+    NSNumber *_Nonnull tag,
+    NSString *_Nonnull type,
+    NSDictionary *_Nonnull yogaValues,
+    NSNumber *_Nonnull depth);
+typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
+
 @interface REAAnimationsManager : NSObject
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
@@ -24,19 +32,19 @@ typedef NS_ENUM(NSInteger, ViewState) {
 #if __cplusplus
 - (void)setLayoutAnimationProxy:(std::shared_ptr<reanimated::LayoutAnimationsProxy>)layoutAnimationsProxy;
 #endif // __cplusplus
-- (void)setRemovingConfigBlock:(void (^)(NSNumber *tag))block;
-- (void)setAnimationStartingBlock:
-    (void (^)(NSNumber *tag, NSString *type, NSDictionary *target, NSNumber *depth))startAnimation;
-- (void)notifyAboutProgress:(NSDictionary *)newStyle tag:(NSNumber *)tag;
-- (void)notifyAboutEnd:(NSNumber *)tag cancelled:(BOOL)cancelled;
+- (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
+- (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
+- (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation;
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle forTag:(NSNumber *_Nonnull)tag;
+- (void)endLayoutAnimnationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)invalidate;
-- (void)onViewRemoval:(UIView *)view before:(REASnapshot *)before;
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
+- (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view;
+- (BOOL)wantsHandleRemovalOfView:(UIView *)view;
+- (void)removeAnimationsFromSubtree:(UIView *)view;
+- (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
-- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
-- (void)onScreenTransition:(UIView *)screen finish:(REASnapshot *)finish transitionType:(NSString *)transitionType;
-- (void)setToBeRemovedRegistry:(NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *)toBeRemovedRegister;
-- (void)removeLeftovers;
 - (void)stopAnimation:(NSNumber *)tag;
 
 @end

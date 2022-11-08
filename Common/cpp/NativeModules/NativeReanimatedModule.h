@@ -143,7 +143,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
-
   jsi::Value registerTransitionTag(
       jsi::Runtime &rt,
       const jsi::Value &transitionTag,
@@ -152,6 +151,14 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &transitionTag,
       const jsi::Value &viewTag) override;
+  jsi::Value configureLayoutAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &type,
+      const jsi::Value &config,
+      const jsi::Value &viewSharedValue) override;
+
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -167,7 +174,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
   std::function<void(double)> onRenderCallback;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
   TransitionTagFunction registerTransitionTagPlatformFunction;

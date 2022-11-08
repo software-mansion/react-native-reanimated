@@ -12,6 +12,7 @@ import {
 } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
+import { LayoutAnimationFunction } from './layoutReanimation';
 
 if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
@@ -178,7 +179,8 @@ function workletValueSetter<T extends WorkletValue>(
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
-    initializeAnimation(getTimestamp());
+    const currentTimestamp = getTimestamp();
+    initializeAnimation(currentTimestamp);
     const step = (timestamp: number) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
@@ -196,13 +198,7 @@ function workletValueSetter<T extends WorkletValue>(
     };
 
     this._animation = animation;
-
-    if (_frameTimestamp) {
-      // frame
-      step(_frameTimestamp);
-    } else {
-      requestAnimationFrame(step);
-    }
+    step(currentTimestamp);
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
@@ -260,8 +256,7 @@ function workletValueSetterJS<T extends WorkletValue>(
     };
 
     this._animation = animation;
-
-    requestFrame(step);
+    step(getTimestamp());
   } else {
     this._setValue && this._setValue(value as AnimatableValue | Descriptor);
   }
@@ -369,6 +364,20 @@ export function enableLayoutAnimations(
     featuresConfig.enableLayoutAnimations = flag;
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
+}
+
+export function configureLayoutAnimations(
+  viewTag: number,
+  type: string,
+  config: LayoutAnimationFunction | Keyframe,
+  viewSharedValue: SharedValue<null | Record<string, unknown>> | null
+): void {
+  NativeReanimatedModule.configureLayoutAnimation(
+    viewTag,
+    type,
+    config,
+    viewSharedValue
+  );
 }
 
 export function configureProps(uiProps: string[], nativeProps: string[]): void {

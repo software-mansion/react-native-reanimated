@@ -3,6 +3,7 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
 #include "JNIHelper.h"
 #include "LayoutAnimationsProxy.h"
 
@@ -12,6 +13,11 @@ using namespace facebook::jni;
 using namespace facebook;
 
 class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
+  using AnimationStartingBlock = std::function<
+      void(int, alias_ref<JString>, alias_ref<JMap<jstring, jstring>>)>;
+  using HasAnimationBlock = std::function<bool(int, std::string)>;
+  using ClearAnimationConfigBlock = std::function<void(int)>;
+
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/layoutReanimation/LayoutAnimations;";
@@ -23,19 +29,29 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       int tag,
       alias_ref<JString> type,
       alias_ref<JMap<jstring, jstring>> values);
-  void removeConfigForTag(int tag);
+  bool hasAnimationForTag(int tag, std::string type);
   bool isLayoutAnimationEnabled();
   void setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt);
-  void notifyAboutProgress(const jsi::Value &progress, int tag);
-  void notifyAboutEnd(int tag, int cancelled);
   void stopAnimation(int tag);
-  void setLayoutAnimationsProxy(std::weak_ptr<LayoutAnimationsProxy> layoutAnimationProxy);
+  void setLayoutAnimationsProxy(
+      std::weak_ptr<LayoutAnimationsProxy> layoutAnimationProxy);
+  void setAnimationStartingBlock(AnimationStartingBlock animationStartingBlock);
+  void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
+  void setClearAnimationConfigBlock(
+      ClearAnimationConfigBlock clearAnimationConfigBlock);
+
+  void progressLayoutAnimation(int tag, const jsi::Value &progress);
+  void endLayoutAnimation(int tag, bool cancelled, bool removeView);
+  void clearAnimationConfigForTag(int tag);
 
  private:
   friend HybridBase;
   jni::global_ref<LayoutAnimations::javaobject> javaPart_;
   std::weak_ptr<jsi::Runtime> weakUIRuntime;
   std::weak_ptr<LayoutAnimationsProxy> layoutAnimationProxy_;
+  AnimationStartingBlock animationStartingBlock_;
+  HasAnimationBlock hasAnimationBlock_;
+  ClearAnimationConfigBlock clearAnimationConfigBlock_;
 
   explicit LayoutAnimations(
       jni::alias_ref<LayoutAnimations::jhybridobject> jThis);

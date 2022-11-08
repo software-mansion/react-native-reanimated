@@ -334,7 +334,7 @@ public class NativeProxy {
     animationsManager.setNativeMethods(
         new NativeMethodsHolder() {
           @Override
-          public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
+          public void startAnimation(int tag, String type, HashMap<String, Float> values) {
             LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
             if (LayoutAnimations != null) {
               HashMap<String, String> preparedValues = new HashMap<>();
@@ -346,16 +346,29 @@ public class NativeProxy {
           }
 
           @Override
-          public void removeConfigForTag(int tag) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              LayoutAnimations.removeConfigForTag(tag);
+          public boolean isLayoutAnimationEnabled() {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.isLayoutAnimationEnabled();
             }
+            return false;
           }
 
           @Override
-          public boolean isLayoutAnimationEnabled() {
-            return LayoutAnimations.isLayoutAnimationEnabled();
+          public boolean hasAnimation(int tag, String type) {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.hasAnimationForTag(tag, type);
+            }
+            return false;
+          }
+
+          @Override
+          public void clearAnimationConfig(int tag) {
+              LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+              if (layoutAnimations != null) {
+                layoutAnimations.clearAnimationConfigForTag(tag);
+              }
           }
 
           @Override
