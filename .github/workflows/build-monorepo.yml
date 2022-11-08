@@ -18,7 +18,6 @@ jobs:
       platform: Android
       concurrency_group: build_monorepo_android_in_app_reanimated-${{ github.ref }}
       is_hoisted: false
-      # react_native_version: '0.70'
 
   build_ios_reanimated_non_hoisted:
     name: Build iOS with non-hoisted Reanimated
