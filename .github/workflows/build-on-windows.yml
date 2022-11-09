@@ -1,0 +1,30 @@
+name: Test build on Windows
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/build-on-windows.yml'
+      - RNReanimated.podspec
+      - android/build.gradle
+      - package.json
+  push:
+    branches:
+      - main
+
+env:
+  REACT_NATIVE_VERSION: "0.70.5"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    concurrency:
+      group: build-on-windows-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Create React Native app
+        run: npx react-native init app --version ${{ env.REACT_NATIVE_VERSION }}
+      - name: Install Reanimated
+        working-directory: app
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Build Android app
+        working-directory: app/android
+        run: ./gradlew assembleDebug --console=plain
