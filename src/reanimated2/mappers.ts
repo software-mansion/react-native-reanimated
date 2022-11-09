@@ -157,8 +157,6 @@ export function startMapper(
   outputs: any[] = []
 ): number {
   const mapperID = (MAPPER_ID += 1);
-  // console.log('START MAPPERZ');
-  // console.log('START ', inputs);
 
   runOnUI(() => {
     'worklet';

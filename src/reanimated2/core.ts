@@ -93,11 +93,7 @@ export const makeRemote = __DEV__
 
 export function requestFrame(frame: (timestamp: Timestamp) => void): void {
   'worklet';
-  if (NativeReanimatedModule.native) {
-    requestAnimationFrame(frame);
-  } else {
-    // pushFrame(frame);
-  }
+  requestAnimationFrame(frame);
 }
 
 global._WORKLET = false;

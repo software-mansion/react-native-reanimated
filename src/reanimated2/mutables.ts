@@ -66,8 +66,8 @@ export function makeMutable<T>(
   const listeners = NativeReanimatedModule.native ? undefined : new Map();
   const mutable = {
     set value(newValue) {
-      value = newValue;
       if (NativeReanimatedModule.native) {
+        value = newValue;
         runOnUI(() => {
           'worklet';
           mutable.value = newValue;

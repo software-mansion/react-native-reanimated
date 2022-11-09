@@ -18,11 +18,6 @@ export default class JSReanimated extends NativeReanimated {
     }
   }
 
-  pushFrame(frame: (timestamp: Timestamp) => void): void {
-    this._frames.push(frame);
-    this.maybeRequestRender();
-  }
-
   getTimestamp(): number {
     return this.timeProvider.now();
   }
@@ -31,34 +26,13 @@ export default class JSReanimated extends NativeReanimated {
     return { __hostObjectShareableJSRef: value };
   }
 
-  maybeRequestRender(): void {
-    if (!this._renderRequested) {
-      this._renderRequested = true;
-
-      requestAnimationFrame((_timestampMs) => {
-        this._renderRequested = false;
-
-        this._onRender(this.getTimestamp());
-      });
-    }
-  }
-
-  _onRender(timestampMs: number): void {
-    const frames = this._frames;
-    this._frames = [];
-
-    for (let i = 0, len = frames.length; i < len; ++i) {
-      frames[i](timestampMs);
-    }
-  }
-
   installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
     this._valueUnpacker = valueUnpacker;
   }
 
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
-    return this.pushFrame(worklet);
+    return requestAnimationFrame(worklet);
   }
 
   registerEventHandler<T>(
