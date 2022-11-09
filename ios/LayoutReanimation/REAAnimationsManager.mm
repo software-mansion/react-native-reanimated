@@ -158,7 +158,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (view == nil) {
     view = _removedSharedTransitionViews[tag];
   }
-  [self setNewProps:[newStyle mutableCopy] forView:view withComponentData:componentData];
+  [self setNewPropsForSharedTransition:[newStyle mutableCopy] forView:view withComponentData:componentData];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -173,6 +173,21 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 - (void)setNewProps:(NSMutableDictionary *)newProps
               forView:(UIView *)view
     withComponentData:(RCTComponentData *)componentData
+{
+  [self setNewPropsForSharedTransition:newProps forView:view withComponentData:componentData convertToAbsolute:NO];
+}
+
+- (void)setNewPropsForSharedTransition:(NSMutableDictionary *)newProps
+                               forView:(UIView *)view
+                     withComponentData:(RCTComponentData *)componentData
+{
+  [self setNewPropsForSharedTransition:newProps forView:view withComponentData:componentData convertToAbsolute:YES];
+}
+
+- (void)setNewPropsForSharedTransition:(NSMutableDictionary *)newProps
+                               forView:(UIView *)view
+                     withComponentData:(RCTComponentData *)componentData
+                     convertToAbsolute:(BOOL)convertToAbsolute
 {
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
@@ -204,8 +219,12 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   if (updateViewPosition) {
     CGPoint newCenter = CGPointMake(originX + view.bounds.size.width / 2.0, originY + view.bounds.size.height / 2.0);
     UIView *window = UIApplication.sharedApplication.keyWindow;
-    CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
-    view.center = convertedCenter;
+    if (convertToAbsolute) {
+      CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
+      view.center = convertedCenter;
+    } else {
+      view.center = newCenter;
+    }
   }
 
   [componentData setProps:newProps forView:view];

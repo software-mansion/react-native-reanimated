@@ -19,8 +19,10 @@ class ShareableValue;
 class LayoutAnimationsProxy {
  public:
   LayoutAnimationsProxy(
-      std::function<void(int, jsi::Object newProps)> progressHandler,
-      std::function<void(int, jsi::Object newProps)> progressHandler2,
+      std::function<void(int, jsi::Object newProps)>
+          layoutAnimationProgressHandler,
+      std::function<void(int, jsi::Object newProps)>
+          sharedTransitionProgressHandler,
       std::function<void(int, bool, bool)> endHandler,
       std::weak_ptr<ErrorHandler> errorHandler);
 

@@ -159,10 +159,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    mNativeMethodsHolder.startAnimationForTag(
-        before.getId(), "sharedElementTransition", preparedValues);
-    mNativeMethodsHolder.startAnimationForTag(
-        after.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimation(before.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimation(after.getId(), "sharedElementTransition", preparedValues);
   }
 
   public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
@@ -264,12 +262,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
       preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
     }
 
-    setNewProps(
-        preparedValues,
-        mViewForTag.get(tag),
-        mViewManager.get(tag),
-        mParentViewManager.get(tag),
-        mParent.get(tag).getId());
+    View view = resolveView(tag);
+    if (view == null) {
+      return;
+    }
+    ViewGroup parent = (ViewGroup) view.getParent();
+    if (parent == null) {
+      return;
+    }
+
+    ViewManager viewManager = resolveViewManager(tag);
+    ViewManager parentViewManager = resolveViewManager(parent.getId());
+    setNewProps(preparedValues, view, viewManager, parentViewManager, parent.getId());
   }
 
   public void setNewProps(

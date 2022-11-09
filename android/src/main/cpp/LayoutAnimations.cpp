@@ -79,7 +79,7 @@ bool LayoutAnimations::isLayoutAnimationEnabled() {
 void LayoutAnimations::stopAnimation(int tag) {
   auto layoutAnimationProxyPtr = layoutAnimationProxy_.lock();
   if (layoutAnimationProxyPtr != nullptr) {
-    layoutAnimationProxyPtr->stopObserving(tag, true);
+    layoutAnimationProxyPtr->stopObserving(tag, true, false);
   }
 }
 
