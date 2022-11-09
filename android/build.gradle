@@ -43,10 +43,7 @@ def safeExtGet(prop, fallback) {
 }
 
 def safeAppExtGet(prop, fallback) {
-    if (findProject(':app') == null) {
-        return fallback
-    }
-    def appProject = project(':app')
+    def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
     appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
 }
 
@@ -228,7 +225,7 @@ def JS_RUNTIME = {
     if (v8Project != null) {
         return "v8"
     }
-    def appProject = findProject(":app") ? project(":app") : null
+    def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
     // return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
     return "jsc" // TODO: properly detect Hermes
 }.call()
