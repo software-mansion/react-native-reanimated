@@ -75,7 +75,6 @@ export function createMapperRegistry() {
   }
 
   function mapperFrame() {
-    _log('mapper frame');
     if (mappers.size !== sortedMappers.length) {
       updateMappersOrder();
     }
@@ -89,7 +88,6 @@ export function createMapperRegistry() {
 
   function maybeRequestUpdates() {
     if (!frameRequested) {
-      _log('req frame');
       requestAnimationFrame(mapperFrame);
       frameRequested = true;
     }
@@ -120,7 +118,6 @@ export function createMapperRegistry() {
       inputs: SharedValue<any>[],
       outputs?: SharedValue<any>[]
     ) => {
-      _log('START ' + JSON.stringify(inputs));
       const mapper = {
         id: mapperID,
         dirty: true,

@@ -145,8 +145,9 @@ function valueUnpacker(objectToUnpack: any): any {
       ) => any;
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
     }
-    workletFun.prototype = objectToUnpack;
-    return workletFun;
+    const functionInstance = workletFun.bind(objectToUnpack);
+    objectToUnpack._recur = functionInstance;
+    return functionInstance;
   } else if (objectToUnpack.__init) {
     let value = handleCache!.get(objectToUnpack);
     if (value === undefined) {

@@ -316,10 +316,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
             )
           )
         ),
-        t.memberExpression(
-          t.memberExpression(t.identifier(name), t.identifier('prototype')),
-          t.identifier('_closure')
-        )
+        t.memberExpression(t.thisExpression(), t.identifier('_closure'))
       ),
     ]);
 
@@ -344,6 +341,24 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         },
         ObjectMethod(path) {
           prependClosure(path);
+        },
+      },
+    };
+  }
+
+  function replaceRecursiveCalls() {
+    return {
+      visitor: {
+        Program(path) {
+          Object.values(path.scope.bindings).forEach((b) => {
+            if (b.path.node.type === 'FunctionDeclaration') {
+              b.referencePaths.forEach((recurRef) => {
+                recurRef.replaceWith(
+                  t.memberExpression(t.thisExpression(), t.identifier('_recur'))
+                );
+              });
+            }
+          });
         },
       },
     };
@@ -375,7 +390,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   }
 
   const transformed = transformSync(code, {
-    plugins: [prependClosureVariablesIfNecessary()],
+    plugins: [prependClosureVariablesIfNecessary(), replaceRecursiveCalls()],
     compact: !shouldGenerateSourceMap(),
     sourceMaps: shouldGenerateSourceMap() ? 'inline' : false,
     inputSourceMap: inputMap,

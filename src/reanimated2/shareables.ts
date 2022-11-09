@@ -36,7 +36,6 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
       } else {
         toAdapt = {};
         for (const [key, element] of Object.entries(value)) {
-          _log('obj convert ' + key);
           toAdapt[key] = makeShareableCloneRecursive(element);
         }
       }

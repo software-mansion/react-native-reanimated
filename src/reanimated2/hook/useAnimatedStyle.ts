@@ -69,26 +69,20 @@ function prepareAnimation(
   lastValue: AnimatedStyle
 ): void {
   'worklet';
-  _log('afgain');
   if (Array.isArray(animatedProp)) {
-    _log('afgain2.1');
     animatedProp.forEach((prop, index) => {
-      _log('wat ' + prop);
       prepareAnimation(
         prop,
         lastAnimation && lastAnimation[index],
         lastValue && lastValue[index]
       );
-      _log('cont');
     });
     // return animatedProp;
   }
-  _log('afgain2');
   if (typeof animatedProp === 'object' && animatedProp.onFrame) {
     const animation = animatedProp;
 
     let value = animation.current;
-    _log('afgain3');
     if (lastValue !== undefined) {
       if (typeof lastValue === 'object') {
         if (lastValue.value !== undefined) {
@@ -112,10 +106,7 @@ function prepareAnimation(
     animation.callStart = (timestamp: Timestamp) => {
       animation.onStart(animation, value, timestamp, lastAnimation);
     };
-    _log('YOLLO ' + getTimestamp);
-    _log('YOLLO 2 ' + getTimestamp());
     animation.callStart(getTimestamp());
-    _log('tollo 4');
     animation.callStart = null;
   } else if (typeof animatedProp === 'object') {
     // it is an object
@@ -205,9 +196,7 @@ function styleUpdater(
   let hasAnimations = false;
   for (const key in newValues) {
     const value = newValues[key];
-    _log('testing ' + key);
     if (isAnimated(value)) {
-      _log('tutej fuk');
       prepareAnimation(value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
