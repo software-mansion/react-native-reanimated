@@ -101,6 +101,8 @@ class Shareable {
     return valueType_;
   }
 
+  static std::shared_ptr<Shareable> undefined();
+
  protected:
   ValueType valueType_;
 };

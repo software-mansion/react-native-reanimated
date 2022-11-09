@@ -42,8 +42,10 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
     if (object.isHostObject<ShareableJSRef>(rt)) {
       return object.getHostObject<ShareableJSRef>(rt)->value();
     }
+  } else if (maybeShareableValue.isUndefined()) {
+    return Shareable::undefined();
   }
-  throw std::runtime_error("expecing the object to be of type ShareableJSRef");
+  throw std::runtime_error("expecting the object to be of type ShareableJSRef");
 }
 
 Shareable::~Shareable() {}
@@ -90,6 +92,11 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
+}
+
+std::shared_ptr<Shareable> Shareable::undefined() {
+  static auto undefined = std::make_shared<ShareableScalar>();
+  return undefined;
 }
 
 } /* namespace reanimated */
