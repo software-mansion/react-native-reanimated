@@ -7,29 +7,11 @@
 
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
-static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
-{
-  if (!view.reactTag) {
-    return NO;
-  }
-
-  if (block(view)) {
-    return YES;
-  }
-
-  for (id<RCTComponent> subview in view.reactSubviews) {
-    if (REANodeFind(subview, block)) {
-      return YES;
-    }
-  }
-
-  return NO;
-}
-
 @implementation REAAnimationsManager {
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
+  NSMutableDictionary<NSNumber *, UIView *> *_removedSharedTransitionViews;
   NSMutableDictionary<NSNumber *, NSNumber *> *_exitingSubviewsCountMap;
   NSMutableSet<NSNumber *> *_ancestorsToRemove;
   NSMutableArray<NSString *> *_targetKeys;
@@ -57,6 +39,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _uiManager = uiManager;
     _reaUiManager = (REAUIManager *)uiManager;
     _exitingViews = [NSMutableDictionary new];
+    _removedSharedTransitionViews = [NSMutableDictionary new];
     _exitingSubviewsCountMap = [NSMutableDictionary new];
     _ancestorsToRemove = [NSMutableSet new];
 
@@ -76,8 +59,33 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _hasAnimationForTag = nil;
   _uiManager = nil;
   _exitingViews = nil;
+  _removedSharedTransitionViews = nil;
   _targetKeys = nil;
   _currentKeys = nil;
+}
+
+- (BOOL)nodeFind:(id<RCTComponent>)view block:(BOOL (^)(id<RCTComponent>))block
+{
+  if (!view.reactTag) {
+    return NO;
+  }
+
+  if (block(view)) {
+    return YES;
+  }
+
+  for (id<RCTComponent> subview in view.reactSubviews) {
+    if ([self nodeFind:subview block:block]) {
+      return YES;
+    }
+  }
+
+  return NO;
+}
+
+- (void)setRemovedSharedTransitionViews:(NSMutableDictionary<NSNumber *, UIView *> *)removedSharedTransitionViews
+{
+  _removedSharedTransitionViews = removedSharedTransitionViews;
 }
 
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation
@@ -110,6 +118,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (removeView && view != nil) {
     [self endAnimationsRecursive:view];
   }
+  for (NSNumber *tag in _removedSharedTransitionViews) {
+    _clearAnimationConfigForTag(tag, true);
+  }
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
@@ -137,6 +148,17 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
   [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] withComponentData:componentData];
+}
+
+- (void)progressSharedTransitionAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag
+{
+  NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
+  UIView *view = [self viewForTag:tag];
+  if (view == nil) {
+    view = _removedSharedTransitionViews[tag];
+  }
+  [self setNewProps:[newStyle mutableCopy] forView:view withComponentData:componentData];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -244,10 +266,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (BOOL)wantsHandleRemovalOfView:(UIView *)view
 {
-  return REANodeFind(view, ^(id<RCTComponent> view) {
-    return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
-        self->_hasAnimationForTag(view.reactTag, @"exiting");
-  });
+  return [self nodeFind:view
+                  block:^(id<RCTComponent> view) {
+                    return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
+                        self->_hasAnimationForTag(view.reactTag, @"exiting");
+                  }];
 }
 
 - (void)registerExitingAncestors:(UIView *)child
@@ -323,11 +346,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     // since it's removed from the React tree, we won't
     // start new animations for it, and might as well remove
     // the layout animation config now
-    _clearAnimationConfigForTag(view.reactTag);
+    _clearAnimationConfigForTag(view.reactTag, false);
     return YES;
   } else if (removeImmediately) {
     [container removeReactSubview:view];
-    _clearAnimationConfigForTag(view.reactTag);
+    _clearAnimationConfigForTag(view.reactTag, false);
   }
 
   return NO;
@@ -357,29 +380,13 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
 }
 
-- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
+- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
   [view.superview bringSubviewToFront:view];
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
-  self->_startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
-}
-
-- (void)onScreenTransition:(UIView *)screen finish:(REASnapshot *)finish transitionType:(NSString *)transitionType
-{
-  NSMutableDictionary *targetValues = finish.values;
-  NSDictionary *preparedValues = nil;
-  if ([transitionType isEqualToString:@"exiting"] || [transitionType isEqualToString:@"hiding"]) {
-    preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:ExitingFrame];
-  } else {
-    preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
-  }
-
-  // we dispatch it asynchronously so it does not mess up with native animiation of transitioning screens
-  dispatch_async(dispatch_get_main_queue(), ^{
-    self->_startAnimationForTag(screen.reactTag, transitionType, preparedValues, @(0));
-  });
+  _startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }
 
 - (void)setNodeManager:(REANodesManager *)nodeManager
@@ -395,7 +402,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)stopAnimation:(NSNumber *)tag
 {
   if (_layoutAnimationsProxy.lock() != nullptr) {
-    _layoutAnimationsProxy.lock()->stopObserving([tag intValue], true);
+    _layoutAnimationsProxy.lock()->stopObserving([tag intValue], true, false);
   }
 }
 
@@ -427,10 +434,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)removeAnimationsFromSubtree:(UIView *)view
 {
-  REANodeFind(view, ^int(id<RCTComponent> view) {
-    self->_clearAnimationConfigForTag(view.reactTag);
-    return false;
-  });
+  [self nodeFind:view
+           block:^(id<RCTComponent> view) {
+             self->_clearAnimationConfigForTag(view.reactTag, false);
+             return false;
+           }];
 }
 
 @end

@@ -11,21 +11,31 @@ namespace reanimated {
 const long long idOffset = 1e9;
 
 LayoutAnimationsProxy::LayoutAnimationsProxy(
-    std::function<void(int, jsi::Object newProps)> progressHandler,
+    std::function<void(int, jsi::Object newProps)>
+        layoutAnimationProgressHandler,
+    std::function<void(int, jsi::Object newProps)>
+        sharedTransitionProgressHandler,
     std::function<void(int, bool, bool)> endHandler,
     std::weak_ptr<ErrorHandler> errorHandler)
-    : progressHandler_(std::move(progressHandler)),
+    : layoutAnimationProgressHandler_(
+          std::move(layoutAnimationProgressHandler)),
+      sharedTransitionProgressHandler_(
+          std::move(sharedTransitionProgressHandler)),
       endHandler_(std::move(endHandler)),
       weakErrorHandler_(errorHandler) {}
 
 void LayoutAnimationsProxy::startObserving(
     int tag,
     std::shared_ptr<MutableValue> sv,
+    const std::string &type,
     jsi::Runtime &rt) {
   observedValues[tag] = sv;
-  this->progressHandler_(tag, sv->value->toJSValue(rt).asObject(rt));
-  sv->addListener(tag + idOffset, [sv, tag, this, &rt]() {
-    this->progressHandler_(tag, sv->value->toJSValue(rt).asObject(rt));
+  auto &progressHandler = type == "sharedElementTransition"
+      ? sharedTransitionProgressHandler_
+      : layoutAnimationProgressHandler_;
+  progressHandler(tag, sv->value->toJSValue(rt).asObject(rt));
+  sv->addListener(tag + idOffset, [sv, tag, progressHandler, &rt]() {
+    progressHandler(tag, sv->value->toJSValue(rt).asObject(rt));
   });
 }
 
@@ -54,6 +64,8 @@ void LayoutAnimationsProxy::configureAnimation(
     exitingAnimations[tag] = config;
   } else if (type == "layout") {
     layoutAnimations[tag] = config;
+  } else if (type == "sharedElementTransition") {
+    sharedTransitionAnimations[tag] = config;
   }
   viewSharedValues[tag] = viewSharedValue;
 }
@@ -68,16 +80,24 @@ bool LayoutAnimationsProxy::hasLayoutAnimation(
     return exitingAnimations.find(tag) != exitingAnimations.end();
   } else if (type == "layout") {
     return layoutAnimations.find(tag) != layoutAnimations.end();
+  } else if (type == "sharedElementTransition") {
+    return sharedTransitionAnimations.find(tag) !=
+        sharedTransitionAnimations.end();
   }
   return false;
 }
 
-void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag) {
+void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag, bool force) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   enteringAnimations.erase(tag);
   exitingAnimations.erase(tag);
   layoutAnimations.erase(tag);
-  viewSharedValues.erase(tag);
+  if (sharedTransitionAnimations.find(tag) ==
+          sharedTransitionAnimations.end() ||
+      force) {
+    viewSharedValues.erase(tag);
+    sharedTransitionAnimations.erase(tag);
+  }
 }
 
 void LayoutAnimationsProxy::startLayoutAnimation(
@@ -95,6 +115,8 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       config = exitingAnimations[tag];
     } else if (type == "layout") {
       config = layoutAnimations[tag];
+    } else if (type == "sharedElementTransition") {
+      config = sharedTransitionAnimations[tag];
     }
     viewSharedValue = viewSharedValues[tag];
   }

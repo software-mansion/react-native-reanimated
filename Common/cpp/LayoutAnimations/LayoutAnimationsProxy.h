@@ -20,11 +20,15 @@ class LayoutAnimationsProxy {
  public:
   LayoutAnimationsProxy(
       std::function<void(int, jsi::Object newProps)> progressHandler,
+      std::function<void(int, jsi::Object newProps)> progressHandler2,
       std::function<void(int, bool, bool)> endHandler,
       std::weak_ptr<ErrorHandler> errorHandler);
 
-  void
-  startObserving(int tag, std::shared_ptr<MutableValue> sv, jsi::Runtime &rt);
+  void startObserving(
+      int tag,
+      std::shared_ptr<MutableValue> sv,
+      const std::string &type,
+      jsi::Runtime &rt);
   void stopObserving(int tag, bool finished, bool removeView);
   void configureAnimation(
       int tag,
@@ -37,10 +41,13 @@ class LayoutAnimationsProxy {
       int tag,
       const std::string &type,
       const jsi::Object &values);
-  void clearLayoutAnimationConfig(int tag);
+  void clearLayoutAnimationConfig(int tag, bool force = false);
 
  private:
-  std::function<void(int, jsi::Object newProps)> progressHandler_;
+  std::function<void(int, jsi::Object newProps)>
+      layoutAnimationProgressHandler_;
+  std::function<void(int, jsi::Object newProps)>
+      sharedTransitionProgressHandler_;
   std::function<void(int, bool, bool)> endHandler_;
   std::weak_ptr<ErrorHandler> weakErrorHandler_;
   std::unordered_map<int, std::shared_ptr<MutableValue>> observedValues;
@@ -48,6 +55,8 @@ class LayoutAnimationsProxy {
   std::unordered_map<int, std::shared_ptr<ShareableValue>> enteringAnimations;
   std::unordered_map<int, std::shared_ptr<ShareableValue>> exitingAnimations;
   std::unordered_map<int, std::shared_ptr<ShareableValue>> layoutAnimations;
+  std::unordered_map<int, std::shared_ptr<ShareableValue>>
+      sharedTransitionAnimations;
   mutable std::mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
                         // `layoutAnimations_` and `viewSharedValues_`.

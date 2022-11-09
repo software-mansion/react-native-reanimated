@@ -260,6 +260,7 @@ void RuntimeDecorator::decorateUIRuntime(
     proxy->startObserving(
         args[0].asNumber(),
         args[1].asObject(rt).getHostObject<MutableValue>(rt),
+        args[2].asString(rt).utf8(rt),
         rt);
     return jsi::Value::undefined();
   };

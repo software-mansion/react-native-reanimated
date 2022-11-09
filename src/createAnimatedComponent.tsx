@@ -22,6 +22,7 @@ import {
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
+  DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -423,8 +424,11 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
         const tag = findNodeHandle(ref);
-        const { layout, entering, exiting } = this.props;
-        if ((layout || entering || exiting) && tag != null) {
+        const { layout, entering, exiting, sharedTransitionTag } = this.props;
+        if (
+          (layout || entering || exiting || sharedTransitionTag) &&
+          tag != null
+        ) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
           }
@@ -453,8 +457,16 @@ export default function createAnimatedComponent(
             );
           }
 
-          if (this.props.sharedTransitionTag) {
-            this._sharedTransitionTag = this.props.sharedTransitionTag;
+          if (sharedTransitionTag) {
+            const sharedElementTransition =
+              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
+            configureLayoutAnimations(
+              tag,
+              'sharedElementTransition',
+              maybeBuild(sharedElementTransition),
+              this.sv
+            );
+            this._sharedTransitionTag = sharedTransitionTag;
             registerTransitionTag(this._sharedTransitionTag, tag);
           }
         }

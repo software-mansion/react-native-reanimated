@@ -270,6 +270,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
+  auto progressSharedTransitionAnimation = [weakAnimationsManager, animatedRuntime](int tag, jsi::Object newStyle) {
+    REAAnimationsManager *animationsManager = weakAnimationsManager;
+    if (animationsManager) {
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
+      [animationsManager progressSharedTransitionAnimationWithStyle:propsDict forTag:@(tag)];
+    }
+  };
+
   auto endLayoutAnimation = [weakAnimationsManager](int tag, bool isCancelled, bool removeView) {
     REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
@@ -284,8 +292,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
-  auto layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation, errorHandler);
+  auto layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(
+      progressLayoutAnimation, progressSharedTransitionAnimation, endLayoutAnimation, errorHandler);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
   [animationsManager setLayoutAnimationProxy:layoutAnimationsProxy];
@@ -439,8 +447,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
   }];
 
-  [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    layoutAnimationsProxy->clearLayoutAnimationConfig([tag intValue]);
+  [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag, bool force) {
+    layoutAnimationsProxy->clearLayoutAnimationConfig([tag intValue], force);
   }];
 #endif
 

@@ -177,8 +177,13 @@ static jsi::Value SPEC_PREFIX(unregisterTransitionTag)(
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->unregisterTransitionTag(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
+}
 
 static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->configureLayoutAnimation(
           rt,

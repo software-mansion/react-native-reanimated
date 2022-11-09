@@ -96,6 +96,7 @@
 - (void)onScreenRemoving:(UIView *)screen
 {
   [self saveSharedTransitionItemsUnderTree:screen];
+  [_animationsManager setRemovedSharedTransitionViews:_removedViewRegistry];
 }
 
 - (void)setAnimationsManager:(REAAnimationsManager *)animationsManager
@@ -126,7 +127,6 @@
 
 - (void)cleanRegisters
 {
-  [_removedViewRegistry removeAllObjects];
   for (NSString *transitionTag in _sharedTransitionsItems) {
     NSMutableArray<REASharedViewConfig *> *sharedViewConfigs = _sharedTransitionsItems[transitionTag];
     NSMutableArray *discardedItems = [NSMutableArray array];
@@ -213,6 +213,8 @@
 - (void)cleanupAfterTransition:(NSMutableArray<REASharedTransitionConfig *> *)sharedTransitionConfigs
                         screen:(RNSScreen *)screen
 {
+  [_removedViewRegistry removeAllObjects];
+  [_animationsManager setRemovedSharedTransitionViews:_removedViewRegistry];
   for (REASharedTransitionConfig *sharedTransitionConfig in sharedTransitionConfigs) {
     UIView *startingView = sharedTransitionConfig.fromView;
     [startingView removeFromSuperview];
