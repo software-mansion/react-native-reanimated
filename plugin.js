@@ -328,38 +328,30 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
       path.node.body.body.unshift(closureDeclaration);
     }
 
-    return {
-      visitor: {
-        FunctionDeclaration(path) {
-          prependClosure(path);
-        },
-        FunctionExpression(path) {
-          prependClosure(path);
-        },
-        ArrowFunctionExpression(path) {
-          prependClosure(path);
-        },
-        ObjectMethod(path) {
-          prependClosure(path);
-        },
-      },
-    };
-  }
+    function prepandRecursiveDeclaration(path) {
+      if (path.parent.type === 'Program' && path.node.id && path.scope.parent) {
+        const hasRecursiveCalls =
+          path.scope.parent.bindings[path.node.id.name]?.references > 0;
+        if (hasRecursiveCalls) {
+          path.node.body.body.unshift(
+            t.variableDeclaration('const', [
+              t.variableDeclarator(
+                t.identifier(path.node.id.name),
+                t.memberExpression(t.thisExpression(), t.identifier('_recur'))
+              ),
+            ])
+          );
+        }
+      }
+    }
 
-  function replaceRecursiveCalls() {
     return {
       visitor: {
-        Program(path) {
-          Object.values(path.scope.bindings).forEach((b) => {
-            if (b.path.node.type === 'FunctionDeclaration') {
-              b.referencePaths.forEach((recurRef) => {
-                recurRef.replaceWith(
-                  t.memberExpression(t.thisExpression(), t.identifier('_recur'))
-                );
-              });
-            }
-          });
-        },
+        'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
+          (path) => {
+            prependClosure(path);
+            prepandRecursiveDeclaration(path);
+          },
       },
     };
   }
@@ -390,7 +382,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   }
 
   const transformed = transformSync(code, {
-    plugins: [prependClosureVariablesIfNecessary(), replaceRecursiveCalls()],
+    plugins: [prependClosureVariablesIfNecessary()],
     compact: !shouldGenerateSourceMap(),
     sourceMaps: shouldGenerateSourceMap() ? 'inline' : false,
     inputSourceMap: inputMap,
