@@ -16,3 +16,7 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
   // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
   return value;
 }
+
+export function makeShareable<T>(value: T): T {
+  return value;
+}

@@ -75,15 +75,16 @@ export function createMapperRegistry() {
   }
 
   function mapperFrame() {
+    frameRequested = false;
     if (mappers.size !== sortedMappers.length) {
       updateMappersOrder();
     }
     for (const mapper of sortedMappers) {
       if (mapper.dirty) {
+        mapper.dirty = false;
         mapper.worklet();
       }
     }
-    frameRequested = false;
   }
 
   function maybeRequestUpdates() {

@@ -34,7 +34,7 @@ export function makeMutable<T>(
           valueSetter(self, newValue);
         },
         get value() {
-          return self._value;
+          return value;
         },
         set _value(newValue: T) {
           value = newValue;
