@@ -50,7 +50,9 @@
 
 - (void)setBridge:(RCTBridge *)bridge
 {
-  RCTLayoutAnimation *deletingAnimation = [[RCTLayoutAnimation alloc] initWithDuration:0.5 config:@{}];
+  // setting a layout animation group with a deleting animation in order to
+  // allows us to call a different method in RCTUIManager for cleaning up exiting views
+  RCTLayoutAnimation *deletingAnimation = [[RCTLayoutAnimation alloc] initWithDuration:0 config:@{}];
   _reactLayoutAnimationGroup = [[RCTLayoutAnimationGroup alloc] initWithCreatingLayoutAnimation:nil
                                                                         updatingLayoutAnimation:nil
                                                                         deletingLayoutAnimation:deletingAnimation
