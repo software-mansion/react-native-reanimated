@@ -20,6 +20,10 @@ jobs:
       group: build-on-windows-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
       - name: Create React Native app
         run: npx react-native init app --version ${{ env.REACT_NATIVE_VERSION }}
       - name: Install Reanimated
