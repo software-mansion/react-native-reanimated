@@ -11,8 +11,6 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import java.util.List;
 
-// TODO: restore ReaUiImplementationProvider
-
 @ReactModule(name = UIManagerModule.NAME)
 public class ReanimatedUIManager extends UIManagerModule {
 
