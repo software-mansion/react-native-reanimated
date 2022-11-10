@@ -31,16 +31,18 @@ void LayoutAnimations::startAnimationForTag(
 
 void LayoutAnimations::progressLayoutAnimation(
     int tag,
-    const jsi::Value &progress) {
+    const jsi::Value &progress,
+    bool isSharedTransition) {
   if (auto rt = this->weakUIRuntime.lock()) {
     static const auto method =
         javaPart_->getClass()
-            ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+            ->getMethod<void(int, JMap<JString, JObject>::javaobject, bool)>(
                 "progressLayoutAnimation");
     method(
         javaPart_.get(),
         tag,
-        JNIHelper::ConvertToPropsMap(*rt, progress.asObject(*rt)).get());
+        JNIHelper::ConvertToPropsMap(*rt, progress.asObject(*rt)).get(),
+        isSharedTransition);
   }
 }
 

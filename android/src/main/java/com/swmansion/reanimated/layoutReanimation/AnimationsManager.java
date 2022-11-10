@@ -179,7 +179,25 @@ public class AnimationsManager implements ViewHierarchyObserver {
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
 
-    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId());
+    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), false);
+  }
+
+  public void progressSharedTransitionAnimation(int tag, Map<String, Object> newStyle) {
+    View view = resolveView(tag);
+    if (view == null) {
+      return;
+    }
+
+    ViewGroup parent = (ViewGroup) view.getParent();
+    if (parent == null) {
+      return;
+    }
+
+    ViewManager viewManager = resolveViewManager(tag);
+    ViewManager parentViewManager = resolveViewManager(parent.getId());
+
+    // TODO: handle views == null
+    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), true);
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
@@ -273,7 +291,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
-    setNewProps(preparedValues, view, viewManager, parentViewManager, parent.getId());
+    setNewProps(preparedValues, view, viewManager, parentViewManager, parent.getId(), true);
   }
 
   public void setNewProps(
@@ -281,7 +299,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       View view,
       ViewManager viewManager,
       ViewManager parentViewManager,
-      Integer parentTag) {
+      Integer parentTag,
+      boolean convertToAbsolute) {
     float x =
         (props.get(Snapshot.ORIGIN_X) != null)
             ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
@@ -299,7 +318,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
             ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
             : PixelUtil.toDIPFromPixel(view.getHeight());
 
-    updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
+    updateLayout(
+        view, parentViewManager, parentTag, view.getId(), x, y, width, height, convertToAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
     props.remove(Snapshot.WIDTH);
@@ -347,7 +367,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       float xf,
       float yf,
       float widthf,
-      float heightf) {
+      float heightf,
+      boolean convertToAbsolute) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
@@ -399,12 +420,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
-      // TODO: create new version AnimationManager after merge Layout Animation rewrite
-      Point newPoint = new Point(x, y);
-      Point convertedPoint =
-          convertPoint(newPoint, (View) viewToUpdate.getParent(), (int) viewToUpdate.getId());
-      x = convertedPoint.x;
-      y = convertedPoint.y;
+      if (convertToAbsolute) {
+        Point newPoint = new Point(x, y);
+        Point convertedPoint =
+            convertPoint(newPoint, (View) viewToUpdate.getParent(), (int) viewToUpdate.getId());
+        x = convertedPoint.x;
+        y = convertedPoint.y;
+      }
       viewToUpdate.layout(x, y, x + width, y + height);
     }
   }

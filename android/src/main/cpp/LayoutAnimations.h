@@ -40,7 +40,10 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setClearAnimationConfigBlock(
       ClearAnimationConfigBlock clearAnimationConfigBlock);
 
-  void progressLayoutAnimation(int tag, const jsi::Value &progress);
+  void progressLayoutAnimation(
+      int tag,
+      const jsi::Value &progress,
+      bool isSharedTransition);
   void endLayoutAnimation(int tag, bool cancelled, bool removeView);
   void clearAnimationConfigForTag(int tag);
 

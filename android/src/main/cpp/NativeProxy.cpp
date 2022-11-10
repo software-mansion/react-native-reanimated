@@ -231,11 +231,14 @@ void NativeProxy::installJSIBindings(
   // Layout Animations Start
 
   auto progressLayoutAnimation = [this](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
+    this->layoutAnimations->cthis()->progressLayoutAnimation(
+        tag, progress, false);
   };
 
-  auto progressLayoutAnimation2 = [this](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
+  auto progressSharedTransitionAnimation = [this](
+                                               int tag, jsi::Value progress) {
+    this->layoutAnimations->cthis()->progressLayoutAnimation(
+        tag, progress, true);
   };
 
   auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
@@ -245,8 +248,8 @@ void NativeProxy::installJSIBindings(
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(
-          progressLayoutAnimation2,
           progressLayoutAnimation,
+          progressSharedTransitionAnimation,
           endLayoutAnimation,
           errorHandler);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
