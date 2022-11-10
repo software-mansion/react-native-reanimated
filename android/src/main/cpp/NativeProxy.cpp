@@ -252,25 +252,25 @@ void NativeProxy::installJSIBindings(
           int tag,
           alias_ref<JString> type,
           alias_ref<JMap<jstring, jstring>> values) {
-        auto rt = wrt.lock();
+        auto runtime = wrt.lock();
         auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        if (!rt || !layoutAnimationsProxy) {
+        if (!runtime || !layoutAnimationsProxy) {
           return;
         }
-        jsi::Object yogaValues(*rt);
+        jsi::Object yogaValues(*runtime);
         for (const auto &entry : *values) {
           try {
-            auto key =
-                jsi::String::createFromAscii(*rt, entry.first->toStdString());
+            auto key = jsi::String::createFromAscii(
+                *runtime, entry.first->toStdString());
             auto value = stod(entry.second->toStdString());
-            yogaValues.setProperty(*rt, key, value);
+            yogaValues.setProperty(*runtime, key, value);
           } catch (std::invalid_argument e) {
             // failed to convert value to number
           }
         }
 
         layoutAnimationsProxy->startLayoutAnimation(
-            *rt, tag, type->toStdString(), yogaValues);
+            *runtime, tag, type->toStdString(), yogaValues);
       });
 
   layoutAnimations->cthis()->setHasAnimationBlock(

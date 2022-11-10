@@ -85,7 +85,7 @@ const SCREENS: Screens = {
     screen: NestedTest,
     title: '🆕 Nested layout animations',
   },
-  Krzysiek: {
+  CombinedLayoutAnimations: {
     screen: CombinedTest,
     title: '🆕 Entering and Exiting with Layout',
   },

@@ -13,16 +13,16 @@ const long long idOffset = 1e9;
 LayoutAnimationsProxy::LayoutAnimationsProxy(
     std::function<void(int, jsi::Object newProps)> progressHandler,
     std::function<void(int, bool, bool)> endHandler,
-    std::weak_ptr<ErrorHandler> errorHandler)
+    std::weak_ptr<ErrorHandler> weakErrorHandler)
     : progressHandler_(std::move(progressHandler)),
       endHandler_(std::move(endHandler)),
-      weakErrorHandler_(errorHandler) {}
+      weakErrorHandler_(weakErrorHandler) {}
 
 void LayoutAnimationsProxy::startObserving(
     int tag,
     std::shared_ptr<MutableValue> sv,
     jsi::Runtime &rt) {
-  observedValues[tag] = sv;
+  observedValues_[tag] = sv;
   this->progressHandler_(tag, sv->value->toJSValue(rt).asObject(rt));
   sv->addListener(tag + idOffset, [sv, tag, this, &rt]() {
     this->progressHandler_(tag, sv->value->toJSValue(rt).asObject(rt));
@@ -33,12 +33,12 @@ void LayoutAnimationsProxy::stopObserving(
     int tag,
     bool finished,
     bool removeView) {
-  if (observedValues.count(tag) == 0) {
+  if (observedValues_.count(tag) == 0) {
     return;
   }
-  std::shared_ptr<MutableValue> sv = observedValues[tag];
+  std::shared_ptr<MutableValue> sv = observedValues_[tag];
   sv->removeListener(tag + idOffset);
-  observedValues.erase(tag);
+  observedValues_.erase(tag);
   this->endHandler_(tag, !finished, removeView);
 }
 
@@ -49,13 +49,13 @@ void LayoutAnimationsProxy::configureAnimation(
     std::shared_ptr<ShareableValue> viewSharedValue) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == "entering") {
-    enteringAnimations[tag] = config;
+    enteringAnimations_[tag] = config;
   } else if (type == "exiting") {
-    exitingAnimations[tag] = config;
+    exitingAnimations_[tag] = config;
   } else if (type == "layout") {
-    layoutAnimations[tag] = config;
+    layoutAnimations_[tag] = config;
   }
-  viewSharedValues[tag] = viewSharedValue;
+  viewSharedValues_[tag] = viewSharedValue;
 }
 
 bool LayoutAnimationsProxy::hasLayoutAnimation(
@@ -63,21 +63,21 @@ bool LayoutAnimationsProxy::hasLayoutAnimation(
     const std::string &type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == "entering") {
-    return enteringAnimations.find(tag) != enteringAnimations.end();
+    return enteringAnimations_.find(tag) != enteringAnimations_.end();
   } else if (type == "exiting") {
-    return exitingAnimations.find(tag) != exitingAnimations.end();
+    return exitingAnimations_.find(tag) != exitingAnimations_.end();
   } else if (type == "layout") {
-    return layoutAnimations.find(tag) != layoutAnimations.end();
+    return layoutAnimations_.find(tag) != layoutAnimations_.end();
   }
   return false;
 }
 
 void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  enteringAnimations.erase(tag);
-  exitingAnimations.erase(tag);
-  layoutAnimations.erase(tag);
-  viewSharedValues.erase(tag);
+  enteringAnimations_.erase(tag);
+  exitingAnimations_.erase(tag);
+  layoutAnimations_.erase(tag);
+  viewSharedValues_.erase(tag);
 }
 
 void LayoutAnimationsProxy::startLayoutAnimation(
@@ -90,13 +90,13 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   {
     auto lock = std::unique_lock<std::mutex>(animationsMutex_);
     if (type == "entering") {
-      config = enteringAnimations[tag];
+      config = enteringAnimations_[tag];
     } else if (type == "exiting") {
-      config = exitingAnimations[tag];
+      config = exitingAnimations_[tag];
     } else if (type == "layout") {
-      config = layoutAnimations[tag];
+      config = layoutAnimations_[tag];
     }
-    viewSharedValue = viewSharedValues[tag];
+    viewSharedValue = viewSharedValues_[tag];
   }
 
   jsi::Value layoutAnimationRepositoryAsValue =

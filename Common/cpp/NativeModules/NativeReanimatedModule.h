@@ -151,13 +151,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &config,
       const jsi::Value &viewSharedValue) override;
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
-
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
   std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;

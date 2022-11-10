@@ -382,17 +382,17 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // Layout Animation callbacks setup
   [animationsManager setAnimationStartingBlock:^(
                          NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
-    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-    if (rt == nullptr) {
+    std::shared_ptr<jsi::Runtime> runtime = wrt.lock();
+    if (runtime == nullptr) {
       return;
     }
-    jsi::Object yogaValues(*rt);
+    jsi::Object yogaValues(*runtime);
     for (NSString *key in values.allKeys) {
       NSNumber *value = values[key];
-      yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
+      yogaValues.setProperty(*runtime, [key UTF8String], [value doubleValue]);
     }
 
-    layoutAnimationsProxy->startLayoutAnimation(*rt, [tag intValue], std::string([type UTF8String]), yogaValues);
+    layoutAnimationsProxy->startLayoutAnimation(*runtime, [tag intValue], std::string([type UTF8String]), yogaValues);
   }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
