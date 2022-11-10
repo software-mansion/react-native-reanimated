@@ -246,9 +246,10 @@ void NativeProxy::installJSIBindings(
   std::weak_ptr<LayoutAnimationsProxy> weakLayoutAnimationsProxy =
       layoutAnimationsProxy;
   layoutAnimations->cthis()->setWeakUIRuntime(wrt);
+  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
 
   layoutAnimations->cthis()->setAnimationStartingBlock(
-      [wrt, weakLayoutAnimationsProxy](
+      [wrt, weakLayoutAnimationsProxy, weakErrorHandler](
           int tag,
           alias_ref<JString> type,
           alias_ref<JMap<jstring, jstring>> values) {
@@ -265,7 +266,10 @@ void NativeProxy::installJSIBindings(
             auto value = stod(entry.second->toStdString());
             yogaValues.setProperty(*runtime, key, value);
           } catch (std::invalid_argument e) {
-            // failed to convert value to number
+            if (auto errorHandler = weakErrorHandler.lock()) {
+              errorHandler->setError("Failed to convert value to number");
+              errorHandler->raise();
+            }
           }
         }
 
