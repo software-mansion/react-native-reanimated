@@ -190,7 +190,6 @@ def reactNativeRootDir = resolveReactNativeDirectory()
 def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
-def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
@@ -384,9 +383,6 @@ if (!BUILD_FROM_SOURCE && !isNewArchitectureEnabled()) { // Reanimated2 only
 if (!BUILD_FROM_SOURCE) {
     return
 }
-// You need to have following folders in this directory:
-//   - double-conversion-1.1.6
-def dependenciesPath = System.getenv("REACT_NATIVE_DEPENDENCIES")
 
 buildscript {
     repositories {
@@ -603,48 +599,13 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
     }
 }
 
-Task resolveDoubleConversion = resolveTaskFactory(
-    "resolveDoubleConversion",
-    "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz",
-    reactNativeAndroidDownloadDir,
-    downloadsDir
-)
-
 if (isNewArchitectureEnabled()) {
     def reactNativeAndroidProject = findProject(":ReactAndroid")
     if (reactNativeAndroidProject != null) {
-        reactNativeAndroidProject.afterEvaluate {
-            def resolveTasks = [resolveDoubleConversion]
-            resolveTasks.forEach({ task ->
-                String reactAndroidDownloadTaskName = "download" + task.name.replace("resolve", "")
-                def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName(reactAndroidDownloadTaskName)
-                if (reactAndroidDownloadTask != null) {
-                    task.dependsOn(reactAndroidDownloadTask)
-                } else {
-                    logger.warn("[Reanimated] Failed to find task named `$reactAndroidDownloadTaskName` in `:ReactAndroid` project." +
-                            " Explicit dependency between it and $task.name task can not be set.")
-                }
-            })
-        }
+        // nothing
     } else {
         throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks can not be set.")
     }
-}
-
-task downloadDoubleConversion(dependsOn: resolveDoubleConversion, type: Download) {
-    src("https://github.com/google/double-conversion/archive/v${DOUBLE_CONVERSION_VERSION}.tar.gz")
-    onlyIfNewer(true)
-    overwrite(false)
-    dest(new File(downloadsDir, "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz"))
-}
-
-task prepareDoubleConversion(dependsOn: dependenciesPath ? [] : [downloadDoubleConversion], type: Copy) {
-    from(dependenciesPath ?: tarTree(downloadDoubleConversion.dest))
-    from("$reactNativeThirdParty/double-conversion/Android.mk")
-    include("double-conversion-${DOUBLE_CONVERSION_VERSION}/src/**/*", "Android.mk")
-    filesMatching("*/src/**/*", { fname -> fname.path = "double-conversion/${fname.name}" })
-    includeEmptyDirs = false
-    into("$thirdPartyNdkDir/double-conversion")
 }
 
 /*
@@ -847,13 +808,7 @@ task unpackReactNativeAAR {
     }
 }
 
-task downloadNdkBuildDependencies {
-    dependsOn(downloadDoubleConversion)
-}
-
 task prepareThirdPartyNdkHeaders(dependsOn:[
-    downloadNdkBuildDependencies,
-    prepareDoubleConversion,
     unpackReactNativeAAR]
 ) {}
 
