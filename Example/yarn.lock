@@ -4103,11 +4103,6 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/eslint-plugin/-/eslint-plugin-1.1.0.tgz#e42b1bef12d2415411519fd528e64b593b1363dc"
   integrity sha512-W/J0fNYVO01tioHjvYWQ9m6RgndVtbElzYozBq1ZPrHO/iCzlqoySHl4gO/fpCl9QEFjvJfjPgtPMTMlsoq5DQ==
 
-"@react-native-community/masked-view@^0.1.10":
-  version "0.1.11"
-  resolved "https://registry.yarnpkg.com/@react-native-community/masked-view/-/masked-view-0.1.11.tgz#2f4c6e10bee0786abff4604e39a37ded6f3980ce"
-  integrity sha512-rQfMIGSR/1r/SyN87+VD8xHHzDYeHaJq6elOSCAD+0iLagXkSI2pfA0LmSXP21uw5i3em7GkkRjfJ8wpqWXZNw==
-
 "@react-native-community/picker@^1.8.1":
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/@react-native-community/picker/-/picker-1.8.1.tgz#94f14f0aad98fa7592967b941be97deec95c3805"
@@ -10315,7 +10310,7 @@ react-native-safe-area-context@^4.4.1:
 
 react-native-screens@software-mansion/react-native-screens#@wolewicki/shared-elements-with-rea:
   version "3.18.2"
-  resolved "https://codeload.github.com/software-mansion/react-native-screens/tar.gz/5d075fe5d762dd81ab69a984e21c35e888f30bee"
+  resolved "https://codeload.github.com/software-mansion/react-native-screens/tar.gz/6fc7ba46e49fbc2c5194a97b408fe0066a20185f"
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
