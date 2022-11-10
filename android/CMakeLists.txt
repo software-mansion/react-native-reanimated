@@ -58,7 +58,6 @@ add_library(
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
         "${BUILD_DIR}/third-party-ndk/double-conversion"
         "${REACT_NATIVE_DIR}/React"
         "${REACT_NATIVE_DIR}/React/Base"

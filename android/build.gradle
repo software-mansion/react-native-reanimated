@@ -190,7 +190,6 @@ def reactNativeRootDir = resolveReactNativeDirectory()
 def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
-def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
 def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
@@ -386,14 +385,8 @@ if (!BUILD_FROM_SOURCE) {
     return
 }
 // You need to have following folders in this directory:
-//   - boost_1_63_0
 //   - double-conversion-1.1.6
 def dependenciesPath = System.getenv("REACT_NATIVE_DEPENDENCIES")
-
-// The Boost library is a very large download (>100MB).
-// If Boost is already present on your system, define the REACT_NATIVE_BOOST_PATH env variable
-// and the build will use that.
-def boostPath = dependenciesPath ?: System.getenv("REACT_NATIVE_BOOST_PATH")
 
 buildscript {
     repositories {
@@ -434,7 +427,6 @@ android {
                 arguments "-DANDROID_STL=c++_shared",
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
-                        "-DBOOST_VERSION=${BOOST_VERSION}",
                         "-DREACT_NATIVE_DIR=${reactNativeRootDir.path}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
@@ -611,7 +603,6 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
     }
 }
 
-Task resolveBoost = resolveTaskFactory("resolveBoost", "boost_${BOOST_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
 Task resolveDoubleConversion = resolveTaskFactory(
     "resolveDoubleConversion",
     "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz",
@@ -623,7 +614,7 @@ if (isNewArchitectureEnabled()) {
     def reactNativeAndroidProject = findProject(":ReactAndroid")
     if (reactNativeAndroidProject != null) {
         reactNativeAndroidProject.afterEvaluate {
-            def resolveTasks = [resolveBoost, resolveDoubleConversion]
+            def resolveTasks = [resolveDoubleConversion]
             resolveTasks.forEach({ task ->
                 String reactAndroidDownloadTaskName = "download" + task.name.replace("resolve", "")
                 def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName(reactAndroidDownloadTaskName)
@@ -637,30 +628,6 @@ if (isNewArchitectureEnabled()) {
         }
     } else {
         throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks can not be set.")
-    }
-}
-
-task downloadBoost(dependsOn: resolveBoost, type: Download) {
-    def transformedVersion = BOOST_VERSION.replace("_", ".")
-    def artifactLocalName = "boost_${BOOST_VERSION}.tar.gz"
-    def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
-    if (REACT_NATIVE_MINOR_VERSION < 69) {
-        srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
-    }
-    src(srcUrl)
-    onlyIfNewer(true)
-    overwrite(false)
-    dest(new File(downloadsDir, artifactLocalName))
-}
-
-task prepareBoost(dependsOn: boostPath ? [] : [downloadBoost], type: Copy) {
-    from(boostPath ?: tarTree(resources.gzip(downloadBoost.dest)))
-    from("$reactNativeThirdParty/boost/Android.mk")
-    include("Android.mk", "boost_${BOOST_VERSION}/boost/**/*.hpp", "boost/boost/**/*.hpp")
-    includeEmptyDirs = false
-    into("$thirdPartyNdkDir/boost")
-    doLast {
-        file("$thirdPartyNdkDir/boost/boost").renameTo("$thirdPartyNdkDir/boost/boost_${BOOST_VERSION}")
     }
 }
 
@@ -881,15 +848,11 @@ task unpackReactNativeAAR {
 }
 
 task downloadNdkBuildDependencies {
-    if (!boostPath) {
-        dependsOn(downloadBoost)
-    }
     dependsOn(downloadDoubleConversion)
 }
 
 task prepareThirdPartyNdkHeaders(dependsOn:[
     downloadNdkBuildDependencies,
-    prepareBoost,
     prepareDoubleConversion,
     unpackReactNativeAAR]
 ) {}
