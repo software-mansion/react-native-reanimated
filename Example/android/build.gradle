@@ -34,6 +34,9 @@ allprojects {
         maven {
             url("$rootDir/../node_modules/detox/Detox-android")
         }
+        maven {
+            url("/Users/tomekzaw/Downloads/tmp/maven-local")
+        }
         mavenCentral()
         google()
         maven { url 'https://www.jitpack.io' }
