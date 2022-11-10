@@ -195,7 +195,6 @@ def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_V
 def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
-def FBJNI_VERSION = "0.3.0"
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
 def REANIMATED_MAJOR_VERSION = getReanimatedVersion()
 
@@ -496,7 +495,6 @@ android {
                 "META-INF",
                 "META-INF/**",
                 "**/libc++_shared.so",
-                "**/libfbjni.so",
                 "**/libjsi.so",
                 "**/libfolly_json.so",
                 "**/libfolly_runtime.so",
@@ -886,18 +884,9 @@ repositories {
 dependencies {
     // noinspection GradleDynamicVersion
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
-    if (isDeveloperMode() && !isNewArchitectureEnabled()) {
-        implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
-    }
-    else {
-        implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION
-    }
     implementation "com.facebook.react:react-native:+" // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     implementation "androidx.core:core:1.6.0"
-    
-    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
-    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
     def jscAAR = fileTree("$reactNativeRootDir/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
     extractSO(files(jscAAR))

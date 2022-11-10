@@ -30,16 +30,12 @@ set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     if(${CLIENT_SIDE_BUILD})
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
-        set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
     else()
         # Reanimated Playground app
         set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/android/app/build/react-ndk/exported")
-        set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
-
     endif()
 else()
     set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
-    set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
 endif()
 
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
@@ -47,6 +43,7 @@ file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
 
+find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
 
 if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
@@ -71,12 +68,9 @@ add_library(
 
 # includes
 
-file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
-
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${LIBFBJNI_INCLUDE_DIR}"
         "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
         "${BUILD_DIR}/third-party-ndk/double-conversion"
         "${BUILD_DIR}/third-party-ndk/folly"
@@ -115,12 +109,6 @@ find_library(
 find_library(
         REACT_NATIVE_JNI_LIB
         reactnativejni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        FBJNI_LIB
-        fbjni
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
@@ -225,7 +213,7 @@ target_link_libraries(
     ${LOG_LIB}
     ${JSI_LIB}
     ReactAndroid::glog
-    ${FBJNI_LIB}
+    fbjni::fbjni
     ${FOLLY_LIB}
     ${REACT_NATIVE_JNI_LIB}
     android
