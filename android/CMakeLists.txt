@@ -47,6 +47,8 @@ file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
 
+find_package(ReactAndroid REQUIRED CONFIG)
+
 if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
         set (
                 INCLUDE_JSI_CPP
@@ -78,7 +80,6 @@ target_include_directories(
         "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
         "${BUILD_DIR}/third-party-ndk/double-conversion"
         "${BUILD_DIR}/third-party-ndk/folly"
-        "${BUILD_DIR}/third-party-ndk/glog/exported"
         "${REACT_NATIVE_DIR}/React"
         "${REACT_NATIVE_DIR}/React/Base"
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
@@ -114,12 +115,6 @@ find_library(
 find_library(
         REACT_NATIVE_JNI_LIB
         reactnativejni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
-        GLOG_LIB
-        glog
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
@@ -229,7 +224,7 @@ target_link_libraries(
     ${PACKAGE_NAME}
     ${LOG_LIB}
     ${JSI_LIB}
-    ${GLOG_LIB}
+    ReactAndroid::glog
     ${FBJNI_LIB}
     ${FOLLY_LIB}
     ${REACT_NATIVE_JNI_LIB}

@@ -193,7 +193,6 @@ file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { rea
 def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
 def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
 def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
-def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def FBJNI_VERSION = "0.3.0"
@@ -392,7 +391,6 @@ if (!BUILD_FROM_SOURCE) {
 //   - boost_1_63_0
 //   - double-conversion-1.1.6
 //   - folly-deprecate-dynamic-initializer
-//   - glog-0.3.5
 def dependenciesPath = System.getenv("REACT_NATIVE_DEPENDENCIES")
 
 // The Boost library is a very large download (>100MB).
@@ -433,6 +431,9 @@ apply plugin: "de.undercouch.download"
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
+    buildFeatures {
+        prefab true
+    }
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
@@ -499,7 +500,7 @@ android {
                 "**/libjsi.so",
                 "**/libfolly_json.so",
                 "**/libfolly_runtime.so",
-                "**/libglog.so",
+                "**/libglog.so", // resolves "2 files found with path 'lib/arm64-v8a/libglog.so' from inputs"
                 "**/libhermes.so",
                 "**/libhermes-executor-debug.so",
                 "**/libreactnativejni.so",
@@ -630,13 +631,12 @@ Task resolveDoubleConversion = resolveTaskFactory(
     downloadsDir
 )
 Task resolveFolly = resolveTaskFactory("resolveFolly", "folly-${FOLLY_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
-Task resolveGlog = resolveTaskFactory("resolveGlog", "glog-${GLOG_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
 
 if (isNewArchitectureEnabled()) {
     def reactNativeAndroidProject = findProject(":ReactAndroid")
     if (reactNativeAndroidProject != null) {
         reactNativeAndroidProject.afterEvaluate {
-            def resolveTasks = [resolveBoost, resolveGlog, resolveDoubleConversion, resolveFolly]
+            def resolveTasks = [resolveBoost, resolveDoubleConversion, resolveFolly]
             resolveTasks.forEach({ task ->
                 String reactAndroidDownloadTaskName = "download" + task.name.replace("resolve", "")
                 def reactAndroidDownloadTask = reactNativeAndroidProject.getTasks().findByName(reactAndroidDownloadTaskName)
@@ -710,52 +710,6 @@ task prepareFolly(dependsOn: dependenciesPath ? [] : [downloadFolly], type: Copy
     filter { line -> line.replaceAll("return int\\(wrapNoInt\\(open, name, flags, mode\\)\\);", follyReplaceContent) }
     includeEmptyDirs = false
     into("$thirdPartyNdkDir/folly")
-}
-
-task downloadGlog(dependsOn: resolveGlog, type: Download) {
-    src("https://github.com/google/glog/archive/v${GLOG_VERSION}.tar.gz")
-    onlyIfNewer(true)
-    overwrite(false)
-    dest(new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz"))
-}
-
-// Prepare glog sources to be compiled, this task will perform steps that normally should've been
-// executed by automake. This way we can avoid dependencies on make/automake
-task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) {
-    duplicatesStrategy = "include"
-    from(dependenciesPath ?: tarTree(downloadGlog.dest))
-    from("$reactNativeThirdParty/glog/")
-    include("glog-${GLOG_VERSION}/src/**/*", "Android.mk", "config.h")
-    includeEmptyDirs = false
-    filesMatching("**/*.h.in") {
-        filter(ReplaceTokens, tokens: [
-                ac_cv_have_unistd_h           : "1",
-                ac_cv_have_stdint_h           : "1",
-                ac_cv_have_systypes_h         : "1",
-                ac_cv_have_inttypes_h         : "1",
-                ac_cv_have_libgflags          : "0",
-                ac_google_start_namespace     : "namespace google {",
-                ac_cv_have_uint16_t           : "1",
-                ac_cv_have_u_int16_t          : "1",
-                ac_cv_have___uint16           : "0",
-                ac_google_end_namespace       : "}",
-                ac_cv_have___builtin_expect   : "1",
-                ac_google_namespace           : "google",
-                ac_cv___attribute___noinline  : "__attribute__ ((noinline))",
-                ac_cv___attribute___noreturn  : "__attribute__ ((noreturn))",
-                ac_cv___attribute___printf_4_5: "__attribute__((__format__ (__printf__, 4, 5)))"
-        ])
-        it.path = (it.name - ".in")
-    }
-    into("$thirdPartyNdkDir/glog")
-
-    doLast {
-        copy {
-            from(fileTree(dir: "$thirdPartyNdkDir/glog", includes: ["stl_logging.h", "logging.h", "raw_logging.h", "vlog_is_on.h", "**/src/glog/log_severity.h"]).files)
-            includeEmptyDirs = false
-            into("$thirdPartyNdkDir/glog/exported/glog")
-        }
-    }
 }
 
 /*
@@ -973,7 +927,6 @@ task downloadNdkBuildDependencies {
     }
     dependsOn(downloadDoubleConversion)
     dependsOn(downloadFolly)
-    dependsOn(downloadGlog)
 }
 
 task prepareThirdPartyNdkHeaders(dependsOn:[
@@ -981,7 +934,6 @@ task prepareThirdPartyNdkHeaders(dependsOn:[
     prepareBoost,
     prepareDoubleConversion,
     prepareFolly,
-    prepareGlog,
     unpackReactNativeAAR]
 ) {}
 
