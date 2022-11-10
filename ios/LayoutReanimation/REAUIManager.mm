@@ -24,6 +24,8 @@
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry;
 
+- (void)_removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container;
+
 - (void)_removeChildren:(NSArray<UIView *> *)children
           fromContainer:(UIView *)container
           withAnimation:(RCTLayoutAnimationGroup *)animation;
@@ -84,8 +86,10 @@
 {
   if (_proxyViewRemoval) {
     [_animationsManager removeChildren:children fromContainer:container];
-  } else {
+  } else if (animation != _reactLayoutAnimationGroup) {
     [super _removeChildren:children fromContainer:container withAnimation:animation];
+  } else {
+    [super _removeChildren:children fromContainer:container];
   }
 }
 
