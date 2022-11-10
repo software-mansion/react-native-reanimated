@@ -58,20 +58,10 @@ add_library(
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${REACT_NATIVE_DIR}/React"
-        "${REACT_NATIVE_DIR}/React/Base"
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule" # CallInvokerHolder.h on 0.71.0-rc.0
-        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
-        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/fabric/jni"
         "${REACT_NATIVE_DIR}/ReactCommon"
         "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-        "${REACT_NATIVE_DIR}/ReactCommon/hermes"
-        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
-        "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
-        "${REACT_NATIVE_DIR}/ReactCommon/turbomodule/core"
-        "${REACT_NATIVE_DIR}/ReactCommon/turbomodule"
-        "${REACT_NATIVE_DIR}/ReactCommon/yoga"
         "${COMMON_SRC_DIR}/cpp/Tools"
         "${COMMON_SRC_DIR}/cpp/SpecTools"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
