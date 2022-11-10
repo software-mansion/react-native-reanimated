@@ -46,24 +46,11 @@ file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp"
 find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
 
-if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
-        set (
-                INCLUDE_JSI_CPP
-                "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/jsi.cpp"
-        )
-        set (
-                INCLUDE_JSIDYNAMIC_CPP
-                "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/JSIDynamic.cpp"
-        )
-endif()
-
 add_library(
         ${PACKAGE_NAME}
         SHARED
         ${SOURCES_COMMON}
         ${SOURCES_ANDROID}
-        ${INCLUDE_JSI_CPP}
-        ${INCLUDE_JSIDYNAMIC_CPP}
 )
 
 # includes
@@ -81,7 +68,6 @@ target_include_directories(
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/fabric/jni"
         "${REACT_NATIVE_DIR}/ReactCommon"
         "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-        "${REACT_NATIVE_DIR}/ReactCommon/jsi"
         "${REACT_NATIVE_DIR}/ReactCommon/hermes"
         "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
         "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
@@ -111,17 +97,6 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
-if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
-    set (JSI_LIB "")
-else()
-    find_library(
-            JSI_LIB
-            jsi
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     find_library(
@@ -194,7 +169,7 @@ set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(
     ${PACKAGE_NAME}
     ${LOG_LIB}
-    ${JSI_LIB}
+    ReactAndroid::jsi
     ReactAndroid::glog
     fbjni::fbjni
     ReactAndroid::folly_runtime
