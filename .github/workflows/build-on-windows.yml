@@ -8,7 +8,7 @@ on:
       - package.json
   push:
     branches:
-      - main
+      - Reanimated2
 
 jobs:
   build:
