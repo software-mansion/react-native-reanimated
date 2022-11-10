@@ -54,6 +54,9 @@ import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import BasicLayoutAnimation from './LayoutReanimation/BasicLayoutAnimation';
+import BasicNestedAnimation from './LayoutReanimation/BasicNestedAnimation';
+import BasicNestedLayoutAnimation from './LayoutReanimation/BasicNestedLayoutAnimation';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -66,6 +69,18 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  BasicLayoutAnimation: {
+    screen: BasicLayoutAnimation,
+    title: '🆕 Basic layout animation',
+  },
+  BasicNestedAnimation: {
+    screen: BasicNestedAnimation,
+    title: '🆕 Basic nested animation',
+  },
+  BasicNestedLayoutAnimation: {
+    screen: BasicNestedLayoutAnimation,
+    title: '🆕 Basic nested layout animation',
+  },
   NestedLayoutAnimations: {
     screen: NestedTest,
     title: '🆕 Nested layout animations',
