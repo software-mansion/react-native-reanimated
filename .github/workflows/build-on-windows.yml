@@ -3,15 +3,12 @@ on:
   pull_request:
     paths:
       - '.github/workflows/build-on-windows.yml'
-      - RNReanimated.podspec
-      - android/build.gradle
+      - 'android/**'
+      - 'Common/**'
       - package.json
   push:
     branches:
       - main
-
-env:
-  REACT_NATIVE_VERSION: "0.70.5"
 
 jobs:
   build:
@@ -24,11 +21,11 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: '11'
-      - name: Create React Native app
-        run: npx react-native init app --version ${{ env.REACT_NATIVE_VERSION }}
+      - name: Create React Native App
+        run: npx react-native init App
       - name: Install Reanimated
-        working-directory: app
+        working-directory: App
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-      - name: Build Android app
-        working-directory: app/android
+      - name: Build Android App
+        working-directory: App/android
         run: ./gradlew assembleDebug --console=plain
