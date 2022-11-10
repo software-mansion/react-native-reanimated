@@ -1,5 +1,6 @@
 import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
 import java.nio.file.Paths
 
@@ -181,6 +182,13 @@ def getReanimatedVersion() {
     String reanimatedVersion = json.version
     def (major, minor, patch) = reanimatedVersion.tokenize('.')
     return major.toInteger()
+}
+
+def toPlatformFileString(String path) {
+  if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+      path = path.replace(File.separatorChar, '/' as char)
+  }
+  return path
 }
 
 boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
@@ -447,7 +455,7 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
-                        "-DREACT_NATIVE_DIR=${reactNativeRootDir.path}",
+                        "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
