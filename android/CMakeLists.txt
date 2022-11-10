@@ -73,7 +73,6 @@ target_include_directories(
         PRIVATE
         "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
         "${BUILD_DIR}/third-party-ndk/double-conversion"
-        "${BUILD_DIR}/third-party-ndk/folly"
         "${REACT_NATIVE_DIR}/React"
         "${REACT_NATIVE_DIR}/React/Base"
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
@@ -112,22 +111,6 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
-if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
-    find_library(
-            FOLLY_LIB
-            folly_json
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-else()
-    find_library(
-            FOLLY_LIB
-            folly_runtime
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-endif()
 
 if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
     set (JSI_LIB "")
@@ -214,7 +197,7 @@ target_link_libraries(
     ${JSI_LIB}
     ReactAndroid::glog
     fbjni::fbjni
-    ${FOLLY_LIB}
+    ReactAndroid::folly_runtime
     ${REACT_NATIVE_JNI_LIB}
     android
 )
