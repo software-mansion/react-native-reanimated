@@ -76,7 +76,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     Integer tag = view.getId();
     mCallbacks.put(tag, callback);
 
-    removeOrAnimateExitRecursive(view, parent, true);
+    if (!removeOrAnimateExitRecursive(view, parent, true)) {
+      removeView(view, parent);
+    }
   }
 
   @Override
@@ -165,15 +167,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
   public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     View exitingView = mExitingViews.get(tag);
     if (exitingView != null && removeView) {
-      if (exitingView instanceof ViewGroup) {
-        removeSubviews((ViewGroup) exitingView);
+      if (exitingView instanceof ViewGroup && mAncestorsToRemove.contains(tag)) {
+        cancelAnimationsInSubviews((ViewGroup) exitingView);
       }
 
       mExitingViews.remove(tag);
       maybeDropAncestors(exitingView);
 
       ViewGroup parent = (ViewGroup) exitingView.getParent();
-      if (parent != null) {
+      if (parent != null && !mAncestorsToRemove.contains(tag)) {
         removeView(exitingView, parent);
       }
     }
@@ -374,8 +376,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private boolean removeOrAnimateExitRecursive(View view, ViewGroup parent, boolean shouldRemove) {
     int tag = view.getId();
-    boolean hasExitAnimation = hasAnimationForTag(tag, "exiting");
-    boolean wantAnimateExit = hasExitAnimation;
+    boolean hasExitAnimation = hasAnimationForTag(tag, "exiting") || mExitingViews.containsKey(tag);
+    boolean hasAnimatedChildren = false;
+    shouldRemove = shouldRemove && !hasExitAnimation;
+
+    ArrayList<View> toBeRemoved = new ArrayList<>();
 
     // we might want to keep this view around
     // because one of the (children's) children
@@ -384,11 +389,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
       ViewGroup viewGroup = (ViewGroup) view;
       for (int i = viewGroup.getChildCount() - 1; i >= 0; i--) {
         View child = viewGroup.getChildAt(i);
-        if (removeOrAnimateExitRecursive(child, viewGroup, shouldRemove && !hasExitAnimation)) {
-          wantAnimateExit = true;
+        if (removeOrAnimateExitRecursive(child, viewGroup, shouldRemove)) {
+          hasAnimatedChildren = true;
+        } else if (shouldRemove) {
+          toBeRemoved.add(child);
         }
       }
     }
+
+    boolean wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
 
     if (hasExitAnimation) {
       Snapshot before = new Snapshot(view, mReanimatedNativeHierarchyManager);
@@ -398,24 +407,24 @@ public class AnimationsManager implements ViewHierarchyObserver {
         mExitingViews.put(tag, view);
         registerExitingAncestors(view);
         mNativeMethodsHolder.startAnimation(tag, "exiting", preparedValues);
-        mNativeMethodsHolder.clearAnimationConfig(tag);
       }
-      return true;
     }
 
     mNativeMethodsHolder.clearAnimationConfig(tag);
 
-    if (wantAnimateExit) {
-      mAncestorsToRemove.add(tag);
-      return true;
+    if (!wantAnimateExit) {
+      return false;
     }
 
-    if (shouldRemove) {
-      removeView(view, parent);
-    } else {
-      view.setClickable(false);
+    if (hasAnimatedChildren) {
+      mAncestorsToRemove.add(tag);
     }
-    return false;
+
+    for (View child : toBeRemoved) {
+      removeView(child, (ViewGroup) view);
+    }
+
+    return true;
   }
 
   private void registerExitingAncestors(View view) {
@@ -463,22 +472,19 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else {
       mReanimatedNativeHierarchyManager.publicDropView(view);
     }
+
     parent.removeView(view);
   }
 
-  private void removeSubviews(ViewGroup view) {
+  private void cancelAnimationsInSubviews(ViewGroup view) {
     for (int i = view.getChildCount() - 1; i >= 0; i--) {
       View child = view.getChildAt(i);
 
       if (mExitingViews.containsKey(child.getId())) {
         endLayoutAnimation(child.getId(), true, true);
-        continue;
+      } else if (child instanceof ViewGroup && mAncestorsToRemove.contains(child.getId())) {
+        cancelAnimationsInSubviews((ViewGroup) child);
       }
-
-      if (child instanceof ViewGroup) {
-        removeSubviews((ViewGroup) child);
-      }
-      removeView(child, view);
     }
   }
 
