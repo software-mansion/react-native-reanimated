@@ -1,8 +1,8 @@
 diff --git a/node_modules/metro-inspector-proxy/src/Device.js b/node_modules/metro-inspector-proxy/src/Device.js
-index 3225715..b9896a3 100644
+index f0007d7..7b63346 100644
 --- a/node_modules/metro-inspector-proxy/src/Device.js
 +++ b/node_modules/metro-inspector-proxy/src/Device.js
-@@ -69,7 +69,7 @@ const EMULATOR_LOCALHOST_ADDRESSES = ["10.0.2.2", "10.0.3.2"]; // Prefix for scr
+@@ -72,7 +72,7 @@ const EMULATOR_LOCALHOST_ADDRESSES = ["10.0.2.2", "10.0.3.2"]; // Prefix for scr
  // more details.
  
  const FILE_PREFIX = "file://";
@@ -11,7 +11,7 @@ index 3225715..b9896a3 100644
  /**
   * Device class represents single device connection to Inspector Proxy. Each device
   * can have multiple inspectable pages.
-@@ -82,11 +82,7 @@ class Device {
+@@ -85,11 +85,7 @@ class Device {
    // Stores socket connection between Inspector Proxy and device.
    // Stores last list of device's pages.
    // Stores information about currently connected debugger (if any).
@@ -24,7 +24,7 @@ index 3225715..b9896a3 100644
  
    _isReloading = false; // The previous "GetPages" message, for deduplication in debug logs.
  
-@@ -94,6 +90,15 @@ class Device {
+@@ -97,6 +93,15 @@ class Device {
  
    _scriptIdToSourcePathMapping = new Map(); // Root of the project used for relative to absolute source path conversion.
  
@@ -40,7 +40,7 @@ index 3225715..b9896a3 100644
    constructor(id, name, app, socket, projectRoot) {
      this._id = id;
      this._name = name;
-@@ -138,17 +143,21 @@ class Device {
+@@ -141,17 +146,21 @@ class Device {
    }
  
    getPagesList() {
@@ -73,7 +73,7 @@ index 3225715..b9896a3 100644
    } // Handles new debugger connection to this device:
    // 1. Sends connect event to device
    // 2. Forwards all messages from the debugger to device as wrappedEvent
-@@ -226,27 +235,21 @@ class Device {
+@@ -228,27 +237,21 @@ class Device {
  
    _handleMessageFromDevice(message) {
      if (message.event === "getPages") {
@@ -110,7 +110,7 @@ index 3225715..b9896a3 100644
          }
        }
      } else if (message.event === "disconnect") {
-@@ -260,7 +263,7 @@ class Device {
+@@ -262,7 +265,7 @@ class Device {
        if (debuggerSocket && debuggerSocket.readyState === _ws.default.OPEN) {
          if (
            this._debuggerConnection != null &&
@@ -119,7 +119,7 @@ index 3225715..b9896a3 100644
          ) {
            debug(`Page ${pageId} is reloading.`);
            debuggerSocket.send(
-@@ -316,30 +319,54 @@ class Device {
+@@ -318,30 +321,54 @@ class Device {
          }),
        PAGES_POLLING_INTERVAL
      );
@@ -188,7 +188,7 @@ index 3225715..b9896a3 100644
      this._isReloading = true; // We already had a debugger connected to React Native page and a
      // new one appeared - in this case we need to emulate execution context
      // detroy and resend Debugger.enable and Runtime.enable commands to new
-@@ -424,19 +451,6 @@ class Device {
+@@ -426,19 +453,6 @@ class Device {
            this._scriptIdToSourcePathMapping.set(params.scriptId, params.url);
          }
        }
@@ -208,7 +208,7 @@ index 3225715..b9896a3 100644
      }
  
      if (
-@@ -542,10 +556,10 @@ class Device {
+@@ -585,10 +599,10 @@ class Device {
  
    _mapToDevicePageId(pageId) {
      if (
@@ -223,10 +223,10 @@ index 3225715..b9896a3 100644
        return pageId;
      }
 diff --git a/node_modules/metro-inspector-proxy/src/Device.js.flow b/node_modules/metro-inspector-proxy/src/Device.js.flow
-index 4a4fd23..b0de2bd 100644
+index 2d963d8..39f224c 100644
 --- a/node_modules/metro-inspector-proxy/src/Device.js.flow
 +++ b/node_modules/metro-inspector-proxy/src/Device.js.flow
-@@ -45,7 +45,13 @@ type DebuggerInfo = {
+@@ -46,7 +46,13 @@ type DebuggerInfo = {
    ...
  };
  
@@ -241,7 +241,7 @@ index 4a4fd23..b0de2bd 100644
  
  /**
   * Device class represents single device connection to Inspector Proxy. Each device
-@@ -70,12 +76,7 @@ class Device {
+@@ -71,12 +77,7 @@ class Device {
    // Stores information about currently connected debugger (if any).
    _debuggerConnection: ?DebuggerInfo = null;
  
@@ -255,7 +255,7 @@ index 4a4fd23..b0de2bd 100644
    _isReloading: boolean = false;
  
    // The previous "GetPages" message, for deduplication in debug logs.
-@@ -87,6 +88,15 @@ class Device {
+@@ -88,6 +89,15 @@ class Device {
    // Root of the project used for relative to absolute source path conversion.
    _projectRoot: string;
  
@@ -271,7 +271,7 @@ index 4a4fd23..b0de2bd 100644
    constructor(
      id: number,
      name: string,
-@@ -133,17 +143,21 @@ class Device {
+@@ -134,17 +144,21 @@ class Device {
    }
  
    getPagesList(): Array<Page> {
@@ -417,7 +417,7 @@ index 4a4fd23..b0de2bd 100644
      }
  
      if (
-@@ -511,10 +543,10 @@ class Device {
+@@ -544,10 +576,10 @@ class Device {
  
    _mapToDevicePageId(pageId: string): string {
      if (
