@@ -238,9 +238,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
   [reaUiManagerNoCast setUp:animationsManager];
 
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
     if (animationsManager) {
-      NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
+      auto rt = wrt.lock();
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(*rt, newStyle);
       [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
     }
   };
@@ -258,7 +261,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   [animationsManager setAnimationStartingBlock:^(
                          NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
     std::shared_ptr<jsi::Runtime> rt = wrt.lock();

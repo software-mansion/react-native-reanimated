@@ -29,22 +29,8 @@ void RuntimeDecorator::decorateRuntime(
   rt.global().setProperty(
       rt, "_LABEL", jsi::String::createFromAscii(rt, label));
 
-  auto dump = [](jsi::Runtime &rt,
-                 const jsi::Value &thisValue,
-                 const jsi::Value *args,
-                 size_t count) -> jsi::Value {
-    auto stats = rt.instrumentation().getRecordedGCStats();
-    Logger::log(stats.c_str());
-    return jsi::Value::undefined();
-  };
-
   jsi::Object dummyGlobal(rt);
   dummyGlobal.setProperty(rt, "gc", rt.global().getProperty(rt, "gc"));
-  dummyGlobal.setProperty(
-      rt,
-      "dump",
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "dump"), 1, dump));
   rt.global().setProperty(rt, "global", dummyGlobal);
 
   rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());

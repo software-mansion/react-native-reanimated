@@ -54,10 +54,10 @@ jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
   jsi::Value value;
   if (&rt == hostRuntime) {
     // TODO: it is suboptimal to generate new object every time getJS is called
-    // on host runtime – the object we are generating already exists and we
-    // should possibly just grab a hold of that object and use it here instead
+    // on host runtime – the objects we are generating already exists and we
+    // should possibly just grab a hold of such object and use it here instead
     // of creating a new JS representation. As far as I understand the only
-    // case where this can be realistically called this way is when a shared
+    // case where it can be realistically called this way is when a shared
     // value is created and then accessed on the same runtime
     return toJSValue(rt);
   } else if (remoteValue == nullptr) {
