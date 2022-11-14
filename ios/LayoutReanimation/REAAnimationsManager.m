@@ -110,12 +110,17 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   UIView *view = [_exitingViews objectForKey:tag];
   if (removeView && view != nil) {
     [self endAnimationsRecursive:view];
+    [view removeFromSuperview];
   }
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
 {
   NSNumber *tag = [view reactTag];
+
+  if (tag == nil) {
+    return;
+  }
 
   // we'll remove this view anyway when exiting from recursion,
   // no need to remove it in `maybeDropAncestors`
@@ -129,8 +134,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [_exitingViews removeObjectForKey:tag];
     [self maybeDropAncestors:view];
   }
-
-  [view removeFromSuperview];
 }
 
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag
@@ -264,8 +267,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     int trackingCount = [_exitingSubviewsCountMap[view.reactTag] intValue] - 1;
     if (trackingCount <= 0) {
       if ([_ancestorsToRemove containsObject:view.reactTag]) {
-        [view removeFromSuperview];
         [_ancestorsToRemove removeObject:view.reactTag];
+        if (![_exitingViews objectForKey:view.reactTag]) {
+          [view removeFromSuperview];
+        }
       }
       [_exitingSubviewsCountMap removeObjectForKey:view.reactTag];
     } else {
@@ -279,49 +284,58 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (!view.reactTag) {
     return NO;
   }
-  BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting");
-  BOOL wantAnimateExit = hasExitAnimation;
+  BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting") || [_exitingViews objectForKey:view.reactTag];
+  BOOL hasAnimatedChildren = NO;
+  removeImmediately = removeImmediately && !hasExitAnimation;
+  NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];
 
   for (UIView *subview in [view.reactSubviews copy]) {
-    if ([self removeRecursive:subview fromContainer:view withoutAnimation:(removeImmediately && !hasExitAnimation)]) {
-      wantAnimateExit = YES;
+    if ([self removeRecursive:subview fromContainer:view withoutAnimation:removeImmediately]) {
+      hasAnimatedChildren = YES;
+    } else if (removeImmediately) {
+      [toBeRemoved addObject:subview];
     }
   }
 
-  if (wantAnimateExit) {
-    REASnapshot *before;
-    if (hasExitAnimation) {
-      before = [[REASnapshot alloc] init:view];
-    }
-    // start exit animation
-    UIView *originalSuperview = view.superview;
-    NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:view];
-    [container removeReactSubview:view];
-    // we don't want user interaction on exiting views
-    view.userInteractionEnabled = NO;
-    [originalSuperview insertSubview:view atIndex:originalIndex];
-    if (hasExitAnimation) {
-      if (![_exitingViews objectForKey:view.reactTag]) {
-        NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
-        [_exitingViews setObject:view forKey:view.reactTag];
-        [self registerExitingAncestors:view];
-        _startAnimationForTag(view.reactTag, @"exiting", preparedValues, @(0));
-      }
-    } else {
-      [_ancestorsToRemove addObject:view.reactTag];
-    }
-    // NOTE: even though this view is still visible,
-    // since it's removed from the React tree, we won't
-    // start new animations for it, and might as well remove
-    // the layout animation config now
-    _clearAnimationConfigForTag(view.reactTag);
-    return YES;
-  } else if (removeImmediately) {
-    [container removeReactSubview:view];
-    _clearAnimationConfigForTag(view.reactTag);
+  BOOL wantAnimateExit = hasExitAnimation || hasAnimatedChildren;
+
+  if (!wantAnimateExit) {
+    return NO;
   }
 
-  return NO;
+  REASnapshot *before;
+  if (hasExitAnimation) {
+    before = [[REASnapshot alloc] init:view];
+  }
+  // start exit animation
+  UIView *originalSuperview = view.superview;
+  NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:view];
+  [container removeReactSubview:view];
+  // we don't want user interaction on exiting views
+  view.userInteractionEnabled = NO;
+  [originalSuperview insertSubview:view atIndex:originalIndex];
+
+  if (hasExitAnimation && ![_exitingViews objectForKey:view.reactTag]) {
+    NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
+    [_exitingViews setObject:view forKey:view.reactTag];
+    [self registerExitingAncestors:view];
+    _startAnimationForTag(view.reactTag, @"exiting", preparedValues, @(0));
+  }
+
+  if (hasAnimatedChildren) {
+    [_ancestorsToRemove addObject:view.reactTag];
+  }
+
+  for (UIView *child in toBeRemoved) {
+    [view removeReactSubview:child];
+  }
+
+  // NOTE: even though this view is still visible,
+  // since it's removed from the React tree, we won't
+  // start new animations for it, and might as well remove
+  // the layout animation config now
+  _clearAnimationConfigForTag(view.reactTag);
+  return YES;
 }
 
 - (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container
