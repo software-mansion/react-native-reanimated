@@ -258,7 +258,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto endLayoutAnimation = [weakAnimationsManager](int tag, bool isCancelled, bool removeView) {
     REAAnimationsManager *animationsManager = weakAnimationsManager;
     if (animationsManager) {
-      [animationsManager endLayoutAnimnationForTag:@(tag) cancelled:isCancelled removeView:removeView];
+      [animationsManager endLayoutAnimationForTag:@(tag) cancelled:isCancelled removeView:removeView];
     }
   };
 

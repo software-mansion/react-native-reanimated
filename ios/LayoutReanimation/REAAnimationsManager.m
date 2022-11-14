@@ -71,7 +71,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)invalidate
 {
   for (NSNumber *tag in [[_exitingViews allKeys] copy]) {
-    [self endLayoutAnimnationForTag:tag cancelled:true removeView:true];
+    [self endLayoutAnimationForTag:tag cancelled:true removeView:true];
   }
   _startAnimationForTag = nil;
   _hasAnimationForTag = nil;
@@ -105,7 +105,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return view;
 }
 
-- (void)endLayoutAnimnationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView
+- (void)endLayoutAnimationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView
 {
   UIView *view = [_exitingViews objectForKey:tag];
   if (removeView && view != nil) {
