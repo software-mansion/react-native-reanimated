@@ -782,7 +782,7 @@ repositories {
 dependencies {
     // noinspection GradleDynamicVersion
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
-    implementation "com.facebook.react:react-native:+" // From node_modules
+    implementation "com.facebook.react:react-native:" + REACT_NATIVE_VERSION
     implementation "androidx.transition:transition:1.1.0"
     implementation "androidx.core:core:1.6.0"
 
