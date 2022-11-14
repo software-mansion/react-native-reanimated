@@ -271,6 +271,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation, errorHandler);
+  auto weakLayoutAnimationsProxy = std::weak_ptr(layoutAnimationsProxy);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
   // Layout Animations end
@@ -386,6 +387,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     if (runtime == nullptr) {
       return;
     }
+    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+    if (layoutAnimationsProxy == nullptr) {
+      return;
+    }
     jsi::Object yogaValues(*runtime);
     for (NSString *key in values.allKeys) {
       NSNumber *value = values[key];
@@ -396,10 +401,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
+    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+    if (layoutAnimationsProxy == nullptr) {
+      return false;
+    }
     return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
+    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+    if (layoutAnimationsProxy == nullptr) {
+      return;
+    }
     layoutAnimationsProxy->clearLayoutAnimationConfig([tag intValue]);
   }];
 #endif
