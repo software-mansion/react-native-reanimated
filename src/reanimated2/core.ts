@@ -1,12 +1,7 @@
 /* global _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
-import {
-  BasicWorkletFunction,
-  Timestamp,
-  Value3D,
-  ValueRotation,
-} from './commonTypes';
+import { BasicWorkletFunction, Value3D, ValueRotation } from './commonTypes';
 import {
   makeShareableCloneRecursive,
   makeShareable as makeShareableUnwrapped,
@@ -90,11 +85,6 @@ export const makeMutable = __DEV__
 export const makeRemote = __DEV__
   ? configurationCheckWrapper(makeRemoteUnwrapped)
   : makeRemoteUnwrapped;
-
-export function requestFrame(frame: (timestamp: Timestamp) => void): void {
-  'worklet';
-  requestAnimationFrame(frame);
-}
 
 global._WORKLET = false;
 global._log = function (s: string) {
@@ -248,8 +238,4 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
   if (!nativeShouldBeMock()) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
   }
-}
-
-export function jestResetJsReanimatedModule() {
-  NativeReanimatedModule.jestResetModule();
 }

@@ -1,13 +1,7 @@
 /* global _frameTimestamp */
 import { MutableRefObject, useEffect, useRef } from 'react';
 
-import {
-  startMapper,
-  stopMapper,
-  makeRemote,
-  requestFrame,
-  getTimestamp,
-} from '../core';
+import { startMapper, stopMapper, makeRemote, getTimestamp } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
 import NativeReanimatedModule from '../NativeReanimated';
@@ -206,8 +200,9 @@ function styleUpdater(
   }
 
   if (hasAnimations) {
-    const frame = (timestamp: Timestamp) => {
+    const frame = (_timestamp?: Timestamp) => {
       const { animations, last, isAnimationCancelled } = state;
+      const timestamp = _timestamp ?? getTimestamp();
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
         return;
@@ -236,7 +231,7 @@ function styleUpdater(
       }
 
       if (!allFinished) {
-        requestFrame(frame);
+        requestAnimationFrame(frame);
       } else {
         state.isAnimationRunning = false;
       }
@@ -249,7 +244,7 @@ function styleUpdater(
       if (_frameTimestamp) {
         frame(_frameTimestamp);
       } else {
-        requestFrame(frame);
+        requestAnimationFrame(frame);
       }
     }
     state.last = Object.assign({}, oldValues, newValues);
@@ -300,8 +295,9 @@ function jestStyleUpdater(
     }
   });
 
-  function frame(timestamp: Timestamp) {
+  function frame(_timestamp?: Timestamp) {
     const { animations, last, isAnimationCancelled } = state;
+    const timestamp = _timestamp ?? getTimestamp();
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;
@@ -336,7 +332,7 @@ function jestStyleUpdater(
     }
 
     if (!allFinished) {
-      requestFrame(frame);
+      requestAnimationFrame(frame);
     } else {
       state.isAnimationRunning = false;
     }
@@ -350,7 +346,7 @@ function jestStyleUpdater(
       if (_frameTimestamp) {
         frame(_frameTimestamp);
       } else {
-        requestFrame(frame);
+        requestAnimationFrame(frame);
       }
     }
   } else {

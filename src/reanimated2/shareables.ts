@@ -1,5 +1,12 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { ShareableRef } from './commonTypes';
+import { shouldBeUseWeb } from './PlatformChecker';
+
+// for web/chrome debugger/jest environments this file provides a stub implementation
+// where no shareable references are used. Instead, the objects themselves are used
+// instead of shareable references, because of the fact that we don't have to deal with
+// runnning the code on separate VMs.
+const USE_STUB_IMPLEMENTATION = shouldBeUseWeb();
 
 const _shareableCache = new WeakMap<
   Record<string, unknown>,
@@ -13,10 +20,16 @@ export function registerShareableMapping(
   shareable: any,
   shareableRef?: ShareableRef<any>
 ): void {
+  if (USE_STUB_IMPLEMENTATION) {
+    return;
+  }
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
 export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
+  if (USE_STUB_IMPLEMENTATION) {
+    return value;
+  }
   // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
   if ((type === 'object' || type === 'function') && value !== null) {
@@ -59,6 +72,11 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
 
 export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
   'worklet';
+  if (USE_STUB_IMPLEMENTATION) {
+    // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
+    // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
+    return value;
+  }
   function cloneRecursive<T>(value: T): ShareableRef<T> {
     const type = typeof value;
     if ((type === 'object' || type === 'function') && value !== null) {
@@ -83,6 +101,9 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
 }
 
 export function makeShareable<T>(value: T): T {
+  if (USE_STUB_IMPLEMENTATION) {
+    return value;
+  }
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';

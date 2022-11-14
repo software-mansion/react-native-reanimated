@@ -18,10 +18,6 @@ export class NativeReanimated {
     throw new Error('stub implementation, used on the web only');
   }
 
-  jestResetModule() {
-    throw new Error('stub implementation, used on the web only');
-  }
-
   installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
     return this.InnerNativeModule.installCoreFunctions(valueUnpacker);
   }
