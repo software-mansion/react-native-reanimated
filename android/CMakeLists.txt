@@ -49,6 +49,7 @@ file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp"
 
 find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
+find_package(hermes-engine REQUIRED CONFIG)
 
 add_library(
         ${PACKAGE_NAME}
@@ -201,7 +202,7 @@ if(${JS_RUNTIME} STREQUAL "hermes")
     endif()
     target_link_libraries(
             ${PACKAGE_NAME}
-            "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so"
+            hermes-engine::libhermes
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
