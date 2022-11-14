@@ -51,7 +51,7 @@ ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
     RuntimeExecutor runtimeExecutor,
     std::unique_ptr<EventHandler const> eventHandler,
     std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry)
-    : UIManagerBinding(uiManager, runtimeExecutor),
+    : UIManagerBinding(uiManager),
       uiManager_(std::move(uiManager)),
       newestShadowNodesRegistry_(newestShadowNodesRegistry) {
   if (eventHandler != nullptr) {
@@ -73,14 +73,14 @@ static inline ShadowNode::Shared cloneNode(
     auto newest = newestShadowNodesRegistry->get(shadowNode->getTag());
     if (newest != nullptr) {
       // ShadowNode managed by Reanimated, use newest ShadowNode from registry
-      auto clone = UIManager_cloneNode(uiManager, newest, children, rawProps);
+      auto clone = UIManager_cloneNode(uiManager, *newest, children, rawProps);
       newestShadowNodesRegistry->update(clone);
       return clone;
     }
   } // release lock since we don't need registry anymore
 
   // ShadowNode not managed by Reanimated (yet?)
-  return UIManager_cloneNode(uiManager, shadowNode, children, rawProps);
+  return UIManager_cloneNode(uiManager, *shadowNode, children, rawProps);
 }
 
 jsi::Value ReanimatedUIManagerBinding::get(

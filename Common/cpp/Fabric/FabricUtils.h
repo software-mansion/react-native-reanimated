@@ -66,9 +66,9 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
 
 ShadowNode::Shared UIManager_cloneNode(
     const UIManager *uiManager,
-    const ShadowNode::Shared &shadowNode,
-    const ShadowNode::SharedListOfShared &children = nullptr,
-    const RawProps *rawProps = nullptr);
+    ShadowNode const &shadowNode,
+    ShadowNode::SharedListOfShared const &children,
+    RawProps const *rawProps);
 
 void UIManager_appendChild(
     const ShadowNode::Shared &parentShadowNode,

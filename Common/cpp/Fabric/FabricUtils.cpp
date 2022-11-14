@@ -91,31 +91,26 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
 
 ShadowNode::Shared UIManager_cloneNode(
     const UIManager *uiManager,
-    const ShadowNode::Shared &shadowNode,
-    const ShadowNode::SharedListOfShared &children,
-    const RawProps *rawProps) {
-  auto delegate_ = getDelegateFromUIManager(uiManager);
+    ShadowNode const &shadowNode,
+    ShadowNode::SharedListOfShared const &children,
+    RawProps const *rawProps) {
   auto contextContainer_ = getContextContainerFromUIManager(uiManager);
 
   // copied from UIManager.cpp
   PropsParserContext propsParserContext{
-      shadowNode->getFamily().getSurfaceId(), *contextContainer_.get()};
+      shadowNode.getFamily().getSurfaceId(), *contextContainer_.get()};
 
-  auto &componentDescriptor = shadowNode->getComponentDescriptor();
+  auto &componentDescriptor = shadowNode.getComponentDescriptor();
   auto clonedShadowNode = componentDescriptor.cloneShadowNode(
-      *shadowNode,
+      shadowNode,
       {
           /* .props = */
-          rawProps ? componentDescriptor.cloneProps(
-                         propsParserContext, shadowNode->getProps(), *rawProps)
-                   : ShadowNodeFragment::propsPlaceholder(),
+          rawProps != nullptr
+              ? componentDescriptor.cloneProps(
+                    propsParserContext, shadowNode.getProps(), *rawProps)
+              : ShadowNodeFragment::propsPlaceholder(),
           /* .children = */ children,
       });
-
-  if (delegate_) {
-    delegate_->uiManagerDidCloneShadowNode(
-        *shadowNode.get(), *clonedShadowNode);
-  }
 
   return clonedShadowNode;
 }
