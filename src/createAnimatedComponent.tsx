@@ -26,6 +26,7 @@ import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  Keyframe,
 } from './reanimated2/layoutReanimation';
 import {
   SharedValue,
