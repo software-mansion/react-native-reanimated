@@ -258,13 +258,14 @@ void NativeProxy::installJSIBindings(
         if (!runtime || !layoutAnimationsProxy) {
           return;
         }
-        jsi::Object yogaValues(*runtime);
+        auto &rt = *runtime;
+        jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
           try {
-            auto key = jsi::String::createFromAscii(
-                *runtime, entry.first->toStdString());
+            auto key =
+                jsi::String::createFromAscii(rt, entry.first->toStdString());
             auto value = stod(entry.second->toStdString());
-            yogaValues.setProperty(*runtime, key, value);
+            yogaValues.setProperty(rt, key, value);
           } catch (std::invalid_argument e) {
             if (auto errorHandler = weakErrorHandler.lock()) {
               errorHandler->setError("Failed to convert value to number");

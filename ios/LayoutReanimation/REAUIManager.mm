@@ -85,10 +85,16 @@
           withAnimation:(RCTLayoutAnimationGroup *)animation
 {
   if (_proxyViewRemoval) {
+    // if a removed view in this batch has an `exiting` animation,
+    // let REAAnimationsManager handle the removal
     [_animationsManager removeChildren:children fromContainer:container];
   } else if (animation != _reactLayoutAnimationGroup) {
+    // otherwise, if there's a layout animation group set,
+    // delegate to the React Native implementation for layout animations
     [super _removeChildren:children fromContainer:container withAnimation:animation];
   } else {
+    // don't use React Native Layout Animations if the layout animations group
+    // is the dummy one set by REAUIManager
     [super _removeChildren:children fromContainer:container];
   }
 }
