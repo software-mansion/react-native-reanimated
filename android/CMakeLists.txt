@@ -42,7 +42,7 @@ else()
     set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
 endif()
 
-file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
+file (GLOB LIBRN_DIR "/Users/tomekzaw/Downloads/aar/react-native-0.71.0-rc.0-debug/jni/${ANDROID_ABI}")
 
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
@@ -67,6 +67,9 @@ target_include_directories(
         "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule" # CallInvokerHolder.h on 0.71.0-rc.0
         "${REACT_NATIVE_DIR}/ReactCommon"
         "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
+        "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor" # RuntimeExecutor.h
+        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx" # Float.h
+        "${REACT_NATIVE_DIR}/ReactCommon/yoga" # YGStyle.h
         "${COMMON_SRC_DIR}/cpp/Tools"
         "${COMMON_SRC_DIR}/cpp/SpecTools"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
@@ -105,50 +108,8 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             NO_CMAKE_FIND_ROOT_PATH
     )
     find_library(
-            REACT_RENDER_COMPONENTREGISTRY
-            react_render_componentregistry
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            REACT_RENDER_CORE
-            react_render_core
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            REACT_DEBUG
-            react_debug
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            REACT_RENDER_DEBUG
-            react_render_debug
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            RRC_ROOT
-            rrc_root
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            RRC_VIEW
-            rrc_view
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
             REACT_RENDER_SCHEDULER
             react_render_scheduler
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            FABRICJNI
-            fabricjni
             PATHS ${LIBRN_DIR}
             NO_CMAKE_FIND_ROOT_PATH
     )
@@ -239,16 +200,16 @@ endif()
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     target_link_libraries(
             ${PACKAGE_NAME}
-            ${REACT_RENDER_UIMANAGER}
-            ${REACT_RENDER_MOUNTING}
-            ${REACT_RENDER_COMPONENTREGISTRY}
-            ${REACT_RENDER_CORE}
-            ${REACT_DEBUG}
-            ${REACT_RENDER_DEBUG}
-            ${RRC_ROOT}
-            ${RRC_VIEW}
-            ${FABRICJNI}
-            ${REACT_RENDER_SCHEDULER}
+            ReactAndroid::react_nativemodule_core
+            ReactAndroid::react_render_componentregistry
+            ReactAndroid::react_render_core
+            ReactAndroid::react_debug
+            ReactAndroid::react_render_debug
+            ReactAndroid::rrc_view
+            ReactAndroid::fabricjni
+            react_render_scheduler # resolves "error: undefined symbol: facebook::react::Scheduler::getUIManager() const"
+            react_render_uimanager # resolves "error: undefined symbol: facebook::react::UIManager::getShadowTreeRegistry() const"
+            react_render_mounting # resolves "error: undefined symbol: facebook::react::ShadowTree::commit(std::__ndk1::function<std::__ndk1::shared_ptr<facebook::react::RootShadowNode> (facebook::react::RootShadowNode const&)> const&, facebook::react::ShadowTree::CommitOptions const&) const"
     )
 endif()
 

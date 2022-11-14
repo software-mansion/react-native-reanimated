@@ -599,15 +599,6 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
     }
 }
 
-if (isNewArchitectureEnabled()) {
-    def reactNativeAndroidProject = findProject(":ReactAndroid")
-    if (reactNativeAndroidProject != null) {
-        // nothing
-    } else {
-        throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks can not be set.")
-    }
-}
-
 /*
 Reanimated includes "hermes/hermes.h" header file in `NativeProxy.cpp`.
 Previously, we used header files from `hermes-engine` package in `node_modules`.
