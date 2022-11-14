@@ -27,6 +27,9 @@ import {
   NativeModals,
   NestedTest,
   CombinedTest,
+  BasicNestedLayoutAnimation,
+  BasicNestedAnimation,
+  BasicLayoutAnimation,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -54,9 +57,6 @@ import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
-import BasicLayoutAnimation from './LayoutReanimation/BasicLayoutAnimation';
-import BasicNestedAnimation from './LayoutReanimation/BasicNestedAnimation';
-import BasicNestedLayoutAnimation from './LayoutReanimation/BasicNestedLayoutAnimation';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 

@@ -8,7 +8,7 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export default function BasicNestedLayoutAnimation() {
+export function BasicNestedLayoutAnimation() {
   const [visible, setVisible] = React.useState(true);
 
   return (

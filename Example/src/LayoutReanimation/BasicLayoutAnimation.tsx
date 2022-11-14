@@ -7,7 +7,7 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export default function BasicLayoutAnimation() {
+export function BasicLayoutAnimation() {
   const [state, setState] = React.useState(false);
   const [visible, setVisible] = React.useState(true);
 
