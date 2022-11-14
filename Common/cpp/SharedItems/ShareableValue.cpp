@@ -414,8 +414,6 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             } else {
               res = funPtr->call(rt, args, count);
             }
-          } catch (jsi::JSError &e) {
-            throw e;
           } catch (std::exception &e) {
             std::string str = e.what();
             runtimeManager->errorHandler->setError(str);

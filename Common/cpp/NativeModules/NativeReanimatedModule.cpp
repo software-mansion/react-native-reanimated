@@ -584,7 +584,11 @@ jsi::Value NativeReanimatedModule::measure(
       uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
-    return jsi::Value::undefined();
+    // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
+    // likely due to the type of measure callback function which accepts just an
+    // array of numbers (not null). In Reanimated, `measure` returns
+    // `MeasuredDimensions | null`.
+    return jsi::Value::null();
   }
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);

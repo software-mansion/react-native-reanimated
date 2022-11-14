@@ -1,10 +1,11 @@
 import { RefObject, useEffect, useRef } from 'react';
 
-import { findNodeHandle } from 'react-native';
-import Animated from '../../';
-import { useEvent, useSharedValue } from '.';
-import { SharedValue } from '../commonTypes';
+import type Animated from '../../index'; // TODO: fixme?
 import { ScrollEvent } from './useAnimatedScrollHandler';
+import { SharedValue } from '../commonTypes';
+import { findNodeHandle } from 'react-native';
+import { useEvent } from './utils';
+import { useSharedValue } from './useSharedValue';
 
 const subscribeForEvents = [
   'onScroll',
