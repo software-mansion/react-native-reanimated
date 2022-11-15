@@ -3,8 +3,11 @@
 #include <jsi/jsi.h>
 #include <memory>
 
+#include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
+
+#define HAS_JS_WEAK_OBJECTS JS_RUNTIME_HERMES
 
 using namespace facebook;
 
@@ -109,13 +112,18 @@ class Shareable {
 
 class RetainingShareable : public Shareable {
  public:
+#if HAS_JS_WEAK_OBJECTS
   jsi::Runtime *hostRuntime;
   std::shared_ptr<jsi::WeakObject> remoteValue;
 
+  jsi::Value getJSValue(jsi::Runtime &rt) override final;
+
   RetainingShareable(jsi::Runtime &rt, ValueType valueType)
       : Shareable(valueType), hostRuntime(&rt) {}
-
-  jsi::Value getJSValue(jsi::Runtime &rt) override final;
+#else
+  RetainingShareable(jsi::Runtime &rt, ValueType valueType)
+      : Shareable(valueType) {}
+#endif
 };
 
 class ShareableJSRef : public jsi::HostObject {

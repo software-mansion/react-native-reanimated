@@ -50,6 +50,8 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
 
 Shareable::~Shareable() {}
 
+#if HAS_JS_WEAK_OBJECTS
+
 jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
   jsi::Value value;
   if (&rt == hostRuntime) {
@@ -72,6 +74,8 @@ jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
   }
   return value;
 }
+
+#endif
 
 ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
     : RetainingShareable(rt, ArrayType) {

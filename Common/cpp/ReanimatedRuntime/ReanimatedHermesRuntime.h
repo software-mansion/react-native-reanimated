@@ -5,7 +5,7 @@
 #if __APPLE__ &&    \
     (__has_include( \
         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
-#define JS_RUNTIME_HERMES 1
+// #define JS_RUNTIME_HERMES 1
 #endif
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
