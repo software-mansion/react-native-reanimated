@@ -37,11 +37,34 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
+// TODO: add support for assigning higher order animations to AnimatedStyle's transform property
+// SequenceAnimation extends Animation<SequenceAnimation>, which is incompatible with Animation<AnimationObject>
 export interface AnimatedStyle
   extends Record<string, Animation<AnimationObject>> {
   [key: string]: any;
-  transform?: Array<Record<string, Animation<AnimationObject>>>;
+  transform?: Array<
+    | Record<'matrix', number[] | Animation<AnimationObject>>
+    | Partial<
+        Record<
+          | 'perspective'
+          | 'scale'
+          | 'scaleX'
+          | 'scaleY'
+          | 'translateX'
+          | 'translateY',
+          number | Animation<AnimationObject>
+        >
+      >
+    | Partial<
+        Record<
+          'rotate' | 'rotateX' | 'rotateY' | 'rotateZ' | 'skewX' | 'skewY',
+          string | Animation<AnimationObject>
+        >
+      >
+    | Record<string, Animation<AnimationObject>>
+  >;
 }
+
 export interface SharedValue<T> {
   get value(): T;
   set value(value: any);
