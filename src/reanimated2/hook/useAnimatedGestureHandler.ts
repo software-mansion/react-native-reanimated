@@ -16,20 +16,30 @@ export interface GestureHandlers<T, TContext extends Context> {
   onFinish?: Handler<T, TContext>;
 }
 
-export enum EventType {
-  UNDETERMINED = 0,
-  FAILED,
-  BEGAN,
-  CANCELLED,
-  ACTIVE,
-  END,
+export const EventType = {
+  UNDETERMINED: 0,
+  FAILED: 1,
+  BEGAN: 2,
+  CANCELLED: 3,
+  ACTIVE: 4,
+  END: 5,
+};
+
+export interface GestureHandlerNativeEvent {
+  handlerTag: number;
+  numberOfPointers: number;
+  state: typeof EventType[keyof typeof EventType];
 }
 
 export interface GestureHandlerEvent<T> extends NativeEvent<T> {
   nativeEvent: T;
 }
 
-type InferArgument<T> = T extends GestureHandlerEvent<infer E> ? E : never;
+type InferArgument<T> = T extends GestureHandlerEvent<infer E>
+  ? E extends GestureHandlerNativeEvent
+    ? E
+    : never
+  : never;
 
 export function useAnimatedGestureHandler<
   T extends GestureHandlerEvent<any>,
