@@ -632,29 +632,6 @@ PODS:
   - React-jsinspector (0.71.0-rc.0)
   - React-logger (0.71.0-rc.0):
     - glog
-  - react-native-safe-area-context (4.4.1):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - react-native-safe-area-context/common (= 4.4.1)
-    - react-native-safe-area-context/fabric (= 4.4.1)
-    - ReactCommon/turbomodule/core
-  - react-native-safe-area-context/common (4.4.1):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - react-native-safe-area-context/fabric (4.4.1):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Codegen
-    - React-Core
-    - react-native-safe-area-context/common
-    - React-RCTFabric
-    - ReactCommon/turbomodule/core
   - React-perflogger (0.71.0-rc.0)
   - React-RCTActionSheet (0.71.0-rc.0):
     - React-Core/RCTActionSheetHeaders (= 0.71.0-rc.0)
@@ -736,15 +713,7 @@ PODS:
     - React-jsidynamic (= 0.71.0-rc.0)
     - React-logger (= 0.71.0-rc.0)
     - React-perflogger (= 0.71.0-rc.0)
-  - RNGestureHandler (2.8.0):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-Codegen
-    - React-RCTFabric
-    - ReactCommon/turbomodule/core
-  - RNReanimated (3.0.0-rc.4):
+  - RNReanimated (3.0.0-rc.5):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -773,31 +742,6 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (3.18.2):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-Codegen
-    - React-RCTFabric
-    - ReactCommon/turbomodule/core
-    - RNScreens/common (= 3.18.2)
-  - RNScreens/common (3.18.2):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-Codegen
-    - React-RCTFabric
-    - ReactCommon/turbomodule/core
-  - RNSVG (13.5.0):
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-Codegen
-    - React-RCTFabric
-    - ReactCommon/turbomodule/core
   - SocketRocket (0.6.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -854,7 +798,6 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
-  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -870,10 +813,7 @@ DEPENDENCIES:
   - React-rncore (from `../node_modules/react-native/ReactCommon`)
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
-  - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
-  - RNScreens (from `../node_modules/react-native-screens`)
-  - RNSVG (from `../node_modules/react-native-svg`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -943,8 +883,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
-  react-native-safe-area-context:
-    :path: "../node_modules/react-native-safe-area-context"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -975,14 +913,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/runtimeexecutor"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
-  RNGestureHandler:
-    :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
-  RNScreens:
-    :path: "../node_modules/react-native-screens"
-  RNSVG:
-    :path: "../node_modules/react-native-svg"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -1024,7 +956,6 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 6e0893f69e4a169f81d904192490447ee0f3a170
   React-jsinspector: a4ad2370d57f0150f21f4684b8931b8226580353
   React-logger: 95b3d56468b4968ecce58951e756f03082eb6bed
-  react-native-safe-area-context: 2f75b317784a1a8e224562941e50ecbc932d2097
   React-perflogger: 9533f63024f91cb527178f236ae3317c94fdc15f
   React-RCTActionSheet: 0e2efddd25f88028c8b1df202afe7a0aeeeb170b
   React-RCTAnimation: 1868f537cfd001f2183550199a3fb44a7921d1f0
@@ -1040,10 +971,7 @@ SPEC CHECKSUMS:
   React-rncore: bdaa86efa518af72ddab486a3e3834151a57be14
   React-runtimeexecutor: 7a1ac2b06a997a985f9fbdc6abbac38dd9e9aa48
   ReactCommon: d30ce0c7a6d0df825870d4706f2370f57bbc2b38
-  RNGestureHandler: ceea17b82fea276bb0743a28b53a394a6edf5b18
-  RNReanimated: 82290bc30711a0d13c6efc8f3fbf132fa9232472
-  RNScreens: 208223c783496e6d0aa92ffdf307f61d58756fc1
-  RNSVG: 3e880662a3f0e2b903927ae677042b17f6fde3a3
+  RNReanimated: bb3dcdf17368a98896fa56e89e73e67687760934
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 167c6bcfbcd203adef48d2310491e85c51daeaf2
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
