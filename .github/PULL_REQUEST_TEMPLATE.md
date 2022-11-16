@@ -1,20 +1,9 @@
-## Description
+<!-- Thanks for submitting a pull request! We appreciate you spending the time to work on these changes. Please follow the template so that the reviewers can easily understand what the code changes affect. -->
 
-<!--
-Explain the motivation for this PR. Include "Fixes #<number>" if possible.
--->
+## Summary
 
-## Changes
+<!-- Explain the motivation for this PR. Include "Fixes #<number>" if applicable. -->
 
-<!--
-Write a list of high-level changes introduced in this PR, for example:
-- Added `foo` method which adds bouncing animation
-- Updated `about.md` docs
-- Added caching in CI builds
--->
+## Test plan
 
-## Test code and steps to reproduce
-
-<!--
-Provide a minimal but complete code snippet that can be used to test out this change along with instructions how to run it and a description of the expected behavior.
--->
+<!-- Provide a minimal but complete code snippet that can be used to test out this change along with instructions how to run it and a description of the expected behavior. -->
