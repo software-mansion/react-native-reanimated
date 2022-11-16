@@ -16,7 +16,7 @@ export function makeMutable<T>(
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
   if (needSynchronousReadsFromReact && NativeReanimatedModule.native) {
-    // updates are alwatys synchronous when running on web or in Jest environment
+    // updates are always synchronous when running on web or in Jest environment
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
       makeShareableCloneRecursive(value)
     );
@@ -36,6 +36,12 @@ export function makeMutable<T>(
         get value() {
           return value;
         },
+        /**
+         * _value prop should only be accessed by the valueSetter implementation
+         * which may make the decision about updating the mutable value depending
+         * on the provided new value. All other places should only attempt to modify
+         * the mutable by assigning to value prop directly.
+         */
         set _value(newValue: T) {
           value = newValue;
           if (syncDataHolder) {
@@ -85,7 +91,7 @@ export function makeMutable<T>(
     set _value(newValue: T) {
       if (NativeReanimatedModule.native) {
         throw new Error(
-          'Setting _value direcly is only possible on the UI runtime'
+          'Setting `_value` directly is only possible on the UI runtime'
         );
       }
       value = newValue;
@@ -96,7 +102,7 @@ export function makeMutable<T>(
     get _value(): T {
       if (NativeReanimatedModule.native) {
         throw new Error(
-          'Reading from _value direcly is only possible on the UI runtime'
+          'Reading from `_value` directly is only possible on the UI runtime'
         );
       }
       return value;

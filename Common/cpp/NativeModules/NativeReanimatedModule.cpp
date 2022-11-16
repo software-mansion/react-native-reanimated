@@ -246,7 +246,7 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
   } else if (value.isNumber()) {
     shareable = std::make_shared<ShareableScalar>(value.getNumber());
   } else {
-    throw std::runtime_error("attempted to convert an unsuppoerted value type");
+    throw std::runtime_error("attempted to convert an unsupported value type");
   }
   return ShareableJSRef::newHostObject(rt, shareable);
 }

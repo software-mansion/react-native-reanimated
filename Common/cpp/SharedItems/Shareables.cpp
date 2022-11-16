@@ -20,6 +20,9 @@ jsi::Value CoreFunction::call(jsi::Runtime &rt, const jsi::Value &arg0) {
   if (runtimeHelper_->isUIRuntime(rt)) {
     if (uiFunction_ == nullptr) {
       // maybe need to initialize UI Function
+      // the newline before closing paren is needed because the last line can be
+      // an inline comment (specifically this happens when we attach source maps
+      // at the end) in which case the paren won't be parsed
       auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
           "(" + functionBody_ + "\n)");
       uiFunction_ = std::make_shared<jsi::Function>(
