@@ -307,31 +307,22 @@ public class NativeProxy {
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
     animationsManager.setNativeMethods(
-        new NativeMethodsHolder() {
-          @Override
-          public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              HashMap<String, String> preparedValues = new HashMap<>();
-              for (String key : values.keySet()) {
-                preparedValues.put(key, values.get(key).toString());
+            new NativeMethodsHolder() {
+              @Override
+              public void startAnimation(int tag, String type, HashMap<String, Float> values) {}
+
+              @Override
+              public boolean isLayoutAnimationEnabled() {
+                return false;
               }
-              LayoutAnimations.startAnimationForTag(tag, type, preparedValues);
-            }
-          }
 
-          @Override
-          public void removeConfigForTag(int tag) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              LayoutAnimations.removeConfigForTag(tag);
-            }
-          }
+              @Override
+              public boolean hasAnimation(int tag, String type) {
+                return false;
+              }
 
-          @Override
-          public boolean isLayoutAnimationEnabled() {
-            return LayoutAnimations.isLayoutAnimationEnabled();
-          }
-        });
+              @Override
+              public void clearAnimationConfig(int tag) {}
+            });
   }
 }
