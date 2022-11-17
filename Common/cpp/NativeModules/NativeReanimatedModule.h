@@ -156,7 +156,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
+ public:
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+
+ private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
   std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
@@ -166,11 +169,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
   std::function<void(double)> onRenderCallback;
-
- public:
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
-
- private:
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
 
