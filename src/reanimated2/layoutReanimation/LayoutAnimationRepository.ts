@@ -1,7 +1,7 @@
-import { LogBox } from 'react-native';
 /* global _stopObservingProgress, _startObservingProgress */
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
+import { LogBox } from 'react-native';
 
 LogBox.ignoreLogs(['Overriding previous layout animation with']);
 
