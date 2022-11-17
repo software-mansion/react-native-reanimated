@@ -37,8 +37,6 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
 
-@property (nonatomic, copy) void (^flushUiOperations)();
-
 @end
 
 NS_ASSUME_NONNULL_END
