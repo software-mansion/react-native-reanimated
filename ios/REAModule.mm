@@ -413,7 +413,8 @@ static UIView *removedView;
         UIView *windowView = UIApplication.sharedApplication.keyWindow;
         [windowView addSubview:removedView];
         removedView.reactTag = @(tag);
-        [self.nodesManager.animationsManager onViewRemoval:removedView before:beforeSnapshot];
+        // TODO: fix exiting animations
+        // [self.nodesManager.animationsManager onViewRemoval:removedView before:beforeSnapshot];
       }
       reanimatedModule->layoutAnimationsProxy->tagsOfRemovedViews_.clear();
     }

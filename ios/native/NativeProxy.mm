@@ -234,12 +234,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
-
-  REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[RCTUIManager class]];
-  RCTUIManager *reaUiManager = reaUiManagerNoCast;
-  REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
-
-  animationsManager.flushUiOperations = ^void() {
+  ((REAUIManager *)uiManager).flushUiOperations = ^void() {
     std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
     if (scheduler != nullptr) {
       scheduler->triggerUI();
@@ -279,9 +274,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto weakLayoutAnimationsProxy = std::weak_ptr(layoutAnimationsProxy);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
-  nodesManager.animationsManager = animationsManager;
-
   // Layout Animations end
+#endif // RCT_NEW_ARCH_ENABLED
 
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
