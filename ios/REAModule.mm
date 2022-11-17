@@ -49,7 +49,6 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   __weak RCTUIManager *_uiManager; // viewForReactTag
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
-  std::shared_ptr<EventListener> eventListener_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_; // for observing shadow tree changes
 #else
   NSMutableArray<AnimatedOperation> *_operations;
@@ -72,8 +71,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)invalidate
 {
 #ifdef RCT_NEW_ARCH_ENABLED
-  RCTScheduler *scheduler = [_surfacePresenter scheduler];
-  [scheduler removeEventListener:eventListener_];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [self.bridge.surfacePresenter removeObserver:self];
 #endif
@@ -165,7 +162,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
       return;
     }
     if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
-      self->eventListener_ =
+      auto eventListener =
           std::make_shared<facebook::react::EventListener>([reanimatedModule](const RawEvent &rawEvent) {
             if (!RCTIsMainQueue()) {
               // event listener called on the JS thread, let's ignore this event
@@ -175,7 +172,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
             }
             return reanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           });
-      [scheduler addEventListener:self->eventListener_];
+      [scheduler addEventListener:eventListener];
     }
   });
 }
