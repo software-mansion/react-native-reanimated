@@ -7,10 +7,14 @@ on:
     paths:
       - '.github/workflows/validate-ios.yml'
       - 'ios/**'
+      - 'package.json'
+      - 'scripts/validate-ios.sh'
   pull_request:
     paths:
       - '.github/workflows/validate-ios.yml'
       - 'ios/**'
+      - 'package.json'
+      - 'scripts/validate-ios.sh'
 
 jobs:
   check:
@@ -18,5 +22,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Check imports
-        run: ./scripts/validate-ios.sh
+      - name: Lint iOS
+        run: yarn lint:ios
