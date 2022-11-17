@@ -23,7 +23,7 @@
 #import <RNReanimated/REASnapshot.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 
-#include <algorithm>
+// #include <algorithm>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -50,7 +50,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
   std::shared_ptr<EventListener> eventListener_;
-  std::shared_ptr<ReanimatedCommitHook> commitHook_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_; // for observing shadow tree changes
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
