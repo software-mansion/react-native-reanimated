@@ -20,7 +20,7 @@
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/REASnapshot.h>
+// #import <RNReanimated/REASnapshot.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 
 // #include <algorithm>
@@ -119,7 +119,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
   newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
+
 #ifdef RCT_NEW_ARCH_ENABLED
+  // install ReanimatedCommitHook to observe ShadowTree changes
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     layoutAnimationsProxy = reanimatedModule->layoutAnimationsProxy_;
@@ -128,6 +130,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(layoutAnimationsProxy);
   uiManager->registerCommitHook(*commitHook_);
 #endif // RCT_NEW_ARCH_ENABLED
+
   [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
   [self setUpNativeReanimatedModule:uiManager];
 }
@@ -268,11 +271,11 @@ RCT_EXPORT_METHOD(installTurboModule)
   _nodesManager = [[REANodesManager alloc] initWithModule:self uiManager:self.bridge.uiManager];
   _operations = [NSMutableArray new];
 
-#ifdef RN_FABRIC_ENABLED
+#ifdef RCT_NEW_ARCH_ENABLED
   [bridge.surfacePresenter addObserver:self];
 #else
   [bridge.uiManager.observerCoordinator addObserver:self];
-#endif // RN_FABRIC_ENABLED
+#endif
 }
 
 #pragma mark-- Batch handling
