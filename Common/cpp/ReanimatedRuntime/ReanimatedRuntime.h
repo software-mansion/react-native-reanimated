@@ -5,7 +5,7 @@
 #if __APPLE__ &&    \
     (__has_include( \
         <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
-//#define JS_RUNTIME_HERMES 1
+#define JS_RUNTIME_HERMES 1
 #endif
 
 #include <cxxreact/MessageQueueThread.h>

@@ -12,6 +12,7 @@ import {
   makeMutable as makeMutableUnwrapped,
   makeRemote as makeRemoteUnwrapped,
 } from './mutables';
+import { LayoutAnimationFunction } from './layoutReanimation';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
@@ -232,6 +233,18 @@ export function enableLayoutAnimations(
     featuresConfig.enableLayoutAnimations = flag;
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
+}
+
+export function configureLayoutAnimations(
+  viewTag: number,
+  type: string,
+  config: LayoutAnimationFunction | Keyframe
+): void {
+  NativeReanimatedModule.configureLayoutAnimation(
+    viewTag,
+    type,
+    makeShareableCloneRecursive(config)
+  );
 }
 
 export function configureProps(uiProps: string[], nativeProps: string[]): void {

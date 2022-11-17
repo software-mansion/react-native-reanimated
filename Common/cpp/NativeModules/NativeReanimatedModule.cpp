@@ -150,8 +150,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
-      platformDepMethodsHolder.notifyAboutProgressFunction,
-      platformDepMethodsHolder.notifyAboutEndFunction);
+      platformDepMethodsHolder.progressLayoutAnimation,
+      platformDepMethodsHolder.endLayoutAnimation);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
@@ -329,6 +329,18 @@ jsi::Value NativeReanimatedModule::configureProps(
   configurePropsPlatformFunction(rt, uiProps, nativeProps);
 #endif // RCT_NEW_ARCH_ENABLED
 
+  return jsi::Value::undefined();
+}
+
+jsi::Value NativeReanimatedModule::configureLayoutAnimation(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &type,
+    const jsi::Value &config) {
+  layoutAnimationsProxy_.configureAnimation(
+      viewTag.asNumber(),
+      type.asString(rt).utf8(rt),
+      extractShareableOrThrow(rt, config));
   return jsi::Value::undefined();
 }
 

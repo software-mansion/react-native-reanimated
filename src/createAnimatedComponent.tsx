@@ -7,7 +7,6 @@ import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
-  makeMutable,
   configureLayoutAnimations,
   enableLayoutAnimations,
   runOnUI,
@@ -169,7 +168,6 @@ export default function createAnimatedComponent(
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
-    sv: SharedValue<null | Record<string, unknown>> | null;
     _component: ComponentRef | null = null;
     static displayName: string;
 
@@ -178,13 +176,11 @@ export default function createAnimatedComponent(
       if (isJest()) {
         this.animatedStyle = { value: {} };
       }
-      this.sv = makeMutable<null | Record<string, unknown>>({});
     }
 
     componentWillUnmount() {
       this._detachNativeEvents();
       this._detachStyles();
-      this.sv = null;
     }
 
     componentDidMount() {
@@ -421,28 +417,13 @@ export default function createAnimatedComponent(
             enableLayoutAnimations(true, false);
           }
           if (layout) {
-            configureLayoutAnimations(
-              tag,
-              'layout',
-              maybeBuild(layout),
-              this.sv
-            );
+            configureLayoutAnimations(tag, 'layout', maybeBuild(layout));
           }
           if (entering) {
-            configureLayoutAnimations(
-              tag,
-              'entering',
-              maybeBuild(entering),
-              this.sv
-            );
+            configureLayoutAnimations(tag, 'entering', maybeBuild(entering));
           }
           if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              'exiting',
-              maybeBuild(exiting),
-              this.sv
-            );
+            configureLayoutAnimations(tag, 'exiting', maybeBuild(exiting));
           }
         }
 

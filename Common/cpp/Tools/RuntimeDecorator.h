@@ -52,8 +52,8 @@ class RuntimeDecorator {
       const RegisterSensorFunction registerSensor,
       const UnregisterSensorFunction unregisterSensor,
       const SetGestureStateFunction setGestureState,
-      const NotifyAboutProgressFunction notifyAboutProgressFunction,
-      const NotifyAboutEndFunction notifyAboutEndFunction);
+      const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
+      const EndLayoutAnimationFunction endLayoutAnimationFunction);
 
   /**
    Returns true if the given Runtime is the Reanimated UI-Thread Runtime.

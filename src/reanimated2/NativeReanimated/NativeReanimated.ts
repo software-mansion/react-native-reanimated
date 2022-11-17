@@ -1,6 +1,5 @@
 import { NativeModules } from 'react-native';
 import { ShareableRef, ShareableSyncDataHolderRef } from '../commonTypes';
-import { SharedValue } from '../commonTypes';
 import { LayoutAnimationFunction } from '../layoutReanimation';
 
 export class NativeReanimated {
@@ -83,15 +82,9 @@ export class NativeReanimated {
   configureLayoutAnimation(
     viewTag: number,
     type: string,
-    config: Keyframe | LayoutAnimationFunction,
-    viewSharedValue: SharedValue<null | Record<string, unknown>> | null
+    config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ) {
-    this.InnerNativeModule.configureLayoutAnimation(
-      viewTag,
-      type,
-      config,
-      viewSharedValue
-    );
+    this.InnerNativeModule.configureLayoutAnimation(viewTag, type, config);
   }
 
   enableLayoutAnimations(flag: boolean): void {

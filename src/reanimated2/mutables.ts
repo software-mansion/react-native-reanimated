@@ -9,6 +9,54 @@ import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 export { stopMapper } from './mappers';
 
+export function makeUIMutable<T>(
+  initial: T,
+  syncDataHolder?: ShareableSyncDataHolderRef<T>
+) {
+  'worklet';
+
+  const listeners = new Map();
+  let value = initial;
+
+  const self = {
+    set value(newValue) {
+      valueSetter(self, newValue);
+    },
+    get value() {
+      return value;
+    },
+    /**
+     * _value prop should only be accessed by the valueSetter implementation
+     * which may make the decision about updating the mutable value depending
+     * on the provided new value. All other places should only attempt to modify
+     * the mutable by assigning to value prop directly.
+     */
+    set _value(newValue: T) {
+      value = newValue;
+      if (syncDataHolder) {
+        _updateDataSynchronously(
+          syncDataHolder,
+          makeShareableCloneOnUIRecursive(newValue)
+        );
+      }
+      listeners.forEach((listener) => {
+        listener(newValue);
+      });
+    },
+    get _value(): T {
+      return value;
+    },
+    addListener: (id: number, listener: (newValue: T) => void) => {
+      listeners.set(id, listener);
+    },
+    removeListener: (id: number) => {
+      listeners.delete(id);
+    },
+    _animation: null,
+  };
+  return self;
+}
+
 export function makeMutable<T>(
   initial: T,
   needSynchronousReadsFromReact = false
@@ -25,47 +73,7 @@ export function makeMutable<T>(
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-
-      const listeners = new Map();
-      let value = initial;
-
-      const self = {
-        set value(newValue) {
-          valueSetter(self, newValue);
-        },
-        get value() {
-          return value;
-        },
-        /**
-         * _value prop should only be accessed by the valueSetter implementation
-         * which may make the decision about updating the mutable value depending
-         * on the provided new value. All other places should only attempt to modify
-         * the mutable by assigning to value prop directly.
-         */
-        set _value(newValue: T) {
-          value = newValue;
-          if (syncDataHolder) {
-            _updateDataSynchronously(
-              syncDataHolder,
-              makeShareableCloneOnUIRecursive(newValue)
-            );
-          }
-          listeners.forEach((listener) => {
-            listener(newValue);
-          });
-        },
-        get _value(): T {
-          return value;
-        },
-        addListener: (id: number, listener: (newValue: T) => void) => {
-          listeners.set(id, listener);
-        },
-        removeListener: (id: number) => {
-          listeners.delete(id);
-        },
-        _animation: null,
-      };
-      return self;
+      return makeUIMutable(initial, syncDataHolder);
     },
   });
   // listeners can only work on JS thread on Web and jest environments

@@ -112,8 +112,8 @@ void RuntimeDecorator::decorateUIRuntime(
     const RegisterSensorFunction registerSensor,
     const UnregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
-    const NotifyAboutProgressFunction notifyAboutProgressFunction,
-    const NotifyAboutEndFunction notifyAboutEndFunction) {
+    const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
+    const EndLayoutAnimationFunction endLayoutAnimationFunction) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
@@ -287,24 +287,25 @@ void RuntimeDecorator::decorateUIRuntime(
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 
   // layout animation
-  auto clb7 = [notifyAboutProgressFunction](
+  auto clb7 = [progressLayoutAnimationFunction](
                   jsi::Runtime &rt,
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
-    notifyAboutProgressFunction(args[0].asNumber(), args[1].asObject(rt));
+    progressLayoutAnimationFunction(args[0].asNumber(), args[1].asObject(rt));
     return jsi::Value::undefined();
   };
   jsi::Value _notifyAboutProgress = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_notifyAboutProgress"), 2, clb7);
   rt.global().setProperty(rt, "_notifyAboutProgress", _notifyAboutProgress);
 
-  auto clb8 = [notifyAboutEndFunction](
+  auto clb8 = [endLayoutAnimationFunction](
                   jsi::Runtime &rt,
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
-    notifyAboutEndFunction(args[0].asNumber(), args[1].asBool());
+    endLayoutAnimationFunction(
+        args[0].asNumber(), args[1].asBool(), args[2].asBool());
     return jsi::Value::undefined();
   };
   jsi::Value _notifyAboutEnd = jsi::Function::createFromHostFunction(

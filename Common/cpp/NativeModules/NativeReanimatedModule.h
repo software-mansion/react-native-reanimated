@@ -13,6 +13,7 @@
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
+#include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
@@ -84,6 +85,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
+  jsi::Value configureLayoutAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &type,
+      const jsi::Value &config) override;
 
   void onRender(double timestampMs);
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -142,6 +148,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
 
+  inline LayoutAnimationsProxy &layoutAnimationsProxy() {
+    return layoutAnimationsProxy_;
+  }
+
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
@@ -176,6 +186,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
+  LayoutAnimationsProxy layoutAnimationsProxy_;
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;

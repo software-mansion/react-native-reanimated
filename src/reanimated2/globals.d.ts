@@ -5,6 +5,7 @@ import type {
   MapperRegistry,
   ShareableRef,
   ShareableSyncDataHolderRef,
+  SharedValue,
 } from './commonTypes';
 import type { ReanimatedConsole } from './core';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
@@ -23,7 +24,11 @@ declare global {
   const _getTimestamp: () => number;
   const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _notifyAboutProgress: (tag: number, value: number) => void;
-  const _notifyAboutEnd: (tag: number, finished: boolean) => void;
+  const _notifyAboutEnd: (
+    tag: number,
+    finished: boolean,
+    removeView: b
+  ) => void;
   const _stopObservingProgress: (
     tag: number,
     cancelled: boolean,
@@ -67,12 +72,6 @@ declare global {
   ) => void;
   const _chronoNow: () => number;
   const performance: { now: () => number };
-  const LayoutAnimationRepository: {
-    configs: Record<string, unknown>;
-    registerConfig(tag: number, config: Record<string, unknown>): void;
-    removeConfig(tag: number): void;
-    startAnimationForTag(tag: number, type: string, yogaValues: unknown): void;
-  };
   const ReanimatedDataMock: {
     now: () => number;
   };
@@ -133,7 +132,7 @@ declare global {
           type: string,
           yogaValues: Record<string, number>,
           config: LayoutAnimationFunction | Keyframe,
-          viewSharedValue: { value: unknown; _value: unknown }
+          viewSharedValue: SharedValue<any>
         ): void;
       };
       ReanimatedDataMock: {

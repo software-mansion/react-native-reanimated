@@ -228,8 +228,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  auto layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(
-      [](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled, bool removeView) {}, errorHandler);
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
@@ -268,9 +266,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
-  auto layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(progressLayoutAnimation, endLayoutAnimation, errorHandler);
-  auto weakLayoutAnimationsProxy = std::weak_ptr(layoutAnimationsProxy);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
   // Layout Animations end
@@ -317,8 +312,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       configurePropsFunction,
 #endif
       getCurrentTime,
-      notifyAboutProgress,
-      notifyAboutEnd,
+      progressLayoutAnimation,
+      endLayoutAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -387,33 +382,22 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     if (runtime == nullptr) {
       return;
     }
-    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-    if (layoutAnimationsProxy == nullptr) {
-      return;
-    }
     jsi::Object yogaValues(*runtime);
     for (NSString *key in values.allKeys) {
       NSNumber *value = values[key];
       yogaValues.setProperty(*runtime, [key UTF8String], [value doubleValue]);
     }
 
-    layoutAnimationsProxy->startLayoutAnimation(*runtime, [tag intValue], std::string([type UTF8String]), yogaValues);
+    module->layoutAnimationsProxy().startLayoutAnimation(
+        *runtime, [tag intValue], std::string([type UTF8String]), yogaValues);
   }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
-    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-    if (layoutAnimationsProxy == nullptr) {
-      return false;
-    }
-    return layoutAnimationsProxy->hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
+    return module->layoutAnimationsProxy().hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-    if (layoutAnimationsProxy == nullptr) {
-      return;
-    }
-    layoutAnimationsProxy->clearLayoutAnimationConfig([tag intValue]);
+    module->layoutAnimationsProxy().clearLayoutAnimationConfig([tag intValue]);
   }];
 #endif
 
