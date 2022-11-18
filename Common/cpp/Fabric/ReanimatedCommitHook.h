@@ -32,7 +32,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   virtual ~ReanimatedCommitHook() noexcept = default;
 
  private:
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+  std::weak_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 };
 
 } // namespace reanimated
