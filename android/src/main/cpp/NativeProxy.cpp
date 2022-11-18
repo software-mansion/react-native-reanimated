@@ -272,6 +272,8 @@ void NativeProxy::installJSIBindings(
 #endif
       platformDepMethodsHolder);
 
+  scheduler_->setRuntimeManager(module);
+
   _nativeReanimatedModule = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
 
