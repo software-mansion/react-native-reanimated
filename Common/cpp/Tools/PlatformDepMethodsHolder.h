@@ -54,7 +54,7 @@ using RequestRender =
 using TimeProviderFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
-    std::function<void(int, jsi::Object newProps)>;
+    std::function<void(int, const jsi::Object &newProps)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool, bool)>;
 
 using RegisterSensorFunction =

@@ -11,6 +11,7 @@
 
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
+#include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
@@ -226,9 +227,12 @@ void NativeProxy::installJSIBindings(
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
-  auto progressLayoutAnimation = [this](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
+  auto progressLayoutAnimation = [this, wrt](
+                                     int tag, const jsi::Object &newProps) {
+    auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
+    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, newPropsJNI);
   };
 
   auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
@@ -247,6 +251,8 @@ void NativeProxy::installJSIBindings(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      progressLayoutAnimation,
+      endLayoutAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -267,8 +273,8 @@ void NativeProxy::installJSIBindings(
       platformDepMethodsHolder);
 
   _nativeReanimatedModule = module;
-
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
+
 #ifdef RCT_NEW_ARCH_ENABLED
   this->registerEventHandler([weakModule, getCurrentTime](
                                  std::string eventName,
@@ -320,11 +326,10 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
 
-  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
   std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
 
   layoutAnimations->cthis()->setAnimationStartingBlock(
-      [wrt, weakErrorHandler](
+      [wrt, weakModule, weakErrorHandler](
           int tag,
           alias_ref<JString> type,
           alias_ref<JMap<jstring, jstring>> values) {
@@ -344,23 +349,20 @@ void NativeProxy::installJSIBindings(
           }
         }
 
-        module->layoutAnimationsManager().startLayoutAnimation(
-            *runtime, tag, type->toStdString(), yogaValues);
+        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, type->toStdString(), yogaValues);
       });
 
   layoutAnimations->cthis()->setHasAnimationBlock(
-      [](int tag, std::string type) {
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        return layoutAnimationsProxy &&
-            layoutAnimationsProxy->hasLayoutAnimation(tag, type);
+      [weakModule](int tag, const std::string &type) {
+        return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
+            tag, type);
       });
 
   layoutAnimations->cthis()->setClearAnimationConfigBlock(
-      [weakLayoutAnimationsProxy](int tag) {
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        if (layoutAnimationsProxy) {
-          layoutAnimationsProxy->clearLayoutAnimationConfig(tag);
-        }
+      [weakModule](int tag) {
+        weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig(
+            tag);
       });
 
   runtime_->global().setProperty(

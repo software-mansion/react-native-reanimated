@@ -246,7 +246,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
-  auto progressLayoutAnimation = [=](int tag, jsi::Object newStyle) {
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(*wrt.lock(), newStyle);
     [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict forTag:@(tag)];
   };

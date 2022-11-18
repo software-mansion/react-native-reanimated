@@ -17,8 +17,8 @@ class CoreFunction;
 
 class JSRuntimeHelper {
  private:
-  jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
   jsi::Runtime *rnRuntime_; // React-Native's main JS runtime
+  jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
   std::shared_ptr<Scheduler> scheduler_;
 
  public:
