@@ -59,11 +59,11 @@ export function makeUIMutable<T>(
 
 export function makeMutable<T>(
   initial: T,
-  needSynchronousReadsFromReact = false
+  oneWayReadsOnly = true
 ): SharedValue<T> {
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
-  if (needSynchronousReadsFromReact && NativeReanimatedModule.native) {
+  if (!oneWayReadsOnly && NativeReanimatedModule.native) {
     // updates are always synchronous when running on web or in Jest environment
     syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
       makeShareableCloneRecursive(value)

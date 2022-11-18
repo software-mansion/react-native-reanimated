@@ -241,25 +241,29 @@ class ShareableRemoteFunction
   }
 };
 
-class ShareableHandle : public RetainingShareable {
+class ShareableHandle : public Shareable {
  private:
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   std::shared_ptr<ShareableObject> initializer_;
+  std::shared_ptr<jsi::Value> remoteValue;
 
  public:
   ShareableHandle(
       const std::shared_ptr<JSRuntimeHelper> runtimeHelper,
       jsi::Runtime &rt,
       const jsi::Object &initializerObject)
-      : RetainingShareable(rt, HandleType), runtimeHelper_(runtimeHelper) {
+      : Shareable(HandleType), runtimeHelper_(runtimeHelper) {
     initializer_ = std::make_shared<ShareableObject>(rt, initializerObject);
   }
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto initObj = initializer_->getJSValue(rt);
-    auto value = runtimeHelper_->valueUnpacker->call(rt, initObj);
-    initializer_ = nullptr; // we can release ref to initializer as this method
-                            // should be called at most once
-    return value;
+    if (initializer_ != nullptr) {
+      auto initObj = initializer_->getJSValue(rt);
+      remoteValue = std::make_shared<jsi::Value>(
+          runtimeHelper_->valueUnpacker->call(rt, initObj));
+      initializer_ = nullptr; // we can release ref to initializer as this
+                              // method should be called at most once
+    }
+    return jsi::Value(rt, *remoteValue);
   }
 };
 
