@@ -5,11 +5,11 @@ import type {
   MapperRegistry,
   ShareableRef,
   ShareableSyncDataHolderRef,
-  SharedValue,
 } from './commonTypes';
 import type { ReanimatedConsole } from './core';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { ShadowNodeWrapper } from './hook/commonTypes';
+import { LayoutAnimationStartFunction } from './layoutReanimation';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 
 declare global {
@@ -126,14 +126,8 @@ declare global {
       ) => void;
       _chronoNow: () => number;
       performance: { now: () => number };
-      LayoutAnimationRepository: {
-        startAnimationForTag(
-          tag: number,
-          type: string,
-          yogaValues: Record<string, number>,
-          config: LayoutAnimationFunction | Keyframe,
-          viewSharedValue: SharedValue<any>
-        ): void;
+      LayoutAnimationsManager: {
+        start: LayoutAnimationStartFunction;
       };
       ReanimatedDataMock: {
         now: () => number;

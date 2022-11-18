@@ -16,7 +16,7 @@ CoreFunction::CoreFunction(
   location_ = workletObject.getProperty(rt, "__location").asString(rt).utf8(rt);
 }
 
-jsi::Value CoreFunction::call(jsi::Runtime &rt, const jsi::Value &arg0) {
+std::shared_ptr<jsi::Function> CoreFunction::getFunction(jsi::Runtime &rt) {
   if (runtimeHelper_->isUIRuntime(rt)) {
     if (uiFunction_ == nullptr) {
       // maybe need to initialize UI Function
@@ -30,10 +30,10 @@ jsi::Value CoreFunction::call(jsi::Runtime &rt, const jsi::Value &arg0) {
               .asObject(rt)
               .asFunction(rt));
     }
-    return uiFunction_->call(rt, arg0);
+    return uiFunction_;
   } else {
     // running on the main RN runtime
-    return rnFunction_->call(rt, arg0);
+    return rnFunction_;
   }
 }
 

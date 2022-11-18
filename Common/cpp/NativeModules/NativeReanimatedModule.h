@@ -13,7 +13,7 @@
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
-#include "LayoutAnimationsProxy.h"
+#include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
@@ -26,7 +26,6 @@ namespace reanimated {
 using FrameCallback = std::function<void(double)>;
 
 class EventHandlerRegistry;
-class JSRuntimeHelper;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec,
                                public RuntimeManager {
@@ -46,8 +45,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   std::shared_ptr<JSRuntimeHelper> runtimeHelper;
 
-  void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &workletMaker)
-      override;
+  void installCoreFunctions(
+      jsi::Runtime &rt,
+      const jsi::Value &workletMaker,
+      const jsi::Value &layoutAnimationStartFunction) override;
 
   jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
       override;
@@ -148,8 +149,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
 
-  inline LayoutAnimationsProxy &layoutAnimationsProxy() {
-    return layoutAnimationsProxy_;
+  inline LayoutAnimationsManager &layoutAnimationsManager() {
+    return layoutAnimationsManager_;
   }
 
  private:
@@ -186,7 +187,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
-  LayoutAnimationsProxy layoutAnimationsProxy_;
+  LayoutAnimationsManager layoutAnimationsManager_;
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;

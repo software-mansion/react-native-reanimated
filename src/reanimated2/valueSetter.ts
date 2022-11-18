@@ -32,7 +32,8 @@ export function valueSetter(sv: any, value: any): void {
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
-    initializeAnimation(getTimestamp());
+    const currentTimestamp = getTimestamp();
+    initializeAnimation(currentTimestamp);
     const step = (timestamp: number) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
@@ -51,12 +52,7 @@ export function valueSetter(sv: any, value: any): void {
 
     sv._animation = animation;
 
-    if (_frameTimestamp) {
-      // frame
-      step(_frameTimestamp);
-    } else {
-      requestAnimationFrame(step);
-    }
+    step(currentTimestamp);
   } else {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input

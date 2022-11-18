@@ -15,10 +15,7 @@ namespace reanimated {
 
 using namespace facebook;
 
-class MutableValue;
-class ShareableValue;
-
-class LayoutAnimationsProxy {
+class LayoutAnimationsManager {
  public:
   void configureAnimation(
       int tag,

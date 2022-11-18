@@ -1,13 +1,11 @@
-#include "LayoutAnimationsProxy.h"
+#include "LayoutAnimationsManager.h"
 #include "Shareables.h"
 
 #include <utility>
 
 namespace reanimated {
 
-const long long idOffset = 1e9;
-
-void LayoutAnimationsProxy::configureAnimation(
+void LayoutAnimationsManager::configureAnimation(
     int tag,
     const std::string &type,
     std::shared_ptr<Shareable> config) {
@@ -21,7 +19,7 @@ void LayoutAnimationsProxy::configureAnimation(
   }
 }
 
-bool LayoutAnimationsProxy::hasLayoutAnimation(
+bool LayoutAnimationsManager::hasLayoutAnimation(
     int tag,
     const std::string &type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
@@ -35,14 +33,14 @@ bool LayoutAnimationsProxy::hasLayoutAnimation(
   return false;
 }
 
-void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag) {
+void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
 }
 
-void LayoutAnimationsProxy::startLayoutAnimation(
+void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
     int tag,
     const std::string &type,
@@ -63,10 +61,10 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
-          .getProperty(rt, "LayoutAnimationRepository");
+          .getProperty(rt, "LayoutAnimationsManager");
   jsi::Function startAnimationForTag =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
-          rt, "startAnimationForTag");
+          rt, "start");
   startAnimationForTag.call(
       rt,
       jsi::Value(tag),

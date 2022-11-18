@@ -227,8 +227,6 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
 
-  // Layout Animations Start
-
   auto progressLayoutAnimation = [this](int tag, jsi::Value progress) {
     this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
   };
@@ -237,62 +235,6 @@ void NativeProxy::installJSIBindings(
     this->layoutAnimations->cthis()->endLayoutAnimation(
         tag, isCancelled, removeView);
   };
-
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(
-          progressLayoutAnimation, endLayoutAnimation, errorHandler);
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  std::weak_ptr<LayoutAnimationsProxy> weakLayoutAnimationsProxy =
-      layoutAnimationsProxy;
-  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
-  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
-
-  layoutAnimations->cthis()->setAnimationStartingBlock(
-      [wrt, weakLayoutAnimationsProxy, weakErrorHandler](
-          int tag,
-          alias_ref<JString> type,
-          alias_ref<JMap<jstring, jstring>> values) {
-        auto runtime = wrt.lock();
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        if (!runtime || !layoutAnimationsProxy) {
-          return;
-        }
-        auto &rt = *runtime;
-        jsi::Object yogaValues(rt);
-        for (const auto &entry : *values) {
-          try {
-            auto key =
-                jsi::String::createFromAscii(rt, entry.first->toStdString());
-            auto value = stod(entry.second->toStdString());
-            yogaValues.setProperty(rt, key, value);
-          } catch (std::invalid_argument e) {
-            if (auto errorHandler = weakErrorHandler.lock()) {
-              errorHandler->setError("Failed to convert value to number");
-              errorHandler->raise();
-            }
-          }
-        }
-
-        layoutAnimationsProxy->startLayoutAnimation(
-            *runtime, tag, type->toStdString(), yogaValues);
-      });
-
-  layoutAnimations->cthis()->setHasAnimationBlock(
-      [weakLayoutAnimationsProxy](int tag, std::string type) {
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        return layoutAnimationsProxy &&
-            layoutAnimationsProxy->hasLayoutAnimation(tag, type);
-      });
-
-  layoutAnimations->cthis()->setClearAnimationConfigBlock(
-      [weakLayoutAnimationsProxy](int tag) {
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        if (layoutAnimationsProxy) {
-          layoutAnimationsProxy->clearLayoutAnimationConfig(tag);
-        }
-      });
-
-  // Layout Animations End
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -377,6 +319,49 @@ void NativeProxy::installJSIBindings(
   //      });
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
+
+  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
+  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
+
+  layoutAnimations->cthis()->setAnimationStartingBlock(
+      [wrt, weakErrorHandler](
+          int tag,
+          alias_ref<JString> type,
+          alias_ref<JMap<jstring, jstring>> values) {
+        auto &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (const auto &entry : *values) {
+          try {
+            auto key =
+                jsi::String::createFromAscii(rt, entry.first->toStdString());
+            auto value = stod(entry.second->toStdString());
+            yogaValues.setProperty(rt, key, value);
+          } catch (std::invalid_argument e) {
+            if (auto errorHandler = weakErrorHandler.lock()) {
+              errorHandler->setError("Failed to convert value to number");
+              errorHandler->raise();
+            }
+          }
+        }
+
+        module->layoutAnimationsManager().startLayoutAnimation(
+            *runtime, tag, type->toStdString(), yogaValues);
+      });
+
+  layoutAnimations->cthis()->setHasAnimationBlock(
+      [](int tag, std::string type) {
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        return layoutAnimationsProxy &&
+            layoutAnimationsProxy->hasLayoutAnimation(tag, type);
+      });
+
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
+      [weakLayoutAnimationsProxy](int tag) {
+        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+        if (layoutAnimationsProxy) {
+          layoutAnimationsProxy->clearLayoutAnimationConfig(tag);
+        }
+      });
 
   runtime_->global().setProperty(
       *runtime_,

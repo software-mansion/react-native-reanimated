@@ -67,9 +67,14 @@ class CoreFunction {
   JSRuntimeHelper
       *runtimeHelper_; // runtime helper holds core function references, so we
                        // use normal pointer here to avoid ref cycles.
+  std::shared_ptr<jsi::Function> getFunction(jsi::Runtime &rt);
+
  public:
   CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
-  jsi::Value call(jsi::Runtime &rt, const jsi::Value &arg0);
+  template <typename... Args>
+  jsi::Value call(jsi::Runtime &rt, Args &&...args) {
+    return getFunction(rt)->call(rt, args...);
+  }
 };
 
 class Shareable {

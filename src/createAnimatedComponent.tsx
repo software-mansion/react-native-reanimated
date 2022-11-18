@@ -2,7 +2,7 @@ import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
-import './reanimated2/layoutReanimation/LayoutAnimationRepository';
+import './reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';

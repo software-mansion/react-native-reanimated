@@ -170,7 +170,8 @@ NativeReanimatedModule::NativeReanimatedModule(
 
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
-    const jsi::Value &valueUnpacker) {
+    const jsi::Value &valueUnpacker,
+    const jsi::Value &layoutAnimationStartFunction) {
   runtimeHelper =
       std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
   runtimeHelper->valueUnpacker =
@@ -337,7 +338,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     const jsi::Value &viewTag,
     const jsi::Value &type,
     const jsi::Value &config) {
-  layoutAnimationsProxy_.configureAnimation(
+  layoutAnimationsManager_.configureAnimation(
       viewTag.asNumber(),
       type.asString(rt).utf8(rt),
       extractShareableOrThrow(rt, config));

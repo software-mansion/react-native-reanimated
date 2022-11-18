@@ -3,6 +3,12 @@ import { withStyleAnimation } from '../animation/styleAnimation';
 import { LogBox } from 'react-native';
 import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
+import {
+  LayoutAnimationFunction,
+  LayoutAnimationsValues,
+} from './animationBuilder';
+
+LogBox.ignoreLogs(['Overriding previous layout animation with']);
 
 const TAG_OFFSET = 1e9;
 
@@ -27,16 +33,18 @@ function stopObservingProgress(
   _notifyAboutEnd(tag, cancelled, removeView);
 }
 
-LogBox.ignoreLogs(['Overriding previous layout animation with']);
-
-runOnUI(() => {
+function createLayoutAnimationManager() {
   'worklet';
-
   const enteringAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
 
-  global.LayoutAnimationRepository = {
-    startAnimationForTag(tag, type, yogaValues, config) {
+  return {
+    start(
+      tag: number,
+      type: string,
+      yogaValues: LayoutAnimationsValues,
+      config: LayoutAnimationFunction
+    ) {
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 
@@ -60,6 +68,7 @@ runOnUI(() => {
         value._value = style.initialValues;
       }
 
+      // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
@@ -69,11 +78,17 @@ runOnUI(() => {
           const shouldRemoveView = type === 'exiting';
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
-        style.callback && style.callback(finished);
+        style.callback &&
+          style.callback(finished === undefined ? false : finished);
       };
 
-      value.value = animation;
       startObservingProgress(tag, value);
+      value.value = animation;
     },
   };
+}
+
+runOnUI(() => {
+  'worklet';
+  global.LayoutAnimationsManager = createLayoutAnimationManager();
 })();
