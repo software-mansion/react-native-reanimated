@@ -249,7 +249,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+  nodesManager.animationsManager = animationsManager;
 #else
   [reaUiManagerNoCast setUp:animationsManager];
 #endif // RCT_NEW_ARCH_ENABLED

@@ -29,7 +29,7 @@ export default function EmptyExample() {
             marginLeft: state ? 200 : 0,
             backgroundColor: state ? 'red' : 'blue',
           }}>
-          <View style={{ width: 50, height: 50, backgroundColor: 'black' }} />
+          {/* <View style={{ width: 50, height: 50, backgroundColor: 'black' }} /> */}
         </Animated.View>
       )}
     </View>
