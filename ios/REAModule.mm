@@ -389,8 +389,10 @@ static UIView *removedView;
       for (auto tag : tags) {
         UIView *view = [_uiManager viewForReactTag:@(tag)];
         view.reactTag = @(tag);
-        REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
-        [self.nodesManager.animationsManager onViewCreate:view after:afterSnapshot];
+        if (view.frame.size.width == 100) {
+          REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+          [self.nodesManager.animationsManager onViewCreate:view after:afterSnapshot];
+        }
       }
       reanimatedModule->layoutAnimationsProxy_->tagsOfCreatedViews_.clear();
     }

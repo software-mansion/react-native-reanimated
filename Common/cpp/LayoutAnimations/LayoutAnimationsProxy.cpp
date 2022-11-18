@@ -96,6 +96,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     } else if (type == "layout") {
       config = layoutAnimations_[tag];
     }
+    assert(config != nullptr);
     viewSharedValue = viewSharedValues_[tag];
   }
 
