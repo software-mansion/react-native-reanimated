@@ -96,8 +96,11 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     } else if (type == "layout") {
       config = layoutAnimations_[tag];
     }
-    assert(config != nullptr);
     viewSharedValue = viewSharedValues_[tag];
+  }
+
+  if (config == nullptr) {
+    return;
   }
 
   jsi::Value layoutAnimationRepositoryAsValue =

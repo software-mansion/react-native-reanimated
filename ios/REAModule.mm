@@ -354,26 +354,26 @@ static UIView *removedView;
 
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     // layout animations
-    //    {
-    //      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfUpdatedViews_;
-    //      for (auto tag : tags) {
-    //        UIView *view = [_uiManager viewForReactTag:@(tag)];
-    //        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-    //        beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
-    //      }
-    //    }
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfUpdatedViews_;
+      for (auto tag : tags) {
+        UIView *view = [_uiManager viewForReactTag:@(tag)];
+        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+        beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
+      }
+    }
 
     // exiting animations
     {
-      //      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfRemovedViews_;
-      //      for (auto tag : tags) {
-      //        UIView *view = [_uiManager viewForReactTag:@(tag)];
-      //        view.reactTag = @(tag);
-      //        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-      //        beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
-      //        removedView = [view snapshotViewAfterScreenUpdates:NO];
-      //        removedView.frame = view.frame;
-      //      }
+      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfRemovedViews_;
+      for (auto tag : tags) {
+        UIView *view = [_uiManager viewForReactTag:@(tag)];
+        view.reactTag = @(tag);
+        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+        beforeSnapshot = snapshot; // TODO: remove beforeSnapshot
+        removedView = [view snapshotViewAfterScreenUpdates:NO];
+        removedView.frame = view.frame;
+      }
     }
   }
 }
@@ -398,28 +398,28 @@ static UIView *removedView;
     }
 
     // layout animations
-    //    {
-    //      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfUpdatedViews_;
-    //      for (auto tag : tags) {
-    //        UIView *view = [_uiManager viewForReactTag:@(tag)];
-    //        REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
-    //        [self.nodesManager.animationsManager onViewUpdate:view before:beforeSnapshot after:afterSnapshot];
-    //      }
-    //      reanimatedModule->layoutAnimationsProxy_->tagsOfUpdatedViews_.clear();
-    //    }
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfUpdatedViews_;
+      for (auto tag : tags) {
+        UIView *view = [_uiManager viewForReactTag:@(tag)];
+        REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+        [self.nodesManager.animationsManager onViewUpdate:view before:beforeSnapshot after:afterSnapshot];
+      }
+      reanimatedModule->layoutAnimationsProxy_->tagsOfUpdatedViews_.clear();
+    }
 
     // exiting animations
-    //    {
-    //      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfRemovedViews_;
-    //      for (auto tag : tags) {
-    //        UIView *windowView = UIApplication.sharedApplication.keyWindow;
-    //        [windowView addSubview:removedView];
-    //        removedView.reactTag = @(tag);
-    //        // TODO: fix exiting animations
-    //        // [self.nodesManager.animationsManager onViewRemoval:removedView before:beforeSnapshot];
-    //      }
-    //      reanimatedModule->layoutAnimationsProxy_->tagsOfRemovedViews_.clear();
-    //    }
+    {
+      const auto &tags = reanimatedModule->layoutAnimationsProxy_->tagsOfRemovedViews_;
+      for (auto tag : tags) {
+        UIView *windowView = UIApplication.sharedApplication.keyWindow;
+        [windowView addSubview:removedView];
+        removedView.reactTag = @(tag);
+        // TODO: fix exiting animations
+        [self.nodesManager.animationsManager removeChildren:@[ removedView ] fromContainer:removedView.superview];
+      }
+      reanimatedModule->layoutAnimationsProxy_->tagsOfRemovedViews_.clear();
+    }
   }
 
   [CATransaction commit];
