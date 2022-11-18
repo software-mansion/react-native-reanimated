@@ -29,6 +29,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 @implementation REAAnimationsManager {
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
+  NSMutableSet<NSNumber *> *_enteringViews;
+  NSMutableDictionary<NSNumber *, REASnapshot *> *_enteringViewTargetValues;
   NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
   NSMutableDictionary<NSNumber *, NSNumber *> *_exitingSubviewsCountMap;
   NSMutableSet<NSNumber *> *_ancestorsToRemove;
@@ -57,6 +59,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _exitingViews = [NSMutableDictionary new];
     _exitingSubviewsCountMap = [NSMutableDictionary new];
     _ancestorsToRemove = [NSMutableSet new];
+    _enteringViews = [NSMutableSet new];
+    _enteringViewTargetValues = [NSMutableDictionary new];
 
     _targetKeys = [NSMutableArray new];
     _currentKeys = [NSMutableArray new];
@@ -107,8 +111,24 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)endLayoutAnimationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView
 {
-  UIView *view = [_exitingViews objectForKey:tag];
-  if (removeView && view != nil) {
+  UIView *view = [self viewForTag:tag];
+
+  if (view == nil) {
+    return;
+  }
+  if ([_enteringViews containsObject:tag] && !removeView) {
+    REASnapshot *target = _enteringViewTargetValues[tag];
+    if (target != nil) {
+      NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
+      RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
+      _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
+      [self setNewProps:target.values forView:view withComponentData:componentData];
+    }
+  }
+  [_enteringViews removeObject:tag];
+  [_enteringViewTargetValues removeObjectForKey:tag];
+
+  if (removeView) {
     [self endAnimationsRecursive:view];
     [view removeFromSuperview];
   }
@@ -351,6 +371,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   NSMutableDictionary *targetValues = after.values;
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
+  [_enteringViews addObject:view.reactTag];
   _startAnimationForTag(view.reactTag, @"entering", preparedValues, @(0));
 }
 
@@ -365,10 +386,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view
 {
-  if (_hasAnimationForTag(view.reactTag, @"layout")) {
-    return [[REASnapshot alloc] init:view];
-  }
-  return nil;
+  return [[REASnapshot alloc] init:view];
 }
 
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before
@@ -381,6 +399,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     } else {
       [self onViewUpdate:view before:before after:after];
     }
+  } else if ([type isEqual:@"layout"] && [_enteringViews containsObject:[view reactTag]]) {
+    NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
+    RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
+    _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
+    [self setNewProps:before.values forView:view withComponentData:componentData];
   }
 }
 
