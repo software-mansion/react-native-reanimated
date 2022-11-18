@@ -37,7 +37,6 @@
 @end
 
 @implementation REAUIManager {
-  BOOL _proxyViewRemoval;
   RCTLayoutAnimationGroup *_reactLayoutAnimationGroup;
   NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *_toBeRemovedRegister;
   NSMutableDictionary<NSNumber *, NSNumber *> *_parentMapper;
@@ -84,25 +83,15 @@
           fromContainer:(UIView *)container
           withAnimation:(RCTLayoutAnimationGroup *)animation
 {
-  if (_proxyViewRemoval) {
+  if (animation == _reactLayoutAnimationGroup) {
     // if a removed view in this batch has an `exiting` animation,
     // let REAAnimationsManager handle the removal
     [_animationsManager removeChildren:children fromContainer:container];
-  } else if (animation != _reactLayoutAnimationGroup) {
+  } else {
     // otherwise, if there's a layout animation group set,
     // delegate to the React Native implementation for layout animations
     [super _removeChildren:children fromContainer:container withAnimation:animation];
-  } else {
-    // don't use React Native Layout Animations if the layout animations group
-    // is the dummy one set by REAUIManager
-    [super _removeChildren:children fromContainer:container];
   }
-}
-
-- (void)batchDidComplete
-{
-  _proxyViewRemoval = NO;
-  [super batchDidComplete];
 }
 
 - (void)_manageChildren:(NSNumber *)containerTag
@@ -127,22 +116,23 @@
   // Reanimated changes /start
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   if (isUIViewRegistry) {
-    BOOL wasProxyRemovalSet = _proxyViewRemoval;
-    if (!_proxyViewRemoval) {
+    BOOL wasProxyRemovalSet = [self valueForKey:@"_layoutAnimationGroup"] == _reactLayoutAnimationGroup;
+    BOOL wantProxyRemoval = NO;
+    if (!wasProxyRemovalSet) {
       id<RCTComponent> container = registry[containerTag];
       NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
                                                                                          atIndices:removeAtIndices];
       for (UIView *removedChild in permanentlyRemovedChildren) {
         if ([_animationsManager wantsHandleRemovalOfView:removedChild]) {
-          _proxyViewRemoval = YES;
+          wantProxyRemoval = YES;
           break;
         }
         [_animationsManager removeAnimationsFromSubtree:removedChild];
       }
-    }
-    if (!wasProxyRemovalSet && _proxyViewRemoval) {
-      // set layout animation group
-      [super setNextLayoutAnimationGroup:_reactLayoutAnimationGroup];
+      if (wantProxyRemoval) {
+        // set layout animation group
+        [super setNextLayoutAnimationGroup:_reactLayoutAnimationGroup];
+      }
     }
   }
   // Reanimated changes /end
