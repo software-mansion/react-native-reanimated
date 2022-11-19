@@ -29,6 +29,11 @@ export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = false;
   return result;
 }
+
+export function isRunningInitialStyleUpdater(): boolean {
+  return IN_STYLE_UPDATER;
+}
+
 interface RecognizedPrefixSuffix {
   prefix?: string;
   suffix?: string;

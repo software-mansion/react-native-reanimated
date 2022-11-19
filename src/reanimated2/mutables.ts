@@ -7,6 +7,7 @@ import {
 } from './shareables';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
+import { isRunningInitialStyleUpdater } from './animation/util';
 export { stopMapper } from './mappers';
 
 export function makeUIMutable<T>(
@@ -81,7 +82,6 @@ export function makeMutable<T>(
   const mutable = {
     set value(newValue) {
       if (NativeReanimatedModule.native) {
-        value = newValue;
         runOnUI(() => {
           'worklet';
           mutable.value = newValue;
@@ -93,6 +93,9 @@ export function makeMutable<T>(
     get value() {
       if (syncDataHolder) {
         return NativeReanimatedModule.getDataSynchronously(syncDataHolder);
+      }
+      if (!isRunningInitialStyleUpdater()) {
+        throw new Error('Attempting to read value on the React Native thread');
       }
       return value;
     },

@@ -8,9 +8,7 @@ import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
-  canApplyOptimalisation,
   getStyleWithoutAnimations,
-  hasColorProps,
   isAnimated,
   parseColors,
   styleDiff,
@@ -451,7 +449,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   useEffect(() => {
     let fun;
     let updaterFn = updater as BasicWorkletFunctionOptional<T>;
-    let optimalization = updater.__optimalization;
     if (adapters) {
       updaterFn = () => {
         'worklet';
@@ -463,38 +460,13 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       };
     }
 
-    if (canApplyOptimalisation(updaterFn) && !shouldBeUseWeb()) {
-      if (hasColorProps(updaterFn())) {
-        updaterFn = () => {
-          'worklet';
-          const newValues = updaterFn();
-          const oldValues = remoteState.last;
-          const diff = styleDiff<T>(oldValues, newValues);
-          remoteState.last = Object.assign({}, oldValues, newValues);
-          parseColors(diff);
-          return diff;
-        };
-      } else {
-        updaterFn = () => {
-          'worklet';
-          const newValues = updaterFn();
-          const oldValues = remoteState.last;
-          const diff = styleDiff<T>(oldValues, newValues);
-          remoteState.last = Object.assign({}, oldValues, newValues);
-          return diff;
-        };
-      }
-    } else if (!shouldBeUseWeb()) {
-      optimalization = 0;
+    if (!shouldBeUseWeb()) {
       updaterFn = () => {
         'worklet';
         const style = updaterFn();
         parseColors(style);
         return style;
       };
-    }
-    if (typeof updater.__optimalization !== undefined) {
-      updaterFn.__optimalization = optimalization;
     }
 
     if (isJest()) {
