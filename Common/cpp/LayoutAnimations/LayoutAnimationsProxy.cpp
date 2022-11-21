@@ -98,10 +98,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     }
     viewSharedValue = viewSharedValues_[tag];
   }
-
-  if (config == nullptr) {
-    return;
-  }
+  assert(config != nullptr);
 
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
