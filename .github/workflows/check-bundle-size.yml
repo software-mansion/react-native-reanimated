@@ -43,4 +43,6 @@ jobs:
 
       - name: Check bundle size
         working-directory: NextExample
-        run: if [[ $SIZE_KB -gt $MAX_SIZE_KB ]]; then false || echo "Bundle size is greater than $MAX_SIZE_KB kB." ; fi
+        run: |
+          export SIZE_KB=`cat output.txt | grep /reanimated | awk '{ print $4 }'`
+          if [[ $SIZE_KB -gt $MAX_SIZE_KB ]]; then false || echo "Bundle size is greater than $MAX_SIZE_KB kB." ; fi
