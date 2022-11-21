@@ -13,14 +13,14 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-native-reanimated": "3.0.0-rc.3",
-    "react-native-web": "^0.18.9"
+    "react-native-web": "^0.18.10"
   },
   "devDependencies": {
-    "@expo/config": "^7.0.1",
-    "@expo/next-adapter": "^4.0.12",
-    "@next/bundle-analyzer": "^12.3.1",
-    "babel-plugin-react-native-web": "^0.18.9",
+    "@expo/config": "^7.0.3",
+    "@expo/next-adapter": "^4.0.13",
+    "@next/bundle-analyzer": "^13.0.4",
+    "babel-plugin-react-native-web": "^0.18.10",
     "next-compose-plugins": "^2.2.1",
-    "next-transpile-modules": "^9.0.0"
+    "next-transpile-modules": "^10.0.0"
   }
 }
