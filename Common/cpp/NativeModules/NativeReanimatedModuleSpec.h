@@ -85,6 +85,14 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) = 0;
+
+  // layout animations
+  virtual jsi::Value configureLayoutAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &type,
+      const jsi::Value &config,
+      const jsi::Value &viewSharedValue) = 0;
 };
 
 } // namespace reanimated

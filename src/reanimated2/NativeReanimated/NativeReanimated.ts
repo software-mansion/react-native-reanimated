@@ -6,6 +6,7 @@ import {
   AnimatedKeyboardInfo,
 } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
+import { LayoutAnimationFunction } from '../layoutReanimation';
 
 export class NativeReanimated {
   native: boolean;
@@ -89,6 +90,20 @@ export class NativeReanimated {
     callback?: (result: T) => void
   ): Promise<T> {
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
+  }
+
+  configureLayoutAnimation(
+    viewTag: number,
+    type: string,
+    config: Keyframe | LayoutAnimationFunction,
+    viewSharedValue: SharedValue<null | Record<string, unknown>> | null
+  ) {
+    this.InnerNativeModule.configureLayoutAnimation(
+      viewTag,
+      type,
+      config,
+      viewSharedValue
+    );
   }
 
   enableLayoutAnimations(flag: boolean): void {
