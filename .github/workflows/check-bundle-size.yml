@@ -46,5 +46,6 @@ jobs:
           export NUMBER=`cat output.txt | grep " /reanimated" | awk '{ print $4 }'`
           export UNIT=`cat output.txt | grep " /reanimated" | awk '{ print $5 }'`
           echo $NUMBER $UNIT
-          if [[ $UNIT != "kB" ]]; then false || echo "Bundle size must be expressed in kilobytes" ; fi
-          if [[ $NUMBER -gt $MAX_SIZE_KB ]]; then false || echo "Bundle size is greater than $MAX_SIZE_KB kB." ; fi
+          if [ $UNIT != "kB" ]; then false || echo "Bundle size must be expressed in kilobytes" ; fi
+          export RESULT=`echo "$NUMBER <= $MAX_SIZE_KB" | bc -l`
+          if [ $RESULT -eq 0 ]; then false || echo "Bundle size is greater than $MAX_SIZE_KB kB." ; fi
