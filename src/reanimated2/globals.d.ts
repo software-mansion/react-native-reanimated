@@ -64,6 +64,7 @@ declare global {
     now: () => number;
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
+  const __reanimatedCallMeLater: (tag: number) => void;
 
   namespace NodeJS {
     interface Global {
@@ -120,6 +121,20 @@ declare global {
         now: () => number;
       };
       _frameCallbackRegistry: FrameCallbackRegistryUI;
+
+      __reanimatedLastLayoutAnimation: {
+        config: LayoutAnimationFunction | Keyframe;
+        sv: SharedValue<null | Record<string, unknown>>;
+      };
+      __reanimatedLastEnteringAnimation: {
+        config: LayoutAnimationFunction | Keyframe;
+        sv: SharedValue<null | Record<string, unknown>>;
+      };
+      __reanimatedLastExitingAnimation: {
+        config: LayoutAnimationFunction | Keyframe;
+        sv: SharedValue<null | Record<string, unknown>>;
+      };
+      __reanimatedCallMeLater: (tag: number) => void;
     }
   }
 }

@@ -413,39 +413,6 @@ export default function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
-        // TODO update config
-        const tag = findNodeHandle(ref);
-        const { layout, entering, exiting } = this.props;
-        if ((layout || entering || exiting) && tag != null) {
-          if (!shouldBeUseWeb()) {
-            enableLayoutAnimations(true, false);
-          }
-          if (layout) {
-            configureLayoutAnimations(
-              tag,
-              'layout',
-              maybeBuild(layout),
-              this.sv
-            );
-          }
-          if (entering) {
-            configureLayoutAnimations(
-              tag,
-              'entering',
-              maybeBuild(entering),
-              this.sv
-            );
-          }
-          if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              'exiting',
-              maybeBuild(exiting),
-              this.sv
-            );
-          }
-        }
-
         if (ref !== this._component) {
           this._component = ref;
         }
@@ -512,6 +479,49 @@ export default function createAnimatedComponent(
       return props;
     }
 
+    _configureLayoutAnimations() {
+      // other idea: keep list of refs to FiberNodes and get tag once React assigns it (before completeRoot)
+      // console.log(this._reactInternals.stateNode._reactInternalInstance);
+
+      // NOTE: This is a serious hack.
+      // When Fabric is enabled, `_setLocalRef` is called after `completeRoot`.
+      // Because of this, layout animation config is unknown during mounting.
+      // Unfortunately, React tag is assigned after `render` method is called.
+      // The function below will be called by ReanimatedUIManagerBinding when React calls "cloneNode".
+      global.__reanimatedCallMeLater = (tag: number) => {
+        const { layout, entering, exiting } = this.props;
+        if ((layout || entering || exiting) && tag != null) {
+          if (!shouldBeUseWeb()) {
+            enableLayoutAnimations(true, false);
+          }
+          if (layout) {
+            configureLayoutAnimations(
+              tag,
+              'layout',
+              maybeBuild(layout),
+              this.sv
+            );
+          }
+          if (entering) {
+            configureLayoutAnimations(
+              tag,
+              'entering',
+              maybeBuild(entering),
+              this.sv
+            );
+          }
+          if (exiting) {
+            configureLayoutAnimations(
+              tag,
+              'exiting',
+              maybeBuild(exiting),
+              this.sv
+            );
+          }
+        }
+      };
+    }
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
@@ -526,6 +536,9 @@ export default function createAnimatedComponent(
         web: {},
         default: { collapsable: false },
       });
+
+      this._configureLayoutAnimations();
+
       return (
         <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );

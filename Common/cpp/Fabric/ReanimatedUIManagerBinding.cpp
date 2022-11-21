@@ -98,6 +98,46 @@ jsi::Value ReanimatedUIManagerBinding::get(
   NewestShadowNodesRegistry *newestShadowNodesRegistry =
       newestShadowNodesRegistry_.get();
 
+  // Semantic: Creates a new node with given pieces.
+  if (methodName == "createNode") {
+    return jsi::Function::createFromHostFunction(
+        runtime,
+        name,
+        5,
+        [uiManager](
+            jsi::Runtime &runtime,
+            jsi::Value const &thisValue,
+            jsi::Value const *arguments,
+            size_t count) noexcept -> jsi::Value {
+          auto eventTarget =
+              eventTargetFromValue(runtime, arguments[4], arguments[0]);
+          if (!eventTarget) {
+            react_native_assert(false);
+            return jsi::Value::undefined();
+          }
+
+          // Layout Animations
+          static const auto funcName = "__reanimatedCallMeLater";
+          static const auto undefined = jsi::Value::undefined();
+          auto global = runtime.global();
+          auto value = global.getProperty(runtime, funcName);
+          if (!value.isUndefined()) {
+            auto tag = tagFromValue(arguments[0]);
+            value.asObject(runtime).asFunction(runtime).call(runtime, tag);
+            global.setProperty(runtime, funcName, undefined);
+          }
+
+          return valueFromShadowNode(
+              runtime,
+              uiManager->createNode(
+                  tagFromValue(arguments[0]),
+                  stringFromValue(runtime, arguments[1]),
+                  surfaceIdFromValue(runtime, arguments[2]),
+                  RawProps(runtime, arguments[3]),
+                  eventTarget));
+        });
+  }
+
   // Semantic: Clones the node with *same* props and *same* children.
   if (methodName == "cloneNode") {
     return jsi::Function::createFromHostFunction(
