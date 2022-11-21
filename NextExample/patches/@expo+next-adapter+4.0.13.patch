@@ -1,0 +1,15 @@
+diff --git a/node_modules/@expo/next-adapter/package.json b/node_modules/@expo/next-adapter/package.json
+index b9eb29a..b7bb78b 100644
+--- a/node_modules/@expo/next-adapter/package.json
++++ b/node_modules/@expo/next-adapter/package.json
+@@ -49,8 +49,8 @@
+   },
+   "peerDependencies": {
+     "next": "^11",
+-    "react": "^17",
+-    "react-native-web": "^0.17.0"
++    "react": "^18",
++    "react-native-web": "^0.18.0"
+   },
+   "publishConfig": {
+     "access": "public"

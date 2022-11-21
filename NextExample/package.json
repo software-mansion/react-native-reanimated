@@ -5,7 +5,8 @@
     "build": "next build",
     "start": "next start",
     "analyze": "ANALYZE=true next build",
-    "cache:clear": "rm -rf .expo .next node_modules/.cache"
+    "cache:clear": "rm -rf .expo .next node_modules/.cache",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "next": "latest",
@@ -21,6 +22,7 @@
     "@next/bundle-analyzer": "^13.0.4",
     "babel-plugin-react-native-web": "^0.18.10",
     "next-compose-plugins": "^2.2.1",
-    "next-transpile-modules": "^10.0.0"
+    "next-transpile-modules": "^10.0.0",
+    "patch-package": "^6.5.0"
   }
 }
