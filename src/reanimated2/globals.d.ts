@@ -22,22 +22,11 @@ declare global {
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
   const _getTimestamp: () => number;
-  const _stopObservingProgress: (tag: number, flag: boolean) => void;
   const _notifyAboutProgress: (tag: number, value: number) => void;
   const _notifyAboutEnd: (
     tag: number,
     finished: boolean,
-    removeView: b
-  ) => void;
-  const _stopObservingProgress: (
-    tag: number,
-    cancelled: boolean,
     removeView: boolean
-  ) => void;
-  const _startObservingProgress: (
-    tag: number,
-    viewSharedValue: { value: unknown; _value: unknown },
-    type: string
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
   const _makeShareableClone: (value: any) => any;
@@ -88,11 +77,6 @@ declare global {
       _log: (s: string) => void;
       _getCurrentTime: () => number;
       _getTimestamp: () => number;
-      _stopObservingProgress: (tag: number, flag: boolean) => void;
-      _startObservingProgress: (
-        tag: number,
-        flag: { value: boolean; _value: boolean }
-      ) => void;
       _setGestureState: (handlerTag: number, newState: number) => void;
       _makeShareableClone: (value: any) => any;
       _updateDataSynchronously: (

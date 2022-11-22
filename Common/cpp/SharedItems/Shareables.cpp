@@ -78,7 +78,7 @@ jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
   return value;
 }
 
-#endif
+#endif // HAS_JS_WEAK_OBJECTS
 
 ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
     : RetainingShareable(rt, ArrayType) {

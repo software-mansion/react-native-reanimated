@@ -20,7 +20,7 @@ void Scheduler::triggerUI() {
   scheduledOnUI = false;
 #if JS_RUNTIME_HERMES
   // JSI's scope defined here allows for JSI-objects to be cleared up after
-  // each runtime loop. WIthin these loops we typically create some temporary
+  // each runtime loop. Within these loops we typically create some temporary
   // JSI objects and hence it allows for such objects to be garbage collected
   // much sooner.
   // Apparently the scope API is only supported on hermes at the moment.

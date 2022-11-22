@@ -55,7 +55,7 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
       if (__DEV__) {
         // we freeze objects that are transformed to shareable. This should help
         // detect issues when someone modifies data after it's been converted to
-        // shareable. Meaning that they may be doing a foulty assumption in their
+        // shareable. Meaning that they may be doing a faulty assumption in their
         // code expecting that the updates are going to automatically populate to
         // the object sent to the UI thread. If the user really wants some objects
         // to be mutable they should use share values instead.
@@ -90,7 +90,7 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
         }
       }
       if (__DEV__) {
-        // See the reasoning begind freezing in the other comment above.
+        // See the reasoning behind freezing in the other comment above.
         Object.freeze(value);
       }
       return _makeShareableClone(toAdapt);
