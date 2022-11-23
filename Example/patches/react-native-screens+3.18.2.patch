@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-screens/ios/RNSScreen.mm b/node_modules/react-native-screens/ios/RNSScreen.mm
-index 337b325..b1c8511 100644
+index 337b325..3ed912e 100644
 --- a/node_modules/react-native-screens/ios/RNSScreen.mm
 +++ b/node_modules/react-native-screens/ios/RNSScreen.mm
 @@ -3,6 +3,7 @@
@@ -10,45 +10,47 @@ index 337b325..b1c8511 100644
  
  #ifdef RN_FABRIC_ENABLED
  #import <React/RCTConversions.h>
-@@ -901,14 +902,42 @@ - (void)setupProgressNotification
+@@ -901,14 +902,44 @@ - (void)setupProgressNotification
  {
    if (self.transitionCoordinator != nil) {
      _fakeView.alpha = 0.0;
-+    __block NSArray<UIView *> *sharedElements;
-+    __block NSMutableDictionary<NSNumber *, UIView *> *sharedElementParents = [NSMutableDictionary new];
-+    __block NSMutableDictionary<NSNumber *, NSNumber *> *sharedElementIndex = [NSMutableDictionary new];
++//    __block NSArray<UIView *> *sharedElements;
++//    __block NSMutableDictionary<NSNumber *, UIView *> *sharedElementParents = [NSMutableDictionary new];
++//    __block NSMutableDictionary<NSNumber *, NSNumber *> *sharedElementIndex = [NSMutableDictionary new];
      [self.transitionCoordinator
          animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
            [[context containerView] addSubview:self->_fakeView];
 +          
-+          if (self->_closing) {
-+            NSObject<RNSSharedElementAnimatorDelegate> *delegate = [RNSSharedElementAnimator getDelegate];
-+            sharedElements = [delegate getSharedElementsForCurrentTransition];
-+            UIView *containerView = [context containerView];
-+            for (UIView *sharedElement in sharedElements) {
-+              UIView *parentView = sharedElement.superview;
-+              sharedElementParents[sharedElement.reactTag] = parentView; 
-+              sharedElementIndex[sharedElement.reactTag] = @([parentView.subviews indexOfObject:sharedElement]);
-+              [sharedElement removeFromSuperview];
-+              [containerView addSubview:sharedElement];
-+            }
-+          }
++//          if (self->_closing) {
++//            NSObject<RNSSharedElementAnimatorDelegate> *delegate = [RNSSharedElementAnimator getDelegate];
++//            sharedElements = [delegate getSharedElementsForCurrentTransition];
++//            UIView *containerView = [context containerView];
++//            for (UIView *sharedElement in sharedElements) {
++//              UIView *parentView = sharedElement.superview;
++//              sharedElementParents[sharedElement.reactTag] = parentView;
++//              sharedElementIndex[sharedElement.reactTag] = @([parentView.subviews indexOfObject:sharedElement]);
++//              [sharedElement removeFromSuperview];
++//              [containerView addSubview:sharedElement];
++//            }
++//          }
 +          
            self->_fakeView.alpha = 1.0;
            self->_animationTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleAnimation)];
            [self->_animationTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
          }
          completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
-+          if (self->_closing) {
-+            for (UIView *sharedElement in sharedElements) {
-+              UIView *parentView = sharedElementParents[sharedElement.reactTag]; 
-+              int index = [sharedElementIndex[sharedElement.reactTag] intValue];
-+              [sharedElement removeFromSuperview];
-+              [parentView insertSubview:sharedElement atIndex:index];
-+            }
-+            NSObject<RNSSharedElementAnimatorDelegate> *delegate = [RNSSharedElementAnimator getDelegate];
-+            [delegate onNativeAnimationEnd:self.view];
-+          }
++//          if (self->_closing) {
++//            for (UIView *sharedElement in sharedElements) {
++//              UIView *parentView = sharedElementParents[sharedElement.reactTag]; 
++//              int index = [sharedElementIndex[sharedElement.reactTag] intValue];
++//              [sharedElement removeFromSuperview];
++//              [parentView insertSubview:sharedElement atIndex:index];
++//              CGPoint convertedCenter = [UIApplication.sharedApplication.keyWindow convertPoint:sharedElement.center toView:sharedElement.superview];
++//              sharedElement.center = convertedCenter;
++//            }
++//            NSObject<RNSSharedElementAnimatorDelegate> *delegate = [RNSSharedElementAnimator getDelegate];
++//            [delegate onNativeAnimationEnd:self.view];
++//          }
 +          
            [self->_animationTimer setPaused:YES];
            [self->_animationTimer invalidate];
