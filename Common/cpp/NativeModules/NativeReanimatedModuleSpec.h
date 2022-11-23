@@ -92,7 +92,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &viewTag,
       const jsi::Value &type,
       const jsi::Value &config,
-      const jsi::Value &viewSharedValue) = 0;
+      const jsi::Value &viewSharedValue,
+      const jsi::Value &sharedTransitionTag) = 0;
 };
 
 } // namespace reanimated

@@ -149,7 +149,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &viewTag,
       const jsi::Value &type,
       const jsi::Value &config,
-      const jsi::Value &viewSharedValue) override;
+      const jsi::Value &viewSharedValue,
+      const jsi::Value &sharedTransitionTag) override;
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED

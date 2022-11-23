@@ -343,12 +343,14 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     const jsi::Value &viewTag,
     const jsi::Value &type,
     const jsi::Value &config,
-    const jsi::Value &viewSharedValue) {
+    const jsi::Value &viewSharedValue,
+    const jsi::Value &sharedTransitionTag) {
   layoutAnimationsProxy_->configureAnimation(
       viewTag.asNumber(),
       type.asString(rt).utf8(rt),
       ShareableValue::adapt(rt, config, this),
-      ShareableValue::adapt(rt, viewSharedValue, this));
+      ShareableValue::adapt(rt, viewSharedValue, this),
+      sharedTransitionTag.asString(rt).utf8(rt));
   return jsi::Value::undefined();
 }
 

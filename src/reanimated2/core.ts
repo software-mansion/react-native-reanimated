@@ -370,13 +370,15 @@ export function configureLayoutAnimations(
   viewTag: number,
   type: string,
   config: LayoutAnimationFunction | Keyframe,
-  viewSharedValue: SharedValue<null | Record<string, unknown>> | null
+  viewSharedValue: SharedValue<null | Record<string, unknown>> | null,
+  sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
     viewTag,
     type,
     config,
-    viewSharedValue
+    viewSharedValue,
+    sharedTransitionTag
   );
 }
 

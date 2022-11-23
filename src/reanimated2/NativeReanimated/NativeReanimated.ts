@@ -96,13 +96,15 @@ export class NativeReanimated {
     viewTag: number,
     type: string,
     config: Keyframe | LayoutAnimationFunction,
-    viewSharedValue: SharedValue<null | Record<string, unknown>> | null
+    viewSharedValue: SharedValue<null | Record<string, unknown>> | null,
+    sharedTransitionTag = ''
   ) {
     this.InnerNativeModule.configureLayoutAnimation(
       viewTag,
       type,
       config,
-      viewSharedValue
+      viewSharedValue,
+      sharedTransitionTag
     );
   }
 

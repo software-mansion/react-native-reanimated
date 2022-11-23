@@ -1,0 +1,110 @@
+diff --git a/node_modules/react-native-screens/ios/RNSScreen.mm b/node_modules/react-native-screens/ios/RNSScreen.mm
+index 337b325..b1c8511 100644
+--- a/node_modules/react-native-screens/ios/RNSScreen.mm
++++ b/node_modules/react-native-screens/ios/RNSScreen.mm
+@@ -3,6 +3,7 @@
+ #import "RNSScreen.h"
+ #import "RNSScreenContainer.h"
+ #import "RNSScreenWindowTraits.h"
++#import "RNSSharedElementAnimator.h"
+ 
+ #ifdef RN_FABRIC_ENABLED
+ #import <React/RCTConversions.h>
+@@ -901,14 +902,42 @@ - (void)setupProgressNotification
+ {
+   if (self.transitionCoordinator != nil) {
+     _fakeView.alpha = 0.0;
++    __block NSArray<UIView *> *sharedElements;
++    __block NSMutableDictionary<NSNumber *, UIView *> *sharedElementParents = [NSMutableDictionary new];
++    __block NSMutableDictionary<NSNumber *, NSNumber *> *sharedElementIndex = [NSMutableDictionary new];
+     [self.transitionCoordinator
+         animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+           [[context containerView] addSubview:self->_fakeView];
++          
++          if (self->_closing) {
++            NSObject<RNSSharedElementAnimatorDelegate> *delegate = [RNSSharedElementAnimator getDelegate];
++            sharedElements = [delegate getSharedElementsForCurrentTransition];
++            UIView *containerView = [context containerView];
++            for (UIView *sharedElement in sharedElements) {
++              UIView *parentView = sharedElement.superview;
++              sharedElementParents[sharedElement.reactTag] = parentView; 
++              sharedElementIndex[sharedElement.reactTag] = @([parentView.subviews indexOfObject:sharedElement]);
++              [sharedElement removeFromSuperview];
++              [containerView addSubview:sharedElement];
++            }
++          }
++          
+           self->_fakeView.alpha = 1.0;
+           self->_animationTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleAnimation)];
+           [self->_animationTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+         }
+         completion:^(id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
++          if (self->_closing) {
++            for (UIView *sharedElement in sharedElements) {
++              UIView *parentView = sharedElementParents[sharedElement.reactTag]; 
++              int index = [sharedElementIndex[sharedElement.reactTag] intValue];
++              [sharedElement removeFromSuperview];
++              [parentView insertSubview:sharedElement atIndex:index];
++            }
++            NSObject<RNSSharedElementAnimatorDelegate> *delegate = [RNSSharedElementAnimator getDelegate];
++            [delegate onNativeAnimationEnd:self.view];
++          }
++          
+           [self->_animationTimer setPaused:YES];
+           [self->_animationTimer invalidate];
+           [self->_fakeView removeFromSuperview];
+diff --git a/node_modules/react-native-screens/ios/sharedElementTransition/RNSSharedElementAnimator.h b/node_modules/react-native-screens/ios/sharedElementTransition/RNSSharedElementAnimator.h
+new file mode 100644
+index 0000000..487dc11
+--- /dev/null
++++ b/node_modules/react-native-screens/ios/sharedElementTransition/RNSSharedElementAnimator.h
+@@ -0,0 +1,16 @@
++@protocol RNSSharedElementAnimatorDelegate <NSObject>
++
++- (void)onScreenTransitionCreate:(id)screen;
++- (void)onNativeAnimationEnd:(UIView *)screen;
++
++- (void)onScreenRemoving:(UIView *)screen;
++- (NSArray<UIView *> *)getSharedElementsForCurrentTransition;
++
++@end
++
++@interface RNSSharedElementAnimator : NSObject
++
+++ (void)setDelegate:(NSObject<RNSSharedElementAnimatorDelegate> *)delegate;
+++ (NSObject<RNSSharedElementAnimatorDelegate> *)getDelegate;
++
++@end
+diff --git a/node_modules/react-native-screens/ios/sharedElementTransition/RNSSharedElementAnimator.m b/node_modules/react-native-screens/ios/sharedElementTransition/RNSSharedElementAnimator.m
+new file mode 100644
+index 0000000..f716505
+--- /dev/null
++++ b/node_modules/react-native-screens/ios/sharedElementTransition/RNSSharedElementAnimator.m
+@@ -0,0 +1,27 @@
++#if __cplusplus
++#import <RNScreens/RNSScreen.h>
++#endif // __cplusplus
++#import <RNScreens/RNSSharedElementAnimator.h>
++// #import <RNScreens/RNSSharedElementAnimatorDelegateMock.h> // TODO
++
++#import <React/RCTUIManager.h>
++
++@implementation RNSSharedElementAnimator
++
++static NSObject<RNSSharedElementAnimatorDelegate> *_delegate;
++
+++ (void)setDelegate:(NSObject<RNSSharedElementAnimatorDelegate> *)delegate
++{
++  _delegate = delegate;
++}
++
+++ (NSObject<RNSSharedElementAnimatorDelegate> *)getDelegate
++{
++  if (_delegate == nil) {
++    // TODO
++//    _delegate = [RNSSharedElementAnimatorDelegateMock alloc];
++  }
++  return _delegate;
++}
++
++@end

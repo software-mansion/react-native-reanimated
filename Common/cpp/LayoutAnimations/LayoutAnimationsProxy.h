@@ -8,6 +8,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace reanimated {
 
@@ -30,7 +31,8 @@ class LayoutAnimationsProxy {
       int tag,
       const std::string &type,
       std::shared_ptr<ShareableValue> config,
-      std::shared_ptr<ShareableValue> viewSharedValue);
+      std::shared_ptr<ShareableValue> viewSharedValue,
+      const std::string &sharedTransitionTag);
   bool hasLayoutAnimation(int tag, const std::string &type);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -38,6 +40,7 @@ class LayoutAnimationsProxy {
       const std::string &type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(int tag);
+  int findTheOtherForSharedTransition(int tag);
 
  private:
   std::function<void(int, jsi::Object newProps)> progressHandler_;
@@ -48,6 +51,8 @@ class LayoutAnimationsProxy {
   std::unordered_map<int, std::shared_ptr<ShareableValue>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<ShareableValue>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<ShareableValue>> layoutAnimations_;
+  std::unordered_map<int, std::shared_ptr<ShareableValue>> sharedTransitionAnimations_;
+  std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   mutable std::mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
                         // `layoutAnimations_` and `viewSharedValues_`.

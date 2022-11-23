@@ -170,7 +170,8 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
           std::move(args[0]),
           std::move(args[1]),
           std::move(args[2]),
-          std::move(args[3]));
+          std::move(args[3]),
+          std::move(args[4]));
 }
 
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
@@ -204,6 +205,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
 
   methodMap_["configureLayoutAnimation"] =
-      MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};
+      MethodMetadata{5, SPEC_PREFIX(configureLayoutAnimation)};
 }
 } // namespace reanimated

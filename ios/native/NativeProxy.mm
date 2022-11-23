@@ -32,6 +32,12 @@
 #import <dlfcn.h>
 #endif
 
+#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
+#import <RNReanimated/REASharedElementAnimatorDelegate.h>
+#import <RNScreens/RNSScreen.h>
+#import <RNScreens/RNSSharedElementAnimator.h>
+#endif
+
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
 @end
@@ -244,6 +250,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
   RCTUIManager *reaUiManager = reaUiManagerNoCast;
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
+  [animationsManager setNodeManager:reanimatedModule.nodesManager];
   [reaUiManagerNoCast setUp:animationsManager];
 
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
@@ -306,6 +313,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
   };
   // end keyboard events
+
+  #if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
+    REASharedElementAnimatorDelegate *delegate = [REASharedElementAnimatorDelegate new];
+    [delegate setAnimationsManager:animationsManager];
+    [RNSSharedElementAnimator setDelegate:delegate];
+  #endif
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -414,6 +427,26 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       return;
     }
     layoutAnimationsProxy->clearLayoutAnimationConfig([tag intValue]);
+  }];
+  
+  [animationsManager setStopAniamtionBlock:^(NSNumber * _Nonnull tag) {
+    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+    if (layoutAnimationsProxy == nullptr) {
+      return;
+    }
+    layoutAnimationsProxy->stopObserving([tag intValue], true, false);
+  }];
+  
+  [animationsManager setFindTheOtherForSharedTransitionBlock:^NSNumber * _Nullable(NSNumber * _Nonnull tag) {
+    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+    if (layoutAnimationsProxy == nullptr) {
+      return nil;
+    }
+    int resultTag = layoutAnimationsProxy->findTheOtherForSharedTransition([tag intValue]);
+    if (resultTag < 0) {
+      return nil;
+    }
+    return @(resultTag);
   }];
 #endif
 
