@@ -43,9 +43,8 @@ typedef NSNumber* _Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber 
 - (void)setNodeManager:(REANodesManager *)nodeManager;
 - (REANodesManager *)getNodeManager;
 - (void)setStopAniamtionBlock:(REAStopAnimationBlock)stopAnimation;
-- (NSArray<UIView *> *)getSharedElementsForCurrentTransition;
 - (void)setFindTheOtherForSharedTransitionBlock:(REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
-- (void)flushTmpViewsArray;
+- (void)viewsDidLayout;
 
 @end
 

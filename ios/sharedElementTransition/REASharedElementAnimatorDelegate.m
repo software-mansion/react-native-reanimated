@@ -40,7 +40,7 @@
 }
 
 - (NSArray<UIView *> *)getSharedElementsForCurrentTransition { 
-  return [_animationsManager getSharedElementsForCurrentTransition];
+  return nil;
 }
 
 

@@ -38,13 +38,17 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAHasAnimationBlock _hasAnimationForTag;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionElement;
+  NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
   NSMutableSet<UIView *> *_viewToRestore;
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
   REANodesManager *_nodeManager;
   REAStopAnimationBlock _stopAnimation;
   NSMutableArray<UIView *> *_currentSharedTransitionElements;
   REAFindTheOtherForSharedTransitionBlock _findTheOtherForSharedTransition;
-  NSMutableArray<UIView *> *_tmpViewsArray;
+  UIView *_transitionContainer;
+  NSMutableArray<UIView *> *_unlayoutedSharedElements;
+  BOOL _isSharedTransitionActive;
 }
 
 + (NSArray *)layoutKeys
@@ -76,7 +80,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _snapshotRegistry = [NSMutableDictionary new];
     _viewToRestore = [NSMutableSet new];
     _currentSharedTransitionElements = [NSMutableArray new];
-    _tmpViewsArray = [NSMutableArray new];
+    _unlayoutedSharedElements = [NSMutableArray new];
+    _sharedTransitionParent = [NSMutableDictionary new];
+    _sharedTransitionInParentIndex = [NSMutableDictionary new];
+    _isSharedTransitionActive = NO;
   }
   return self;
 }
@@ -133,6 +140,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self endAnimationsRecursive:view];
     [view removeFromSuperview];
   }
+  [self finishSharedAnimation:[self viewForTag:tag]];
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
@@ -421,7 +429,14 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
   
   if (_hasAnimationForTag(viewTag, @"sharedElementTransition")) {
-    [_tmpViewsArray addObject:view];
+    [_unlayoutedSharedElements addObject:view];
+  }
+}
+
+- (void)viewsDidLayout
+{
+  for (UIView *view in _unlayoutedSharedElements) {
+    [self startSharedAnimation:view withNewElement:YES];
   }
 }
 
@@ -429,22 +444,14 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   REANodeFind(view, ^int(id<RCTComponent> view) {
     if (self->_hasAnimationForTag(view.reactTag, @"sharedElementTransition")) {
-      [self maybeRunSharedAnimation:(UIView*)view withNewElement:NO];
+      [self startSharedAnimation:(UIView*)view withNewElement:NO];
     }
     self->_clearAnimationConfigForTag(view.reactTag);
     return false;
   });
 }
 
-- (void)flushTmpViewsArray
-{
-  for (UIView *view in _tmpViewsArray) {
-    [self maybeRunSharedAnimation:view withNewElement:YES];
-  }
-  [_tmpViewsArray removeAllObjects];
-}
-
-- (void)maybeRunSharedAnimation:(UIView *)view withNewElement:(BOOL)withNewElement
+- (void)startSharedAnimation:(UIView *)view withNewElement:(BOOL)withNewElement
 {
   _sharedTransitionElement[view.reactTag] = view;
   NSNumber *targetViewTag = _findTheOtherForSharedTransition(view.reactTag);
@@ -460,20 +467,37 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     viewSource = view;
     viewTarget = _sharedTransitionElement[targetViewTag];
   }
-//  [viewSource.superview bringSubviewToFront:viewSource]; // TODO
-//  [viewTarget.superview bringSubviewToFront:viewTarget];
   REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] init:viewSource withParent:viewSource.superview];
   REASnapshot *targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
-  [self onViewTransition:viewSource before:sourceViewSnapshot after:targetViewSnapshot];
-//  [self onViewTransition:viewTarget before:sourceViewSnapshot after:targetViewSnapshot];
   _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
   _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
-//  [_viewToRestore addObject:viewSource];
-//  [_currentSharedTransitionElements addObject:viewSource];
-//  [_currentSharedTransitionElements addObject:viewTarget];
+  [_viewToRestore addObject:viewSource];
+  [_currentSharedTransitionElements addObject:viewSource];
+  [_currentSharedTransitionElements addObject:viewTarget];
   if (!withNewElement) {
     [_sharedTransitionElement removeObjectForKey:viewSource.reactTag];
   }
+  if (_isSharedTransitionActive == NO) {
+    _isSharedTransitionActive = YES;
+    UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
+    if (_transitionContainer == nil) {
+      _transitionContainer = [UIView new];
+    }
+    [mainWindow addSubview:_transitionContainer];
+    [mainWindow bringSubviewToFront:_transitionContainer];
+  }
+  _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
+  _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
+  [viewSource removeFromSuperview];
+  [_transitionContainer addSubview:viewSource];
+  
+  _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
+  _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
+  [viewTarget removeFromSuperview];
+  [_transitionContainer addSubview:viewTarget];
+  
+  [self onViewTransition:viewSource before:sourceViewSnapshot after:targetViewSnapshot];
+  [self onViewTransition:viewTarget before:sourceViewSnapshot after:targetViewSnapshot];
 }
 
 - (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
@@ -485,18 +509,25 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }
 
-- (void)restoreStateForSharedTransition
+- (void)finishSharedAnimation:(UIView *)view
 {
-  NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  for (UIView *view in _viewToRestore) {
-    NSNumber *viewTag = view.reactTag;
-    _stopAnimation(viewTag);
-    REASnapshot *viewSourcePeviousSnapshot = _snapshotRegistry[viewTag];
-    [self setNewProps:viewSourcePeviousSnapshot.values forView:view withComponentData:componentData convertToAbsolute:YES];
+  if ([_currentSharedTransitionElements containsObject:view]) {
+    [view removeFromSuperview];
+    UIView *parent = _sharedTransitionParent[view.reactTag];
+    int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
+    [parent insertSubview:view atIndex:childIndex];
+    REASnapshot *viewSourcePeviousSnapshot = _snapshotRegistry[view.reactTag];
+    [self progressLayoutAnimationWithStyle:viewSourcePeviousSnapshot.values forTag:view.reactTag];
+    [_currentSharedTransitionElements removeObject:view];
   }
-  [_viewToRestore removeAllObjects];
-  [_currentSharedTransitionElements removeAllObjects];
+  if ([_currentSharedTransitionElements count] == 0) {
+    [_sharedTransitionParent removeAllObjects];
+    [_sharedTransitionInParentIndex removeAllObjects];
+    [_transitionContainer removeFromSuperview];
+    [_viewToRestore removeAllObjects];
+    [_currentSharedTransitionElements removeAllObjects];
+    _isSharedTransitionActive = NO;
+  }
 }
 
 - (void)setNodeManager:(REANodesManager *)nodeManager
@@ -512,10 +543,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setStopAniamtionBlock:(REAStopAnimationBlock)stopAnimation
 {
   _stopAnimation = stopAnimation;
-}
-
-- (NSArray<UIView *> *)getSharedElementsForCurrentTransition { // ASYNC
-  return _currentSharedTransitionElements;
 }
 
 - (void)setFindTheOtherForSharedTransitionBlock:(REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition

@@ -12,17 +12,17 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <View style={{ display: 'flex', flexDirection: 'column' }}>
-        {/* <View style={{ marginTop: 50, marginLeft: 10 }}>
-          <View style={{ marginTop: 50, marginLeft: 10 }}> */}
+        <View style={{ marginTop: 50, marginLeft: 10 }}>
+          <View style={{ marginTop: 50, marginLeft: 10 }}>
             <View style={{ marginTop: 50}}>
               <Animated.View
                 sharedTransitionTag="mleko"
-                style={{ width: 100, height: 100, backgroundColor: 'green', borderWidth: 3, borderBottomColor: 'black' }}
+                style={{ width: 100, height: 100, backgroundColor: 'green' }}
               />
             </View>
           </View>
-        {/* </View>
-      </View> */}
+        </View>
+      </View>
       <Button
         onPress={() => navigation.navigate('Screen2')}
         title="Go to the next screen"
@@ -36,7 +36,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
     <View style={{ flex: 1, marginTop: 200 }}>
       <Animated.View
         sharedTransitionTag="mleko"
-        style={{ width: 100, height: 100, backgroundColor: 'red' }}
+        style={{ width: '100%', height: 400, backgroundColor: 'green' }}
       />
       <AnimatedButton
         title="go back"
@@ -51,7 +51,7 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          animation: 'fade',
+          animation: 'slide_from_right',
         }}>
         <Stack.Screen
           name="Screen1"

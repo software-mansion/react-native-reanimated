@@ -332,7 +332,7 @@
     // private field
     [uiManager setNextLayoutAnimationGroup:nil];
     
-    [self->_animationsManager flushTmpViewsArray];
+    [self->_animationsManager viewsDidLayout];
   };
 }
 
