@@ -271,7 +271,7 @@ class ShareableHandle : public Shareable {
  private:
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   std::unique_ptr<ShareableObject> initializer_;
-  std::unique_ptr<jsi::Value> remoteValue;
+  jsi::Value *remoteValue;
 
  public:
   ShareableHandle(
@@ -282,11 +282,27 @@ class ShareableHandle : public Shareable {
     initializer_ =
         std::make_unique<ShareableObject>(runtimeHelper, rt, initializerObject);
   }
+  ~ShareableHandle() {
+    // We can only call to jsi::Value destructor if the runtime is still alive.
+    // Due to the fact that some of the ShareableHandle will be referenced from
+    // the RN JS runtime that gets destroyed after the UI runtime, we may have
+    // this destructor triggered while the UI runtime is already down. Deleting
+    // jsi::Value in such case will crash as the underlying data on the JS VM
+    // side is alerady gone. Similarily to how we do this in RetainingShareable,
+    // we leak the JS VM pointer reference here as it is more efficient than
+    // storing the map of all the allocated values only so they can be cleaned
+    // up in the right moment given that the cleanup only happens in development
+    // mode or when the react instance is being terminated (e.g. when the
+    // application process is being torn down gracefully)
+    if (!runtimeHelper_->uiRuntimeDestroyed) {
+      delete remoteValue;
+    }
+  }
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (initializer_ != nullptr) {
       auto initObj = initializer_->getJSValue(rt);
-      remoteValue = std::make_unique<jsi::Value>(
-          runtimeHelper_->valueUnpacker->call(rt, initObj));
+      remoteValue =
+          new jsi::Value(runtimeHelper_->valueUnpacker->call(rt, initObj));
       initializer_ = nullptr; // we can release ref to initializer as this
                               // method should be called at most once
     }
