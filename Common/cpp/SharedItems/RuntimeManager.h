@@ -3,7 +3,6 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include "ErrorHandler.h"
-#include "JSIStoreValueUser.h"
 #include "RuntimeDecorator.h"
 #include "Scheduler.h"
 
@@ -21,18 +20,10 @@ class RuntimeManager {
       std::shared_ptr<ErrorHandler> errorHandler,
       std::shared_ptr<Scheduler> scheduler,
       RuntimeType runtimeType = RuntimeType::Worklet)
-      : runtime(runtime),
-        errorHandler(errorHandler),
-        scheduler(scheduler),
-        storeUserData(std::make_shared<StaticStoreUser>()) {
+      : runtime(runtime), errorHandler(errorHandler), scheduler(scheduler) {
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
 
-  virtual ~RuntimeManager() {
-    clearStore();
-  }
-
- public:
   /**
    Holds the jsi::Runtime this RuntimeManager is managing.
    */
@@ -46,17 +37,6 @@ class RuntimeManager {
    React-JS Thread.
    */
   std::shared_ptr<Scheduler> scheduler;
-  /**
-   Holds the JSI-Value Store where JSI::Values are cached on a
-   per-RuntimeManager basis.
-   */
-  std::shared_ptr<StaticStoreUser> storeUserData;
-
- private:
-  void clearStore() {
-    const std::lock_guard<std::recursive_mutex> lock(storeUserData->storeMutex);
-    storeUserData->store.clear();
-  }
 };
 
 } // namespace reanimated

@@ -57,7 +57,7 @@ Shareable::~Shareable() {}
 
 jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
   jsi::Value value;
-  if (&rt == hostRuntime) {
+  if (runtimeHelper_->isRNRuntime(rt)) {
     // TODO: it is suboptimal to generate new object every time getJS is called
     // on host runtime – the objects we are generating already exists and we
     // should possibly just grab a hold of such object and use it here instead
@@ -67,21 +67,31 @@ jsi::Value RetainingShareable::getJSValue(jsi::Runtime &rt) {
     return toJSValue(rt);
   } else if (remoteValue == nullptr) {
     value = toJSValue(rt);
-    remoteValue = std::make_shared<jsi::WeakObject>(rt, value.asObject(rt));
+    remoteValue = new jsi::WeakObject(rt, value.asObject(rt));
   } else {
     value = remoteValue->lock(rt);
     if (value.isUndefined()) {
       value = toJSValue(rt);
-      remoteValue = std::make_shared<jsi::WeakObject>(rt, value.asObject(rt));
+      delete remoteValue;
+      remoteValue = new jsi::WeakObject(rt, value.asObject(rt));
     }
   }
   return value;
 }
 
+RetainingShareable::~RetainingShareable() {
+  if (!runtimeHelper_->uiRuntimeDestroyed) {
+    delete remoteValue;
+  }
+}
+
 #endif // HAS_JS_WEAK_OBJECTS
 
-ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
-    : RetainingShareable(rt, ArrayType) {
+ShareableArray::ShareableArray(
+    const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
+    jsi::Runtime &rt,
+    const jsi::Array &array)
+    : RetainingShareable(runtimeHelper, rt, ArrayType) {
   auto size = array.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -89,8 +99,11 @@ ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
   }
 }
 
-ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
-    : RetainingShareable(rt, ObjectType) {
+ShareableObject::ShareableObject(
+    const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
+    jsi::Runtime &rt,
+    const jsi::Object &object)
+    : RetainingShareable(runtimeHelper, rt, ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);
   auto size = propertyNames.size(rt);
   data_.reserve(size);

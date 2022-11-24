@@ -31,10 +31,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
                                public RuntimeManager {
  public:
   NativeReanimatedModule(
-      std::shared_ptr<CallInvoker> jsInvoker,
-      std::shared_ptr<Scheduler> scheduler,
-      std::shared_ptr<jsi::Runtime> rt,
-      std::shared_ptr<ErrorHandler> errorHandler,
+      const std::shared_ptr<CallInvoker> &jsInvoker,
+      const std::shared_ptr<Scheduler> &scheduler,
+      const std::shared_ptr<jsi::Runtime> &rt,
+      const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -42,6 +42,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
           propObtainer,
 #endif
       PlatformDepMethodsHolder platformDepMethodsHolder);
+
+  ~NativeReanimatedModule();
 
   std::shared_ptr<JSRuntimeHelper> runtimeHelper;
 

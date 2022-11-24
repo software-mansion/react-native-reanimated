@@ -19,7 +19,6 @@
 
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
-#include "JSIStoreValueUser.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "Shareables.h"
@@ -30,10 +29,10 @@ using namespace facebook;
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
-    std::shared_ptr<CallInvoker> jsInvoker,
-    std::shared_ptr<Scheduler> scheduler,
-    std::shared_ptr<jsi::Runtime> rt,
-    std::shared_ptr<ErrorHandler> errorHandler,
+    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::shared_ptr<Scheduler> &scheduler,
+    const std::shared_ptr<jsi::Runtime> &rt,
+    const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -178,6 +177,12 @@ void NativeReanimatedModule::installCoreFunctions(
       std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
 
+NativeReanimatedModule::~NativeReanimatedModule() {
+  runtimeHelper->valueUnpacker = nullptr;
+  runtime.reset();
+  runtimeHelper->uiRuntimeDestroyed = true;
+}
+
 void NativeReanimatedModule::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
@@ -232,9 +237,10 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       shareable = std::make_shared<ShareableRemoteFunction>(
           runtimeHelper, rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
-      shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
+      shareable = std::make_shared<ShareableArray>(
+          runtimeHelper, rt, object.asArray(rt));
     } else {
-      shareable = std::make_shared<ShareableObject>(rt, object);
+      shareable = std::make_shared<ShareableObject>(runtimeHelper, rt, object);
     }
   } else if (value.isString()) {
     shareable = std::make_shared<ShareableString>(rt, value.asString(rt));
