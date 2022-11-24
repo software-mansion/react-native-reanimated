@@ -1,4 +1,10 @@
-import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
+import React, {
+  Component,
+  ComponentType,
+  FunctionComponent,
+  MutableRefObject,
+  Ref,
+} from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
@@ -38,6 +44,9 @@ import {
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
+
+import type { useAnimatedScrollHandler } from './reanimated2/hook/useAnimatedScrollHandler';
+import type { useAnimatedProps } from './reanimated2/hook/Hooks';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -99,15 +108,17 @@ interface AnimatedProps extends Record<string, unknown> {
   initial?: SharedValue<StyleProps>;
 }
 
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
-  style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+export type AnimatedComponentProps<P> = P & {
+  forwardedRef?: any;
+  animatedProps?:
+    | Partial<AnimatedComponentProps<AnimatedProps>>
+    | ReturnType<typeof useAnimatedProps>;
   animatedStyle?: StyleProps;
   layout?:
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder
     | typeof BaseAnimationBuilder;
+  // TODO: | LayoutAnimationFunction ?
   entering?:
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
@@ -129,15 +140,59 @@ interface ComponentRef extends Component {
   getScrollableNode?: () => ComponentRef;
 }
 
-export interface InitialComponentProps extends Record<string, unknown> {
-  ref?: Ref<Component>;
+export interface InitialFunctionComponentProps {
   collapsable?: boolean;
 }
 
-export default function createAnimatedComponent(
-  Component: ComponentType<InitialComponentProps>,
-  options?: Options<InitialComponentProps>
-): ComponentType<AnimatedComponentProps<InitialComponentProps>> {
+export interface InitialComponentProps extends InitialFunctionComponentProps {
+  ref?: Ref<Component>;
+}
+
+export type Intersection<T, U> = Pick<
+  T,
+  Extract<keyof T, keyof U> & Extract<keyof U, keyof T>
+>;
+
+export type Diff<T, U> = Pick<T, SetDifference<keyof T, keyof U>>;
+
+export type SetDifference<A, B> = A extends B ? never : A;
+
+export type ExtendProps<
+  Props,
+  ExtendWith,
+  I = Diff<Props, ExtendWith> &
+    (Intersection<Props, ExtendWith> | Intersection<ExtendWith, Props>)
+> = Pick<I, keyof I>;
+
+type PropsExtensions = {
+  onScroll?: ReturnType<typeof useAnimatedScrollHandler>;
+  style?: NestedArray<StyleProps>;
+};
+
+function createAnimatedComponent<P>(
+  Component: FunctionComponent<P & InitialFunctionComponentProps>,
+  options?: Options<P & InitialFunctionComponentProps>
+): FunctionComponent<
+  AnimatedComponentProps<
+    ExtendProps<P, PropsExtensions> & InitialFunctionComponentProps
+  >
+>;
+function createAnimatedComponent<P>(
+  Component: ComponentType<P & InitialComponentProps>,
+  options?: Options<P & InitialComponentProps>
+): ComponentType<
+  AnimatedComponentProps<
+    ExtendProps<P, PropsExtensions> & InitialComponentProps
+  >
+>;
+function createAnimatedComponent<P>(
+  Component: ComponentType<P & InitialComponentProps>,
+  options?: Options<P & InitialComponentProps>
+): ComponentType<
+  AnimatedComponentProps<
+    ExtendProps<P, PropsExtensions> & InitialComponentProps
+  >
+> {
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -146,10 +201,16 @@ export default function createAnimatedComponent(
   );
 
   class AnimatedComponent extends React.Component<
-    AnimatedComponentProps<InitialComponentProps>
+    AnimatedComponentProps<
+      ExtendProps<P, PropsExtensions> & InitialComponentProps
+    > &
+      Record<string, unknown>
   > {
     _styles: StyleProps[] | null = null;
-    _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+    _animatedProps?:
+      | Partial<AnimatedComponentProps<AnimatedProps>>
+      | ReturnType<typeof useAnimatedProps>;
+
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
@@ -158,7 +219,11 @@ export default function createAnimatedComponent(
     _component: ComponentRef | null = null;
     static displayName: string;
 
-    constructor(props: AnimatedComponentProps<InitialComponentProps>) {
+    constructor(
+      props: AnimatedComponentProps<
+        ExtendProps<P, PropsExtensions> & InitialComponentProps
+      >
+    ) {
       super(props);
       if (isJest()) {
         this.animatedStyle = { value: {} };
@@ -269,6 +334,7 @@ export default function createAnimatedComponent(
 
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
+        // @ts-ignore TODO: this functions seems not to be used anywhere
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         options.setNativeProps(this._component!, props);
       } else {
@@ -445,7 +511,8 @@ export default function createAnimatedComponent(
     });
 
     _filterNonAnimatedProps(
-      inputProps: AnimatedComponentProps<InitialComponentProps>
+      inputProps: AnimatedComponentProps<InitialComponentProps> &
+        Record<string, unknown>
     ): Record<string, unknown> {
       const props: Record<string, unknown> = {};
       for (const key in inputProps) {
@@ -519,6 +586,7 @@ export default function createAnimatedComponent(
         default: { collapsable: false },
       });
       return (
+        // @ts-ignore TODO: I've given up
         <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
     }
@@ -528,12 +596,22 @@ export default function createAnimatedComponent(
     Component.displayName || Component.name || 'Component'
   })`;
 
-  return React.forwardRef<Component>((props, ref) => {
+  return React.forwardRef<
+    AnimatedComponent,
+    AnimatedComponentProps<
+      AnimatedComponentProps<
+        ExtendProps<P, PropsExtensions> & InitialComponentProps
+      >
+    > &
+      any
+  >((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
-        {...(ref === null ? null : { forwardedRef: ref })}
+        {...(ref === null ? null : { forwardedRef: null })}
       />
     );
-  });
+  }) as any;
 }
+
+export default createAnimatedComponent;
