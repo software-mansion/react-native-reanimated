@@ -44,7 +44,6 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
         toAdapt = value.map((element) => makeShareableCloneRecursive(element));
       } else if (type === 'function' && value.__workletHash === undefined) {
         // this is a remote function
-        // throw new Error('adapt remote fun ' + value.name);
         toAdapt = value;
       } else {
         toAdapt = {};

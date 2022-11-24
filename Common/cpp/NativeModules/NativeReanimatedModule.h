@@ -160,9 +160,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
+  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
   std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
-  std::shared_ptr<jsi::Value> dummyEvent;
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>

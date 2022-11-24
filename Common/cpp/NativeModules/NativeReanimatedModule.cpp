@@ -42,7 +42,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
-      eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
+      eventHandlerRegistry(new EventHandlerRegistry()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
@@ -178,9 +178,15 @@ void NativeReanimatedModule::installCoreFunctions(
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
-  runtimeHelper->valueUnpacker = nullptr;
-  runtime.reset();
-  runtimeHelper->uiRuntimeDestroyed = true;
+  if (runtimeHelper) {
+    runtimeHelper->valueUnpacker = nullptr;
+    // event handler registry stores some JSI values from UI runtime, so it has
+    // to go away before we tear down the runtime
+    eventHandlerRegistry.reset();
+    runtime.reset();
+    // make sure uiRuntimeDestroyed is set after the runtime is deallocated
+    runtimeHelper->uiRuntimeDestroyed = true;
+  }
 }
 
 void NativeReanimatedModule::scheduleOnUI(
