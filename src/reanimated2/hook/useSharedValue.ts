@@ -3,7 +3,7 @@ import { cancelAnimation } from '../animation';
 import { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
 
-let ONE_WAY_READS_DEFAULT = true; // false on 2.x
+let ONE_WAY_READS_DEFAULT = false;
 
 export function enableDefaultFastOneWaySharedValues() {
   ONE_WAY_READS_DEFAULT = true;
