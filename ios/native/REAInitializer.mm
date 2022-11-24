@@ -58,6 +58,9 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
 
     runtime.global().setProperty(runtime, "_IS_FABRIC", false);
 
+    auto version = jsi::String::createFromUtf8(runtime, REANIMATED_VERSION);
+    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
+
     runtime.global().setProperty(
         runtime,
         jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),

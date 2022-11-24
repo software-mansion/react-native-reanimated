@@ -225,6 +225,9 @@ void NativeProxy::installJSIBindings(
   runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
 #endif
 
+  auto version = jsi::String::createFromUtf8(*runtime_, REANIMATED_VERSION);
+  runtime_->global().setProperty(*runtime_, "_REANIMATED_VERSION_CPP", version);
+
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
 

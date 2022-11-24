@@ -7,6 +7,7 @@ import {
 } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
 import { LayoutAnimationFunction } from '../layoutReanimation';
+import { version as jsVersion } from '../../../package.json';
 
 export class NativeReanimated {
   native: boolean;
@@ -19,6 +20,18 @@ export class NativeReanimated {
     }
     this.InnerNativeModule = global.__reanimatedModuleProxy;
     this.native = native;
+    if (native) {
+      this.checkVersion();
+    }
+  }
+
+  checkVersion(): void {
+    const cppVersion = global._REANIMATED_VERSION_CPP;
+    if (jsVersion !== cppVersion) {
+      console.error(
+        `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs. ${cppVersion}). Did you forget to re-build the app after upgrading react-native-reanimated?`
+      );
+    }
   }
 
   installCoreFunctions(valueSetter: <T>(value: T) => void): void {
