@@ -3,18 +3,10 @@ import { cancelAnimation } from '../animation';
 import { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
 
-let ONE_WAY_READS_DEFAULT = false;
-
-export function enableDefaultFastOneWaySharedValues() {
-  ONE_WAY_READS_DEFAULT = true;
-}
-
 export function useSharedValue<T>(
   init: T,
-  oneWayReadsOnly_ = undefined
+  oneWayReadsOnly = false
 ): SharedValue<T> {
-  const oneWayReadsOnly =
-    oneWayReadsOnly_ === undefined ? ONE_WAY_READS_DEFAULT : oneWayReadsOnly_;
   const ref = useRef<SharedValue<T>>(makeMutable(init, oneWayReadsOnly));
 
   if (ref.current === null) {

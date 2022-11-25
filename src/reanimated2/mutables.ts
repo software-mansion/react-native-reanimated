@@ -7,7 +7,6 @@ import {
 } from './shareables';
 import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
-import { isRunningInitialStyleUpdater } from './animation/util';
 export { stopMapper } from './mappers';
 
 export function makeUIMutable<T>(
@@ -60,7 +59,7 @@ export function makeUIMutable<T>(
 
 export function makeMutable<T>(
   initial: T,
-  oneWayReadsOnly = true
+  oneWayReadsOnly = false
 ): SharedValue<T> {
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
@@ -93,9 +92,6 @@ export function makeMutable<T>(
     get value() {
       if (syncDataHolder) {
         return NativeReanimatedModule.getDataSynchronously(syncDataHolder);
-      }
-      if (!isRunningInitialStyleUpdater()) {
-        throw new Error('Attempting to read value on the React Native thread');
       }
       return value;
     },
