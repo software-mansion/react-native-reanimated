@@ -10,7 +10,8 @@
 #include <memory>
 #include <string>
 
-using namespace facebook::react;
+using namespace facebook;
+using namespace react;
 
 namespace reanimated {
 

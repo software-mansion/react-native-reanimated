@@ -9222,10 +9222,10 @@ react-native-builder-bob@^0.18.3:
   optionalDependencies:
     jetifier "^2.0.0"
 
-react-native-codegen@^0.71.3:
-  version "0.71.3"
-  resolved "https://registry.yarnpkg.com/react-native-codegen/-/react-native-codegen-0.71.3.tgz#75fbc591819050791319ebdb9fe341ee4df5c288"
-  integrity sha512-5AvdHVU1sAaXg05i0dG664ZTaCaIFaY1znV5vNsj+wUu6MGxNEUNbDKk9dxKUkkxOyk2KZOK5uhzWL0p5H5yZQ==
+react-native-codegen@^0.72.0:
+  version "0.72.0"
+  resolved "https://registry.yarnpkg.com/react-native-codegen/-/react-native-codegen-0.72.0.tgz#b130e9798bbbc70a75e293b432438e65bda9d3c5"
+  integrity sha512-FoM//DIikIgdTurw+3EJyM4enZSKDdEswxhvWa/6eiRNzCegPFVLgk7WppGfJ084R3jEE2Q1e0IHu+nhff6LeA==
   dependencies:
     "@babel/parser" "^7.14.0"
     flow-parser "^0.185.0"
@@ -9243,15 +9243,15 @@ react-native-gesture-handler@^2.4.2:
     lodash "^4.17.21"
     prop-types "^15.7.2"
 
-react-native-gradle-plugin@^0.71.9:
-  version "0.71.9"
-  resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.9.tgz#c269938fddc4ca8418d3927a35b3344e9308773e"
-  integrity sha512-hv/xt/aRzzlA7asGCIebvVBwjsxPMaXXGrKsk9W19CInUpShTFSBvBitViNfpw/hOQ7OHa6SxWpG2OZf5yZ21w==
+react-native-gradle-plugin@^0.72.1:
+  version "0.72.1"
+  resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.72.1.tgz#4052452ba36b32f2271af9228707079dfda37e9d"
+  integrity sha512-mgFiUa9J/f7pKWxKWuPBdjrqahN1QxljWWYQefM45BEq21nbNGAk+vRI5WyjIQBu34JRCTuWy/pLSMDWwTfb5w==
 
-react-native@0.71.0-rc.2:
-  version "0.71.0-rc.2"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.71.0-rc.2.tgz#5cf5abfb07f1f93119203afa670fb63342ef3c06"
-  integrity sha512-V5vpByU6pi74TISITSCX9nABhAIggwMUWi8edTZjxJtEOj0ym+t+rf+8zBhex1pZzSLTYfmQlS0RbdgI2/0wAQ==
+react-native@0.0.0-20221120-2051-81e441ae8:
+  version "0.0.0-20221120-2051-81e441ae8"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.0.0-20221120-2051-81e441ae8.tgz#86fcfc802f0e144ca40aef47e89455dfe5206284"
+  integrity sha512-Duh4xFw+i5Rzopd08WNUeH/FIyuI28Yg73T5sUN3Uo7NIFw8HgEwWXeUq3jlykRtko+frgmb+Z88vxUNDrt/DA==
   dependencies:
     "@jest/create-cache-key-function" "^29.2.1"
     "@react-native-community/cli" "10.0.0-alpha.5"
@@ -9277,8 +9277,8 @@ react-native@0.71.0-rc.2:
     pretty-format "^26.5.2"
     promise "^8.3.0"
     react-devtools-core "^4.26.1"
-    react-native-codegen "^0.71.3"
-    react-native-gradle-plugin "^0.71.9"
+    react-native-codegen "^0.72.0"
+    react-native-gradle-plugin "^0.72.1"
     react-refresh "^0.4.0"
     react-shallow-renderer "^16.15.0"
     regenerator-runtime "^0.13.2"

@@ -17,7 +17,7 @@
     "@react-navigation/native": "^6.0.13",
     "@react-navigation/native-stack": "^6.9.0",
     "react": "18.2.0",
-    "react-native": "0.71.0-rc.2",
+    "react-native": "0.0.0-20221120-2051-81e441ae8",
     "react-native-reanimated": "link:../"
   },
   "devDependencies": {

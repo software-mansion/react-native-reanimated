@@ -198,7 +198,8 @@ def reactNativeRootDir = resolveReactNativeDirectory()
 def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
-def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
+// def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
+def REACT_NATIVE_VERSION = "0.71.0-rc.2" // just for nightly
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
 def REANIMATED_MAJOR_VERSION = getReanimatedVersion()

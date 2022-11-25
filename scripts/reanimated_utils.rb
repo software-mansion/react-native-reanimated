@@ -30,6 +30,8 @@ def find_config()
     raise '[RNReanimated] Unable to recognize your `react-native` version! Please set environmental variable with `react-native` locations: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install'
   end
 
+  react_native_json['version'] = '0.71.0-rc.2' # just for nightly
+
   result[:is_reanimated_example_app] = ENV["REANIMATED_EXAMPLE_APP_NAME"] != nil
   result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
