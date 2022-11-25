@@ -29,9 +29,5 @@ jobs:
         run: yarn lint:js
       - name: Finding circular dependencies
         run: yarn circular_dependency_check
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-        with:
-          limit-access-to-actor: false
       - name: Jest test:unit
         run: yarn test:unit
