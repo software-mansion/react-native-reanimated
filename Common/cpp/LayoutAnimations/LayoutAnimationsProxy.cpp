@@ -90,7 +90,6 @@ void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag) {
   viewSharedValues_.erase(tag);
   
   sharedTransitionAnimations_.erase(tag);
-  int theOtherTag = -1;
   for (auto &[key, group] : sharedTransitionGroups_) {
     bool isCurrentGroupMember = false;
     int indexInGroup;

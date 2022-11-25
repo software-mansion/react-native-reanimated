@@ -599,55 +599,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (void)startSharedAnimation___:(UIView *)view withNewElement:(BOOL)withNewElement
-{
-  _sharedViews[view.reactTag] = view;
-  NSNumber *targetViewTag = _findTheOtherForSharedTransition(view.reactTag);
-  if (targetViewTag == nil) {
-    return;
-  }
-  UIView *viewSource;
-  UIView *viewTarget;
-  if (withNewElement) {
-    viewSource = _sharedViews[targetViewTag];
-    viewTarget = view;
-  } else {
-    viewSource = view;
-    viewTarget = _sharedViews[targetViewTag];
-  }
-  REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] init:viewSource withParent:viewSource.superview];
-  REASnapshot *targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
-  _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
-  _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
-  [_viewToRestore addObject:viewSource];
-  [_currentSharedTransitionViews addObject:viewSource];
-  [_currentSharedTransitionViews addObject:viewTarget];
-  if (!withNewElement) {
-    [_sharedViews removeObjectForKey:viewSource.reactTag];
-  }
-  if (_isSharedTransitionActive == NO) {
-    _isSharedTransitionActive = YES;
-    UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
-    if (_transitionContainer == nil) {
-      _transitionContainer = [UIView new];
-    }
-    [mainWindow addSubview:_transitionContainer];
-    [mainWindow bringSubviewToFront:_transitionContainer];
-  }
-  _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
-  _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
-  [viewSource removeFromSuperview];
-  [_transitionContainer addSubview:viewSource];
-  
-  _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
-  _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
-  [viewTarget removeFromSuperview];
-  [_transitionContainer addSubview:viewTarget];
-  
-  [self onViewTransition:viewSource before:sourceViewSnapshot after:targetViewSnapshot];
-  [self onViewTransition:viewTarget before:sourceViewSnapshot after:targetViewSnapshot];
-}
-
 - (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
 {
   NSMutableDictionary *targetValues = after.values;
