@@ -27,10 +27,25 @@ export class NativeReanimated {
 
   checkVersion(): void {
     const cppVersion = global._REANIMATED_VERSION_CPP;
-    if (jsVersion !== cppVersion) {
+    const ok = (() => {
+      if (
+        jsVersion.match(/^\d+\.\d+\.\d+$/) &&
+        cppVersion.match(/^\d+\.\d+\.\d+$/)
+      ) {
+        // x.y.z, compare only major and minor, skip patch
+        const [jsMajor, jsMinor] = jsVersion.split('.');
+        const [cppMajor, cppMinor] = cppVersion.split('.');
+        return jsMajor === cppMajor && jsMinor === cppMinor;
+      } else {
+        // alpha, beta or rc, compare everything
+        return jsVersion === cppVersion;
+      }
+    })();
+    if (!ok) {
       console.error(
         `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs. ${cppVersion}). Did you forget to re-build the app after upgrading react-native-reanimated?`
       );
+      // TODO: detect Expo managed workflow
     }
   }
 
