@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <unordered_set>
 
 #include "PlatformDepMethodsHolder.h"

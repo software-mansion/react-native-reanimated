@@ -84,7 +84,9 @@ NativeReanimatedModule::NativeReanimatedModule(
       } else {
         auto argsArray = shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
         auto argsSize = argsArray.size(rt);
-        jsi::Value args[argsSize];
+        // number of arguments is typically relatively small so it is ok to
+        // to use VLAs here, hence disabling the lint rule
+        jsi::Value args[argsSize]; // NOLINT(runtime/arrays)
         for (size_t i = 0; i < argsSize; i++) {
           args[i] = argsArray.getValueAtIndex(rt, i);
         }
