@@ -661,7 +661,7 @@ task prepareHermes() {
 
         doLast {
             // e.g. hermes-engine-0.70.0-rc.1-debug.aar
-            def hermesAAR = file("/Users/tomekzaw/Downloads/tmp/maven-local/com/facebook/react/hermes-engine/0.71.0-rc.0/hermes-engine-0.71.0-rc.0-debug.aar")
+            def hermesAAR = file("/Users/tomekzaw/Downloads/hermes-android-0.71.0-rc.2-debug.aar")
             if (!hermesAAR.exists()) {
                 throw new GradleScriptException("Could not find hermes-engine AAR", null)
             }
@@ -800,7 +800,7 @@ task unpackReactNativeAAR {
 //    }
 //    def rnAAR = fileTree("$reactNativeRootDir/android").matching({ it.include rnAarMatcher }).singleFile
     // TODO: consume shared libraries from prefabs
-    def rnAAR = file("/Users/tomekzaw/Downloads/tmp/maven-local/com/facebook/react/react-native/0.71.0-rc.0/react-native-0.71.0-rc.0-debug.aar")
+    def rnAAR = file("/Users/tomekzaw/Downloads/react-android-0.71.0-rc.2-debug.aar")
     def file = rnAAR.absoluteFile
     def packageName = file.name.tokenize('-')[0]
     copy {

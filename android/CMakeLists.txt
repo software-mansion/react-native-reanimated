@@ -42,7 +42,7 @@ else()
     set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
 endif()
 
-file (GLOB LIBRN_DIR "/Users/tomekzaw/Downloads/aar/react-native-0.71.0-rc.0-debug/jni/${ANDROID_ABI}")
+file (GLOB LIBRN_DIR "/Users/tomekzaw/Downloads/react-native-0.71.0-rc.2-debug/jni/${ANDROID_ABI}")
 
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
