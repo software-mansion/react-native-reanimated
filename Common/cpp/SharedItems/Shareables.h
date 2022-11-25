@@ -2,6 +2,9 @@
 
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
@@ -101,7 +104,7 @@ class Shareable {
     SynchronizedDataHolder,
   };
 
-  Shareable(ValueType valueType) : valueType_(valueType){};
+  explicit Shareable(ValueType valueType) : valueType_(valueType) {}
   virtual jsi::Value getJSValue(jsi::Runtime &rt) {
     return toJSValue(rt);
   }
@@ -120,25 +123,12 @@ class RetainingShareable : public Shareable {
  protected:
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
 
- public:
 #if HAS_JS_WEAK_OBJECTS
-  // remoteValue is manualy managed in order to avoid potential crashes due to
-  // the UI runtime being town down. In development mode, or when the app
-  // instance is shut down, the UI runtime will destruct before the RN runtime.
-  // The RetainingShareable class makes it so that the objects from RN runtime
-  // may retain WeakObject references to objects from the UI runtime. Because of
-  // that these objects won't allocate prior to the UI runtime being destroyed
-  // and in such scenario we can skip deleting them. This causes the object
-  // reference to leak, however it is a better tradeoff than keeping track of
-  // all the allocated objects only so that we can clean them up before the
-  // runtime goes down -- note again, that this only happens in development mode
-  // when the app reloads and when the react instance is terminated in
-  // production (e.g. when the app is being gracefully shut down by the system).
-  // In addition, we only leak small object references, as the underlying
-  // objects are allocated in the JS VM memory space and are deallocated along
-  // with the VM.
-  jsi::WeakObject *remoteValue;
-  jsi::Value getJSValue(jsi::Runtime &rt) override final;
+ private:
+  std::unique_ptr<jsi::WeakObject> remoteValue_;
+
+ public:
+  jsi::Value getJSValue(jsi::Runtime &rt) final;
 
   RetainingShareable(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
@@ -148,6 +138,7 @@ class RetainingShareable : public Shareable {
 
   ~RetainingShareable();
 #else
+ public:
   RetainingShareable(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       jsi::Runtime &rt,
@@ -161,7 +152,7 @@ class ShareableJSRef : public jsi::HostObject {
   std::shared_ptr<Shareable> value_;
 
  public:
-  ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value){};
+  explicit ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {}
   std::shared_ptr<Shareable> value() const {
     return value_;
   }
@@ -271,7 +262,7 @@ class ShareableHandle : public Shareable {
  private:
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   std::unique_ptr<ShareableObject> initializer_;
-  jsi::Value *remoteValue;
+  std::unique_ptr<jsi::Value> remoteValue_;
 
  public:
   ShareableHandle(
@@ -283,30 +274,37 @@ class ShareableHandle : public Shareable {
         std::make_unique<ShareableObject>(runtimeHelper, rt, initializerObject);
   }
   ~ShareableHandle() {
-    // We can only call to jsi::Value destructor if the runtime is still alive.
-    // Due to the fact that some of the ShareableHandle will be referenced from
-    // the RN JS runtime that gets destroyed after the UI runtime, we may have
-    // this destructor triggered while the UI runtime is already down. Deleting
-    // jsi::Value in such case will crash as the underlying data on the JS VM
-    // side is alerady gone. Similarily to how we do this in RetainingShareable,
-    // we leak the JS VM pointer reference here as it is more efficient than
-    // storing the map of all the allocated values only so they can be cleaned
-    // up in the right moment given that the cleanup only happens in development
-    // mode or when the react instance is being terminated (e.g. when the
-    // application process is being torn down gracefully)
-    if (!runtimeHelper_->uiRuntimeDestroyed) {
-      delete remoteValue;
+    if (runtimeHelper_->uiRuntimeDestroyed) {
+      // The below use of unique_ptr.release prevents the smart pointer from
+      // calling the destructor of the kept object. This effectively results in
+      // leaking some memory. We do this on purpose, as sometimes we would keep
+      // references to JSI objects past the lifetime of its runtime (e.g.,
+      // shared values references from the RN VM holds reference to JSI objects
+      // on the UI runtime). When the UI runtime is terminated, the orphaned JSI
+      // objects would crash the app when their destructors are called, because
+      // they call into a memory that's managed by the terminated runtime. We
+      // accept the tradeoff of leaking memory here, as it has a limited impact.
+      // This scenario can only occur when the React instance is torn down which
+      // happens in development mode during app reloads, or in production when
+      // the app is being shut down gracefully by the system. An alternative
+      // solution would require us to keep track of all JSI values that are in
+      // use which would require additional data structure and compute spent on
+      // bookkeeping that only for the sake of destroying the values in time
+      // before the runtime is terminated. Note that the underlying memory that
+      // jsi::Value refers to is managed by the VM and gets freed along with the
+      // runtime.
+      remoteValue_.release();
     }
   }
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (initializer_ != nullptr) {
       auto initObj = initializer_->getJSValue(rt);
-      remoteValue =
-          new jsi::Value(runtimeHelper_->valueUnpacker->call(rt, initObj));
+      remoteValue_ = std::make_unique<jsi::Value>(
+          runtimeHelper_->valueUnpacker->call(rt, initObj));
       initializer_ = nullptr; // we can release ref to initializer as this
                               // method should be called at most once
     }
-    return jsi::Value(rt, *remoteValue);
+    return jsi::Value(rt, *remoteValue_);
   }
 };
 
@@ -378,14 +376,14 @@ class ShareableString : public Shareable {
 
 class ShareableScalar : public Shareable {
  public:
-  ShareableScalar(double number) : Shareable(NumberType) {
+  explicit ShareableScalar(double number) : Shareable(NumberType) {
     data_.number = number;
-  };
-  ShareableScalar(bool boolean) : Shareable(BooleanType) {
+  }
+  explicit ShareableScalar(bool boolean) : Shareable(BooleanType) {
     data_.boolean = boolean;
-  };
-  ShareableScalar() : Shareable(UndefinedType) {}
-  ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
+  }
+  explicit ShareableScalar() : Shareable(UndefinedType) {}
+  explicit ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     switch (valueType_) {
