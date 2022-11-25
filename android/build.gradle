@@ -466,7 +466,7 @@ android {
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
                         "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}",
-                        "-DREANIMATED_VERSION=\\\"${REANIMATED_VERSION}\\\""
+                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
