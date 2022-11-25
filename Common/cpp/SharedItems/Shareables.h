@@ -169,17 +169,21 @@ class ShareableJSRef : public jsi::HostObject {
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
-    const jsi::Value &maybeShareableValue);
+    const jsi::Value &maybeShareableValue,
+    const char *errorMessage = nullptr);
 
 template <typename T>
 std::shared_ptr<T> extractShareableOrThrow(
     jsi::Runtime &rt,
-    const jsi::Value &shareableRef) {
-  auto res =
-      std::dynamic_pointer_cast<T>(extractShareableOrThrow(rt, shareableRef));
+    const jsi::Value &shareableRef,
+    const char *errorMessage = nullptr) {
+  auto res = std::dynamic_pointer_cast<T>(
+      extractShareableOrThrow(rt, shareableRef, errorMessage));
   if (!res) {
     throw new std::runtime_error(
-        "provided shareable object is of an incompatible type");
+        errorMessage != nullptr
+            ? errorMessage
+            : "provided shareable object is of an incompatible type");
   }
   return res;
 }

@@ -67,7 +67,10 @@ NativeReanimatedModule::NativeReanimatedModule(
                           jsi::Runtime &rt,
                           const jsi::Value &remoteFun,
                           const jsi::Value &argsValue) {
-    auto shareableRemoteFun = extractShareableOrThrow(rt, remoteFun);
+    auto shareableRemoteFun = extractShareableOrThrow<ShareableRemoteFunction>(
+        rt,
+        remoteFun,
+        "Incompatible object passed to scheduleOnJS. It is only allowed to schedule functions defined on the React Native JS runtime this way.");
     auto shareableArgs = argsValue.isUndefined()
         ? nullptr
         : extractShareableOrThrow(rt, argsValue);

@@ -39,7 +39,8 @@ std::shared_ptr<jsi::Function> CoreFunction::getFunction(jsi::Runtime &rt) {
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
-    const jsi::Value &maybeShareableValue) {
+    const jsi::Value &maybeShareableValue,
+    const char *errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
     if (object.isHostObject<ShareableJSRef>(rt)) {
@@ -48,7 +49,10 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
-  throw std::runtime_error("expecting the object to be of type ShareableJSRef");
+  throw std::runtime_error(
+      errorMessage != nullptr
+          ? errorMessage
+          : "expecting the object to be of type ShareableJSRef");
 }
 
 Shareable::~Shareable() {}
