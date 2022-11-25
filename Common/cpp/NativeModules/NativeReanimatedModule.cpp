@@ -176,8 +176,12 @@ void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
     const jsi::Value &valueUnpacker,
     const jsi::Value &layoutAnimationStartFunction) {
-  runtimeHelper =
-      std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
+  if (!runtimeHelper) {
+    // initialize runtimeHelper here if not already present. We expect only one
+    // instace of the helper to exists.
+    runtimeHelper =
+        std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
+  }
   runtimeHelper->valueUnpacker =
       std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
