@@ -3,6 +3,7 @@
 #include <chrono>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include "ReanimatedHiddenHeaders.h"
 
 namespace reanimated {

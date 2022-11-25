@@ -124,6 +124,7 @@ class RetainingShareable : public Shareable {
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
 
 #if HAS_JS_WEAK_OBJECTS
+
  private:
   std::unique_ptr<jsi::WeakObject> remoteValue_;
 
@@ -138,6 +139,7 @@ class RetainingShareable : public Shareable {
 
   ~RetainingShareable();
 #else
+
  public:
   RetainingShareable(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
@@ -382,7 +384,7 @@ class ShareableScalar : public Shareable {
   explicit ShareableScalar(bool boolean) : Shareable(BooleanType) {
     data_.boolean = boolean;
   }
-  explicit ShareableScalar() : Shareable(UndefinedType) {}
+  ShareableScalar() : Shareable(UndefinedType) {}
   explicit ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
