@@ -780,8 +780,10 @@ repositories {
 
 dependencies {
     // noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-native:" + REACT_NATIVE_VERSION
-    implementation "com.facebook.react:hermes-engine:" + REACT_NATIVE_VERSION // TODO: if Hermes enabled
+    // TODO: if (REACT_NATIVE_MINOR_VERSION >= 71)
+    // TODO: remove REACT_NATIVE_VERSION when react-native-gradle-plugin correctly substitutes version
+    implementation "com.facebook.react:react-android:" + REACT_NATIVE_VERSION
+    implementation "com.facebook.react:hermes-android:" + REACT_NATIVE_VERSION // TODO: if Hermes enabled
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
     implementation "androidx.transition:transition:1.1.0"
     implementation "androidx.core:core:1.6.0"
