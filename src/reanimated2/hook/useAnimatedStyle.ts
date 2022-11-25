@@ -296,6 +296,7 @@ function jestStyleUpdater(
   function frame(_timestamp?: Timestamp) {
     const { animations, last, isAnimationCancelled } = state;
     const timestamp = _timestamp ?? getTimestamp();
+    console.log('FRAME', _timestamp, timestamp);
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;

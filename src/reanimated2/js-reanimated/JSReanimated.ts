@@ -9,6 +9,7 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   getTimestamp(): number {
+    console.log('GET TIMESTAMP', window.performance.now());
     return window.performance.now();
   }
 

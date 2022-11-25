@@ -73,74 +73,74 @@ describe('Tests of animations', () => {
     expect(view).toHaveAnimatedStyle(style);
   });
 
-  test('withTiming animation, get animated style', () => {
-    const { getByTestId } = render(<AnimatedComponent />);
-    const view = getByTestId('view');
-    const button = getByTestId('button');
-    fireEvent.press(button);
-    jest.advanceTimersByTime(600);
-    const style = getAnimatedStyle(view);
-    expect(style.width).toBe(100);
-  });
+  // test('withTiming animation, get animated style', () => {
+  //   const { getByTestId } = render(<AnimatedComponent />);
+  //   const view = getByTestId('view');
+  //   const button = getByTestId('button');
+  //   fireEvent.press(button);
+  //   jest.advanceTimersByTime(600);
+  //   const style = getAnimatedStyle(view);
+  //   expect(style.width).toBe(100);
+  // });
 
-  test('withTiming animation, width in a middle of animation', () => {
-    const style = getDefaultStyle();
+  // test('withTiming animation, width in a middle of animation', () => {
+  //   const style = getDefaultStyle();
 
-    const { getByTestId } = render(<AnimatedComponent />);
-    const view = getByTestId('view');
-    const button = getByTestId('button');
+  //   const { getByTestId } = render(<AnimatedComponent />);
+  //   const view = getByTestId('view');
+  //   const button = getByTestId('button');
 
-    expect(view.props.style.width).toBe(0);
-    expect(view).toHaveAnimatedStyle(style);
+  //   expect(view.props.style.width).toBe(0);
+  //   expect(view).toHaveAnimatedStyle(style);
 
-    fireEvent.press(button);
-    jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers(); // timers scheduled for the exact 250ms won't run without this additional call
-    style.width = 50; // value of component width after 150ms of animation
-    expect(view).toHaveAnimatedStyle(style);
-  });
+  //   fireEvent.press(button);
+  //   jest.advanceTimersByTime(250);
+  //   jest.runOnlyPendingTimers(); // timers scheduled for the exact 250ms won't run without this additional call
+  //   style.width = 50; // value of component width after 150ms of animation
+  //   expect(view).toHaveAnimatedStyle(style);
+  // });
 
-  test('withTiming animation, compare all styles', () => {
-    const style = getDefaultStyle();
+  // test('withTiming animation, compare all styles', () => {
+  //   const style = getDefaultStyle();
 
-    const { getByTestId } = render(<AnimatedComponent />);
-    const view = getByTestId('view');
-    const button = getByTestId('button');
+  //   const { getByTestId } = render(<AnimatedComponent />);
+  //   const view = getByTestId('view');
+  //   const button = getByTestId('button');
 
-    fireEvent.press(button);
-    jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
-    style.width = 50; // value of component width after 250ms of animation
-    expect(view).toHaveAnimatedStyle(style, true);
-  });
+  //   fireEvent.press(button);
+  //   jest.advanceTimersByTime(250);
+  //   jest.runOnlyPendingTimers();
+  //   style.width = 50; // value of component width after 250ms of animation
+  //   expect(view).toHaveAnimatedStyle(style, true);
+  // });
 
-  test('withTiming animation, define shared value outside component', () => {
-    let sharedValue;
-    renderHook(() => {
-      sharedValue = useSharedValue(0);
-    });
-    const { getByTestId } = render(
-      <AnimatedComponent sharedValue={sharedValue} />
-    );
-    const view = getByTestId('view');
-    const button = getByTestId('button');
+  // test('withTiming animation, define shared value outside component', () => {
+  //   let sharedValue;
+  //   renderHook(() => {
+  //     sharedValue = useSharedValue(0);
+  //   });
+  //   const { getByTestId } = render(
+  //     <AnimatedComponent sharedValue={sharedValue} />
+  //   );
+  //   const view = getByTestId('view');
+  //   const button = getByTestId('button');
 
-    fireEvent.press(button);
-    jest.advanceTimersByTime(600);
-    expect(view).toHaveAnimatedStyle({ width: 100 });
-  });
+  //   fireEvent.press(button);
+  //   jest.advanceTimersByTime(600);
+  //   expect(view).toHaveAnimatedStyle({ width: 100 });
+  // });
 
-  test('withTiming animation, change shared value outside component', () => {
-    let sharedValue;
-    renderHook(() => {
-      sharedValue = useSharedValue(0);
-    });
-    const { getByTestId } = render(
-      <AnimatedSharedValueComponent sharedValue={sharedValue} />
-    );
-    const view = getByTestId('view');
-    sharedValue.value = 50;
-    jest.advanceTimersByTime(600);
-    expect(view).toHaveAnimatedStyle({ width: 50 });
-  });
+  // test('withTiming animation, change shared value outside component', () => {
+  //   let sharedValue;
+  //   renderHook(() => {
+  //     sharedValue = useSharedValue(0);
+  //   });
+  //   const { getByTestId } = render(
+  //     <AnimatedSharedValueComponent sharedValue={sharedValue} />
+  //   );
+  //   const view = getByTestId('view');
+  //   sharedValue.value = 50;
+  //   jest.advanceTimersByTime(600);
+  //   expect(view).toHaveAnimatedStyle({ width: 50 });
+  // });
 });
