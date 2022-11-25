@@ -159,6 +159,20 @@ static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->configureLayoutAnimation(
+          rt,
+          std::move(args[0]),
+          std::move(args[1]),
+          std::move(args[2]),
+          std::move(args[3]));
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -188,5 +202,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(subscribeForKeyboardEvents)};
   methodMap_["unsubscribeFromKeyboardEvents"] =
       MethodMetadata{1, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
+
+  methodMap_["configureLayoutAnimation"] =
+      MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};
 }
 } // namespace reanimated

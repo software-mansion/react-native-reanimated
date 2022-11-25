@@ -17,10 +17,15 @@ declare global {
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
-  const _stopObservingProgress: (tag: number, flag: boolean) => void;
+  const _stopObservingProgress: (
+    tag: number,
+    cancelled: boolean,
+    removeView: boolean
+  ) => void;
   const _startObservingProgress: (
     tag: number,
-    flag: { value: boolean; _value: boolean }
+    viewSharedValue: { value: unknown; _value: unknown },
+    type: string
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
   const _updatePropsPaper: (
@@ -103,13 +108,12 @@ declare global {
       _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationRepository: {
-        configs: Record<string, unknown>;
-        registerConfig(tag: number, config: Record<string, unknown>): void;
-        removeConfig(tag: number): void;
         startAnimationForTag(
           tag: number,
           type: string,
-          yogaValues: unknown
+          yogaValues: Record<string, number>,
+          config: LayoutAnimationFunction | Keyframe,
+          viewSharedValue: { value: unknown; _value: unknown }
         ): void;
       };
       ReanimatedDataMock: {

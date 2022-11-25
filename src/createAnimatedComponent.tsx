@@ -8,14 +8,10 @@ import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   makeMutable,
-  runOnUI,
+  configureLayoutAnimations,
   enableLayoutAnimations,
+  runOnUI,
 } from './reanimated2/core';
-import {
-  DefaultEntering,
-  DefaultExiting,
-  DefaultLayout,
-} from './reanimated2/layoutReanimation/defaultAnimations/Default';
 import {
   isJest,
   isChromeDebugger,
@@ -26,6 +22,7 @@ import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
   SharedValue,
@@ -41,6 +38,25 @@ import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
+}
+
+function maybeBuild(
+  layoutAnimationOrBuilder:
+    | ILayoutAnimationBuilder
+    | LayoutAnimationFunction
+    | Keyframe
+): LayoutAnimationFunction | Keyframe {
+  const isAnimationBuilder = (
+    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
+  ): value is ILayoutAnimationBuilder =>
+    'build' in layoutAnimationOrBuilder &&
+    typeof layoutAnimationOrBuilder.build === 'function';
+
+  if (isAnimationBuilder(layoutAnimationOrBuilder)) {
+    return layoutAnimationOrBuilder.build();
+  } else {
+    return layoutAnimationOrBuilder;
+  }
 }
 
 type NestedArray<T> = T | NestedArray<T>[];
@@ -399,42 +415,35 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
         const tag = findNodeHandle(ref);
-        if (
-          !shouldBeUseWeb() &&
-          (this.props.layout || this.props.entering || this.props.exiting) &&
-          tag != null
-        ) {
-          enableLayoutAnimations(true, false);
-          let layout = this.props.layout ? this.props.layout : DefaultLayout;
-          let entering = this.props.entering
-            ? this.props.entering
-            : DefaultEntering;
-          let exiting = this.props.exiting
-            ? this.props.exiting
-            : DefaultExiting;
-
-          if (has('build', layout)) {
-            layout = layout.build();
+        const { layout, entering, exiting } = this.props;
+        if ((layout || entering || exiting) && tag != null) {
+          if (!shouldBeUseWeb()) {
+            enableLayoutAnimations(true, false);
           }
-
-          if (has('build', entering)) {
-            entering = entering.build() as EntryExitAnimationFunction;
+          if (layout) {
+            configureLayoutAnimations(
+              tag,
+              'layout',
+              maybeBuild(layout),
+              this.sv
+            );
           }
-
-          if (has('build', exiting)) {
-            exiting = exiting.build() as EntryExitAnimationFunction;
+          if (entering) {
+            configureLayoutAnimations(
+              tag,
+              'entering',
+              maybeBuild(entering),
+              this.sv
+            );
           }
-
-          const config = {
-            layout,
-            entering,
-            exiting,
-            sv: this.sv,
-          };
-          runOnUI(() => {
-            'worklet';
-            global.LayoutAnimationRepository.registerConfig(tag, config);
-          })();
+          if (exiting) {
+            configureLayoutAnimations(
+              tag,
+              'exiting',
+              maybeBuild(exiting),
+              this.sv
+            );
+          }
         }
 
         if (ref !== this._component) {
