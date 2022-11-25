@@ -1,15 +1,20 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { ShareableRef } from '../commonTypes';
+import { isJest } from '../PlatformChecker';
 
 export default class JSReanimated extends NativeReanimated {
   _valueUnpacker?: <T>(value: T) => void = undefined;
 
   constructor() {
     super(false);
-  }
-
-  getTimestamp(): number {
-    return window.performance.now();
+    if (isJest()) {
+      // on node < 16 jest have problems mocking performance.now method which
+      // results in the tests failing, since date precision isn't that important
+      // for tests, we use Date.now instead
+      this.getTimestamp = () => Date.now();
+    } else {
+      this.getTimestamp = () => window.performance.now();
+    }
   }
 
   makeShareableClone<T>(value: T): ShareableRef<T> {
