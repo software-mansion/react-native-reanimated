@@ -9,7 +9,6 @@ on:
   push:
     branches:
       - main
-      - "@tomekzaw/fix-monorepo-ci"
 
 jobs:
   build_android_reanimated_non_hoisted:
