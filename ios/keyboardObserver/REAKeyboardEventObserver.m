@@ -79,12 +79,18 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)runAnimation
 {
+  if (displayLink) {
+      return;
+  }
   displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
   [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 }
 
 - (void)stopAnimation
 {
+  if (!displayLink) {
+      return;
+  }
   [displayLink invalidate];
   displayLink = nil;
   [self updateKeyboardFrame];
