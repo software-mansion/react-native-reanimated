@@ -23,6 +23,12 @@
 #include "ReanimatedUIManagerBinding.h"
 #endif
 
+#ifdef REANIMATED_VERSION
+#define STRINGIZE(x) #x
+#define STRINGIZE2(x) STRINGIZE(x)
+#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
+#endif // REANIMATED_VERSION
+
 namespace reanimated {
 
 using namespace facebook;
@@ -224,6 +230,10 @@ void NativeProxy::installJSIBindings(
 #else
   runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
 #endif
+
+  auto version =
+      jsi::String::createFromUtf8(*runtime_, REANIMATED_VERSION_STRING);
+  runtime_->global().setProperty(*runtime_, "_REANIMATED_VERSION_CPP", version);
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
