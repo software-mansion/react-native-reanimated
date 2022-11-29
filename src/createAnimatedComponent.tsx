@@ -33,6 +33,7 @@ import {
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
+import { makeShareableShadowNodeWrapper } from './reanimated2/shareables';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -328,7 +329,9 @@ export default function createAnimatedComponent(
         }
 
         if (global._IS_FABRIC) {
-          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+          shadowNodeWrapper = makeShareableShadowNodeWrapper(
+            getShadowNodeWrapperFromRef(this)
+          );
         }
       }
       this._viewTag = viewTag as number;

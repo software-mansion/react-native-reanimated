@@ -26,6 +26,13 @@ export function registerShareableMapping(
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
+export function makeShareableShadowNodeWrapper<T>(shadowNodeWrapper: T): T {
+  const adoptedSNW =
+    NativeReanimatedModule.makeShareableClone(shadowNodeWrapper);
+  registerShareableMapping(shadowNodeWrapper, adoptedSNW);
+  return shadowNodeWrapper;
+}
+
 export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
   if (USE_STUB_IMPLEMENTATION) {
     return value;

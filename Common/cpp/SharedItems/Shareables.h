@@ -6,6 +6,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/uimanager/primitives.h>
+#endif
+
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
@@ -64,14 +68,14 @@ class JSRuntimeHelper {
 // simplicity reasons.
 class CoreFunction {
  private:
-  std::shared_ptr<jsi::Function> rnFunction_;
-  std::shared_ptr<jsi::Function> uiFunction_;
+  std::unique_ptr<jsi::Function> rnFunction_;
+  std::unique_ptr<jsi::Function> uiFunction_;
   std::string functionBody_;
   std::string location_;
   JSRuntimeHelper
       *runtimeHelper_; // runtime helper holds core function references, so we
                        // use normal pointer here to avoid ref cycles.
-  std::shared_ptr<jsi::Function> getFunction(jsi::Runtime &rt);
+  std::unique_ptr<jsi::Function> &getFunction(jsi::Runtime &rt);
 
  public:
   CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
@@ -102,6 +106,9 @@ class Shareable {
     RemoteFunctionType,
     HandleType,
     SynchronizedDataHolder,
+#ifdef RCT_NEW_ARCH_ENABLED
+    ShadowNode,
+#endif
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -226,6 +233,27 @@ class ShareableObject : public RetainingShareable {
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
 };
+
+#ifdef RCT_NEW_ARCH_ENABLED
+class ShareableShadowNodeWrapper : public Shareable {
+ private:
+  react::ShadowNode::Shared shadowNode_;
+
+ public:
+  ShareableShadowNodeWrapper(
+      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
+      jsi::Runtime &rt,
+      const jsi::Object &wrapperObject)
+      : Shareable(ShadowNode) {
+    shadowNode_ =
+        wrapperObject.getHostObject<ShadowNodeWrapper>(rt)->shadowNode;
+  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    return jsi::Object::createFromHostObject(
+        rt, std::make_shared<ShadowNodeWrapper>(shadowNode_));
+  }
+};
+#endif
 
 class ShareableWorklet : public ShareableObject {
  public:

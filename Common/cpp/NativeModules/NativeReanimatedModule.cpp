@@ -254,6 +254,11 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     } else if (object.isArray(rt)) {
       shareable = std::make_shared<ShareableArray>(
           runtimeHelper, rt, object.asArray(rt));
+#ifdef RCT_NEW_ARCH_ENABLED
+    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
+      shareable = std::make_shared<ShareableShadowNodeWrapper>(
+          runtimeHelper, rt, object);
+#endif
     } else {
       shareable = std::make_shared<ShareableObject>(runtimeHelper, rt, object);
     }

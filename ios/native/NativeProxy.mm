@@ -228,6 +228,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
+    // noop
+  };
+
+  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
+    // noop
+  };
+
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;

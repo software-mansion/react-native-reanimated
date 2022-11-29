@@ -10,13 +10,13 @@ CoreFunction::CoreFunction(
     : runtimeHelper_(runtimeHelper) {
   jsi::Runtime &rt = *runtimeHelper->rnRuntime();
   auto workletObject = workletValue.asObject(rt);
-  rnFunction_ = std::make_shared<jsi::Function>(workletObject.asFunction(rt));
+  rnFunction_ = std::make_unique<jsi::Function>(workletObject.asFunction(rt));
   functionBody_ =
       workletObject.getProperty(rt, "asString").asString(rt).utf8(rt);
   location_ = workletObject.getProperty(rt, "__location").asString(rt).utf8(rt);
 }
 
-std::shared_ptr<jsi::Function> CoreFunction::getFunction(jsi::Runtime &rt) {
+std::unique_ptr<jsi::Function> &CoreFunction::getFunction(jsi::Runtime &rt) {
   if (runtimeHelper_->isUIRuntime(rt)) {
     if (uiFunction_ == nullptr) {
       // maybe need to initialize UI Function
@@ -25,7 +25,7 @@ std::shared_ptr<jsi::Function> CoreFunction::getFunction(jsi::Runtime &rt) {
       // at the end) in which case the paren won't be parsed
       auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
           "(" + functionBody_ + "\n)");
-      uiFunction_ = std::make_shared<jsi::Function>(
+      uiFunction_ = std::make_unique<jsi::Function>(
           rt.evaluateJavaScript(codeBuffer, location_)
               .asObject(rt)
               .asFunction(rt));
