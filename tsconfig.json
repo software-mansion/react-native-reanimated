@@ -16,7 +16,8 @@
     "lib": ["es6", "dom"],
     "esModuleInterop": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
   },
   "include": ["lib/**/*.ts", "lib/**/*.tsx", "react-native-reanimated.d.ts", "react-native-reanimated-tests.tsx"]
 }

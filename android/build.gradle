@@ -179,8 +179,11 @@ def checkNoMultipleInstances() {
 def getReanimatedVersion() {
     def inputFile = file(projectDir.path + '/../package.json')
     def json = new JsonSlurper().parseText(inputFile.text)
-    String reanimatedVersion = json.version
-    def (major, minor, patch) = reanimatedVersion.tokenize('.')
+    return json.version
+}
+
+def getReanimatedMajorVersion() {
+    def (major, minor, patch) = getReanimatedVersion().tokenize('.')
     return major.toInteger()
 }
 
@@ -209,7 +212,8 @@ def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def FBJNI_VERSION = "0.3.0"
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
-def REANIMATED_MAJOR_VERSION = getReanimatedVersion()
+def REANIMATED_VERSION = getReanimatedVersion()
+def REANIMATED_MAJOR_VERSION = getReanimatedMajorVersion()
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -461,7 +465,8 @@ android {
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
-                        "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}"
+                        "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}",
+                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }

@@ -10,6 +10,7 @@ folly_prefix = config[:react_native_minor_version] >= 64 ? 'RCT-' : ''
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=' + config[:react_native_minor_version].to_s
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 boost_compiler_flags = '-Wno-documentation'
+version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 
 Pod::Spec.new do |s|
   
@@ -43,7 +44,7 @@ Pod::Spec.new do |s|
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
   s.xcconfig               = {
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
-    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags 
+    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + version_flag
   }
 
   s.requires_arc = true

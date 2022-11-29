@@ -9,6 +9,7 @@ import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegis
 
 declare global {
   const _WORKLET: boolean;
+  const _REANIMATED_VERSION_CPP: string;
   const _frameTimestamp: number | null;
   const _eventTimestamp: number;
   const __reanimatedModuleProxy: NativeReanimated;
@@ -49,6 +50,7 @@ declare global {
     interface Global {
       _WORKLET: boolean;
       _IS_FABRIC: boolean;
+      _REANIMATED_VERSION_CPP: string;
       _frameTimestamp: number | null;
       _eventTimestamp: number;
       __reanimatedModuleProxy: NativeReanimated;
