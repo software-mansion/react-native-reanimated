@@ -22,7 +22,14 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
     add: (item: Descriptor) => {
       sharableViewDescriptors.modify((descriptors: Descriptor[]) => {
         'worklet';
-        descriptors.push(item);
+        const index = descriptors.findIndex(
+          (descriptor) => descriptor.tag === item.tag
+        );
+        if (index !== -1) {
+          descriptors[index] = item;
+        } else {
+          descriptors.push(item);
+        }
         return descriptors;
       });
     },

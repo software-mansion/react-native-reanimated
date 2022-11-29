@@ -175,5 +175,5 @@ export function stopMapper(mapperID: number): void {
     'worklet';
     const mapperRegistry = global.__mapperRegistry;
     mapperRegistry?.stop(mapperID);
-  });
+  })();
 }
