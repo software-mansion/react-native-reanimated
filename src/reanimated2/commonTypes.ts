@@ -44,7 +44,35 @@ export interface AnimatedStyle
 }
 export interface SharedValue<T> {
   value: T;
+  addListener: (listenerID: number, listener: (value: T) => void) => void;
+  removeListener: (listenerID: number) => void;
+  modify: (modifier: (value: T) => T) => void;
 }
+
+// The below type is used for HostObjects retured by the JSI API that don't have
+// any accessable fields or methods but can carry data that is accessed from the
+// c++ side. We add a field to the type to make it possible for typescript to recognize
+// which JSI methods accept those types as arguments and to be able to correctly type
+// check other methods that may use them. However, this field is not actually defined
+// nor should be used for anything else as assigning any data to those objects will
+// throw an error.
+export type ShareableRef<T> = {
+  __hostObjectShareableJSRef: T;
+};
+
+export type ShareableSyncDataHolderRef<T> = {
+  __hostObjectShareableJSRefSyncDataHolder: T;
+};
+
+export type MapperRegistry = {
+  start: (
+    mapperID: number,
+    worklet: () => void,
+    inputs: SharedValue<any>[],
+    outputs?: SharedValue<any>[]
+  ) => void;
+  stop: (mapperID: number) => void;
+};
 
 export type Context = Record<string, unknown>;
 
@@ -133,8 +161,6 @@ export type Value3D = {
   z: number;
 };
 
-export type SensorValue3D = SharedValue<Value3D>;
-
 export type ValueRotation = {
   qw: number;
   qx: number;
@@ -144,8 +170,6 @@ export type ValueRotation = {
   pitch: number;
   roll: number;
 };
-
-export type SensorValueRotation = SharedValue<ValueRotation>;
 
 export type ShadowNodeWrapper = object;
 

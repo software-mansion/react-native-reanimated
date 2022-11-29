@@ -1,11 +1,5 @@
 import { NativeModules } from 'react-native';
-import {
-  SharedValue,
-  SensorValue3D,
-  SensorValueRotation,
-  AnimatedKeyboardInfo,
-} from '../commonTypes';
-import { Descriptor } from '../hook/commonTypes';
+import { ShareableRef, ShareableSyncDataHolderRef } from '../commonTypes';
 import { LayoutAnimationFunction } from '../layoutReanimation';
 import { version as jsVersion } from '../../../package.json';
 
@@ -49,61 +43,54 @@ export class NativeReanimated {
     }
   }
 
-  installCoreFunctions(valueSetter: <T>(value: T) => void): void {
-    return this.InnerNativeModule.installCoreFunctions(valueSetter);
+  getTimestamp(): number {
+    throw new Error('stub implementation, used on the web only');
   }
 
-  makeShareable<T>(value: T): T {
-    return this.InnerNativeModule.makeShareable(value);
+  installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
+    return this.InnerNativeModule.installCoreFunctions(valueUnpacker);
   }
 
-  makeMutable<T>(value: T): SharedValue<T> {
-    return this.InnerNativeModule.makeMutable(value);
+  makeShareableClone<T>(value: T): ShareableRef<T> {
+    return this.InnerNativeModule.makeShareableClone(value);
   }
 
-  makeRemote<T>(object = {}): T {
-    return this.InnerNativeModule.makeRemote(object);
+  makeSynchronizedDataHolder<T>(
+    valueRef: ShareableRef<T>
+  ): ShareableSyncDataHolderRef<T> {
+    return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
   }
 
-  registerSensor(
+  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T {
+    return this.InnerNativeModule.getDataSynchronously(ref);
+  }
+
+  updateDataSynchronously<T>(
+    ref: ShareableSyncDataHolderRef<T>,
+    value: T
+  ): void {
+    this.InnerNativeModule.updateDataSynchronously(ref, value);
+  }
+
+  scheduleOnUI<T>(shareable: ShareableRef<T>) {
+    return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  registerSensor<T>(
     sensorType: number,
     interval: number,
-    sensorData: SensorValue3D | SensorValueRotation
+    handler: ShareableRef<T>
   ) {
-    return this.InnerNativeModule.registerSensor(
-      sensorType,
-      interval,
-      sensorData
-    );
+    return this.InnerNativeModule.registerSensor(sensorType, interval, handler);
   }
 
   unregisterSensor(sensorId: number) {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  startMapper(
-    mapper: () => void,
-    inputs: any[] = [],
-    outputs: any[] = [],
-    updater: () => void,
-    viewDescriptors: Descriptor[] | SharedValue<Descriptor[]>
-  ): number {
-    return this.InnerNativeModule.startMapper(
-      mapper,
-      inputs,
-      outputs,
-      updater,
-      viewDescriptors
-    );
-  }
-
-  stopMapper(mapperId: number): void {
-    return this.InnerNativeModule.stopMapper(mapperId);
-  }
-
   registerEventHandler<T>(
     eventHash: string,
-    eventHandler: (event: T) => void
+    eventHandler: ShareableRef<T>
   ): string {
     return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
   }
@@ -123,15 +110,9 @@ export class NativeReanimated {
   configureLayoutAnimation(
     viewTag: number,
     type: string,
-    config: Keyframe | LayoutAnimationFunction,
-    viewSharedValue: SharedValue<null | Record<string, unknown>> | null
+    config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ) {
-    this.InnerNativeModule.configureLayoutAnimation(
-      viewTag,
-      type,
-      config,
-      viewSharedValue
-    );
+    this.InnerNativeModule.configureLayoutAnimation(viewTag, type, config);
   }
 
   enableLayoutAnimations(flag: boolean): void {
@@ -142,8 +123,8 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  subscribeForKeyboardEvents(keyboardEventData: AnimatedKeyboardInfo): number {
-    return this.InnerNativeModule.subscribeForKeyboardEvents(keyboardEventData);
+  subscribeForKeyboardEvents(handler: ShareableRef<number>): number {
+    return this.InnerNativeModule.subscribeForKeyboardEvents(handler);
   }
 
   unsubscribeFromKeyboardEvents(listenerId: number): void {

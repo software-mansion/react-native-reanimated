@@ -2,12 +2,11 @@ import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
-import './reanimated2/layoutReanimation/LayoutAnimationRepository';
+import './reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
-  makeMutable,
   configureLayoutAnimations,
   enableLayoutAnimations,
   runOnUI,
@@ -34,6 +33,7 @@ import {
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
+import { makeShareableShadowNodeWrapper } from './reanimated2/shareables';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -169,7 +169,6 @@ export default function createAnimatedComponent(
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
-    sv: SharedValue<null | Record<string, unknown>> | null;
     _component: ComponentRef | null = null;
     static displayName: string;
 
@@ -178,13 +177,11 @@ export default function createAnimatedComponent(
       if (isJest()) {
         this.animatedStyle = { value: {} };
       }
-      this.sv = makeMutable({});
     }
 
     componentWillUnmount() {
       this._detachNativeEvents();
       this._detachStyles();
-      this.sv = null;
     }
 
     componentDidMount() {
@@ -332,7 +329,9 @@ export default function createAnimatedComponent(
         }
 
         if (global._IS_FABRIC) {
-          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+          shadowNodeWrapper = makeShareableShadowNodeWrapper(
+            getShadowNodeWrapperFromRef(this)
+          );
         }
       }
       this._viewTag = viewTag as number;
@@ -421,28 +420,13 @@ export default function createAnimatedComponent(
             enableLayoutAnimations(true, false);
           }
           if (layout) {
-            configureLayoutAnimations(
-              tag,
-              'layout',
-              maybeBuild(layout),
-              this.sv
-            );
+            configureLayoutAnimations(tag, 'layout', maybeBuild(layout));
           }
           if (entering) {
-            configureLayoutAnimations(
-              tag,
-              'entering',
-              maybeBuild(entering),
-              this.sv
-            );
+            configureLayoutAnimations(tag, 'entering', maybeBuild(entering));
           }
           if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              'exiting',
-              maybeBuild(exiting),
-              this.sv
-            );
+            configureLayoutAnimations(tag, 'exiting', maybeBuild(exiting));
           }
         }
 
