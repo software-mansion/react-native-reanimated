@@ -334,6 +334,15 @@ public class NativeProxy {
                 layoutAnimations.clearAnimationConfigForTag(tag);
               }
           }
+
+          @Override
+          public int findTheOtherForSharedTransition(int tag) {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.findTheOtherForSharedTransition(tag);
+            }
+            return -1;
+          }
         });
   }
 }

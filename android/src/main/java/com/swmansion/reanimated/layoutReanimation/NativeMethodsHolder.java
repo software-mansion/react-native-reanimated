@@ -10,4 +10,6 @@ public interface NativeMethodsHolder {
   void clearAnimationConfig(int tag);
 
   boolean isLayoutAnimationEnabled();
+
+  int findTheOtherForSharedTransition(int tag);
 }

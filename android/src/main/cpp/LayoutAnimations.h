@@ -16,6 +16,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       void(int, alias_ref<JString>, alias_ref<JMap<jstring, jstring>>)>;
   using HasAnimationBlock = std::function<bool(int, std::string)>;
   using ClearAnimationConfigBlock = std::function<void(int)>;
+  using FindTheOtherForSharedTransitionBlock = std::function<int(int)>;
 
  public:
   static auto constexpr kJavaDescriptor =
@@ -36,10 +37,13 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
   void setClearAnimationConfigBlock(
       ClearAnimationConfigBlock clearAnimationConfigBlock);
+  void setFindTheOtherForSharedTransition(
+    FindTheOtherForSharedTransitionBlock findTheOtherForSharedTransitionBlock);
 
   void progressLayoutAnimation(int tag, const jsi::Value &progress);
   void endLayoutAnimation(int tag, bool cancelled, bool removeView);
   void clearAnimationConfigForTag(int tag);
+  int findTheOtherForSharedTransition(int tag);
 
  private:
   friend HybridBase;
@@ -48,6 +52,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   AnimationStartingBlock animationStartingBlock_;
   HasAnimationBlock hasAnimationBlock_;
   ClearAnimationConfigBlock clearAnimationConfigBlock_;
+  FindTheOtherForSharedTransitionBlock findTheOtherForSharedTransitionBlock_;
 
   explicit LayoutAnimations(
       jni::alias_ref<LayoutAnimations::jhybridobject> jThis);

@@ -153,6 +153,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     maybeInit();
     return mAnimationsManager.isLayoutAnimationEnabled();
   }
+
+  public AnimationsManager getAnimationsManager() {
+    return mAnimationsManager;
+  }
 }
 
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
@@ -228,6 +232,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   public synchronized void updateLayout(
       int parentTag, int tag, int x, int y, int width, int height) {
     super.updateLayout(parentTag, tag, x, y, width, height);
+    ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
     if (isLayoutAnimationDisabled()) {
       return;
     }
@@ -337,6 +342,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       }
     }
     super.manageChildren(tag, null, null, tagsToDelete);
+    ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidRemoved();
   }
 
   public void publicDropView(View view) {

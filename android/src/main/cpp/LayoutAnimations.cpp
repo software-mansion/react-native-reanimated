@@ -76,6 +76,15 @@ bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
 
+void LayoutAnimations::setFindTheOtherForSharedTransition(
+  FindTheOtherForSharedTransitionBlock findTheOtherForSharedTransitionBlock) {
+  findTheOtherForSharedTransitionBlock_ = findTheOtherForSharedTransitionBlock;
+}
+
+int LayoutAnimations::findTheOtherForSharedTransition(int tag) {
+  return findTheOtherForSharedTransitionBlock_(tag);
+}
+
 void LayoutAnimations::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
@@ -89,6 +98,9 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),
+      makeNativeMethod(
+          "findTheOtherForSharedTransition",
+          LayoutAnimations::findTheOtherForSharedTransition),
   });
 }
 

@@ -293,6 +293,15 @@ void NativeProxy::installJSIBindings(
         }
       });
 
+  layoutAnimations->cthis()->setFindTheOtherForSharedTransition(
+    [weakLayoutAnimationsProxy](int tag) {
+      auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
+      if (layoutAnimationsProxy) {
+        return layoutAnimationsProxy->findTheOtherForSharedTransition(tag);
+      }
+      return -1;
+    });
+
   // Layout Animations End
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
