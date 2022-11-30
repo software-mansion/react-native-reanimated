@@ -17,7 +17,7 @@
     "@react-navigation/native": "^6.0.13",
     "@react-navigation/native-stack": "^6.9.0",
     "react": "18.2.0",
-    "react-native": "0.0.0-20221130-2022-6003e70e8",
+    "react-native": "0.71.0-rc.3",
     "react-native-reanimated": "link:../"
   },
   "devDependencies": {
@@ -42,9 +42,5 @@
   },
   "jest": {
     "preset": "react-native"
-  },
-  "resolutions": {
-    "@react-native/gradle-plugin": "npm:react-native-gradle-plugin@0.72.1",
-    "@react-native/codegen": "npm:react-native-codegen@0.72.0"
   }
 }
