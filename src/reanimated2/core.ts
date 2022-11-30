@@ -148,7 +148,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
 
 Possible solutions are:
   a) If you want to synchronously execute this method, mark it as a worklet
-  b) If you want to execute this method on the JS thread, wrap it using runOnJS`);
+  b) If you want to execute this function on the JS thread, wrap it using \`runOnJS\``);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
