@@ -147,7 +147,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
       throw new Error(`Tried to synchronously call a non-worklet function
 
 Possible solutions are:
-  a) If you want to synchronously execute this method, mark it as a Worklet
+  a) If you want to synchronously execute this method, mark it as a worklet
   b) If you want to execute this method on the JS thread, wrap it using runOnJS`);
     };
     fun.__remoteFunction = objectToUnpack;
