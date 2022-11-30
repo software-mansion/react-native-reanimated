@@ -96,6 +96,7 @@ export interface NativeEvent<T> {
 export interface ComplexWorkletFunction<A extends any[], R>
   extends WorkletFunction {
   (...args: A): R;
+  __remoteFunction?: (...args: A) => R;
 }
 
 export interface NestedObject<T> {

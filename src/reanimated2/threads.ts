@@ -27,6 +27,9 @@ export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
+  if (fun.__remoteFunction) {
+    fun = fun.__remoteFunction;
+  }
   if (!_WORKLET) {
     return fun;
   }

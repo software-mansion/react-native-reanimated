@@ -285,7 +285,14 @@ class ShareableRemoteFunction
         function_(std::move(function)) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (runtimeHelper_->isUIRuntime(rt)) {
+#ifdef DEBUG
+      return runtimeHelper_->valueUnpacker->call(
+          rt,
+          ShareableJSRef::newHostObject(rt, shared_from_this()),
+          jsi::String::createFromAscii(rt, "RemoteFunction"));
+#else
       return ShareableJSRef::newHostObject(rt, shared_from_this());
+#endif
     } else {
       return jsi::Value(rt, function_);
     }
