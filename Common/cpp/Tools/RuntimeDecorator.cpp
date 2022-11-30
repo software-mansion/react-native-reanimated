@@ -306,7 +306,7 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
     endLayoutAnimationFunction(
-        args[0].asNumber(), args[1].asBool(), args[2].asBool());
+        args[0].asNumber(), args[1].getBool(), args[2].getBool());
     return jsi::Value::undefined();
   };
   jsi::Value _notifyAboutEnd = jsi::Function::createFromHostFunction(
