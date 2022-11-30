@@ -144,7 +144,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     return value;
   } else if (category === 'RemoteFunction') {
     const fun = () => {
-      throw new Error(`Tried to synchronously call a non-worklet function
+      throw new Error(`Tried to synchronously call a non-worklet function on the UI thread.
 
 Possible solutions are:
   a) If you want to synchronously execute this method, mark it as a worklet
