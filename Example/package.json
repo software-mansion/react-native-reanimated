@@ -29,7 +29,6 @@
     "@fortawesome/react-native-fontawesome": "^0.2.3",
     "@react-native-community/masked-view": "^0.1.10",
     "@react-native-community/picker": "^1.8.1",
-    "@react-native-community/slider": "^4.1.7",
     "@react-navigation/native": "^5.9.2",
     "@react-navigation/stack": "^5.14.2",
     "@react-navigation/web": "^1.0.0-alpha.9",
@@ -38,13 +37,9 @@
     "expo-asset": "^8.2.0",
     "react": "18.2.0",
     "react-dom": "^16.13.1",
-    "react-native": "0.0.0-20221129-2018-43027b6d4",
-    "react-native-gesture-handler": "^2.7.1",
+    "react-native": "0.0.0-20221130-2022-6003e70e8",
     "react-native-pager-view": "^5.4.1",
-    "react-native-safe-area-context": "^4.4.1",
-    "react-native-screens": "^3.18.2",
     "react-native-status-bar-height": "^2.4.0",
-    "react-native-svg": "^13.4.0",
     "react-native-web": "^0.14.7"
   },
   "devDependencies": {
