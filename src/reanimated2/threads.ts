@@ -27,6 +27,13 @@ export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
+  if (fun.__remoteFunction) {
+    // in development mode the function provided as `fun` throws an error message
+    // such that when someone accidently calls it directly on the UI runtime, they
+    // see that they should use `runOnJS` instead. To facilitate that we purt the
+    // reference to the original remote function in the `__remoteFunction` property.
+    fun = fun.__remoteFunction;
+  }
   if (!_WORKLET) {
     return fun;
   }
