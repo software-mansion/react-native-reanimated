@@ -29,20 +29,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
-
 set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-    if(${CLIENT_SIDE_BUILD})
-        set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
-    else()
-        # Reanimated Playground app
-        set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/android/app/build/react-ndk/exported")
-    endif()
-else()
-    set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
-endif()
-
-file (GLOB LIBRN_DIR "/Users/tomekzaw/Downloads/react-android-0.71.0-rc.2-debug/jni/${ANDROID_ABI}")
 
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
@@ -87,33 +74,6 @@ find_library(
         LOG_LIB
         log
 )
-find_library(
-        REACT_NATIVE_JNI_LIB
-        reactnativejni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-    find_library(
-            REACT_RENDER_UIMANAGER
-            react_render_uimanager
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            REACT_RENDER_MOUNTING
-            react_render_mounting
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    find_library(
-            REACT_RENDER_SCHEDULER
-            react_render_scheduler
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-endif()
 
 # build shared lib
 
@@ -127,7 +87,7 @@ target_link_libraries(
     ReactAndroid::glog
     fbjni::fbjni
     ReactAndroid::folly_runtime
-    ${REACT_NATIVE_JNI_LIB}
+    ReactAndroid::reactnativejni
     android
 )
 
@@ -150,15 +110,9 @@ if(${JS_RUNTIME} STREQUAL "hermes")
         )
     endif()
     if (${HERMES_ENABLE_DEBUGGER})
-        find_library(
-                HERMES_EXECUTOR_LIB
-                hermes-executor-debug
-                PATHS ${LIBRN_DIR}
-                NO_CMAKE_FIND_ROOT_PATH
-        )
         target_link_libraries(
                 ${PACKAGE_NAME}
-                ${HERMES_EXECUTOR_LIB}
+                ReactAndroid::hermes_executor
         )
     endif()
     target_link_libraries(
@@ -185,16 +139,17 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
     )
 else()
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-    find_library(
-            JSEXECUTOR_LIB
-            jscexecutor
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
-    )
-    target_link_libraries(
-            ${PACKAGE_NAME}
-            ${JSEXECUTOR_LIB}
-    )
+    # TODO: JSC
+    # find_library(
+    #         JSEXECUTOR_LIB
+    #         jscexecutor
+    #         PATHS ${LIBRN_DIR}
+    #         NO_CMAKE_FIND_ROOT_PATH
+    # )
+    # target_link_libraries(
+    #         ${PACKAGE_NAME}
+    #         ${JSEXECUTOR_LIB}
+    # )
 endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
@@ -207,9 +162,9 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
             ReactAndroid::react_render_debug
             ReactAndroid::rrc_view
             ReactAndroid::fabricjni
-            react_render_scheduler # resolves "error: undefined symbol: facebook::react::Scheduler::getUIManager() const"
-            react_render_uimanager # resolves "error: undefined symbol: facebook::react::UIManager::getShadowTreeRegistry() const"
-            react_render_mounting # resolves "error: undefined symbol: facebook::react::ShadowTree::commit(std::__ndk1::function<std::__ndk1::shared_ptr<facebook::react::RootShadowNode> (facebook::react::RootShadowNode const&)> const&, facebook::react::ShadowTree::CommitOptions const&) const"
+            ReactAndroid::react_render_scheduler
+            ReactAndroid::react_render_uimanager
+            ReactAndroid::react_render_mounting
     )
 endif()
 

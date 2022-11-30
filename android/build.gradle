@@ -198,9 +198,9 @@ def reactNativeRootDir = resolveReactNativeDirectory()
 def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
-// def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
-def REACT_NATIVE_VERSION = "0.71.0-rc.2" // just for nightly
-def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
+def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
+def REACT_NATIVE_IS_NIGHTLY = REACT_NATIVE_VERSION.startsWith("0.0.0-")
+def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_IS_NIGHTLY ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
 def REANIMATED_MAJOR_VERSION = getReanimatedVersion()
 
@@ -402,7 +402,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.3.0"
+        classpath "com.android.tools.build:gradle:7.3.1"
         classpath "de.undercouch:gradle-download-task:5.0.1"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:6.11.0"
     }
@@ -487,7 +487,7 @@ android {
                 "**/libfolly_runtime.so",
                 "**/libglog.so", // resolves "2 files found with path 'lib/arm64-v8a/libglog.so' from inputs"
                 "**/libhermes.so",
-                "**/libhermes-executor-debug.so",
+                "**/libhermes_executor.so",
                 "**/libreactnativejni.so",
                 "**/libjscexecutor.so",
                 "**/libv8executor.so",
@@ -655,6 +655,9 @@ if (REACT_NATIVE_MINOR_VERSION >= 69 && !isNewArchitectureEnabled()) {
 }
 
 task prepareHermes() {
+    if (REACT_NATIVE_MINOR_VERSION >= 71) {
+        // do nothing
+    }
     if (REACT_NATIVE_MINOR_VERSION >= 69) {
         if (!isNewArchitectureEnabled()) {
             dependsOn(unzipHermes)
@@ -768,6 +771,11 @@ task packageNdkLibs(type: Copy) {
 repositories {
     mavenCentral()
     mavenLocal()
+    if (REACT_NATIVE_IS_NIGHTLY) {
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
         url "$reactNativeRootDir/android"
@@ -781,10 +789,25 @@ repositories {
 
 dependencies {
     // noinspection GradleDynamicVersion
-    // TODO: if (REACT_NATIVE_MINOR_VERSION >= 71)
-    // TODO: remove REACT_NATIVE_VERSION when react-native-gradle-plugin correctly substitutes version
-    implementation "com.facebook.react:react-android:" + REACT_NATIVE_VERSION
-    implementation "com.facebook.react:hermes-android:" + REACT_NATIVE_VERSION // TODO: if Hermes enabled
+    def VERSION_STRING = {
+        if (REACT_NATIVE_IS_NIGHTLY) {
+            // nightly, use AARs from SonaType
+            return REACT_NATIVE_VERSION + "-SNAPSHOT"
+        } else if (REACT_NATIVE_MINOR_VERSION >= 71) {
+            // use AARs from Maven Repository
+            // TODO: react-native-gradle-plugin should substitute version also for libraries
+            return REACT_NATIVE_VERSION
+        } else {
+            // use AARs from local Maven repo in node_modules
+            return ":+"
+        }
+    }.call()
+
+    implementation "com.facebook.react:react-android:" + VERSION_STRING
+    if (JS_RUNTIME == "hermes") {
+        implementation "com.facebook.react:hermes-android:" + VERSION_STRING
+    }
+
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
     implementation "androidx.transition:transition:1.1.0"
     implementation "androidx.core:core:1.6.0"
@@ -800,15 +823,14 @@ task unpackReactNativeAAR {
 //        rnAarMatcher = "**/**/*.aar"
 //    }
 //    def rnAAR = fileTree("$reactNativeRootDir/android").matching({ it.include rnAarMatcher }).singleFile
-    // TODO: consume shared libraries from prefabs
-    def rnAAR = file("/Users/tomekzaw/Downloads/react-android-0.71.0-rc.2-debug.aar")
-    def file = rnAAR.absoluteFile
-    def packageName = file.name.tokenize('-')[0]
-    copy {
-        from zipTree(file)
-        into "$reactNativeRootDir/ReactAndroid/src/main/jni/first-party/$packageName/"
-        include "jni/**/*.so"
-    }
+    // def rnAAR = file("/Users/tomekzaw/Downloads/react-android-0.71.0-rc.2-debug.aar")
+    // def file = rnAAR.absoluteFile
+    // def packageName = file.name.tokenize('-')[0]
+    // copy {
+    //     from zipTree(file)
+    //     into "$reactNativeRootDir/ReactAndroid/src/main/jni/first-party/$packageName/"
+    //     include "jni/**/*.so"
+    // }
 }
 
 task prepareThirdPartyNdkHeaders(dependsOn:[
