@@ -31,7 +31,6 @@
 @end
 
 @implementation REAUIManager {
-  RCTLayoutAnimationGroup *_reactLayoutAnimationGroup;
   NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *_toBeRemovedRegister;
   NSMutableDictionary<NSNumber *, NSNumber *> *_parentMapper;
   REAAnimationsManager *_animationsManager;
@@ -45,13 +44,6 @@
 
 - (void)setBridge:(RCTBridge *)bridge
 {
-  // setting a layout animation group with a deleting animation in order to
-  // allows us to call a different method in RCTUIManager for cleaning up exiting views
-  RCTLayoutAnimation *deletingAnimation = [[RCTLayoutAnimation alloc] initWithDuration:0 config:@{}];
-  _reactLayoutAnimationGroup = [[RCTLayoutAnimationGroup alloc] initWithCreatingLayoutAnimation:nil
-                                                                        updatingLayoutAnimation:nil
-                                                                        deletingLayoutAnimation:deletingAnimation
-                                                                                       callback:nil];
   if (!_blockSetter) {
     _blockSetter = true;
 
@@ -98,7 +90,9 @@
                 registry:registry];
 
   if (isLayoutAnimationEnabled) {
-    [_animationsManager reattachChildren:permanentlyRemovedChildren toContainer:container atIndices:removeAtIndices];
+    [_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
+                                     toContainer:container
+                                       atIndices:removeAtIndices];
   }
 }
 

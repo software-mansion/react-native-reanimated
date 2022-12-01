@@ -336,9 +336,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return YES;
 }
 
-- (void)reattachChildren:(NSArray<id<RCTComponent>> *)children
-             toContainer:(id<RCTComponent>)container
-               atIndices:(NSArray<NSNumber *> *)indices
+- (void)reattachAnimatedChildren:(NSArray<id<RCTComponent>> *)children
+                     toContainer:(id<RCTComponent>)container
+                       atIndices:(NSArray<NSNumber *> *)indices
 {
   if (![container isKindOfClass:[UIView class]]) {
     return;

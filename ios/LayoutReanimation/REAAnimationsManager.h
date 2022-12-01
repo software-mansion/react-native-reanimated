@@ -33,9 +33,9 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view;
 - (BOOL)wantsHandleRemovalOfView:(UIView *)view;
 - (void)removeAnimationsFromSubtree:(UIView *)view;
-- (void)reattachChildren:(NSArray<id<RCTComponent>> *)children
-             toContainer:(id<RCTComponent>)container
-               atIndices:(NSArray<NSNumber *> *)indices;
+- (void)reattachAnimatedChildren:(NSArray<id<RCTComponent>> *)children
+                     toContainer:(id<RCTComponent>)container
+                       atIndices:(NSArray<NSNumber *> *)indices;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
 
