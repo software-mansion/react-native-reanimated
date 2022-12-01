@@ -25,6 +25,7 @@
     "packages/",
     "Cargo.toml",
     "package.json",
+    "README.md",
     "target/wasm32-wasi/release/swc_plugin_reanimated.wasm"
   ],
   "scripts": {
