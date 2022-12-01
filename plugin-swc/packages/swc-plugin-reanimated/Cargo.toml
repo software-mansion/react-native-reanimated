@@ -11,7 +11,7 @@ repository = "https://github.com/software-mansion/react-native-reanimated"
 crate-type = ["cdylib"]
 
 [dependencies]
-swc_core = { version = "0.40.13", features = ["plugin_transform"] }
+swc_core = { version = "0.43.23", features = ["plugin_transform"] }
 swc-reanimated-worklets-visitor = { version = "0.1.0", path = "../swc-reanimated-worklets-visitor" }
 serde = "1.0.137"
 serde_json = "1.0.81"
