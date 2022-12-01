@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated-swc-plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "main": "./target/wasm32-wasi/release/swc_plugin_reanimated.wasm",
   "napi": {
