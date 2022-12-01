@@ -6,11 +6,20 @@ import { getTag } from '../NativeMethods';
 import { getShadowNodeWrapperFromHostInstance } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,
+  makeShareableShadowNodeWrapper,
   registerShareableMapping,
 } from '../shareables';
 
+function getShareableShadowNodeFromComponent(
+  component: Component
+): ShadowNodeWrapper {
+  return makeShareableShadowNodeWrapper(
+    getShadowNodeWrapperFromHostInstance(component)
+  );
+}
+
 const getTagValueFunction = global._IS_FABRIC
-  ? getShadowNodeWrapperFromHostInstance
+  ? getShareableShadowNodeFromComponent
   : getTag;
 
 export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {

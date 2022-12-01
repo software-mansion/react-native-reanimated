@@ -114,7 +114,7 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
-function valueUnpacker(objectToUnpack: any): any {
+function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -142,6 +142,16 @@ function valueUnpacker(objectToUnpack: any): any {
       handleCache!.set(objectToUnpack, value);
     }
     return value;
+  } else if (category === 'RemoteFunction') {
+    const fun = () => {
+      throw new Error(`Tried to synchronously call a non-worklet function on the UI thread.
+
+Possible solutions are:
+  a) If you want to synchronously execute this method, mark it as a worklet
+  b) If you want to execute this function on the JS thread, wrap it using \`runOnJS\``);
+    };
+    fun.__remoteFunction = objectToUnpack;
+    return fun;
   } else {
     throw new Error('data type not recognized by unpack method');
   }
