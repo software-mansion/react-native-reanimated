@@ -26,5 +26,5 @@ Below is a table showing compatibility of the plugin. Please note that `swc_core
 
 | Plugin version | `swc_core` version | Next.js version |
 | -------------- | ------------------ | --------------- |
-| 0.1.0          | 0.40.13            | 13.0.0          |
 | 0.2.0          | 0.43.23            | 13.0.5          |
+| 0.1.0          | 0.40.13            | 13.0.0          |
