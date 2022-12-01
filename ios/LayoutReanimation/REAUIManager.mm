@@ -98,13 +98,7 @@
                 registry:registry];
 
   if (isLayoutAnimationEnabled) {
-    NSMutableArray<UIView *> *children = [NSMutableArray new];
-    for (id<RCTComponent> child in permanentlyRemovedChildren) {
-      if ([child isKindOfClass:[UIView class]]) {
-        [children addObject:(UIView *)child];
-      }
-    }
-    [_animationsManager reattachChildren:children toContainer:(UIView *)container atIndices:removeAtIndices];
+    [_animationsManager reattachChildren:permanentlyRemovedChildren toContainer:container atIndices:removeAtIndices];
   }
 }
 

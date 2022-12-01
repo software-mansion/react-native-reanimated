@@ -336,15 +336,22 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return YES;
 }
 
-- (void)reattachChildren:(NSArray<UIView *> *)children
-             toContainer:(UIView *)container
+- (void)reattachChildren:(NSArray<id<RCTComponent>> *)children
+             toContainer:(id<RCTComponent>)container
                atIndices:(NSArray<NSNumber *> *)indices
 {
+  if (![container isKindOfClass:[UIView class]]) {
+    return;
+  }
   for (int i = 0; i < children.count; i++) {
-    UIView *child = [children objectAtIndex:i];
+    id<RCTComponent> child = [children objectAtIndex:i];
+    if (![child isKindOfClass:[UIView class]]) {
+      continue;
+    }
+    UIView *childView = (UIView *)child;
     NSNumber *originalIndex = [indices objectAtIndex:i];
-    if ([self startAnimationsRecursive:child removingSubviewsWithoutAnimations:true]) {
-      [container insertSubview:child atIndex:[originalIndex intValue]];
+    if ([self startAnimationsRecursive:childView removingSubviewsWithoutAnimations:true]) {
+      [(UIView *)container insertSubview:childView atIndex:[originalIndex intValue]];
     }
   }
 }
