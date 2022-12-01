@@ -24,12 +24,6 @@
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry;
 
-- (void)_removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container;
-
-- (void)_removeChildren:(NSArray<UIView *> *)children
-          fromContainer:(UIView *)container
-          withAnimation:(RCTLayoutAnimationGroup *)animation;
-
 - (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
 
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
@@ -79,21 +73,6 @@
   }
 }
 
-- (void)_removeChildren:(NSArray<UIView *> *)children
-          fromContainer:(UIView *)container
-          withAnimation:(RCTLayoutAnimationGroup *)animation
-{
-  if (animation == _reactLayoutAnimationGroup) {
-    // if a removed view in this batch has an `exiting` animation,
-    // let REAAnimationsManager handle the removal
-    [_animationsManager removeChildren:children fromContainer:container];
-  } else {
-    // otherwise, if there's a layout animation group set,
-    // delegate to the React Native implementation for layout animations
-    [super _removeChildren:children fromContainer:container withAnimation:animation];
-  }
-}
-
 - (void)_manageChildren:(NSNumber *)containerTag
         moveFromIndices:(NSArray<NSNumber *> *)moveFromIndices
           moveToIndices:(NSArray<NSNumber *> *)moveToIndices
@@ -102,40 +81,13 @@
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
-  if (!reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
-    [super _manageChildren:containerTag
-           moveFromIndices:moveFromIndices
-             moveToIndices:moveToIndices
-         addChildReactTags:addChildReactTags
-              addAtIndices:addAtIndices
-           removeAtIndices:removeAtIndices
-                  registry:registry];
-    return;
+  bool isLayoutAnimationEnabled = reanimated::FeaturesConfig::isLayoutAnimationEnabled();
+  id<RCTComponent> container;
+  NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
+  if (isLayoutAnimationEnabled) {
+    container = registry[containerTag];
+    permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
   }
-
-  // Reanimated changes /start
-  BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
-  if (isUIViewRegistry) {
-    BOOL wasProxyRemovalSet = [self valueForKey:@"_layoutAnimationGroup"] == _reactLayoutAnimationGroup;
-    BOOL wantProxyRemoval = NO;
-    if (!wasProxyRemovalSet) {
-      id<RCTComponent> container = registry[containerTag];
-      NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
-                                                                                         atIndices:removeAtIndices];
-      for (UIView *removedChild in permanentlyRemovedChildren) {
-        if ([_animationsManager wantsHandleRemovalOfView:removedChild]) {
-          wantProxyRemoval = YES;
-          break;
-        }
-        [_animationsManager removeAnimationsFromSubtree:removedChild];
-      }
-      if (wantProxyRemoval) {
-        // set layout animation group
-        [super setNextLayoutAnimationGroup:_reactLayoutAnimationGroup];
-      }
-    }
-  }
-  // Reanimated changes /end
 
   [super _manageChildren:containerTag
          moveFromIndices:moveFromIndices
@@ -144,6 +96,16 @@
             addAtIndices:addAtIndices
          removeAtIndices:removeAtIndices
                 registry:registry];
+
+  if (isLayoutAnimationEnabled) {
+    NSMutableArray<UIView *> *children = [NSMutableArray new];
+    for (id<RCTComponent> child in permanentlyRemovedChildren) {
+      if ([child isKindOfClass:[UIView class]]) {
+        [children addObject:(UIView *)child];
+      }
+    }
+    [_animationsManager reattachChildren:children toContainer:(UIView *)container atIndices:removeAtIndices];
+  }
 }
 
 - (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag

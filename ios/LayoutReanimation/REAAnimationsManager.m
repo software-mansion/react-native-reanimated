@@ -279,20 +279,20 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (BOOL)removeRecursive:(UIView *)view fromContainer:(UIView *)container withoutAnimation:(BOOL)removeImmediately;
+- (BOOL)startAnimationsRecursive:(UIView *)view removingSubviewsWithoutAnimations:(BOOL)removeSubviewsWithoutAnimations;
 {
   if (!view.reactTag) {
     return NO;
   }
   BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting") || [_exitingViews objectForKey:view.reactTag];
   BOOL hasAnimatedChildren = NO;
-  removeImmediately = removeImmediately && !hasExitAnimation;
+  removeSubviewsWithoutAnimations = removeSubviewsWithoutAnimations && !hasExitAnimation;
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];
 
   for (UIView *subview in [view.reactSubviews copy]) {
-    if ([self removeRecursive:subview fromContainer:view withoutAnimation:removeImmediately]) {
+    if ([self startAnimationsRecursive:subview removingSubviewsWithoutAnimations:removeSubviewsWithoutAnimations]) {
       hasAnimatedChildren = YES;
-    } else if (removeImmediately) {
+    } else if (removeSubviewsWithoutAnimations) {
       [toBeRemoved addObject:subview];
     }
   }
@@ -307,14 +307,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (hasExitAnimation) {
     before = [[REASnapshot alloc] init:view];
   }
-  // start exit animation
-  UIView *originalSuperview = view.superview;
-  NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:view];
-  [container removeReactSubview:view];
-  // we don't want user interaction on exiting views
-  view.userInteractionEnabled = NO;
-  [originalSuperview insertSubview:view atIndex:originalIndex];
 
+  // start exit animation
   if (hasExitAnimation && ![_exitingViews objectForKey:view.reactTag]) {
     NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
     [_exitingViews setObject:view forKey:view.reactTag];
@@ -335,14 +329,22 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   // start new animations for it, and might as well remove
   // the layout animation config now
   _clearAnimationConfigForTag(view.reactTag);
+
+  // we don't want user interaction on exiting views
+  view.userInteractionEnabled = NO;
+
   return YES;
 }
 
-- (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container
+- (void)reattachChildren:(NSArray<UIView *> *)children
+             toContainer:(UIView *)container
+               atIndices:(NSArray<NSNumber *> *)indices
 {
-  for (UIView *removedChild in children) {
-    if (![self removeRecursive:removedChild fromContainer:container withoutAnimation:true]) {
-      [removedChild removeFromSuperview];
+  for (int i = 0; i < children.count; i++) {
+    UIView *child = [children objectAtIndex:i];
+    NSNumber *originalIndex = [indices objectAtIndex:i];
+    if ([self startAnimationsRecursive:child removingSubviewsWithoutAnimations:true]) {
+      [container insertSubview:child atIndex:[originalIndex intValue]];
     }
   }
 }
