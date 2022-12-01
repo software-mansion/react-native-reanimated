@@ -11,7 +11,7 @@
 
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
-#include "LayoutAnimationsProxy.h"
+#include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
@@ -22,6 +22,12 @@
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
+
+#ifdef REANIMATED_VERSION
+#define STRINGIZE(x) #x
+#define STRINGIZE2(x) STRINGIZE(x)
+#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
+#endif // REANIMATED_VERSION
 
 namespace reanimated {
 
@@ -203,7 +209,7 @@ void NativeProxy::installJSIBindings(
 
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
-      ReanimatedRuntime::make(jsQueue);
+      ReanimatedRuntime::make(runtime_, jsQueue);
 
   auto workletRuntimeValue =
       runtime_->global()
@@ -225,26 +231,24 @@ void NativeProxy::installJSIBindings(
   runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
 #endif
 
+  auto version =
+      jsi::String::createFromUtf8(*runtime_, REANIMATED_VERSION_STRING);
+  runtime_->global().setProperty(*runtime_, "_REANIMATED_VERSION_CPP", version);
+
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
-
-  // Layout Animations Start
-
-  auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
-  };
-
-  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-    this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
-  };
-
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(
-          notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
 
-  // Layout Animations End
+  auto progressLayoutAnimation = [this, wrt](
+                                     int tag, const jsi::Object &newProps) {
+    auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
+    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, newPropsJNI);
+  };
+
+  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
+    this->layoutAnimations->cthis()->endLayoutAnimation(
+        tag, isCancelled, removeView);
+  };
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -257,6 +261,8 @@ void NativeProxy::installJSIBindings(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      progressLayoutAnimation,
+      endLayoutAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -274,12 +280,13 @@ void NativeProxy::installJSIBindings(
 #else
       propObtainer,
 #endif
-      layoutAnimationsProxy,
       platformDepMethodsHolder);
 
-  _nativeReanimatedModule = module;
+  scheduler_->setRuntimeManager(module);
 
+  _nativeReanimatedModule = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
+
 #ifdef RCT_NEW_ARCH_ENABLED
   this->registerEventHandler([weakModule, getCurrentTime](
                                  std::string eventName,
@@ -330,6 +337,45 @@ void NativeProxy::installJSIBindings(
   //      });
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
+
+  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
+
+  layoutAnimations->cthis()->setAnimationStartingBlock(
+      [wrt, weakModule, weakErrorHandler](
+          int tag,
+          alias_ref<JString> type,
+          alias_ref<JMap<jstring, jstring>> values) {
+        auto &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (const auto &entry : *values) {
+          try {
+            auto key =
+                jsi::String::createFromAscii(rt, entry.first->toStdString());
+            auto value = stod(entry.second->toStdString());
+            yogaValues.setProperty(rt, key, value);
+          } catch (std::invalid_argument e) {
+            if (auto errorHandler = weakErrorHandler.lock()) {
+              errorHandler->setError("Failed to convert value to number");
+              errorHandler->raise();
+            }
+          }
+        }
+
+        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, type->toStdString(), yogaValues);
+      });
+
+  layoutAnimations->cthis()->setHasAnimationBlock(
+      [weakModule](int tag, const std::string &type) {
+        return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
+            tag, type);
+      });
+
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
+      [weakModule](int tag) {
+        weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig(
+            tag);
+      });
 
   runtime_->global().setProperty(
       *runtime_,

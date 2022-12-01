@@ -24,24 +24,24 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  public:
   virtual void installCoreFunctions(
       jsi::Runtime &rt,
-      const jsi::Value &valueSetter) = 0;
+      const jsi::Value &valueUnpacker,
+      const jsi::Value &layoutAnimationStartFunction) = 0;
 
   // SharedValue
-  virtual jsi::Value makeShareable(
+  virtual jsi::Value makeShareableClone(
       jsi::Runtime &rt,
       const jsi::Value &value) = 0;
-  virtual jsi::Value makeMutable(jsi::Runtime &rt, const jsi::Value &value) = 0;
-  virtual jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) = 0;
 
-  // mappers
-  virtual jsi::Value startMapper(
+  // Synchronized data objects
+  virtual jsi::Value makeSynchronizedDataHolder(
       jsi::Runtime &rt,
-      const jsi::Value &worklet,
-      const jsi::Value &inputs,
-      const jsi::Value &outputs,
-      const jsi::Value &updater,
-      const jsi::Value &viewDescriptors) = 0;
-  virtual void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) = 0;
+      const jsi::Value &initialShareable) = 0;
+  virtual jsi::Value getDataSynchronously(
+      jsi::Runtime &rt,
+      const jsi::Value &synchronizedDataHolderRef) = 0;
+
+  // Scheduling
+  virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
 
   // events
   virtual jsi::Value registerEventHandler(
@@ -85,6 +85,13 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) = 0;
+
+  // layout animations
+  virtual jsi::Value configureLayoutAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &type,
+      const jsi::Value &config) = 0;
 };
 
 } // namespace reanimated

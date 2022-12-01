@@ -1,5 +1,6 @@
 import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
 import java.nio.file.Paths
 
@@ -178,9 +179,19 @@ def checkNoMultipleInstances() {
 def getReanimatedVersion() {
     def inputFile = file(projectDir.path + '/../package.json')
     def json = new JsonSlurper().parseText(inputFile.text)
-    String reanimatedVersion = json.version
-    def (major, minor, patch) = reanimatedVersion.tokenize('.')
+    return json.version
+}
+
+def getReanimatedMajorVersion() {
+    def (major, minor, patch) = getReanimatedVersion().tokenize('.')
     return major.toInteger()
+}
+
+def toPlatformFileString(String path) {
+  if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+      path = path.replace(File.separatorChar, '/' as char)
+  }
+  return path
 }
 
 boolean CLIENT_SIDE_BUILD = resolveClientSideBuild()
@@ -201,7 +212,8 @@ def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def FBJNI_VERSION = "0.3.0"
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
-def REANIMATED_MAJOR_VERSION = getReanimatedVersion()
+def REANIMATED_VERSION = getReanimatedVersion()
+def REANIMATED_MAJOR_VERSION = getReanimatedMajorVersion()
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -447,13 +459,14 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
-                        "-DREACT_NATIVE_DIR=${reactNativeRootDir.path}",
+                        "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
-                        "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}"
+                        "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}",
+                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
                 abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }

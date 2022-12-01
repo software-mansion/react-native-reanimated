@@ -1,4 +1,3 @@
-#import <RNReanimated/LayoutAnimationsProxy.h>
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
@@ -31,6 +30,10 @@
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
 #endif
+
+@interface RCTBridge (JSIRuntime)
+- (void *)runtime;
+@end
 
 namespace reanimated {
 
@@ -198,7 +201,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(jsQueue);
+  auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reanimatedModule.bridge.runtime);
+  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
@@ -224,8 +228,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>([](int tag, jsi::Object newStyle) {}, [](int tag, bool isCancelled) {});
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
+    // noop
+  };
+
+  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
+    // noop
+  };
+
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
@@ -241,17 +251,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
   [reaUiManagerNoCast setUp:animationsManager];
 
-  auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
-    if (animationsManager) {
-      NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
-      [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
-    }
+  __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
+    NSDictionary *propsDict = convertJSIObjectToNSDictionary(*wrt.lock(), newStyle);
+    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict forTag:@(tag)];
   };
 
-  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-    if (animationsManager) {
-      [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
-    }
+  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
+    [weakAnimationsManager endLayoutAnimationForTag:@(tag) cancelled:isCancelled removeView:removeView];
   };
 
   auto configurePropsFunction = [reanimatedModule](
@@ -260,49 +269,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSSet *nativePropsSet = convertProps(rt, nativeProps);
     [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
-
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  [animationsManager setAnimationStartingBlock:^(
-                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
-    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-    if (wrt.expired()) {
-      return;
-    }
-    jsi::Object yogaValues(*rt);
-    for (NSString *key in values.allKeys) {
-      NSNumber *value = values[key];
-      yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
-    }
-
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function startAnimationForTag =
-          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
-      startAnimationForTag.call(
-          *rt,
-          jsi::Value([tag intValue]),
-          jsi::String::createFromAscii(*rt, std::string([type UTF8String])),
-          yogaValues,
-          jsi::Value([depth intValue]));
-    }
-  }];
-
-  [animationsManager setRemovingConfigBlock:^(NSNumber *_Nonnull tag) {
-    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
-    if (wrt.expired()) {
-      return;
-    }
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function removeConfig =
-          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
-      removeConfig.call(*rt, jsi::Value([tag intValue]));
-    }
-  }];
 
   // Layout Animations end
 #endif
@@ -348,6 +314,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      progressLayoutAnimation,
+      endLayoutAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -365,7 +333,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
       propObtainer,
 #endif
-      layoutAnimationsProxy,
       platformDepMethodsHolder);
 
   scheduler->setRuntimeManager(module);
@@ -402,14 +369,38 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 #endif
 
-#ifdef RCT_NEW_ARCH_ENABLED
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
+#ifdef RCT_NEW_ARCH_ENABLED
   [reanimatedModule.nodesManager registerPerformOperations:^() {
     if (auto module = weakModule.lock()) {
       module->performOperations();
     }
   }];
+#else
+  // Layout Animation callbacks setup
+  [animationsManager setAnimationStartingBlock:^(
+                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
+    jsi::Runtime &rt = *wrt.lock();
+    jsi::Object yogaValues(rt);
+    for (NSString *key in values.allKeys) {
+      NSNumber *value = values[key];
+      yogaValues.setProperty(rt, [key UTF8String], [value doubleValue]);
+    }
+
+    weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
+        rt, [tag intValue], std::string([type UTF8String]), yogaValues);
+  }];
+
+  [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
+    return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
+        [tag intValue], std::string([type UTF8String]));
+  }];
+
+  [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
+    weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+  }];
 #endif
+
   return module;
 }
 
