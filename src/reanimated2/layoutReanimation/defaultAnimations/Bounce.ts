@@ -4,7 +4,10 @@ import {
 } from '../animationBuilder/commonTypes';
 import { withSequence, withTiming } from '../../animation';
 import { Dimensions } from 'react-native';
-import { ComplexAnimationBuilder } from '../animationBuilder/ComplexAnimationBuilder';
+import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,8 +15,10 @@ export class BounceIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceIn {
-    return new BounceIn();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceIn() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -63,8 +68,10 @@ export class BounceInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceInDown {
-    return new BounceInDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceInDown() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -118,8 +125,10 @@ export class BounceInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceInUp {
-    return new BounceInUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceInUp() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -169,8 +178,10 @@ export class BounceInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceInLeft {
-    return new BounceInLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceInLeft() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -220,8 +231,10 @@ export class BounceInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceInRight {
-    return new BounceInRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceInRight() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -271,8 +284,10 @@ export class BounceOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceOut {
-    return new BounceOut();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceOut() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -322,8 +337,10 @@ export class BounceOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceOutDown {
-    return new BounceOutDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceOutDown() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -375,8 +392,10 @@ export class BounceOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceOutUp {
-    return new BounceOutUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceOutUp() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -428,8 +447,10 @@ export class BounceOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceOutRight {
-    return new BounceOutLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceOutLeft() as InstanceType<T>;
   }
 
   static getDuration(): number {
@@ -481,8 +502,10 @@ export class BounceOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): BounceOutRight {
-    return new BounceOutRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new BounceOutRight() as InstanceType<T>;
   }
 
   static getDuration(): number {
