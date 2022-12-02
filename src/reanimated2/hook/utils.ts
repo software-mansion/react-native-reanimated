@@ -51,7 +51,7 @@ export function useHandler<T, TContext extends Context>(
   const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
   if (initRef.current === null) {
     initRef.current = {
-      context: makeRemote({}),
+      context: makeRemote<TContext>({} as TContext),
       savedDependencies: [],
     };
   }

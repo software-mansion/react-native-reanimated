@@ -14,7 +14,7 @@ using namespace facebook;
 class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using AnimationStartingBlock = std::function<
       void(int, alias_ref<JString>, alias_ref<JMap<jstring, jstring>>)>;
-  using HasAnimationBlock = std::function<bool(int, std::string)>;
+  using HasAnimationBlock = std::function<bool(int, const std::string &)>;
   using ClearAnimationConfigBlock = std::function<void(int)>;
   using FindTheOtherForSharedTransitionBlock = std::function<int(int)>;
 
@@ -32,15 +32,17 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   bool hasAnimationForTag(int tag, std::string type);
   bool isLayoutAnimationEnabled();
 
-  void setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt);
   void setAnimationStartingBlock(AnimationStartingBlock animationStartingBlock);
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
   void setClearAnimationConfigBlock(
       ClearAnimationConfigBlock clearAnimationConfigBlock);
   void setFindTheOtherForSharedTransition(
-    FindTheOtherForSharedTransitionBlock findTheOtherForSharedTransitionBlock);
+      FindTheOtherForSharedTransitionBlock
+          findTheOtherForSharedTransitionBlock);
 
-  void progressLayoutAnimation(int tag, const jsi::Value &progress);
+  void progressLayoutAnimation(
+      int tag,
+      const jni::local_ref<JNIHelper::PropsMap> &updates);
   void endLayoutAnimation(int tag, bool cancelled, bool removeView);
   void clearAnimationConfigForTag(int tag);
   int findTheOtherForSharedTransition(int tag);
@@ -48,7 +50,6 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
  private:
   friend HybridBase;
   jni::global_ref<LayoutAnimations::javaobject> javaPart_;
-  std::weak_ptr<jsi::Runtime> weakUIRuntime;
   AnimationStartingBlock animationStartingBlock_;
   HasAnimationBlock hasAnimationBlock_;
   ClearAnimationConfigBlock clearAnimationConfigBlock_;

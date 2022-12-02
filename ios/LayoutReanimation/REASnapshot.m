@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
   self = [super init];
   UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
   CGPoint absolutePosition = [parent convertPoint:view.center toView:mainWindow];
-  
+
   _values = [NSMutableDictionary new];
   _values[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
   _values[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];

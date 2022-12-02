@@ -36,13 +36,12 @@
 
 - (void)onScreenRemoving:(UIView *)screen
 {
-  
 }
 
-- (NSArray<UIView *> *)getSharedElementsForCurrentTransition { 
+- (NSArray<UIView *> *)getSharedElementsForCurrentTransition
+{
   return nil;
 }
-
 
 @end
 

@@ -17,7 +17,7 @@ def find_config()
     :react_native_common_dir => nil,
   }
 
-  react_native_node_modules_dir = File.join(File.dirname(`cd #{Pod::Config.instance.installation_root.to_s} && node --print "require.resolve('react-native/package.json')"`), '..')
+  react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
   react_native_json = try_to_parse_react_native_package_json(react_native_node_modules_dir)
 
   if react_native_json == nil
@@ -52,6 +52,7 @@ def assert_no_multiple_instances(react_native_info)
 
   lib_instances_in_react_native_node_modules = %x[find #{react_native_info[:react_native_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
   lib_instances_in_react_native_node_modules_array = lib_instances_in_react_native_node_modules.split("\n")
+  lib_instances_in_reanimated_node_modules_array = Array.new
   reanimated_instances = lib_instances_in_react_native_node_modules_array.length()
   if react_native_info[:react_native_node_modules_dir] != react_native_info[:reanimated_node_modules_dir]
     lib_instances_in_reanimated_node_modules = %x[find #{react_native_info[:reanimated_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
@@ -64,7 +65,7 @@ def assert_no_multiple_instances(react_native_info)
       location['/package.json'] = ''
       parsed_location += "- " + location + "\n"
     end
-    raise "[react-native-reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsed_location
+    raise "[react-native-reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/next/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsed_location
   end
 end
 

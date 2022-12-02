@@ -21,6 +21,12 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 
+#ifdef REANIMATED_VERSION
+#define STRINGIZE(x) #x
+#define STRINGIZE2(x) STRINGIZE(x)
+#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
+#endif // REANIMATED_VERSION
+
 using namespace facebook::react;
 using namespace reanimated;
 
@@ -44,7 +50,6 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
-  std::shared_ptr<EventListener> eventListener_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
@@ -66,8 +71,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)invalidate
 {
 #ifdef RCT_NEW_ARCH_ENABLED
-  RCTScheduler *scheduler = [_surfacePresenter scheduler];
-  [scheduler removeEventListener:eventListener_];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 #endif
   [_nodesManager invalidate];
@@ -146,7 +149,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
       return;
     }
     if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
-      self->eventListener_ =
+      auto eventListener =
           std::make_shared<facebook::react::EventListener>([reanimatedModule](const RawEvent &rawEvent) {
             if (!RCTIsMainQueue()) {
               // event listener called on the JS thread, let's ignore this event
@@ -156,7 +159,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
             }
             return reanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           });
-      [scheduler addEventListener:self->eventListener_];
+      [scheduler addEventListener:eventListener];
     }
   });
 }
@@ -218,6 +221,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
     runtime.global().setProperty(runtime, "_IS_FABRIC", true);
+
+    auto version = jsi::String::createFromUtf8(runtime, REANIMATED_VERSION_STRING);
+    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
 
     runtime.global().setProperty(
         runtime,
