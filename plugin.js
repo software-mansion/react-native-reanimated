@@ -4,6 +4,7 @@ const hash = require('string-hash-64');
 const traverse = require('@babel/traverse').default;
 const { transformSync } = require('@babel/core');
 const fs = require('fs');
+const convertSourceMap = require('convert-source-map');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -72,11 +73,13 @@ const globals = new Set([
   '_makeShareableClone',
   '_updateDataSynchronously',
   'eval',
+  'evalWithSourceMap',
   '_updatePropsPaper',
   '_updatePropsFabric',
   '_removeShadowNodeFromRegistry',
   'RegExp',
   'Error',
+  'ErrorUtils',
   'global',
   '_measure',
   '_scrollTo',
@@ -384,7 +387,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
     compact: !shouldGenerateSourceMap(),
-    sourceMaps: shouldGenerateSourceMap() ? 'inline' : false,
+    sourceMaps: shouldGenerateSourceMap() ? true : false,
     inputSourceMap: inputMap,
     ast: false,
     babelrc: false,
@@ -392,7 +395,9 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     comments: false,
   });
 
-  return transformed.code;
+  const sourceMapString = convertSourceMap.fromObject(transformed.map).toJSON();
+
+  return [transformed.code, sourceMapString];
 }
 
 function makeWorkletName(t, fun) {
@@ -514,7 +519,7 @@ function makeWorklet(t, fun, state) {
     funExpression = clone;
   }
 
-  const funString = buildWorkletString(
+  const [funString, sourceMapString] = buildWorkletString(
     t,
     transformed.ast,
     variables,
@@ -564,6 +569,17 @@ function makeWorklet(t, fun, state) {
           false
         ),
         t.numericLiteral(workletHash)
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__sourceMap'),
+          false
+        ),
+        t.stringLiteral(sourceMapString)
       )
     ),
     t.expressionStatement(

@@ -226,11 +226,7 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    auto fun =
-        std::make_shared<jsi::Function>(args[0].asObject(rt).asFunction(rt));
-    requestFrame([&rt, fun](double timestampMs) {
-      fun->call(rt, jsi::Value(timestampMs));
-    });
+    requestFrame(rt, std::move(args[0]));
     return jsi::Value::undefined();
   };
   jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(

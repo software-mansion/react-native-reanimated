@@ -36,7 +36,8 @@ class JSRuntimeHelper {
       : rnRuntime_(rnRuntime), uiRuntime_(uiRuntime), scheduler_(scheduler) {}
 
   volatile bool uiRuntimeDestroyed;
-  std::shared_ptr<CoreFunction> valueUnpacker;
+  std::unique_ptr<CoreFunction> callGuard;
+  std::unique_ptr<CoreFunction> valueUnpacker;
 
   inline jsi::Runtime *uiRuntime() const {
     return uiRuntime_;

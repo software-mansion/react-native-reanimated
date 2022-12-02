@@ -79,6 +79,25 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   // that the thread was indeed `quit` before
   jsQueue->quitSynchronous();
 #endif
+
+  jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
+      *runtime_,
+      jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
+      3,
+      [](jsi::Runtime &rt,
+         const jsi::Value &thisValue,
+         const jsi::Value *args,
+         size_t count) -> jsi::Value {
+        auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
+            args[0].asString(rt).utf8(rt));
+        auto sourceMapJSONBuffer = std::make_shared<const jsi::StringBuffer>(
+            args[1].asString(rt).utf8(rt));
+        return dynamic_cast<facebook::hermes::HermesRuntime &>(rt)
+             .evaluateJavaScriptWithSourceMap(
+                codeBuffer, sourceMapJSONBuffer, args[2].asString(rt).utf8(rt));
+      });
+  runtime_->global().setProperty(
+      *runtime_, "evalWithSourceMap", evalWithSourceMap);
 }
 
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
