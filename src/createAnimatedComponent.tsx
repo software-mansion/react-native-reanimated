@@ -441,7 +441,6 @@ export default function createAnimatedComponent(
               tag,
               'sharedElementTransition',
               maybeBuild(sharedElementTransition),
-              this.sv,
               sharedTransitionTag
             );
           }

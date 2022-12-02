@@ -8,6 +8,7 @@ namespace reanimated {
 void LayoutAnimationsManager::configureAnimation(
     int tag,
     const std::string &type,
+    const std::string &sharedTransitionTag,
     std::shared_ptr<Shareable> config) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == "entering") {
@@ -16,6 +17,13 @@ void LayoutAnimationsManager::configureAnimation(
     exitingAnimations_[tag] = config;
   } else if (type == "layout") {
     layoutAnimations_[tag] = config;
+  } else if (type == "sharedElementTransition") {
+    sharedTransitionAnimations_[tag] = config;
+    if (sharedTransitionGroups_.find(sharedTransitionTag) ==
+        sharedTransitionGroups_.end()) {
+      sharedTransitionGroups_[sharedTransitionTag] = std::vector<int>();
+    }
+    sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
   }
 }
 
@@ -29,6 +37,9 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     return exitingAnimations_.find(tag) != exitingAnimations_.end();
   } else if (type == "layout") {
     return layoutAnimations_.find(tag) != layoutAnimations_.end();
+  } else if (type == "sharedElementTransition") {
+    return sharedTransitionAnimations_.find(tag) !=
+        sharedTransitionAnimations_.end();
   }
   return false;
 }
@@ -38,6 +49,22 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
+
+  sharedTransitionAnimations_.erase(tag);
+  for (auto &[key, group] : sharedTransitionGroups_) {
+    bool isCurrentGroupMember = false;
+    int indexInGroup;
+    for (indexInGroup = 0; indexInGroup < group.size(); indexInGroup++) {
+      if (group[indexInGroup] == tag) {
+        isCurrentGroupMember = true;
+        break;
+      }
+    }
+    if (isCurrentGroupMember) {
+      group.erase(group.begin() + indexInGroup);
+      break;
+    }
+  }
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
@@ -54,6 +81,8 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config = exitingAnimations_[tag];
     } else if (type == "layout") {
       config = layoutAnimations_[tag];
+    } else if (type == "sharedElementTransition") {
+      config = sharedTransitionAnimations_[tag];
     }
   }
 
@@ -71,6 +100,25 @@ void LayoutAnimationsManager::startLayoutAnimation(
       jsi::String::createFromAscii(rt, type),
       values,
       config->getJSValue(rt));
+}
+
+int LayoutAnimationsManager::findTheOtherForSharedTransition(int tag) {
+  int theOtherTag = -1;
+  for (auto const &[key, group] : sharedTransitionGroups_) {
+    bool isCurrentGroupMember = false;
+    int indexInGroup;
+    for (indexInGroup = 0; indexInGroup < group.size(); indexInGroup++) {
+      if (group[indexInGroup] == tag) {
+        isCurrentGroupMember = true;
+        break;
+      }
+    }
+    if (isCurrentGroupMember && indexInGroup > 0) {
+      theOtherTag = group[indexInGroup - 1];
+      break;
+    }
+  }
+  return theOtherTag;
 }
 
 } // namespace reanimated

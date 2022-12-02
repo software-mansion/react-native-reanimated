@@ -413,20 +413,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
-  [animationsManager setStopAniamtionBlock:^(NSNumber *_Nonnull tag) {
-    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-    if (layoutAnimationsProxy == nullptr) {
-      return;
-    }
-    layoutAnimationsProxy->stopObserving([tag intValue], true, false);
-  }];
-
   [animationsManager setFindTheOtherForSharedTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
-    auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-    if (layoutAnimationsProxy == nullptr) {
-      return nil;
-    }
-    int resultTag = layoutAnimationsProxy->findTheOtherForSharedTransition([tag intValue]);
+    int resultTag = weakModule.lock()->layoutAnimationsManager().findTheOtherForSharedTransition([tag intValue]);
     if (resultTag < 0) {
       return nil;
     }

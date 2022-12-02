@@ -69,7 +69,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableSet<UIView *> *_viewToRestore;
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
   REANodesManager *_nodeManager;
-  REAStopAnimationBlock _stopAnimation;
   NSMutableArray<UIView *> *_currentSharedTransitionViews;
   REAFindTheOtherForSharedTransitionBlock _findTheOtherForSharedTransition;
   UIView *_transitionContainer;
@@ -641,11 +640,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (REANodesManager *)getNodeManager
 {
   return _nodeManager;
-}
-
-- (void)setStopAniamtionBlock:(REAStopAnimationBlock)stopAnimation
-{
-  _stopAnimation = stopAnimation;
 }
 
 - (void)setFindTheOtherForSharedTransitionBlock:(REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition

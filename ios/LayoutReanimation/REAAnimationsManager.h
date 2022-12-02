@@ -20,7 +20,6 @@ typedef void (^REAAnimationStartingBlock)(
     NSDictionary *_Nonnull yogaValues,
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
-typedef void (^REAStopAnimationBlock)(NSNumber *_Nonnull tag);
 typedef NSNumber *_Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber *_Nonnull tag);
 
 @interface REAAnimationsManager : NSObject
@@ -42,7 +41,6 @@ typedef NSNumber *_Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber 
 - (void)restoreStateForSharedTransition;
 - (void)setNodeManager:(REANodesManager *)nodeManager;
 - (REANodesManager *)getNodeManager;
-- (void)setStopAniamtionBlock:(REAStopAnimationBlock)stopAnimation;
 - (void)setFindTheOtherForSharedTransitionBlock:
     (REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
 - (void)viewsDidLayout;
