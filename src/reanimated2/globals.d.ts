@@ -20,6 +20,11 @@ declare global {
   const _eventTimestamp: number;
   const __reanimatedModuleProxy: NativeReanimated;
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
+  const evalWithSourceMap: (
+    js: string,
+    sourceMap: string,
+    sourceURL: string
+  ) => any;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
   const _getTimestamp: () => number;
@@ -65,6 +70,9 @@ declare global {
   const ReanimatedDataMock: {
     now: () => number;
   };
+  const ErrorUtils: {
+    reportFatalError: (error: Error) => void;
+  };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
 
   namespace NodeJS {
@@ -76,6 +84,11 @@ declare global {
       _eventTimestamp: number;
       __reanimatedModuleProxy: NativeReanimated;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
+      evalWithSourceMap: (
+        js: string,
+        sourceMap: string,
+        sourceURL: string
+      ) => any;
       _log: (s: string) => void;
       _getCurrentTime: () => number;
       _getTimestamp: () => number;
@@ -117,6 +130,9 @@ declare global {
       };
       ReanimatedDataMock: {
         now: () => number;
+      };
+      ErrorUtils: {
+        reportFatalError: (error: Error) => void;
       };
       _frameCallbackRegistry: FrameCallbackRegistryUI;
       __workletsCache?: Map<string, (...args: any[]) => any>;

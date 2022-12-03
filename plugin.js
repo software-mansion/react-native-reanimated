@@ -387,7 +387,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
     compact: !shouldGenerateSourceMap(),
-    sourceMaps: shouldGenerateSourceMap() ? true : false,
+    sourceMaps: shouldGenerateSourceMap(),
     inputSourceMap: inputMap,
     ast: false,
     babelrc: false,
@@ -395,9 +395,14 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     comments: false,
   });
 
-  const sourceMapString = convertSourceMap.fromObject(transformed.map).toJSON();
+  const sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+  // sourcesContent field contains a full source code of the file which contains the worklet
+  // and is not needed by the source map interpreter in order to symbolicate a stack trace.
+  // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
+  // in files that contain multiple worklets.
+  delete sourceMap.sourcesContent;
 
-  return [transformed.code, sourceMapString];
+  return [transformed.code, JSON.stringify(sourceMap)];
 }
 
 function makeWorkletName(t, fun) {
@@ -410,7 +415,7 @@ function makeWorkletName(t, fun) {
   if (t.isFunctionExpression(fun) && t.isIdentifier(fun.node.id)) {
     return fun.node.id.name;
   }
-  return '_f'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
 }
 
 function makeWorklet(t, fun, state) {

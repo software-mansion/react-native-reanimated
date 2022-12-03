@@ -1,4 +1,3 @@
-/* global _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import { BasicWorkletFunction, Value3D, ValueRotation } from './commonTypes';
