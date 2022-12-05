@@ -189,9 +189,10 @@ void NativeReanimatedModule::installCoreFunctions(
 NativeReanimatedModule::~NativeReanimatedModule() {
   if (runtimeHelper) {
     runtimeHelper->valueUnpacker = nullptr;
-    // event handler registry stores some JSI values from UI runtime, so it has
-    // to go away before we tear down the runtime
+    // event handler registry and frame callbacks store some JSI values from UI
+    // runtime, so they have to go away before we tear down the runtime
     eventHandlerRegistry.reset();
+    frameCallbacks.clear();
     runtime.reset();
     // make sure uiRuntimeDestroyed is set after the runtime is deallocated
     runtimeHelper->uiRuntimeDestroyed = true;
