@@ -90,6 +90,16 @@
                 registry:registry];
 
   if (isLayoutAnimationEnabled) {
+    // we sort the (index, view) pairs to make sure we insert views back in order
+    NSMutableArray<NSArray<id> *> *removedViewsWithIndices = [NSMutableArray new];
+    for (int i = 0; i < removeAtIndices.count; i++) {
+      removedViewsWithIndices[i] = @[ removeAtIndices[i], permanentlyRemovedChildren[i] ];
+    }
+    [removedViewsWithIndices
+        sortUsingComparator:^NSComparisonResult(NSArray<id> *_Nonnull obj1, NSArray<id> *_Nonnull obj2) {
+          return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
+        }];
+
     [_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
                                      toContainer:container
                                        atIndices:removeAtIndices];

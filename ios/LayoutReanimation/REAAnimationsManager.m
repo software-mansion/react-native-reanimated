@@ -279,20 +279,22 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (BOOL)startAnimationsRecursive:(UIView *)view removingSubviewsWithoutAnimations:(BOOL)removeSubviewsWithoutAnimations;
+- (BOOL)startAnimationsRecursive:(UIView *)view
+    shouldRemoveSubviewsWithoutAnimations:(BOOL)shouldRemoveSubviewsWithoutAnimations;
 {
   if (!view.reactTag) {
     return NO;
   }
   BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting") || [_exitingViews objectForKey:view.reactTag];
   BOOL hasAnimatedChildren = NO;
-  removeSubviewsWithoutAnimations = removeSubviewsWithoutAnimations && !hasExitAnimation;
+  shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];
 
   for (UIView *subview in [view.reactSubviews copy]) {
-    if ([self startAnimationsRecursive:subview removingSubviewsWithoutAnimations:removeSubviewsWithoutAnimations]) {
+    if ([self startAnimationsRecursive:subview
+            shouldRemoveSubviewsWithoutAnimations:shouldRemoveSubviewsWithoutAnimations]) {
       hasAnimatedChildren = YES;
-    } else if (removeSubviewsWithoutAnimations) {
+    } else if (shouldRemoveSubviewsWithoutAnimations) {
       [toBeRemoved addObject:subview];
     }
   }
@@ -343,15 +345,26 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (![container isKindOfClass:[UIView class]]) {
     return;
   }
+
+  // since we reattach only some of the views,
+  // we count the views we DIDN'T reattach
+  // and shift later views' indices by that number
+  // to make sure they appear at correct relative posisitons
+  // in the `subviews` array
+  int skippedViewsCount = 0;
+
   for (int i = 0; i < children.count; i++) {
-    id<RCTComponent> child = [children objectAtIndex:i];
+    id<RCTComponent> child = children[i];
     if (![child isKindOfClass:[UIView class]]) {
+      skippedViewsCount++;
       continue;
     }
     UIView *childView = (UIView *)child;
-    NSNumber *originalIndex = [indices objectAtIndex:i];
-    if ([self startAnimationsRecursive:childView removingSubviewsWithoutAnimations:true]) {
-      [(UIView *)container insertSubview:childView atIndex:[originalIndex intValue]];
+    NSNumber *originalIndex = indices[i];
+    if ([self startAnimationsRecursive:childView shouldRemoveSubviewsWithoutAnimations:YES]) {
+      [(UIView *)container insertSubview:childView atIndex:[originalIndex intValue] - skippedViewsCount];
+    } else {
+      skippedViewsCount++;
     }
   }
 }
