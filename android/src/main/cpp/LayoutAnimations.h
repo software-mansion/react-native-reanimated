@@ -42,7 +42,8 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
 
   void progressLayoutAnimation(
       int tag,
-      const jni::local_ref<JNIHelper::PropsMap> &updates);
+      const jni::local_ref<JNIHelper::PropsMap> &updates,
+      bool isSharedTransition);
   void endLayoutAnimation(int tag, bool cancelled, bool removeView);
   void clearAnimationConfigForTag(int tag);
   int findTheOtherForSharedTransition(int tag);

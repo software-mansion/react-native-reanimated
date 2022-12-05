@@ -14,11 +14,13 @@ const TAG_OFFSET = 1e9;
 
 function startObservingProgress(
   tag: number,
-  sharedValue: SharedValue<number>
+  sharedValue: SharedValue<number>,
+  animationType: string,
 ): void {
   'worklet';
+  const isSharedTransition = animationType == 'sharedElementTransition';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    _notifyAboutProgress(tag, sharedValue.value);
+    _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
 }
 
@@ -26,7 +28,7 @@ function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
   cancelled: boolean,
-  removeView: boolean
+  removeView: boolean,
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
@@ -82,7 +84,7 @@ function createLayoutAnimationManager() {
           style.callback(finished === undefined ? false : finished);
       };
 
-      startObservingProgress(tag, value);
+      startObservingProgress(tag, value, type);
       value.value = animation;
     },
   };

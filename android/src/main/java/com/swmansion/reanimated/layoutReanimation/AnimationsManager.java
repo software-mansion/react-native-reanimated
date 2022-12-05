@@ -166,12 +166,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimation(tag, "layout", preparedValues);
   }
 
-  public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
-    progressLayoutAnimation(tag, newStyle, true);
-  }
-
   public void progressLayoutAnimation(
-      int tag, Map<String, Object> newStyle, boolean convertFromAbsolute) {
+      int tag, Map<String, Object> newStyle, boolean isSharedTransition) {
     View view = resolveView(tag);
 
     if (view == null) {
@@ -188,7 +184,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     ViewManager parentViewManager = resolveViewManager(parent.getId());
 
     setNewProps(
-        newStyle, view, viewManager, parentViewManager, parent.getId(), convertFromAbsolute);
+        newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {

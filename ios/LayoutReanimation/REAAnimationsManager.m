@@ -190,14 +190,14 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag isSharedTransition:(BOOL)isSharedTransition
 {
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
   [self setNewProps:[newStyle mutableCopy]
                 forView:[self viewForTag:tag]
       withComponentData:componentData
-      convertToAbsolute:YES];
+      convertFromAbsolute:isSharedTransition];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -212,7 +212,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setNewProps:(NSMutableDictionary *)newProps
               forView:(UIView *)view
     withComponentData:(RCTComponentData *)componentData
-    convertToAbsolute:(BOOL)convertToAbsolute
+    convertFromAbsolute:(BOOL)convertFromAbsolute
 {
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
@@ -230,21 +230,24 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 
   bool updateViewPosition = false;
-  double originX = 0, originY = 0;
+  double centerX = view.center.x;
+  double centerY = view.center.y;
   if (newProps[@"originX"]) {
     updateViewPosition = true;
-    originX = [self getDoubleOrZero:newProps[@"originX"]];
+    double originX = [self getDoubleOrZero:newProps[@"originX"]];
     [newProps removeObjectForKey:@"originX"];
+    centerX = originX + view.bounds.size.width / 2.0;
   }
   if (newProps[@"originY"]) {
     updateViewPosition = true;
-    originY = [self getDoubleOrZero:newProps[@"originY"]];
+    double originY = [self getDoubleOrZero:newProps[@"originY"]];
     [newProps removeObjectForKey:@"originY"];
+    centerY = originY + view.bounds.size.height / 2.0;
   }
   if (updateViewPosition) {
-    CGPoint newCenter = CGPointMake(originX + view.bounds.size.width / 2.0, originY + view.bounds.size.height / 2.0);
-    UIView *window = UIApplication.sharedApplication.keyWindow;
-    if (convertToAbsolute) {
+    CGPoint newCenter = CGPointMake(centerX, centerY);
+    if (convertFromAbsolute) {
+      UIView *window = UIApplication.sharedApplication.keyWindow;
       CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
       view.center = convertedCenter;
     } else {
@@ -619,7 +622,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
     [parent insertSubview:view atIndex:childIndex];
     REASnapshot *viewSourcePeviousSnapshot = _snapshotRegistry[view.reactTag];
-    [self progressLayoutAnimationWithStyle:viewSourcePeviousSnapshot.values forTag:view.reactTag];
+    [self progressLayoutAnimationWithStyle:viewSourcePeviousSnapshot.values forTag:view.reactTag isSharedTransition:YES];
     [_currentSharedTransitionViews removeObject:view];
   }
   if ([_currentSharedTransitionViews count] == 0) {

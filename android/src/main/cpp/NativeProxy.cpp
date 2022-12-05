@@ -240,9 +240,9 @@ void NativeProxy::installJSIBindings(
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
   auto progressLayoutAnimation = [this, wrt](
-                                     int tag, const jsi::Object &newProps) {
+                                     int tag, const jsi::Object &newProps, bool isSharedTransition) {
     auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
-    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, newPropsJNI);
+    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, newPropsJNI, isSharedTransition);
   };
 
   auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {

@@ -255,9 +255,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(*wrt.lock(), newStyle);
-    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict forTag:@(tag)];
+    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict 
+                                                     forTag:@(tag) 
+                                         isSharedTransition:isSharedTransition];
   };
 
   auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
