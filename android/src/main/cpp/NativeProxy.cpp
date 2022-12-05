@@ -11,7 +11,7 @@
 
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
-#include "LayoutAnimationsProxy.h"
+#include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
@@ -22,6 +22,12 @@
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
+
+#ifdef REANIMATED_VERSION
+#define STRINGIZE(x) #x
+#define STRINGIZE2(x) STRINGIZE(x)
+#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
+#endif // REANIMATED_VERSION
 
 namespace reanimated {
 
@@ -225,75 +231,24 @@ void NativeProxy::installJSIBindings(
   runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
 #endif
 
+  auto version =
+      jsi::String::createFromUtf8(*runtime_, REANIMATED_VERSION_STRING);
+  runtime_->global().setProperty(*runtime_, "_REANIMATED_VERSION_CPP", version);
+
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
-  // Layout Animations Start
-
-  auto progressLayoutAnimation = [this](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, progress);
+  auto progressLayoutAnimation = [this, wrt](
+                                     int tag, const jsi::Object &newProps) {
+    auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
+    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, newPropsJNI);
   };
 
   auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
     this->layoutAnimations->cthis()->endLayoutAnimation(
         tag, isCancelled, removeView);
   };
-
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(
-          progressLayoutAnimation, endLayoutAnimation, errorHandler);
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  std::weak_ptr<LayoutAnimationsProxy> weakLayoutAnimationsProxy =
-      layoutAnimationsProxy;
-  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
-  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
-
-  layoutAnimations->cthis()->setAnimationStartingBlock(
-      [wrt, weakLayoutAnimationsProxy, weakErrorHandler](
-          int tag,
-          alias_ref<JString> type,
-          alias_ref<JMap<jstring, jstring>> values) {
-        auto runtime = wrt.lock();
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        if (!runtime || !layoutAnimationsProxy) {
-          return;
-        }
-        auto &rt = *runtime;
-        jsi::Object yogaValues(rt);
-        for (const auto &entry : *values) {
-          try {
-            auto key =
-                jsi::String::createFromAscii(rt, entry.first->toStdString());
-            auto value = stod(entry.second->toStdString());
-            yogaValues.setProperty(rt, key, value);
-          } catch (std::invalid_argument e) {
-            if (auto errorHandler = weakErrorHandler.lock()) {
-              errorHandler->setError("Failed to convert value to number");
-              errorHandler->raise();
-            }
-          }
-        }
-
-        layoutAnimationsProxy->startLayoutAnimation(
-            *runtime, tag, type->toStdString(), yogaValues);
-      });
-
-  layoutAnimations->cthis()->setHasAnimationBlock(
-      [weakLayoutAnimationsProxy](int tag, std::string type) {
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        return layoutAnimationsProxy &&
-            layoutAnimationsProxy->hasLayoutAnimation(tag, type);
-      });
-
-  layoutAnimations->cthis()->setClearAnimationConfigBlock(
-      [weakLayoutAnimationsProxy](int tag) {
-        auto layoutAnimationsProxy = weakLayoutAnimationsProxy.lock();
-        if (layoutAnimationsProxy) {
-          layoutAnimationsProxy->clearLayoutAnimationConfig(tag);
-        }
-      });
-
-  // Layout Animations End
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -306,6 +261,8 @@ void NativeProxy::installJSIBindings(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      progressLayoutAnimation,
+      endLayoutAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -323,12 +280,13 @@ void NativeProxy::installJSIBindings(
 #else
       propObtainer,
 #endif
-      layoutAnimationsProxy,
       platformDepMethodsHolder);
 
-  _nativeReanimatedModule = module;
+  scheduler_->setRuntimeManager(module);
 
+  _nativeReanimatedModule = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
+
 #ifdef RCT_NEW_ARCH_ENABLED
   this->registerEventHandler([weakModule, getCurrentTime](
                                  std::string eventName,
@@ -379,6 +337,45 @@ void NativeProxy::installJSIBindings(
   //      });
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
+
+  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
+
+  layoutAnimations->cthis()->setAnimationStartingBlock(
+      [wrt, weakModule, weakErrorHandler](
+          int tag,
+          alias_ref<JString> type,
+          alias_ref<JMap<jstring, jstring>> values) {
+        auto &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (const auto &entry : *values) {
+          try {
+            auto key =
+                jsi::String::createFromAscii(rt, entry.first->toStdString());
+            auto value = stod(entry.second->toStdString());
+            yogaValues.setProperty(rt, key, value);
+          } catch (std::invalid_argument e) {
+            if (auto errorHandler = weakErrorHandler.lock()) {
+              errorHandler->setError("Failed to convert value to number");
+              errorHandler->raise();
+            }
+          }
+        }
+
+        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, type->toStdString(), yogaValues);
+      });
+
+  layoutAnimations->cthis()->setHasAnimationBlock(
+      [weakModule](int tag, const std::string &type) {
+        return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
+            tag, type);
+      });
+
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
+      [weakModule](int tag) {
+        weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig(
+            tag);
+      });
 
   runtime_->global().setProperty(
       *runtime_,

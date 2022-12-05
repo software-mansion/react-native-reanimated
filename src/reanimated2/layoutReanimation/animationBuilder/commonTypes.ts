@@ -59,6 +59,13 @@ export type LayoutAnimationFunction = (
   targetValues: LayoutAnimationsValues
 ) => LayoutAnimation;
 
+export type LayoutAnimationStartFunction = (
+  tag: number,
+  type: string,
+  yogaValues: LayoutAnimationsValues,
+  config: LayoutAnimationFunction
+) => void;
+
 export interface ILayoutAnimationBuilder {
   build: () => LayoutAnimationFunction;
 }

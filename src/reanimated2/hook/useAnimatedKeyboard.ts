@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
-import NativeReanimated from '../NativeReanimated';
-import { makeMutable } from '../core';
+import {
+  makeMutable,
+  subscribeForKeyboardEvents,
+  unsubscribeFromKeyboardEvents,
+} from '../core';
 import { AnimatedKeyboardInfo, KeyboardState } from '../commonTypes';
 
 export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
@@ -10,24 +13,30 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
 
   if (ref.current === null) {
     const keyboardEventData: AnimatedKeyboardInfo = {
-      state: makeMutable(KeyboardState.UNKNOWN),
+      state: makeMutable<KeyboardState>(KeyboardState.UNKNOWN),
       height: makeMutable(0),
     };
-    listenerId.current =
-      NativeReanimated.subscribeForKeyboardEvents(keyboardEventData);
+    listenerId.current = subscribeForKeyboardEvents((state, height) => {
+      'worklet';
+      keyboardEventData.state.value = state;
+      keyboardEventData.height.value = height;
+    });
     ref.current = keyboardEventData;
     isSubscribed.current = true;
   }
   useEffect(() => {
     if (isSubscribed.current === false && ref.current !== null) {
+      const keyboardEventData = ref.current;
       // subscribe again after Fast Refresh
-      listenerId.current = NativeReanimated.subscribeForKeyboardEvents(
-        ref.current
-      );
+      listenerId.current = subscribeForKeyboardEvents((state, height) => {
+        'worklet';
+        keyboardEventData.state.value = state;
+        keyboardEventData.height.value = height;
+      });
       isSubscribed.current = true;
     }
     return () => {
-      NativeReanimated.unsubscribeFromKeyboardEvents(listenerId.current);
+      unsubscribeFromKeyboardEvents(listenerId.current);
       isSubscribed.current = false;
     };
   }, []);

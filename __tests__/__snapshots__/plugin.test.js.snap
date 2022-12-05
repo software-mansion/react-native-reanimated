@@ -19,8 +19,8 @@ var f = function () {
       x: objX.x
     }
   };
-  _f.asString = \\"function f(){const{x,objX}=jsThis._closure;return{res:x+objX.x};}\\";
-  _f.__workletHash = 4922892741734;
+  _f.asString = \\"function f(){const{x,objX}=this._closure;return{res:x+objX.x};}\\";
+  _f.__workletHash = 5359970077727;
   _f.__location = \\"${ process.cwd() }/jest tests fixture (6:6)\\";
   return _f;
 }();"
@@ -61,6 +61,26 @@ exports[`babel plugin doesn't transform string literals 1`] = `
 }();"
 `;
 
+exports[`babel plugin supports recursive calls 1`] = `
+"var a = 1;
+
+var foo = function () {
+  var _f = function _f(t) {
+    if (t > 0) {
+      return a + foo(t - 1);
+    }
+  };
+
+  _f._closure = {
+    a: a
+  };
+  _f.asString = \\"function foo(t){const foo=this._recur;const{a}=this._closure;if(t>0){return a+foo(t-1);}}\\";
+  _f.__workletHash = 2022702330805;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (3:6)\\";
+  return _f;
+}();"
+`;
+
 exports[`babel plugin transforms 1`] = `
 "var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
 
@@ -82,8 +102,8 @@ function Box() {
     _f._closure = {
       offset: offset
     };
-    _f.asString = \\"function _f(){const{offset}=jsThis._closure;return{transform:[{translateX:offset.value*255}]};}\\";
-    _f.__workletHash = 8545597539225;
+    _f.asString = \\"function _f(){const{offset}=this._closure;return{transform:[{translateX:offset.value*255}]};}\\";
+    _f.__workletHash = 361788175040;
     _f.__location = \\"${ process.cwd() }/jest tests fixture (10:48)\\";
     _f.__optimalization = 3;
     return _f;
@@ -225,8 +245,8 @@ var Foo = function () {
       _f._closure = {
         x: x
       };
-      _f.asString = \\"function get(){const{x}=jsThis._closure;return x+2;}\\";
-      _f.__workletHash = 923830736710;
+      _f.asString = \\"function get(){const{x}=this._closure;return x+2;}\\";
+      _f.__workletHash = 10436985806815;
       _f.__location = \\"${ process.cwd() }/jest tests fixture\\";
       return _f;
     }()

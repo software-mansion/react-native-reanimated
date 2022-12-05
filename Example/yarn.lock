@@ -4876,6 +4876,7 @@
   integrity sha512-0oWZ9UxJ1eJljxV+k31bz12OzN0oqnpbIW8utg7aNLD4nxUHWw5zydD3Okxx4Gizmf3E8ptAx90hP15X8UqdTA==
 
 "@react-native/normalize-color@*", "@react-native/normalize-colors@^0.72.0", "@react-native/normalize-colors@npm:@react-native/normalize-color":
+  name "@react-native/normalize-colors"
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@react-native/normalize-color/-/normalize-color-2.1.0.tgz#939b87a9849e81687d3640c5efa2a486ac266f91"
   integrity sha512-Z1jQI2NpdFJCVgpY+8Dq/Bt3d+YUi1928Q+/CZm/oh66fzM0RUl54vvuXlPJKybH4pdCZey1eDTPaLHkMPNgWA==
