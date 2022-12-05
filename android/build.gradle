@@ -221,20 +221,25 @@ def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/b
 def _stackProtectorFlag = true
 
 def JS_RUNTIME = {
-    // Returns the js runtime explicitly requested in the environment variable
+    // Override JS runtime with environment variable
     if (System.getenv("JS_RUNTIME")) {
         return System.getenv("JS_RUNTIME")
     }
 
-    // Detect js runtime from project setup
-    def defaultRuntimeType = "jsc";
+    // Enable V8 runtime if react-native-v8 is installed
     def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
     if (v8Project != null) {
         return "v8"
     }
+
+    // Check if Hermes is enabled in app setup
     def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
-    // return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
-    return "jsc" // TODO: properly detect Hermes
+    if (appProject?.hermesEnabled?.toBoolean() || appProject?.ext?.react?.enableHermes?.toBoolean()) {
+        return "hermes"
+    }
+
+    // Use JavaScriptCore (JSC) by default
+    return "jsc"
 }.call()
 
 def jsRuntimeDir = {
