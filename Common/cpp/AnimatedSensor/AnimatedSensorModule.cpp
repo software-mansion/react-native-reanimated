@@ -1,19 +1,17 @@
 #include "AnimatedSensorModule.h"
-#include "MutableValue.h"
-#include "ValueWrapper.h"
 
 #include <memory>
 #include <utility>
 
+#include "Shareables.h"
+
 namespace reanimated {
 
 AnimatedSensorModule::AnimatedSensorModule(
-    const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    RuntimeManager *runtimeManager)
+    const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
       platformUnregisterSensorFunction_(
-          platformDepMethodsHolder.unregisterSensor),
-      runtimeManager_(runtimeManager) {}
+          platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
   // It is called during app reload because app reload doesn't call hooks
@@ -25,41 +23,38 @@ AnimatedSensorModule::~AnimatedSensorModule() {
 
 jsi::Value AnimatedSensorModule::registerSensor(
     jsi::Runtime &rt,
-    const jsi::Value &sensorType,
+    const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
+    const jsi::Value &sensorTypeValue,
     const jsi::Value &interval,
-    const jsi::Value &sensorDataContainer) {
-  std::shared_ptr<ShareableValue> sensorsData = ShareableValue::adapt(
-      rt, sensorDataContainer.getObject(rt), runtimeManager_);
-  auto &mutableObject =
-      ValueWrapper::asMutableValue(sensorsData->valueContainer);
+    const jsi::Value &sensorDataHandler) {
+  SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
-  std::function<void(double[])> setter;
-  if (sensorType.asNumber() == SensorType::ROTATION_VECTOR) {
-    setter = [&, mutableObject](double newValues[]) {
-      jsi::Runtime &runtime = *runtimeManager_->runtime.get();
-      jsi::Object value(runtime);
-      value.setProperty(runtime, "qx", newValues[0]);
-      value.setProperty(runtime, "qy", newValues[1]);
-      value.setProperty(runtime, "qz", newValues[2]);
-      value.setProperty(runtime, "qw", newValues[3]);
-      value.setProperty(runtime, "yaw", newValues[4]);
-      value.setProperty(runtime, "pitch", newValues[5]);
-      value.setProperty(runtime, "roll", newValues[6]);
-      mutableObject->setValue(runtime, std::move(value));
-    };
-  } else {
-    setter = [&, mutableObject](double newValues[]) {
-      jsi::Runtime &runtime = *runtimeManager_->runtime.get();
-      jsi::Object value(runtime);
-      value.setProperty(runtime, "x", newValues[0]);
-      value.setProperty(runtime, "y", newValues[1]);
-      value.setProperty(runtime, "z", newValues[2]);
-      mutableObject->setValue(runtime, std::move(value));
-    };
-  }
+  auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
+  auto uiRuntime = runtimeHelper->uiRuntime();
 
   int sensorId = platformRegisterSensorFunction_(
-      sensorType.asNumber(), interval.asNumber(), setter);
+      sensorType, interval.asNumber(), [=](double newValues[]) {
+        jsi::Runtime &rt = *uiRuntime;
+        auto handler =
+            shareableHandler->getJSValue(rt).asObject(rt).asFunction(rt);
+        if (sensorType == SensorType::ROTATION_VECTOR) {
+          jsi::Object value(rt);
+          value.setProperty(rt, "qx", newValues[0]);
+          value.setProperty(rt, "qy", newValues[1]);
+          value.setProperty(rt, "qz", newValues[2]);
+          value.setProperty(rt, "qw", newValues[3]);
+          value.setProperty(rt, "yaw", newValues[4]);
+          value.setProperty(rt, "pitch", newValues[5]);
+          value.setProperty(rt, "roll", newValues[6]);
+          handler.call(rt, value);
+        } else {
+          jsi::Object value(rt);
+          value.setProperty(rt, "x", newValues[0]);
+          value.setProperty(rt, "y", newValues[1]);
+          value.setProperty(rt, "z", newValues[2]);
+          handler.call(rt, value);
+        }
+      });
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);
   }

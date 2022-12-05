@@ -22,16 +22,16 @@ describe('babel plugin', () => {
         useAnimatedStyle,
         useSharedValue,
       } from 'react-native-reanimated';
-      
+
       function Box() {
         const offset = useSharedValue(0);
-      
+
         const animatedStyles = useAnimatedStyle(() => {
           return {
             transform: [{ translateX: offset.value * 255 }],
           };
         });
-      
+
         return (
           <>
             <Animated.View style={[styles.box, animatedStyles]} />
@@ -51,13 +51,13 @@ describe('babel plugin', () => {
 
       function Box() {
         const offset = Reanimated.useSharedValue(0);
-      
+
         const animatedStyles = Reanimated.useAnimatedStyle(() => {
           return {
             transform: [{ translateX: offset.value * 255 }],
           };
         });
-      
+
         return (
           <>
             <Animated.View style={[styles.box, animatedStyles]} />
@@ -141,7 +141,7 @@ describe('babel plugin', () => {
       const x = 5;
 
       const objX = { x };
-      
+
       function f() {
         'worklet';
         return { res: x + objX.x };
@@ -482,6 +482,21 @@ describe('babel plugin', () => {
       function foo(arg) {
         'worklet';
         console.log(...arg);
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports recursive calls', () => {
+    const input = `
+      const a = 1;
+      function foo(t) {
+        'worklet';
+        if (t > 0) {
+          return a + foo(t-1);
+        }
       }
     `;
 

@@ -13,10 +13,6 @@ jni::local_ref<LayoutAnimations::jhybriddata> LayoutAnimations::initHybrid(
   return makeCxxInstance(jThis);
 }
 
-void LayoutAnimations::setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt) {
-  this->weakUIRuntime = wrt;
-}
-
 void LayoutAnimations::setAnimationStartingBlock(
     AnimationStartingBlock animationStartingBlock) {
   this->animationStartingBlock_ = animationStartingBlock;
@@ -31,17 +27,12 @@ void LayoutAnimations::startAnimationForTag(
 
 void LayoutAnimations::progressLayoutAnimation(
     int tag,
-    const jsi::Value &progress) {
-  if (auto rt = this->weakUIRuntime.lock()) {
-    static const auto method =
-        javaPart_->getClass()
-            ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-                "progressLayoutAnimation");
-    method(
-        javaPart_.get(),
-        tag,
-        JNIHelper::ConvertToPropsMap(*rt, progress.asObject(*rt)).get());
-  }
+    const jni::local_ref<JNIHelper::PropsMap> &updates) {
+  static const auto method =
+      javaPart_->getClass()
+          ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+              "progressLayoutAnimation");
+  method(javaPart_.get(), tag, updates.get());
 }
 
 void LayoutAnimations::endLayoutAnimation(
@@ -77,7 +68,7 @@ bool LayoutAnimations::isLayoutAnimationEnabled() {
 }
 
 void LayoutAnimations::setFindTheOtherForSharedTransition(
-  FindTheOtherForSharedTransitionBlock findTheOtherForSharedTransitionBlock) {
+    FindTheOtherForSharedTransitionBlock findTheOtherForSharedTransitionBlock) {
   findTheOtherForSharedTransitionBlock_ = findTheOtherForSharedTransitionBlock;
 }
 
@@ -103,5 +94,4 @@ void LayoutAnimations::registerNatives() {
           LayoutAnimations::findTheOtherForSharedTransition),
   });
 }
-
 }; // namespace reanimated

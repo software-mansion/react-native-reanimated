@@ -1,10 +1,12 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <unordered_set>
 
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeManager.h"
+#include "Shareables.h"
 
 namespace reanimated {
 
@@ -22,16 +24,15 @@ class AnimatedSensorModule {
   std::unordered_set<int> sensorsIds_;
   RegisterSensorFunction platformRegisterSensorFunction_;
   UnregisterSensorFunction platformUnregisterSensorFunction_;
-  RuntimeManager *runtimeManager_;
 
  public:
   AnimatedSensorModule(
-      const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      RuntimeManager *runtimeManager);
+      const PlatformDepMethodsHolder &platformDepMethodsHolder);
   ~AnimatedSensorModule();
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
+      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer);

@@ -64,8 +64,14 @@ const globals = new Set([
   'parseInt',
   'parseFloat',
   'Map',
+  'WeakMap',
+  'WeakRef',
   'Set',
   '_log',
+  '_scheduleOnJS',
+  '_makeShareableClone',
+  '_updateDataSynchronously',
+  'eval',
   '_updatePropsPaper',
   '_updatePropsFabric',
   '_removeShadowNodeFromRegistry',
@@ -81,8 +87,8 @@ const globals = new Set([
   '_frameTimestamp',
   'isNaN',
   'LayoutAnimationRepository',
-  '_stopObservingProgress',
-  '_startObservingProgress',
+  '_notifyAboutProgress',
+  '_notifyAboutEnd',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
@@ -310,7 +316,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
             )
           )
         ),
-        t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
+        t.memberExpression(t.thisExpression(), t.identifier('_closure'))
       ),
     ]);
 
@@ -322,20 +328,30 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
       path.node.body.body.unshift(closureDeclaration);
     }
 
+    function prepandRecursiveDeclaration(path) {
+      if (path.parent.type === 'Program' && path.node.id && path.scope.parent) {
+        const hasRecursiveCalls =
+          path.scope.parent.bindings[path.node.id.name]?.references > 0;
+        if (hasRecursiveCalls) {
+          path.node.body.body.unshift(
+            t.variableDeclaration('const', [
+              t.variableDeclarator(
+                t.identifier(path.node.id.name),
+                t.memberExpression(t.thisExpression(), t.identifier('_recur'))
+              ),
+            ])
+          );
+        }
+      }
+    }
+
     return {
       visitor: {
-        FunctionDeclaration(path) {
-          prependClosure(path);
-        },
-        FunctionExpression(path) {
-          prependClosure(path);
-        },
-        ArrowFunctionExpression(path) {
-          prependClosure(path);
-        },
-        ObjectMethod(path) {
-          prependClosure(path);
-        },
+        'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
+          (path) => {
+            prependClosure(path);
+            prepandRecursiveDeclaration(path);
+          },
       },
     };
   }

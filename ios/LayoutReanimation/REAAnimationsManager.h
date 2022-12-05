@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASnapshot.h>
 #import <React/RCTUIManager.h>
-#import <RNReanimated/REANodesManager.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,8 +20,7 @@ typedef void (^REAAnimationStartingBlock)(
     NSDictionary *_Nonnull yogaValues,
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
-typedef void (^REAStopAnimationBlock)(NSNumber *_Nonnull tag);
-typedef NSNumber* _Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber *_Nonnull tag);
+typedef NSNumber *_Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber *_Nonnull tag);
 
 @interface REAAnimationsManager : NSObject
 
@@ -42,8 +41,8 @@ typedef NSNumber* _Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber 
 - (void)restoreStateForSharedTransition;
 - (void)setNodeManager:(REANodesManager *)nodeManager;
 - (REANodesManager *)getNodeManager;
-- (void)setStopAniamtionBlock:(REAStopAnimationBlock)stopAnimation;
-- (void)setFindTheOtherForSharedTransitionBlock:(REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
+- (void)setFindTheOtherForSharedTransitionBlock:
+    (REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
 - (void)viewsDidLayout;
 
 @end
