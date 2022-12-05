@@ -28,7 +28,9 @@ typedef NSNumber *_Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber 
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation;
-- (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle forTag:(NSNumber *_Nonnull)tag isSharedTransition:(BOOL)isSharedTransition;
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle
+                                  forTag:(NSNumber *_Nonnull)tag
+                      isSharedTransition:(BOOL)isSharedTransition;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;

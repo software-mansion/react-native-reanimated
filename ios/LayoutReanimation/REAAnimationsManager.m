@@ -190,13 +190,15 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag isSharedTransition:(BOOL)isSharedTransition
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle
+                                  forTag:(NSNumber *)tag
+                      isSharedTransition:(BOOL)isSharedTransition
 {
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
   [self setNewProps:[newStyle mutableCopy]
-                forView:[self viewForTag:tag]
-      withComponentData:componentData
+                  forView:[self viewForTag:tag]
+        withComponentData:componentData
       convertFromAbsolute:isSharedTransition];
 }
 
@@ -210,8 +212,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 }
 
 - (void)setNewProps:(NSMutableDictionary *)newProps
-              forView:(UIView *)view
-    withComponentData:(RCTComponentData *)componentData
+                forView:(UIView *)view
+      withComponentData:(RCTComponentData *)componentData
     convertFromAbsolute:(BOOL)convertFromAbsolute
 {
   if (newProps[@"height"]) {
@@ -622,7 +624,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
     [parent insertSubview:view atIndex:childIndex];
     REASnapshot *viewSourcePeviousSnapshot = _snapshotRegistry[view.reactTag];
-    [self progressLayoutAnimationWithStyle:viewSourcePeviousSnapshot.values forTag:view.reactTag isSharedTransition:YES];
+    [self progressLayoutAnimationWithStyle:viewSourcePeviousSnapshot.values
+                                    forTag:view.reactTag
+                        isSharedTransition:YES];
     [_currentSharedTransitionViews removeObject:view];
   }
   if ([_currentSharedTransitionViews count] == 0) {

@@ -257,8 +257,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(*wrt.lock(), newStyle);
-    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict 
-                                                     forTag:@(tag) 
+    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
+                                                     forTag:@(tag)
                                          isSharedTransition:isSharedTransition];
   };
 

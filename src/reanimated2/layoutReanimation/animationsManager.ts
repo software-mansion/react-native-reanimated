@@ -18,7 +18,7 @@ function startObservingProgress(
   animationType: string,
 ): void {
   'worklet';
-  const isSharedTransition = animationType == 'sharedElementTransition';
+  const isSharedTransition = animationType === 'sharedElementTransition';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
     _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
