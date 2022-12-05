@@ -31,12 +31,6 @@
 #import <dlfcn.h>
 #endif
 
-#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
-#import <RNReanimated/REASharedElementAnimatorDelegate.h>
-#import <RNScreens/RNSScreen.h>
-#import <RNScreens/RNSSharedElementAnimator.h>
-#endif
-
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
 @end
@@ -309,12 +303,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
   };
   // end keyboard events
-
-#if __has_include(<RNScreens/RNSSharedElementAnimator.h>)
-  REASharedElementAnimatorDelegate *delegate = [REASharedElementAnimatorDelegate new];
-  [delegate setAnimationsManager:animationsManager];
-  [RNSSharedElementAnimator setDelegate:delegate];
-#endif
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
