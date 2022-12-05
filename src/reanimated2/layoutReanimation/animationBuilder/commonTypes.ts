@@ -39,6 +39,7 @@ export type EntryExitAnimationFunction = (
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
 export interface LayoutAnimationsValues {
+  [key: string]: any;
   currentOriginX: number;
   currentOriginY: number;
   currentWidth: number;
