@@ -377,6 +377,13 @@ void NativeProxy::installJSIBindings(
             tag);
       });
 
+  layoutAnimations->cthis()->setFindTheOtherForSharedTransition(
+      [weakModule](int tag) {
+        return weakModule.lock()
+            ->layoutAnimationsManager()
+            .findTheOtherForSharedTransition(tag);
+      });
+
   runtime_->global().setProperty(
       *runtime_,
       jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),

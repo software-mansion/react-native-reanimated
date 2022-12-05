@@ -49,7 +49,6 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
-  viewSharedValues_.erase(tag);
 
   sharedTransitionAnimations_.erase(tag);
   for (auto &[key, group] : sharedTransitionGroups_) {
