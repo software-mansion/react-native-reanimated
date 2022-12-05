@@ -37,7 +37,7 @@
     "expo-asset": "^8.2.0",
     "react": "18.2.0",
     "react-dom": "^16.13.1",
-    "react-native": "0.71.0-rc.3",
+    "react-native": "0.0.0-20221203-2022-3e9141569",
     "react-native-pager-view": "^5.4.1",
     "react-native-status-bar-height": "^2.4.0",
     "react-native-web": "^0.14.7"
@@ -77,6 +77,10 @@
     "preset": "react-native"
   },
   "resolutions": {
-    "@babel/runtime": "7.12.13"
+    "@babel/runtime": "7.12.13",
+    "@react-native/codegen": "npm:react-native-codegen",
+    "@react-native/normalize-colors": "npm:@react-native/normalize-color",
+    "@react-native/gradle-plugin": "npm:react-native-gradle-plugin",
+    "@react-native/assets-registry": "npm:@react-native/assets"
   }
 }

@@ -17,7 +17,7 @@
     "@react-navigation/native": "^6.0.13",
     "@react-navigation/native-stack": "^6.9.0",
     "react": "18.2.0",
-    "react-native": "0.71.0-rc.3",
+    "react-native": "0.0.0-20221203-2022-3e9141569",
     "react-native-reanimated": "link:../"
   },
   "devDependencies": {
@@ -42,5 +42,11 @@
   },
   "jest": {
     "preset": "react-native"
+  },
+  "resolutions": {
+    "@react-native/codegen": "npm:react-native-codegen",
+    "@react-native/normalize-colors": "npm:@react-native/normalize-color",
+    "@react-native/gradle-plugin": "npm:react-native-gradle-plugin",
+    "@react-native/assets-registry": "npm:@react-native/assets"
   }
 }
