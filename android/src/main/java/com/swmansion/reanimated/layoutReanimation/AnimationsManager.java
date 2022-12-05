@@ -7,8 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.widget.RelativeLayout;
-
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -24,11 +22,9 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Scheduler;
 import com.swmansion.reanimated.sharedElementTransition.SharedElement;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -171,6 +167,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
+    progressLayoutAnimation(tag, newStyle, true);
+  }
+
+  public void progressLayoutAnimation(
+      int tag, Map<String, Object> newStyle, boolean convertFromAbsolute) {
     View view = resolveView(tag);
 
     if (view == null) {
@@ -186,7 +187,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
 
-    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), true);
+    setNewProps(
+        newStyle, view, viewManager, parentViewManager, parent.getId(), convertFromAbsolute);
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
@@ -269,7 +271,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       ViewManager viewManager,
       ViewManager parentViewManager,
       Integer parentTag,
-      boolean convertToAbsolute) {
+      boolean convertFromAbsolute) {
     float x =
         (props.get(Snapshot.ORIGIN_X) != null)
             ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
@@ -286,9 +288,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
         (props.get(Snapshot.HEIGHT) != null)
             ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
             : PixelUtil.toDIPFromPixel(view.getHeight());
-    updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height, convertToAbsolute);
+    updateLayout(
+        view, parentViewManager, parentTag, view.getId(), x, y, width, height, convertFromAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
+    props.remove(Snapshot.GLOBAL_ORIGIN_X);
+    props.remove(Snapshot.GLOBAL_ORIGIN_Y);
     props.remove(Snapshot.WIDTH);
     props.remove(Snapshot.HEIGHT);
 
@@ -335,7 +340,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       float yf,
       float widthf,
       float heightf,
-      boolean convertToAbsolute) {
+      boolean convertFromAbsolute) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
@@ -390,10 +395,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
-      if (convertToAbsolute) {
+      if (convertFromAbsolute) {
         Point newPoint = new Point(x, y);
         Point convertedPoint =
-                convertPoint(newPoint, (View) viewToUpdate.getParent(), (int) viewToUpdate.getId());
+            convertPoint(newPoint, (View) viewToUpdate.getParent(), (int) viewToUpdate.getId());
         x = convertedPoint.x;
         y = convertedPoint.y;
       }
@@ -415,7 +420,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     boolean hasAnimatedChildren = false;
     shouldRemove = shouldRemove && !hasExitAnimation;
 
-    if (hasAnimationForTag(tag, "mRemovedSharedViews")) {
+    if (hasAnimationForTag(tag, "sharedElementTransition")) {
       mRemovedSharedViews.add(view);
     }
 
@@ -542,7 +547,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return mUIManager.resolveView(tag);
     } catch (IllegalViewOperationException e) {
       // view has been removed already
-      e.printStackTrace();
+      //      e.printStackTrace();
       return null;
     }
   }
@@ -551,7 +556,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     try {
       return mReanimatedNativeHierarchyManager.resolveViewManager(tag);
     } catch (Exception e) {
-      e.printStackTrace();
+      //      e.printStackTrace();
       return null;
     }
   }
@@ -562,16 +567,23 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void viewsDidRemoved() {
-    setupStaredTransitionForViews(mRemovedSharedViews, true);
+    setupStaredTransitionForViews(mRemovedSharedViews, false);
+    for (View removedSharedView : mRemovedSharedViews) {
+      visitTreeAndClearConfig(removedSharedView);
+    }
     mRemovedSharedViews.clear();
   }
 
   private void setupStaredTransitionForViews(List<View> sharedViews, boolean withNewElements) {
+    if (sharedViews.isEmpty()) {
+      return;
+    }
     sortViewsByTags(sharedViews);
     if (withNewElements) {
       saveSharedViewsForFutureTransitions(sharedViews);
     }
-    List<SharedElement> sharedElements = getSharedElementForCurrentTransition(sharedViews, withNewElements);
+    List<SharedElement> sharedElements =
+        getSharedElementForCurrentTransition(sharedViews, withNewElements);
     if (sharedElements.isEmpty()) {
       return;
     }
@@ -590,7 +602,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private List<SharedElement> getSharedElementForCurrentTransition(List<View> sharedViews, boolean withNewElements) {
+  private List<SharedElement> getSharedElementForCurrentTransition(
+      List<View> sharedViews, boolean withNewElements) {
     List<SharedElement> sharedElements = new ArrayList<>();
     for (View sharedView : sharedViews) {
       int targetViewTag = mNativeMethodsHolder.findTheOtherForSharedTransition(sharedView.getId());
@@ -611,17 +624,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mSnapshotRegistry.put(viewTarget.getId(), targetViewSnapshot);
 
       mViewToRestore.add(viewSource);
-      mCurrentSharedTransitionViews.add(viewSource);
+      mCurrentSharedTransitionViews.add(viewSource); // TODO: A
       mCurrentSharedTransitionViews.add(viewTarget);
       if (!withNewElements) {
-        sharedViews.remove(viewSource);
+        mSharedViews.remove(viewSource.getId());
       }
-      SharedElement sharedElement = new SharedElement(
-              viewSource,
-              sourceViewSnapshot,
-              viewTarget,
-              targetViewSnapshot
-      );
+      SharedElement sharedElement =
+          new SharedElement(viewSource, sourceViewSnapshot, viewTarget, targetViewSnapshot);
       sharedElements.add(sharedElement);
     }
     return sharedElements;
@@ -631,7 +640,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (!mIsSharedTransitionActive) {
       mIsSharedTransitionActive = true;
       ViewGroup mainWindow =
-              (ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView().getRootView();
+          (ViewGroup) mContext.getCurrentActivity().getWindow().getDecorView().getRootView();
       if (mTransitionContainer == null) {
         mTransitionContainer = new ReactViewGroup(mContext);
       }
@@ -645,19 +654,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
       View viewSource = sharedElement.sourceView;
       View viewTarget = sharedElement.targetView;
 
-      mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
+      mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent()); // TODO: A
       mSharedTransitionInParentIndex.put(
-              viewSource.getId(),
-              ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource)
-      );
+          viewSource.getId(), ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource));
       ((ViewGroup) viewSource.getParent()).removeView(viewSource);
       ((ViewGroup) mTransitionContainer).addView(viewSource);
 
       mSharedTransitionParent.put(viewTarget.getId(), (View) viewTarget.getParent());
       mSharedTransitionInParentIndex.put(
-              viewTarget.getId(),
-              ((ViewGroup) viewTarget.getParent()).indexOfChild(viewTarget)
-      );
+          viewTarget.getId(), ((ViewGroup) viewTarget.getParent()).indexOfChild(viewTarget));
       ((ViewGroup) viewTarget.getParent()).removeView(viewTarget);
       ((ViewGroup) mTransitionContainer).addView(viewTarget);
     }
@@ -665,16 +670,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private void startSharedTransition(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
+      onViewTransition( // TODO: A
+          sharedElement.sourceView,
+          sharedElement.sourceViewSnapshot,
+          sharedElement.targetViewSnapshot);
       onViewTransition(
-              sharedElement.sourceView,
-              sharedElement.sourceViewSnapshot,
-              sharedElement.targetViewSnapshot
-      );
-      onViewTransition(
-              sharedElement.targetView,
-              sharedElement.sourceViewSnapshot,
-              sharedElement.targetViewSnapshot
-      );
+          sharedElement.targetView,
+          sharedElement.sourceViewSnapshot,
+          sharedElement.targetViewSnapshot);
     }
   }
 
@@ -688,7 +691,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues, false);
     HashMap<String, Float> preparedTargetValues =
-            prepareDataForAnimationWorklet(targetValues, true);
+        prepareDataForAnimationWorklet(targetValues, true);
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
@@ -717,11 +720,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
       int childIndex = mSharedTransitionInParentIndex.get(view.getId());
       ((ViewGroup) parent).addView(view, childIndex);
       Snapshot viewSourcePeviousSnapshot = mSnapshotRegistry.get(view.getId());
-      Map preparedValues = prepareDataForAnimationWorklet(
-              viewSourcePeviousSnapshot.toCurrentMap(),
-              false
-      );
-      progressLayoutAnimation(view.getId(), preparedValues);
+      Map<String, Object> snapshotMap = viewSourcePeviousSnapshot.toBasicMap();
+      Map<String, Object> preparedValues = new HashMap<>();
+      for (String key : snapshotMap.keySet()) {
+        Object value = snapshotMap.get(key);
+        preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+      }
+      progressLayoutAnimation(view.getId(), preparedValues, true);
       mCurrentSharedTransitionViews.remove(view);
     }
     if (mCurrentSharedTransitionViews.isEmpty()) {
@@ -731,6 +736,51 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mViewToRestore.clear();
       mCurrentSharedTransitionViews.clear();
       mIsSharedTransitionActive = false;
+    }
+  }
+
+  public void visitTreeForViews(List<View> views, boolean clearConfig) {
+    if (views == null) {
+      return;
+    }
+    if (clearConfig) {
+      for (View view : views) {
+        visitTreeAndClearConfig(view);
+      }
+    } else {
+      for (View view : views) {
+        visitTreeAndFindSharedViews(view);
+      }
+    }
+  }
+
+  private void visitTreeAndFindSharedViews(View root) {
+    if (root == null) {
+      return;
+    }
+    if (hasAnimationForTag(root.getId(), "sharedElementTransition")) {
+      mRemovedSharedViews.add(root);
+    }
+    if (root instanceof ViewGroup) {
+      ViewGroup viewGroup = (ViewGroup) root;
+      for (int i = 0; i < viewGroup.getChildCount(); i++) {
+        View children = viewGroup.getChildAt(i);
+        visitTreeAndFindSharedViews(children);
+      }
+    }
+  }
+
+  private void visitTreeAndClearConfig(View root) {
+    if (root == null) {
+      return;
+    }
+    mNativeMethodsHolder.clearAnimationConfig(root.getId());
+    if (root instanceof ViewGroup) {
+      ViewGroup viewGroup = (ViewGroup) root;
+      for (int i = 0; i < viewGroup.getChildCount(); i++) {
+        View children = viewGroup.getChildAt(i);
+        visitTreeAndClearConfig(children);
+      }
     }
   }
 }

@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 class ReaLayoutAnimator extends LayoutAnimationController {
@@ -281,6 +282,26 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     // we don't want layout animations in native-stack since it is currently buggy there
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
+      if (tagsToDelete != null) {
+        List <View> rootsToRemove = new ArrayList<>();
+        for (Integer tagToDelete : tagsToDelete) {
+          View view = null;
+          try {
+            view = resolveView(tagToDelete);
+          } catch (IllegalViewOperationException e) {
+            // (IllegalViewOperationException) == (vm == null)
+            e.printStackTrace();
+            continue;
+          }
+          if (view != null) {
+            rootsToRemove.add(view);
+          }
+        }
+        AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
+        animationsManager.visitTreeForViews(rootsToRemove, false);
+        animationsManager.viewsDidRemoved();
+        animationsManager.visitTreeForViews(rootsToRemove, true);
+      }
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
       return;
     }

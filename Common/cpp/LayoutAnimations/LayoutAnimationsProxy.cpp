@@ -57,7 +57,8 @@ void LayoutAnimationsProxy::configureAnimation(
     layoutAnimations_[tag] = config;
   } else if (type == "sharedElementTransition") {
     sharedTransitionAnimations_[tag] = config;
-    if (sharedTransitionGroups_.find(sharedTransitionTag) == sharedTransitionGroups_.end()) {
+    if (sharedTransitionGroups_.find(sharedTransitionTag) ==
+        sharedTransitionGroups_.end()) {
       sharedTransitionGroups_[sharedTransitionTag] = std::vector<int>();
     }
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
@@ -88,7 +89,7 @@ void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag) {
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
   viewSharedValues_.erase(tag);
-  
+
   sharedTransitionAnimations_.erase(tag);
   for (auto &[key, group] : sharedTransitionGroups_) {
     bool isCurrentGroupMember = false;
@@ -104,6 +105,7 @@ void LayoutAnimationsProxy::clearLayoutAnimationConfig(int tag) {
       break;
     }
   }
+  viewSharedValues_.erase(tag);
 }
 
 void LayoutAnimationsProxy::startLayoutAnimation(
@@ -121,7 +123,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       config = exitingAnimations_[tag];
     } else if (type == "layout") {
       config = layoutAnimations_[tag];
-    } else if(type == "sharedElementTransition") {
+    } else if (type == "sharedElementTransition") {
       config = sharedTransitionAnimations_[tag];
     }
     viewSharedValue = viewSharedValues_[tag];
@@ -154,7 +156,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 
 int LayoutAnimationsProxy::findTheOtherForSharedTransition(int tag) {
   int theOtherTag = -1;
-  for (auto const& [key, group] : sharedTransitionGroups_) {
+  for (auto const &[key, group] : sharedTransitionGroups_) {
     bool isCurrentGroupMember = false;
     int indexInGroup;
     for (indexInGroup = 0; indexInGroup < group.size(); indexInGroup++) {
