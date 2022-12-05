@@ -48,7 +48,8 @@ public class LayoutAnimations {
     }
   }
 
-  private void progressLayoutAnimation(int tag, Map<String, Object> newStyle, boolean isSharedTransition) {
+  private void progressLayoutAnimation(
+      int tag, Map<String, Object> newStyle, boolean isSharedTransition) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {
       context

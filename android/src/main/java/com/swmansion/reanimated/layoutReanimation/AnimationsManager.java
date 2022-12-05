@@ -183,8 +183,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
 
-    setNewProps(
-        newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
+    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
