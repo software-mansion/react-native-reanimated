@@ -10,6 +10,8 @@
 #include "ReanimatedHermesRuntime.h"
 #elif JS_RUNTIME_V8
 #include <v8runtime/V8RuntimeFactory.h>
+#elif REACT_NATIVE_MINOR_VERSION >= 71
+#include <jsc/JSCRuntime.h>
 #else
 #include <jsi/JSCRuntime.h>
 #endif

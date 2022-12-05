@@ -199,8 +199,7 @@ def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
-def REACT_NATIVE_IS_NIGHTLY = REACT_NATIVE_VERSION.startsWith("0.0.0-")
-def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_IS_NIGHTLY ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
+def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
 def REANIMATED_MAJOR_VERSION = getReanimatedVersion()
 
@@ -231,7 +230,7 @@ def JS_RUNTIME = {
     }
     def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
     // return appProject?.ext?.react?.enableHermes ? "hermes" : defaultRuntimeType
-    return "hermes" // TODO: properly detect Hermes
+    return "jsc" // TODO: properly detect Hermes
 }.call()
 
 def jsRuntimeDir = {
@@ -771,11 +770,6 @@ task packageNdkLibs(type: Copy) {
 repositories {
     mavenCentral()
     mavenLocal()
-    if (REACT_NATIVE_IS_NIGHTLY) {
-        maven {
-            url "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
-    }
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
         url "$reactNativeRootDir/android"
@@ -789,23 +783,9 @@ repositories {
 
 dependencies {
     // noinspection GradleDynamicVersion
-    def VERSION_STRING = {
-        if (REACT_NATIVE_IS_NIGHTLY) {
-            // nightly, use AARs from SonaType
-            return REACT_NATIVE_VERSION + "-SNAPSHOT"
-        } else if (REACT_NATIVE_MINOR_VERSION >= 71) {
-            // use AARs from Maven Repository
-            // TODO: react-native-gradle-plugin should substitute version also for libraries
-            return REACT_NATIVE_VERSION
-        } else {
-            // use AARs from local Maven repo in node_modules
-            return ":+"
-        }
-    }.call()
-
-    implementation "com.facebook.react:react-android:" + VERSION_STRING
-    if (JS_RUNTIME == "hermes") {
-        implementation "com.facebook.react:hermes-android:" + VERSION_STRING
+    implementation "com.facebook.react:react-android:+" // From node_modules or substituted by RNGP
+    if (REACT_NATIVE_MINOR_VERSION >= 71 && JS_RUNTIME == "hermes") {
+        implementation "com.facebook.react:hermes-android"
     }
 
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"

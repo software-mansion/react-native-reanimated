@@ -35,7 +35,9 @@ file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp"
 
 find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
-find_package(hermes-engine REQUIRED CONFIG)
+if(${JS_RUNTIME} STREQUAL "hermes")
+    find_package(hermes-engine REQUIRED CONFIG)
+endif()
 
 add_library(
         ${PACKAGE_NAME}
@@ -136,19 +138,14 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
             ${PACKAGE_NAME}
             ${V8EXECUTOR_LIB}
     )
-else()
+elseif(${JS_RUNTIME} STREQUAL "jsc")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-    # TODO: JSC
-    # find_library(
-    #         JSEXECUTOR_LIB
-    #         jscexecutor
-    #         PATHS ${LIBRN_DIR}
-    #         NO_CMAKE_FIND_ROOT_PATH
-    # )
-    # target_link_libraries(
-    #         ${PACKAGE_NAME}
-    #         ${JSEXECUTOR_LIB}
-    # )
+    target_link_libraries(
+            ${PACKAGE_NAME}
+            ReactAndroid::jscexecutor
+    )
+else()
+    message(FATAL_ERROR "Unknown JS runtime")
 endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
