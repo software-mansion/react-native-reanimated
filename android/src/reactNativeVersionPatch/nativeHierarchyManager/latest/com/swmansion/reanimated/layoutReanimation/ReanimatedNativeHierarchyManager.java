@@ -233,7 +233,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   public synchronized void updateLayout(
       int parentTag, int tag, int x, int y, int width, int height) {
     super.updateLayout(parentTag, tag, x, y, width, height);
-    ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
+    try {
+      View parentView = this.resolveView(parentTag);
+      if (parentView.getClass().getSimpleName().equals("ScreenStack")) { // TODO: this is just temporary workaround
+        ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
+      }
+    } catch (IllegalViewOperationException e) {
+      e.printStackTrace();
+    }
     if (isLayoutAnimationDisabled()) {
       return;
     }

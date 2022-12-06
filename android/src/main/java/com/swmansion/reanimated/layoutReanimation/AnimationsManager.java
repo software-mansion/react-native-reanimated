@@ -417,6 +417,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (hasAnimationForTag(tag, "sharedElementTransition")) {
       mRemovedSharedViews.add(view);
+      makeSnapshot(view);
     }
 
     ArrayList<View> toBeRemoved = new ArrayList<>();
@@ -588,7 +589,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void sortViewsByTags(List<View> views) {
-    Collections.sort(views, (v1, v2) -> Integer.compare(v1.getId(), v2.getId()));
+    Collections.sort(views, (v1, v2) -> Integer.compare(v2.getId(), v1.getId()));
   }
 
   private void saveSharedViewsForFutureTransitions(List<View> sharedViews) {
@@ -613,10 +614,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewSource = sharedView;
         viewTarget = mSharedViews.get(targetViewTag);
       }
-      Snapshot sourceViewSnapshot = new Snapshot(viewSource);
-      Snapshot targetViewSnapshot = new Snapshot(viewTarget);
-      mSnapshotRegistry.put(viewSource.getId(), sourceViewSnapshot);
-      mSnapshotRegistry.put(viewTarget.getId(), targetViewSnapshot);
+
+      if (withNewElements) {
+        makeSnapshot(viewSource);
+        makeSnapshot(viewTarget);
+      }
+      Snapshot sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
+      Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
 
       mViewToRestore.add(viewSource);
       mCurrentSharedTransitionViews.add(viewSource);
@@ -739,6 +743,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
+  private void makeSnapshot(View view) {
+    mSnapshotRegistry.put(view.getId(), new Snapshot(view));
+  }
+
   public void visitTreeForViews(List<View> views, boolean clearConfig) {
     if (views == null) {
       return;
@@ -760,6 +768,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     if (hasAnimationForTag(root.getId(), "sharedElementTransition")) {
       mRemovedSharedViews.add(root);
+      makeSnapshot(root);
     }
     if (root instanceof ViewGroup) {
       ViewGroup viewGroup = (ViewGroup) root;
