@@ -15,7 +15,7 @@ const TAG_OFFSET = 1e9;
 function startObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
-  animationType: string,
+  animationType: string
 ): void {
   'worklet';
   const isSharedTransition = animationType === 'sharedElementTransition';
@@ -28,7 +28,7 @@ function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
   cancelled: boolean,
-  removeView: boolean,
+  removeView: boolean
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
