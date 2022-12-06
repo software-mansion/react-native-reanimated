@@ -25,6 +25,7 @@ declare global {
     sourceURL: string,
     sourceMap: string
   ) => any;
+  const evalWithSourceUrl: (js: string, sourceURL: string) => any;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
   const _getTimestamp: () => number;
@@ -89,6 +90,7 @@ declare global {
         sourceURL: string,
         sourceMap: string
       ) => any;
+      evalWithSourceUrl: (js: string, sourceURL: string) => any;
       _log: (s: string) => void;
       _getCurrentTime: () => number;
       _getTimestamp: () => number;

@@ -399,8 +399,10 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   // sourcesContent field contains a full source code of the file which contains the worklet
   // and is not needed by the source map interpreter in order to symbolicate a stack trace.
   // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
-  // in files that contain multiple worklets.
+  // in files that contain multiple worklets. Along with sourcesContent, we also remove sources field
+  // as it isn't necessary for the stack trace symbolication.
   delete sourceMap.sourcesContent;
+  delete sourceMap.sources;
 
   return [transformed.code, JSON.stringify(sourceMap)];
 }
@@ -533,20 +535,6 @@ function makeWorklet(t, fun, state) {
   );
   const workletHash = hash(funString);
 
-  let location = state.file.opts.filename;
-  if (state.opts && state.opts.relativeSourceLocation) {
-    const path = require('path');
-    location = path.relative(state.cwd, location);
-  }
-
-  const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
-  if (loc) {
-    const { line, column } = loc;
-    if (typeof line === 'number' && typeof column === 'number') {
-      location = `${location} (${line}:${column})`;
-    }
-  }
-
   let lineOffset = 1;
   if (closure.size > 0) {
     lineOffset -= closure.size + 2;
@@ -592,17 +580,6 @@ function makeWorklet(t, fun, state) {
         t.stringLiteral(sourceMapString)
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('__location'),
-          false
-        ),
-        t.stringLiteral(location)
-      )
-    ),
   ];
 
   if (!isRelease()) {
@@ -613,7 +590,7 @@ function makeWorklet(t, fun, state) {
           t.arrayExpression([
             t.newExpression(t.identifier('Error'), []),
             t.numericLiteral(lineOffset),
-            t.numericLiteral(-25),
+            t.numericLiteral(-20), // the placement of opening bracket after Exeption in line that defined '_e' variable
           ])
         ),
       ])

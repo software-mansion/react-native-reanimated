@@ -1,6 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { ShareableRef } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { registerWorkletStackDetails } from './initializers';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -15,8 +16,6 @@ const _shareableCache = new WeakMap<
 // the below symbol is used to represent a mapping from the value to itself
 // this is used to allow for a converted shareable to be passed to makeShareableClone
 const _shareableFlag = Symbol('shareable flag');
-
-global.__workletStackDetails = new Map();
 
 export function registerShareableMapping(
   shareable: any,
@@ -56,7 +55,7 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
         toAdapt = value;
       } else {
         if (__DEV__ && value.__workletHash !== undefined) {
-          global.__workletStackDetails.set(
+          registerWorkletStackDetails(
             value.__workletHash,
             value.__stackDetails
           );

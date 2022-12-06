@@ -29,12 +29,11 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
   if (objectToUnpack.__workletHash) {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
     if (workletFun === undefined) {
-      // eslint-disable-next-line no-eval
       const evalFn =
-        global.evalWithSourceMap || global.evalWithSourceUrl || eval;
+        global.evalWithSourceMap || global.evalWithSourceUrl || eval; // eslint-disable-line no-eval
       workletFun = evalFn(
         '(' + objectToUnpack.asString + '\n)',
-        objectToUnpack.__sourceURL || `worklet_${objectToUnpack.__workletHash}`,
+        `worklet_${objectToUnpack.__workletHash}`,
         objectToUnpack.__sourceMap
       ) as (...args: any[]) => any;
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
@@ -64,22 +63,39 @@ Possible solutions are:
   }
 }
 
-function getBundleOffset(error: Error) {
-  const frame = error.stack.split('\n')[0];
-  const [, file, line, col] = /@(.*):(\d+):(\d+)/.exec(frame);
-  return [file, Number(line), Number(col)];
+type StackDetails = [Error, number, number];
+
+const _workletStackDetails = new Map<number, StackDetails>();
+
+export function registerWorkletStackDetails(
+  hash: number,
+  stackDetails: StackDetails
+) {
+  _workletStackDetails.set(hash, stackDetails);
+}
+
+function getBundleOffset(error: Error): [string, number, number] {
+  const frame = error.stack?.split('\n')?.[0];
+  if (frame) {
+    const parsedFrame = /@(.*):(\d+):(\d+)/.exec(frame);
+    if (parsedFrame) {
+      const [, file, line, col] = parsedFrame;
+      return [file, Number(line), Number(col)];
+    }
+  }
+  return ['unknown', 0, 0];
 }
 
 function processStack(stack: string): string {
   const workletStackEntries = stack.match(/worklet_(\d+):(\d+):(\d+)/g);
   let result = stack;
   workletStackEntries?.forEach((match) => {
-    const [_, hash, origLine, origCol] = match.split(/:|_/).map(Number);
-    if (!global.__workletStackDetails.has(hash)) {
+    const [, hash, origLine, origCol] = match.split(/:|_/).map(Number);
+    const errorDetails = _workletStackDetails.get(hash);
+    if (!errorDetails) {
       return;
     }
-    const [error, lineOffset, colOffset] =
-      global.__workletStackDetails.get(hash);
+    const [error, lineOffset, colOffset] = errorDetails;
     const [bundleFile, bundleLine, bundleCol] = getBundleOffset(error);
     const line = origLine + bundleLine + lineOffset;
     const col = origCol + bundleCol + colOffset;
@@ -98,7 +114,7 @@ function reportFatalErrorOnJS({
 }) {
   const error = new Error();
   error.message = message;
-  error.stack = processStack(stack);
+  error.stack = stack ? processStack(stack) : undefined;
   error.name = 'ReanimatedError';
   // @ts-ignore React Native's ErrorUtils implementation extends the Error type with jsEngine field
   error.jsEngine = 'reanimated';
