@@ -619,7 +619,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mSnapshotRegistry.put(viewTarget.getId(), targetViewSnapshot);
 
       mViewToRestore.add(viewSource);
-      mCurrentSharedTransitionViews.add(viewSource); // TODO: A
+      mCurrentSharedTransitionViews.add(viewSource);
       mCurrentSharedTransitionViews.add(viewTarget);
       if (!withNewElements) {
         mSharedViews.remove(viewSource.getId());
@@ -649,7 +649,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       View viewSource = sharedElement.sourceView;
       View viewTarget = sharedElement.targetView;
 
-      mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent()); // TODO: A
+      mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
       mSharedTransitionInParentIndex.put(
           viewSource.getId(), ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource));
       ((ViewGroup) viewSource.getParent()).removeView(viewSource);
@@ -665,7 +665,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private void startSharedTransition(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
-      onViewTransition( // TODO: A
+      onViewTransition(
           sharedElement.sourceView,
           sharedElement.sourceViewSnapshot,
           sharedElement.targetViewSnapshot);
@@ -711,9 +711,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     if (view != null) {
       ((ViewGroup) mTransitionContainer).removeView(view);
-      View parent = mSharedTransitionParent.get(view.getId());
+      View parentView = mSharedTransitionParent.get(view.getId());
       int childIndex = mSharedTransitionInParentIndex.get(view.getId());
-      ((ViewGroup) parent).addView(view, childIndex);
+      ViewGroup parentViewGroup = ((ViewGroup) parentView);
+      if (childIndex <= parentViewGroup.getChildCount()) {
+        parentViewGroup.addView(view, childIndex);
+      } else {
+        parentViewGroup.addView(view);
+      }
       Snapshot viewSourcePeviousSnapshot = mSnapshotRegistry.get(view.getId());
       Map<String, Object> snapshotMap = viewSourcePeviousSnapshot.toBasicMap();
       Map<String, Object> preparedValues = new HashMap<>();
