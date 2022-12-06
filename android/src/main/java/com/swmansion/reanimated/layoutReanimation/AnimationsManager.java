@@ -719,8 +719,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       } else {
         parentViewGroup.addView(view);
       }
-      Snapshot viewSourcePeviousSnapshot = mSnapshotRegistry.get(view.getId());
-      Map<String, Object> snapshotMap = viewSourcePeviousSnapshot.toBasicMap();
+      Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(view.getId());
+      Map<String, Object> snapshotMap = viewSourcePreviousSnapshot.toBasicMap();
       Map<String, Object> preparedValues = new HashMap<>();
       for (String key : snapshotMap.keySet()) {
         Object value = snapshotMap.get(key);

@@ -623,8 +623,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     UIView *parent = _sharedTransitionParent[view.reactTag];
     int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
     [parent insertSubview:view atIndex:childIndex];
-    REASnapshot *viewSourcePeviousSnapshot = _snapshotRegistry[view.reactTag];
-    [self progressLayoutAnimationWithStyle:viewSourcePeviousSnapshot.values
+    REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[view.reactTag];
+    [self progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
                                     forTag:view.reactTag
                         isSharedTransition:YES];
     [_currentSharedTransitionViews removeObject:view];
