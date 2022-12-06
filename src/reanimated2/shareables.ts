@@ -16,6 +16,8 @@ const _shareableCache = new WeakMap<
 // this is used to allow for a converted shareable to be passed to makeShareableClone
 const _shareableFlag = Symbol('shareable flag');
 
+global.__workletStackDetails = new Map();
+
 export function registerShareableMapping(
   shareable: any,
   shareableRef?: ShareableRef<any>
@@ -53,6 +55,12 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
         // this is a remote function
         toAdapt = value;
       } else {
+        if (__DEV__ && value.__workletHash !== undefined) {
+          global.__workletStackDetails.set(
+            value.__workletHash,
+            value.__stackDetails
+          );
+        }
         toAdapt = {};
         for (const [key, element] of Object.entries(value)) {
           toAdapt[key] = makeShareableCloneRecursive(element);

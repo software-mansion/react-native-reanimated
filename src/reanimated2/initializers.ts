@@ -30,10 +30,12 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
     if (workletFun === undefined) {
       // eslint-disable-next-line no-eval
-      workletFun = evalWithSourceMap(
+      const evalFn =
+        global.evalWithSourceMap || global.evalWithSourceUrl || eval;
+      workletFun = evalFn(
         '(' + objectToUnpack.asString + '\n)',
-        objectToUnpack.__sourceMap,
-        objectToUnpack.__location
+        objectToUnpack.__sourceURL || `worklet_${objectToUnpack.__workletHash}`,
+        objectToUnpack.__sourceMap
       ) as (...args: any[]) => any;
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
     }
@@ -62,6 +64,31 @@ Possible solutions are:
   }
 }
 
+function getBundleOffset(error: Error) {
+  const frame = error.stack.split('\n')[0];
+  const [, file, line, col] = /@(.*):(\d+):(\d+)/.exec(frame);
+  return [file, Number(line), Number(col)];
+}
+
+function processStack(stack: string): string {
+  const workletStackEntries = stack.match(/worklet_(\d+):(\d+):(\d+)/g);
+  let result = stack;
+  workletStackEntries?.forEach((match) => {
+    const [_, hash, origLine, origCol] = match.split(/:|_/).map(Number);
+    if (!global.__workletStackDetails.has(hash)) {
+      return;
+    }
+    const [error, lineOffset, colOffset] =
+      global.__workletStackDetails.get(hash);
+    const [bundleFile, bundleLine, bundleCol] = getBundleOffset(error);
+    const line = origLine + bundleLine + lineOffset;
+    const col = origCol + bundleCol + colOffset;
+
+    result = result.replace(match, `${bundleFile}:${line}:${col}`);
+  });
+  return result;
+}
+
 function reportFatalErrorOnJS({
   message,
   stack,
@@ -71,7 +98,7 @@ function reportFatalErrorOnJS({
 }) {
   const error = new Error();
   error.message = message;
-  error.stack = stack;
+  error.stack = processStack(stack);
   error.name = 'ReanimatedError';
   // @ts-ignore React Native's ErrorUtils implementation extends the Error type with jsEngine field
   error.jsEngine = 'reanimated';

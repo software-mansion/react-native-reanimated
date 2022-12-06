@@ -22,8 +22,8 @@ declare global {
   const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const evalWithSourceMap: (
     js: string,
-    sourceMap: string,
-    sourceURL: string
+    sourceURL: string,
+    sourceMap: string
   ) => any;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
@@ -86,8 +86,8 @@ declare global {
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       evalWithSourceMap: (
         js: string,
-        sourceMap: string,
-        sourceURL: string
+        sourceURL: string,
+        sourceMap: string
       ) => any;
       _log: (s: string) => void;
       _getCurrentTime: () => number;

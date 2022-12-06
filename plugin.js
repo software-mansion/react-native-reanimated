@@ -547,6 +547,11 @@ function makeWorklet(t, fun, state) {
     }
   }
 
+  let lineOffset = 1;
+  if (closure.size > 0) {
+    lineOffset -= closure.size + 2;
+  }
+
   const statements = [
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),
@@ -599,6 +604,34 @@ function makeWorklet(t, fun, state) {
       )
     ),
   ];
+
+  if (!isRelease()) {
+    statements.unshift(
+      t.variableDeclaration('const', [
+        t.variableDeclarator(
+          t.identifier('_e'),
+          t.arrayExpression([
+            t.newExpression(t.identifier('Error'), []),
+            t.numericLiteral(lineOffset),
+            t.numericLiteral(-25),
+          ])
+        ),
+      ])
+    );
+    statements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__stackDetails'),
+            false
+          ),
+          t.identifier('_e')
+        )
+      )
+    );
+  }
 
   if (options && options.optFlags) {
     statements.push(

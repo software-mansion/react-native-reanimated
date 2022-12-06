@@ -30,11 +30,30 @@ void RuntimeDecorator::decorateRuntime(
   rt.global().setProperty(
       rt, "_LABEL", jsi::String::createFromAscii(rt, label));
 
-  jsi::Object dummyGlobal(rt);
-  dummyGlobal.setProperty(rt, "gc", rt.global().getProperty(rt, "gc"));
-  rt.global().setProperty(rt, "global", dummyGlobal);
+  rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
+  auto evalWithSourceUrl = [](jsi::Runtime &rt,
+                              const jsi::Value &thisValue,
+                              const jsi::Value *args,
+                              size_t count) -> jsi::Value {
+    auto code = std::make_shared<const jsi::StringBuffer>(
+        args[0].asString(rt).utf8(rt));
+    std::string url;
+    if (count > 1 && args[1].isString()) {
+      url = args[1].asString(rt).utf8(rt);
+    }
+
+    return rt.evaluateJavaScript(code, url);
+  };
+
+  rt.global().setProperty(
+      rt,
+      "evalWithSourceUrl",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
+          1,
+          evalWithSourceUrl));
 
   auto callback = [](jsi::Runtime &rt,
                      const jsi::Value &thisValue,

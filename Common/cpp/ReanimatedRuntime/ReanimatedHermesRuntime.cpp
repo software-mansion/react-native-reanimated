@@ -88,13 +88,19 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
          const jsi::Value &thisValue,
          const jsi::Value *args,
          size_t count) -> jsi::Value {
-        auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
+        auto code = std::make_shared<const jsi::StringBuffer>(
             args[0].asString(rt).utf8(rt));
-        auto sourceMapJSONBuffer = std::make_shared<const jsi::StringBuffer>(
-            args[1].asString(rt).utf8(rt));
+        std::string sourceURL;
+        if (count > 1 && args[1].isString()) {
+          sourceURL = args[1].asString(rt).utf8(rt);
+        }
+        std::shared_ptr<const jsi::Buffer> sourceMap;
+        if (count > 2 && args[2].isString()) {
+          sourceMap = std::make_shared<const jsi::StringBuffer>(
+              args[2].asString(rt).utf8(rt));
+        }
         return dynamic_cast<facebook::hermes::HermesRuntime &>(rt)
-             .evaluateJavaScriptWithSourceMap(
-                codeBuffer, sourceMapJSONBuffer, args[2].asString(rt).utf8(rt));
+            .evaluateJavaScriptWithSourceMap(code, sourceMap, sourceURL);
       });
   runtime_->global().setProperty(
       *runtime_, "evalWithSourceMap", evalWithSourceMap);
