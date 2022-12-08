@@ -107,7 +107,7 @@ def resolveReactNativeDirectory() {
         return reactNativeFromNodeModulesWithReanimated
     }
 
-    throw new Exception(
+    throw new GradleException(
         "[Reanimated] Unable to resolve react-native location in " +
         "node_modules. You should project extension property (in app/build.gradle) " +
         "`REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
@@ -169,7 +169,7 @@ def checkNoMultipleInstances() {
             "https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/" +
             "troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict " +
             "between: \n" + parsedLocation + "\n";
-        throw new Exception(exceptionMessage)
+        throw new GradleException(exceptionMessage)
     }
 }
 
@@ -601,7 +601,7 @@ def assertNoMultipleInstances = task assertNoMultipleInstancesTask {
 def assertNoReanimated2WithNewArchitecture = task assertNoReanimated2WithNewArchitectureTask {
     onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION == 2 }
     doFirst {
-        throw new Exception(
+        throw new GradleException(
             "\n[react-native-reanimated] Reanimated 2.x does not support Fabric. " +
             "Please upgrade to 3.x to use Reanimated with the New Architecture. " +
             "For details, see https://blog.swmansion.com/announcing-reanimated-3-16167428c5f7"
@@ -612,15 +612,16 @@ def assertNoReanimated2WithNewArchitecture = task assertNoReanimated2WithNewArch
 def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
     onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 71 }
     doFirst {
-        throw new Exception(
-            "\n[react-native-reanimated] Reanimated for Fabric supports only the latest minor release of react-native. " +
-            "Please upgrade to React Native 0.71.0+ to use Reanimated with the New Architecture."
+        throw new GradleException(
+            "\n[react-native-reanimated] Reanimated " + REANIMATED_VERSION + " supports the New Architecture " +
+            "only on the latest minor release of React Native. Please upgrade to React Native 0.71.0+ " +
+            "or downgrade to an older version of Reanimated v3."
         )
     }
 }
 
 tasks.preBuild {
-    dependsOn assertNoMultipleInstances, assertNoReanimated2WithNewArchitecture
+    dependsOn assertNoMultipleInstances, assertNoReanimated2WithNewArchitecture, assertLatestReactNativeWithNewArchitecture
 }
 
 task cleanCmakeCache() {
@@ -690,7 +691,7 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
                 })
             }
         } else {
-            throw new GradleScriptException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks can not be set.")
+            throw new GradleException("[Reanimated] Failed to find `:ReactAndroid` project. Explicit dependency between download tasks can not be set.")
         }
     }
 
@@ -861,7 +862,7 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
                     "${resolveBuildType()}.aar"
                 )
                 if (!hermesAAR.exists()) {
-                    throw new GradleScriptException("Could not find hermes-engine AAR", null)
+                    throw new GradleException("Could not find hermes-engine AAR", null)
                 }
 
                 def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
@@ -876,12 +877,12 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
             doLast {
                 def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
                 if (!hermesPackagePath) {
-                    throw new GradleScriptException("Could not find the hermes-engine npm package", null)
+                    throw new GradleException("Could not find the hermes-engine npm package", null)
                 }
 
                 def hermesAAR = file("$hermesPackagePath/android/hermes-${resolveBuildType()}.aar") // e.g. hermes-debug.aar
                 if (!hermesAAR.exists()) {
-                    throw new GradleScriptException("The hermes-engine npm package is missing \"android/hermes-${resolveBuildType()}.aar\"", null)
+                    throw new GradleException("The hermes-engine npm package is missing \"android/hermes-${resolveBuildType()}.aar\"", null)
                 }
 
                 def soFiles = zipTree(hermesAAR).matching({ it.include "**/*.so" })
@@ -902,12 +903,12 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
             doLast {
                 def jscPackagePath = findNodeModulePath(projectDir, "jsc-android")
                 if (!jscPackagePath) {
-                    throw new GradleScriptException("Could not find the jsc-android npm package", null)
+                    throw new GradleException("Could not find the jsc-android npm package", null)
                 }
 
                 def jscDist = file("$jscPackagePath/dist")
                 if (!jscDist.exists()) {
-                    throw new GradleScriptException("The jsc-android npm package is missing its \"dist\" directory", null)
+                    throw new GradleException("The jsc-android npm package is missing its \"dist\" directory", null)
                 }
 
                 def jscAAR = fileTree(jscDist).matching({ it.include "**/android-jsc/**/*.aar" }).singleFile
