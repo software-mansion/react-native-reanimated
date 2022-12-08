@@ -106,9 +106,7 @@ if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
         "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
     )
 else()
-    if(${REACT_NATIVE_MINOR_VERSION} LESS 71)
-        file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
-    endif()
+    file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
     target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
