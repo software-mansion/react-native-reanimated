@@ -30,9 +30,7 @@ void RuntimeDecorator::decorateRuntime(
   rt.global().setProperty(
       rt, "_LABEL", jsi::String::createFromAscii(rt, label));
 
-  jsi::Object dummyGlobal(rt);
-  dummyGlobal.setProperty(rt, "gc", rt.global().getProperty(rt, "gc"));
-  rt.global().setProperty(rt, "global", dummyGlobal);
+  rt.global().setProperty(rt, "global", rt.global());
 
   rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
 
