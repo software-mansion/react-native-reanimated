@@ -34,7 +34,18 @@ set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 
-if(${REACT_NATIVE_MINOR_VERSION} LESS 71)
+file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
+file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
+
+if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+    # Consume shared libraries and headers from prefabs
+    find_package(fbjni REQUIRED CONFIG)
+    find_package(ReactAndroid REQUIRED CONFIG)
+    if(${JS_RUNTIME} STREQUAL "hermes")
+        find_package(hermes-engine REQUIRED CONFIG)
+    endif()
+else()
+    # Consume shared libraries from found .so files
     if(${IS_NEW_ARCHITECTURE_ENABLED})
         if(${CLIENT_SIDE_BUILD})
             set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
@@ -43,24 +54,12 @@ if(${REACT_NATIVE_MINOR_VERSION} LESS 71)
             # Reanimated Playground app
             set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/android/app/build/react-ndk/exported")
             set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
-
         endif()
     else()
         set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
         set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
     endif()
     file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
-endif()
-
-file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
-file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
-
-if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
-    find_package(fbjni REQUIRED CONFIG)
-    find_package(ReactAndroid REQUIRED CONFIG)
-    if(${JS_RUNTIME} STREQUAL "hermes")
-        find_package(hermes-engine REQUIRED CONFIG)
-    endif()
 endif()
 
 if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
@@ -146,14 +145,70 @@ endif()
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+    set(JSI_LIB ReactAndroid::jsi)
+    set(GLOG_LIB ReactAndroid::glog)
+    set(FBJNI_LIB fbjni::fbjni)
+    set(FOLLY_LIB ReactAndroid::folly_runtime)
+    set(REACTNATIVEJNI_LIB ReactAndroid::reactnativejni)
+elseif()
+    if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
+        set (JSI_LIB "")
+    else()
+        find_library(
+                JSI_LIB
+                jsi
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+    endif()
+
+    find_library(
+            GLOG_LIB
+            glog
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+
+    find_library(
+            FBJNI_LIB
+            fbjni
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+
+    if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
+        find_library(
+                FOLLY_LIB
+                folly_json
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+    else()
+        find_library(
+                FOLLY_LIB
+                folly_runtime
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+    endif()
+
+    find_library(
+            REACTNATIVEJNI_LIB
+            reactnativejni
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+    )
+endif()
+
 target_link_libraries(
     ${PACKAGE_NAME}
     log
-    ReactAndroid::jsi
-    ReactAndroid::glog
-    fbjni::fbjni
-    ReactAndroid::folly_runtime
-    ReactAndroid::reactnativejni
+    ${JSI_LIB}
+    ${GLOG_LIB}
+    ${FBJNI_LIB}
+    ${FOLLY_LIB}
+    ${REACTNATIVEJNI_LIB}
     android
 )
 
@@ -237,17 +292,17 @@ endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     target_link_libraries(
-            ${PACKAGE_NAME}
-            ReactAndroid::react_nativemodule_core
-            ReactAndroid::react_render_componentregistry
-            ReactAndroid::react_render_core
-            ReactAndroid::react_debug
-            ReactAndroid::react_render_debug
-            ReactAndroid::rrc_view
-            ReactAndroid::fabricjni
-            ReactAndroid::react_render_scheduler
-            ReactAndroid::react_render_uimanager
-            ReactAndroid::react_render_mounting
+        ${PACKAGE_NAME}
+        ReactAndroid::react_nativemodule_core
+        ReactAndroid::react_render_componentregistry
+        ReactAndroid::react_render_core
+        ReactAndroid::react_debug
+        ReactAndroid::react_render_debug
+        ReactAndroid::rrc_view
+        ReactAndroid::fabricjni
+        ReactAndroid::react_render_scheduler
+        ReactAndroid::react_render_uimanager
+        ReactAndroid::react_render_mounting
     )
 endif()
 
