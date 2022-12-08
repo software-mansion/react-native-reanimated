@@ -399,10 +399,8 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   // sourcesContent field contains a full source code of the file which contains the worklet
   // and is not needed by the source map interpreter in order to symbolicate a stack trace.
   // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
-  // in files that contain multiple worklets. Along with sourcesContent, we also remove sources field
-  // as it isn't necessary for the stack trace symbolication.
+  // in files that contain multiple worklets. Along with sourcesContent.
   delete sourceMap.sourcesContent;
-  delete sourceMap.sources;
 
   return [transformed.code, JSON.stringify(sourceMap)];
 }

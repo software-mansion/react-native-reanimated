@@ -80,6 +80,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   jsQueue->quitSynchronous();
 #endif
 
+#ifndef NDEBUG
   jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
       *runtime_,
       jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
@@ -104,6 +105,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
       });
   runtime_->global().setProperty(
       *runtime_, "evalWithSourceMap", evalWithSourceMap);
+#endif
 }
 
 ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
