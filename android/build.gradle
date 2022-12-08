@@ -793,17 +793,30 @@ repositories {
 
 dependencies {
     // noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-android:+" // From node_modules or substituted by RNGP
-    if (REACT_NATIVE_MINOR_VERSION >= 71 && JS_RUNTIME == "hermes") {
-        implementation "com.facebook.react:hermes-android"
-    }
-
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
     implementation "androidx.transition:transition:1.1.0"
     implementation "androidx.core:core:1.6.0"
 
-    def jscAAR = fileTree("$reactNativeRootDir/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
-    extractSO(files(jscAAR))
+    if (REACT_NATIVE_MINOR_VERSION >= 71) {
+        implementation "com.facebook.react:react-android" // version substituted by RNGP
+        if (JS_RUNTIME == "hermes") {
+            implementation "com.facebook.react:hermes-android" // version substituted by RNGP
+        }
+    } else {
+        implementation "com.facebook.react:react-native:+" // From node_modules
+        if (isDeveloperMode() && !isNewArchitectureEnabled()) {
+            implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
+        }
+        else {
+            implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION
+        }
+
+        extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
+        extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+
+        def jscAAR = fileTree("$reactNativeRootDir/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
+        extractSO(files(jscAAR))
+    }
 }
 
 task unpackReactNativeAAR {
