@@ -674,7 +674,11 @@ task prepareHermes() {
 
         doLast {
             // e.g. hermes-engine-0.70.0-rc.1-debug.aar
-            def hermesAAR = file("/Users/tomekzaw/Downloads/hermes-android-0.71.0-rc.2-debug.aar")
+            def hermesAAR = file(
+                "$reactNativeRootDir/android/com/facebook/react/hermes-engine/" +
+                "${REACT_NATIVE_VERSION}/hermes-engine-${REACT_NATIVE_VERSION}-" +
+                "${resolveBuildType()}.aar"
+            )
             if (!hermesAAR.exists()) {
                 throw new GradleScriptException("Could not find hermes-engine AAR", null)
             }
