@@ -6,8 +6,12 @@ set (CMAKE_CXX_STANDARD 17)
 
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fstack-protector-all"
 
-include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
-string(REPLACE ";" " " folly_FLAGS ${folly_FLAGS}) # input is a semicolon-separated list
+if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+    include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
+    string(REPLACE ";" " " folly_FLAGS ${folly_FLAGS}) # input is a semicolon-separated list
+else()
+    set(folly_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1") 
+endif()
 string(APPEND CMAKE_CXX_FLAGS " ${folly_FLAGS}")
 
 string(APPEND CMAKE_CXX_FLAGS " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} -DREANIMATED_VERSION=${REANIMATED_VERSION} -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
@@ -30,13 +34,38 @@ set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 
+if(${REACT_NATIVE_MINOR_VERSION} LESS 71)
+    if(${IS_NEW_ARCHITECTURE_ENABLED})
+        if(${CLIENT_SIDE_BUILD})
+            set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../../../android/app/build/react-ndk/exported")
+            set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+        else()
+            # Reanimated Playground app
+            set (RN_SO_DIR "${CMAKE_SOURCE_DIR}/../${PLAYGROUND_APP_NAME}/android/app/build/react-ndk/exported")
+            set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+
+        endif()
+    else()
+        set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
+        set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
+    endif()
+    file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
+endif()
+
 file(GLOB_RECURSE SOURCES_COMMON CONFIGURE_DEPENDS "${COMMON_SRC_DIR}/cpp/**.cpp")
 file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${SRC_DIR}/main/cpp/**.cpp")
 
-find_package(fbjni REQUIRED CONFIG)
-find_package(ReactAndroid REQUIRED CONFIG)
-if(${JS_RUNTIME} STREQUAL "hermes")
-    find_package(hermes-engine REQUIRED CONFIG)
+if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+    find_package(fbjni REQUIRED CONFIG)
+    find_package(ReactAndroid REQUIRED CONFIG)
+    if(${JS_RUNTIME} STREQUAL "hermes")
+        find_package(hermes-engine REQUIRED CONFIG)
+    endif()
+endif()
+
+if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
+    set(INCLUDE_JSI_CPP "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/jsi.cpp")
+    set(INCLUDE_JSIDYNAMIC_CPP "${REACT_NATIVE_DIR}/ReactCommon/jsi/jsi/JSIDynamic.cpp")
 endif()
 
 add_library(
@@ -44,6 +73,8 @@ add_library(
         SHARED
         ${SOURCES_COMMON}
         ${SOURCES_ANDROID}
+        ${INCLUDE_JSI_CPP}
+        ${INCLUDE_JSIDYNAMIC_CPP}
 )
 
 # includes
@@ -51,13 +82,6 @@ add_library(
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
-        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule" # CallInvokerHolder.h on 0.71.0-rc.0
-        "${REACT_NATIVE_DIR}/ReactCommon"
-        "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-        "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor" # RuntimeExecutor.h
-        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx" # Float.h
-        "${REACT_NATIVE_DIR}/ReactCommon/yoga" # YGStyle.h
         "${COMMON_SRC_DIR}/cpp/Tools"
         "${COMMON_SRC_DIR}/cpp/SpecTools"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
@@ -71,6 +95,45 @@ target_include_directories(
         "${SRC_DIR}/main/cpp"
 )
 
+if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+    # Ideally, these headers should be distributed in prefabs.
+    # See https://github.com/reactwg/react-native-releases/discussions/41#discussioncomment-4342384.
+    target_include_directories(
+        ${PACKAGE_NAME}
+        PRIVATE
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
+        "${REACT_NATIVE_DIR}/ReactCommon"
+        "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
+    )
+else()
+    if(${REACT_NATIVE_MINOR_VERSION} LESS 71)
+        file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
+    endif()
+    target_include_directories(
+        ${PACKAGE_NAME}
+        PRIVATE
+        "${LIBFBJNI_INCLUDE_DIR}"
+        "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
+        "${BUILD_DIR}/third-party-ndk/double-conversion"
+        "${BUILD_DIR}/third-party-ndk/folly"
+        "${BUILD_DIR}/third-party-ndk/glog/exported"
+        "${REACT_NATIVE_DIR}/React"
+        "${REACT_NATIVE_DIR}/React/Base"
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/java/com/facebook/react/fabric/jni"
+        "${REACT_NATIVE_DIR}/ReactCommon"
+        "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
+        "${REACT_NATIVE_DIR}/ReactCommon/jsi"
+        "${REACT_NATIVE_DIR}/ReactCommon/hermes"
+        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+        "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+        "${REACT_NATIVE_DIR}/ReactCommon/turbomodule/core"
+        "${REACT_NATIVE_DIR}/ReactCommon/turbomodule"
+        "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+    )
+endif()
+
 find_library(
         LOG_LIB
         log
@@ -79,7 +142,6 @@ find_library(
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-
 
 target_link_libraries(
     ${PACKAGE_NAME}
