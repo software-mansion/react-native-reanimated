@@ -105,6 +105,16 @@ if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
         "${REACT_NATIVE_DIR}/ReactCommon"
         "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
     )
+    if(${IS_NEW_ARCHITECTURE_ENABLED})
+        target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
+            "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+            "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+            "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+        )
+    endif()
 else()
     file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
     target_include_directories(
