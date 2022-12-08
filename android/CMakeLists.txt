@@ -132,18 +132,13 @@ else()
     )
 endif()
 
-find_library(
-        LOG_LIB
-        log
-)
-
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(
     ${PACKAGE_NAME}
-    ${LOG_LIB}
+    log
     ReactAndroid::jsi
     ReactAndroid::glog
     fbjni::fbjni
@@ -154,14 +149,10 @@ target_link_libraries(
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-    if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
-        # From `hermes-engine` npm package
-        target_include_directories(
-            ${PACKAGE_NAME}
-            PRIVATE
-            "${JS_RUNTIME_DIR}/android/include"
-        )
-    else()
+    if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+        # From prefab from module `com.facebook.react:hermes-android`
+        set(HERMES_LIB hermes-engine::libhermes)
+    elseif(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 69)
         # Bundled Hermes from module `com.facebook.react:hermes-engine` or project `:ReactAndroid:hermes-engine`
         target_include_directories(
             ${PACKAGE_NAME}
@@ -169,17 +160,36 @@ if(${JS_RUNTIME} STREQUAL "hermes")
             "${JS_RUNTIME_DIR}/API"
             "${JS_RUNTIME_DIR}/public"
         )
-    endif()
-    if (${HERMES_ENABLE_DEBUGGER})
-        target_link_libraries(
-                ${PACKAGE_NAME}
-                ReactAndroid::hermes_executor
+        set(HERMES_LIB "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so")
+    else()
+        # From `hermes-engine` npm package
+        target_include_directories(
+            ${PACKAGE_NAME}
+            PRIVATE
+            "${JS_RUNTIME_DIR}/android/include"
         )
+        set(HERMES_LIB "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}/libhermes.so")
     endif()
     target_link_libraries(
-            ${PACKAGE_NAME}
-            hermes-engine::libhermes
+        ${PACKAGE_NAME}
+        ${HERMES_LIB}
     )
+    if (${HERMES_ENABLE_DEBUGGER})
+        if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+            set(HERMES_EXECUTOR_LIB ReactAndroid::hermes_executor)
+        else()
+            find_library(
+                HERMES_EXECUTOR_LIB
+                hermes-executor-debug
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+            )
+        endif()
+        target_link_libraries(
+                ${PACKAGE_NAME}
+                ${HERMES_EXECUTOR_LIB}
+        )
+    endif()
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
     target_include_directories(
@@ -200,12 +210,19 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
     )
 elseif(${JS_RUNTIME} STREQUAL "jsc")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-    target_link_libraries(
-            ${PACKAGE_NAME}
-            ReactAndroid::jscexecutor
-    )
+    if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
+        set(JSEXECUTOR_LIB ReactAndroid::jscexecutor)
+    else()
+        find_library(
+            JSEXECUTOR_LIB
+            jscexecutor
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
+        )
+    endif()
+    target_link_libraries(${PACKAGE_NAME} ${JSEXECUTOR_LIB})
 else()
-    message(FATAL_ERROR "Unknown JS runtime")
+    message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
 endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
