@@ -8,7 +8,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
     include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
-    string(REPLACE ";" " " folly_FLAGS ${folly_FLAGS}) # input is a semicolon-separated list
+    string(REPLACE ";" " " folly_FLAGS "${folly_FLAGS}") # input is a semicolon-separated list
 else()
     set(folly_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DFOLLY_HAVE_RECVMMSG=1 -DFOLLY_HAVE_PTHREAD=1") 
 endif()
