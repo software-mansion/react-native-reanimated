@@ -13,12 +13,12 @@ export function getTag(
 
 const isNative = !shouldBeUseWeb();
 
-export let measure: (
-  animatedRef: RefObjectFunction<Component>
+export let measure: <T extends Component>(
+  animatedRef: RefObjectFunction<T>
 ) => MeasuredDimensions | null;
 
 if (isWeb()) {
-  measure = (animatedRef: RefObjectFunction<Component>) => {
+  measure = <T extends Component>(animatedRef: RefObjectFunction<T>) => {
     const element = animatedRef() as unknown as HTMLElement; // TODO: fix typing of animated refs on web
     const viewportOffset = element.getBoundingClientRect();
     return {
@@ -31,12 +31,12 @@ if (isWeb()) {
     };
   };
 } else if (isChromeDebugger()) {
-  measure = (_animatedRef: RefObjectFunction<Component>) => {
+  measure = <T extends Component>(_animatedRef: RefObjectFunction<T>) => {
     console.warn('[Reanimated] measure() cannot be used with Chrome Debugger.');
     return null;
   };
 } else {
-  measure = (animatedRef: RefObjectFunction<Component>) => {
+  measure = <T extends Component>(animatedRef: RefObjectFunction<T>) => {
     'worklet';
     if (!_WORKLET) {
       console.warn(
@@ -80,8 +80,8 @@ if (isWeb()) {
   };
 }
 
-export function dispatchCommand(
-  animatedRef: RefObjectFunction<Component>,
+export function dispatchCommand<T extends Component>(
+  animatedRef: RefObjectFunction<T>,
   commandName: string,
   args: Array<unknown>
 ): void {
@@ -93,16 +93,16 @@ export function dispatchCommand(
   _dispatchCommand(shadowNodeWrapper, commandName, args);
 }
 
-export let scrollTo: (
-  animatedRef: RefObjectFunction<Component>,
+export let scrollTo: <T extends Component>(
+  animatedRef: RefObjectFunction<T>,
   x: number,
   y: number,
   animated: boolean
 ) => void;
 
 if (isWeb()) {
-  scrollTo = (
-    animatedRef: RefObjectFunction<Component>,
+  scrollTo = <T extends Component>(
+    animatedRef: RefObjectFunction<T>,
     x: number,
     y: number,
     animated: boolean
@@ -113,8 +113,8 @@ if (isWeb()) {
     element.scrollTo({ x, y, animated });
   };
 } else if (isNative && global._IS_FABRIC) {
-  scrollTo = (
-    animatedRef: RefObjectFunction<Component>,
+  scrollTo = <T extends Component>(
+    animatedRef: RefObjectFunction<T>,
     x: number,
     y: number,
     animated: boolean
@@ -123,8 +123,8 @@ if (isWeb()) {
     dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
   };
 } else if (isNative) {
-  scrollTo = (
-    animatedRef: RefObjectFunction<Component>,
+  scrollTo = <T extends Component>(
+    animatedRef: RefObjectFunction<T>,
     x: number,
     y: number,
     animated: boolean
@@ -137,8 +137,8 @@ if (isWeb()) {
     _scrollTo(viewTag, x, y, animated);
   };
 } else {
-  scrollTo = (
-    _animatedRef: RefObjectFunction<Component>,
+  scrollTo = <T extends Component>(
+    _animatedRef: RefObjectFunction<T>,
     _x: number,
     _y: number
   ) => {
