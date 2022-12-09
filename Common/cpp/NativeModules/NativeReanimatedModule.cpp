@@ -179,8 +179,7 @@ void NativeReanimatedModule::installCoreFunctions(
   if (!runtimeHelper) {
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
-    runtimeHelper =
-        std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
+    runtimeHelper = std::make_shared<JSRuntimeHelper>(&rt, runtime, scheduler);
   }
   runtimeHelper->valueUnpacker =
       std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
@@ -188,7 +187,7 @@ void NativeReanimatedModule::installCoreFunctions(
 
 NativeReanimatedModule::~NativeReanimatedModule() {
   if (runtimeHelper) {
-    runtimeHelper->valueUnpacker = nullptr;
+    runtimeHelper->reset();
     // event handler registry and frame callbacks store some JSI values from UI
     // runtime, so they have to go away before we tear down the runtime
     eventHandlerRegistry.reset();
