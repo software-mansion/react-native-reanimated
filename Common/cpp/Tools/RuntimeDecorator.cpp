@@ -54,22 +54,6 @@ void RuntimeDecorator::decorateRuntime(
       rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
   rt.global().setProperty(rt, "_log", log);
 
-  auto setGlobalConsole = [](jsi::Runtime &rt,
-                             const jsi::Value &thisValue,
-                             const jsi::Value *args,
-                             size_t count) -> jsi::Value {
-    rt.global().setProperty(rt, "console", args[0]);
-    return jsi::Value::undefined();
-  };
-  rt.global().setProperty(
-      rt,
-      "_setGlobalConsole",
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "_setGlobalConsole"),
-          1,
-          setGlobalConsole));
-
   auto chronoNow = [](jsi::Runtime &rt,
                       const jsi::Value &thisValue,
                       const jsi::Value *args,
