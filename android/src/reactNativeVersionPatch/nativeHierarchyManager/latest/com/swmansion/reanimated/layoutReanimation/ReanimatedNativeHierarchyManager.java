@@ -118,6 +118,8 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
+      mAnimationsManager.clearAnimationConfigRecursive(view);
+      mAnimationsManager.cancelAnimationsRecursive(view);
       super.deleteView(view, listener);
       return;
     }
@@ -135,11 +137,15 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       } catch (IllegalViewOperationException e) {
         // (IllegalViewOperationException) == (vm == null)
         e.printStackTrace();
+        mAnimationsManager.clearAnimationConfigRecursive(view);
+        mAnimationsManager.cancelAnimationsRecursive(view);
         super.deleteView(view, listener);
         return;
       }
       String parentName = screenParentViewManager.getName();
       if (parentName.equals("RNSScreenStack")) {
+        mAnimationsManager.clearAnimationConfigRecursive(view);
+        mAnimationsManager.cancelAnimationsRecursive(view);
         super.deleteView(view, listener);
         return;
       }
@@ -152,6 +158,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   public boolean isLayoutAnimationEnabled() {
     maybeInit();
     return mAnimationsManager.isLayoutAnimationEnabled();
+  }
+
+  public void cancelAnimationsInSubviews(View view) {
+    mAnimationsManager.cancelAnimationsRecursive(view);
   }
 }
 
@@ -276,6 +286,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     // we don't want layout animations in native-stack since it is currently buggy there
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
+      if (indicesToRemove != null) {
+        for (int index : indicesToRemove) {
+          View child = viewGroupManager.getChildAt(viewGroup, index);
+          ((ReaLayoutAnimator) mReaLayoutAnimator).cancelAnimationsInSubviews(child);
+        }
+      }
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
       return;
     }
