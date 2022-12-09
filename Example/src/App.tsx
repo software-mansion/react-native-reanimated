@@ -8,12 +8,10 @@ import {
   Platform,
   UIManager,
   ScrollView,
+  Pressable,
 } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-import {
-  createStackNavigator,
-  StackNavigationProp,
-} from '@react-navigation/stack';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   Carousel,
@@ -273,16 +271,16 @@ export function MainScreenItem({
 }: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
-    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+    <Pressable style={styles.button} onPress={() => onPressItem(item)}>
       <Text style={styles.buttonText}>{screens[key].title || key}</Text>
-    </RectButton>
+    </Pressable>
   );
 }
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const Reanimated2 = () => (
-  <Stack.Navigator detachInactiveScreens={false}>
+  <Stack.Navigator>
     <Stack.Screen
       name="Home"
       options={{ title: '🎬 Reanimated 2.x Examples' }}
