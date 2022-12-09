@@ -14,8 +14,11 @@ export class CurvedTransition
   easingYV: EasingFn = Easing.out(Easing.ease);
   easingWidthV: EasingFn = Easing.in(Easing.exp);
   easingHeightV: EasingFn = Easing.out(Easing.exp);
-  static createInstance(): CurvedTransition {
-    return new CurvedTransition();
+
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new CurvedTransition() as InstanceType<T>;
   }
 
   static easingX(easing: EasingFn): CurvedTransition {
