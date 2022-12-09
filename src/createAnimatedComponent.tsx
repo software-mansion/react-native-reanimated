@@ -33,6 +33,7 @@ import {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   Keyframe,
+  LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
   SharedValue,
@@ -472,11 +473,16 @@ function createAnimatedComponent<P>(
           tag != null
         ) {
           enableLayoutAnimations(true, false);
-          let layout = this.props.layout ? this.props.layout : DefaultLayout;
-          let entering = this.props.entering
+          let layout: ILayoutAnimationBuilder | LayoutAnimationFunction = this
+            .props.layout
+            ? this.props.layout
+            : DefaultLayout;
+          let entering: ILayoutAnimationBuilder | LayoutAnimationFunction = this
+            .props.entering
             ? this.props.entering
             : DefaultEntering;
-          let exiting = this.props.exiting
+          let exiting: ILayoutAnimationBuilder | LayoutAnimationFunction = this
+            .props.exiting
             ? this.props.exiting
             : DefaultExiting;
 
