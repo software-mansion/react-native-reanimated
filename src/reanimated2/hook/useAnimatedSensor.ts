@@ -15,18 +15,30 @@ export type SensorConfig = {
   interval: number | 'auto';
 };
 
-export type AnimatedSensor = {
-  sensor: SensorValue3D | SensorValueRotation | null;
+export type AnimatedSensor<
+  T extends SensorValue3D | SensorValueRotation | null
+> = {
+  sensor: T;
   unregister: () => void;
   isAvailable: boolean;
   config: SensorConfig;
 };
 
 export function useAnimatedSensor(
+  sensorType: SensorType.ROTATION,
+  userConfig?: SensorConfig
+): AnimatedSensor<SensorValueRotation>;
+export function useAnimatedSensor(
+  sensorType: Exclude<SensorType, SensorType.ROTATION>,
+  userConfig?: SensorConfig
+): AnimatedSensor<SensorValue3D>;
+export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: SensorConfig
-): AnimatedSensor {
-  const ref = useRef<AnimatedSensor>({
+): AnimatedSensor<SensorValue3D | SensorValueRotation | null> {
+  const ref = useRef<
+    AnimatedSensor<SensorValue3D | SensorValueRotation | null>
+  >({
     sensor: null,
     unregister: () => {
       // NOOP
