@@ -29,6 +29,7 @@ import {
   BasicNestedAnimation,
   BasicLayoutAnimation,
   DeleteAncestorOfExiting,
+  NestedNativeStacksWithLayout,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -71,6 +72,10 @@ const SCREENS: Screens = {
   DeleteAncestorOfExiting: {
     screen: DeleteAncestorOfExiting,
     title: '🆕 Deleting view with an exiting animation',
+  },
+  NestedNativeStacksWithLayout: {
+    screen: NestedNativeStacksWithLayout,
+    title: '🆕 Nested NativeStacks with layout',
   },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
