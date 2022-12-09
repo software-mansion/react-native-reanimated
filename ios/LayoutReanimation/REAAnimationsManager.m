@@ -369,8 +369,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     NSNumber *originalIndex = indices[i];
     if ([self startAnimationsRecursive:childView shouldRemoveSubviewsWithoutAnimations:YES]) {
       [(UIView *)container insertSubview:childView atIndex:[originalIndex intValue] - skippedViewsCount];
-      [self registerExitingAncestors:childView
-                exitingSubviewsCount:[_exitingSubviewsCountMap[childView.reactTag] intValue]];
+      int exitingSubviewsCount = [_exitingSubviewsCountMap[childView.reactTag] intValue];
+      if ([_exitingViews objectForKey:childView.reactTag] != nil) {
+        exitingSubviewsCount++;
+      }
+      [self registerExitingAncestors:childView exitingSubviewsCount:exitingSubviewsCount];
     } else {
       skippedViewsCount++;
     }
