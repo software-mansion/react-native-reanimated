@@ -289,26 +289,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     // we don't want layout animations in native-stack since it is currently buggy there
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
-      if (tagsToDelete != null) {
-        List <View> rootsToRemove = new ArrayList<>();
-        for (Integer tagToDelete : tagsToDelete) {
-          View view = null;
-          try {
-            view = resolveView(tagToDelete);
-          } catch (IllegalViewOperationException e) {
-            // (IllegalViewOperationException) == (vm == null)
-            e.printStackTrace();
-            continue;
-          }
-          if (view != null) {
-            rootsToRemove.add(view);
-          }
-        }
-        AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
-        animationsManager.visitTreeForViews(rootsToRemove, false);
-        animationsManager.viewsDidRemoved();
-        animationsManager.visitTreeForViews(rootsToRemove, true);
-      }
+      maybeNotifyAboutViewsRemoving(tagsToDelete);
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
       return;
     }
@@ -361,7 +342,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         pendingTags.clear();
       }
     }
-
+    maybeNotifyAboutViewsRemoving(tagsToDelete);
     super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
@@ -370,7 +351,33 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       }
     }
     super.manageChildren(tag, null, null, tagsToDelete);
-    ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidRemoved();
+  }
+
+  private void maybeNotifyAboutViewsRemoving(int[] tagsToDelete) {
+    if (tagsToDelete != null) {
+      List <View> rootsToRemove = tagsToViews(tagsToDelete);
+      AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
+      animationsManager.visitTreeForViews(rootsToRemove, false);
+      animationsManager.viewsDidRemoved();
+      animationsManager.visitTreeForViews(rootsToRemove, true);
+    }
+  }
+
+  private List<View> tagsToViews(int[] tagsToDelete) {
+    List<View> views = new ArrayList<>();
+    for (Integer tagToDelete : tagsToDelete) {
+      View view = null;
+      try {
+        view = resolveView(tagToDelete);
+      } catch (IllegalViewOperationException e) {
+        e.printStackTrace();
+        continue;
+      }
+      if (view != null) {
+        views.add(view);
+      }
+    }
+    return views;
   }
 
   public void publicDropView(View view) {

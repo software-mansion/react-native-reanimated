@@ -71,13 +71,6 @@ public class Snapshot {
     view.getLocationOnScreen(location);
     originX = location[0];
     originY = location[1];
-    if (originX == 0 && originY == 0) {
-      // it mat happen on covered screens in stack
-      Rect rectPosition = new Rect();
-      view.getGlobalVisibleRect(rectPosition);
-      originX = rectPosition.left;
-      originY = rectPosition.top;
-    }
     width = view.getWidth();
     height = view.getHeight();
     initKeys();

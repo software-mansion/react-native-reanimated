@@ -4,6 +4,7 @@
 #import <React/RCTTextView.h>
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
+#import <objc/runtime.h>
 
 @interface SharedElement : NSObject
 - (instancetype)initWithSourceView:(UIView *)sourceView
@@ -14,6 +15,7 @@
 @property REASnapshot *sourceViewSnapshot;
 @property UIView *targetView;
 @property REASnapshot *targetViewSnapshot;
+@property UIView *targetViewParentScreen;
 @end
 
 @implementation SharedElement
@@ -21,12 +23,14 @@
                 sourceViewSnapshot:(REASnapshot *)sourceViewSnapshot
                         targetView:(UIView *)targetView
                 targetViewSnapshot:(REASnapshot *)targetViewSnapshot
+            viewTargetParentScreen:(UIView *)viewTargetParentScreen
 {
   self = [super init];
   _sourceView = sourceView;
   _sourceViewSnapshot = sourceViewSnapshot;
   _targetView = targetView;
   _targetViewSnapshot = targetViewSnapshot;
+  _targetViewParentScreen = viewTargetParentScreen;
   return self;
 }
 @end
@@ -74,6 +78,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   UIView *_transitionContainer;
   NSMutableArray<UIView *> *_unlayoutedSharedViews;
   BOOL _isSharedTransitionActive;
+  NSMutableArray<SharedElement *> *_sharedElements;
 }
 
 + (NSArray *)layoutKeys
@@ -109,6 +114,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _sharedTransitionParent = [NSMutableDictionary new];
     _sharedTransitionInParentIndex = [NSMutableDictionary new];
     _isSharedTransitionActive = NO;
+    _sharedElements = [NSArray new];
   }
   return self;
 }
@@ -459,7 +465,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
     return false;
   });
-  [self setupStaredTransitionForViews:removedView withNewElements:NO];
+  [self setupSyncSharedTransitionForViews:removedView];
   for (UIView *view in removedView) {
     self->_clearAnimationConfigForTag(view.reactTag);
   }
@@ -485,18 +491,21 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)viewsDidLayout
 {
-  [self setupStaredTransitionForViews:_unlayoutedSharedViews withNewElements:YES];
+  [self setupAsyncSharedTransitionForViews:_unlayoutedSharedViews];
   [_unlayoutedSharedViews removeAllObjects];
 }
 
-- (void)setupStaredTransitionForViews:(NSArray<UIView *> *)views withNewElements:(BOOL)withNewElements
+- (void)setupAsyncSharedTransitionForViews:(NSArray<UIView *> *)views
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
-  if (withNewElements) {
-    [self saveSharedViewsForFutureTransitions:sharedViews];
-  }
-  NSArray<SharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
-                                                                        withNewElements:withNewElements];
+  [self saveSharedViewsForFutureTransitions:sharedViews];
+  _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
+}
+
+- (void)setupSyncSharedTransitionForViews:(NSArray<UIView *> *)views
+{
+  NSArray *sharedViews = [self sortViewsByTags:views];
+  NSArray<SharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:NO];
   if ([sharedElements count] == 0) {
     return;
   }
@@ -525,23 +534,42 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (NSArray<SharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
+- (NSMutableArray<SharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
                                                    withNewElements:(BOOL)withNewElements
 {
+  NSMutableSet<NSNumber *> *viewTags = [NSMutableSet new];
+  if (!withNewElements) {
+    for (UIView *view in sharedViews) {
+      [viewTags addObject:view.reactTag];
+    }
+  }
   NSMutableArray<SharedElement *> *sharedElements = [NSMutableArray new];
   for (UIView *sharedView in sharedViews) {
     NSNumber *targetViewTag = _findTheOtherForSharedTransition(sharedView.reactTag);
+    bool bothAreRemoved = !withNewElements && [viewTags containsObject:targetViewTag];
     if (targetViewTag == nil) {
+      // the sibling of shared view doesn't exist yet
       continue;
     }
     UIView *viewSource;
     UIView *viewTarget;
+    UIView *viewTargetParentScreen = nil;
     if (withNewElements) {
       viewSource = _sharedViews[targetViewTag];
       viewTarget = sharedView;
+      viewTargetParentScreen = [self getParentScreen:viewTarget];
+      if (viewTargetParentScreen != nil) {
+        [self observeChanges:viewTargetParentScreen];
+      }
     } else {
       viewSource = sharedView;
       viewTarget = _sharedViews[targetViewTag];
+    }
+    if (bothAreRemoved) {
+      // case for nested stack
+      [self clearAllSharedConfigsForView:viewSource];
+      [self clearAllSharedConfigsForView:viewTarget];
+      continue;
     }
 
     REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] init:viewSource withParent:viewSource.superview];
@@ -555,14 +583,99 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     if (!withNewElements) {
       [_sharedViews removeObjectForKey:viewSource.reactTag];
     }
-
+    
     SharedElement *sharedElement = [[SharedElement alloc] initWithSourceView:viewSource
                                                           sourceViewSnapshot:sourceViewSnapshot
                                                                   targetView:viewTarget
-                                                          targetViewSnapshot:targetViewSnapshot];
+                                                          targetViewSnapshot:targetViewSnapshot
+                                                      viewTargetParentScreen:viewTargetParentScreen];
     [sharedElements addObject:sharedElement];
   }
   return sharedElements;
+}
+
+- (UIView *)getParentScreen:(UIView *)view
+{
+  UIView *screen = view;
+  while (![NSStringFromClass([screen class]) isEqualToString:@"RNSScreenView"] && screen.superview != nil) {
+    screen = screen.superview;
+  }
+  if ([NSStringFromClass([screen class]) isEqualToString:@"RNSScreenView"]) {
+    return screen;
+  }
+  return nil;
+}
+
+- (void)observeChanges:(UIView *)view {
+  [view addObserver:self
+           forKeyPath:@"window"
+              options:NSKeyValueObservingOptionNew
+              context:nil];
+  
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    // it replaces method for RNSScreenView class, so it can be done only once
+    Class originalClass = [view class];
+    Class class = [self class];
+    SEL originalSelector = @selector(reactSetFrame:);
+    SEL swizzledSelector = @selector(swizzled_reactSetFrame:);
+    Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
+    Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+    IMP originalImp = method_getImplementation(originalMethod);
+    IMP swizzledImp = method_getImplementation(swizzledMethod);
+    class_replaceMethod(
+      originalClass,
+      swizzledSelector,
+      originalImp,
+      method_getTypeEncoding(originalMethod)
+    );
+    class_replaceMethod(
+      originalClass,
+      originalSelector,
+      swizzledImp,
+      method_getTypeEncoding(swizzledSelector)
+    );
+  });
+}
+
+- (void)swizzled_reactSetFrame:(CGRect)frame {
+  [self swizzled_reactSetFrame:frame]; // call original method
+  [self setValue:[self valueForKey:@"window"] forKey:@"window"]; // call KVO
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSKeyValueChangeKey,id> *)change
+                       context:(void *)context {
+  [self runAsyncStaredTransition];
+}
+
+- (void)runAsyncStaredTransition
+{
+  if ([_sharedElements count] == 0) {
+    return;
+  }
+  NSMutableArray<SharedElement *> *currentSharedElements = [NSMutableArray new];
+  for (SharedElement *sharedElement in _sharedElements) {
+    if (sharedElement.targetViewParentScreen.superview == nil) {
+      // wait until screen will be attached to parent
+      continue;
+    }
+    UIView *viewTarget = sharedElement.targetView;
+    REASnapshot *targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
+    _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+    sharedElement.targetViewSnapshot = targetViewSnapshot;
+    [currentSharedElements addObject:sharedElement];
+  }
+  
+  if ([currentSharedElements count] == 0) {
+    return;
+  }
+  [self setupTransitionContainer];
+  [self reparentSharedViewsForCurrentTransition:_sharedElements];
+  [self startSharedTransition:_sharedElements];
+  [_unlayoutedSharedViews removeAllObjects];
+  [_sharedElements removeObjectsInArray:currentSharedElements];
 }
 
 - (void)setupTransitionContainer
@@ -652,6 +765,14 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setFindTheOtherForSharedTransitionBlock:(REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition
 {
   _findTheOtherForSharedTransition = findTheOtherForSharedTransition;
+}
+
+- (void)clearAllSharedConfigsForView:(UIView *)view
+{
+  NSNumber *viewTag = view.reactTag;
+  [_snapshotRegistry removeObjectForKey:viewTag];
+  [_sharedViews removeObjectForKey:viewTag];
+  _clearAnimationConfigForTag(viewTag);
 }
 
 @end
