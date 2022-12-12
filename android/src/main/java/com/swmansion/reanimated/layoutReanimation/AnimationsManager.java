@@ -23,7 +23,6 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Scheduler;
 import com.swmansion.reanimated.sharedElementTransition.SharedElement;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -605,7 +604,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     Set<Integer> viewTags = new HashSet<>();
     if (!withNewElements) {
       for (View view : sharedViews) {
-      viewTags.add(view.getId());
+        viewTags.add(view.getId());
       }
     }
     List<SharedElement> sharedElements = new ArrayList<>();
@@ -796,7 +795,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
         return;
       }
       viewGroup = (ViewGroup) view;
-      viewGroupManager = (ViewGroupManager) mReanimatedNativeHierarchyManager.resolveViewManager(tag);
+      viewGroupManager =
+          (ViewGroupManager) mReanimatedNativeHierarchyManager.resolveViewManager(tag);
     } catch (IllegalViewOperationException e) {
       return;
     }

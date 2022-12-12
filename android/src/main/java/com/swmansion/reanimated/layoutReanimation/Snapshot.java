@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.layoutReanimation;
 
-import android.graphics.Rect;
 import android.view.View;
 import android.view.ViewGroup;
 import com.facebook.react.uimanager.IllegalViewOperationException;

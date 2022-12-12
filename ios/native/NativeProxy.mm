@@ -228,7 +228,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
     // noop
   };
 

@@ -532,7 +532,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 }
 
 - (NSMutableArray<SharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
-                                                   withNewElements:(BOOL)withNewElements
+                                                          withNewElements:(BOOL)withNewElements
 {
   NSMutableSet<NSNumber *> *viewTags = [NSMutableSet new];
   if (!withNewElements) {
@@ -553,11 +553,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     if (withNewElements) {
       viewSource = _sharedViews[targetViewTag];
       viewTarget = sharedView;
-      UIView * viewTargetParentScreen = [self getParentScreen:viewTarget];
+      UIView *viewTargetParentScreen = [self getParentScreen:viewTarget];
       if (viewTargetParentScreen != nil) {
         [self observeChanges:viewTargetParentScreen];
       }
-      UIView * viewSourceParentScreen = [self getParentScreen:viewSource];
+      UIView *viewSourceParentScreen = [self getParentScreen:viewSource];
       if (viewSourceParentScreen != nil) {
         [self unobserveChanges:viewSourceParentScreen];
       }
@@ -583,7 +583,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     if (!withNewElements) {
       [_sharedViews removeObjectForKey:viewSource.reactTag];
     }
-    
+
     SharedElement *sharedElement = [[SharedElement alloc] initWithSourceView:viewSource
                                                           sourceViewSnapshot:sourceViewSnapshot
                                                                   targetView:viewTarget
@@ -605,25 +605,23 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return nil;
 }
 
-- (void)observeChanges:(UIView *)view {
-  [view addObserver:self
-         forKeyPath:@"window"
-            options:NSKeyValueObservingOptionNew
-            context:nil];
-  [view addObserver:self
-         forKeyPath:@"activityState"
-            options:NSKeyValueObservingOptionNew
-            context:nil];
-  
+- (void)observeChanges:(UIView *)view
+{
+  [view addObserver:self forKeyPath:@"window" options:NSKeyValueObservingOptionNew context:nil];
+  [view addObserver:self forKeyPath:@"activityState" options:NSKeyValueObservingOptionNew context:nil];
+
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
     [self swizzlMethod:@selector(reactSetFrame:) with:@selector(swizzled_reactSetFrame:) forClass:[view class]];
-    [self swizzlMethod:@selector(notifyWillDisappear) with:@selector(swizzled_notifyWillDisappear) forClass:[view class]];
+    [self swizzlMethod:@selector(notifyWillDisappear)
+                  with:@selector(swizzled_notifyWillDisappear)
+              forClass:[view class]];
   });
 }
 
-- (void)unobserveChanges:(UIView *)view {
+- (void)unobserveChanges:(UIView *)view
+{
   if ([view observationInfo] != nil) {
     [view removeObserver:self forKeyPath:@"window"];
     [view removeObserver:self forKeyPath:@"activityState"];
@@ -637,34 +635,28 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
   IMP originalImp = method_getImplementation(originalMethod);
   IMP swizzledImp = method_getImplementation(swizzledMethod);
-  class_replaceMethod(
-    originalClass,
-    swizzledSelector,
-    originalImp,
-    method_getTypeEncoding(originalMethod)
-  );
-  class_replaceMethod(
-    originalClass,
-    originalSelector,
-    swizzledImp,
-    method_getTypeEncoding(swizzledSelector)
-  );
+  class_replaceMethod(originalClass, swizzledSelector, originalImp, method_getTypeEncoding(originalMethod));
+  class_replaceMethod(originalClass, originalSelector, swizzledImp, method_getTypeEncoding(swizzledSelector));
 }
 
-- (void)swizzled_reactSetFrame:(CGRect)frame {
+- (void)swizzled_reactSetFrame:(CGRect)frame
+{
   [self swizzled_reactSetFrame:frame]; // call original method
   [self setValue:[self valueForKey:@"window"] forKey:@"window"]; // call KVO to run runAsyncStaredTransition
 }
 
-- (void)swizzled_notifyWillDisappear {
+- (void)swizzled_notifyWillDisappear
+{
   [self swizzled_notifyWillDisappear]; // call original method
-  [self setValue:[self valueForKey:@"activityState"] forKey:@"activityState"]; // call KVO to run runAsyncStaredTransition
+  [self setValue:[self valueForKey:@"activityState"]
+          forKey:@"activityState"]; // call KVO to run runAsyncStaredTransition
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
-                        change:(NSDictionary<NSKeyValueChangeKey,id> *)change
-                       context:(void *)context {
+                        change:(NSDictionary<NSKeyValueChangeKey, id> *)change
+                       context:(void *)context
+{
   UIView *screen = (UIView *)object;
   if ([keyPath isEqualToString:@"window"]) {
     if (screen.superview != nil) {
@@ -703,7 +695,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     sharedElement.targetViewSnapshot = targetViewSnapshot;
     [currentSharedElements addObject:sharedElement];
   }
-  
+
   if ([currentSharedElements count] == 0) {
     return;
   }
