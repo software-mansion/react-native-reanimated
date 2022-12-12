@@ -557,6 +557,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       if (viewTargetParentScreen != nil) {
         [self observeChanges:viewTargetParentScreen];
       }
+      UIView * viewSourceParentScreen = [self getParentScreen:viewSource];
+      if (viewSourceParentScreen != nil) {
+        [self unobserveChanges:viewSourceParentScreen];
+      }
     } else {
       viewSource = sharedView;
       viewTarget = _sharedViews[targetViewTag];
@@ -606,12 +610,24 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
          forKeyPath:@"window"
             options:NSKeyValueObservingOptionNew
             context:nil];
+  [view addObserver:self
+         forKeyPath:@"activityState"
+            options:NSKeyValueObservingOptionNew
+            context:nil];
   
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
     [self swizzlMethod:@selector(reactSetFrame:) with:@selector(swizzled_reactSetFrame:) forClass:[view class]];
+    [self swizzlMethod:@selector(notifyWillDisappear) with:@selector(swizzled_notifyWillDisappear) forClass:[view class]];
   });
+}
+
+- (void)unobserveChanges:(UIView *)view {
+  if ([view observationInfo] != nil) {
+    [view removeObserver:self forKeyPath:@"window"];
+    [view removeObserver:self forKeyPath:@"activityState"];
+  }
 }
 
 - (void)swizzlMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
@@ -640,14 +656,37 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [self setValue:[self valueForKey:@"window"] forKey:@"window"]; // call KVO to run runAsyncStaredTransition
 }
 
+- (void)swizzled_notifyWillDisappear {
+  [self swizzled_notifyWillDisappear]; // call original method
+  [self setValue:[self valueForKey:@"activityState"] forKey:@"activityState"]; // call KVO to run runAsyncStaredTransition
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey,id> *)change
                        context:(void *)context {
+  UIView *screen = (UIView *)object;
   if ([keyPath isEqualToString:@"window"]) {
-    if (((UIView *)object).superview != nil) {
+    if (screen.superview != nil) {
       [self runAsyncStaredTransition];
     }
+  } else if ([keyPath isEqualToString:@"activityState"]) {
+    [self runSharedTransitionForSharedViewsOnScreen:screen];
+  }
+}
+
+- (void)runSharedTransitionForSharedViewsOnScreen:(UIView *)screen
+{
+  NSMutableArray<UIView *> *removedView = [NSMutableArray new];
+  REANodeFind(screen, ^int(id<RCTComponent> view) {
+    if (self->_hasAnimationForTag(view.reactTag, @"sharedElementTransition")) {
+      [removedView addObject:(UIView *)view];
+    }
+    return false;
+  });
+  [self setupSyncSharedTransitionForViews:removedView];
+  for (UIView *view in removedView) {
+    self->_clearAnimationConfigForTag(view.reactTag);
   }
 }
 
