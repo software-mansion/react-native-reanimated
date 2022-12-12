@@ -15,7 +15,6 @@
 @property REASnapshot *sourceViewSnapshot;
 @property UIView *targetView;
 @property REASnapshot *targetViewSnapshot;
-@property UIView *targetViewParentScreen;
 @end
 
 @implementation SharedElement
@@ -23,14 +22,12 @@
                 sourceViewSnapshot:(REASnapshot *)sourceViewSnapshot
                         targetView:(UIView *)targetView
                 targetViewSnapshot:(REASnapshot *)targetViewSnapshot
-            viewTargetParentScreen:(UIView *)viewTargetParentScreen
 {
   self = [super init];
   _sourceView = sourceView;
   _sourceViewSnapshot = sourceViewSnapshot;
   _targetView = targetView;
   _targetViewSnapshot = targetViewSnapshot;
-  _targetViewParentScreen = viewTargetParentScreen;
   return self;
 }
 @end
@@ -553,11 +550,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
     UIView *viewSource;
     UIView *viewTarget;
-    UIView *viewTargetParentScreen = nil;
     if (withNewElements) {
       viewSource = _sharedViews[targetViewTag];
       viewTarget = sharedView;
-      viewTargetParentScreen = [self getParentScreen:viewTarget];
+      UIView * viewTargetParentScreen = [self getParentScreen:viewTarget];
       if (viewTargetParentScreen != nil) {
         [self observeChanges:viewTargetParentScreen];
       }
@@ -587,8 +583,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     SharedElement *sharedElement = [[SharedElement alloc] initWithSourceView:viewSource
                                                           sourceViewSnapshot:sourceViewSnapshot
                                                                   targetView:viewTarget
-                                                          targetViewSnapshot:targetViewSnapshot
-                                                      viewTargetParentScreen:viewTargetParentScreen];
+                                                          targetViewSnapshot:targetViewSnapshot];
     [sharedElements addObject:sharedElement];
   }
   return sharedElements;
@@ -608,15 +603,14 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)observeChanges:(UIView *)view {
   [view addObserver:self
-           forKeyPath:@"window"
-              options:NSKeyValueObservingOptionNew
-              context:nil];
+         forKeyPath:@"window"
+            options:NSKeyValueObservingOptionNew
+            context:nil];
   
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
     [self swizzlMethod:@selector(reactSetFrame:) with:@selector(swizzled_reactSetFrame:) forClass:[view class]];
-    // [self swizzlMethod:@selector(notifyWillDisappear) with:@selector(swizzled_notifyWillDisappear) forClass:[view class]];
   });
 }
 
@@ -643,18 +637,18 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)swizzled_reactSetFrame:(CGRect)frame {
   [self swizzled_reactSetFrame:frame]; // call original method
-  [self setValue:[self valueForKey:@"window"] forKey:@"window"]; // call KVO
-}
-
-- (void)swizzled_notifyWillDisappear {
-  [self swizzled_notifyWillDisappear]; // call original method
+  [self setValue:[self valueForKey:@"window"] forKey:@"window"]; // call KVO to run runAsyncStaredTransition
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey,id> *)change
                        context:(void *)context {
-  [self runAsyncStaredTransition];
+  if ([keyPath isEqualToString:@"window"]) {
+    if (((UIView *)object).superview != nil) {
+      [self runAsyncStaredTransition];
+    }
+  }
 }
 
 - (void)runAsyncStaredTransition
@@ -664,10 +658,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
   NSMutableArray<SharedElement *> *currentSharedElements = [NSMutableArray new];
   for (SharedElement *sharedElement in _sharedElements) {
-    if (sharedElement.targetViewParentScreen.superview == nil) {
-      // wait until screen will be attached to parent
-      continue;
-    }
     UIView *viewTarget = sharedElement.targetView;
     REASnapshot *targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
     _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
