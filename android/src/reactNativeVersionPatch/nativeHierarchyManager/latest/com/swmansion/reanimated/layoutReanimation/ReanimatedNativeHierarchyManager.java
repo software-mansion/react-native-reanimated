@@ -355,29 +355,11 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
   private void maybeNotifyAboutViewsRemoving(int[] tagsToDelete) {
     if (tagsToDelete != null) {
-      List <View> rootsToRemove = tagsToViews(tagsToDelete);
       AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
-      animationsManager.visitTreeForViews(rootsToRemove, false);
+      animationsManager.visitTreeForTags(tagsToDelete, false);
       animationsManager.viewsDidRemoved();
-      animationsManager.visitTreeForViews(rootsToRemove, true);
+      animationsManager.visitTreeForTags(tagsToDelete, true);
     }
-  }
-
-  private List<View> tagsToViews(int[] tagsToDelete) {
-    List<View> views = new ArrayList<>();
-    for (Integer tagToDelete : tagsToDelete) {
-      View view = null;
-      try {
-        view = resolveView(tagToDelete);
-      } catch (IllegalViewOperationException e) {
-        e.printStackTrace();
-        continue;
-      }
-      if (view != null) {
-        views.add(view);
-      }
-    }
-    return views;
   }
 
   public void publicDropView(View view) {

@@ -615,32 +615,39 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
-    Class originalClass = [view class];
-    Class class = [self class];
-    SEL originalSelector = @selector(reactSetFrame:);
-    SEL swizzledSelector = @selector(swizzled_reactSetFrame:);
-    Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
-    Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
-    IMP originalImp = method_getImplementation(originalMethod);
-    IMP swizzledImp = method_getImplementation(swizzledMethod);
-    class_replaceMethod(
-      originalClass,
-      swizzledSelector,
-      originalImp,
-      method_getTypeEncoding(originalMethod)
-    );
-    class_replaceMethod(
-      originalClass,
-      originalSelector,
-      swizzledImp,
-      method_getTypeEncoding(swizzledSelector)
-    );
+    [self swizzlMethod:@selector(reactSetFrame:) with:@selector(swizzled_reactSetFrame:) forClass:[view class]];
+    // [self swizzlMethod:@selector(notifyWillDisappear) with:@selector(swizzled_notifyWillDisappear) forClass:[view class]];
   });
+}
+
+- (void)swizzlMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
+{
+  Class class = [self class];
+  Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
+  Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+  IMP originalImp = method_getImplementation(originalMethod);
+  IMP swizzledImp = method_getImplementation(swizzledMethod);
+  class_replaceMethod(
+    originalClass,
+    swizzledSelector,
+    originalImp,
+    method_getTypeEncoding(originalMethod)
+  );
+  class_replaceMethod(
+    originalClass,
+    originalSelector,
+    swizzledImp,
+    method_getTypeEncoding(swizzledSelector)
+  );
 }
 
 - (void)swizzled_reactSetFrame:(CGRect)frame {
   [self swizzled_reactSetFrame:frame]; // call original method
   [self setValue:[self valueForKey:@"window"] forKey:@"window"]; // call KVO
+}
+
+- (void)swizzled_notifyWillDisappear {
+  [self swizzled_notifyWillDisappear]; // call original method
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
