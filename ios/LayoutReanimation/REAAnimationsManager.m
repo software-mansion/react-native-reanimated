@@ -5,6 +5,11 @@
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
 
+#if __has_include(<RNScreens/RNSScreen.h>)
+#import <RNScreens/RNSScreen.h>
+#import <RNScreens/RNSScreenStack.h>
+#endif
+
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
@@ -291,6 +296,17 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (!view.reactTag) {
     return NO;
   }
+
+#if __has_include(<RNScreens/RNSScreen.h>)
+  if ([view isKindOfClass:[RNSScreenStackView class]]) {
+    [self removeAnimationsFromSubtree:view];
+    for (UIView *child in [view.reactSubviews copy]) {
+      [self endAnimationsRecursive:child];
+    }
+    return NO;
+  }
+#endif
+
   BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting") || [_exitingViews objectForKey:view.reactTag];
   BOOL hasAnimatedChildren = NO;
   shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;

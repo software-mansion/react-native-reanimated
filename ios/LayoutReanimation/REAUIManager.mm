@@ -13,6 +13,7 @@
 
 #if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNScreens/RNSScreen.h>
+#import <RNScreens/RNSScreenStack.h>
 #endif
 
 @interface RCTUIManager (REA)
@@ -79,6 +80,17 @@
   if (isLayoutAnimationEnabled) {
     container = registry[containerTag];
     permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+
+#if __has_include(<RNScreens/RNSScreen.h>)
+    if ([container isKindOfClass:[RNSScreenStackView class]]) {
+      NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
+                                                                                         atIndices:removeAtIndices];
+      for (UIView *view in permanentlyRemovedChildren) {
+        [_animationsManager endAnimationsRecursive:view];
+      }
+      [_animationsManager removeAnimationsFromSubtree:(UIView *)container];
+    }
+#endif
   }
 
   [super _manageChildren:containerTag
@@ -89,21 +101,29 @@
          removeAtIndices:removeAtIndices
                 registry:registry];
 
-  if (isLayoutAnimationEnabled) {
-    // we sort the (index, view) pairs to make sure we insert views back in order
-    NSMutableArray<NSArray<id> *> *removedViewsWithIndices = [NSMutableArray new];
-    for (int i = 0; i < removeAtIndices.count; i++) {
-      removedViewsWithIndices[i] = @[ removeAtIndices[i], permanentlyRemovedChildren[i] ];
-    }
-    [removedViewsWithIndices
-        sortUsingComparator:^NSComparisonResult(NSArray<id> *_Nonnull obj1, NSArray<id> *_Nonnull obj2) {
-          return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
-        }];
-
-    [_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
-                                     toContainer:container
-                                       atIndices:removeAtIndices];
+  if (!isLayoutAnimationEnabled) {
+    return;
   }
+
+#if __has_include(<RNScreens/RNSScreen.h>)
+  if ([container isKindOfClass:[RNSScreenStackView class]]) {
+    return;
+  }
+#endif
+
+  // we sort the (index, view) pairs to make sure we insert views back in order
+  NSMutableArray<NSArray<id> *> *removedViewsWithIndices = [NSMutableArray new];
+  for (int i = 0; i < removeAtIndices.count; i++) {
+    removedViewsWithIndices[i] = @[ removeAtIndices[i], permanentlyRemovedChildren[i] ];
+  }
+  [removedViewsWithIndices
+      sortUsingComparator:^NSComparisonResult(NSArray<id> *_Nonnull obj1, NSArray<id> *_Nonnull obj2) {
+        return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
+      }];
+
+  [_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
+                                   toContainer:container
+                                     atIndices:removeAtIndices];
 }
 
 - (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag
