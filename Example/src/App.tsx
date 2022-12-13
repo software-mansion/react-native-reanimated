@@ -57,7 +57,18 @@ import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
-import { CardExample } from './SharedElementTransition';
+import { 
+  CardExample, 
+  CustomTransitionExample, 
+  GalleryExample, 
+  HeadersExample, 
+  ImageExample, 
+  LayoutAnimationExample, 
+  ManyTagsExample, 
+  MixedPropsExample, 
+  ParentMarginExample, 
+  RestoreStateExample, 
+} from './SharedElementTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -72,7 +83,43 @@ type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 const SCREENS: Screens = {
   CardExample: {
     screen: CardExample,
-    title: '⚠️ [SET] Card',
+    title: '⚠️ [SET] CardExample',
+  },
+  CustomTransitionExample: {
+    screen: CustomTransitionExample,
+    title: '⚠️ [SET] CustomTransitionExample',
+  },
+  GalleryExample: {
+    screen: GalleryExample,
+    title: '⚠️ [SET] GalleryExample',
+  },
+  HeadersExample: {
+    screen: HeadersExample,
+    title: '⚠️ [SET] HeadersExample',
+  },
+  ImageExample: {
+    screen: ImageExample,
+    title: '⚠️ [SET] ImageExample',
+  },
+  LayoutAnimationExample: {
+    screen: LayoutAnimationExample,
+    title: '⚠️ [SET] LayoutAnimationExample',
+  },
+  ManyTagsExample: {
+    screen: ManyTagsExample,
+    title: '⚠️ [SET] ManyTagsExample',
+  },
+  MixedPropsExample: {
+    screen: MixedPropsExample,
+    title: '⚠️ [SET] MixedPropsExample',
+  },
+  ParentMarginExample: {
+    screen: ParentMarginExample,
+    title: '⚠️ [SET] ParentMarginExample',
+  },
+  RestoreStateExample: {
+    screen: RestoreStateExample,
+    title: '⚠️ [SET] RestoreStateExample',
   },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,

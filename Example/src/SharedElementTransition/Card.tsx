@@ -9,7 +9,7 @@ const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-function Card({ navigation, title, transitionTag, isOpen = false }: any) {
+function Card({ navigation, title, transitionTag, isOpen = false, nextScreen }: any) {
   const goNext = (screenName: string) => {
     navigation.navigate(screenName, {
       title: title,
@@ -20,15 +20,16 @@ function Card({ navigation, title, transitionTag, isOpen = false }: any) {
   return (
     <TouchableNativeFeedback
       onPress={() => {
-        goNext(isOpen ? 'Screen1' : 'Screen2');
+        goNext(nextScreen);
       }}>
       <Animated.View
         style={
           isOpen
             ? { height: 500, marginTop: 50, backgroundColor: 'green' }
-            : { height: 120, marginTop: 20, backgroundColor: 'red' }
+            : { height: 120, marginTop: 20, backgroundColor: 'green' }
         }
-        sharedTransitionTag={transitionTag + '1'}>
+        sharedTransitionTag={transitionTag + '1'}
+        >
         <Animated.Text
           sharedTransitionTag={transitionTag + '2'}
           style={{ width: '100%', height: 20 }}>
@@ -65,6 +66,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
           navigation={navigation}
           title={'Mleko' + i}
           transitionTag={'mleko1' + i}
+          nextScreen="Screen2"
         />
       ))}
     </Animated.ScrollView>
@@ -81,6 +83,7 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
         title={title}
         transitionTag={sharedTransitionTag}
         isOpen={true}
+        nextScreen="Screen1"
       />
     </View>
   );
@@ -93,8 +96,8 @@ export function CardExample() {
         screenOptions={{
           // stackAnimation: 'fade_from_bottom',
           // stackAnimation: 'slide_from_right',
-          stackAnimation: 'fade',
-          // stackAnimation: 'none',
+          // stackAnimation: 'fade',
+          stackAnimation: 'none',
         }}>
         <Stack.Screen
           name="Screen1"
@@ -104,7 +107,7 @@ export function CardExample() {
         <Stack.Screen
           name="Screen2"
           component={Screen2}
-          options={{ headerShown: false }}
+          options={{ headerShown: true }}
         />
       </Stack.Navigator>
     // </NavigationContainer>

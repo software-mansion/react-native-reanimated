@@ -48,9 +48,9 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export default function SimpleSharedElementTransition() {
+export function MixedPropsExample() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           stackAnimation: 'none',
@@ -66,6 +66,6 @@ export default function SimpleSharedElementTransition() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    // </NavigationContainer>
   );
 }

@@ -62,9 +62,9 @@ function Screen3({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export default function SimpleSharedElementTransition() {
+export function RestoreStateExample() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
           name="Screen1"
@@ -82,6 +82,6 @@ export default function SimpleSharedElementTransition() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    // </NavigationContainer>
   );
 }

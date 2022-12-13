@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, View } from 'react-native';
+import { View, Button } from 'react-native';
 import { NavigationContainer, ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import Animated, {
@@ -61,9 +61,9 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export default function SimpleSharedElementTransition() {
+export function CustomTransitionExample() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           stackAnimation: 'none',
@@ -79,6 +79,6 @@ export default function SimpleSharedElementTransition() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    // </NavigationContainer>
   );
 }

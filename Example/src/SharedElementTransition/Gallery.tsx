@@ -153,9 +153,9 @@ function DetailsScreen({
   );
 }
 
-export default function Gallery() {
+export function GalleryExample() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -163,7 +163,7 @@ export default function Gallery() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Details" component={DetailsScreen} />
       </Stack.Navigator>
-    </NavigationContainer>
+    // </NavigationContainer>
   );
 }
 

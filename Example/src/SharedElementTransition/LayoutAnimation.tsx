@@ -70,9 +70,9 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export default function SimpleSharedElementTransition() {
+export function LayoutAnimationExample() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           stackAnimation: 'fade',
@@ -88,6 +88,6 @@ export default function SimpleSharedElementTransition() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    // </NavigationContainer>
   );
 }

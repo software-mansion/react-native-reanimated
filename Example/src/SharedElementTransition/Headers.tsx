@@ -38,9 +38,9 @@ function Screen2() {
   );
 }
 
-export default function SimpleSharedElementTransition() {
+export function HeadersExample() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           stackAnimation: 'slide_from_right',
@@ -56,6 +56,6 @@ export default function SimpleSharedElementTransition() {
           options={{ headerShown: true }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    // </NavigationContainer>
   );
 }
