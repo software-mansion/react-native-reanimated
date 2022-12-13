@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Image, TouchableNativeFeedback } from 'react-native';
 import { NavigationContainer, ParamListBase } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import Animated from 'react-native-reanimated';
 import { StackScreenProps } from '@react-navigation/stack';
 
@@ -86,14 +86,14 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export default function SimpleSharedElementTransition() {
+export function CardExample() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           // stackAnimation: 'fade_from_bottom',
           // stackAnimation: 'slide_from_right',
-          animation: 'fade',
+          stackAnimation: 'fade',
           // stackAnimation: 'none',
         }}>
         <Stack.Screen
@@ -107,6 +107,6 @@ export default function SimpleSharedElementTransition() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </NavigationContainer>
+    // </NavigationContainer>
   );
 }

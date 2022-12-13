@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, View, Image } from 'react-native';
 import { NavigationContainer, ParamListBase } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import Animated, { SlideInLeft, SlideOutLeft } from 'react-native-reanimated';
 import { StackScreenProps } from '@react-navigation/stack';
 
@@ -75,7 +75,7 @@ export default function SimpleSharedElementTransition() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          animation: 'fade',
+          stackAnimation: 'fade',
         }}>
         <Stack.Screen
           name="Screen1"

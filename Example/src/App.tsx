@@ -57,6 +57,7 @@ import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import { CardExample } from './SharedElementTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -69,6 +70,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  CardExample: {
+    screen: CardExample,
+    title: '⚠️ [SET] Card',
+  },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
     title: '🆕 Basic layout animation',

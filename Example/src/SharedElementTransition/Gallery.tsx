@@ -8,8 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, NativeStackScreenProps } from 'react-native-screens/native-stack';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 const florence = require('./assets/florence.jpg');
