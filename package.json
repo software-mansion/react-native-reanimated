@@ -123,7 +123,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.0.0-20221203-2022-3e9141569",
+    "react-native": "0.0.0-20221212-2056-0f089ea2d",
     "react-native-builder-bob": "^0.18.3",
     "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",
@@ -167,11 +167,5 @@
     "./lib/reanimated2/core",
     "./lib/reanimated2/js-reanimated/global",
     "./lib/index"
-  ],
-  "resolutions": {
-    "@react-native/codegen": "npm:react-native-codegen",
-    "@react-native/normalize-colors": "npm:@react-native/normalize-color",
-    "@react-native/gradle-plugin": "npm:react-native-gradle-plugin",
-    "@react-native/assets-registry": "npm:@react-native/assets"
-  }
+  ]
 }

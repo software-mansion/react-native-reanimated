@@ -95,25 +95,13 @@ target_include_directories(
 )
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
-    # Ideally, these headers should be distributed in prefabs.
+    # Ideally, `cxxreact/MessageQueueThread.h` should be distributed in prefab.
     # See https://github.com/reactwg/react-native-releases/discussions/41#discussioncomment-4342384.
     target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
         "${REACT_NATIVE_DIR}/ReactCommon"
-        "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
     )
-    if(${IS_NEW_ARCHITECTURE_ENABLED})
-        target_include_directories(
-            ${PACKAGE_NAME}
-            PRIVATE
-            "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni"
-            "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
-            "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
-            "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-        )
-    endif()
 else()
     file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
     target_include_directories(
@@ -151,6 +139,12 @@ if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
     set(FBJNI_LIB fbjni::fbjni)
     set(FOLLY_LIB ReactAndroid::folly_runtime)
     set(REACTNATIVEJNI_LIB ReactAndroid::reactnativejni)
+    # TODO: remove variables 
+    target_link_libraries(
+        ${PACKAGE_NAME}
+        ReactAndroid::turbomodulejsijni
+        ReactAndroid::react_nativemodule_core
+    )
 elseif()
     if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
         set (JSI_LIB "")
@@ -291,6 +285,7 @@ else()
 endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
+    # TODO: reorder
     target_link_libraries(
         ${PACKAGE_NAME}
         ReactAndroid::react_nativemodule_core
@@ -303,6 +298,9 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
         ReactAndroid::react_render_mounting
+        ReactAndroid::yoga
+        ReactAndroid::react_render_graphics
+        ReactAndroid::runtimeexecutor
     )
 endif()
 

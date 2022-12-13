@@ -533,6 +533,8 @@ android {
                 "**/libhermes-executor-debug.so",
                 "**/libhermes_executor.so",
                 "**/libreactnativejni.so",
+                "**/libturbomodulejsijni.so",
+                "**/libreact_nativemodule_core.so",
                 "**/libjscexecutor.so",
                 "**/libv8executor.so",
         ]
