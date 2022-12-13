@@ -133,78 +133,81 @@ endif()
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+target_link_libraries(
+    ${PACKAGE_NAME}
+    log
+    android
+)
+
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
-    set(JSI_LIB ReactAndroid::jsi)
-    set(GLOG_LIB ReactAndroid::glog)
-    set(FBJNI_LIB fbjni::fbjni)
-    set(FOLLY_LIB ReactAndroid::folly_runtime)
-    set(REACTNATIVEJNI_LIB ReactAndroid::reactnativejni)
-    # TODO: remove variables 
     target_link_libraries(
         ${PACKAGE_NAME}
-        ReactAndroid::turbomodulejsijni
+        ReactAndroid::folly_runtime
+        ReactAndroid::glog
+        ReactAndroid::jsi
         ReactAndroid::react_nativemodule_core
+        ReactAndroid::reactnativejni
+        ReactAndroid::turbomodulejsijni
+        fbjni::fbjni
     )
 elseif()
     if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
         set (JSI_LIB "")
     else()
         find_library(
-                JSI_LIB
-                jsi
-                PATHS ${LIBRN_DIR}
-                NO_CMAKE_FIND_ROOT_PATH
+            JSI_LIB
+            jsi
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
         )
     endif()
 
     find_library(
-            GLOG_LIB
-            glog
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
+        GLOG_LIB
+        glog
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
     )
 
     find_library(
-            FBJNI_LIB
-            fbjni
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
+        FBJNI_LIB
+        fbjni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
     )
 
     if(${REACT_NATIVE_MINOR_VERSION} LESS 69)
         find_library(
-                FOLLY_LIB
-                folly_json
-                PATHS ${LIBRN_DIR}
-                NO_CMAKE_FIND_ROOT_PATH
+            FOLLY_LIB
+            folly_json
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
         )
     else()
         find_library(
-                FOLLY_LIB
-                folly_runtime
-                PATHS ${LIBRN_DIR}
-                NO_CMAKE_FIND_ROOT_PATH
+            FOLLY_LIB
+            folly_runtime
+            PATHS ${LIBRN_DIR}
+            NO_CMAKE_FIND_ROOT_PATH
         )
     endif()
 
     find_library(
-            REACTNATIVEJNI_LIB
-            reactnativejni
-            PATHS ${LIBRN_DIR}
-            NO_CMAKE_FIND_ROOT_PATH
+        REACTNATIVEJNI_LIB
+        reactnativejni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+    )
+
+    target_link_libraries(
+        ${PACKAGE_NAME}
+        ${JSI_LIB}
+        ${GLOG_LIB}
+        ${FBJNI_LIB}
+        ${FOLLY_LIB}
+        ${REACTNATIVEJNI_LIB}
     )
 endif()
-
-target_link_libraries(
-    ${PACKAGE_NAME}
-    log
-    ${JSI_LIB}
-    ${GLOG_LIB}
-    ${FBJNI_LIB}
-    ${FOLLY_LIB}
-    ${REACTNATIVEJNI_LIB}
-    android
-)
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
@@ -285,22 +288,21 @@ else()
 endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
-    # TODO: reorder
     target_link_libraries(
         ${PACKAGE_NAME}
+        ReactAndroid::fabricjni
+        ReactAndroid::react_debug
         ReactAndroid::react_nativemodule_core
         ReactAndroid::react_render_componentregistry
         ReactAndroid::react_render_core
-        ReactAndroid::react_debug
         ReactAndroid::react_render_debug
-        ReactAndroid::rrc_view
-        ReactAndroid::fabricjni
+        ReactAndroid::react_render_graphics
+        ReactAndroid::react_render_mounting
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
-        ReactAndroid::react_render_mounting
-        ReactAndroid::yoga
-        ReactAndroid::react_render_graphics
+        ReactAndroid::rrc_view
         ReactAndroid::runtimeexecutor
+        ReactAndroid::yoga
     )
 endif()
 
