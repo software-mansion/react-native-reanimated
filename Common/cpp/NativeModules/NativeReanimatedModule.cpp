@@ -212,12 +212,12 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  frameCallbacks.push_back([=](double timestamp) {
+  auto uiRuntime = runtimeHelper->uiRuntime();
+  scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
     runtimeHelper->runOnUIGuarded(workletValue);
   });
-  maybeRequestRender();
 }
 
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
