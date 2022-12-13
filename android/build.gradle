@@ -226,8 +226,6 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
-def _stackProtectorFlag = true
-
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
     if (System.getenv("JS_RUNTIME")) {
@@ -482,7 +480,6 @@ android {
                         "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
                 abiFilters (*reactNativeArchitectures())
-                _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
         }
 
