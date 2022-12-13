@@ -79,7 +79,8 @@
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "setimmediate": "^1.0.5",
-    "string-hash-64": "^1.0.3"
+    "string-hash-64": "^1.0.3",
+    "convert-source-map": "^1.7.0"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",

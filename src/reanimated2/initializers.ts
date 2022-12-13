@@ -1,7 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { runOnUI, runOnJS } from './threads';
 
-function callGuard<T extends Array<any>, U>(
+function callGuardDEV<T extends Array<any>, U>(
   fn: (...args: T) => U,
   ...args: T
 ): void {
@@ -10,11 +10,19 @@ function callGuard<T extends Array<any>, U>(
     fn(...args);
   } catch (e) {
     if (global.ErrorUtils) {
-      global.ErrorUtils.reportFatalError(e);
+      global.ErrorUtils.reportFatalError(e as Error);
     } else {
       throw e;
     }
   }
+}
+
+function callGuard<T extends Array<any>, U>(
+  fn: (...args: T) => U,
+  ...args: T
+): void {
+  'worklet';
+  fn(...args);
 }
 
 function valueUnpacker(objectToUnpack: any, category?: string): any {
@@ -77,7 +85,8 @@ export function registerWorkletStackDetails(
 function getBundleOffset(error: Error): [string, number, number] {
   const frame = error.stack?.split('\n')?.[0];
   if (frame) {
-    const parsedFrame = /@(.*):(\d+):(\d+)/.exec(frame);
+    console.log('FRAME: ', frame);
+    const parsedFrame = /@([^@]+):(\d+):(\d+)/.exec(frame);
     if (parsedFrame) {
       const [, file, line, col] = parsedFrame;
       return [file, Number(line), Number(col)];
@@ -122,7 +131,10 @@ function reportFatalErrorOnJS({
 }
 
 export function initializeUIRuntime() {
-  NativeReanimatedModule.installCoreFunctions(callGuard, valueUnpacker);
+  NativeReanimatedModule.installCoreFunctions(
+    __DEV__ ? callGuardDEV : callGuard,
+    valueUnpacker
+  );
 
   const capturableConsole = console;
   runOnUI(() => {
