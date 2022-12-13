@@ -9,6 +9,7 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
@@ -81,14 +82,16 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 #endif
 
 #ifdef DEBUG
+  facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
   jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
       *runtime_,
       jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
       3,
-      [](jsi::Runtime &rt,
-         const jsi::Value &thisValue,
-         const jsi::Value *args,
-         size_t count) -> jsi::Value {
+      [wrappedRuntime](
+          jsi::Runtime &rt,
+          const jsi::Value &thisValue,
+          const jsi::Value *args,
+          size_t count) -> jsi::Value {
         auto code = std::make_shared<const jsi::StringBuffer>(
             args[0].asString(rt).utf8(rt));
         std::string sourceURL;
@@ -100,8 +103,8 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
           sourceMap = std::make_shared<const jsi::StringBuffer>(
               args[2].asString(rt).utf8(rt));
         }
-        return dynamic_cast<facebook::hermes::HermesRuntime &>(rt)
-            .evaluateJavaScriptWithSourceMap(code, sourceMap, sourceURL);
+        return wrappedRuntime->evaluateJavaScriptWithSourceMap(
+            code, sourceMap, sourceURL);
       });
   runtime_->global().setProperty(
       *runtime_, "evalWithSourceMap", evalWithSourceMap);

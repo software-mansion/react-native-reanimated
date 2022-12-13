@@ -383,10 +383,12 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     }
   }
 
+  const includeSourceMap = shouldGenerateSourceMap();
+
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
-    compact: !shouldGenerateSourceMap(),
-    sourceMaps: shouldGenerateSourceMap(),
+    compact: !includeSourceMap,
+    sourceMaps: includeSourceMap,
     inputSourceMap: inputMap,
     ast: false,
     babelrc: false,
@@ -394,12 +396,15 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     comments: false,
   });
 
-  const sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-  // sourcesContent field contains a full source code of the file which contains the worklet
-  // and is not needed by the source map interpreter in order to symbolicate a stack trace.
-  // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
-  // in files that contain multiple worklets. Along with sourcesContent.
-  delete sourceMap.sourcesContent;
+  let sourceMap;
+  if (includeSourceMap) {
+    sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+    // sourcesContent field contains a full source code of the file which contains the worklet
+    // and is not needed by the source map interpreter in order to symbolicate a stack trace.
+    // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
+    // in files that contain multiple worklets. Along with sourcesContent.
+    delete sourceMap.sourcesContent;
+  }
 
   return [transformed.code, JSON.stringify(sourceMap)];
 }
@@ -571,18 +576,23 @@ function makeWorklet(t, fun, state) {
         t.numericLiteral(workletHash)
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('__sourceMap'),
-          false
-        ),
-        t.stringLiteral(sourceMapString)
-      )
-    ),
   ];
+
+  if (sourceMapString) {
+    statements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__sourceMap'),
+            false
+          ),
+          t.stringLiteral(sourceMapString)
+        )
+      )
+    );
+  }
 
   if (!isRelease()) {
     statements.unshift(
