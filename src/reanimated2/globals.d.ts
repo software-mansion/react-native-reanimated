@@ -6,7 +6,6 @@ import type {
   ShareableRef,
   ShareableSyncDataHolderRef,
 } from './commonTypes';
-import type { ReanimatedConsole } from './core';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { ShadowNodeWrapper } from './hook/commonTypes';
 import { LayoutAnimationStartFunction } from './layoutReanimation';
@@ -19,7 +18,6 @@ declare global {
   const _frameTimestamp: number | null;
   const _eventTimestamp: number;
   const __reanimatedModuleProxy: NativeReanimated;
-  const _setGlobalConsole: (console?: ReanimatedConsole) => void;
   const evalWithSourceMap: (
     js: string,
     sourceURL: string,
@@ -75,6 +73,7 @@ declare global {
     reportFatalError: (error: Error) => void;
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
+  const console: Console;
 
   namespace NodeJS {
     interface Global {
@@ -84,7 +83,6 @@ declare global {
       _frameTimestamp: number | null;
       _eventTimestamp: number;
       __reanimatedModuleProxy: NativeReanimated;
-      _setGlobalConsole: (console?: ReanimatedConsole) => void;
       evalWithSourceMap: (
         js: string,
         sourceURL: string,
@@ -140,6 +138,7 @@ declare global {
       __workletsCache?: Map<string, (...args: any[]) => any>;
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
+      console: Console;
     }
   }
 }

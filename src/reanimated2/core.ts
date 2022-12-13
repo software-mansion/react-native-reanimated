@@ -17,13 +17,6 @@ export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
 export { getTimestamp } from './time';
 
-if (global._setGlobalConsole === undefined) {
-  // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
-  global._setGlobalConsole = () => {
-    // noop
-  };
-}
-
 export type ReanimatedConsole = Pick<
   Console,
   'debug' | 'log' | 'warn' | 'info' | 'error'
