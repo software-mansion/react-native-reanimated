@@ -12,7 +12,6 @@ export function registerWorkletStackDetails(
 function getBundleOffset(error: Error): [string, number, number] {
   const frame = error.stack?.split('\n')?.[0];
   if (frame) {
-    console.log('FRAME: ', frame);
     const parsedFrame = /@([^@]+):(\d+):(\d+)/.exec(frame);
     if (parsedFrame) {
       const [, file, line, col] = parsedFrame;
