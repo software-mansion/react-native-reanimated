@@ -1,4 +1,3 @@
-/* global _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import { BasicWorkletFunction, Value3D, ValueRotation } from './commonTypes';
@@ -17,13 +16,6 @@ import { LayoutAnimationFunction } from './layoutReanimation';
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
 export { getTimestamp } from './time';
-
-if (global._setGlobalConsole === undefined) {
-  // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
-  global._setGlobalConsole = () => {
-    // noop
-  };
-}
 
 export type ReanimatedConsole = Pick<
   Console,
@@ -205,14 +197,14 @@ if (!isWeb() && isConfigured()) {
   const capturableConsole = console;
   runOnUI(() => {
     'worklet';
-    const console = {
+    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
+    global.console = {
       debug: runOnJS(capturableConsole.debug),
       log: runOnJS(capturableConsole.log),
       warn: runOnJS(capturableConsole.warn),
       error: runOnJS(capturableConsole.error),
       info: runOnJS(capturableConsole.info),
     };
-    _setGlobalConsole(console);
   })();
 }
 
