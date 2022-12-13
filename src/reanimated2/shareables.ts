@@ -1,7 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { ShareableRef } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { registerWorkletStackDetails } from './initializers';
+import { registerWorkletStackDetails } from './errors';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
