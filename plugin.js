@@ -588,7 +588,7 @@ function makeWorklet(t, fun, state) {
           t.arrayExpression([
             t.newExpression(t.identifier('Error'), []),
             t.numericLiteral(lineOffset),
-            t.numericLiteral(-20), // the placement of opening bracket after Exeption in line that defined '_e' variable
+            t.numericLiteral(-20), // the placement of opening bracket after Exception in line that defined '_e' variable
           ])
         ),
       ])
