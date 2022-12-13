@@ -32,7 +32,7 @@ void RuntimeDecorator::decorateRuntime(
 
   rt.global().setProperty(rt, "global", rt.global());
 
-#ifndef NDEBUG
+#ifdef DEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
                               const jsi::Value &thisValue,
                               const jsi::Value *args,
@@ -55,7 +55,7 @@ void RuntimeDecorator::decorateRuntime(
           jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
           1,
           evalWithSourceUrl));
-#endif
+#endif // DEBUG
 
   auto callback = [](jsi::Runtime &rt,
                      const jsi::Value &thisValue,
