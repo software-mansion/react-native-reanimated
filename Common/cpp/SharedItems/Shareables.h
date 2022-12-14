@@ -91,12 +91,11 @@ class JSRuntimeHelper {
     // function directly. CallGuard provides a way of capturing exceptions in
     // JavaScript and propagating them to the main React Native thread such that
     // they can be presented using RN's LogBox.
+    jsi::Runtime &rt = *uiRuntime_;
 #ifdef DEBUG
-    callGuard->call(*uiRuntime_, function, args...);
+    callGuard->call(rt, function, args...);
 #else
-    function.asObject(*uiRuntime_)
-        .asFunction(*uiRuntime_)
-        .call(*uiRuntime_, args...);
+    function.asObject(rt).asFunction(rt).call(rt, args...);
 #endif
   }
 };
