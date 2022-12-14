@@ -64,6 +64,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAAnimationStartingBlock _startAnimationForTag;
   REAHasAnimationBlock _hasAnimationForTag;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
+  NSMutableDictionary<NSNumber *, UIView *> *_sharedViews;
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
   NSMutableSet<UIView *> *_viewToRestore;
@@ -102,6 +103,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       [_targetKeys addObject:[NSString stringWithFormat:@"target%@", [key capitalizedString]]];
       [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
     }
+    _sharedViews = [NSMutableDictionary new];
     _snapshotRegistry = [NSMutableDictionary new];
     _viewToRestore = [NSMutableSet new];
     _currentSharedTransitionViews = [NSMutableArray new];
@@ -125,6 +127,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _exitingViews = nil;
   _targetKeys = nil;
   _currentKeys = nil;
+  _sharedViews = nil;
 }
 
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation
@@ -492,6 +495,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setupAsyncSharedTransitionForViews:(NSArray<UIView *> *)views
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
+  [self saveSharedViewsForFutureTransitions:sharedViews];
   _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
 }
 
@@ -520,6 +524,13 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }];
 }
 
+- (void)saveSharedViewsForFutureTransitions:(NSArray *)sharedViews
+{
+  for (UIView *sharedView in sharedViews) {
+    _sharedViews[sharedView.reactTag] = sharedView;
+  }
+}
+
 - (NSMutableArray<SharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
                                                           withNewElements:(BOOL)withNewElements
 {
@@ -540,7 +551,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     UIView *viewSource;
     UIView *viewTarget;
     if (withNewElements) {
-      viewSource = [self viewForTag:targetViewTag];
+      viewSource = _sharedViews[targetViewTag];
       viewTarget = sharedView;
       UIView *viewTargetParentScreen = [self getParentScreen:viewTarget];
       if (viewTargetParentScreen != nil) {
@@ -552,7 +563,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       }
     } else {
       viewSource = sharedView;
-      viewTarget = [self viewForTag:targetViewTag];
+      viewTarget = _sharedViews[targetViewTag];
     }
     if (bothAreRemoved) {
       // case for nested stack
@@ -569,6 +580,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [_viewToRestore addObject:viewSource];
     [_currentSharedTransitionViews addObject:viewSource];
     [_currentSharedTransitionViews addObject:viewTarget];
+    if (!withNewElements) {
+      [_sharedViews removeObjectForKey:viewSource.reactTag];
+    }
 
     SharedElement *sharedElement = [[SharedElement alloc] initWithSourceView:viewSource
                                                           sourceViewSnapshot:sourceViewSnapshot
@@ -785,6 +799,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   NSNumber *viewTag = view.reactTag;
   [_snapshotRegistry removeObjectForKey:viewTag];
+  [_sharedViews removeObjectForKey:viewTag];
   _clearAnimationConfigForTag(viewTag);
 }
 
