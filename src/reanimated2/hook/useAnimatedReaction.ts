@@ -21,8 +21,8 @@ export function useAnimatedReaction<T>(
   const previous = useSharedValue<T | null>(null);
   if (dependencies === undefined) {
     dependencies = [
-      Object.values(prepare._closure ?? {}),
-      Object.values(react._closure ?? {}),
+      ...Object.values(prepare._closure ?? {}),
+      ...Object.values(react._closure ?? {}),
       prepare.__workletHash,
       react.__workletHash,
     ];
