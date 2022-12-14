@@ -46,7 +46,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private boolean isCatalystInstanceDestroyed;
 
   private List<View> mUnlayoutedSharedViews = new ArrayList<>();
-  private Map<Integer, View> mSharedViews = new HashMap<>();
   private Map<Integer, View> mSharedTransitionParent = new HashMap<>();
   private Map<Integer, Integer> mSharedTransitionInParentIndex = new HashMap<>();
   private boolean mIsSharedTransitionActive;
@@ -576,9 +575,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
     sortViewsByTags(sharedViews);
-    if (withNewElements) {
-      saveSharedViewsForFutureTransitions(sharedViews);
-    }
     List<SharedElement> sharedElements =
         getSharedElementForCurrentTransition(sharedViews, withNewElements);
     if (sharedElements.isEmpty()) {
@@ -591,12 +587,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private void sortViewsByTags(List<View> views) {
     Collections.sort(views, (v1, v2) -> Integer.compare(v2.getId(), v1.getId()));
-  }
-
-  private void saveSharedViewsForFutureTransitions(List<View> sharedViews) {
-    for (View sharedView : sharedViews) {
-      mSharedViews.put(sharedView.getId(), sharedView);
-    }
   }
 
   private List<SharedElement> getSharedElementForCurrentTransition(
@@ -616,11 +606,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
       View viewSource, viewTarget;
       if (withNewElements) {
-        viewSource = mSharedViews.get(targetViewTag);
+        viewSource = mReanimatedNativeHierarchyManager.resolveView(targetViewTag);
         viewTarget = sharedView;
       } else {
         viewSource = sharedView;
-        viewTarget = mSharedViews.get(targetViewTag);
+        viewTarget = mReanimatedNativeHierarchyManager.resolveView(targetViewTag);
       }
       if (withNewElements) {
         makeSnapshot(viewSource);
@@ -639,9 +629,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mViewToRestore.add(viewSource);
       mCurrentSharedTransitionViews.add(viewSource);
       mCurrentSharedTransitionViews.add(viewTarget);
-      if (!withNewElements) {
-        mSharedViews.remove(viewSource.getId());
-      }
       SharedElement sharedElement =
           new SharedElement(viewSource, sourceViewSnapshot, viewTarget, targetViewSnapshot);
       sharedElements.add(sharedElement);
@@ -812,7 +799,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private void clearAllSharedConfigsForView(View view) {
     int viewTag = view.getId();
     mSnapshotRegistry.remove(viewTag);
-    mSharedViews.remove(viewTag);
     mNativeMethodsHolder.clearAnimationConfig(viewTag);
   }
 }
