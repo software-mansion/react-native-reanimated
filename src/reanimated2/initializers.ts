@@ -2,6 +2,7 @@ import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
 import { runOnUI, runOnJS } from './threads';
 
+// callGuard is only used with debug builds
 function callGuardDEV<T extends Array<any>, U>(
   fn: (...args: T) => U,
   ...args: T
@@ -16,14 +17,6 @@ function callGuardDEV<T extends Array<any>, U>(
       throw e;
     }
   }
-}
-
-function callGuard<T extends Array<any>, U>(
-  fn: (...args: T) => U,
-  ...args: T
-): void {
-  'worklet';
-  fn(...args);
 }
 
 function valueUnpacker(objectToUnpack: any, category?: string): any {
@@ -73,10 +66,7 @@ Possible solutions are:
 }
 
 export function initializeUIRuntime() {
-  NativeReanimatedModule.installCoreFunctions(
-    __DEV__ ? callGuardDEV : callGuard,
-    valueUnpacker
-  );
+  NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);
 
   const capturableConsole = console;
   runOnUI(() => {

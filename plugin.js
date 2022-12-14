@@ -72,7 +72,6 @@ const globals = new Set([
   '_makeShareableClone',
   '_updateDataSynchronously',
   'eval',
-  'evalWithSourceMap',
   '_updatePropsPaper',
   '_updatePropsFabric',
   '_removeShadowNodeFromRegistry',

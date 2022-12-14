@@ -14,9 +14,8 @@ CoreFunction::CoreFunction(
   functionBody_ =
       workletObject.getProperty(rt, "asString").asString(rt).utf8(rt);
   location_ = "worklet_" +
-      std::to_string((unsigned long long)workletObject
-                         .getProperty(rt, "__workletHash")
-                         .getNumber());
+      std::to_string(static_cast<unsigned long long>(
+          workletObject.getProperty(rt, "__workletHash").getNumber()));
 }
 
 std::unique_ptr<jsi::Function> &CoreFunction::getFunction(jsi::Runtime &rt) {

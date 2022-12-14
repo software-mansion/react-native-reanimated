@@ -61,8 +61,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=](double timestamp) {
-      jsi::Runtime &rt = *runtimeHelper->uiRuntime();
-      runtimeHelper->callGuard->call(rt, *jsFunction, jsi::Value(timestamp));
+      runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
     });
     maybeRequestRender();
   };
@@ -216,7 +215,7 @@ void NativeReanimatedModule::scheduleOnUI(
   frameCallbacks.push_back([=](double timestamp) {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
-    runtimeHelper->callGuard->call(rt, workletValue);
+    runtimeHelper->runOnUIGuarded(workletValue);
   });
   maybeRequestRender();
 }

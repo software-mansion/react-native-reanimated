@@ -20,7 +20,29 @@ using namespace facebook;
 
 namespace reanimated {
 
-class CoreFunction;
+class JSRuntimeHelper;
+
+// Core functions are not allowed to capture outside variables, otherwise they'd
+// try to access _closure variable which is something we want to avoid for
+// simplicity reasons.
+class CoreFunction {
+ private:
+  std::unique_ptr<jsi::Function> rnFunction_;
+  std::unique_ptr<jsi::Function> uiFunction_;
+  std::string functionBody_;
+  std::string location_;
+  JSRuntimeHelper
+      *runtimeHelper_; // runtime helper holds core function references, so we
+                       // use normal pointer here to avoid ref cycles.
+  std::unique_ptr<jsi::Function> &getFunction(jsi::Runtime &rt);
+
+ public:
+  CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
+  template <typename... Args>
+  jsi::Value call(jsi::Runtime &rt, Args &&...args) {
+    return getFunction(rt)->call(rt, args...);
+  }
+};
 
 class JSRuntimeHelper {
  private:
@@ -62,27 +84,20 @@ class JSRuntimeHelper {
   void scheduleOnJS(std::function<void()> job) {
     scheduler_->scheduleOnJS(job);
   }
-};
 
-// Core functions are not allowed to capture outside variables, otherwise they'd
-// try to access _closure variable which is something we want to avoid for
-// simplicity reasons.
-class CoreFunction {
- private:
-  std::unique_ptr<jsi::Function> rnFunction_;
-  std::unique_ptr<jsi::Function> uiFunction_;
-  std::string functionBody_;
-  std::string location_;
-  JSRuntimeHelper
-      *runtimeHelper_; // runtime helper holds core function references, so we
-                       // use normal pointer here to avoid ref cycles.
-  std::unique_ptr<jsi::Function> &getFunction(jsi::Runtime &rt);
-
- public:
-  CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
   template <typename... Args>
-  jsi::Value call(jsi::Runtime &rt, Args &&...args) {
-    return getFunction(rt)->call(rt, args...);
+  inline void runOnUIGuarded(const jsi::Value &function, Args &&...args) {
+    // We only use callGuard in debug mode, otherwise we call the provided
+    // function directly. CallGuard provides a way of capturing expeptions in
+    // Javascript and propagating them to the main React Native thread such that
+    // they can be presented using RN's LogBox.
+#ifdef DEBUG
+    callGuard->call(*uiRuntime_, function, args...);
+#else
+    function.asObject(*uiRuntime_)
+        .asFunction(*uiRuntime_)
+        .call(*uiRuntime_, args...);
+#endif
   }
 };
 
