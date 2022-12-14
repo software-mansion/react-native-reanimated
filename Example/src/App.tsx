@@ -30,6 +30,7 @@ import {
   BasicNestedLayoutAnimation,
   BasicNestedAnimation,
   BasicLayoutAnimation,
+  DeleteAncestorOfExiting,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -69,6 +70,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  DeleteAncestorOfExiting: {
+    screen: DeleteAncestorOfExiting,
+    title: '🆕 Deleting view with an exiting animation',
+  },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
     title: '🆕 Basic layout animation',

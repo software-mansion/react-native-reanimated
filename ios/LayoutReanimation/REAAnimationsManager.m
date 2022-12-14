@@ -246,10 +246,16 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)registerExitingAncestors:(UIView *)child
 {
+  [self registerExitingAncestors:child exitingSubviewsCount:1];
+}
+
+- (void)registerExitingAncestors:(UIView *)child exitingSubviewsCount:(int)exitingSubviewsCount
+{
   UIView *parent = child.superview;
   while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
     if (parent.reactTag != nil) {
-      _exitingSubviewsCountMap[parent.reactTag] = @([_exitingSubviewsCountMap[parent.reactTag] intValue] + 1);
+      _exitingSubviewsCountMap[parent.reactTag] =
+          @([_exitingSubviewsCountMap[parent.reactTag] intValue] + exitingSubviewsCount);
     }
     parent = parent.superview;
   }
@@ -363,6 +369,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     NSNumber *originalIndex = indices[i];
     if ([self startAnimationsRecursive:childView shouldRemoveSubviewsWithoutAnimations:YES]) {
       [(UIView *)container insertSubview:childView atIndex:[originalIndex intValue] - skippedViewsCount];
+      int exitingSubviewsCount = [_exitingSubviewsCountMap[childView.reactTag] intValue];
+      if ([_exitingViews objectForKey:childView.reactTag] != nil) {
+        exitingSubviewsCount++;
+      }
+      [self registerExitingAncestors:childView exitingSubviewsCount:exitingSubviewsCount];
     } else {
       skippedViewsCount++;
     }
