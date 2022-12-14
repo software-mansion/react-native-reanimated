@@ -1,5 +1,5 @@
-import Animated, { SlideOutLeft } from 'react-native-reanimated';
-import { Button, StyleSheet, View, Text } from 'react-native';
+import Animated, { SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
+import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -24,7 +24,7 @@ function Second() {
       <View style={{ ...styles.container, backgroundColor: 'red' }}>
         {state && (
           <Animated.View
-            exiting={SlideOutLeft.duration(5000)}
+            exiting={SlideOutLeft.duration(3000)}
             style={{ ...styles.box, backgroundColor: 'blue' }}
           />
         )}
@@ -41,7 +41,10 @@ export function NestedNativeStacksWithLayout() {
       <Button title="Toggle" onPress={() => setVisible((prev) => !prev)} />
       {visible && (
         <>
-          <Text>HAHAHA</Text>
+          <Animated.View
+            exiting={SlideOutRight.duration(5000)}
+            style={[styles.box, { backgroundColor: 'green' }]}
+          />
           <Stack.Navigator initialRouteName="First">
             <Stack.Screen name="First" component={First} />
             <Stack.Screen name="Second" component={Second} />

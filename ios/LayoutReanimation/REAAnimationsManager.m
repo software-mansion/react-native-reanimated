@@ -36,6 +36,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAUIManager *_reaUiManager;
   NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
   NSMutableDictionary<NSNumber *, NSNumber *> *_exitingSubviewsCountMap;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_exitingParentTags;
   NSMutableSet<NSNumber *> *_ancestorsToRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
@@ -62,6 +63,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _exitingViews = [NSMutableDictionary new];
     _exitingSubviewsCountMap = [NSMutableDictionary new];
     _ancestorsToRemove = [NSMutableSet new];
+    _exitingParentTags = [NSMutableDictionary new];
 
     _targetKeys = [NSMutableArray new];
     _currentKeys = [NSMutableArray new];
@@ -256,11 +258,21 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)registerExitingAncestors:(UIView *)child exitingSubviewsCount:(int)exitingSubviewsCount
 {
+  NSNumber *childTag = child.reactTag;
   UIView *parent = child.superview;
+
+#if __has_include(<RNScreens/RNSScreen.h>)
+  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]] &&
+         ![parent isKindOfClass:[RNSScreenView class]] && ![parent isKindOfClass:[RNSScreenStackView class]]) {
+#else
   while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
-    if (parent.reactTag != nil) {
+#endif
+    NSNumber *parentTag = parent.reactTag;
+    if (parentTag != nil) {
       _exitingSubviewsCountMap[parent.reactTag] =
           @([_exitingSubviewsCountMap[parent.reactTag] intValue] + exitingSubviewsCount);
+      _exitingParentTags[childTag] = parentTag;
+      childTag = parentTag;
     }
     parent = parent.superview;
   }
@@ -269,12 +281,36 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)maybeDropAncestors:(UIView *)child
 {
   UIView *parent = child.superview;
-  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+  NSNumber *parentTag = _exitingParentTags[child.reactTag];
+  [_exitingParentTags removeObjectForKey:child.reactTag];
+  while (parentTag != nil && ![parent isKindOfClass:[RCTRootView class]]) {
     UIView *view = parent;
+    NSNumber *viewTag = parentTag;
+    parentTag = _exitingParentTags[viewTag];
+    UIView *viewByTag = [self viewForTag:viewTag];
     parent = view.superview;
+
+    if (view == nil) {
+      if (viewByTag == nil) {
+        // the view was already removed from both native and RN hierarchies
+        // we can safely forget that it had any animated children
+        [_ancestorsToRemove removeObject:viewTag];
+        [_exitingSubviewsCountMap removeObjectForKey:viewTag];
+        [_exitingParentTags removeObjectForKey:viewTag];
+        continue;
+      }
+      // the child was dettached from view, but view is still
+      // in the native and RN hierarchy
+      view = viewByTag;
+    }
+
     if (view.reactTag == nil) {
+      // we skip over views with no tag when registering parent tags,
+      // so we shouldn't go to the parent of viewTag yet
+      parentTag = viewTag;
       continue;
     }
+
     int trackingCount = [_exitingSubviewsCountMap[view.reactTag] intValue] - 1;
     if (trackingCount <= 0) {
       if ([_ancestorsToRemove containsObject:view.reactTag]) {
@@ -284,6 +320,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
         }
       }
       [_exitingSubviewsCountMap removeObjectForKey:view.reactTag];
+      [_exitingParentTags removeObjectForKey:view.reactTag];
     } else {
       _exitingSubviewsCountMap[view.reactTag] = @(trackingCount);
     }
