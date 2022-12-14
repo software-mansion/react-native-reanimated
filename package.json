@@ -123,7 +123,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.0.0-20221212-2056-0f089ea2d",
+    "react-native": "0.0.0-20221213-2027-455ca8cfa",
     "react-native-builder-bob": "^0.18.3",
     "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",

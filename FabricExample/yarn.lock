@@ -5405,10 +5405,10 @@ react-is@^17.0.1:
   version "0.0.0"
   uid ""
 
-react-native@0.0.0-20221212-2056-0f089ea2d:
-  version "0.0.0-20221212-2056-0f089ea2d"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.0.0-20221212-2056-0f089ea2d.tgz#4afcbf8eb6135d3f89f63cd7ab12e1d23203e826"
-  integrity sha512-x9OazS4tWicgN5k42H6hKTTdySS4dfayshVAfxKX3Z6tcrBebC2xx9wk0GTS5dMovsr5YhQ1bBMYKZ30B4YJpg==
+react-native@0.0.0-20221213-2027-455ca8cfa:
+  version "0.0.0-20221213-2027-455ca8cfa"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.0.0-20221213-2027-455ca8cfa.tgz#0c3c41499a757806d98bf15e9d9fbdb2cad72b9f"
+  integrity sha512-eZPpDIyREKDaJ4cjBMwV+0+PmxVhP0iaxsuIlmoc0kUY5meRMF3wJoNU2usRvuh4qGBnHQaXVFkpQaAOCjz6UA==
   dependencies:
     "@jest/create-cache-key-function" "^29.2.1"
     "@react-native-community/cli" "10.0.0"

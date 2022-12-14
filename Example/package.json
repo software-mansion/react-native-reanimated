@@ -37,7 +37,7 @@
     "expo-asset": "^8.2.0",
     "react": "18.2.0",
     "react-dom": "^16.13.1",
-    "react-native": "0.0.0-20221212-2056-0f089ea2d",
+    "react-native": "0.0.0-20221213-2027-455ca8cfa",
     "react-native-pager-view": "^5.4.1",
     "react-native-status-bar-height": "^2.4.0",
     "react-native-web": "^0.14.7"

@@ -95,7 +95,7 @@ target_include_directories(
 )
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
-    # Ideally, `cxxreact/MessageQueueThread.h` should be distributed in prefab.
+    # Ideally, `react/renderer/animations/LayoutAnimationDriver.h` should be distributed in prefab.
     # See https://github.com/reactwg/react-native-releases/discussions/41#discussioncomment-4342384.
     target_include_directories(
         ${PACKAGE_NAME}
