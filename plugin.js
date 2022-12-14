@@ -536,6 +536,12 @@ function makeWorklet(t, fun, state) {
   );
   const workletHash = hash(funString);
 
+  let location = state.file.opts.filename;
+  if (state.opts && state.opts.relativeSourceLocation) {
+    const path = require('path');
+    location = path.relative(state.cwd, location);
+  }
+
   let lineOffset = 1;
   if (closure.size > 0) {
     // When worklet captures some variables, we append closure destructing at
@@ -573,6 +579,17 @@ function makeWorklet(t, fun, state) {
           false
         ),
         t.numericLiteral(workletHash)
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__location'),
+          false
+        ),
+        t.stringLiteral(location)
       )
     ),
   ];

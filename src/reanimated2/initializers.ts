@@ -31,13 +31,32 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
   if (objectToUnpack.__workletHash) {
     let workletFun = workletsCache.get(objectToUnpack.__workletHash);
     if (workletFun === undefined) {
-      const evalFn =
-        global.evalWithSourceMap || global.evalWithSourceUrl || eval; // eslint-disable-line no-eval
-      workletFun = evalFn(
-        '(' + objectToUnpack.asString + '\n)',
-        `worklet_${objectToUnpack.__workletHash}`,
-        objectToUnpack.__sourceMap
-      ) as (...args: any[]) => any;
+      if (global.evalWithSourceMap) {
+        // if the runtime (hermes only for now) supports loading source maps
+        // we want to use the proper filename for the location as that guarantees
+        // that debugger understands and loads the source code of the file where
+        // the worklet is defined.
+        workletFun = global.evalWithSourceMap(
+          '(' + objectToUnpack.asString + '\n)',
+          objectToUnpack.__location,
+          objectToUnpack.__sourceMap
+        ) as (...args: any[]) => any;
+      } else if (global.evalWithSourceUrl) {
+        // if the runtime doesn't support loading source maps, in dev mode we
+        // can pass source url when evaluating the worklet. Now, instead of using
+        // the actual file location we use worklet hash, as it the allows us to
+        // properly symbolicate traces (see errors.ts for details)
+        workletFun = global.evalWithSourceUrl(
+          '(' + objectToUnpack.asString + '\n)',
+          `worklet_${objectToUnpack.__workletHash}`
+        ) as (...args: any[]) => any;
+      } else {
+        // in release we use the regular eval to save on JSI calls
+        // eslint-disable-next-line no-eval
+        workletFun = eval('(' + objectToUnpack.asString + '\n)') as (
+          ...args: any[]
+        ) => any;
+      }
       workletsCache.set(objectToUnpack.__workletHash, workletFun);
     }
     const functionInstance = workletFun.bind(objectToUnpack);
