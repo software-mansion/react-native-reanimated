@@ -95,12 +95,11 @@ target_include_directories(
 )
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
-    # Ideally, `react/renderer/animations/LayoutAnimationDriver.h` should be distributed in prefab.
-    # See https://github.com/reactwg/react-native-releases/discussions/41#discussioncomment-4342384.
     target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        "${REACT_NATIVE_DIR}/ReactCommon"
+        "${REACT_NATIVE_DIR}/ReactCommon" # waiting for rc.5 which includes `react/renderer/animations/LayoutAnimationDriver.h`
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni" # `ComponentRegistryResolver.h` exists in the prefab AAR but in a wrong path
     )
 else()
     file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
