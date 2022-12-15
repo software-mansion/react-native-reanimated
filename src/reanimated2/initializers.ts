@@ -33,7 +33,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     if (workletFun === undefined) {
       if (global.evalWithSourceMap) {
         // if the runtime (hermes only for now) supports loading source maps
-        // we want to use the proper filename for the location as that guarantees
+        // we want to use the proper filename for the location as it guarantees
         // that debugger understands and loads the source code of the file where
         // the worklet is defined.
         workletFun = global.evalWithSourceMap(

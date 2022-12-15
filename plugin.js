@@ -547,7 +547,7 @@ function makeWorklet(t, fun, state) {
     // When worklet captures some variables, we append closure destructing at
     // the beginning of the function body. This effectively results in line
     // numbers shifting by the number of captured variables (size of the
-    // closure) + 2 (for the opening and closing bracets of the destruct
+    // closure) + 2 (for the opening and closing brackets of the destruct
     // statement)
     lineOffset -= closure.size + 2;
   }
