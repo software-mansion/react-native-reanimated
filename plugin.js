@@ -4,6 +4,7 @@ const hash = require('string-hash-64');
 const traverse = require('@babel/traverse').default;
 const { transformSync } = require('@babel/core');
 const fs = require('fs');
+const convertSourceMap = require('convert-source-map');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -76,6 +77,7 @@ const globals = new Set([
   '_removeShadowNodeFromRegistry',
   'RegExp',
   'Error',
+  'ErrorUtils',
   'global',
   '_measure',
   '_scrollTo',
@@ -380,10 +382,12 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     }
   }
 
+  const includeSourceMap = shouldGenerateSourceMap();
+
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
-    compact: !shouldGenerateSourceMap(),
-    sourceMaps: shouldGenerateSourceMap() ? 'inline' : false,
+    compact: !includeSourceMap,
+    sourceMaps: includeSourceMap,
     inputSourceMap: inputMap,
     ast: false,
     babelrc: false,
@@ -391,7 +395,17 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     comments: false,
   });
 
-  return transformed.code;
+  let sourceMap;
+  if (includeSourceMap) {
+    sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+    // sourcesContent field contains a full source code of the file which contains the worklet
+    // and is not needed by the source map interpreter in order to symbolicate a stack trace.
+    // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
+    // in files that contain multiple worklets. Along with sourcesContent.
+    delete sourceMap.sourcesContent;
+  }
+
+  return [transformed.code, JSON.stringify(sourceMap)];
 }
 
 function makeWorkletName(t, fun) {
@@ -404,7 +418,7 @@ function makeWorkletName(t, fun) {
   if (t.isFunctionExpression(fun) && t.isIdentifier(fun.node.id)) {
     return fun.node.id.name;
   }
-  return '_f'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
 }
 
 function makeWorklet(t, fun, state) {
@@ -513,7 +527,7 @@ function makeWorklet(t, fun, state) {
     funExpression = clone;
   }
 
-  const funString = buildWorkletString(
+  const [funString, sourceMapString] = buildWorkletString(
     t,
     transformed.ast,
     variables,
@@ -528,12 +542,14 @@ function makeWorklet(t, fun, state) {
     location = path.relative(state.cwd, location);
   }
 
-  const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
-  if (loc) {
-    const { line, column } = loc;
-    if (typeof line === 'number' && typeof column === 'number') {
-      location = `${location} (${line}:${column})`;
-    }
+  let lineOffset = 1;
+  if (closure.size > 0) {
+    // When worklet captures some variables, we append closure destructing at
+    // the beginning of the function body. This effectively results in line
+    // numbers shifting by the number of captured variables (size of the
+    // closure) + 2 (for the opening and closing brackets of the destruct
+    // statement)
+    lineOffset -= closure.size + 2;
   }
 
   const statements = [
@@ -577,6 +593,50 @@ function makeWorklet(t, fun, state) {
       )
     ),
   ];
+
+  if (sourceMapString) {
+    statements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__sourceMap'),
+            false
+          ),
+          t.stringLiteral(sourceMapString)
+        )
+      )
+    );
+  }
+
+  if (!isRelease()) {
+    statements.unshift(
+      t.variableDeclaration('const', [
+        t.variableDeclarator(
+          t.identifier('_e'),
+          t.arrayExpression([
+            t.newExpression(t.identifier('Error'), []),
+            t.numericLiteral(lineOffset),
+            t.numericLiteral(-20), // the placement of opening bracket after Exception in line that defined '_e' variable
+          ])
+        ),
+      ])
+    );
+    statements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__stackDetails'),
+            false
+          ),
+          t.identifier('_e')
+        )
+      )
+    );
+  }
 
   if (options && options.optFlags) {
     statements.push(

@@ -116,7 +116,7 @@ class ReanimatedHermesRuntime
   ~ReanimatedHermesRuntime();
 
  private:
-  std::shared_ptr<facebook::hermes::HermesRuntime> runtime_;
+  std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
 };
 

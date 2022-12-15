@@ -58,8 +58,11 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction)
 #endif
 {
-  auto requestAnimationFrame = [=](FrameCallback callback) {
-    frameCallbacks.push_back(callback);
+  auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
+    auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
+    frameCallbacks.push_back([=](double timestamp) {
+      runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
+    });
     maybeRequestRender();
   };
 
@@ -174,20 +177,23 @@ NativeReanimatedModule::NativeReanimatedModule(
 
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
-    const jsi::Value &valueUnpacker,
-    const jsi::Value &layoutAnimationStartFunction) {
+    const jsi::Value &callGuard,
+    const jsi::Value &valueUnpacker) {
   if (!runtimeHelper) {
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
   }
+  runtimeHelper->callGuard =
+      std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
   runtimeHelper->valueUnpacker =
-      std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
+      std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
   if (runtimeHelper) {
+    runtimeHelper->callGuard = nullptr;
     runtimeHelper->valueUnpacker = nullptr;
     // event handler registry and frame callbacks store some JSI values from UI
     // runtime, so they have to go away before we tear down the runtime
@@ -206,11 +212,10 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  auto uiRuntime = runtimeHelper->uiRuntime();
   frameCallbacks.push_back([=](double timestamp) {
-    jsi::Runtime &rt = *uiRuntime;
+    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
-    workletValue.asObject(rt).asFunction(rt).call(rt);
+    runtimeHelper->runOnUIGuarded(workletValue);
   });
   maybeRequestRender();
 }

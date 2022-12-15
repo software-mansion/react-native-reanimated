@@ -11,7 +11,8 @@ using namespace facebook;
 
 namespace reanimated {
 
-using RequestFrameFunction = std::function<void(std::function<void(double)>)>;
+using RequestFrameFunction =
+    std::function<void(jsi::Runtime &, const jsi::Value &)>;
 using ScheduleOnJSFunction =
     std::function<void(jsi::Runtime &, const jsi::Value &, const jsi::Value &)>;
 using MakeShareableCloneFunction =
