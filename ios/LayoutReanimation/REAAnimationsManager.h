@@ -21,6 +21,7 @@ typedef void (^REAAnimationStartingBlock)(
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 typedef NSNumber *_Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber *_Nonnull tag);
+typedef int (^REATreeVisitor)(id<RCTComponent>);
 
 @interface REAAnimationsManager : NSObject
 
@@ -40,12 +41,19 @@ typedef NSNumber *_Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber 
 - (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
-- (void)restoreStateForSharedTransition;
-- (void)setNodeManager:(REANodesManager *)nodeManager;
-- (REANodesManager *)getNodeManager;
 - (void)setFindTheOtherForSharedTransitionBlock:
     (REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
 - (void)viewsDidLayout;
+- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
+                                          targetValues:(NSMutableDictionary *)targetValues;
+- (UIView *)viewForTag:(NSNumber *)tag;
+- (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type;
+- (void)clearAnimationConfigForTag:(NSNumber *)tag;
+- (void)startAnimationForTag:(NSNumber *)tag
+                        type:(NSString *)type
+                  yogaValues:(NSDictionary *)yogaValues
+                       depth:(NSNumber *)depth;
+- (void)visitTree:(UIView *)view block:(REATreeVisitor)block;
 
 @end
 
