@@ -5,7 +5,6 @@
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
-  NSMutableSet<UIView *> *_viewToRestore;
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
   NSMutableArray<UIView *> *_currentSharedTransitionViews;
   REAFindTheOtherForSharedTransitionBlock _findTheOtherForSharedTransition;
@@ -20,7 +19,6 @@
 {
   if (self = [super init]) {
     _snapshotRegistry = [NSMutableDictionary new];
-    _viewToRestore = [NSMutableSet new];
     _currentSharedTransitionViews = [NSMutableArray new];
     _addedSharedViews = [NSMutableArray new];
     _sharedTransitionParent = [NSMutableDictionary new];
@@ -34,12 +32,7 @@
 
 - (void)invalidate
 {
-  // TODO
-  //  for (NSNumber *tag in [[_exitingViews allKeys] copy]) {
-  //    [self endLayoutAnimationForTag:tag cancelled:true removeView:true];
-  //  }
   _snapshotRegistry = nil;
-  _viewToRestore = nil;
   _currentSharedTransitionViews = nil;
   _addedSharedViews = nil;
   _sharedTransitionParent = nil;
@@ -142,7 +135,6 @@
     _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
     _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
 
-    [_viewToRestore addObject:viewSource];
     [_currentSharedTransitionViews addObject:viewSource];
     [_currentSharedTransitionViews addObject:viewTarget];
 
@@ -203,15 +195,25 @@
 
 - (void)swizzled_reactSetFrame:(CGRect)frame
 {
-  [self swizzled_reactSetFrame:frame]; // call original method
-  [self setValue:[self valueForKey:@"window"] forKey:@"window"]; // call KVO to run runAsyncStaredTransition
+  /*
+    The screen header is added later than other screen children and changes their
+    position on the screen. That's why we need to make a snapshot after the header
+    mount. We don't want to add a strong dependency to the react-native-screens
+    library so we decided to use KVO from Obj-C. However, all properties of the
+    screen are updated without calling Obj-C's setters. We swizzled the method
+    `reactSetFrame` - this method is called after the appearance of the header.
+    Then we call KVO to notify Reanimated observer about the attached header.
+  */
+  [self swizzled_reactSetFrame:frame]; // call original method from react-native-screens, self == RNScreenView
+  [self setValue:[self valueForKey:@"window"]
+          forKey:@"window"]; // call KVO to run runAsyncStaredTransition from Reanimated
 }
 
 - (void)swizzled_notifyWillDisappear
 {
-  [self swizzled_notifyWillDisappear]; // call original method
+  [self swizzled_notifyWillDisappear]; // call original method from react-native-screens, self == RNScreenView
   [self setValue:[self valueForKey:@"activityState"]
-          forKey:@"activityState"]; // call KVO to run runAsyncStaredTransition
+          forKey:@"activityState"]; // call KVO to run runAsyncStaredTransition from Reanimated
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -342,7 +344,6 @@
     [_sharedTransitionParent removeAllObjects];
     [_sharedTransitionInParentIndex removeAllObjects];
     [_transitionContainer removeFromSuperview];
-    [_viewToRestore removeAllObjects];
     [_currentSharedTransitionViews removeAllObjects];
     _isSharedTransitionActive = NO;
   }
