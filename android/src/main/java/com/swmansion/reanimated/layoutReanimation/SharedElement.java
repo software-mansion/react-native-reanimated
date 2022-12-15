@@ -1,7 +1,6 @@
-package com.swmansion.reanimated.sharedElementTransition;
+package com.swmansion.reanimated.layoutReanimation;
 
 import android.view.View;
-import com.swmansion.reanimated.layoutReanimation.Snapshot;
 
 public class SharedElement {
 

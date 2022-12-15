@@ -249,7 +249,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
   RCTUIManager *reaUiManager = reaUiManagerNoCast;
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
-  [animationsManager setNodeManager:reanimatedModule.nodesManager];
   [reaUiManagerNoCast setUp:animationsManager];
 
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
