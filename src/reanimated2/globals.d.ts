@@ -73,6 +73,7 @@ declare global {
     reportFatalError: (error: Error) => void;
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
+  const requestAnimationFrame: (callback: (time: number) => void) => number;
   const console: Console;
 
   namespace NodeJS {
@@ -138,6 +139,7 @@ declare global {
       __workletsCache?: Map<string, (...args: any[]) => any>;
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
+      requestAnimationFrame: (callback: (time: number) => void) => number;
       console: Console;
     }
   }
