@@ -161,13 +161,16 @@
 
 - (void)observeChanges:(UIView *)view
 {
-  [view addObserver:self forKeyPath:@"window" options:NSKeyValueObservingOptionNew context:nil];
+  [view addObserver:self forKeyPath:@"transitionDuration" options:NSKeyValueObservingOptionNew context:nil];
   [view addObserver:self forKeyPath:@"activityState" options:NSKeyValueObservingOptionNew context:nil];
 
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
-    [self swizzlMethod:@selector(reactSetFrame:) with:@selector(swizzled_reactSetFrame:) forClass:[view class]];
+    UIViewController *viewController = [view valueForKey:@"controller"];
+    [self swizzlMethod:@selector(viewDidLayoutSubviews)
+                  with:@selector(swizzled_viewDidLayoutSubviews)
+              forClass:[viewController class]];
     [self swizzlMethod:@selector(notifyWillDisappear)
                   with:@selector(swizzled_notifyWillDisappear)
               forClass:[view class]];
@@ -177,7 +180,7 @@
 - (void)unobserveChanges:(UIView *)view
 {
   if ([view observationInfo] != nil) {
-    [view removeObserver:self forKeyPath:@"window"];
+    [view removeObserver:self forKeyPath:@"transitionDuration"];
     [view removeObserver:self forKeyPath:@"activityState"];
   }
 }
@@ -193,7 +196,7 @@
   class_replaceMethod(originalClass, originalSelector, swizzledImp, method_getTypeEncoding(swizzledSelector));
 }
 
-- (void)swizzled_reactSetFrame:(CGRect)frame
+- (void)swizzled_viewDidLayoutSubviews
 {
   /*
     The screen header is added later than other screen children and changes their
@@ -201,19 +204,25 @@
     mount. We don't want to add a strong dependency to the react-native-screens
     library so we decided to use KVO from Obj-C. However, all properties of the
     screen are updated without calling Obj-C's setters. We swizzled the method
-    `reactSetFrame` - this method is called after the appearance of the header.
+    `viewDidLayoutSubviews` - this method is called after the appearance of the header.
     Then we call KVO to notify Reanimated observer about the attached header.
   */
-  [self swizzled_reactSetFrame:frame]; // call original method from react-native-screens, self == RNScreenView
-  [self setValue:[self valueForKey:@"window"]
-          forKey:@"window"]; // call KVO to run runAsyncStaredTransition from Reanimated
+
+  // call original method from react-native-screens, self == RNScreen
+  [self swizzled_viewDidLayoutSubviews];
+  // get RNScreenView from RNScreen to call KVO on RNScreenView because
+  // RNScreen doesn't contains writable public property.
+  UIView *view = [self valueForKey:@"screenView"];
+  // call KVO to run runAsyncStaredTransition from Reanimated
+  [view setValue:[view valueForKey:@"transitionDuration"] forKey:@"transitionDuration"];
 }
 
 - (void)swizzled_notifyWillDisappear
 {
-  [self swizzled_notifyWillDisappear]; // call original method from react-native-screens, self == RNScreenView
-  [self setValue:[self valueForKey:@"activityState"]
-          forKey:@"activityState"]; // call KVO to run runAsyncStaredTransition from Reanimated
+  // call original method from react-native-screens, self == RNScreenView
+  [self swizzled_notifyWillDisappear];
+  // call KVO to run runAsyncStaredTransition from Reanimated
+  [self setValue:[self valueForKey:@"activityState"] forKey:@"activityState"];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -222,7 +231,7 @@
                        context:(void *)context
 {
   UIView *screen = (UIView *)object;
-  if ([keyPath isEqualToString:@"window"]) {
+  if ([keyPath isEqualToString:@"transitionDuration"]) {
     if (screen.superview != nil) {
       [self runAsyncStaredTransition];
     }
