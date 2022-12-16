@@ -460,15 +460,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       };
     }
 
-    if (!shouldBeUseWeb()) {
-      updaterFn = () => {
-        'worklet';
-        const style = updaterFn();
-        parseColors(style);
-        return style;
-      };
-    }
-
     if (isJest()) {
       fun = () => {
         'worklet';
