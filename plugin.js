@@ -73,7 +73,11 @@ const globals = new Set([
   '_updateDataSynchronously',
   'eval',
   '_updatePropsPaper',
+  '_updateUiPropsPaper',
+  '_updateNativePropsPaper',
   '_updatePropsFabric',
+  '_beginSection',
+  '_endSection',
   '_removeShadowNodeFromRegistry',
   'RegExp',
   'Error',
@@ -146,6 +150,7 @@ const blacklistedFunctions = new Set([
   'call',
   '__callAsync',
   'includes',
+  'has',
 ]);
 
 const possibleOptFunction = new Set(['interpolate']);

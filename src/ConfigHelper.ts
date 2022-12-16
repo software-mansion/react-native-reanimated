@@ -1,7 +1,7 @@
 import { configureProps as jsiConfigureProps } from './reanimated2/core';
 
 /**
- * Styles allowed to be direcly updated in UI thread
+ * Styles allowed to be directly updated in UI thread
  */
 let UI_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   opacity: true,

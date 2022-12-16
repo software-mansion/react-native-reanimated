@@ -195,7 +195,17 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
+  private void updateUiProps(int viewTag, ReadableMap uiProps) {
+    mNodesManager.updateUiProps(viewTag, uiProps);
+  }
+
+  @DoNotStrip
+  private void updateNativeProps(int viewTag, WritableMap nativeProps) {
+    mNodesManager.updateNativeProps(viewTag, nativeProps);
+  }
+
+  @DoNotStrip
+  private void synchronouslyUpdateUIProps(int viewTag, WritableMap uiProps) {
     mNodesManager.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 

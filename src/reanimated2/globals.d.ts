@@ -45,6 +45,16 @@ declare global {
     name: string,
     updates: StyleProps | AnimatedStyle
   ) => void;
+  const _updateUiPropsPaper: (
+    tag: number,
+    name: string,
+    updates: StyleProps | AnimatedStyle
+  ) => void;
+  const _updateNativePropsPaper: (
+    tag: number,
+    name: string,
+    updates: StyleProps | AnimatedStyle
+  ) => void;
   const _updatePropsFabric: (
     shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
@@ -75,6 +85,8 @@ declare global {
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
   const requestAnimationFrame: (callback: (time: number) => void) => number;
   const console: Console;
+  const _beginSection: (name: string) => void;
+  const _endSection: () => void;
 
   namespace NodeJS {
     interface Global {
@@ -141,6 +153,8 @@ declare global {
       __mapperRegistry?: MapperRegistry;
       requestAnimationFrame: (callback: (time: number) => void) => number;
       console: Console;
+      _beginSection: (name: string) => void;
+      _endSection: () => void;
     }
   }
 }

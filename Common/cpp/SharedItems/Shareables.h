@@ -10,6 +10,8 @@
 #include <react/renderer/uimanager/primitives.h>
 #endif
 
+#include <react/renderer/debug/SystraceSection.h>
+
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
@@ -92,7 +94,8 @@ class JSRuntimeHelper {
     // JavaScript and propagating them to the main React Native thread such that
     // they can be presented using RN's LogBox.
     jsi::Runtime &rt = *uiRuntime_;
-#ifdef DEBUG
+#if 1
+    SystraceSection s("JSI call");
     callGuard->call(rt, function, args...);
 #else
     function.asObject(rt).asFunction(rt).call(rt, args...);

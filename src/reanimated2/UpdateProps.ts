@@ -28,6 +28,105 @@ export const colorProps = [
 
 export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
+const uiPropsSet = Object.keys({
+  opacity: true,
+  transform: true,
+  /* colors */
+  backgroundColor: true,
+  borderRightColor: true,
+  borderBottomColor: true,
+  borderColor: true,
+  borderEndColor: true,
+  borderLeftColor: true,
+  borderStartColor: true,
+  borderTopColor: true,
+  /* ios styles */
+  shadowOpacity: true,
+  shadowRadius: true,
+  /* legacy android transform properties */
+  scaleX: true,
+  scaleY: true,
+  translateX: true,
+  translateY: true,
+});
+
+const nativePropsSet = Object.keys({
+  borderBottomWidth: true,
+  borderEndWidth: true,
+  borderLeftWidth: true,
+  borderRightWidth: true,
+  borderStartWidth: true,
+  borderTopWidth: true,
+  borderWidth: true,
+  bottom: true,
+  flex: true,
+  flexGrow: true,
+  flexShrink: true,
+  height: true,
+  left: true,
+  margin: true,
+  marginBottom: true,
+  marginEnd: true,
+  marginHorizontal: true,
+  marginLeft: true,
+  marginRight: true,
+  marginStart: true,
+  marginTop: true,
+  marginVertical: true,
+  maxHeight: true,
+  maxWidth: true,
+  minHeight: true,
+  minWidth: true,
+  padding: true,
+  paddingBottom: true,
+  paddingEnd: true,
+  paddingHorizontal: true,
+  paddingLeft: true,
+  paddingRight: true,
+  paddingStart: true,
+  paddingTop: true,
+  paddingVertical: true,
+  right: true,
+  start: true,
+  top: true,
+  width: true,
+  zIndex: true,
+  borderBottomEndRadius: true,
+  borderBottomLeftRadius: true,
+  borderBottomRightRadius: true,
+  borderBottomStartRadius: true,
+  borderRadius: true,
+  borderTopEndRadius: true,
+  borderTopLeftRadius: true,
+  borderTopRightRadius: true,
+  borderTopStartRadius: true,
+  elevation: true,
+  fontSize: true,
+  lineHeight: true,
+  textShadowRadius: true,
+  letterSpacing: true,
+  /* strings */
+  display: true,
+  backfaceVisibility: true,
+  overflow: true,
+  resizeMode: true,
+  fontStyle: true,
+  fontWeight: true,
+  textAlign: true,
+  textDecorationLine: true,
+  fontFamily: true,
+  textAlignVertical: true,
+  fontVariant: true,
+  textDecorationStyle: true,
+  textTransform: true,
+  writingDirection: true,
+  /* text color */
+  color: true,
+  tintColor: true,
+  shadowColor: true,
+  placeholderTextColor: true,
+});
+
 let updatePropsByPlatform;
 if (shouldBeUseWeb()) {
   updatePropsByPlatform = (
@@ -69,13 +168,44 @@ if (shouldBeUseWeb()) {
     ): void => {
       'worklet';
 
+      if (_WORKLET) _beginSection('UpdateProps processColor');
       for (const key in updates) {
         if (ColorProperties.indexOf(key) !== -1) {
+          if (_WORKLET) _beginSection('processColor');
           updates[key] = processColor(updates[key]);
+          if (_WORKLET) _endSection();
         }
       }
+      if (_WORKLET) _endSection();
+
+      if (_WORKLET) _beginSection('check props');
+      let hasNativeProps = false;
+      let hasJsProps = false;
+      for (const key of Object.keys(updates)) {
+        if (uiPropsSet.includes(key)) {
+          // do nothing
+        } else if (nativePropsSet.includes(key)) {
+          hasNativeProps = true;
+        } else {
+          hasJsProps = true;
+        }
+      }
+      if (_WORKLET) _endSection();
+
+      let nativeUpdatePropsFunction: typeof _updatePropsPaper;
+      if (!hasNativeProps && !hasJsProps) {
+        // only UI props
+        nativeUpdatePropsFunction = _updateUiPropsPaper;
+      } else if (!hasJsProps) {
+        // only UI or native props
+        nativeUpdatePropsFunction = _updateNativePropsPaper;
+      } else {
+        // has JS props, use general implementation
+        nativeUpdatePropsFunction = _updatePropsPaper;
+      }
+
       viewDescriptors.value.forEach((viewDescriptor) => {
-        _updatePropsPaper(
+        nativeUpdatePropsFunction(
           viewDescriptor.tag,
           viewDescriptor.name || 'RCTView',
           updates

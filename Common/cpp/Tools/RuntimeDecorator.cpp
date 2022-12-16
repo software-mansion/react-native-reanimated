@@ -1,10 +1,14 @@
 #include "RuntimeDecorator.h"
+#include <android/trace.h>
 #include <jsi/instrumentation.h>
+#include <react/renderer/debug/SystraceSection.h>
 #include <chrono>
 #include <memory>
 #include <unordered_map>
 #include <utility>
 #include "ReanimatedHiddenHeaders.h"
+
+using namespace facebook::react;
 
 namespace reanimated {
 
@@ -103,6 +107,8 @@ void RuntimeDecorator::decorateRuntime(
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
     const UpdatePropsFunction updateProps,
+    const UpdateUiPropsFunction updateUiProps,
+    const UpdateNativePropsFunction updateNativeProps,
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
     const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
@@ -181,15 +187,53 @@ void RuntimeDecorator::decorateUIRuntime(
                  const jsi::Value &thisValue,
                  const jsi::Value *args,
                  const size_t count) -> jsi::Value {
+    SystraceSection s("_updatePropsPaper");
     const auto viewTag = args[0].asNumber();
-    const jsi::Value *viewName = &args[1];
+    const auto &viewName = args[1];
     const auto params = args[2].asObject(rt);
-    updateProps(rt, viewTag, *viewName, params);
+    updateProps(rt, viewTag, viewName, params);
     return jsi::Value::undefined();
   };
   jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_updatePropsPaper"), 3, clb);
   rt.global().setProperty(rt, "_updatePropsPaper", updatePropsHostFunction);
+
+  auto clbb = [updateUiProps](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    SystraceSection s("_updateUiPropsPaper");
+    const auto viewTag = args[0].asNumber();
+    const auto &viewName = args[1];
+    const auto &uiProps = args[2];
+    updateUiProps(rt, viewTag, viewName, uiProps);
+    return jsi::Value::undefined();
+  };
+  jsi::Value updateUiPropsHostFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_updateUiPropsPaper"), 2, clbb);
+  rt.global().setProperty(rt, "_updateUiPropsPaper", updateUiPropsHostFunction);
+
+  auto clbbb = [updateNativeProps](
+                   jsi::Runtime &rt,
+                   const jsi::Value &thisValue,
+                   const jsi::Value *args,
+                   const size_t count) -> jsi::Value {
+    SystraceSection s("_updateNativePropsPaper");
+    const auto viewTag = args[0].asNumber();
+    const auto &viewName = args[1];
+    const auto &nativeProps = args[2];
+    updateNativeProps(rt, viewTag, viewName, nativeProps);
+    return jsi::Value::undefined();
+  };
+  jsi::Value updateNativePropsHostFunction =
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_updateNativePropsPaper"),
+          2,
+          clbbb);
+  rt.global().setProperty(
+      rt, "_updateNativePropsPaper", updateNativePropsHostFunction);
 
   auto _scrollTo = [scrollTo](
                        jsi::Runtime &rt,
@@ -279,6 +323,7 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
+    SystraceSection s("_getCurrentTime");
     return getCurrentTime();
   };
   jsi::Value timeFun = jsi::Function::createFromHostFunction(
@@ -327,6 +372,28 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi::Value setGestureStateFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_setGestureState"), 2, clb9);
   rt.global().setProperty(rt, "_setGestureState", setGestureStateFunction);
+
+  auto clb10 = [](jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    ATrace_beginSection(args[0].asString(rt).utf8(rt).c_str());
+    return jsi::Value::undefined();
+  };
+  jsi::Value fun10 = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_beginSection"), 1, clb10);
+  rt.global().setProperty(rt, "_beginSection", fun10);
+
+  auto clb11 = [](jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    ATrace_endSection();
+    return jsi::Value::undefined();
+  };
+  jsi::Value fun11 = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_endSection"), 0, clb11);
+  rt.global().setProperty(rt, "_endSection", fun11);
 }
 
 } // namespace reanimated

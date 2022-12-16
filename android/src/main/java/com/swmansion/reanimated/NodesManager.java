@@ -26,6 +26,7 @@ import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.systrace.Systrace;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -184,6 +185,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void performOperations() {
+    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "performOperations");
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       mNativeProxy.performOperations();
     } else if (!mOperationsInBatch.isEmpty()) {
@@ -228,9 +230,12 @@ public class NodesManager implements EventDispatcherListener {
         }
       }
     }
+    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
+    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
+
     currentFrameTimeMs = frameTimeNanos / 1000000.;
 
     while (!mEventQueue.isEmpty()) {
@@ -254,6 +259,8 @@ public class NodesManager implements EventDispatcherListener {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }
+
+    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
   public void enqueueUpdateViewOnNativeThread(
@@ -326,6 +333,8 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void updateProps(int viewTag, Map<String, Object> props) {
+    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateProps");
+
     // TODO: update PropsNode to use this method instead of its own way of updating props
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
@@ -364,6 +373,24 @@ public class NodesManager implements EventDispatcherListener {
         sendEvent("onReanimatedPropsChange", evt);
       }
     }
+
+    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+  }
+
+  public void updateUiProps(int viewTag, ReadableMap uiProps) {
+    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateUiProps");
+    if (viewTag != View.NO_ID) {
+      mUIImplementation.synchronouslyUpdateViewOnUIThread(viewTag, new ReactStylesDiffMap(uiProps));
+    }
+    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+  }
+
+  public void updateNativeProps(int viewTag, WritableMap nativeProps) {
+    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateNativeProps");
+    if (viewTag != View.NO_ID) {
+      enqueueUpdateViewOnNativeThread(viewTag, nativeProps, true);
+    }
+    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
   public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {

@@ -188,10 +188,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void installJSIBindings(
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<JFabricUIManager::javaobject> fabricUIManager);
-  void synchronouslyUpdateUIProps(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const jsi::Value &uiProps);
 #else
   void installJSIBindings(
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
@@ -215,9 +211,17 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       std::function<void(int, int)> keyboardEventDataUpdater);
   void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+  void synchronouslyUpdateUIProps(
+      jsi::Runtime &rt,
+      Tag viewTag,
+      const jsi::Value &uiProps);
 #else
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
+  void updateUiProps(jsi::Runtime &rt, int viewTag, const jsi::Value &uiProps);
+  void updateNativeProps(
+      jsi::Runtime &rt,
+      int viewTag,
+      const jsi::Value &nativeProps);
   void scrollTo(int viewTag, double x, double y, bool animated);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif

@@ -448,7 +448,7 @@ apply plugin: "de.undercouch.download"
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
     defaultConfig {
-        minSdkVersion safeExtGet("minSdkVersion", 16)
+        minSdkVersion safeExtGet("minSdkVersion", 23)
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
         versionCode 1
         versionName "1.0"

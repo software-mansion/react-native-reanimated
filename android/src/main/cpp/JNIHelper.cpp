@@ -1,5 +1,7 @@
 #include "JNIHelper.h"
 
+#include <react/renderer/debug/SystraceSection.h>
+
 namespace reanimated {
 
 using namespace facebook::jni;
@@ -23,6 +25,7 @@ void JNIHelper::PropsMap::put(
 jni::local_ref<JNIHelper::PropsMap> JNIHelper::ConvertToPropsMap(
     jsi::Runtime &rt,
     const jsi::Object &props) {
+  SystraceSection s("JNIHelper::ConvertToPropsMap");
   auto map = PropsMap::create();
 
   auto propNames = props.getPropertyNames(rt);

@@ -10,7 +10,9 @@ function callGuardDEV<T extends Array<any>, U>(
 ): void {
   'worklet';
   try {
+    if (_WORKLET) _beginSection('callGuardDEV ' + fn.name);
     fn(...args);
+    if (_WORKLET) _endSection();
   } catch (e) {
     if (global.ErrorUtils) {
       global.ErrorUtils.reportFatalError(e as Error);

@@ -5,6 +5,8 @@
 #include <react/renderer/uimanager/primitives.h>
 #endif
 
+#include <react/renderer/debug/SystraceSection.h>
+
 #include <functional>
 #include <memory>
 #include <thread>
@@ -59,8 +61,10 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
 {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
+    SystraceSection s("requestAnimationFrame");
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=](double timestamp) {
+      SystraceSection s("animationFrame");
       runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
     });
     maybeRequestRender();
@@ -146,6 +150,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       dispatchCommand,
 #else
       platformDepMethodsHolder.updatePropsFunction,
+      platformDepMethodsHolder.updateUiPropsFunction,
+      platformDepMethodsHolder.updateNativePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
 #endif
@@ -168,6 +174,9 @@ NativeReanimatedModule::NativeReanimatedModule(
   // nothing
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
+  updateUiPropsFunction = platformDepMethodsHolder.updateUiPropsFunction;
+  updateNativePropsFunction =
+      platformDepMethodsHolder.updateNativePropsFunction;
 #endif
   subscribeForKeyboardEventsFunction =
       platformDepMethodsHolder.subscribeForKeyboardEvents;

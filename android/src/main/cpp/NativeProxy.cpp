@@ -120,6 +120,24 @@ void NativeProxy::installJSIBindings(
     this->updateProps(rt, viewTag, props);
   };
 
+  auto updateUiPropsFunction = [this](
+                                   jsi::Runtime &rt,
+                                   int viewTag,
+                                   const jsi::Value &viewName,
+                                   const jsi::Value &uiProps) {
+    // viewName is for iOS only, we skip it here
+    this->updateUiProps(rt, viewTag, uiProps);
+  };
+
+  auto updateNativePropsFunction = [this](
+                                       jsi::Runtime &rt,
+                                       int viewTag,
+                                       const jsi::Value &viewName,
+                                       const jsi::Value &nativeProps) {
+    // viewName is for iOS only, we skip it here
+    this->updateNativeProps(rt, viewTag, nativeProps);
+  };
+
   auto measureFunction =
       [this](int viewTag) -> std::vector<std::pair<std::string, double>> {
     return measure(viewTag);
@@ -256,6 +274,8 @@ void NativeProxy::installJSIBindings(
       synchronouslyUpdateUIPropsFunction,
 #else
       updatePropsFunction,
+      updateUiPropsFunction,
+      updateNativePropsFunction,
       scrollToFunction,
       measureFunction,
       configurePropsFunction,
@@ -423,6 +443,16 @@ void NativeProxy::registerEventHandler(
       EventHandler::newObjectCxxArgs(std::move(handler)).get());
 }
 
+inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
+    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
+  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
+}
+
+inline jni::local_ref<WritableMap::javaobject> castWritableMap(
+    jni::local_ref<WritableNativeMap::javaobject> const &nativeMap) {
+  return make_local(reinterpret_cast<WritableMap::javaobject>(nativeMap.get()));
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -430,11 +460,42 @@ void NativeProxy::updateProps(
     jsi::Runtime &rt,
     int viewTag,
     const jsi::Object &props) {
-  auto method = javaPart_->getClass()
-                    ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-                        "updateProps");
+  SystraceSection s("NativeProxy::updateProps");
+  static const auto method =
+      javaPart_->getClass()
+          ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+              "updateProps");
   method(
       javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+}
+
+void NativeProxy::updateUiProps(
+    jsi::Runtime &rt,
+    int viewTag,
+    const jsi::Value &uiProps) {
+  SystraceSection s("NativeProxy::updateUiProps");
+  static const auto method =
+      javaPart_->getClass()
+          ->getMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
+              "updateUiProps");
+  jni::local_ref<ReadableMap::javaobject> javaUiProps = castReadableMap(
+      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps)));
+  method(javaPart_.get(), viewTag, javaUiProps);
+}
+
+void NativeProxy::updateNativeProps(
+    jsi::Runtime &rt,
+    int viewTag,
+    const jsi::Value &nativeProps) {
+  SystraceSection s("NativeProxy::updateNativeProps");
+  static const auto method =
+      javaPart_->getClass()
+          ->getMethod<void(int, jni::local_ref<WritableMap::javaobject>)>(
+              "updateNativeProps");
+  jni::local_ref<WritableMap::javaobject> javaNativeProps =
+      castWritableMap(WritableNativeMap::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, nativeProps)));
+  method(javaPart_.get(), viewTag, javaNativeProps);
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
@@ -466,11 +527,6 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
-inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
-    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
-  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
-}
-
 void NativeProxy::synchronouslyUpdateUIProps(
     jsi::Runtime &rt,
     Tag tag,
