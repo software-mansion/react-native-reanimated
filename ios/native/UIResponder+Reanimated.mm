@@ -16,7 +16,7 @@ typedef JSCExecutorFactory ExecutorFactory;
 #ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DONT_AUTOINSTALL_REANIMATED
 
-@implementation UIResponder (Reanimated)
+@implementation NSObject (Reanimated)
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
   const auto installer = reanimated::REAJSIExecutorRuntimeInstaller(bridge, NULL);

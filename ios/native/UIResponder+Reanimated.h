@@ -4,7 +4,7 @@
 #ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DONT_AUTOINSTALL_REANIMATED
 
-@interface UIResponder (Reanimated) <RCTCxxBridgeDelegate>
+@interface NSObject (Reanimated) <RCTCxxBridgeDelegate>
 
 @end
 
