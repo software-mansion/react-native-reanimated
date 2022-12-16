@@ -1,5 +1,6 @@
 import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
+import { isJest } from './PlatformChecker';
 import { runOnUI, runOnJS } from './threads';
 
 // callGuard is only used with debug builds
@@ -87,6 +88,8 @@ Possible solutions are:
 export function initializeUIRuntime() {
   NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);
 
+  const IS_JEST = isJest();
+
   const capturableConsole = console;
   runOnUI(() => {
     'worklet';
@@ -109,5 +112,32 @@ export function initializeUIRuntime() {
       error: runOnJS(capturableConsole.error),
       info: runOnJS(capturableConsole.info),
     };
+
+    if (!IS_JEST) {
+      // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
+      // so we avoid doing requestAnimationFrame batching in Jest environment.
+      const nativeRequestAnimationFrame = global.requestAnimationFrame;
+      let callbacks: Array<(time: number) => void> = [];
+      global.requestAnimationFrame = (
+        callback: (timestamp: number) => void
+      ): number => {
+        callbacks.push(callback);
+        if (callbacks.length === 1) {
+          // We schedule native requestAnimationFrame only when the first callback
+          // is added and then use it to execute all the enqueued callbacks. Once
+          // the callbacks are run, we clear the array.
+          nativeRequestAnimationFrame((timestamp) => {
+            const currentCallbacks = callbacks;
+            callbacks = [];
+            currentCallbacks.forEach((f) => f(timestamp));
+          });
+        }
+        // Reanimated currently does not support cancelling calbacks requested with
+        // requestAnimationFrame. We return -1 as identifier which isn't in line
+        // with the spec but it should give users better clue in case they actually
+        // attempt to store the value returned from rAF and use it for cancelling.
+        return -1;
+      };
+    }
   })();
 }
