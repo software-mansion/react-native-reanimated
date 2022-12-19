@@ -2,6 +2,10 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
 
+#if __has_include(<RNScreens/RNSScreen.h>)
+#import <RNScreens/RNSScreen.h>
+#endif
+
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
@@ -15,7 +19,7 @@
   REAAnimationsManager *_animationManager;
 }
 
-- (instancetype)init:(REAAnimationsManager *)animationManager
+- (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager
 {
   if (self = [super init]) {
     _snapshotRegistry = [NSMutableDictionary new];
@@ -79,13 +83,7 @@
 - (NSArray *)sortViewsByTags:(NSArray *)views
 {
   return [views sortedArrayUsingComparator:^NSComparisonResult(UIView *view1, UIView *view2) {
-    if ([view1.reactTag intValue] > [view2.reactTag intValue]) {
-      return (NSComparisonResult)NSOrderedAscending;
-    }
-    if ([view1.reactTag intValue] < [view2.reactTag intValue]) {
-      return (NSComparisonResult)NSOrderedDescending;
-    }
-    return (NSComparisonResult)NSOrderedSame;
+    return [view2.reactTag compare:view1.reactTag];
   }];
 }
 
@@ -149,13 +147,15 @@
 
 - (UIView *)getParentScreen:(UIView *)view
 {
+#if __has_include(<RNScreens/RNSScreen.h>)
   UIView *screen = view;
-  while (![NSStringFromClass([screen class]) isEqualToString:@"RNSScreenView"] && screen.superview != nil) {
+  while (![screen isKindOfClass:[RNSScreenView class]] && screen.superview != nil) {
     screen = screen.superview;
   }
-  if ([NSStringFromClass([screen class]) isEqualToString:@"RNSScreenView"]) {
+  if ([screen isKindOfClass:[RNSScreenView class]]) {
     return screen;
   }
+#endif
   return nil;
 }
 
@@ -213,7 +213,7 @@
   // get RNScreenView from RNScreen to call KVO on RNScreenView because
   // RNScreen doesn't contains writable public property.
   UIView *view = [self valueForKey:@"screenView"];
-  // call KVO to run runAsyncStaredTransition from Reanimated
+  // call KVO to run runAsyncSharedTransition from Reanimated
   [view setValue:[view valueForKey:@"transitionDuration"] forKey:@"transitionDuration"];
 }
 
@@ -221,7 +221,7 @@
 {
   // call original method from react-native-screens, self == RNScreenView
   [self swizzled_notifyWillDisappear];
-  // call KVO to run runAsyncStaredTransition from Reanimated
+  // call KVO to run runAsyncSharedTransition from Reanimated
   [self setValue:[self valueForKey:@"activityState"] forKey:@"activityState"];
 }
 
@@ -233,7 +233,7 @@
   UIView *screen = (UIView *)object;
   if ([keyPath isEqualToString:@"transitionDuration"]) {
     if (screen.superview != nil) {
-      [self runAsyncStaredTransition];
+      [self runAsyncSharedTransition];
     }
   } else if ([keyPath isEqualToString:@"activityState"]) {
     [self runSharedTransitionForSharedViewsOnScreen:screen];
@@ -257,7 +257,7 @@
   }
 }
 
-- (void)runAsyncStaredTransition
+- (void)runAsyncSharedTransition
 {
   if ([_sharedElements count] == 0) {
     return;

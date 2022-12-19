@@ -110,7 +110,7 @@ export class NativeReanimated {
   configureLayoutAnimation(
     viewTag: number,
     type: string,
-    sharedTransitionTag = '',
+    sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ) {
     this.InnerNativeModule.configureLayoutAnimation(

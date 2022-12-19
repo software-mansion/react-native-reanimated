@@ -18,6 +18,7 @@ import java.util.Set;
 
 public class SharedTransitionManager {
   private final AnimationsManager mAnimationsManager;
+  private NativeMethodsHolder mNativeMethodsHolder;
   private final List<View> mAddedSharedViews = new ArrayList<>();
   private final Map<Integer, View> mSharedTransitionParent = new HashMap<>();
   private final Map<Integer, Integer> mSharedTransitionInParentIndex = new HashMap<>();
@@ -44,19 +45,23 @@ public class SharedTransitionManager {
   }
 
   protected void viewsDidLayout() {
-    setupStaredTransitionForViews(mAddedSharedViews, true);
+    setupSharedTransitionForViews(mAddedSharedViews, true);
     mAddedSharedViews.clear();
   }
 
   protected void viewsDidRemoved() {
-    setupStaredTransitionForViews(mRemovedSharedViews, false);
+    setupSharedTransitionForViews(mRemovedSharedViews, false);
     for (View removedSharedView : mRemovedSharedViews) {
       visitTree(removedSharedView.getId(), true);
     }
     mRemovedSharedViews.clear();
   }
 
-  private void setupStaredTransitionForViews(List<View> sharedViews, boolean withNewElements) {
+  protected void setNativeMethods(NativeMethodsHolder nativeMethods) {
+    mNativeMethodsHolder = nativeMethods;
+  }
+
+  private void setupSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
     if (sharedViews.isEmpty()) {
       return;
     }
@@ -87,10 +92,7 @@ public class SharedTransitionManager {
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
         mAnimationsManager.getReanimatedNativeHierarchyManager();
     for (View sharedView : sharedViews) {
-      int targetViewTag =
-          mAnimationsManager
-              .getNativeMethodsHolder()
-              .findTheOtherForSharedTransition(sharedView.getId());
+      int targetViewTag = mNativeMethodsHolder.findTheOtherForSharedTransition(sharedView.getId());
       boolean bothAreRemoved = !withNewElements && viewTags.contains(targetViewTag);
       if (targetViewTag < 0) {
         continue;
@@ -183,9 +185,7 @@ public class SharedTransitionManager {
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    mAnimationsManager
-        .getNativeMethodsHolder()
-        .startAnimation(view.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimation(view.getId(), "sharedElementTransition", preparedValues);
   }
 
   protected void finishSharedAnimation(int tag) {
@@ -258,7 +258,7 @@ public class SharedTransitionManager {
         makeSnapshot(view);
       }
       if (clearConfig) {
-        mAnimationsManager.getNativeMethodsHolder().clearAnimationConfig(tag);
+        mNativeMethodsHolder.clearAnimationConfig(tag);
       }
 
       if (!(view instanceof ViewGroup)) {
@@ -282,6 +282,6 @@ public class SharedTransitionManager {
   private void clearAllSharedConfigsForView(View view) {
     int viewTag = view.getId();
     mSnapshotRegistry.remove(viewTag);
-    mAnimationsManager.getNativeMethodsHolder().clearAnimationConfig(viewTag);
+    mNativeMethodsHolder.clearAnimationConfig(viewTag);
   }
 }

@@ -1,4 +1,5 @@
 #include "LayoutAnimationsManager.h"
+#include "CollectionUtils.h"
 #include "Shareables.h"
 
 #include <utility>
@@ -19,10 +20,7 @@ void LayoutAnimationsManager::configureAnimation(
     layoutAnimations_[tag] = config;
   } else if (type == "sharedElementTransition") {
     sharedTransitionAnimations_[tag] = config;
-    if (sharedTransitionGroups_.find(sharedTransitionTag) ==
-        sharedTransitionGroups_.end()) {
-      sharedTransitionGroups_[sharedTransitionTag] = std::vector<int>();
-    }
+    sharedTransitionGroups_.try_emplace(sharedTransitionTag);
     auto &group = sharedTransitionGroups_[sharedTransitionTag];
     if (group.size() < 2) {
       group.push_back(tag);
@@ -39,14 +37,13 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     const std::string &type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == "entering") {
-    return enteringAnimations_.find(tag) != enteringAnimations_.end();
+    return collection::mapContains(enteringAnimations_, tag);
   } else if (type == "exiting") {
-    return exitingAnimations_.find(tag) != exitingAnimations_.end();
+    return collection::mapContains(exitingAnimations_, tag);
   } else if (type == "layout") {
-    return layoutAnimations_.find(tag) != layoutAnimations_.end();
+    return collection::mapContains(layoutAnimations_, tag);
   } else if (type == "sharedElementTransition") {
-    return sharedTransitionAnimations_.find(tag) !=
-        sharedTransitionAnimations_.end();
+    return collection::mapContains(sharedTransitionAnimations_, tag);
   }
   return false;
 }
@@ -59,17 +56,9 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
 
   sharedTransitionAnimations_.erase(tag);
   for (auto &[key, group] : sharedTransitionGroups_) {
-    bool isCurrentGroupMember = false;
-    int indexInGroup;
-    for (indexInGroup = 0; indexInGroup < group.size(); indexInGroup++) {
-      if (group[indexInGroup] == tag) {
-        isCurrentGroupMember = true;
-        break;
-      }
-    }
-    if (isCurrentGroupMember) {
-      group.erase(group.begin() + indexInGroup);
-      break;
+    auto position = std::find(group.begin(), group.end(), tag);
+    if (position != group.end()) {
+      group.erase(position);
     }
   }
 }
@@ -112,17 +101,12 @@ void LayoutAnimationsManager::startLayoutAnimation(
 int LayoutAnimationsManager::findTheOtherForSharedTransition(int tag) {
   int theOtherTag = -1;
   for (auto const &[key, group] : sharedTransitionGroups_) {
-    bool isCurrentGroupMember = false;
-    int indexInGroup;
-    for (indexInGroup = 0; indexInGroup < group.size(); indexInGroup++) {
-      if (group[indexInGroup] == tag) {
-        isCurrentGroupMember = true;
-        break;
+    auto position = std::find(group.begin(), group.end(), tag);
+    if (position != group.end()) {
+      int index = position - group.begin();
+      if (index > 0) {
+        return group[index - 1]; // get one before
       }
-    }
-    if (isCurrentGroupMember && indexInGroup > 0) {
-      theOtherTag = group[indexInGroup - 1];
-      break;
     }
   }
   return theOtherTag;

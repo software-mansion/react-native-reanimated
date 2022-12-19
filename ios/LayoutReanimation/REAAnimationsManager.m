@@ -67,7 +67,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       [_targetKeys addObject:[NSString stringWithFormat:@"target%@", [key capitalizedString]]];
       [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
     }
-    _sharedTransitionManager = [[REASharedTransitionManager new] init:self];
+    _sharedTransitionManager = [[REASharedTransitionManager alloc] initWithAnimationsManager:self];
   }
   return self;
 }

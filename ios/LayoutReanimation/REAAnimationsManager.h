@@ -32,6 +32,8 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle
                                   forTag:(NSNumber *_Nonnull)tag
                       isSharedTransition:(BOOL)isSharedTransition;
+- (void)setFindTheOtherForSharedTransitionBlock:
+    (REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
@@ -41,8 +43,6 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
 - (void)removeChildren:(NSArray<UIView *> *)children fromContainer:(UIView *)container;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
-- (void)setFindTheOtherForSharedTransitionBlock:
-    (REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
 - (void)viewsDidLayout;
 - (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues;

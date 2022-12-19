@@ -244,6 +244,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void setNativeMethods(NativeMethodsHolder nativeMethods) {
     mNativeMethodsHolder = nativeMethods;
+    mSharedTransitionManager.setNativeMethods(nativeMethods);
   }
 
   public void setNewProps(
@@ -378,7 +379,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else {
       if (convertFromAbsolute) {
         Point newPoint = new Point(x, y);
-        Point convertedPoint = convertPoint(newPoint, (View) viewToUpdate.getParent());
+        Point convertedPoint =
+            convertRelativePointToScreenLocation(newPoint, (View) viewToUpdate.getParent());
         x = convertedPoint.x;
         y = convertedPoint.y;
       }
@@ -528,7 +530,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return mUIManager.resolveView(tag);
     } catch (IllegalViewOperationException e) {
       // view has been removed already
-      //      e.printStackTrace();
+      e.printStackTrace();
       return null;
     }
   }
@@ -537,12 +539,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     try {
       return mReanimatedNativeHierarchyManager.resolveViewManager(tag);
     } catch (Exception e) {
-      //      e.printStackTrace();
+      e.printStackTrace();
       return null;
     }
   }
 
-  private Point convertPoint(Point fromPoint, View parentView) {
+  private Point convertRelativePointToScreenLocation(Point fromPoint, View parentView) {
     int[] toCord = {0, 0};
     if (parentView != null) {
       parentView.getLocationOnScreen(toCord);

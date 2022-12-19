@@ -42,8 +42,24 @@ public class Snapshot {
   public int globalOriginX;
   public int globalOriginY;
 
-  public static ArrayList<String> targetKeysToTransform;
-  public static ArrayList<String> currentKeysToTransform;
+  public static ArrayList<String> targetKeysToTransform =
+          new ArrayList<>(
+              Arrays.asList(
+                  Snapshot.TARGET_WIDTH,
+                  Snapshot.TARGET_HEIGHT,
+                  Snapshot.TARGET_ORIGIN_X,
+                  Snapshot.TARGET_ORIGIN_Y,
+                  Snapshot.TARGET_GLOBAL_ORIGIN_X,
+                  Snapshot.TARGET_GLOBAL_ORIGIN_Y));
+  public static ArrayList<String> currentKeysToTransform =
+          new ArrayList<>(
+              Arrays.asList(
+                  Snapshot.CURRENT_WIDTH,
+                  Snapshot.CURRENT_HEIGHT,
+                  Snapshot.CURRENT_ORIGIN_X,
+                  Snapshot.CURRENT_ORIGIN_Y,
+                  Snapshot.CURRENT_GLOBAL_ORIGIN_X,
+                  Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
 
   Snapshot(View view, NativeViewHierarchyManager viewHierarchyManager) {
     parent = (ViewGroup) view.getParent();
@@ -62,7 +78,6 @@ public class Snapshot {
     view.getLocationOnScreen(location);
     globalOriginX = location[0];
     globalOriginY = location[1];
-    initKeys();
   }
 
   public Snapshot(View view) {
@@ -72,30 +87,6 @@ public class Snapshot {
     originY = location[1];
     width = view.getWidth();
     height = view.getHeight();
-    initKeys();
-  }
-
-  private void initKeys() {
-    if (targetKeysToTransform == null || currentKeysToTransform == null) {
-      targetKeysToTransform =
-          new ArrayList<>(
-              Arrays.asList(
-                  Snapshot.TARGET_WIDTH,
-                  Snapshot.TARGET_HEIGHT,
-                  Snapshot.TARGET_ORIGIN_X,
-                  Snapshot.TARGET_ORIGIN_Y,
-                  Snapshot.TARGET_GLOBAL_ORIGIN_X,
-                  Snapshot.TARGET_GLOBAL_ORIGIN_Y));
-      currentKeysToTransform =
-          new ArrayList<>(
-              Arrays.asList(
-                  Snapshot.CURRENT_WIDTH,
-                  Snapshot.CURRENT_HEIGHT,
-                  Snapshot.CURRENT_ORIGIN_X,
-                  Snapshot.CURRENT_ORIGIN_Y,
-                  Snapshot.CURRENT_GLOBAL_ORIGIN_X,
-                  Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
-    }
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
