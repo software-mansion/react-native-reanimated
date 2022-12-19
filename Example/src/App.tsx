@@ -58,6 +58,7 @@ import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import InvertedFlatListExample from './InvertedFlatListExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -229,6 +230,10 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
+  },
+  InvertedFlatListExample: {
+    screen: InvertedFlatListExample,
+    title: 'Inverted FlatList Example',
   },
 };
 
