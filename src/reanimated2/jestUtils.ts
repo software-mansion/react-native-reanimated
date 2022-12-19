@@ -1,7 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { jestResetJsReanimatedModule } from './core';
-
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
@@ -139,62 +137,57 @@ const compareStyle = (received, expectedStyle, config) => {
 };
 
 let frameTime = 1000 / config.fps;
-let requestAnimationFrameCopy;
-let currentTimestamp = 0;
-
-const requestAnimationFrame = (callback) => {
-  setTimeout(callback, frameTime);
-};
 
 const beforeTest = () => {
-  jestResetJsReanimatedModule();
-  requestAnimationFrameCopy = global.requestAnimationFrame;
-  global.requestAnimationFrame = requestAnimationFrame;
-  global.ReanimatedDataMock = {
-    now: () => currentTimestamp,
-  };
-  currentTimestamp = 0;
   jest.useFakeTimers();
 };
 
 const afterTest = () => {
+  jest.runOnlyPendingTimers();
   jest.useRealTimers();
-  global.requestAnimationFrame = requestAnimationFrameCopy;
-};
-
-const tickTravel = () => {
-  currentTimestamp += frameTime;
-  jest.advanceTimersByTime(frameTime);
 };
 
 export const withReanimatedTimer = (animationTest) => {
+  console.warn(
+    'This method is deprecated, you shoulddefine your own before and after test hooks to enable jest.useFakeTimers(). Check out the documentation for details on testing'
+  );
   beforeTest();
   animationTest();
   afterTest();
 };
 
 export const advanceAnimationByTime = (time = frameTime) => {
-  for (let i = 0; i <= Math.ceil(time / frameTime); i++) {
-    tickTravel();
-  }
-  jest.advanceTimersByTime(frameTime);
+  console.warn(
+    'This method is deprecated, use jest.advanceTimersByTime directly'
+  );
+  jest.advanceTimersByTime(time);
+  jest.runOnlyPendingTimers();
 };
 
 export const advanceAnimationByFrame = (count) => {
-  for (let i = 0; i <= count; i++) {
-    tickTravel();
-  }
-  jest.advanceTimersByTime(frameTime);
+  console.warn(
+    'This method is deprecated, use jest.advanceTimersByTime directly'
+  );
+  jest.advanceTimersByTime(count * frameTime);
+  jest.runOnlyPendingTimers();
 };
 
 export const setUpTests = (userConfig = {}) => {
-  let expect;
-  try {
-    expect = require('expect');
-  } catch (_) {
-    // for Jest in version 28+
-    const { expect: expectModule } = require('@jest/globals');
+  let expect = global.expect;
+  if (expect === undefined) {
+    const expectModule = require('expect');
     expect = expectModule;
+    // Starting from Jest 28, "expect" package uses named exports instead of default export.
+    // So, requiring "expect" package doesn't give direct access to "expect" function anymore.
+    // It gives access to the module object instead.
+    // We use this info to detect if the project uses Jest 28 or higher.
+    if (typeof expect === 'object') {
+      const jestGlobals = require('@jest/globals');
+      expect = jestGlobals.expect;
+    }
+    if (expect === undefined || expect.extend === undefined) {
+      expect = expectModule.default;
+    }
   }
 
   require('setimmediate');

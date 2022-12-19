@@ -1,0 +1,31 @@
+name: Test build on Windows
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/build-on-windows.yml'
+      - 'android/**'
+      - 'Common/**'
+      - package.json
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+    concurrency:
+      group: build-on-windows-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      - name: Create React Native App
+        run: npx react-native init App
+      - name: Install Reanimated
+        working-directory: App
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Build Android App
+        working-directory: App/android
+        run: ./gradlew assembleDebug --console=plain

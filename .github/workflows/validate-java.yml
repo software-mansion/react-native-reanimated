@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'android/src/main/java/**'
+      - 'android/build.gradle'
   push:
     branches:
       - main
@@ -10,7 +11,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     concurrency:
-      group: static-root-${{ github.ref }}
+      group: validate-java-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout

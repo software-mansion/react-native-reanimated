@@ -1,6 +1,12 @@
 #import <RNReanimated/REAInitializer.h>
 #import <RNReanimated/REAUIManager.h>
 
+#ifdef REANIMATED_VERSION
+#define STRINGIZE(x) #x
+#define STRINGIZE2(x) STRINGIZE(x)
+#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
+#endif // REANIMATED_VERSION
+
 @interface RCTEventDispatcher (Reanimated)
 
 - (void)setBridge:(RCTBridge *)bridge;
@@ -24,7 +30,7 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
 
   [bridge moduleForClass:[RCTEventDispatcher class]];
   RCTEventDispatcher *eventDispatcher = [REAEventDispatcher new];
-#if RNVERSION >= 66
+#if REACT_NATIVE_MINOR_VERSION >= 66
   RCTCallableJSModules *callableJSModules = [RCTCallableJSModules new];
   [bridge setValue:callableJSModules forKey:@"_callableJSModules"];
   [callableJSModules setBridge:bridge];
@@ -39,7 +45,7 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     if (!bridge) {
       return;
     }
-#if RNVERSION >= 63
+#if REACT_NATIVE_MINOR_VERSION >= 63
     auto reanimatedModule = reanimated::createReanimatedModule(bridge, bridge.jsCallInvoker);
 #else
     auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
@@ -57,6 +63,9 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
     runtime.global().setProperty(runtime, "_IS_FABRIC", false);
+
+    auto version = jsi::String::createFromUtf8(runtime, REANIMATED_VERSION_STRING);
+    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
 
     runtime.global().setProperty(
         runtime,

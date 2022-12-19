@@ -25,6 +25,12 @@ import {
   SpringLayoutAnimation,
   SwipeableList,
   NativeModals,
+  NestedTest,
+  CombinedTest,
+  BasicNestedLayoutAnimation,
+  BasicNestedAnimation,
+  BasicLayoutAnimation,
+  DeleteAncestorOfExiting,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -51,6 +57,8 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import InvertedFlatListExample from './InvertedFlatListExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -63,6 +71,30 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  DeleteAncestorOfExiting: {
+    screen: DeleteAncestorOfExiting,
+    title: '🆕 Deleting view with an exiting animation',
+  },
+  BasicLayoutAnimation: {
+    screen: BasicLayoutAnimation,
+    title: '🆕 Basic layout animation',
+  },
+  BasicNestedAnimation: {
+    screen: BasicNestedAnimation,
+    title: '🆕 Basic nested animation',
+  },
+  BasicNestedLayoutAnimation: {
+    screen: BasicNestedLayoutAnimation,
+    title: '🆕 Basic nested layout animation',
+  },
+  NestedLayoutAnimations: {
+    screen: NestedTest,
+    title: '🆕 Nested layout animations',
+  },
+  CombinedLayoutAnimations: {
+    screen: CombinedTest,
+    title: '🆕 Entering and Exiting with Layout',
+  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
@@ -159,6 +191,10 @@ const SCREENS: Screens = {
     screen: ScrollEventExample,
     title: 'Scroll Events',
   },
+  ScrollViewOffsetExample: {
+    screen: ScrollViewOffsetExample,
+    title: 'ScrollView offset',
+  },
   ChatHeadsExample: {
     screen: ChatHeadsExample,
     title: 'Chat Heads',
@@ -194,6 +230,10 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
+  },
+  InvertedFlatListExample: {
+    screen: InvertedFlatListExample,
+    title: 'Inverted FlatList Example',
   },
 };
 
