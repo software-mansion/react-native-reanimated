@@ -95,12 +95,7 @@ target_include_directories(
 )
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
-    target_include_directories(
-        ${PACKAGE_NAME}
-        PRIVATE
-        "${REACT_NATIVE_DIR}/ReactCommon" # waiting for rc.5 which includes `react/renderer/animations/LayoutAnimationDriver.h`
-        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni" # `ComponentRegistryResolver.h` exists in the prefab AAR but in a wrong path
-    )
+    # TODO: use target_include_directories instead of target_link_libraries
 else()
     file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
     target_include_directories(
@@ -292,6 +287,7 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ReactAndroid::fabricjni
         ReactAndroid::react_debug
         ReactAndroid::react_nativemodule_core
+        ReactAndroid::react_render_animations
         ReactAndroid::react_render_componentregistry
         ReactAndroid::react_render_core
         ReactAndroid::react_render_debug

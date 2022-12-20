@@ -2,8 +2,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #ifdef ANDROID
-#include <Binding.h>
 #include <fbjni/fbjni.h>
+#include <react/fabric/Binding.h>
 #endif
 #include <react/renderer/uimanager/UIManager.h>
 

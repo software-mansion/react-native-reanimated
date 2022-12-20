@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <JFabricUIManager.h>
+#include <react/fabric/JFabricUIManager.h>
 #endif
 
 #include <ReactCommon/CallInvokerHolder.h>
