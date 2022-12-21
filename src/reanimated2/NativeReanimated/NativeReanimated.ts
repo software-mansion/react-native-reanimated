@@ -47,8 +47,17 @@ export class NativeReanimated {
     throw new Error('stub implementation, used on the web only');
   }
 
-  installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
-    return this.InnerNativeModule.installCoreFunctions(valueUnpacker);
+  installCoreFunctions(
+    callGuard: <T extends Array<any>, U>(
+      fn: (...args: T) => U,
+      ...args: T
+    ) => void,
+    valueUnpacker: <T>(value: T) => T
+  ): void {
+    return this.InnerNativeModule.installCoreFunctions(
+      callGuard,
+      valueUnpacker
+    );
   }
 
   makeShareableClone<T>(value: T): ShareableRef<T> {

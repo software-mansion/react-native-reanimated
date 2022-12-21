@@ -503,4 +503,60 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
+
+  it('supports SequenceExpression', () => {
+    const input = `
+    function App(){
+      (0, fun)({ onStart() {} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, with objectHook', () => {
+    const input = `
+    function App(){
+      (0, useAnimatedGestureHandler)({ onStart() {} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, with worklet', () => {
+    const input = `
+    function App(){
+      (0, fun)({ onStart() {'worklet'} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, many arguments', () => {
+    const input = `
+    function App(){
+      (0, 3, fun)({ onStart() {'worklet'} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, with worklet closure', () => {
+    const input = `
+    function App(){
+      const obj = {a: 1, b: 2};
+      (0, fun)({ onStart() {'worklet'; const a = obj.a;} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
 });

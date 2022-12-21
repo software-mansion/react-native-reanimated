@@ -30,6 +30,7 @@ import {
   BasicNestedLayoutAnimation,
   BasicNestedAnimation,
   BasicLayoutAnimation,
+  DeleteAncestorOfExiting,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -57,6 +58,7 @@ import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import InvertedFlatListExample from './InvertedFlatListExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -69,6 +71,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  DeleteAncestorOfExiting: {
+    screen: DeleteAncestorOfExiting,
+    title: '🆕 Deleting view with an exiting animation',
+  },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
     title: '🆕 Basic layout animation',
@@ -224,6 +230,10 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
+  },
+  InvertedFlatListExample: {
+    screen: InvertedFlatListExample,
+    title: 'Inverted FlatList Example',
   },
 };
 

@@ -1,14 +1,11 @@
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
-import { LogBox } from 'react-native';
 import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
 import {
   LayoutAnimationFunction,
   LayoutAnimationsValues,
 } from './animationBuilder';
-
-LogBox.ignoreLogs(['Overriding previous layout animation with']);
 
 const TAG_OFFSET = 1e9;
 

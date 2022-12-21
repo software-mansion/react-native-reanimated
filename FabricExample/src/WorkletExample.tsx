@@ -16,6 +16,7 @@ import { Button, Text, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
+  GestureHandlerRootView,
   PanGestureHandler,
 } from 'react-native-gesture-handler';
 
@@ -181,11 +182,13 @@ function ThrowErrorFromGestureDetectorDemo() {
   });
 
   return (
-    <GestureDetector gesture={gesture}>
-      <View style={{ width: 100, height: 100, backgroundColor: 'tomato' }}>
-        <Text>GestureDetector</Text>
-      </View>
-    </GestureDetector>
+    <GestureHandlerRootView>
+      <GestureDetector gesture={gesture}>
+        <View style={{ width: 100, height: 100, backgroundColor: 'tomato' }}>
+          <Text>GestureDetector</Text>
+        </View>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
 }
 
@@ -197,12 +200,14 @@ function ThrowErrorFromUseAnimatedGestureHandlerDemo() {
   });
 
   return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
-      <Animated.View
-        style={{ width: 100, height: 100, backgroundColor: 'gold' }}>
-        <Text>PanGestureHandler + useAnimatedGestureHandler</Text>
-      </Animated.View>
-    </PanGestureHandler>
+    <GestureHandlerRootView>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View
+          style={{ width: 100, height: 100, backgroundColor: 'gold' }}>
+          <Text>PanGestureHandler + useAnimatedGestureHandler</Text>
+        </Animated.View>
+      </PanGestureHandler>
+    </GestureHandlerRootView>
   );
 }
 
