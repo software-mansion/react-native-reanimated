@@ -53,12 +53,6 @@ RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding);
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
     const UIManager *uiManager);
 
-LayoutMetrics UIManager_getRelativeLayoutMetrics(
-    const std::shared_ptr<UIManager> &uiManager,
-    ShadowNode const &shadowNode,
-    ShadowNode const *ancestorShadowNode,
-    LayoutableShadowNode::LayoutInspectingPolicy policy);
-
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

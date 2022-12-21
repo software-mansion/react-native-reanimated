@@ -33,50 +33,6 @@ std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
   return getUIManagerPublic(uiManager)->contextContainer_;
 }
 
-inline static UIManagerDelegate *getDelegateFromUIManager(
-    const UIManager *uiManager) {
-  return getUIManagerPublic(uiManager)->delegate_;
-}
-
-LayoutMetrics UIManager_getRelativeLayoutMetrics(
-    const std::shared_ptr<UIManager> &uiManager,
-    ShadowNode const &shadowNode,
-    ShadowNode const *ancestorShadowNode,
-    LayoutableShadowNode::LayoutInspectingPolicy policy) {
-  // based on implementation from UIManager.cpp
-  const auto &shadowTreeRegistry = uiManager->getShadowTreeRegistry();
-
-  // We might store here an owning pointer to `ancestorShadowNode` to ensure
-  // that the node is not deallocated during method execution lifetime.
-  auto owningAncestorShadowNode = ShadowNode::Shared{};
-
-  if (!ancestorShadowNode) {
-    shadowTreeRegistry.visit(
-        shadowNode.getSurfaceId(), [&](ShadowTree const &shadowTree) {
-          owningAncestorShadowNode =
-              shadowTree.getCurrentRevision().rootShadowNode;
-          ancestorShadowNode = owningAncestorShadowNode.get();
-        });
-  } else {
-    // It is possible for JavaScript (or other callers) to have a reference
-    // to a previous version of ShadowNodes, but we enforce that
-    // metrics are only calculated on most recently committed versions.
-    owningAncestorShadowNode =
-        uiManager->getNewestCloneOfShadowNode(*ancestorShadowNode);
-    ancestorShadowNode = owningAncestorShadowNode.get();
-  }
-
-  auto layoutableAncestorShadowNode =
-      traitCast<LayoutableShadowNode const *>(ancestorShadowNode);
-
-  if (!layoutableAncestorShadowNode) {
-    return EmptyLayoutMetrics;
-  }
-
-  return LayoutableShadowNode::computeRelativeLayoutMetrics(
-      shadowNode.getFamily(), *layoutableAncestorShadowNode, policy);
-}
-
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED
