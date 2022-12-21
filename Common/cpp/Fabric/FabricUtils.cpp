@@ -23,14 +23,10 @@ RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding) {
 }
 #endif
 
-inline static const UIManagerPublic *getUIManagerPublic(
-    const UIManager *uiManager) {
-  return reinterpret_cast<const UIManagerPublic *>(uiManager);
-}
-
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
     const UIManager *uiManager) {
-  return getUIManagerPublic(uiManager)->contextContainer_;
+  return reinterpret_cast<const UIManagerPublic *>(uiManager)
+      ->contextContainer_;
 }
 
 } // namespace reanimated
