@@ -38,19 +38,6 @@ inline static UIManagerDelegate *getDelegateFromUIManager(
   return getUIManagerPublic(uiManager)->delegate_;
 }
 
-void UIManager_dispatchCommand(
-    const std::shared_ptr<UIManager> &uiManager,
-    const ShadowNode::Shared &shadowNode,
-    std::string const &commandName,
-    folly::dynamic const &args) {
-  auto delegate_ = getDelegateFromUIManager(&*uiManager);
-
-  // copied from UIManager.cpp
-  if (delegate_) {
-    delegate_->uiManagerDidDispatchCommand(shadowNode, commandName, args);
-  }
-}
-
 LayoutMetrics UIManager_getRelativeLayoutMetrics(
     const std::shared_ptr<UIManager> &uiManager,
     ShadowNode const &shadowNode,

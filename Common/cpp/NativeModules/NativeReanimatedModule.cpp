@@ -592,9 +592,7 @@ void NativeReanimatedModule::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-
-  // TODO: use uiManager_->dispatchCommand once it's public
-  UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
+  uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
 jsi::Value NativeReanimatedModule::measure(

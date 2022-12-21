@@ -53,12 +53,6 @@ RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding);
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(
     const UIManager *uiManager);
 
-void UIManager_dispatchCommand(
-    const std::shared_ptr<UIManager> &uiManager,
-    const ShadowNode::Shared &shadowNode,
-    std::string const &commandName,
-    folly::dynamic const &args);
-
 LayoutMetrics UIManager_getRelativeLayoutMetrics(
     const std::shared_ptr<UIManager> &uiManager,
     ShadowNode const &shadowNode,
