@@ -7,6 +7,7 @@
 
 #include "FabricUtils.h"
 
+#include <react/renderer/debug/SystraceSection.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 using namespace facebook::react;
@@ -97,6 +98,8 @@ ShadowNode::Shared UIManager_cloneNode(
   auto contextContainer_ = getContextContainerFromUIManager(uiManager);
 
   // copied from UIManager.cpp
+  SystraceSection s("UIManager::cloneNode");
+
   PropsParserContext propsParserContext{
       shadowNode.getFamily().getSurfaceId(), *contextContainer_.get()};
 
