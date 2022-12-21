@@ -95,7 +95,16 @@ target_include_directories(
 )
 
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
-    # TODO: use target_include_directories instead of target_link_libraries
+    target_include_directories(
+        ${PACKAGE_NAME}
+        PRIVATE
+        "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
+        "${REACT_NATIVE_DIR}/ReactCommon"
+        "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
+        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+        "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+        "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+    )
 else()
     file(GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
     target_include_directories(
@@ -139,9 +148,7 @@ if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
         ReactAndroid::folly_runtime
         ReactAndroid::glog
         ReactAndroid::jsi
-        ReactAndroid::react_nativemodule_core
         ReactAndroid::reactnativejni
-        ReactAndroid::turbomodulejsijni
         fbjni::fbjni
     )
 elseif()
@@ -286,18 +293,11 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         ${PACKAGE_NAME}
         ReactAndroid::fabricjni
         ReactAndroid::react_debug
-        ReactAndroid::react_nativemodule_core
-        ReactAndroid::react_render_animations
-        ReactAndroid::react_render_componentregistry
         ReactAndroid::react_render_core
-        ReactAndroid::react_render_debug
-        ReactAndroid::react_render_graphics
         ReactAndroid::react_render_mounting
         ReactAndroid::react_render_scheduler
         ReactAndroid::react_render_uimanager
         ReactAndroid::rrc_view
-        ReactAndroid::runtimeexecutor
-        ReactAndroid::yoga
     )
 endif()
 
