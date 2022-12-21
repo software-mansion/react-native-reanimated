@@ -1,5 +1,9 @@
 /* global _WORKLET */
-import Animated, { runOnUI, scrollTo, useAnimatedRef } from 'react-native-reanimated';
+import Animated, {
+  runOnUI,
+  scrollTo,
+  useAnimatedRef,
+} from 'react-native-reanimated';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
 
 import React from 'react';
