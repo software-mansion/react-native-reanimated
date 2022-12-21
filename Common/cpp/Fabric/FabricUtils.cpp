@@ -90,42 +90,6 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
       shadowNode.getFamily(), *layoutableAncestorShadowNode, policy);
 }
 
-ShadowNode::Shared UIManager_cloneNode(
-    const UIManager *uiManager,
-    ShadowNode const &shadowNode,
-    ShadowNode::SharedListOfShared const &children,
-    RawProps const *rawProps) {
-  auto contextContainer_ = getContextContainerFromUIManager(uiManager);
-
-  // copied from UIManager.cpp
-  SystraceSection s("UIManager::cloneNode");
-
-  PropsParserContext propsParserContext{
-      shadowNode.getFamily().getSurfaceId(), *contextContainer_.get()};
-
-  auto &componentDescriptor = shadowNode.getComponentDescriptor();
-  auto clonedShadowNode = componentDescriptor.cloneShadowNode(
-      shadowNode,
-      {
-          /* .props = */
-          rawProps != nullptr
-              ? componentDescriptor.cloneProps(
-                    propsParserContext, shadowNode.getProps(), *rawProps)
-              : ShadowNodeFragment::propsPlaceholder(),
-          /* .children = */ children,
-      });
-
-  return clonedShadowNode;
-}
-
-void UIManager_appendChild(
-    const ShadowNode::Shared &parentShadowNode,
-    const ShadowNode::Shared &childShadowNode) {
-  // copied from UIManager.cpp
-  auto &componentDescriptor = parentShadowNode->getComponentDescriptor();
-  componentDescriptor.appendChild(parentShadowNode, childShadowNode);
-}
-
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

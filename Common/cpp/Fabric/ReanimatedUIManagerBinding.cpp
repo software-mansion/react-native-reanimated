@@ -73,14 +73,14 @@ static inline ShadowNode::Shared cloneNode(
     auto newest = newestShadowNodesRegistry->get(shadowNode->getTag());
     if (newest != nullptr) {
       // ShadowNode managed by Reanimated, use newest ShadowNode from registry
-      auto clone = UIManager_cloneNode(uiManager, *newest, children, rawProps);
+      auto clone = uiManager->cloneNode(*newest, children, rawProps);
       newestShadowNodesRegistry->update(clone);
       return clone;
     }
   } // release lock since we don't need registry anymore
 
   // ShadowNode not managed by Reanimated (yet?)
-  return UIManager_cloneNode(uiManager, *shadowNode, children, rawProps);
+  return uiManager->cloneNode(*shadowNode, children, rawProps);
 }
 
 jsi::Value ReanimatedUIManagerBinding::get(
@@ -190,7 +190,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
         runtime,
         name,
         2,
-        [newestShadowNodesRegistry](
+        [uiManager, newestShadowNodesRegistry](
             jsi::Runtime &runtime,
             jsi::Value const &thisValue,
             jsi::Value const *arguments,
@@ -204,7 +204,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
               child = newest;
             }
           }
-          UIManager_appendChild(parent, child);
+          uiManager->appendChild(parent, child);
           return jsi::Value::undefined();
         });
   }

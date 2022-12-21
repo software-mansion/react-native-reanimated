@@ -65,16 +65,6 @@ LayoutMetrics UIManager_getRelativeLayoutMetrics(
     ShadowNode const *ancestorShadowNode,
     LayoutableShadowNode::LayoutInspectingPolicy policy);
 
-ShadowNode::Shared UIManager_cloneNode(
-    const UIManager *uiManager,
-    ShadowNode const &shadowNode,
-    ShadowNode::SharedListOfShared const &children,
-    RawProps const *rawProps);
-
-void UIManager_appendChild(
-    const ShadowNode::Shared &parentShadowNode,
-    const ShadowNode::Shared &childShadowNode);
-
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED
