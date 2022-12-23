@@ -134,22 +134,7 @@ void NativeProxy::installJSIBindings(
 
   auto requestRender = [this, getCurrentTime](
                            std::function<void(double)> onRender,
-                           jsi::Runtime &rt) {
-    // doNoUse -> NodesManager passes here a timestamp from choreographer which
-    // is useless for us as we use diffrent timer to better handle events. The
-    // lambda is translated to NodeManager.OnAnimationFrame and treated just
-    // like reanimated 1 frame callbacks which make use of the timestamp.
-    auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
-      jsi::Object global = rt.global();
-      jsi::String frameTimestampName =
-          jsi::String::createFromAscii(rt, "_frameTimestamp");
-      double frameTimestamp = getCurrentTime();
-      global.setProperty(rt, frameTimestampName, frameTimestamp);
-      onRender(frameTimestamp);
-      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
-    };
-    this->requestRender(std::move(wrappedOnRender));
-  };
+                           jsi::Runtime &rt) { this->requestRender(onRender); };
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction =
@@ -303,14 +288,7 @@ void NativeProxy::installJSIBindings(
       [weakModule, getCurrentTime](
           std::string eventName, std::string eventAsString) {
         if (auto module = weakModule.lock()) {
-          jsi::Object global = module->runtime->global();
-          jsi::String eventTimestampName =
-              jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-          global.setProperty(
-              *module->runtime, eventTimestampName, getCurrentTime());
-          module->onEvent(eventName, eventAsString);
-          global.setProperty(
-              *module->runtime, eventTimestampName, jsi::Value::undefined());
+          module->onEvent(getCurrentTime(), eventName, eventAsString);
         }
       });
 #endif

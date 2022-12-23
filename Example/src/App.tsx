@@ -1,337 +1,103 @@
-import {
-  BasicLayoutAnimation,
-  BasicNestedAnimation,
-  BasicNestedLayoutAnimation,
-  Carousel,
-  CombinedTest,
-  CustomLayoutAnimationScreen,
-  DefaultAnimations,
-  DeleteAncestorOfExiting,
-  Modal,
-  ModalNewAPI,
-  MountingUnmounting,
-  NativeModals,
-  NestedTest,
-  SpringLayoutAnimation,
-  SwipeableList,
-} from './LayoutReanimation';
-import {
-  FlatList,
-  LogBox,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  UIManager,
-  View,
-} from 'react-native';
-import {
-  StackNavigationProp,
-  createStackNavigator,
-} from '@react-navigation/stack';
+import { Dimensions, StyleSheet, View } from 'react-native';
 
-import AnimatedKeyboardExample from './AnimatedKeyboardExample';
-import AnimatedListExample from './LayoutReanimation/AnimatedList';
-import AnimatedSensorExample from './AnimatedSensorExample';
-import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
-import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
-import AnimatedTabBarExample from './AnimatedTabBarExample';
-import ChatHeadsExample from './ChatHeadsExample';
-import DragAndSnapExample from './DragAndSnapExample';
-import ExtrapolationExample from './ExtrapolationExample';
-import FrameCallbackExample from './FrameCallbackExample';
-import InvertedFlatListExample from './InvertedFlatListExample';
-import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
-import LightboxExample from './LightboxExample';
-import LiquidSwipe from './LiquidSwipe';
-import MeasureExample from './MeasureExample';
-import { NavigationContainer } from '@react-navigation/native';
-import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
-import { PagerExample } from './CustomHandler';
 import React from 'react';
-import { ReactionsCounterExample } from './ReactionsCounterExample';
-import { RectButton } from 'react-native-gesture-handler';
-import ScrollEventExample from './ScrollEventExample';
-import ScrollExample from './AnimatedScrollExample';
-import ScrollToExample from './ScrollToExample';
-import ScrollViewOffsetExample from './ScrollViewOffsetExample';
-import ScrollableViewExample from './ScrollableViewExample';
-import SwipeableListExample from './SwipeableListExample';
-import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
-import WobbleExample from './WobbleExample';
-import { ColorInterpolationExample } from './ColorInterpolationExample';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-LogBox.ignoreLogs(['Calling `getNode()`']);
+const { width, height } = Dimensions.get('window');
 
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
+function getRandomWidth() {
+  return Math.random() * width;
 }
 
-type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
+function getRandomHeight() {
+  return Math.random() * height;
+}
 
-const SCREENS: Screens = {
-  ColorInterpolation: {
-    screen: ColorInterpolationExample,
-    title: 'Color interpolation',
-  },
-  DeleteAncestorOfExiting: {
-    screen: DeleteAncestorOfExiting,
-    title: '🆕 Deleting view with an exiting animation',
-  },
-  BasicLayoutAnimation: {
-    screen: BasicLayoutAnimation,
-    title: '🆕 Basic layout animation',
-  },
-  BasicNestedAnimation: {
-    screen: BasicNestedAnimation,
-    title: '🆕 Basic nested animation',
-  },
-  BasicNestedLayoutAnimation: {
-    screen: BasicNestedLayoutAnimation,
-    title: '🆕 Basic nested layout animation',
-  },
-  NestedLayoutAnimations: {
-    screen: NestedTest,
-    title: '🆕 Nested layout animations',
-  },
-  CombinedLayoutAnimations: {
-    screen: CombinedTest,
-    title: '🆕 Entering and Exiting with Layout',
-  },
-  DefaultAnimations: {
-    screen: DefaultAnimations,
-    title: '🆕 Default layout animations',
-  },
-  AnimatedKeyboard: {
-    screen: AnimatedKeyboardExample,
-    title: '🆕 Use Animated Keyboard',
-  },
-  AnimatedSensor: {
-    screen: AnimatedSensorExample,
-    title: '🆕 Use Animated Sensor',
-  },
-  FrameCallbackExample: {
-    screen: FrameCallbackExample,
-    title: '🆕 Frame callback example',
-  },
-  DefaultTransistions: {
-    screen: WaterfallGridExample,
-    title: '🆕 Default layout transitions',
-  },
-  KeyframeAnimation: {
-    screen: KeyframeAnimation,
-    title: '🆕 Keyframe animation',
-  },
-  ParticipantList: {
-    screen: AnimatedListExample,
-    title: '🆕 Participant List',
-  },
-  OlympicAnimation: {
-    screen: OlympicAnimation,
-    title: '🆕 Olympic animation',
-  },
-  CustomLayoutAnimation: {
-    screen: CustomLayoutAnimationScreen,
-    title: '🆕 Custom layout animation',
-  },
-  ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  ReactionsCounterExample: {
-    screen: ReactionsCounterExample,
-    title: '🆕 Reactions counter',
-  },
-  SwipeableList: {
-    title: '🆕 Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '🆕 Modal',
-    screen: Modal,
-  },
-  NativeModals: {
-    title: '🆕 Native modals (RN and Screens)',
-    screen: NativeModals,
-  },
-  Carousel: {
-    title: 'Carousel',
-    screen: Carousel,
-  },
-  PagerExample: {
-    screen: PagerExample,
-    title: 'Custom Handler Example - Pager',
-  },
-  AnimatedStyleUpdate: {
-    screen: AnimatedStyleUpdateExample,
-    title: 'Animated Style Update',
-  },
-  AnimatedSharedStyle: {
-    screen: AnimatedSharedStyleExample,
-    title: 'Animated Shared Style',
-  },
-  WobbleExample: {
-    screen: WobbleExample,
-    title: 'Animation Modifiers (Wobble Effect)',
-  },
-  DragAndSnapExample: {
-    screen: DragAndSnapExample,
-    title: 'Drag and Snap',
-  },
-  MeasureExample: {
-    screen: MeasureExample,
-    title: 'Synchronous Measure',
-  },
-  ScrollEventExample: {
-    screen: ScrollEventExample,
-    title: 'Scroll Events',
-  },
-  ScrollViewOffsetExample: {
-    screen: ScrollViewOffsetExample,
-    title: 'ScrollView offset',
-  },
-  ChatHeadsExample: {
-    screen: ChatHeadsExample,
-    title: 'Chat Heads',
-  },
-  ScrollableToExample: {
-    screen: ScrollToExample,
-    title: 'scrollTo',
-  },
-  SwipeableListExample: {
-    screen: SwipeableListExample,
-    title: '(advanced) Swipeable List',
-  },
-  LightboxExample: {
-    screen: LightboxExample,
-    title: '(advanced) Lightbox',
-  },
-  ScrollableViewExample: {
-    screen: ScrollableViewExample,
-    title: '(advanced) ScrollView imitation',
-  },
-  AnimatedTabBarExample: {
-    screen: AnimatedTabBarExample,
-    title: '(advanced) Tab Bar Example',
-  },
-  LiquidSwipe: {
-    screen: LiquidSwipe,
-    title: 'Liquid Swipe Example',
-  },
-  ExtrapolationExample: {
-    screen: ExtrapolationExample,
-    title: 'Extrapolation Example',
-  },
-  ScrollExample: {
-    screen: ScrollExample,
-    title: 'Scroll Example',
-  },
-  InvertedFlatListExample: {
-    screen: InvertedFlatListExample,
-    title: 'Inverted FlatList Example',
-  },
-};
+function getRandomHue() {
+  return 100 + Math.random() * 100;
+}
 
-type RootStackParams = { Home: undefined } & { [key: string]: undefined };
-type MainScreenProps = {
-  navigation: StackNavigationProp<RootStackParams, 'Home'>;
-};
+function getRandomPositionDiff() {
+  return -100 + Math.random() * 200;
+}
 
-function MainScreen({ navigation }: MainScreenProps) {
-  const data = Object.keys(SCREENS).map((key) => ({ key }));
+function getRandomHueDiff() {
+  return Math.random() * 100;
+}
+
+function Circle() {
+  const left = useSharedValue(getRandomWidth());
+  const top = useSharedValue(getRandomHeight());
+  const hue = useSharedValue(getRandomHue());
+
+  const duration = 2000 + Math.random() * 1000;
+  const power = Math.random();
+  const config = { duration, easing: Easing.linear };
+
+  const update = () => {
+    left.value = withTiming(left.value + getRandomPositionDiff(), config);
+    top.value = withTiming(top.value + getRandomPositionDiff(), config);
+    hue.value = withTiming(hue.value + getRandomHueDiff(), config);
+  };
+
+  React.useEffect(() => {
+    update();
+    const id = setInterval(update, duration);
+    return () => clearInterval(id);
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const size = 100 + power * 250;
+    return {
+      backgroundColor: `hsl(${hue.value}, 100%, 50%)`,
+      width: size,
+      height: size,
+      top: top.value - size / 2,
+      left: left.value - size / 2,
+      opacity: 0.1 + (1 - power) * 0.1,
+    };
+  }, []);
+
+  return <Animated.View style={[styles.bokeh, animatedStyle]} />;
+}
+
+interface BokehProps {
+  count: number;
+}
+
+function Bokeh({ count }: BokehProps) {
   return (
-    <FlatList
-      style={styles.list}
-      data={data}
-      ItemSeparatorComponent={ItemSeparator}
-      renderItem={(props) => (
-        <MainScreenItem
-          {...props}
-          screens={SCREENS}
-          onPressItem={({ key }) => navigation.navigate(key)}
-        />
-      )}
-      renderScrollComponent={(props) => <ScrollView {...props} />}
-    />
+    <>
+      {[...Array(count)].map((_, i) => (
+        <Circle key={i} />
+      ))}
+    </>
   );
 }
 
-export function ItemSeparator(): React.ReactElement {
-  return <View style={styles.separator} />;
-}
-
-type Item = { key: string };
-type MainScreenItemProps = {
-  item: Item;
-  onPressItem: ({ key }: Item) => void;
-  screens: Screens;
-};
-export function MainScreenItem({
-  item,
-  onPressItem,
-  screens,
-}: MainScreenItemProps): React.ReactElement {
-  const { key } = item;
+export default function App() {
   return (
-    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
-      <Text style={styles.buttonText}>{screens[key].title || key}</Text>
-    </RectButton>
+    <View style={styles.container}>
+      <Bokeh count={100} />
+    </View>
   );
 }
 
-const Stack = createStackNavigator();
-
-const Reanimated2 = () => (
-  <Stack.Navigator detachInactiveScreens={false}>
-    <Stack.Screen
-      name="Home"
-      options={{ title: '🎬 Reanimated 2.x Examples' }}
-      children={(props) => <MainScreen {...props} />}
-    />
-    {Object.keys(SCREENS).map((name) => (
-      <Stack.Screen
-        key={name}
-        name={name}
-        getComponent={() => SCREENS[name].screen}
-        options={{ title: SCREENS[name].title || name }}
-      />
-    ))}
-  </Stack.Navigator>
-);
-
-function App(): React.ReactElement {
-  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
-}
-
-export const styles = StyleSheet.create({
-  list: {
-    backgroundColor: '#EFEFF4',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#DBDBE0',
-  },
-  buttonText: {
-    backgroundColor: 'transparent',
-  },
-  button: {
+const styles = StyleSheet.create({
+  container: {
     flex: 1,
-    height: 60,
-    padding: 10,
-    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: 'center',
+    backgroundColor: 'black',
+    overflow: 'hidden',
+  },
+  bokeh: {
+    position: 'absolute',
+    borderRadius: 9999,
   },
 });
-
-export default App;

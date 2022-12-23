@@ -129,6 +129,15 @@ static jsi::Value SPEC_PREFIX(configureProps)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(handleMemoryPressure)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->handleMemoryPressure(rt, std::move(args[0]));
+}
+
 static jsi::Value SPEC_PREFIX(subscribeForKeyboardEvents)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -186,6 +195,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, SPEC_PREFIX(unregisterSensor)};
   methodMap_["configureProps"] = MethodMetadata{2, SPEC_PREFIX(configureProps)};
+  methodMap_["handleMemoryPressure"] =
+      MethodMetadata{1, SPEC_PREFIX(handleMemoryPressure)};
   methodMap_["subscribeForKeyboardEvents"] =
       MethodMetadata{1, SPEC_PREFIX(subscribeForKeyboardEvents)};
   methodMap_["unsubscribeFromKeyboardEvents"] =

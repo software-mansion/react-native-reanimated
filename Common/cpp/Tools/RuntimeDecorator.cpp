@@ -114,7 +114,6 @@ void RuntimeDecorator::decorateUIRuntime(
     const ScheduleOnJSFunction scheduleOnJS,
     const MakeShareableCloneFunction makeShareableClone,
     const UpdateDataSynchronouslyFunction updateDataSynchronously,
-    const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
     const UnregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
@@ -273,20 +272,6 @@ void RuntimeDecorator::decorateUIRuntime(
       rt, jsi::PropNameID::forAscii(rt, "_updateDataSynchronously"), 1, clb51);
   rt.global().setProperty(
       rt, "_updateDataSynchronously", updateDataSynchronouslyFun);
-
-  auto clb6 = [getCurrentTime](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    return getCurrentTime();
-  };
-  jsi::Value timeFun = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
-  rt.global().setProperty(rt, "_getCurrentTime", timeFun);
-
-  rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
-  rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 
   // layout animation
   auto clb7 = [progressLayoutAnimationFunction](

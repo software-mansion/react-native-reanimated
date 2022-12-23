@@ -3,6 +3,27 @@ import { Descriptor } from './hook/commonTypes';
 import { getTimestamp } from './time';
 export { stopMapper } from './mappers';
 
+function tester() {
+  function fromImmediate() {
+    console.log('from immediate', performance.now());
+  }
+  function nextFrame() {
+    console.log('next frame', performance.now());
+  }
+  function firstAnimationFrame() {
+    console.log('FIRST', performance.now());
+    setImmediate(() => {
+      console.log('IMMEDIATE', performance.now());
+      requestAnimationFrame(fromImmediate);
+    });
+    requestAnimationFrame(nextFrame);
+  }
+  requestAnimationFrame(firstAnimationFrame);
+  requestAnimationFrame(() => {
+    console.log('SECOND', performance.now());
+  });
+}
+
 export function valueSetter(sv: any, value: any): void {
   'worklet';
   const previousAnimation = sv._animation;

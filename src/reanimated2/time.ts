@@ -11,13 +11,7 @@ if (nativeShouldBeMock()) {
 } else {
   _getTimestamp = () => {
     'worklet';
-    if (_frameTimestamp) {
-      return _frameTimestamp;
-    }
-    if (_eventTimestamp) {
-      return _eventTimestamp;
-    }
-    return _getCurrentTime();
+    return global.__frameTimestamp;
   };
 }
 

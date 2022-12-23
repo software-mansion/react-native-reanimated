@@ -86,17 +86,10 @@ class JSRuntimeHelper {
   }
 
   template <typename... Args>
-  inline void runOnUIGuarded(const jsi::Value &function, Args &&...args) {
-    // We only use callGuard in debug mode, otherwise we call the provided
-    // function directly. CallGuard provides a way of capturing exceptions in
-    // JavaScript and propagating them to the main React Native thread such that
-    // they can be presented using RN's LogBox.
+  inline void
+  runOnUIGuarded(double timestamp, const jsi::Value &function, Args &&...args) {
     jsi::Runtime &rt = *uiRuntime_;
-#ifdef DEBUG
-    callGuard->call(rt, function, args...);
-#else
-    function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif
+    callGuard->call(rt, jsi::Value(timestamp), function, args...);
   }
 };
 
@@ -105,6 +98,7 @@ class Shareable {
   virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
 
  public:
+  int identifier;
   virtual ~Shareable();
 
   enum ValueType {
@@ -126,7 +120,7 @@ class Shareable {
 #endif
   };
 
-  explicit Shareable(ValueType valueType) : valueType_(valueType) {}
+  explicit Shareable(ValueType valueType);
   virtual jsi::Value getJSValue(jsi::Runtime &rt) {
     return toJSValue(rt);
   }
@@ -174,9 +168,11 @@ class RetainingShareable : public Shareable {
 class ShareableJSRef : public jsi::HostObject {
  private:
   std::shared_ptr<Shareable> value_;
+  int identifier;
 
  public:
-  explicit ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {}
+  explicit ShareableJSRef(std::shared_ptr<Shareable> value);
+  ~ShareableJSRef();
   std::shared_ptr<Shareable> value() const {
     return value_;
   }

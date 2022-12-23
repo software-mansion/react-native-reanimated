@@ -88,6 +88,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
+  jsi::Value handleMemoryPressure(jsi::Runtime &rt, const jsi::Value &level)
+      override;
   jsi::Value configureLayoutAnimation(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
@@ -96,9 +98,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void onRender(double timestampMs);
 #ifdef RCT_NEW_ARCH_ENABLED
-  void onEvent(std::string eventName, jsi::Value &&eventAsString);
+  void onEvent(
+      double eventTimestamp,
+      std::string eventName,
+      jsi::Value &&eventAsString);
 #else
-  void onEvent(std::string eventName, std::string eventAsString);
+  void onEvent(
+      double eventTimestamp,
+      std::string eventName,
+      std::string eventAsString);
 #endif
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
@@ -169,6 +177,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<void(double)> onRenderCallback;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
+  TimeProviderFunction getCurrentTimeFunction;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;

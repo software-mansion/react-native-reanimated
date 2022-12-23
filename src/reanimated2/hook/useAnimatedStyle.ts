@@ -1,4 +1,3 @@
-/* global _frameTimestamp */
 import { MutableRefObject, useEffect, useRef } from 'react';
 
 import { startMapper, stopMapper, makeRemote, getTimestamp } from '../core';
@@ -197,9 +196,8 @@ function styleUpdater(
   }
 
   if (hasAnimations) {
-    const frame = (_timestamp?: Timestamp) => {
+    const frame = (timestamp: Timestamp) => {
       const { animations, last, isAnimationCancelled } = state;
-      const timestamp = _timestamp ?? getTimestamp();
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
         return;
@@ -238,11 +236,7 @@ function styleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      if (_frameTimestamp) {
-        frame(_frameTimestamp);
-      } else {
-        requestAnimationFrame(frame);
-      }
+      frame(getTimestamp());
     }
     state.last = Object.assign({}, oldValues, newValues);
     const style = getStyleWithoutAnimations(state.last);
@@ -292,9 +286,8 @@ function jestStyleUpdater(
     }
   });
 
-  function frame(_timestamp?: Timestamp) {
+  function frame(timestamp: Timestamp) {
     const { animations, last, isAnimationCancelled } = state;
-    const timestamp = _timestamp ?? getTimestamp();
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;
@@ -340,11 +333,7 @@ function jestStyleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      if (_frameTimestamp) {
-        frame(_frameTimestamp);
-      } else {
-        requestAnimationFrame(frame);
-      }
+      frame(getTimestamp());
     }
   } else {
     state.isAnimationCancelled = true;

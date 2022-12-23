@@ -14,7 +14,7 @@ export function createMapperRegistry() {
   const mappers = new Map();
   let sortedMappers: Mapper[] = [];
 
-  let frameRequested = false;
+  let runRequested = false;
 
   function updateMappersOrder() {
     // sort mappers topologically
@@ -74,8 +74,8 @@ export function createMapperRegistry() {
     sortedMappers = newOrder;
   }
 
-  function mapperFrame() {
-    frameRequested = false;
+  function mapperRun() {
+    runRequested = false;
     if (mappers.size !== sortedMappers.length) {
       updateMappersOrder();
     }
@@ -88,9 +88,9 @@ export function createMapperRegistry() {
   }
 
   function maybeRequestUpdates() {
-    if (!frameRequested) {
-      requestAnimationFrame(mapperFrame);
-      frameRequested = true;
+    if (!runRequested) {
+      setImmediate(mapperRun);
+      runRequested = true;
     }
   }
 

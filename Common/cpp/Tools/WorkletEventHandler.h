@@ -4,6 +4,8 @@
 #include <string>
 #include <utility>
 
+#include "Shareables.h"
+
 using namespace facebook;
 
 namespace reanimated {
@@ -14,17 +16,22 @@ class WorkletEventHandler {
   friend EventHandlerRegistry;
 
  private:
+  std::shared_ptr<JSRuntimeHelper> _runtimeHelper;
   unsigned long id;
   std::string eventName;
-  jsi::Function handler;
+  jsi::Value _handlerFunction;
 
  public:
   WorkletEventHandler(
+      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       unsigned long id,
       std::string eventName,
-      jsi::Function &&handler)
-      : id(id), eventName(eventName), handler(std::move(handler)) {}
-  void process(jsi::Runtime &rt, const jsi::Value &eventValue);
+      jsi::Value &&handlerFunction)
+      : _runtimeHelper(runtimeHelper),
+        id(id),
+        eventName(eventName),
+        _handlerFunction(std::move(handlerFunction)) {}
+  void process(double eventTimestamp, const jsi::Value &eventValue);
 };
 
 } // namespace reanimated

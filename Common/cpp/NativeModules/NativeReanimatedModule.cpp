@@ -1,5 +1,7 @@
 #include "NativeReanimatedModule.h"
 
+#include <jsi/instrumentation.h>
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
@@ -61,7 +63,8 @@ NativeReanimatedModule::NativeReanimatedModule(
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=](double timestamp) {
-      runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
+      runtimeHelper->runOnUIGuarded(
+          timestamp, *jsFunction, jsi::Value(timestamp));
     });
     maybeRequestRender();
   };
@@ -153,7 +156,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       scheduleOnJS,
       makeShareableClone,
       updateDataSynchronously,
-      platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
@@ -169,6 +171,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
 #endif
+  getCurrentTimeFunction = platformDepMethodsHolder.getCurrentTime;
   subscribeForKeyboardEventsFunction =
       platformDepMethodsHolder.subscribeForKeyboardEvents;
   unsubscribeFromKeyboardEventsFunction =
@@ -212,10 +215,11 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
+  TimeProviderFunction getCurrentTime = getCurrentTimeFunction;
   scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
-    runtimeHelper->runOnUIGuarded(workletValue);
+    runtimeHelper->runOnUIGuarded(getCurrentTime(), workletValue);
   });
 }
 
@@ -296,11 +300,13 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
-    auto handlerFunction =
-        handlerShareable->getJSValue(rt).asObject(rt).asFunction(rt);
+    auto handlerFunction = handlerShareable->getJSValue(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
-        newRegistrationId, eventName, std::move(handlerFunction));
-    eventHandlerRegistry->registerEventHandler(handler);
+        runtimeHelper,
+        newRegistrationId,
+        eventName,
+        std::move(handlerFunction));
+    eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
@@ -365,6 +371,17 @@ jsi::Value NativeReanimatedModule::configureProps(
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::handleMemoryPressure(
+    jsi::Runtime &rt,
+    const jsi::Value &pressureLevel) {
+  int level = static_cast<int>(pressureLevel.asNumber());
+  scheduler->scheduleOnUI([=] {
+    runtimeHelper->uiRuntime()->instrumentation().collectGarbage(
+        "TRIM_MEMORY_RUNNING_CRITICAL");
+  });
+  return jsi::Value::undefined();
+}
+
 jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
@@ -378,6 +395,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 }
 
 void NativeReanimatedModule::onEvent(
+    double eventTimestamp,
     std::string eventName,
 #ifdef RCT_NEW_ARCH_ENABLED
     jsi::Value &&payload
@@ -385,21 +403,13 @@ void NativeReanimatedModule::onEvent(
     std::string eventAsString
 #endif
     /**/) {
-  try {
 #ifdef RCT_NEW_ARCH_ENABLED
-    eventHandlerRegistry->processEvent(*runtime, eventName, payload);
+  eventHandlerRegistry->processEvent(
+      *runtime, eventTimestamp, eventName, payload);
 #else
-    eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
+  eventHandlerRegistry->processEvent(
+      *runtime, eventTimestamp, eventName, eventAsString);
 #endif
-  } catch (std::exception &e) {
-    std::string str = e.what();
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  } catch (...) {
-    std::string str = "OnEvent error";
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  }
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -469,12 +479,7 @@ bool NativeReanimatedModule::handleEvent(
     jsi::Value &&payload,
     double currentTime) {
   jsi::Runtime &rt = *runtime.get();
-  jsi::Object global = rt.global();
-  jsi::String eventTimestampName =
-      jsi::String::createFromAscii(rt, "_eventTimestamp");
-  global.setProperty(rt, eventTimestampName, currentTime);
-  onEvent(eventName, std::move(payload));
-  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+  onEvent(currentTime, eventName, std::move(payload));
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -656,12 +661,12 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
-  auto uiRuntime = runtimeHelper->uiRuntime();
+  auto getCurrentTime = getCurrentTimeFunction;
   return subscribeForKeyboardEventsFunction([=](int keyboardState, int height) {
-    jsi::Runtime &rt = *uiRuntime;
+    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto handler = shareableHandler->getJSValue(rt);
-    handler.asObject(rt).asFunction(rt).call(
-        rt, jsi::Value(keyboardState), jsi::Value(height));
+    runtimeHelper->runOnUIGuarded(
+        getCurrentTime(), handler, jsi::Value(height));
   });
 }
 

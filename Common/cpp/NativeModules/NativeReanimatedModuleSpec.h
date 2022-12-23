@@ -85,6 +85,9 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) = 0;
+  virtual jsi::Value handleMemoryPressure(
+      jsi::Runtime &rt,
+      const jsi::Value &level) = 0;
 
   // layout animations
   virtual jsi::Value configureLayoutAnimation(

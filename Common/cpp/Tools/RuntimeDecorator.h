@@ -49,7 +49,6 @@ class RuntimeDecorator {
       const ScheduleOnJSFunction scheduleOnJS,
       const MakeShareableCloneFunction makeShareableClone,
       const UpdateDataSynchronouslyFunction updateDataSynchronously,
-      const TimeProviderFunction getCurrentTime,
       const RegisterSensorFunction registerSensor,
       const UnregisterSensorFunction unregisterSensor,
       const SetGestureStateFunction setGestureState,

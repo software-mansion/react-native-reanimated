@@ -3,9 +3,9 @@
 namespace reanimated {
 
 void WorkletEventHandler::process(
-    jsi::Runtime &rt,
+    double eventTimestamp,
     const jsi::Value &eventValue) {
-  handler.callWithThis(rt, handler, eventValue);
+  _runtimeHelper->runOnUIGuarded(eventTimestamp, _handlerFunction, eventValue);
 }
 
 } // namespace reanimated

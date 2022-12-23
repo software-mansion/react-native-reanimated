@@ -30,11 +30,13 @@ class EventHandlerRegistry {
 #ifdef RCT_NEW_ARCH_ENABLED
   void processEvent(
       jsi::Runtime &rt,
+      double eventTimestamp,
       std::string eventName,
       jsi::Value &eventPayload);
 #else
   void processEvent(
       jsi::Runtime &rt,
+      double eventTimestamp,
       std::string eventName,
       std::string eventPayload);
 #endif

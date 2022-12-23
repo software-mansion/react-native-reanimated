@@ -24,6 +24,7 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 
 void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
+    double eventTimestamp,
     std::string eventName,
 #ifdef RCT_NEW_ARCH_ENABLED
     jsi::Value &eventPayload
@@ -45,7 +46,7 @@ void EventHandlerRegistry::processEvent(
   eventPayload.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
   for (auto handler : handlersForEvent) {
-    handler->process(rt, eventPayload);
+    handler->process(eventTimestamp, eventPayload);
   }
 #else
   // We receive here a JS Map with JSON as a value of NativeMap key
@@ -67,7 +68,7 @@ void EventHandlerRegistry::processEvent(
   eventObject.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
   for (auto handler : handlersForEvent) {
-    handler->process(rt, eventObject);
+    handler->process(eventTimestamp, eventObject);
   }
 #endif
 }
