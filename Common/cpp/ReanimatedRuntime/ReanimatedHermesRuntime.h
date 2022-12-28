@@ -120,7 +120,7 @@ class ReanimatedHermesRuntime
   ~ReanimatedHermesRuntime();
 
  private:
-  std::shared_ptr<facebook::hermes::HermesRuntime> runtime_;
+  std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
 #if REACT_NATIVE_MINOR_VERSION >= 71
   facebook::hermes::inspector::chrome::DebugSessionToken debugToken_;

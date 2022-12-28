@@ -3,8 +3,6 @@ import { ShareableRef } from '../commonTypes';
 import { isJest } from '../PlatformChecker';
 
 export default class JSReanimated extends NativeReanimated {
-  _valueUnpacker?: <T>(value: T) => void = undefined;
-
   constructor() {
     super(false);
     if (isJest()) {
@@ -21,8 +19,14 @@ export default class JSReanimated extends NativeReanimated {
     return { __hostObjectShareableJSRef: value };
   }
 
-  installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
-    this._valueUnpacker = valueUnpacker;
+  installCoreFunctions(
+    _callGuard: <T extends Array<any>, U>(
+      fn: (...args: T) => U,
+      ...args: T
+    ) => void,
+    _valueUnpacker: <T>(value: T) => T
+  ): void {
+    // noop
   }
 
   scheduleOnUI<T>(worklet: ShareableRef<T>) {

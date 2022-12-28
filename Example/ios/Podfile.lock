@@ -384,7 +384,7 @@ PODS:
     - React
   - RNCPicker (1.8.1):
     - React-Core
-  - RNReanimated (3.0.0-rc.8):
+  - RNReanimated (3.0.0-rc.9):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -627,7 +627,7 @@ SPEC CHECKSUMS:
   ReactCommon: 22ec04726eb397686d75debf5ea97c09b6abab83
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
   RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
-  RNReanimated: 9d5813331478f6786148b83d513b0193e9ddb31a
+  RNReanimated: 484ab925c068b6721c63afc1910dc113d2ce9a77
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 81db1f51b5d3ea7eeb1b76a6890caffa45229cb2
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a

@@ -10,7 +10,6 @@ import {
   buildWorkletsHash,
   getStyleWithoutAnimations,
   isAnimated,
-  parseColors,
   styleDiff,
   validateAnimatedStyles,
 } from './utils';
@@ -21,7 +20,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../ViewDescriptorsSet';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest } from '../PlatformChecker';
 import {
   AnimationObject,
   Timestamp,
@@ -457,15 +456,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           adapter(newValues);
         });
         return newValues;
-      };
-    }
-
-    if (!shouldBeUseWeb()) {
-      updaterFn = () => {
-        'worklet';
-        const style = updaterFn();
-        parseColors(style);
-        return style;
       };
     }
 
