@@ -59,6 +59,7 @@ import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
+import { ColorInterpolationExample } from './ColorInterpolationExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -71,6 +72,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  ColorInterpolation: {
+    screen: ColorInterpolationExample,
+    title: 'Color interpolation',
+  },
   DeleteAncestorOfExiting: {
     screen: DeleteAncestorOfExiting,
     title: '🆕 Deleting view with an exiting animation',
