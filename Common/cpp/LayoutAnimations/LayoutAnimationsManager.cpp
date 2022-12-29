@@ -22,13 +22,13 @@ void LayoutAnimationsManager::configureAnimation(
     sharedTransitionAnimations_[tag] = config;
     sharedTransitionGroups_.try_emplace(sharedTransitionTag);
     auto &group = sharedTransitionGroups_[sharedTransitionTag];
-    if (group.size() < 2) {
-      group.push_back(tag);
-    } else {
-      // at this moment we want to allow only for two-items groups
-      group[0] = group[1];
-      group[1] = tag;
-    }
+    //    if (group.size() < 2) {
+    group.push_back(tag);
+    //    } else {
+    // at this moment we want to allow only for two-items groups
+    //      group[0] = group[1];
+    //      group[1] = tag;
+    //    }
   }
 }
 
@@ -81,7 +81,6 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config = sharedTransitionAnimations_[tag];
     }
   }
-
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
@@ -99,7 +98,6 @@ void LayoutAnimationsManager::startLayoutAnimation(
 }
 
 int LayoutAnimationsManager::findTheOtherForSharedTransition(int tag) {
-  int theOtherTag = -1;
   for (auto const &[key, group] : sharedTransitionGroups_) {
     auto position = std::find(group.begin(), group.end(), tag);
     if (position != group.end()) {
@@ -109,7 +107,7 @@ int LayoutAnimationsManager::findTheOtherForSharedTransition(int tag) {
       }
     }
   }
-  return theOtherTag;
+  return -1;
 }
 
 } // namespace reanimated

@@ -39,6 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
   _values[@"globalOriginY"] = _values[@"originY"];
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
+  //  UIColor *color = view.backgroundColor;
 
   return self;
 }
