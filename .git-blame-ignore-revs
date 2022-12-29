@@ -1,0 +1,7 @@
+# .git-blame-ignore-revs
+# feat: add native code formatting (#2196)
+e646dce7b85204cddeea4ef3e1ab971a85830562
+# Fix precommit hook & reformat code (#2497)
+008ee9322f3d2ed3ffef1996cbab50039fb72a3d
+# Flatten headers directory (#3474) 
+bb3e42154807bc9f220d49d3c2a03521f58c2394

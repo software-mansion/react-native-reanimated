@@ -1,0 +1,26 @@
+name: Validate iOS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/validate-ios.yml'
+      - 'ios/**'
+      - 'package.json'
+      - 'scripts/validate-ios.sh'
+  pull_request:
+    paths:
+      - '.github/workflows/validate-ios.yml'
+      - 'ios/**'
+      - 'package.json'
+      - 'scripts/validate-ios.sh'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Lint iOS
+        run: yarn lint:ios

@@ -1,0 +1,71 @@
+name: Test tvOS build
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/tvos-build.yml'
+      - 'RNReanimated.podspec'
+      - 'ios/**'
+      - 'Common/**'
+      - 'TVOSExample/package.json'
+      - 'TVOSExample/ios/**'
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-12
+    env:
+      WORKING_DIRECTORY: TVOSExample
+    concurrency:
+      group: tvos-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Restore Reanimated node_modules from cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-node-modules-reanimated-
+
+      - name: Install Reanimated node_modules
+        run: yarn install --frozen-lockfile
+
+      - name: Restore app node_modules from cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.WORKING_DIRECTORY }}/node_modules
+          key: ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', env.WORKING_DIRECTORY)) }}
+          restore-keys: ${{ runner.os }}-node-modules-${{ env.WORKING_DIRECTORY }}-
+
+      - name: Install app node_modules
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Pods from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/ios/Podfile.lock', env.WORKING_DIRECTORY)) }}
+
+      - name: Install Pods
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: pod install
+
+      - name: Restore build artifacts from cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/ios/build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-tvos-build-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/ios/Podfile.lock', env.WORKING_DIRECTORY)) }}
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn tvos

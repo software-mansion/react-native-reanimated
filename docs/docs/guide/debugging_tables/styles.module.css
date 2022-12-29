@@ -1,0 +1,20 @@
+.width10 {
+  width: 10%;
+}
+
+.width20 {
+  width: 20%;
+}
+
+.width30 {
+  width: 30%;
+}
+
+.cellNormal {
+  text-align: center;
+}
+
+.cellNotAvailable {
+  text-align: center;
+  color: lightgray;
+}

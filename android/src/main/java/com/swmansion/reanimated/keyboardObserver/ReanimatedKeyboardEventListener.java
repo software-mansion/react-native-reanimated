@@ -57,7 +57,8 @@ public class ReanimatedKeyboardEventListener {
         rootView,
         (v, insets) -> {
           int paddingBottom = 0;
-          if (!BuildConfig.IS_NEW_ARCHITECTURE_ENABLED && BuildConfig.REACT_NATIVE_VERSION < 70) {
+          if (!BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
+              && BuildConfig.REACT_NATIVE_MINOR_VERSION < 70) {
             paddingBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
           }
           int paddingTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;

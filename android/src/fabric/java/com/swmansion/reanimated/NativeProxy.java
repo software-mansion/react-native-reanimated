@@ -7,6 +7,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
@@ -159,7 +160,9 @@ public class NativeProxy {
       LayoutAnimations LayoutAnimations,
       FabricUIManager fabricUIManager);
 
-  private native void installJSIBindings(FabricUIManager fabricUIManager);
+  private native void installJSIBindings(
+    MessageQueueThread messageQueueThread,
+    FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
@@ -223,14 +226,12 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private String getUptime() {
+  private long getCurrentTime() {
     if (slowAnimationsEnabled) {
       final long ANIMATIONS_DRAG_FACTOR = 10;
-      return Long.toString(
-          this.firstUptime
-              + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+      return this.firstUptime + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR;
     } else {
-      return Long.toString(SystemClock.uptimeMillis());
+      return SystemClock.uptimeMillis();
     }
   }
 
@@ -294,8 +295,9 @@ public class NativeProxy {
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     FabricUIManager fabricUIManager =
-        (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
-    installJSIBindings(fabricUIManager);
+      (FabricUIManager) UIManagerHelper.getUIManager(mContext.get(), UIManagerType.FABRIC);
+    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    installJSIBindings(messageQueueThread, fabricUIManager);
     AnimationsManager animationsManager =
         mContext
             .get()
@@ -305,31 +307,22 @@ public class NativeProxy {
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
     animationsManager.setNativeMethods(
-        new NativeMethodsHolder() {
-          @Override
-          public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              HashMap<String, String> preparedValues = new HashMap<>();
-              for (String key : values.keySet()) {
-                preparedValues.put(key, values.get(key).toString());
+            new NativeMethodsHolder() {
+              @Override
+              public void startAnimation(int tag, String type, HashMap<String, Float> values) {}
+
+              @Override
+              public boolean isLayoutAnimationEnabled() {
+                return false;
               }
-              LayoutAnimations.startAnimationForTag(tag, type, preparedValues);
-            }
-          }
 
-          @Override
-          public void removeConfigForTag(int tag) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              LayoutAnimations.removeConfigForTag(tag);
-            }
-          }
+              @Override
+              public boolean hasAnimation(int tag, String type) {
+                return false;
+              }
 
-          @Override
-          public boolean isLayoutAnimationEnabled() {
-            return LayoutAnimations.isLayoutAnimationEnabled();
-          }
-        });
+              @Override
+              public void clearAnimationConfig(int tag) {}
+            });
   }
 }

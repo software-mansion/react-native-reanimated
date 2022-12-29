@@ -7,6 +7,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
@@ -152,7 +153,7 @@ public class NativeProxy {
       Scheduler scheduler,
       LayoutAnimations LayoutAnimations);
 
-  private native void installJSIBindings();
+  private native void installJSIBindings(MessageQueueThread messageQueueThread);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
@@ -216,14 +217,12 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private String getUptime() {
+  private long getCurrentTime() {
     if (slowAnimationsEnabled) {
       final long ANIMATIONS_DRAG_FACTOR = 10;
-      return Long.toString(
-          this.firstUptime
-              + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+      return this.firstUptime + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR;
     } else {
-      return Long.toString(SystemClock.uptimeMillis());
+      return SystemClock.uptimeMillis();
     }
   }
 
@@ -286,7 +285,8 @@ public class NativeProxy {
       return;
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
-    installJSIBindings();
+    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    installJSIBindings(messageQueueThread);
     AnimationsManager animationsManager =
         mContext
             .get()
@@ -298,7 +298,7 @@ public class NativeProxy {
     animationsManager.setNativeMethods(
         new NativeMethodsHolder() {
           @Override
-          public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
+          public void startAnimation(int tag, String type, HashMap<String, Float> values) {
             LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
             if (LayoutAnimations != null) {
               HashMap<String, String> preparedValues = new HashMap<>();
@@ -310,16 +310,29 @@ public class NativeProxy {
           }
 
           @Override
-          public void removeConfigForTag(int tag) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              LayoutAnimations.removeConfigForTag(tag);
+          public boolean isLayoutAnimationEnabled() {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.isLayoutAnimationEnabled();
             }
+            return false;
           }
 
           @Override
-          public boolean isLayoutAnimationEnabled() {
-            return LayoutAnimations.isLayoutAnimationEnabled();
+          public boolean hasAnimation(int tag, String type) {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.hasAnimationForTag(tag, type);
+            }
+            return false;
+          }
+
+          @Override
+          public void clearAnimationConfig(int tag) {
+              LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+              if (layoutAnimations != null) {
+                layoutAnimations.clearAnimationConfigForTag(tag);
+              }
           }
         });
   }

@@ -141,11 +141,11 @@ export function useInterpolateConfig(
   outputRange: readonly (string | number)[],
   colorSpace = ColorSpace.RGB
 ): SharedValue<InterpolateConfig> {
-  return useSharedValue({
+  return useSharedValue<InterpolateConfig>({
     inputRange,
     outputRange,
     colorSpace,
-    cache: makeMutable(null),
+    cache: makeMutable<InterpolateRGB | InterpolateHSV | null>(null),
   });
 }
 

@@ -45,6 +45,7 @@ module.exports = {
             'api/hooks/useEvent',
             'api/hooks/useFrameCallback',
             'api/hooks/useHandler',
+            'api/hooks/useScrollViewOffset',
             'api/hooks/useSharedValue',
           ],
           'Layout Animations': [
@@ -70,7 +71,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guide/testing'],
+      items: ['guide/testing', 'guide/debugging'],
     },
     {
       type: 'category',
