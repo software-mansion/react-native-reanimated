@@ -115,7 +115,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
 
   // based on implementation from UIManagerBinding.cpp
   auto methodName = name.utf8(runtime);
-  SystraceSection s("UIManagerBinding::get", "name", methodName);
+  SystraceSection s("ReanimatedUIManagerBinding::get", "name", methodName);
   UIManager *uiManager = uiManager_.get();
   NewestShadowNodesRegistry *newestShadowNodesRegistry =
       newestShadowNodesRegistry_.get();
