@@ -207,13 +207,12 @@ def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
 def REANIMATED_VERSION = getReanimatedVersion()
 def REANIMATED_MAJOR_VERSION = getReanimatedMajorVersion()
 
-if (REACT_NATIVE_MINOR_VERSION < 71) {
-    def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
-    def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
-    def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
-    def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
-    def FBJNI_VERSION = "0.3.0"
-}
+// for React Native <= 0.70
+def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
+def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
+def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
+def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
+def FBJNI_VERSION = "0.3.0"
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -240,7 +239,7 @@ def JS_RUNTIME = {
 
     // Check if Hermes is enabled in app setup
     def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
-    if (appProject?.hermesEnabled?.toBoolean() || appProject?.ext?.react?.enableHermes?.toBoolean()) {
+    if ((REACT_NATIVE_MINOR_VERSION >= 71 && appProject?.hermesEnabled?.toBoolean()) || appProject?.ext?.react?.enableHermes?.toBoolean()) {
         return "hermes"
     }
 
@@ -405,28 +404,6 @@ if (!BUILD_FROM_SOURCE && !isNewArchitectureEnabled()) { // Reanimated2 only
 // end if already loaded aar
 if (!BUILD_FROM_SOURCE) {
     return
-}
-
-if (REACT_NATIVE_MINOR_VERSION < 71) {
-    // You need to have following folders in this directory:
-    //   - boost_1_63_0
-    //   - double-conversion-1.1.6
-    //   - folly-deprecate-dynamic-initializer
-    //   - glog-0.3.5
-    def dependenciesPath = System.getenv("REACT_NATIVE_DEPENDENCIES")
-
-    // The Boost library is a very large download (>100MB).
-    // If Boost is already present on your system, define the REACT_NATIVE_BOOST_PATH env variable
-    // and the build will use that.
-    def boostPath = dependenciesPath ?: System.getenv("REACT_NATIVE_BOOST_PATH")
-
-    def follyReplaceContent = '''
-    ssize_t r;
-    do {
-        r = open(name, flags, mode);
-    } while (r == -1 && errno == EINTR);
-    return r;
-    '''
 }
 
 buildscript {
@@ -669,7 +646,73 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
     }
 }
 
+/*
+Reanimated includes "hermes/hermes.h" header file in `NativeProxy.cpp`.
+Previously, we used header files from `hermes-engine` package in `node_modules`.
+In React Native 0.69 and 0.70, Hermes is no longer distributed as package on NPM.
+On the new architecture, Hermes is downloaded from GitHub and then compiled from sources.
+However, on the old architecture, we need to download Hermes header files on our own
+as well as unzip Hermes AAR in order to obtain `libhermes.so` shared library.
+For more details, see https://reactnative.dev/architecture/bundled-hermes
+or https://github.com/reactwg/react-native-new-architecture/discussions/4
+*/
+if (REACT_NATIVE_MINOR_VERSION in [69, 70] && !isNewArchitectureEnabled()) {
+    // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
+
+    def downloadDir = customDownloadsDir ? new File(customDownloadsDir) : new File(reactNativeRootDir, "sdks/download")
+
+    // By default we are going to download and unzip hermes inside the /sdks/hermes folder
+    // but you can provide an override for where the hermes source code is located.
+    def hermesDir = System.getenv("REACT_NATIVE_OVERRIDE_HERMES_DIR") ?: new File(reactNativeRootDir, "sdks/hermes")
+
+    def hermesVersion = "main"
+    def hermesVersionFile = new File(reactNativeRootDir, "sdks/.hermesversion")
+    if (hermesVersionFile.exists()) {
+        hermesVersion = hermesVersionFile.text
+    }
+
+    task downloadHermes(type: Download) {
+        src("https://github.com/facebook/hermes/tarball/${hermesVersion}")
+        onlyIfNewer(true)
+        overwrite(false)
+        dest(new File(downloadDir, "hermes.tar.gz"))
+    }
+
+    task unzipHermes(dependsOn: downloadHermes, type: Copy) {
+        from(tarTree(downloadHermes.dest)) {
+            eachFile { file ->
+                // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
+                // folder at the top level.
+                if (file.relativePath.segments.size() > 1) {
+                    file.relativePath = new RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
+                }
+            }
+        }
+        into(hermesDir)
+    }
+}
+
 if (REACT_NATIVE_MINOR_VERSION < 71) {
+    // You need to have following folders in this directory:
+    //   - boost_1_63_0
+    //   - double-conversion-1.1.6
+    //   - folly-deprecate-dynamic-initializer
+    //   - glog-0.3.5
+    def dependenciesPath = System.getenv("REACT_NATIVE_DEPENDENCIES")
+
+    // The Boost library is a very large download (>100MB).
+    // If Boost is already present on your system, define the REACT_NATIVE_BOOST_PATH env variable
+    // and the build will use that.
+    def boostPath = dependenciesPath ?: System.getenv("REACT_NATIVE_BOOST_PATH")
+
+    def follyReplaceContent = '''
+    ssize_t r;
+    do {
+        r = open(name, flags, mode);
+    } while (r == -1 && errno == EINTR);
+    return r;
+    '''
+
     Task resolveBoost = resolveTaskFactory("resolveBoost", "boost_${BOOST_VERSION}.tar.gz", reactNativeAndroidDownloadDir, downloadsDir)
     Task resolveDoubleConversion = resolveTaskFactory(
         "resolveDoubleConversion",
@@ -805,55 +848,7 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
             }
         }
     }
-}
 
-/*
-Reanimated includes "hermes/hermes.h" header file in `NativeProxy.cpp`.
-Previously, we used header files from `hermes-engine` package in `node_modules`.
-In React Native 0.69 and 0.70, Hermes is no longer distributed as package on NPM.
-On the new architecture, Hermes is downloaded from GitHub and then compiled from sources.
-However, on the old architecture, we need to download Hermes header files on our own
-as well as unzip Hermes AAR in order to obtain `libhermes.so` shared library.
-For more details, see https://reactnative.dev/architecture/bundled-hermes
-or https://github.com/reactwg/react-native-new-architecture/discussions/4
-*/
-if (REACT_NATIVE_MINOR_VERSION in [69, 70] && !isNewArchitectureEnabled()) {
-    // copied from `react-native/ReactAndroid/hermes-engine/build.gradle`
-
-    def downloadDir = customDownloadsDir ? new File(customDownloadsDir) : new File(reactNativeRootDir, "sdks/download")
-
-    // By default we are going to download and unzip hermes inside the /sdks/hermes folder
-    // but you can provide an override for where the hermes source code is located.
-    def hermesDir = System.getenv("REACT_NATIVE_OVERRIDE_HERMES_DIR") ?: new File(reactNativeRootDir, "sdks/hermes")
-
-    def hermesVersion = "main"
-    def hermesVersionFile = new File(reactNativeRootDir, "sdks/.hermesversion")
-    if (hermesVersionFile.exists()) {
-        hermesVersion = hermesVersionFile.text
-    }
-
-    task downloadHermes(type: Download) {
-        src("https://github.com/facebook/hermes/tarball/${hermesVersion}")
-        onlyIfNewer(true)
-        overwrite(false)
-        dest(new File(downloadDir, "hermes.tar.gz"))
-    }
-
-    task unzipHermes(dependsOn: downloadHermes, type: Copy) {
-        from(tarTree(downloadHermes.dest)) {
-            eachFile { file ->
-                // We flatten the unzip as the tarball contains a `facebook-hermes-<SHA>`
-                // folder at the top level.
-                if (file.relativePath.segments.size() > 1) {
-                    file.relativePath = new RelativePath(!file.isDirectory(), file.relativePath.segments.drop(1))
-                }
-            }
-        }
-        into(hermesDir)
-    }
-}
-
-if (REACT_NATIVE_MINOR_VERSION < 71) {
     task prepareHermes {
         if (REACT_NATIVE_MINOR_VERSION >= 69) {
             if (!isNewArchitectureEnabled()) {
@@ -963,6 +958,40 @@ if (REACT_NATIVE_MINOR_VERSION < 71) {
             }
         }
     }
+
+    task unpackReactNativeAAR {
+        def buildType = resolveBuildType()
+        def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
+        if (REACT_NATIVE_MINOR_VERSION < 69) {
+            rnAarMatcher = "**/**/*.aar"
+        }
+        def rnAAR = fileTree("$reactNativeRootDir/android").matching({ it.include rnAarMatcher }).singleFile
+        def file = rnAAR.absoluteFile
+        def packageName = file.name.tokenize('-')[0]
+        copy {
+            from zipTree(file)
+            into "$reactNativeRootDir/ReactAndroid/src/main/jni/first-party/$packageName/"
+            include "jni/**/*.so"
+        }
+    }
+
+    task downloadNdkBuildDependencies {
+        if (!boostPath) {
+            dependsOn(downloadBoost)
+        }
+        dependsOn(downloadDoubleConversion)
+        dependsOn(downloadFolly)
+        dependsOn(downloadGlog)
+    }
+
+    task prepareThirdPartyNdkHeaders(dependsOn:[
+        downloadNdkBuildDependencies,
+        prepareBoost,
+        prepareDoubleConversion,
+        prepareFolly,
+        prepareGlog,
+        unpackReactNativeAAR]
+    ) {}
 }
 
 task packageNdkLibs(type: Copy) {
@@ -1014,42 +1043,6 @@ dependencies {
         def jscAAR = fileTree("$reactNativeRootDir/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
         extractSO(files(jscAAR))
     }
-}
-
-if (REACT_NATIVE_MINOR_VERSION < 71) {
-    task unpackReactNativeAAR {
-        def buildType = resolveBuildType()
-        def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
-        if (REACT_NATIVE_MINOR_VERSION < 69) {
-            rnAarMatcher = "**/**/*.aar"
-        }
-        def rnAAR = fileTree("$reactNativeRootDir/android").matching({ it.include rnAarMatcher }).singleFile
-        def file = rnAAR.absoluteFile
-        def packageName = file.name.tokenize('-')[0]
-        copy {
-            from zipTree(file)
-            into "$reactNativeRootDir/ReactAndroid/src/main/jni/first-party/$packageName/"
-            include "jni/**/*.so"
-        }
-    }
-
-    task downloadNdkBuildDependencies {
-        if (!boostPath) {
-            dependsOn(downloadBoost)
-        }
-        dependsOn(downloadDoubleConversion)
-        dependsOn(downloadFolly)
-        dependsOn(downloadGlog)
-    }
-
-    task prepareThirdPartyNdkHeaders(dependsOn:[
-        downloadNdkBuildDependencies,
-        prepareBoost,
-        prepareDoubleConversion,
-        prepareFolly,
-        prepareGlog,
-        unpackReactNativeAAR]
-    ) {}
 }
 
 def nativeBuildDependsOn(dependsOnTask) {
