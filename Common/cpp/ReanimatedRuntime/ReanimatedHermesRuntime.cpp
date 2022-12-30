@@ -46,7 +46,7 @@ class HermesExecutorRuntimeAdapter
   facebook::hermes::HermesRuntime &getRuntime() override {
     return hermesRuntime_;
   }
-#elif
+#else
   facebook::jsi::Runtime &getRuntime() override {
     return hermesRuntime_;
   }
@@ -82,7 +82,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 #if REACT_NATIVE_MINOR_VERSION >= 71
   debugToken_ = facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
-#elif
+#else
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #endif // REACT_NATIVE_MINOR_VERSION
@@ -127,7 +127,7 @@ ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
   // We have to disable debugging before the runtime is destroyed.
 #if REACT_NATIVE_MINOR_VERSION >= 71
   facebook::hermes::inspector::chrome::disableDebugging(debugToken_);
-#elif
+#else
   facebook::hermes::inspector::chrome::disableDebugging(*runtime_);
 #endif // REACT_NATIVE_MINOR_VERSION
 #endif // HERMES_ENABLE_DEBUGGER
