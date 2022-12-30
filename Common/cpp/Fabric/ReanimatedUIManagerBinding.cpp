@@ -64,7 +64,7 @@ ReanimatedUIManagerBinding::ReanimatedUIManagerBinding(
 
 ReanimatedUIManagerBinding::~ReanimatedUIManagerBinding() {}
 
-static inline ShadowNode::Shared cloneNodeFromNewest(
+static inline ShadowNode::Shared cloneNodeUsingNewest(
     UIManager *uiManager,
     NewestShadowNodesRegistry *newestShadowNodesRegistry,
     ShadowNode const &shadowNode,
@@ -85,7 +85,7 @@ static inline ShadowNode::Shared cloneNodeFromNewest(
   return uiManager->cloneNode(shadowNode, children, rawProps);
 }
 
-static inline void appendChildFromNewest(
+static inline void appendChildUsingNewest(
     UIManager *uiManager,
     NewestShadowNodesRegistry *newestShadowNodesRegistry,
     const ShadowNode::Shared &parentShadowNode,
@@ -133,7 +133,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
             size_t /*count*/) noexcept -> jsi::Value {
           return valueFromShadowNode(
               runtime,
-              cloneNodeFromNewest(
+              cloneNodeUsingNewest(
                   uiManager,
                   newestShadowNodesRegistry,
                   *shadowNodeFromValue(runtime, arguments[0])));
@@ -153,7 +153,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
             size_t /*count*/) noexcept -> jsi::Value {
           return valueFromShadowNode(
               runtime,
-              cloneNodeFromNewest(
+              cloneNodeUsingNewest(
                   uiManager,
                   newestShadowNodesRegistry,
                   *shadowNodeFromValue(runtime, arguments[0]),
@@ -175,7 +175,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
           auto const &rawProps = RawProps(runtime, arguments[1]);
           return valueFromShadowNode(
               runtime,
-              cloneNodeFromNewest(
+              cloneNodeUsingNewest(
                   uiManager,
                   newestShadowNodesRegistry,
                   *shadowNodeFromValue(runtime, arguments[0]),
@@ -198,7 +198,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
           auto const &rawProps = RawProps(runtime, arguments[1]);
           return valueFromShadowNode(
               runtime,
-              cloneNodeFromNewest(
+              cloneNodeUsingNewest(
                   uiManager,
                   newestShadowNodesRegistry,
                   *shadowNodeFromValue(runtime, arguments[0]),
@@ -217,7 +217,7 @@ jsi::Value ReanimatedUIManagerBinding::get(
             jsi::Value const & /*thisValue*/,
             jsi::Value const *arguments,
             size_t /*count*/) noexcept -> jsi::Value {
-          appendChildFromNewest(
+          appendChildUsingNewest(
               uiManager,
               newestShadowNodesRegistry,
               shadowNodeFromValue(runtime, arguments[0]),
