@@ -299,6 +299,14 @@ PODS:
     - glog
   - react-native-pager-view (5.4.1):
     - React-Core
+  - react-native-safe-area-context (4.4.1):
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - ReactCommon/turbomodule/core
+  - react-native-slider (4.4.0):
+    - React-Core
   - React-perflogger (0.71.0-rc.5)
   - React-RCTActionSheet (0.71.0-rc.5):
     - React-Core/RCTActionSheetHeaders (= 0.71.0-rc.5)
@@ -384,6 +392,8 @@ PODS:
     - React
   - RNCPicker (1.8.1):
     - React-Core
+  - RNGestureHandler (2.8.0):
+    - React-Core
   - RNReanimated (3.0.0-rc.9):
     - DoubleConversion
     - FBLazyVector
@@ -411,6 +421,11 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNScreens (3.18.2):
+    - React-Core
+    - React-RCTImage
+  - RNSVG (13.6.0):
+    - React-Core
   - SocketRocket (0.6.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -463,6 +478,8 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
+  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -478,7 +495,10 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
   - "RNCPicker (from `../node_modules/@react-native-community/picker`)"
+  - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../../`)
+  - RNScreens (from `../node_modules/react-native-screens`)
+  - RNSVG (from `../node_modules/react-native-svg`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -542,6 +562,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/logger"
   react-native-pager-view:
     :path: "../node_modules/react-native-pager-view"
+  react-native-safe-area-context:
+    :path: "../node_modules/react-native-safe-area-context"
+  react-native-slider:
+    :path: "../node_modules/@react-native-community/slider"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -572,8 +596,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/masked-view"
   RNCPicker:
     :path: "../node_modules/@react-native-community/picker"
+  RNGestureHandler:
+    :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../../"
+  RNScreens:
+    :path: "../node_modules/react-native-screens"
+  RNSVG:
+    :path: "../node_modules/react-native-svg"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -612,6 +642,8 @@ SPEC CHECKSUMS:
   React-jsinspector: 55ec7f756a6b15df4b1b0b2246001a42771190c9
   React-logger: 79c2bd2ce2122aa7c4a2bcb7be274d91ba6fb700
   react-native-pager-view: 43f51f45f37ec9715f6c188e4af46ccdf79872e8
+  react-native-safe-area-context: 99b24a0c5acd0d5dcac2b1a7f18c49ea317be99a
+  react-native-slider: d2938a12c4e439a227c70eec65d119136eb4aeb5
   React-perflogger: 6c81fa72c14bd8c7b34aa989edf59aa9d7baee58
   React-RCTActionSheet: 9fbf08df3759f11aae38c0182ada561eb64c216e
   React-RCTAnimation: 940ad0c37d927dc2a75ebeed34703ba0c9545ac7
@@ -627,7 +659,10 @@ SPEC CHECKSUMS:
   ReactCommon: 22ec04726eb397686d75debf5ea97c09b6abab83
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
   RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
+  RNGestureHandler: 62232ba8f562f7dea5ba1b3383494eb5bf97a4d3
   RNReanimated: 484ab925c068b6721c63afc1910dc113d2ce9a77
+  RNScreens: 34cc502acf1b916c582c60003dc3089fa01dc66d
+  RNSVG: 3a79c0c4992213e4f06c08e62730c5e7b9e4dc17
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 81db1f51b5d3ea7eeb1b76a6890caffa45229cb2
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
