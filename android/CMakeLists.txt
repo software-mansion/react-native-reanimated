@@ -151,7 +151,7 @@ if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 71)
         ReactAndroid::reactnativejni
         fbjni::fbjni
     )
-elseif()
+else()
     if(${REACT_NATIVE_MINOR_VERSION} LESS 66)
         set (JSI_LIB "")
     else()
