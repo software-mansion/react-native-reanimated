@@ -1,0 +1,23 @@
+.smallBox {
+    width: 20px;
+    height: 20px;
+}
+
+.animatedBox {
+    width: 200px;
+    height: 200px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+}
+
+.gap {
+    row-gap: 24px;
+    column-gap: 24px;
+}
+
+.marginTop {
+    margin-top: 24px;
+}
