@@ -8,7 +8,7 @@
 
 /* eslint no-bitwise: 0 */
 import { Platform } from 'react-native';
-import { makeRemote, makeShareable, isConfigured } from './core';
+import { isConfigured, makeRemote, makeShareable } from './core';
 
 interface RGB {
   r: number;
@@ -23,7 +23,7 @@ interface HSV {
 }
 
 // var INTEGER = '[-+]?\\d+';
-const NUMBER = '[-+]?\\d*\\.?\\d+';
+const NUMBER = '[-+]?\\d*(?:\\.\\d*)?';
 const PERCENTAGE = NUMBER + '%';
 
 function call(...args: unknown[]): string {
