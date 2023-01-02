@@ -20,6 +20,7 @@
   REAAnimationsManager *_animationManager;
   NSMutableSet<NSNumber *> *_stackDetectedChange;
   NSMutableSet<NSNumber *> *_stackHasObserver;
+  NSMutableSet<NSNumber *> *_screenHasObserver;
 }
 
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager
@@ -35,6 +36,7 @@
     _animationManager = animationManager;
     _stackDetectedChange = [NSMutableSet new];
     _stackHasObserver = [NSMutableSet new];
+    _screenHasObserver = [NSMutableSet new];
   }
   return self;
 }
@@ -219,6 +221,11 @@
 
 - (void)observeChanges:(UIView *)view
 {
+  if ([_screenHasObserver containsObject:view.reactTag]) {
+    return;
+  }
+  [_screenHasObserver addObject:view.reactTag];
+
   [view addObserver:self forKeyPath:@"transitionDuration" options:NSKeyValueObservingOptionNew context:@"reanimated"];
   [view addObserver:self forKeyPath:@"activityState" options:NSKeyValueObservingOptionNew context:nil];
 
@@ -342,6 +349,7 @@
                                  [self clearAllSharedConfigsForView:(UIView *)view];
                                  return false;
                                }];
+        [_screenHasObserver removeObject:child.reactTag];
       }
       [_stackHasObserver removeObject:stack.reactTag];
     }
