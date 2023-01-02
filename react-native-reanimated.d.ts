@@ -720,6 +720,8 @@ declare module 'react-native-reanimated' {
     useCorrectedHSVInterpolation?: boolean;
   };
 
+  export function isColor(value: unknown): boolean;
+
   export function interpolateColor<T extends string | number>(
     value: number,
     inputRange: readonly number[],

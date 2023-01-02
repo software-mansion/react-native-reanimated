@@ -47,6 +47,18 @@ describe('colors interpolation', () => {
     expect(interpolatedColor).toBe('rgba(255, 0, 90, 1)');
   });
 
+  it('interpolates css colors', () => {
+    const colors = ['red', 'green'];
+    const interpolatedColor = interpolateColor(0.5, [0, 1], colors);
+    expect(interpolatedColor).toBe('rgba(186, 93, 0, 1)');
+  });
+
+  it('interpolates semi-transparent colors', () => {
+    const colors = ['#10506050', '#60902070'];
+    const interpolatedColor = interpolateColor(0.5, [0, 1], colors);
+    expect(interpolatedColor).toBe(`rgba(71, 117, 73, ${96 / 255})`);
+  });
+
   function TestComponent() {
     const color = useSharedValue('#105060');
 

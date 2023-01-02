@@ -3,7 +3,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   interpolateColor,
-  // @ts-ignore isColor is exported but not available in ts types
   isColor,
 } from 'react-native-reanimated';
 import {
