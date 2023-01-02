@@ -35,8 +35,10 @@ export function valueSetter(sv: any, value: any): void {
     const currentTimestamp = getTimestamp();
     initializeAnimation(currentTimestamp);
     const step = (timestamp: number) => {
+      if (_WORKLET) _beginSection('valueSetter step');
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
+        if (_WORKLET) _endSection();
         return;
       }
       const finished = animation.onFrame(animation, timestamp);
@@ -48,6 +50,7 @@ export function valueSetter(sv: any, value: any): void {
       } else {
         requestAnimationFrame(step);
       }
+      if (_WORKLET) _endSection();
     };
 
     sv._animation = animation;
