@@ -161,9 +161,15 @@
     }
 
     REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] init:viewSource withParent:viewSource.superview];
-    REASnapshot *targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
     _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
-    _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+
+    REASnapshot *targetViewSnapshot;
+    if (addedNewScreen) {
+      targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
+      _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+    } else {
+      targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
+    }
 
     [_currentSharedTransitionViews addObject:viewSource];
     [_currentSharedTransitionViews addObject:viewTarget];
@@ -317,6 +323,16 @@
     if (stack != nil && [_stackDetectedChange containsObject:stack.reactTag]) {
       if ([self isScreen:screen outsideStack:stack]) {
         [self runSharedTransitionForSharedViewsOnScreen:screen];
+      } else {
+        [_animationManager
+            visitTree:screen
+                block:^int(id<RCTComponent> view) {
+                  if ([self->_animationManager hasAnimationForTag:view.reactTag type:@"sharedElementTransition"]) {
+                    REASnapshot *snapshot = [[REASnapshot alloc] init:view withParent:((UIView *)view).superview];
+                    self->_snapshotRegistry[view.reactTag] = snapshot;
+                  }
+                  return false;
+                }];
       }
       [_stackDetectedChange removeObject:stack.reactTag];
     } else { // removed stack
@@ -450,9 +466,15 @@
     int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
     [parent insertSubview:view atIndex:childIndex];
     REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[view.reactTag];
+    BOOL isScreenDetached = [self getParentScreen:view].superview == nil;
+    NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
+    if (isScreenDetached) {
+      viewSourcePreviousSnapshot.values[@"originY"] = viewSourcePreviousSnapshot.values[@"originYByParent"];
+    }
     [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
                                                  forTag:view.reactTag
                                      isSharedTransition:YES];
+    viewSourcePreviousSnapshot.values[@"originY"] = originY;
     [_currentSharedTransitionViews removeObject:view];
   }
   if ([_currentSharedTransitionViews count] == 0) {
