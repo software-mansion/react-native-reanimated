@@ -841,17 +841,14 @@ function isGestureObject(t, node) {
 }
 
 function processWorklets(t, path, state) {
-  
   const callee =
     path.node.callee.type === 'SequenceExpression'
       ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
       : path.node.callee;
 
   const name =
-    callee.type === 'MemberExpression'
-      ? callee.property.name
-      : callee.name;
-  
+    callee.type === 'MemberExpression' ? callee.property.name : callee.name;
+
   if (
     objectHooks.has(name) &&
     path.get('arguments.0').type === 'ObjectExpression'
