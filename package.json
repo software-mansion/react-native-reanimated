@@ -76,11 +76,11 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
+    "convert-source-map": "^1.7.0",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "setimmediate": "^1.0.5",
-    "string-hash-64": "^1.0.3",
-    "convert-source-map": "^1.7.0"
+    "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
@@ -103,7 +103,7 @@
     "@types/babel__traverse": "^7.14.2",
     "@types/invariant": "^2.2.35",
     "@types/jest": "^27.4.0",
-    "@types/react-native": "^0.66.0",
+    "@types/react": "^18.0.26",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "babel-eslint": "^10.1.0",
@@ -124,9 +124,8 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.70.5",
+    "react-native": "0.71.0-rc.5",
     "react-native-builder-bob": "^0.18.3",
-    "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^2.4.2",
     "react-test-renderer": "17.0.2",
     "release-it": "^13.7.2",

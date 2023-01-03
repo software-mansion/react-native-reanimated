@@ -1,64 +1,64 @@
-import React from 'react';
 import {
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-  LogBox,
-  Platform,
-  UIManager,
-  ScrollView,
-} from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-import {
-  createStackNavigator,
-  StackNavigationProp,
-} from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
-import {
+  BasicLayoutAnimation,
+  BasicNestedAnimation,
+  BasicNestedLayoutAnimation,
   Carousel,
+  CombinedTest,
   CustomLayoutAnimationScreen,
   DefaultAnimations,
+  DeleteAncestorOfExiting,
   Modal,
   ModalNewAPI,
   MountingUnmounting,
-  SpringLayoutAnimation,
-  SwipeableList,
   NativeModals,
   NestedTest,
-  CombinedTest,
-  BasicNestedLayoutAnimation,
-  BasicNestedAnimation,
-  BasicLayoutAnimation,
-  DeleteAncestorOfExiting,
+  SpringLayoutAnimation,
+  SwipeableList,
 } from './LayoutReanimation';
+import {
+  FlatList,
+  LogBox,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  UIManager,
+  View,
+} from 'react-native';
+import {
+  StackNavigationProp,
+  createStackNavigator,
+} from '@react-navigation/stack';
 
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import ChatHeadsExample from './ChatHeadsExample';
-import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
-import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import FrameCallbackExample from './FrameCallbackExample';
+import InvertedFlatListExample from './InvertedFlatListExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
+import { NavigationContainer } from '@react-navigation/native';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import { PagerExample } from './CustomHandler';
+import React from 'react';
 import { ReactionsCounterExample } from './ReactionsCounterExample';
+import { RectButton } from 'react-native-gesture-handler';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
-import WobbleExample from './WobbleExample';
-import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
-import AnimatedSensorExample from './AnimatedSensorExample';
-import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
-import AnimatedKeyboardExample from './AnimatedKeyboardExample';
-import ScrollViewOffsetExample from './ScrollViewOffsetExample';
-import InvertedFlatListExample from './InvertedFlatListExample';
+import WobbleExample from './WobbleExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 

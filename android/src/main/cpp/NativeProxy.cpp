@@ -17,7 +17,6 @@
 #include "ReanimatedRuntime.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <JFabricUIManager.h>
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
