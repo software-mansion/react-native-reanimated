@@ -21,3 +21,16 @@
 .marginTop {
     margin-top: 24px;
 }
+
+.marginLeft {
+    margin-left: 12px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    row-gap: 24px;
+    font-weight: 700;
+    font-size:medium;
+    margin-top: 48px;
+}

@@ -176,7 +176,36 @@ const rgbToString = (color: RGB): string => {
 
 const animationDuration = 1000;
 
-const ColorWidget = ({
+const ColorProgressBar = ({
+  color1,
+  color2,
+  interpolateFunction,
+}: {
+  color1: RGB;
+  color2: RGB;
+  interpolateFunction: (c1: RGB, c2: RGB, p: number) => RGB;
+}) => {
+  return (
+    <div className={styles.row}>
+      {new Array(11)
+        .fill(null)
+        .map((_, i) => i / 10)
+        .map((p) => (
+          <div
+            key={'' + p}
+            className={styles.smallBox}
+            style={{
+              backgroundColor: rgbToString(
+                interpolateFunction(color1, color2, p)
+              ),
+            }}
+          />
+        ))}
+    </div>
+  );
+};
+
+const AnimationWidget = ({
   color1,
   color2,
   interpolateFunction,
@@ -188,77 +217,80 @@ const ColorWidget = ({
   const animatedBoxRef = useRef<HTMLDivElement>();
   const frame = useRef(0);
   const firstFrameTime = useRef(performance.now());
-
-  const [animatedBoxColor, setAnimatedBoxColor] = useState(color1);
+  const currentBoxColor = useRef(color1);
+  const [nextBoxColor, setNextBoxColor] = useState(0);
+  const colors = [color1, color2];
 
   useEffect(() => {
-    if (animatedBoxColor == color1) {
+    if (
+      rgbToString(currentBoxColor.current) == rgbToString(colors[nextBoxColor])
+    ) {
       return;
     }
     firstFrameTime.current = performance.now();
     frame.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame.current);
-  }, [animatedBoxColor]);
+  }, [nextBoxColor]);
 
   useEffect(() => {
-    nextAnimationFrameHandler(0);
-  }, [color1, color2, animatedBoxRef]);
+    const box = animatedBoxRef.current;
+    setNextBoxColor(0);
+    currentBoxColor.current = colors[0];
+    if (box) {
+      box.style.backgroundColor = rgbToString(colors[0]);
+    }
+  }, [color1, color2, animatedBoxRef, interpolateFunction]);
 
-  const animate = (now) => {
+  const animate = (now: number) => {
     let timeFraction = (now - firstFrameTime.current) / animationDuration;
     if (timeFraction > 1) {
       timeFraction = 1;
     }
 
     nextAnimationFrameHandler(timeFraction);
-    if (timeFraction != 1) frame.current = requestAnimationFrame(animate);
+    if (timeFraction != 1) {
+      frame.current = requestAnimationFrame(animate);
+    } else {
+      currentBoxColor.current = [color1, color2][nextBoxColor];
+    }
   };
 
-  const nextAnimationFrameHandler = (progress) => {
+  const nextAnimationFrameHandler = (progress: number) => {
     const box = animatedBoxRef.current;
     if (box) {
       box.style.backgroundColor = rgbToString(
-        interpolateFunction(color1, color2, progress)
+        interpolateFunction(
+          colors[1 - nextBoxColor],
+          colors[nextBoxColor],
+          progress
+        )
       );
     }
   };
 
   return (
-    <div>
-      <div className={styles.row}>
-        {new Array(11)
-          .fill(null)
-          .map((_, i) => i / 10)
-          .map((p) => (
-            <div
-              key={'' + p}
-              className={styles.smallBox}
-              style={{
-                backgroundColor: rgbToString(
-                  interpolateFunction(color1, color2, p)
-                ),
-              }}
-            />
-          ))}
-      </div>
-      <div className={`${styles.row} ${styles.gap} ${styles.marginTop}`}>
-        <div className={styles.animatedBox} ref={animatedBoxRef} />
-        <button type="button" onClick={() => setAnimatedBoxColor(color2)}>
-          Start animation!
-        </button>
-      </div>
+    <div className={`${styles.row} ${styles.gap} ${styles.marginTop}`}>
+      <div className={styles.animatedBox} ref={animatedBoxRef} />
+      <button type="button" onClick={() => setNextBoxColor(1 - nextBoxColor)}>
+        Start animation!
+      </button>
     </div>
   );
 };
 
 export const ColorWidgets = () => {
-  const [color1, setColor1] = useState('#ff0000');
-  const [color2, setColor2] = useState('#00ff00');
+  const [colorspace, setColorspace] = useState('RGB');
+  const [color1, setColor1] = useState('#00ff00');
+  const [color2, setColor2] = useState('#ffc0cb');
   const [gamma, setGamma] = useState(2.2);
 
   const handleOnGammaChange = (event) => {
     const gamma = event.target.value;
     setGamma(parseFloat(gamma));
+  };
+
+  const handleColorspaceChange = (event) => {
+    setColorspace(event.target.value);
   };
 
   const [useCorrectedHSV, setUseCorrectedHSV] = useState(true);
@@ -282,33 +314,108 @@ export const ColorWidgets = () => {
         </div>
       </div>
 
-      <h3 className={styles.marginTop}>RGB colorspace:</h3>
-      <h4>
-        Gamma:{' '}
-        <input type="number" value={gamma} onChange={handleOnGammaChange} />{' '}
-      </h4>
-      <ColorWidget
-        color1={hexToRgb(color1)}
-        color2={hexToRgb(color2)}
-        interpolateFunction={(c1, c2, p) => rgbInterpolation(p, c1, c2, gamma)}
-      />
+      <table className={styles.marginTop}>
+        <thead>
+          <tr>
+            <th>Mode</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>RGB without gamma correction</td>
+            <td>
+              <ColorProgressBar
+                color1={hexToRgb(color1)}
+                color2={hexToRgb(color2)}
+                interpolateFunction={(c1, c2, p) =>
+                  rgbInterpolation(p, c1, c2, 1)
+                }
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>RGB with gamma = 2.2 (default)</td>
+            <td>
+              <ColorProgressBar
+                color1={hexToRgb(color1)}
+                color2={hexToRgb(color2)}
+                interpolateFunction={(c1, c2, p) =>
+                  rgbInterpolation(p, c1, c2, 2.2)
+                }
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>HSV without correction</td>
+            <td>
+              <ColorProgressBar
+                color1={hexToRgb(color1)}
+                color2={hexToRgb(color2)}
+                interpolateFunction={(c1, c2, p) =>
+                  hsvInterpolation(p, c1, c2, false)
+                }
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>HSV with correction</td>
+            <td>
+              <ColorProgressBar
+                color1={hexToRgb(color1)}
+                color2={hexToRgb(color2)}
+                interpolateFunction={(c1, c2, p) =>
+                  hsvInterpolation(p, c1, c2, true)
+                }
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-      <h3 className={styles.marginTop}>HSV colorspace:</h3>
-      <label>
-        <input
-          type="checkbox"
-          checked={useCorrectedHSV}
-          onChange={() => setUseCorrectedHSV(!useCorrectedHSV)}
+      <div className={styles.form}>
+        <h3>Animation: </h3>
+        <label>
+          Select colorspace:
+          <select
+            value={colorspace}
+            onChange={handleColorspaceChange}
+            className={styles.marginLeft}>
+            <option value="RGB">RGB</option>
+            <option value="HSV">HSV</option>
+          </select>
+        </label>
+
+        <label>
+          Gamma:
+          <input
+            type="number"
+            value={gamma}
+            onChange={handleOnGammaChange}
+            disabled={colorspace !== 'RGB'}
+            className={styles.marginLeft}
+          />
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            checked={useCorrectedHSV}
+            onChange={() => setUseCorrectedHSV(!useCorrectedHSV)}
+            disabled={colorspace !== 'HSV'}
+          />
+          Use corrected HSV
+        </label>
+
+        <AnimationWidget
+          color1={hexToRgb(color1)}
+          color2={hexToRgb(color2)}
+          interpolateFunction={(c1, c2, p) => {
+            if (colorspace === 'RGB') return rgbInterpolation(p, c1, c2, gamma);
+            return hsvInterpolation(p, c1, c2, useCorrectedHSV);
+          }}
         />
-        Use corrected HSV
-      </label>
-      <ColorWidget
-        color1={hexToRgb(color1)}
-        color2={hexToRgb(color2)}
-        interpolateFunction={(c1, c2, p) =>
-          hsvInterpolation(p, c1, c2, useCorrectedHSV)
-        }
-      />
+      </div>
     </div>
   );
 };
