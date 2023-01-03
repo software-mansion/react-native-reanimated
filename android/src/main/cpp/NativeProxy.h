@@ -217,7 +217,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const jsi::Value &uiProps);
 #else
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
-  void updateUiProps(jsi::Runtime &rt, int viewTag, const jsi::Value &uiProps);
+  void updateUiProps(jsi::Runtime &rt, const jsi::Value &updates);
   void updateNativeProps(
       jsi::Runtime &rt,
       int viewTag,

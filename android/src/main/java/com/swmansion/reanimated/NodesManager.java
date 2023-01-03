@@ -30,6 +30,7 @@ import com.facebook.systrace.Systrace;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -377,10 +378,16 @@ public class NodesManager implements EventDispatcherListener {
     Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
-  public void updateUiProps(int viewTag, ReadableMap uiProps) {
+  public void updateUiProps(ReadableMap updates) {
     Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateUiProps");
-    if (viewTag != View.NO_ID) {
-      mUIImplementation.synchronouslyUpdateViewOnUIThread(viewTag, new ReactStylesDiffMap(uiProps));
+    Iterator<Map.Entry<String, Object>> iterator = updates.getEntryIterator();
+    while (iterator.hasNext()) {
+      Map.Entry<String, Object> entry = (Map.Entry<String, Object>) iterator.next();
+      String key = (String) entry.getKey();
+      int viewTag = Integer.parseInt(key);
+      Object props = entry.getValue();
+      ReactStylesDiffMap reactStylesDiffMap = new ReactStylesDiffMap((ReadableMap) props);
+      mUIImplementation.synchronouslyUpdateViewOnUIThread(viewTag, reactStylesDiffMap);
     }
     Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }

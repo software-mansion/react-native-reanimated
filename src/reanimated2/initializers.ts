@@ -10,9 +10,9 @@ function callGuardDEV<T extends Array<any>, U>(
 ): void {
   'worklet';
   try {
-    if (_WORKLET) _beginSection('callGuardDEV ' + fn.name);
+    // if (_WORKLET) _beginSection('callGuardDEV ' + fn.name);
     fn(...args);
-    if (_WORKLET) _endSection();
+    // if (_WORKLET) _endSection();
   } catch (e) {
     if (global.ErrorUtils) {
       global.ErrorUtils.reportFatalError(e as Error);
@@ -132,6 +132,10 @@ export function initializeUIRuntime() {
             const currentCallbacks = callbacks;
             callbacks = [];
             currentCallbacks.forEach((f) => f(timestamp));
+            if (global._setImmediateFunction !== undefined) {
+              global._setImmediateFunction();
+              global._setImmediateFunction = undefined;
+            }
           });
         }
         // Reanimated currently does not support cancelling callbacks requested with
@@ -139,6 +143,11 @@ export function initializeUIRuntime() {
         // with the spec but it should give users better clue in case they actually
         // attempt to store the value returned from rAF and use it for cancelling.
         return -1;
+      };
+
+      // @ts-ignore fix types
+      global.setImmediate = (callback: () => void) => {
+        global._setImmediateFunction = callback;
       };
     }
   })();

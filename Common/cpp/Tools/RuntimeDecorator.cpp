@@ -204,14 +204,12 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
     SystraceSection s("_updateUiPropsPaper");
-    const auto viewTag = args[0].asNumber();
-    const auto &viewName = args[1];
-    const auto &uiProps = args[2];
-    updateUiProps(rt, viewTag, viewName, uiProps);
+    const auto &updates = args[0];
+    updateUiProps(rt, updates);
     return jsi::Value::undefined();
   };
   jsi::Value updateUiPropsHostFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_updateUiPropsPaper"), 2, clbb);
+      rt, jsi::PropNameID::forAscii(rt, "_updateUiPropsPaper"), 1, clbb);
   rt.global().setProperty(rt, "_updateUiPropsPaper", updateUiPropsHostFunction);
 
   auto clbbb = [updateNativeProps](

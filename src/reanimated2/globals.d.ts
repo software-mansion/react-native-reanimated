@@ -46,9 +46,7 @@ declare global {
     updates: StyleProps | AnimatedStyle
   ) => void;
   const _updateUiPropsPaper: (
-    tag: number,
-    name: string,
-    updates: StyleProps | AnimatedStyle
+    updates: Record<number, StyleProps | AnimatedStyle>
   ) => void;
   const _updateNativePropsPaper: (
     tag: number,
@@ -87,6 +85,7 @@ declare global {
   const console: Console;
   const _beginSection: (name: string) => void;
   const _endSection: () => void;
+  const _setImmediateFunction: (() => void) | undefined;
 
   namespace NodeJS {
     interface Global {
@@ -113,6 +112,14 @@ declare global {
       ) => void;
       _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
       _updatePropsPaper: (
+        tag: number,
+        name: string,
+        updates: StyleProps | AnimatedStyle
+      ) => void;
+      _updateUiPropsPaper: (
+        updates: Record<number, StyleProps | AnimatedStyle>
+      ) => void;
+      _updateNativePropsPaper: (
         tag: number,
         name: string,
         updates: StyleProps | AnimatedStyle
@@ -155,6 +162,7 @@ declare global {
       console: Console;
       _beginSection: (name: string) => void;
       _endSection: () => void;
+      _setImmediateFunction: (() => void) | undefined;
     }
   }
 }

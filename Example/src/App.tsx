@@ -56,10 +56,12 @@ function Circle() {
   const animatedStyle = useAnimatedStyle(() => {
     return {
       // backgroundColor: `hsl(${hue.value}, 100%, 50%)`,
-      transform: [
-        { translateY: top.value - size / 2 },
-        { translateX: left.value - size / 2 },
-      ],
+      // transform: [
+      //   { translateY: top.value - size / 2 },
+      //   { translateX: left.value - size / 2 },
+      // ],
+      translateX: left.value - size / 2,
+      translateY: top.value - size / 2,
       opacity: 0.1 + (1 - power) * 0.1,
     };
   }, []);

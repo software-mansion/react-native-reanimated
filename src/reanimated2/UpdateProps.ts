@@ -127,6 +127,27 @@ const nativePropsSet = Object.keys({
   placeholderTextColor: true,
 });
 
+let uiPropUpdates: Record<number, StyleProps | AnimatedStyle> = {}; // tag -> props
+const uiPropUpdatesCount: { count: number } = { count: 0 };
+
+function updateUiPropsPaperBatched(
+  tag: number,
+  _name: string,
+  updates: StyleProps | AnimatedStyle
+) {
+  'worklet';
+  uiPropUpdates[tag] = updates;
+  ++uiPropUpdatesCount.count;
+  if (uiPropUpdatesCount.count === 1) {
+    global.setImmediate(() => {
+      'worklet';
+      _updateUiPropsPaper(uiPropUpdates);
+      uiPropUpdates = {};
+      uiPropUpdatesCount.count = 0;
+    });
+  }
+}
+
 let updatePropsByPlatform;
 if (shouldBeUseWeb()) {
   updatePropsByPlatform = (
@@ -168,17 +189,17 @@ if (shouldBeUseWeb()) {
     ): void => {
       'worklet';
 
-      if (_WORKLET) _beginSection('UpdateProps processColor');
+      // if (_WORKLET) _beginSection('UpdateProps processColor');
       for (const key in updates) {
         if (ColorProperties.indexOf(key) !== -1) {
-          if (_WORKLET) _beginSection('processColor');
+          // if (_WORKLET) _beginSection('processColor');
           updates[key] = processColor(updates[key]);
-          if (_WORKLET) _endSection();
+          // if (_WORKLET) _endSection();
         }
       }
-      if (_WORKLET) _endSection();
+      // if (_WORKLET) _endSection();
 
-      if (_WORKLET) _beginSection('check props');
+      // if (_WORKLET) _beginSection('check props');
       let hasNativeProps = false;
       let hasJsProps = false;
       for (const key of Object.keys(updates)) {
@@ -190,12 +211,12 @@ if (shouldBeUseWeb()) {
           hasJsProps = true;
         }
       }
-      if (_WORKLET) _endSection();
+      // if (_WORKLET) _endSection();
 
       let nativeUpdatePropsFunction: typeof _updatePropsPaper;
       if (!hasNativeProps && !hasJsProps) {
         // only UI props
-        nativeUpdatePropsFunction = _updateUiPropsPaper;
+        nativeUpdatePropsFunction = updateUiPropsPaperBatched;
       } else if (!hasJsProps) {
         // only UI or native props
         nativeUpdatePropsFunction = _updateNativePropsPaper;

@@ -120,14 +120,10 @@ void NativeProxy::installJSIBindings(
     this->updateProps(rt, viewTag, props);
   };
 
-  auto updateUiPropsFunction = [this](
-                                   jsi::Runtime &rt,
-                                   int viewTag,
-                                   const jsi::Value &viewName,
-                                   const jsi::Value &uiProps) {
-    // viewName is for iOS only, we skip it here
-    this->updateUiProps(rt, viewTag, uiProps);
-  };
+  auto updateUiPropsFunction =
+      [this](jsi::Runtime &rt, const jsi::Value &updates) {
+        this->updateUiProps(rt, updates);
+      };
 
   auto updateNativePropsFunction = [this](
                                        jsi::Runtime &rt,
@@ -469,18 +465,15 @@ void NativeProxy::updateProps(
       javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
 }
 
-void NativeProxy::updateUiProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &uiProps) {
+void NativeProxy::updateUiProps(jsi::Runtime &rt, const jsi::Value &updates) {
   SystraceSection s("NativeProxy::updateUiProps");
   static const auto method =
       javaPart_->getClass()
-          ->getMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
+          ->getMethod<void(jni::local_ref<ReadableMap::javaobject>)>(
               "updateUiProps");
-  jni::local_ref<ReadableMap::javaobject> javaUiProps = castReadableMap(
-      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps)));
-  method(javaPart_.get(), viewTag, javaUiProps);
+  jni::local_ref<ReadableMap::javaobject> javaUpdates = castReadableMap(
+      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, updates)));
+  method(javaPart_.get(), javaUpdates);
 }
 
 void NativeProxy::updateNativeProps(

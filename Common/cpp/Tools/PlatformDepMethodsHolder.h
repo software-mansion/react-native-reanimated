@@ -43,11 +43,8 @@ using UpdatePropsFunction = std::function<void(
     int viewTag,
     const jsi::Value &viewName,
     const jsi::Object &object)>;
-using UpdateUiPropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    const jsi::Value &uiProps)>;
+using UpdateUiPropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &updates)>;
 using UpdateNativePropsFunction = std::function<void(
     jsi::Runtime &rt,
     int viewTag,
