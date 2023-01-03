@@ -1,5 +1,5 @@
 import { EasingFn } from '../../Easing';
-import { StyleProps } from '../../commonTypes';
+import { StyleProps, AnimatedStyle } from '../../commonTypes';
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFn;
@@ -8,7 +8,7 @@ export interface KeyframeProps extends StyleProps {
 
 export type LayoutAnimation = {
   initialValues: StyleProps;
-  animations: StyleProps;
+  animations: AnimatedStyle;
   callback?: (finished: boolean) => void;
 };
 
