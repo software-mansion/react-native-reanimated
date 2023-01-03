@@ -6,19 +6,22 @@ import {
   Timestamp,
   AnimationObject,
 } from '../commonTypes';
-import { RepeatAnimation } from './commonTypes';
+import { InferAnimationReturnType, RepeatAnimation } from './commonTypes';
 
-export function withRepeat<T extends AnimationObject>(
+export function withRepeat<
+  T extends AnimationObject,
+  U extends AnimatableValue = InferAnimationReturnType<T>
+>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,
   reverse = false,
   callback?: AnimationCallback
-): Animation<RepeatAnimation> {
+): Animation<RepeatAnimation<U>> {
   'worklet';
 
-  return defineAnimation<RepeatAnimation, T>(
+  return defineAnimation<RepeatAnimation<U>, T>(
     _nextAnimation,
-    (): RepeatAnimation => {
+    (): RepeatAnimation<U> => {
       'worklet';
 
       const nextAnimation =
@@ -26,7 +29,7 @@ export function withRepeat<T extends AnimationObject>(
           ? _nextAnimation()
           : _nextAnimation;
 
-      function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
+      function repeat(animation: RepeatAnimation<U>, now: Timestamp): boolean {
         const finished = nextAnimation.onFrame(nextAnimation, now);
         animation.current = nextAnimation.current;
         if (finished) {
@@ -51,7 +54,7 @@ export function withRepeat<T extends AnimationObject>(
             nextAnimation,
             startValue,
             now,
-            nextAnimation.previousAnimation as RepeatAnimation
+            nextAnimation.previousAnimation as RepeatAnimation<U>
           );
           return false;
         }
@@ -69,7 +72,7 @@ export function withRepeat<T extends AnimationObject>(
       };
 
       function onStart(
-        animation: RepeatAnimation,
+        animation: RepeatAnimation<U>,
         value: AnimatableValue,
         now: Timestamp,
         previousAnimation: Animation<any> | null

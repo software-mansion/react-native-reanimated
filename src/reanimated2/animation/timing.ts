@@ -12,30 +12,31 @@ interface TimingConfig {
   easing?: EasingFn | EasingFactoryFn;
 }
 
-export interface TimingAnimation extends Animation<TimingAnimation> {
+export interface TimingAnimation<T extends AnimatableValue>
+  extends Animation<TimingAnimation<T>> {
   type: string;
   easing: EasingFn;
   startValue: AnimatableValue;
   startTime: Timestamp;
   progress: number;
   toValue: AnimatableValue;
-  current: AnimatableValue;
+  current: T;
 }
 
-export interface InnerTimingAnimation
-  extends Omit<TimingAnimation, 'toValue' | 'current'> {
+export interface InnerTimingAnimation<T extends AnimatableValue>
+  extends Omit<TimingAnimation<T>, 'toValue' | 'current'> {
   toValue: number;
   current: number;
 }
 
-export function withTiming(
-  toValue: AnimatableValue,
+export function withTiming<T extends AnimatableValue>(
+  toValue: T,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
-): Animation<TimingAnimation> {
+): Animation<TimingAnimation<T>> {
   'worklet';
 
-  return defineAnimation<TimingAnimation>(toValue, () => {
+  return defineAnimation<TimingAnimation<T>>(toValue, () => {
     'worklet';
     const config: Required<TimingConfig> = {
       duration: 300,
@@ -48,7 +49,10 @@ export function withTiming(
       );
     }
 
-    function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
+    function timing(
+      animation: InnerTimingAnimation<T>,
+      now: Timestamp
+    ): boolean {
       const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
@@ -65,23 +69,25 @@ export function withTiming(
     }
 
     function onStart(
-      animation: TimingAnimation,
-      value: number,
+      animation: TimingAnimation<T>,
+      value: T,
       now: Timestamp,
-      previousAnimation: Animation<TimingAnimation>
+      previousAnimation: Animation<TimingAnimation<T>>
     ): void {
       if (
         previousAnimation &&
-        (previousAnimation as TimingAnimation).type === 'timing' &&
-        (previousAnimation as TimingAnimation).toValue === toValue &&
-        (previousAnimation as TimingAnimation).startTime
+        (previousAnimation as TimingAnimation<T>).type === 'timing' &&
+        (previousAnimation as TimingAnimation<T>).toValue === toValue &&
+        (previousAnimation as TimingAnimation<T>).startTime
       ) {
         // to maintain continuity of timing animations we check if we are starting
         // new timing over the old one with the same parameters. If so, we want
         // to copy animation timeline properties
-        animation.startTime = (previousAnimation as TimingAnimation).startTime;
+        animation.startTime = (
+          previousAnimation as TimingAnimation<T>
+        ).startTime;
         animation.startValue = (
-          previousAnimation as TimingAnimation
+          previousAnimation as TimingAnimation<T>
         ).startValue;
       } else {
         animation.startTime = now;
@@ -98,7 +104,10 @@ export function withTiming(
     return {
       type: 'timing',
       onFrame: timing,
-      onStart: onStart as (animation: TimingAnimation, now: number) => boolean,
+      onStart: onStart as (
+        animation: TimingAnimation<T>,
+        now: number
+      ) => boolean,
       progress: 0,
       toValue,
       startValue: 0,
@@ -106,6 +115,6 @@ export function withTiming(
       easing: () => 0,
       current: toValue,
       callback,
-    } as TimingAnimation;
+    } as TimingAnimation<T>;
   });
 }
