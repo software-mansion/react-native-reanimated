@@ -763,7 +763,10 @@ declare module 'react-native-reanimated' {
   type DependencyList = ReadonlyArray<any>;
 
   // reanimated2 hooks
-  export function useSharedValue<T>(initialValue: T): SharedValue<T>;
+  export function useSharedValue<T>(
+    initialValue: T,
+    oneWayReadsOnly = false
+  ): SharedValue<T>;
 
   export function useDerivedValue<T>(
     processor: () => T,
