@@ -1,6 +1,8 @@
 import {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
 } from '../animationBuilder/commonTypes';
 import {
   ComplexAnimationBuilder,
@@ -24,7 +26,7 @@ export class FadeIn
     const initialValues = this.initialValues;
     const delay = this.getDelay();
 
-    return (_) => {
+    return (_: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -205,7 +207,7 @@ export class FadeOut
     const initialValues = this.initialValues;
     const delay = this.getDelay();
 
-    return (_) => {
+    return (_: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
