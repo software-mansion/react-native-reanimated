@@ -1,72 +1,332 @@
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
+import {
+  BasicLayoutAnimation,
+  BasicNestedAnimation,
+  BasicNestedLayoutAnimation,
+  Carousel,
+  CombinedTest,
+  CustomLayoutAnimationScreen,
+  DefaultAnimations,
+  DeleteAncestorOfExiting,
+  Modal,
+  ModalNewAPI,
+  MountingUnmounting,
+  NativeModals,
+  NestedTest,
+  SpringLayoutAnimation,
+  SwipeableList,
+} from './LayoutReanimation';
+import {
+  FlatList,
+  LogBox,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  UIManager,
+  View,
+} from 'react-native';
+import {
+  StackNavigationProp,
+  createStackNavigator,
+} from '@react-navigation/stack';
 
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
+import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import AnimatedTabBarExample from './AnimatedTabBarExample';
+import ChatHeadsExample from './ChatHeadsExample';
+import DragAndSnapExample from './DragAndSnapExample';
+import ExtrapolationExample from './ExtrapolationExample';
+import FrameCallbackExample from './FrameCallbackExample';
+import InvertedFlatListExample from './InvertedFlatListExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import LightboxExample from './LightboxExample';
+import LiquidSwipe from './LiquidSwipe';
+import MeasureExample from './MeasureExample';
+import { NavigationContainer } from '@react-navigation/native';
+import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import { PagerExample } from './CustomHandler';
 import React from 'react';
+import { ReactionsCounterExample } from './ReactionsCounterExample';
+import { RectButton } from 'react-native-gesture-handler';
+import ScrollEventExample from './ScrollEventExample';
+import ScrollExample from './AnimatedScrollExample';
+import ScrollToExample from './ScrollToExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SwipeableListExample from './SwipeableListExample';
+import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import WobbleExample from './WobbleExample';
 
-export default function WidthExample() {
-  const [padding, setPadding] = React.useState(20);
-  const [height, setHeight] = React.useState(80);
+LogBox.ignoreLogs(['Calling `getNode()`']);
 
-  const sv = useSharedValue(0);
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 
-  const handleAnimateWidth = () => {
-    sv.value = withTiming(Math.random(), { duration: 300 });
-  };
+type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
-  const handleIncreasePadding = () => {
-    setPadding((p) => p + 3);
-  };
+const SCREENS: Screens = {
+  DeleteAncestorOfExiting: {
+    screen: DeleteAncestorOfExiting,
+    title: '🆕 Deleting view with an exiting animation',
+  },
+  BasicLayoutAnimation: {
+    screen: BasicLayoutAnimation,
+    title: '🆕 Basic layout animation',
+  },
+  BasicNestedAnimation: {
+    screen: BasicNestedAnimation,
+    title: '🆕 Basic nested animation',
+  },
+  BasicNestedLayoutAnimation: {
+    screen: BasicNestedLayoutAnimation,
+    title: '🆕 Basic nested layout animation',
+  },
+  NestedLayoutAnimations: {
+    screen: NestedTest,
+    title: '🆕 Nested layout animations',
+  },
+  CombinedLayoutAnimations: {
+    screen: CombinedTest,
+    title: '🆕 Entering and Exiting with Layout',
+  },
+  DefaultAnimations: {
+    screen: DefaultAnimations,
+    title: '🆕 Default layout animations',
+  },
+  AnimatedKeyboard: {
+    screen: AnimatedKeyboardExample,
+    title: '🆕 Use Animated Keyboard',
+  },
+  AnimatedSensor: {
+    screen: AnimatedSensorExample,
+    title: '🆕 Use Animated Sensor',
+  },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: '🆕 Frame callback example',
+  },
+  DefaultTransistions: {
+    screen: WaterfallGridExample,
+    title: '🆕 Default layout transitions',
+  },
+  KeyframeAnimation: {
+    screen: KeyframeAnimation,
+    title: '🆕 Keyframe animation',
+  },
+  ParticipantList: {
+    screen: AnimatedListExample,
+    title: '🆕 Participant List',
+  },
+  OlympicAnimation: {
+    screen: OlympicAnimation,
+    title: '🆕 Olympic animation',
+  },
+  CustomLayoutAnimation: {
+    screen: CustomLayoutAnimationScreen,
+    title: '🆕 Custom layout animation',
+  },
+  ModalNewAPI: {
+    title: '🆕 ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    title: '🆕 Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    title: '🆕 Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  ReactionsCounterExample: {
+    screen: ReactionsCounterExample,
+    title: '🆕 Reactions counter',
+  },
+  SwipeableList: {
+    title: '🆕 Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    title: '🆕 Modal',
+    screen: Modal,
+  },
+  NativeModals: {
+    title: '🆕 Native modals (RN and Screens)',
+    screen: NativeModals,
+  },
+  Carousel: {
+    title: 'Carousel',
+    screen: Carousel,
+  },
+  PagerExample: {
+    screen: PagerExample,
+    title: 'Custom Handler Example - Pager',
+  },
+  AnimatedStyleUpdate: {
+    screen: AnimatedStyleUpdateExample,
+    title: 'Animated Style Update',
+  },
+  AnimatedSharedStyle: {
+    screen: AnimatedSharedStyleExample,
+    title: 'Animated Shared Style',
+  },
+  WobbleExample: {
+    screen: WobbleExample,
+    title: 'Animation Modifiers (Wobble Effect)',
+  },
+  DragAndSnapExample: {
+    screen: DragAndSnapExample,
+    title: 'Drag and Snap',
+  },
+  MeasureExample: {
+    screen: MeasureExample,
+    title: 'Synchronous Measure',
+  },
+  ScrollEventExample: {
+    screen: ScrollEventExample,
+    title: 'Scroll Events',
+  },
+  ScrollViewOffsetExample: {
+    screen: ScrollViewOffsetExample,
+    title: 'ScrollView offset',
+  },
+  ChatHeadsExample: {
+    screen: ChatHeadsExample,
+    title: 'Chat Heads',
+  },
+  ScrollableToExample: {
+    screen: ScrollToExample,
+    title: 'scrollTo',
+  },
+  SwipeableListExample: {
+    screen: SwipeableListExample,
+    title: '(advanced) Swipeable List',
+  },
+  LightboxExample: {
+    screen: LightboxExample,
+    title: '(advanced) Lightbox',
+  },
+  ScrollableViewExample: {
+    screen: ScrollableViewExample,
+    title: '(advanced) ScrollView imitation',
+  },
+  AnimatedTabBarExample: {
+    screen: AnimatedTabBarExample,
+    title: '(advanced) Tab Bar Example',
+  },
+  LiquidSwipe: {
+    screen: LiquidSwipe,
+    title: 'Liquid Swipe Example',
+  },
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: 'Extrapolation Example',
+  },
+  ScrollExample: {
+    screen: ScrollExample,
+    title: 'Scroll Example',
+  },
+  InvertedFlatListExample: {
+    screen: InvertedFlatListExample,
+    title: 'Inverted FlatList Example',
+  },
+};
 
-  const handleIncreaseHeight = () => {
-    setHeight((h) => h + 10);
-  };
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
+};
 
-  const childStyle = useAnimatedStyle(() => {
-    return {
-      width: 80 + 230 * sv.value,
-    };
-  }, []);
-
+function MainScreen({ navigation }: MainScreenProps) {
+  const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
-    <>
-      <View style={styles.buttons}>
-        <Button onPress={handleAnimateWidth} title="Animate width" />
-        <Button onPress={handleIncreasePadding} title="Increase padding" />
-        <Button onPress={handleIncreaseHeight} title="Increase height" />
-      </View>
-      <View style={[styles.parent, { paddingVertical: padding }]}>
-        <View collapsable={false} style={styles.middle}>
-          <Animated.View style={[styles.left, { height }, childStyle]} />
-          <View style={styles.right} />
-        </View>
-      </View>
-    </>
+    <FlatList
+      style={styles.list}
+      data={data}
+      ItemSeparatorComponent={ItemSeparator}
+      renderItem={(props) => (
+        <MainScreenItem
+          {...props}
+          screens={SCREENS}
+          onPressItem={({ key }) => navigation.navigate(key)}
+        />
+      )}
+      renderScrollComponent={(props) => <ScrollView {...props} />}
+    />
   );
 }
 
-const styles = StyleSheet.create({
-  buttons: {
-    marginTop: 80,
-    marginBottom: 40,
+export function ItemSeparator(): React.ReactElement {
+  return <View style={styles.separator} />;
+}
+
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export function MainScreenItem({
+  item,
+  onPressItem,
+  screens,
+}: MainScreenItemProps): React.ReactElement {
+  const { key } = item;
+  return (
+    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+      <Text style={styles.buttonText}>{screens[key].title || key}</Text>
+    </RectButton>
+  );
+}
+
+const Stack = createStackNavigator();
+
+const Reanimated2 = () => (
+  <Stack.Navigator detachInactiveScreens={false}>
+    <Stack.Screen
+      name="Home"
+      options={{ title: '🎬 Reanimated 2.x Examples' }}
+      children={(props) => <MainScreen {...props} />}
+    />
+    {Object.keys(SCREENS).map((name) => (
+      <Stack.Screen
+        key={name}
+        name={name}
+        getComponent={() => SCREENS[name].screen}
+        options={{ title: SCREENS[name].title || name }}
+      />
+    ))}
+  </Stack.Navigator>
+);
+
+function App(): React.ReactElement {
+  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
+}
+
+export const styles = StyleSheet.create({
+  list: {
+    backgroundColor: '#EFEFF4',
   },
-  parent: {
-    flexDirection: 'row',
-    backgroundColor: 'red',
-    paddingHorizontal: 20,
+  separator: {
+    height: 1,
+    backgroundColor: '#DBDBE0',
   },
-  middle: {
-    flexDirection: 'row',
+  buttonText: {
+    backgroundColor: 'transparent',
+  },
+  button: {
     flex: 1,
-  },
-  left: {
-    backgroundColor: 'blue',
-  },
-  right: {
-    backgroundColor: 'lime',
-    flex: 1,
+    height: 60,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
 });
+
+export default App;
