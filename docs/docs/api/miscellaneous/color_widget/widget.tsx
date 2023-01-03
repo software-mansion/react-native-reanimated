@@ -145,19 +145,20 @@ const hsvInterpolation = (
   let h;
   let d = hsv2.h - hsv1.h;
   if (useCorrectedHSV) {
+    let correctedValue = value;
     if (hsv1.h > hsv2.h) {
       var h3 = hsv2.h;
       hsv2.h = hsv1.h;
       hsv1.h = h3;
       d = -d;
-      value = 1 - value;
+      correctedValue = 1 - value;
     }
     if (d > 0.5) {
       hsv1.h = hsv1.h + 1;
-      h = (hsv1.h + value * (hsv2.h - hsv1.h)) % 1;
+      h = (hsv1.h + correctedValue * (hsv2.h - hsv1.h)) % 1;
     }
     if (d <= 0.5) {
-      h = hsv1.h + value * d;
+      h = hsv1.h + correctedValue * d;
     }
   } else {
     h = hsv1.h + value * d;
