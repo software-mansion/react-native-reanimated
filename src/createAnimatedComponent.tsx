@@ -118,8 +118,8 @@ export type AnimatedComponentProps<P> = P & {
   layout?:
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder
-    | typeof BaseAnimationBuilder;
-  // TODO: | LayoutAnimationFunction ?
+    | typeof BaseAnimationBuilder
+    | LayoutAnimationFunction;
   entering?:
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
