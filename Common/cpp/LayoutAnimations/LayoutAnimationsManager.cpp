@@ -22,13 +22,7 @@ void LayoutAnimationsManager::configureAnimation(
     sharedTransitionAnimations_[tag] = config;
     sharedTransitionGroups_.try_emplace(sharedTransitionTag);
     auto &group = sharedTransitionGroups_[sharedTransitionTag];
-    //    if (group.size() < 2) {
     group.push_back(tag);
-    //    } else {
-    // at this moment we want to allow only for two-items groups
-    //      group[0] = group[1];
-    //      group[1] = tag;
-    //    }
   }
 }
 

@@ -16,6 +16,7 @@ public class Snapshot {
   public static final String ORIGIN_Y = "originY";
   public static final String GLOBAL_ORIGIN_X = "globalOriginX";
   public static final String GLOBAL_ORIGIN_Y = "globalOriginY";
+  public static final String ORIGIN_Y_BY_PARENT = "originYByParent";
 
   public static final String CURRENT_WIDTH = "currentWidth";
   public static final String CURRENT_HEIGHT = "currentHeight";
@@ -41,6 +42,7 @@ public class Snapshot {
   public int originY;
   public int globalOriginX;
   public int globalOriginY;
+  public int originYByParent;
 
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
@@ -87,6 +89,7 @@ public class Snapshot {
     originY = location[1];
     width = view.getWidth();
     height = view.getHeight();
+    originYByParent = view.getTop();
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {

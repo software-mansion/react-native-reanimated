@@ -564,6 +564,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.visitTreeForTags(viewTags, clearConfig);
   }
 
+  public void visitTreeAndMakeSnapshot(View view) {
+    mSharedTransitionManager.visitTreeAndMakeSnapshot(view);
+  }
+
   protected NativeMethodsHolder getNativeMethodsHolder() {
     return mNativeMethodsHolder;
   }

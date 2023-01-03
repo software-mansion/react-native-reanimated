@@ -139,24 +139,24 @@
     }
 
     // check right target screen configuration
-    int count = [stack.reactSubviews count];
+    int screensCount = [stack.reactSubviews count];
     if (addedNewScreen) {
       // is under top
-      if (count - 2 < 0) {
+      if (screensCount - 2 < 0) {
         continue;
       }
       UIView *viewSourceParentScreen = [self getParentScreen:viewSource];
-      UIView *screenUnderStackTop = stack.reactSubviews[count - 2];
+      UIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
       if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag]) {
         continue;
       }
     } else {
       // is on top
-      if (count - 1 < 0) {
+      if (screensCount - 1 < 0) {
         continue;
       }
       UIView *viewTargetParentScreen = [self getParentScreen:viewTarget];
-      UIView *stackTop = stack.reactSubviews[count - 1];
+      UIView *stackTop = stack.reactSubviews[screensCount - 1];
       if (![stackTop.reactTag isEqual:viewTargetParentScreen.reactTag]) {
         continue;
       }

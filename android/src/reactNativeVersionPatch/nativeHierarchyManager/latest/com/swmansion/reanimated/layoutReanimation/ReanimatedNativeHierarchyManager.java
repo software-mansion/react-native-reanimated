@@ -282,7 +282,15 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     // we don't want layout animations in native-stack since it is currently buggy there
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
-      maybeNotifyAboutViewsRemoving(tagsToDelete);
+      if (tagsToDelete == null) {
+        int screensCount = viewGroup.getChildCount();
+        if (screensCount > 0) {
+          View screen = ((ViewGroup)viewGroup.getChildAt(0)).getChildAt(0);
+          tryToDoSnapshots(screen);
+        }
+      } else {
+        maybeNotifyAboutViewsRemoving(tagsToDelete);
+      }
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
       return;
     }
@@ -353,6 +361,11 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       animationsManager.viewsDidRemoved();
       animationsManager.visitTreeForTags(tagsToDelete, true);
     }
+  }
+
+  private void tryToDoSnapshots(View screen) {
+    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
+    animationsManager.visitTreeAndMakeSnapshot(screen);
   }
 
   public void publicDropView(View view) {
