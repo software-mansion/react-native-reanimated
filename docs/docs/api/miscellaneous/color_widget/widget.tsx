@@ -297,7 +297,6 @@ export const ColorWidgets = () => {
 
   return (
     <div>
-      <h3>Interpolate:</h3>
       <div className={`${styles.row} ${styles.gap}`}>
         <div>
           <h4>
@@ -374,7 +373,7 @@ export const ColorWidgets = () => {
       </table>
 
       <div className={styles.form}>
-        <h3>Animation: </h3>
+        <h3>Live demo</h3>
         <label>
           Select colorspace:
           <select
@@ -386,26 +385,31 @@ export const ColorWidgets = () => {
           </select>
         </label>
 
-        <label>
-          Gamma:
-          <input
-            type="number"
-            value={gamma}
-            onChange={handleOnGammaChange}
-            disabled={colorspace !== 'RGB'}
-            className={styles.marginLeft}
-          />
-        </label>
+        {colorspace === 'RGB' && (
+          <label>
+            Gamma:
+            <input
+              type="number"
+              value={gamma}
+              onChange={handleOnGammaChange}
+              step="0.1"
+              min="0.1"
+              max="10"
+              className={styles.marginLeft}
+            />
+          </label>
+        )}
 
-        <label>
-          <input
-            type="checkbox"
-            checked={useCorrectedHSV}
-            onChange={() => setUseCorrectedHSV(!useCorrectedHSV)}
-            disabled={colorspace !== 'HSV'}
-          />
-          Use corrected HSV
-        </label>
+        {colorspace === 'HSV' && (
+          <label>
+            <input
+              type="checkbox"
+              checked={useCorrectedHSV}
+              onChange={() => setUseCorrectedHSV(!useCorrectedHSV)}
+            />
+            Use corrected HSV
+          </label>
+        )}
 
         <AnimationWidget
           color1={hexToRgb(color1)}
