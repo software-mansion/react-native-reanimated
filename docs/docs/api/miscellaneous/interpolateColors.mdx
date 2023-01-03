@@ -43,7 +43,7 @@ Object containg color interpolation options. Allowed parameters are listed below
 
 - _gamma_ - Colors on web / mobile are expressed in sRGB colorspace which is gamma-corrected, that is non-linear.
   Operations on colors in non-linear space like addition will give wrong results. For example the interpolated color
-  may appear darker than it should. That's why when iterpolating we convert sRGB to linear space first and then convert
+  may appear darker than it should. That's why when interpolating we convert sRGB to linear space first and then convert
   the result back into non-linear sRGB space. Gamma correction is device-dependent but for most devices to convert
   from non-linear to linear space raising components to the power of gamma=2.2 is a good approximation. If you'd like to
   disable that you can always set gamma=1. A nice article on that if you'd like to know more: https://observablehq.com/@sebastien/srgb-rgb-gamma
