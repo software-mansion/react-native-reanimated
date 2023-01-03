@@ -5,23 +5,26 @@ import {
   AnimatableValue,
   AnimationObject,
 } from '../commonTypes';
-import { DelayAnimation } from './commonTypes';
+import { DelayAnimation, InferAnimationReturnType } from './commonTypes';
 
-export function withDelay<T extends AnimationObject>(
+export function withDelay<
+  T extends AnimationObject,
+  U extends AnimatableValue = InferAnimationReturnType<T>
+>(
   delayMs: number,
   _nextAnimation: T | (() => T)
-): Animation<DelayAnimation> {
+): Animation<DelayAnimation<U>> {
   'worklet';
-  return defineAnimation<DelayAnimation, T>(
+  return defineAnimation<DelayAnimation<U>, T>(
     _nextAnimation,
-    (): DelayAnimation => {
+    (): DelayAnimation<U> => {
       'worklet';
       const nextAnimation =
         typeof _nextAnimation === 'function'
           ? _nextAnimation()
           : _nextAnimation;
 
-      function delay(animation: DelayAnimation, now: Timestamp): boolean {
+      function delay(animation: DelayAnimation<U>, now: Timestamp): boolean {
         const { startTime, started, previousAnimation } = animation;
         const current: AnimatableValue = animation.current;
 
@@ -37,7 +40,7 @@ export function withDelay<T extends AnimationObject>(
             animation.started = true;
           }
           const finished = nextAnimation.onFrame(nextAnimation, now);
-          animation.current = nextAnimation.current!;
+          animation.current = nextAnimation.current as U;
           return finished;
         } else if (previousAnimation) {
           const finished =
@@ -77,7 +80,7 @@ export function withDelay<T extends AnimationObject>(
         isHigherOrder: true,
         onFrame: delay,
         onStart,
-        current: nextAnimation.current!,
+        current: nextAnimation.current as U,
         callback,
         previousAnimation: null,
         startTime: 0,
