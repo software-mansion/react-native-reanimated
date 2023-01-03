@@ -18,7 +18,7 @@ An array of Floats that contains points that indicate the range of the input val
 
 #### `output range` [(string | number)[]]
 
-An array of colors (strings like `'red'`, `'#ff0000'`, `'rgba(10, 10, 10, 1)'` etc.) that contains points that indicate the range of the output value. It should have at least the same number of points as the input range.
+An array of colors (strings like `'red'`, `'#ff0000'`, `'rgba(255, 0, 0, 0.5)'` etc.) that contains points that indicate the range of the output value. It should have at least the same number of points as the input range.
 
 #### `color space` [String]
 
@@ -31,7 +31,7 @@ Object containg color interpolation options. Allowed parameters are listed below
 | Options                      | Default | Description                                                                                                                                                                                                                                                 |
 | ---------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | gamma                        | 2.2     | Gamma parameter used in gamma correction.                                                                                                                                                                                                                   |
-| useCorrectedHSVInterpolation | true    | Sometimes (for example when interpolating from yellow to purple) HSV interpolation goes through many other hues. This option allows to reduce the number of hues in such cases by treating hsv hues like a circular spectrum and choosing the shortest arc. |
+| useCorrectedHSVInterpolation | true    | Sometimes (for example when interpolating from yellow to purple) HSV interpolation goes through many other hues. This option allows to reduce the number of hues in such cases by treating HSV hues like a circular spectrum and choosing the shortest arc. |
 
 ### Returns
 
