@@ -4,12 +4,12 @@ import { Button, StyleSheet, View } from 'react-native';
 import React from 'react';
 import Animated, {
   measure,
+  runOnUI,
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnUI } from '../../src/reanimated2/core';
 
 export default function MeasureExample() {
   const aref = useAnimatedRef<Animated.View>();

@@ -601,9 +601,7 @@ void NativeReanimatedModule::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-
-  // TODO: use uiManager_->dispatchCommand once it's public
-  UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
+  uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
 jsi::Value NativeReanimatedModule::measure(
@@ -612,11 +610,8 @@ jsi::Value NativeReanimatedModule::measure(
   // based on implementation from UIManagerBinding.cpp
 
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  // TODO: use uiManager_->getRelativeLayoutMetrics once it's public
-  // auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
-  //     *shadowNode, nullptr, {/* .includeTransform = */ true});
-  auto layoutMetrics = UIManager_getRelativeLayoutMetrics(
-      uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
+  auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
+      *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
     // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
@@ -630,7 +625,8 @@ jsi::Value NativeReanimatedModule::measure(
 
   auto layoutableShadowNode =
       traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-  facebook::react::Point originRelativeToParent = layoutableShadowNode
+  facebook::react::Point originRelativeToParent =
+      layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin
       : facebook::react::Point();
 
