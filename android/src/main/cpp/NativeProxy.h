@@ -216,12 +216,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       Tag viewTag,
       const jsi::Value &uiProps);
 #else
-  void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
-  void updateUiProps(jsi::Runtime &rt, const jsi::Value &updates);
-  void updateNativeProps(
-      jsi::Runtime &rt,
-      int viewTag,
-      const jsi::Value &nativeProps);
+  void updateProps(jsi::Runtime &rt, const jsi::Value &updates);
   void scrollTo(int viewTag, double x, double y, bool animated);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif

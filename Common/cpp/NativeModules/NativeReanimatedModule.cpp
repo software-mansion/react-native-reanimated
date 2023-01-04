@@ -150,8 +150,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       dispatchCommand,
 #else
       platformDepMethodsHolder.updatePropsFunction,
-      platformDepMethodsHolder.updateUiPropsFunction,
-      platformDepMethodsHolder.updateNativePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
 #endif
@@ -174,9 +172,6 @@ NativeReanimatedModule::NativeReanimatedModule(
   // nothing
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
-  updateUiPropsFunction = platformDepMethodsHolder.updateUiPropsFunction;
-  updateNativePropsFunction =
-      platformDepMethodsHolder.updateNativePropsFunction;
 #endif
   subscribeForKeyboardEventsFunction =
       platformDepMethodsHolder.subscribeForKeyboardEvents;

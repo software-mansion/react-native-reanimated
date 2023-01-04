@@ -41,17 +41,7 @@ declare global {
   ) => void;
   const _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
   const _updatePropsPaper: (
-    tag: number,
-    name: string,
-    updates: StyleProps | AnimatedStyle
-  ) => void;
-  const _updateUiPropsPaper: (
     updates: Record<number, StyleProps | AnimatedStyle>
-  ) => void;
-  const _updateNativePropsPaper: (
-    tag: number,
-    name: string,
-    updates: StyleProps | AnimatedStyle
   ) => void;
   const _updatePropsFabric: (
     shadowNodeWrapper: ShadowNodeWrapper,
@@ -112,17 +102,7 @@ declare global {
       ) => void;
       _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
       _updatePropsPaper: (
-        tag: number,
-        name: string,
-        updates: StyleProps | AnimatedStyle
-      ) => void;
-      _updateUiPropsPaper: (
         updates: Record<number, StyleProps | AnimatedStyle>
-      ) => void;
-      _updateNativePropsPaper: (
-        tag: number,
-        name: string,
-        updates: StyleProps | AnimatedStyle
       ) => void;
       _updatePropsFabric: (
         shadowNodeWrapper: ShadowNodeWrapper,

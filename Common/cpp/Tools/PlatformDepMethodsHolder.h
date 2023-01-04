@@ -38,18 +38,8 @@ using MeasureFunction = std::function<
 
 #else
 
-using UpdatePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    const jsi::Object &object)>;
-using UpdateUiPropsFunction =
+using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &updates)>;
-using UpdateNativePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    const jsi::Value &nativeProps)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
@@ -82,8 +72,6 @@ struct PlatformDepMethodsHolder {
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #else
   UpdatePropsFunction updatePropsFunction;
-  UpdateUiPropsFunction updateUiPropsFunction;
-  UpdateNativePropsFunction updateNativePropsFunction;
   ScrollToFunction scrollToFunction;
   MeasureFunction measureFunction;
   ConfigurePropsFunction configurePropsFunction;

@@ -190,18 +190,8 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private void updateProps(int viewTag, Map<String, Object> props) {
-    mNodesManager.updateProps(viewTag, props);
-  }
-
-  @DoNotStrip
-  private void updateUiProps(ReadableMap updates) {
-    mNodesManager.updateUiProps(updates);
-  }
-
-  @DoNotStrip
-  private void updateNativeProps(int viewTag, WritableMap nativeProps) {
-    mNodesManager.updateNativeProps(viewTag, nativeProps);
+  private void updateProps(ReadableMap updates) {
+    mNodesManager.updateProps(updates);
   }
 
   @DoNotStrip

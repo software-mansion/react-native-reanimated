@@ -95,7 +95,7 @@ class JSRuntimeHelper {
     // they can be presented using RN's LogBox.
     jsi::Runtime &rt = *uiRuntime_;
 #if 1
-    SystraceSection s("JSI call");
+    SystraceSection s("runOnUIGuarded");
     callGuard->call(rt, function, args...);
 #else
     function.asObject(rt).asFunction(rt).call(rt, args...);

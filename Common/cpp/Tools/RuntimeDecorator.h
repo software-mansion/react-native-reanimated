@@ -38,8 +38,6 @@ class RuntimeDecorator {
   static void decorateUIRuntime(
       jsi::Runtime &rt,
       const UpdatePropsFunction updateProps,
-      const UpdateUiPropsFunction updateUiProps,
-      const UpdateNativePropsFunction updateNativeProps,
       const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
       const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,

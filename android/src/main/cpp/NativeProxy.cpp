@@ -112,26 +112,8 @@ void NativeProxy::installJSIBindings(
   // nothing
 #else
   auto updatePropsFunction = [this](
-                                 jsi::Runtime &rt,
-                                 int viewTag,
-                                 const jsi::Value &viewName,
-                                 const jsi::Object &props) {
-    // viewName is for iOS only, we skip it here
-    this->updateProps(rt, viewTag, props);
-  };
-
-  auto updateUiPropsFunction =
-      [this](jsi::Runtime &rt, const jsi::Value &updates) {
-        this->updateUiProps(rt, updates);
-      };
-
-  auto updateNativePropsFunction = [this](
-                                       jsi::Runtime &rt,
-                                       int viewTag,
-                                       const jsi::Value &viewName,
-                                       const jsi::Value &nativeProps) {
-    // viewName is for iOS only, we skip it here
-    this->updateNativeProps(rt, viewTag, nativeProps);
+                                 jsi::Runtime &rt, const jsi::Value &updates) {
+    this->updateProps(rt, updates);
   };
 
   auto measureFunction =
@@ -270,8 +252,6 @@ void NativeProxy::installJSIBindings(
       synchronouslyUpdateUIPropsFunction,
 #else
       updatePropsFunction,
-      updateUiPropsFunction,
-      updateNativePropsFunction,
       scrollToFunction,
       measureFunction,
       configurePropsFunction,
@@ -444,51 +424,18 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
   return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
 }
 
-inline jni::local_ref<WritableMap::javaobject> castWritableMap(
-    jni::local_ref<WritableNativeMap::javaobject> const &nativeMap) {
-  return make_local(reinterpret_cast<WritableMap::javaobject>(nativeMap.get()));
-}
-
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
-void NativeProxy::updateProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Object &props) {
+void NativeProxy::updateProps(jsi::Runtime &rt, const jsi::Value &updates) {
   SystraceSection s("NativeProxy::updateProps");
   static const auto method =
       javaPart_->getClass()
-          ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-              "updateProps");
-  method(
-      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
-}
-
-void NativeProxy::updateUiProps(jsi::Runtime &rt, const jsi::Value &updates) {
-  SystraceSection s("NativeProxy::updateUiProps");
-  static const auto method =
-      javaPart_->getClass()
           ->getMethod<void(jni::local_ref<ReadableMap::javaobject>)>(
-              "updateUiProps");
+              "updateProps");
   jni::local_ref<ReadableMap::javaobject> javaUpdates = castReadableMap(
       ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, updates)));
   method(javaPart_.get(), javaUpdates);
-}
-
-void NativeProxy::updateNativeProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &nativeProps) {
-  SystraceSection s("NativeProxy::updateNativeProps");
-  static const auto method =
-      javaPart_->getClass()
-          ->getMethod<void(int, jni::local_ref<WritableMap::javaobject>)>(
-              "updateNativeProps");
-  jni::local_ref<WritableMap::javaobject> javaNativeProps =
-      castWritableMap(WritableNativeMap::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, nativeProps)));
-  method(javaPart_.get(), viewTag, javaNativeProps);
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {

@@ -104,8 +104,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void maybeRequestRender();
   UpdatePropsFunction updatePropsFunction;
-  UpdateUiPropsFunction updateUiPropsFunction;
-  UpdateNativePropsFunction updateNativePropsFunction;
 
   bool handleEvent(
       const std::string &eventName,

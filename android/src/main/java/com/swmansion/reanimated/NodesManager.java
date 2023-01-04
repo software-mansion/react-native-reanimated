@@ -5,11 +5,11 @@ import static java.lang.Float.NaN;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
-import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableArray;
@@ -118,9 +118,9 @@ public class NodesManager implements EventDispatcherListener {
 
   private final class NativeUpdateOperation {
     public int mViewTag;
-    public WritableMap mNativeProps;
+    public ReadableMap mNativeProps;
 
-    public NativeUpdateOperation(int viewTag, WritableMap nativeProps) {
+    public NativeUpdateOperation(int viewTag, ReadableMap nativeProps) {
       mViewTag = viewTag;
       mNativeProps = nativeProps;
     }
@@ -265,7 +265,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void enqueueUpdateViewOnNativeThread(
-      int viewTag, WritableMap nativeProps, boolean trySynchronously) {
+      int viewTag, ReadableMap nativeProps, boolean trySynchronously) {
     if (trySynchronously) {
       mTryRunBatchUpdatesSynchronously = true;
     }
@@ -333,70 +333,42 @@ public class NodesManager implements EventDispatcherListener {
     mEventEmitter.emit(name, body);
   }
 
-  public void updateProps(int viewTag, Map<String, Object> props) {
+  public void updateProps(ReadableMap updates) {
     Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateProps");
 
-    // TODO: update PropsNode to use this method instead of its own way of updating props
-    boolean hasUIProps = false;
-    boolean hasNativeProps = false;
-    boolean hasJSProps = false;
-    JavaOnlyMap newUIProps = new JavaOnlyMap();
-    WritableMap newJSProps = Arguments.createMap();
-    WritableMap newNativeProps = Arguments.createMap();
-
-    for (Map.Entry<String, Object> entry : props.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      if (uiProps.contains(key)) {
-        hasUIProps = true;
-        addProp(newUIProps, key, value);
-      } else if (nativeProps.contains(key)) {
-        hasNativeProps = true;
-        addProp(newNativeProps, key, value);
-      } else {
-        hasJSProps = true;
-        addProp(newJSProps, key, value);
-      }
-    }
-
-    if (viewTag != View.NO_ID) {
-      if (hasUIProps) {
-        mUIImplementation.synchronouslyUpdateViewOnUIThread(
-            viewTag, new ReactStylesDiffMap(newUIProps));
-      }
-      if (hasNativeProps) {
-        enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
-      }
-      if (hasJSProps) {
-        WritableMap evt = Arguments.createMap();
-        evt.putInt("viewTag", viewTag);
-        evt.putMap("props", newJSProps);
-        sendEvent("onReanimatedPropsChange", evt);
-      }
-    }
-
-    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
-  }
-
-  public void updateUiProps(ReadableMap updates) {
-    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateUiProps");
     Iterator<Map.Entry<String, Object>> iterator = updates.getEntryIterator();
     while (iterator.hasNext()) {
-      Map.Entry<String, Object> entry = (Map.Entry<String, Object>) iterator.next();
-      String key = (String) entry.getKey();
+      Map.Entry<String, Object> entry = iterator.next();
+      String key = entry.getKey();
       int viewTag = Integer.parseInt(key);
-      Object props = entry.getValue();
-      ReactStylesDiffMap reactStylesDiffMap = new ReactStylesDiffMap((ReadableMap) props);
-      mUIImplementation.synchronouslyUpdateViewOnUIThread(viewTag, reactStylesDiffMap);
-    }
-    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
-  }
+      ReadableMap props = (ReadableMap) entry.getValue();
 
-  public void updateNativeProps(int viewTag, WritableMap nativeProps) {
-    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateNativeProps");
-    if (viewTag != View.NO_ID) {
-      enqueueUpdateViewOnNativeThread(viewTag, nativeProps, true);
+      boolean hasNativeProps = false;
+      boolean hasJsProps = false;
+      ReadableMapKeySetIterator propNames = props.keySetIterator();
+      while (propNames.hasNextKey()) {
+        String propName = propNames.nextKey();
+        if (uiProps.contains(propName)) {
+          // do nothing
+        } else if (nativeProps.contains(propName)) {
+          hasNativeProps = true;
+        } else {
+          hasJsProps = true;
+        }
+      }
+
+      if (!hasNativeProps && !hasJsProps) {
+        // only UI props
+        ReactStylesDiffMap reactStylesDiffMap = new ReactStylesDiffMap(props);
+        mUIImplementation.synchronouslyUpdateViewOnUIThread(viewTag, reactStylesDiffMap);
+      } else if (!hasJsProps) {
+        // only UI or native props
+        enqueueUpdateViewOnNativeThread(viewTag, props, true);
+      } else {
+        // TODO: handle JS props
+      }
     }
+
     Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
