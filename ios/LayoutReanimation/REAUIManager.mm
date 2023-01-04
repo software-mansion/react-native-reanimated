@@ -13,7 +13,6 @@
 
 #if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNScreens/RNSScreen.h>
-#import <RNScreens/RNSScreenStack.h>
 #endif
 
 @interface RCTUIManager (REA)
@@ -77,12 +76,21 @@
   bool isLayoutAnimationEnabled = reanimated::FeaturesConfig::isLayoutAnimationEnabled();
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
+  BOOL containerIsRootOfViewController = NO;
   if (isLayoutAnimationEnabled) {
     container = registry[containerTag];
     permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
 
-#if __has_include(<RNScreens/RNSScreen.h>)
-    if ([container isKindOfClass:[RNSScreenStackView class]]) {
+    if ([container isKindOfClass:[UIView class]]) {
+      UIViewController *controller = ((UIView *)container).reactViewController;
+      UIViewController *parentController = ((UIView *)container).superview.reactViewController;
+      containerIsRootOfViewController = controller != parentController;
+    }
+
+    // we check if the container we`re removing from is a root view
+    // of some view controller. In that case, we skip running exiting animations
+    // in its children, to prevent issues with RN Screens.
+    if (containerIsRootOfViewController) {
       NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
                                                                                          atIndices:removeAtIndices];
       for (UIView *view in permanentlyRemovedChildren) {
@@ -90,7 +98,6 @@
       }
       [_animationsManager removeAnimationsFromSubtree:(UIView *)container];
     }
-#endif
   }
 
   [super _manageChildren:containerTag
@@ -105,11 +112,9 @@
     return;
   }
 
-#if __has_include(<RNScreens/RNSScreen.h>)
-  if ([container isKindOfClass:[RNSScreenStackView class]]) {
+  if (containerIsRootOfViewController) {
     return;
   }
-#endif
 
   // we sort the (index, view) pairs to make sure we insert views back in order
   NSMutableArray<NSArray<id> *> *removedViewsWithIndices = [NSMutableArray new];

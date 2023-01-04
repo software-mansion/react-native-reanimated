@@ -5,11 +5,6 @@
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
 
-#if __has_include(<RNScreens/RNSScreen.h>)
-#import <RNScreens/RNSScreen.h>
-#import <RNScreens/RNSScreenStack.h>
-#endif
-
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
@@ -261,12 +256,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSNumber *childTag = child.reactTag;
   UIView *parent = child.superview;
 
-#if __has_include(<RNScreens/RNSScreen.h>)
-  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]] &&
-         ![parent isKindOfClass:[RNSScreenView class]] && ![parent isKindOfClass:[RNSScreenStackView class]]) {
-#else
-  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
-#endif
+  UIViewController *childController = child.reactViewController;
+
+  while (parent != nil && parent.reactViewController == childController &&
+         ![parent isKindOfClass:[RCTRootView class]]) {
     NSNumber *parentTag = parent.reactTag;
     if (parentTag != nil) {
       _exitingSubviewsCountMap[parent.reactTag] =
@@ -283,7 +276,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   UIView *parent = child.superview;
   NSNumber *parentTag = _exitingParentTags[child.reactTag];
   [_exitingParentTags removeObjectForKey:child.reactTag];
-  while (parentTag != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+
+  UIViewController *childController = child.reactViewController;
+
+  while ((parent != nil || parentTag != nil) && ![parent isKindOfClass:[RCTRootView class]]) {
     UIView *view = parent;
     NSNumber *viewTag = parentTag;
     parentTag = _exitingParentTags[viewTag];
@@ -334,15 +330,17 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     return NO;
   }
 
-#if __has_include(<RNScreens/RNSScreen.h>)
-  if ([view isKindOfClass:[RNSScreenStackView class]]) {
+  UIViewController *viewController = view.reactViewController;
+
+  // `startAnimationsRecursive:shouldRemoveSubviewsWithoutAnimations:`
+  // is called on a detached view tree, so the `viewController` should be `nil`.
+  // If it's not, we're descending into another `UIViewController`.
+  // We don't want to run animations inside it (since it causes issues with RNScreens),
+  // so instead clean up the subtree and return `NO`.
+  if (viewController != nil) {
     [self removeAnimationsFromSubtree:view];
-    for (UIView *child in [view.reactSubviews copy]) {
-      [self endAnimationsRecursive:child];
-    }
     return NO;
   }
-#endif
 
   BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting") || [_exitingViews objectForKey:view.reactTag];
   BOOL hasAnimatedChildren = NO;
