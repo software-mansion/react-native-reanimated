@@ -89,17 +89,11 @@ if (shouldBeUseWeb()) {
       _: ViewRefSet<any> | undefined
     ): void => {
       'worklet';
-
-      // if (_WORKLET) _beginSection('UpdateProps processColor');
       for (const key in updates) {
         if (ColorProperties.indexOf(key) !== -1) {
-          // if (_WORKLET) _beginSection('processColor');
           updates[key] = processColor(updates[key]);
-          // if (_WORKLET) _endSection();
         }
       }
-      // if (_WORKLET) _endSection();
-
       viewDescriptors.value.forEach((viewDescriptor) => {
         updatePropsPaperBatched(
           viewDescriptor.tag,

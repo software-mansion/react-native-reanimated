@@ -1,5 +1,4 @@
 #include "RuntimeDecorator.h"
-#include <android/trace.h>
 #include <jsi/instrumentation.h>
 #include <react/renderer/debug/SystraceSection.h>
 #include <chrono>
@@ -282,7 +281,6 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    SystraceSection s("_getCurrentTime");
     return getCurrentTime();
   };
   jsi::Value timeFun = jsi::Function::createFromHostFunction(

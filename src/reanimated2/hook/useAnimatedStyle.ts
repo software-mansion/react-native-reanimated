@@ -180,15 +180,10 @@ function styleUpdater(
   animationsActive: SharedValue<boolean>
 ): void {
   'worklet';
-  // if (_WORKLET) _beginSection('styleUpdater');
-
   const animations = state.animations ?? {};
-  // if (_WORKLET) _beginSection('updater');
   const newValues = updater() ?? {};
-  // if (_WORKLET) _endSection();
   const oldValues = state.last;
 
-  // if (_WORKLET) _beginSection('for loop');
   let hasAnimations = false;
   for (const key in newValues) {
     const value = newValues[key];
@@ -200,7 +195,6 @@ function styleUpdater(
       delete animations[key];
     }
   }
-  // if (_WORKLET) _endSection();
 
   if (hasAnimations) {
     const frame = (_timestamp?: Timestamp) => {
@@ -259,16 +253,12 @@ function styleUpdater(
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    // if (_WORKLET) _beginSection('styleDiff');
     const diff = styleDiff(oldValues, newValues);
-    // if (_WORKLET) _endSection();
     state.last = Object.assign({}, oldValues, newValues);
     if (diff) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
   }
-
-  // if (_WORKLET) _endSection();
 }
 
 function jestStyleUpdater(

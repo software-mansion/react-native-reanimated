@@ -73,8 +73,6 @@ declare global {
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
   const requestAnimationFrame: (callback: (time: number) => void) => number;
   const console: Console;
-  const _beginSection: (name: string) => void;
-  const _endSection: () => void;
   const _setImmediateFunction: (() => void) | undefined;
 
   namespace NodeJS {
@@ -140,8 +138,6 @@ declare global {
       __mapperRegistry?: MapperRegistry;
       requestAnimationFrame: (callback: (time: number) => void) => number;
       console: Console;
-      _beginSection: (name: string) => void;
-      _endSection: () => void;
       _setImmediateFunction: (() => void) | undefined;
     }
   }
