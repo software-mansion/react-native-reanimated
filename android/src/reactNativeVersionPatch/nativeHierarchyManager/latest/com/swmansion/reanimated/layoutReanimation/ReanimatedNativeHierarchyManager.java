@@ -84,6 +84,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     // otherwise use update animation. This approach is easier than maintaining a list of tags
     // for recently created views.
     if (view.getWidth() == 0 || view.getHeight() == 0) {
+      if (!mAnimationsManager.hasAnimationForTag(view.getId(), "entering")) {
+        super.applyLayoutUpdate(view, x, y, width, height);
+        return;
+      }
       view.layout(x, y, x + width, y + height);
       if (view.getId() != -1) {
         mAnimationsManager.onViewCreate(
@@ -91,12 +95,13 @@ class ReaLayoutAnimator extends LayoutAnimationController {
             (ViewGroup) view.getParent(),
             new Snapshot(view, mWeakNativeViewHierarchyManage.get()));
       }
-    } else {
-      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
-      view.layout(x, y, x + width, y + height);
-      Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
-      mAnimationsManager.onViewUpdate(view, before, after);
+      return;
     }
+
+    Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
+    view.layout(x, y, x + width, y + height);
+    Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
+    mAnimationsManager.onViewUpdate(view, before, after);
   }
 
   /**
@@ -267,33 +272,6 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
   private boolean isLayoutAnimationDisabled() {
     return !initOk || !((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled();
-  }
-
-  public synchronized void updateLayout(
-      int parentTag, int tag, int x, int y, int width, int height) {
-    super.updateLayout(parentTag, tag, x, y, width, height);
-    if (isLayoutAnimationDisabled()) {
-      return;
-    }
-    try {
-      View viewToUpdate = this.resolveView(tag);
-      ViewManager viewManager = this.resolveViewManager(tag);
-      String viewManagerName = viewManager.getName();
-      View container = resolveView(parentTag);
-      if (container != null
-          && viewManagerName.equals("RNSScreen")
-          && this.mReaLayoutAnimator != null) {
-        this.mReaLayoutAnimator.applyLayoutUpdate(
-            viewToUpdate,
-            (int) container.getX(),
-            (int) container.getY(),
-            container.getWidth(),
-            container.getHeight());
-      }
-    } catch (IllegalViewOperationException e) {
-      // (IllegalViewOperationException) == (vm == null)
-      e.printStackTrace();
-    }
   }
 
   @Override
