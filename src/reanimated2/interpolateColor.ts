@@ -68,7 +68,8 @@ const interpolateColorsHSV = (
   }
   const s = interpolate(value, inputRange, colors.s, Extrapolate.CLAMP);
   const v = interpolate(value, inputRange, colors.v, Extrapolate.CLAMP);
-  return hsvToColor(h, s, v);
+  const a = interpolate(value, inputRange, colors.a, Extrapolate.CLAMP);
+  return hsvToColor(h, s, v, a);
 };
 
 const toLinearSpace = (x: number[], gamma: number): number[] => {
@@ -144,6 +145,7 @@ interface InterpolateHSV {
   h: number[];
   s: number[];
   v: number[];
+  a: number[];
 }
 
 const getInterpolateHSV = (
@@ -153,21 +155,24 @@ const getInterpolateHSV = (
   const h = [];
   const s = [];
   const v = [];
+  const a = [];
   for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
     const processedColor = processColor(color) as any;
-    const processedHSVColor = RGBtoHSV(
-      red(processedColor),
-      green(processedColor),
-      blue(processedColor)
-    );
-    if (processedColor) {
+    if (typeof processedColor === 'number') {
+      const processedHSVColor = RGBtoHSV(
+        red(processedColor),
+        green(processedColor),
+        blue(processedColor)
+      );
+
       h.push(processedHSVColor.h);
       s.push(processedHSVColor.s);
       v.push(processedHSVColor.v);
+      a.push(opacity(processedColor));
     }
   }
-  return { h, s, v };
+  return { h, s, v, a };
 };
 
 export const interpolateColor = (

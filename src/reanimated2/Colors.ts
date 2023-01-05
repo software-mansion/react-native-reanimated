@@ -573,11 +573,12 @@ function HSVtoRGB(h: any, s?: any, v?: any) {
 export const hsvToColor = (
   h: number,
   s: number,
-  v: number
+  v: number,
+  a: number
 ): number | string => {
   'worklet';
   const { r, g, b } = HSVtoRGB(h, s, v);
-  return rgbaColor(r, g, b);
+  return rgbaColor(r, g, b, a);
 };
 
 export function processColorInitially(

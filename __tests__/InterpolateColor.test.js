@@ -112,6 +112,15 @@ describe('colors interpolation', () => {
 
     interpolatedColor = interpolateColor(1, [0, 1], colors);
     expect(interpolatedColor).toBe(`rgba(96, 144, 32, ${112 / 255})`);
+
+    interpolatedColor = interpolateColor(0.5, [0, 1], colors, 'HSV');
+    expect(interpolatedColor).toBe(`rgba(23, 120, 54, ${96 / 255})`);
+
+    interpolatedColor = interpolateColor(0, [0, 1], colors, 'HSV');
+    expect(interpolatedColor).toBe(`rgba(16, 80, 96, ${80 / 255})`);
+
+    interpolatedColor = interpolateColor(1, [0, 1], colors, 'HSV');
+    expect(interpolatedColor).toBe(`rgba(96, 144, 32, ${112 / 255})`);
   });
 
   function TestComponent() {
