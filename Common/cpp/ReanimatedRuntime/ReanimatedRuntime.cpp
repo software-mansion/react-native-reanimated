@@ -27,8 +27,10 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
     jsi::Runtime *rnRuntime,
     std::shared_ptr<MessageQueueThread> jsQueue) {
 #if JS_RUNTIME_HERMES
+  auto config =
+      ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(true);
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
-      facebook::hermes::makeHermesRuntime();
+      facebook::hermes::makeHermesRuntime(config.build());
 
   // We don't call `jsQueue->quitSynchronous()` here, since it will be done
   // later in ReanimatedHermesRuntime

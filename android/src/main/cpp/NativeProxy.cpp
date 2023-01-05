@@ -6,6 +6,8 @@
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 
+#include <semaphore>
+
 #include <memory>
 #include <string>
 
@@ -203,8 +205,14 @@ void NativeProxy::installJSIBindings(
   };
 
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      ReanimatedRuntime::make(runtime_, jsQueue);
+
+  std::binary_semaphore semaphore{0};
+  std::shared_ptr<jsi::Runtime> animatedRuntime;
+  scheduler_->scheduleOnUI([&semaphore, &animatedRuntime, this, jsQueue]() {
+    animatedRuntime = ReanimatedRuntime::make(this->runtime_, jsQueue);
+    semaphore.release();
+  });
+  semaphore.acquire();
 
   auto workletRuntimeValue =
       runtime_->global()
