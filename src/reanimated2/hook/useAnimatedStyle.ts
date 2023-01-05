@@ -254,7 +254,7 @@ function styleUpdater(
     state.animations = [];
 
     const diff = styleDiff(oldValues, newValues);
-    state.last = Object.assign({}, oldValues, newValues);
+    state.last = Object.assign(oldValues, diff);
     if (diff) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
