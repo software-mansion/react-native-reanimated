@@ -23,6 +23,18 @@ export function runOnUI<A extends any[], R>(
   };
 }
 
+if (__DEV__) {
+  try {
+    runOnUI(() => {
+      'worklet';
+    });
+  } catch (e) {
+    throw new Error(
+      'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'
+    );
+  }
+}
+
 export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
