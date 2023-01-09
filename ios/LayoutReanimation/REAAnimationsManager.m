@@ -119,10 +119,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if ([_enteringViews containsObject:tag] && !removeView) {
     REASnapshot *target = _enteringViewTargetValues[tag];
     if (target != nil) {
-      NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
-      RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-      _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
-      [self setNewProps:target.values forView:view withComponentData:componentData];
+      [self setNewProps:target.values forView:view];
     }
   }
   [_enteringViews removeObject:tag];
@@ -158,9 +155,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag
 {
-  NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] withComponentData:componentData];
+  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag]];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -170,6 +165,13 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     return 0;
   }
   return doubleValue;
+}
+
+- (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view
+{
+  NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
+  [self setNewProps:newProps forView:view withComponentData:componentData];
 }
 
 - (void)setNewProps:(NSMutableDictionary *)newProps
@@ -400,10 +402,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       [self onViewUpdate:view before:before after:after];
     }
   } else if ([type isEqual:@"layout"] && [_enteringViews containsObject:[view reactTag]]) {
-    NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
-    RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
     _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
-    [self setNewProps:before.values forView:view withComponentData:componentData];
+    [self setNewProps:before.values forView:view];
   }
 }
 
