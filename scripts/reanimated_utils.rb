@@ -34,6 +34,9 @@ def find_config()
   result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
   result[:react_native_minor_version] = react_native_json['version'].split('.')[1].to_i
+  if result[:react_native_minor_version] == 0 # nightly
+    result[:react_native_minor_version] = 1000
+  end
   result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
   result[:reanimated_node_modules_dir] = File.expand_path(File.join(__dir__, '..', '..'))
 

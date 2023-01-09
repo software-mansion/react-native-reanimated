@@ -32,7 +32,30 @@ void RuntimeDecorator::decorateRuntime(
 
   rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
+#ifdef DEBUG
+  auto evalWithSourceUrl = [](jsi::Runtime &rt,
+                              const jsi::Value &thisValue,
+                              const jsi::Value *args,
+                              size_t count) -> jsi::Value {
+    auto code = std::make_shared<const jsi::StringBuffer>(
+        args[0].asString(rt).utf8(rt));
+    std::string url;
+    if (count > 1 && args[1].isString()) {
+      url = args[1].asString(rt).utf8(rt);
+    }
+
+    return rt.evaluateJavaScript(code, url);
+  };
+
+  rt.global().setProperty(
+      rt,
+      "evalWithSourceUrl",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
+          1,
+          evalWithSourceUrl));
+#endif // DEBUG
 
   auto callback = [](jsi::Runtime &rt,
                      const jsi::Value &thisValue,
@@ -208,11 +231,7 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    auto fun =
-        std::make_shared<jsi::Function>(args[0].asObject(rt).asFunction(rt));
-    requestFrame([&rt, fun](double timestampMs) {
-      fun->call(rt, jsi::Value(timestampMs));
-    });
+    requestFrame(rt, std::move(args[0]));
     return jsi::Value::undefined();
   };
   jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(
