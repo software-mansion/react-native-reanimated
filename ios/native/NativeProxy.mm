@@ -392,8 +392,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
-    return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
-        [tag intValue], std::string([type UTF8String]));
+    bool hasLayoutAnimation =
+        weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
+    return hasLayoutAnimation ? YES : NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
