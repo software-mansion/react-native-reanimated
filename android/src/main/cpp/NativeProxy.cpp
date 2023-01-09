@@ -15,18 +15,13 @@
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
+#include "ReanimatedVersion.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
-
-#ifdef REANIMATED_VERSION
-#define STRINGIZE(x) #x
-#define STRINGIZE2(x) STRINGIZE(x)
-#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
-#endif // REANIMATED_VERSION
 
 namespace reanimated {
 
@@ -230,8 +225,7 @@ void NativeProxy::installJSIBindings(
   runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
 #endif
 
-  auto version =
-      jsi::String::createFromUtf8(*runtime_, REANIMATED_VERSION_STRING);
+  auto version = getReanimatedVersionString(*runtime_);
   runtime_->global().setProperty(*runtime_, "_REANIMATED_VERSION_CPP", version);
 
   std::shared_ptr<ErrorHandler> errorHandler =
