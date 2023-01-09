@@ -21,12 +21,7 @@
 #include "LayoutAnimationsProxy.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
-
-#ifdef REANIMATED_VERSION
-#define STRINGIZE(x) #x
-#define STRINGIZE2(x) STRINGIZE(x)
-#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
-#endif // REANIMATED_VERSION
+#include "ReanimatedVersion.h"
 
 namespace reanimated {
 
@@ -180,9 +175,7 @@ void NativeProxy::installJSIBindings() {
   runtime_->global().setProperty(
       *runtime_, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-  auto version =
-      jsi::String::createFromUtf8(*runtime_, REANIMATED_VERSION_STRING);
-  runtime_->global().setProperty(*runtime_, "_REANIMATED_VERSION_CPP", version);
+  auto version = getReanimatedVersionString(*runtime_);
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);

@@ -2,8 +2,10 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REATransitionManager.h>
+#import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 
+using namespace facebook::react;
 using namespace reanimated;
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
