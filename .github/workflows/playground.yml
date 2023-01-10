@@ -1,0 +1,12 @@
+name: Playground
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-build-workflow-rea-v2:
+    uses: ./.github/workflows/build-npm-package-action.yml
+    with:
+      version: release
+      ref: "@piaskowyk/2.14.0"
+      upload_binaries: true
