@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet } from 'react-native';
 
-export default function AnimatedStyleUpdateExample() {
+export default function AnimatedSensorExample() {
   const animatedSensor = useAnimatedSensor(SensorType.ROTATION);
   const style = useAnimatedStyle(() => {
     const pitch = Math.abs(animatedSensor.sensor.value.pitch);

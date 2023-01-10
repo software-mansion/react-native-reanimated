@@ -84,24 +84,19 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     // otherwise use update animation. This approach is easier than maintaining a list of tags
     // for recently created views.
     if (view.getWidth() == 0 || view.getHeight() == 0) {
-      if (!mAnimationsManager.hasAnimationForTag(view.getId(), "entering")) {
-        super.applyLayoutUpdate(view, x, y, width, height);
-        return;
-      }
       view.layout(x, y, x + width, y + height);
       if (view.getId() != -1) {
         mAnimationsManager.onViewCreate(
-            view,
-            (ViewGroup) view.getParent(),
-            new Snapshot(view, mWeakNativeViewHierarchyManage.get()));
+                view,
+                (ViewGroup) view.getParent(),
+                new Snapshot(view, mWeakNativeViewHierarchyManage.get()));
       }
-      return;
+    } else {
+      Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
+      view.layout(x, y, x + width, y + height);
+      Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
+      mAnimationsManager.onViewUpdate(view, before, after);
     }
-
-    Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
-    view.layout(x, y, x + width, y + height);
-    Snapshot after = new Snapshot(view, mWeakNativeViewHierarchyManager.get());
-    mAnimationsManager.onViewUpdate(view, before, after);
   }
 
   /**
