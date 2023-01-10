@@ -54,6 +54,7 @@ import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import { ColorInterpolationExample } from './ColorInterpolationExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -66,6 +67,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  ColorInterpolation: {
+    screen: ColorInterpolationExample,
+    title: 'Color interpolation',
+  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',

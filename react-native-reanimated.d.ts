@@ -713,11 +713,19 @@ declare module 'react-native-reanimated' {
 
   export function processColor(color: number | string): number;
 
+  export type InterpolationOptions = {
+    gamma?: number;
+    useCorrectedHSVInterpolation?: boolean;
+  };
+
+  export function isColor(value: unknown): boolean;
+
   export function interpolateColor<T extends string | number>(
     value: number,
     inputRange: readonly number[],
     outputRange: readonly T[],
-    colorSpace?: 'RGB' | 'HSV'
+    colorSpace?: 'RGB' | 'HSV',
+    options?: InterpolationOptions
   ): T;
 
   export enum ColorSpace {
@@ -748,7 +756,8 @@ declare module 'react-native-reanimated' {
   export function useInterpolateConfig(
     inputRange: readonly number[],
     outputRange: readonly (string | number)[],
-    colorSpace?: ColorSpace
+    colorSpace?: ColorSpace,
+    options?: InterpolationOptions
   ): SharedValue<InterpolateConfig>;
 
   export function interpolateSharableColor(
