@@ -5,10 +5,13 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Dimensions,
+  // Dimensions,
 } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator, NativeStackScreenProps } from 'react-native-screens/native-stack';
+// import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNativeStackNavigator,
+  NativeStackScreenProps,
+} from 'react-native-screens/native-stack';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 const florence = require('./assets/florence.jpg');
@@ -21,7 +24,7 @@ type StackParamList = {
 };
 
 const Stack = createNativeStackNavigator<StackParamList>();
-const AnimatedImage = Animated.createAnimatedComponent(Image);
+// const AnimatedImage = Animated.createAnimatedComponent(Image);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
 const gallery = {
@@ -47,6 +50,53 @@ const gallery = {
 
 type Tag = keyof typeof gallery;
 
+const MultiImageCard = () => {
+  return (
+    <Animated.View
+      style={{ flexDirection: 'row', flexWrap: 'wrap' }}
+      sharedTransitionTag={'countryside'}>
+      <Image
+        source={gallery.countryside.image}
+        style={{
+          width: '50%',
+          height: 100,
+          // marginTop: 20,
+          borderRadius: 15,
+        }}
+      />
+      <Image
+        source={gallery.florence.image}
+        style={{
+          width: '50%',
+          height: 100,
+          // marginTop: 20,
+          borderRadius: 15,
+        }}
+      />
+      <Image
+        source={gallery.dawn.image}
+        style={{
+          width: '50%',
+          height: 100,
+          // marginTop: 20,
+          // marginLeft: 20,
+          borderRadius: 15,
+        }}
+      />
+      <Image
+        source={gallery.dawn.image}
+        style={{
+          width: '50%',
+          height: 100,
+          // marginTop: 20,
+          // marginLeft: 20,
+          borderRadius: 15,
+        }}
+      />
+    </Animated.View>
+  );
+};
+
 function HomeScreen({
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Home'>) {
@@ -55,34 +105,16 @@ function HomeScreen({
     navigation.navigate('Details', { tag });
   };
 
-  const { width } = Dimensions.get('screen');
+  // const { width } = Dimensions.get('screen');
 
   return (
     <Animated.ScrollView style={styles.homeContainer}>
       <Pressable onPress={() => goToDetails('countryside')}>
-        <AnimatedImage
-          sharedTransitionTag={'countryside'}
-          source={gallery.countryside.image}
-          style={{
-            width: '100%',
-            height: 160,
-            marginTop: 20,
-            borderRadius: 15,
-          }}
-        />
+        <MultiImageCard />
       </Pressable>
-      <View style={styles.row}>
+      {/* <View style={styles.row}>
         <Pressable onPress={() => goToDetails('florence')}>
-          <AnimatedImage
-            sharedTransitionTag={'florence'}
-            source={gallery.florence.image}
-            style={{
-              width: width / 2 - 35,
-              height: 250,
-              marginTop: 20,
-              borderRadius: 15,
-            }}
-          />
+          
         </Pressable>
         <Pressable onPress={() => goToDetails('dawn')}>
           <AnimatedImage
@@ -97,7 +129,7 @@ function HomeScreen({
             }}
           />
         </Pressable>
-      </View>
+      </View> */}
       <Text style={{ ...styles.header, fontSize: 40 }}>Tuscany</Text>
       <View style={styles.row}>
         {chips.map((chip) => (
@@ -123,11 +155,12 @@ function DetailsScreen({
 
   return (
     <View style={styles.detailContainer}>
-      <AnimatedImage
+      {/* <AnimatedImage
         sharedTransitionTag={tag}
         source={gallery[tag].image}
         style={styles.detailsImage}
-      />
+      /> */}
+      <MultiImageCard />
       <View style={styles.wrapper}>
         <AnimatedText
           entering={FadeIn.delay(150).duration(1000)}
@@ -156,13 +189,13 @@ function DetailsScreen({
 export function GalleryExample() {
   return (
     // <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Details" component={DetailsScreen} />
-      </Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Details" component={DetailsScreen} />
+    </Stack.Navigator>
     // </NavigationContainer>
   );
 }
