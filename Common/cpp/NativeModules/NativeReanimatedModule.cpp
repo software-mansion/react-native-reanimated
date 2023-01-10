@@ -543,36 +543,33 @@ void NativeReanimatedModule::performOperations() {
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+    auto lock = newestShadowNodesRegistry_->createLock();
+
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
       ShadowTreeCloner shadowTreeCloner{
           newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
-      {
-        // lock once due to performance reasons
-        auto lock = newestShadowNodesRegistry_->createLock();
+      for (const auto &pair : copiedOperationsQueue) {
+        const ShadowNodeFamily &family = pair.first->getFamily();
+        react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        for (const auto &pair : copiedOperationsQueue) {
-          const ShadowNodeFamily &family = pair.first->getFamily();
-          react_native_assert(family.getSurfaceId() == surfaceId_);
+        auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            rootNode, family, RawProps(rt, *pair.second));
 
-          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-              rootNode, family, RawProps(rt, *pair.second));
-
-          if (newRootNode == nullptr) {
-            // this happens when React removed the component but Reanimated
-            // still tries to animate it, let's skip update for this specific
-            // component
-            continue;
-          }
-          rootNode = newRootNode;
+        if (newRootNode == nullptr) {
+          // this happens when React removed the component but Reanimated
+          // still tries to animate it, let's skip update for this specific
+          // component
+          continue;
         }
+        rootNode = newRootNode;
+      }
 
-        // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-        for (auto tag : copiedTagsToRemove) {
-          newestShadowNodesRegistry_->remove(tag);
-        }
+      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+      for (auto tag : copiedTagsToRemove) {
+        newestShadowNodesRegistry_->remove(tag);
       }
 
       shadowTreeCloner.updateYogaChildren();
