@@ -17,6 +17,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
 
   const style = useAnimatedStyle(() => {
     return {
+      // opacity: withTiming(randomWidth.value, config),
       width: withTiming(randomWidth.value, config),
     };
   });
@@ -36,7 +37,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = Math.random() * 350;
+          randomWidth.value = Math.random() * 300;
         }}
       />
     </View>
