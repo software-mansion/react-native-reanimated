@@ -72,9 +72,13 @@ def resolveClientSideBuild() {
     return true
 }
 
+def isPackageBuild() {
+    return System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
+}
+
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false) || System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
+    return safeAppExtGet("isReanimatedExampleApp", false) || isPackageBuild()
 }
 
 def isNewArchitectureEnabled() {
@@ -437,7 +441,11 @@ android {
         }
     }
     defaultConfig {
-        minSdkVersion safeExtGet("minSdkVersion", 16)
+        if (REACT_NATIVE_MINOR_VERSION >= 71 && isPackageBuild()) {
+            minSdkVersion safeExtGet("minSdkVersion", 21)
+        } else {
+            minSdkVersion safeExtGet("minSdkVersion", 16)
+        }
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
         versionCode 1
         versionName "1.0"
@@ -1024,9 +1032,17 @@ dependencies {
     implementation "androidx.core:core:1.6.0"
 
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
-        implementation "com.facebook.react:react-android" // version substituted by RNGP
+        if (isPackageBuild()) {
+            implementation "com.facebook.react:react-android:+"
+        } else {
+            implementation "com.facebook.react:react-android:" // version substituted by RNGP
+        }
         if (JS_RUNTIME == "hermes") {
-            implementation "com.facebook.react:hermes-android" // version substituted by RNGP
+            if (isPackageBuild()) {
+                implementation "com.facebook.react:hermes-android:+"
+            } else {
+                implementation "com.facebook.react:hermes-android:" // version substituted by RNGP
+            }
         }
     } else {
         implementation "com.facebook.react:react-native:+" // From node_modules
