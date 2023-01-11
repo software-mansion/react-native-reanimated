@@ -552,6 +552,35 @@ function makeWorklet(t, fun, state) {
     lineOffset -= closure.size + 2;
   }
 
+  const pathForStringDefinitions = fun.parentPath.isProgram()
+    ? fun
+    : fun.findParent((path) => path.parentPath.isProgram());
+
+  const initDataId =
+    pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
+      `worklet_${workletHash}_init_data`
+    );
+
+  const initDataObjectExpression = t.objectExpression([
+    t.objectProperty(t.identifier('code'), t.stringLiteral(funString)),
+    t.objectProperty(t.identifier('location'), t.stringLiteral(location)),
+  ]);
+
+  if (sourceMapString) {
+    initDataObjectExpression.properties.push(
+      t.objectProperty(
+        t.identifier('__sourceMap'),
+        t.stringLiteral(sourceMapString)
+      )
+    );
+  }
+
+  pathForStringDefinitions.insertBefore(
+    t.variableDeclaration('const', [
+      t.variableDeclarator(initDataId, initDataObjectExpression),
+    ])
+  );
+
   const statements = [
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),
@@ -566,8 +595,12 @@ function makeWorklet(t, fun, state) {
     t.expressionStatement(
       t.assignmentExpression(
         '=',
-        t.memberExpression(privateFunctionId, t.identifier('asString'), false),
-        t.stringLiteral(funString)
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__initData'),
+          false
+        ),
+        initDataId
       )
     ),
     t.expressionStatement(
@@ -581,74 +614,19 @@ function makeWorklet(t, fun, state) {
         t.numericLiteral(workletHash)
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('__location'),
-          false
-        ),
-        t.stringLiteral(location)
-      )
-    ),
   ];
-
-  if (sourceMapString) {
-    statements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__sourceMap'),
-            false
-          ),
-          t.stringLiteral(sourceMapString)
-        )
-      )
-    );
-  }
 
   if (!isRelease()) {
     statements.unshift(
-      t.variableDeclaration('const', [
-        t.variableDeclarator(
-          t.identifier('_e'),
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(initDataId, t.identifier('stackDetails'), false),
           t.arrayExpression([
             t.newExpression(t.identifier('Error'), []),
             t.numericLiteral(lineOffset),
             t.numericLiteral(-20), // the placement of opening bracket after Exception in line that defined '_e' variable
           ])
-        ),
-      ])
-    );
-    statements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__stackDetails'),
-            false
-          ),
-          t.identifier('_e')
-        )
-      )
-    );
-  }
-
-  if (options && options.optFlags) {
-    statements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__optimalization'),
-            false
-          ),
-          t.numericLiteral(options.optFlags)
         )
       )
     );

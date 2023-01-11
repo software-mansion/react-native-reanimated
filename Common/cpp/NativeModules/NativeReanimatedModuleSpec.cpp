@@ -24,7 +24,7 @@ static jsi::Value SPEC_PREFIX(makeShareableClone)(
     const jsi::Value *args,
     size_t count) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeShareableClone(rt, std::move(args[0]));
+      ->makeShareableClone(rt, std::move(args[0]), std::move(args[1]));
 }
 
 // Sync methods
@@ -165,7 +165,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{2, SPEC_PREFIX(installCoreFunctions)};
 
   methodMap_["makeShareableClone"] =
-      MethodMetadata{1, SPEC_PREFIX(makeShareableClone)};
+      MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
 
   methodMap_["makeSynchronizedDataHolder"] =
       MethodMetadata{1, SPEC_PREFIX(makeSynchronizedDataHolder)};
