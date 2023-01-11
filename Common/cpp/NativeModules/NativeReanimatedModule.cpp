@@ -1,7 +1,5 @@
 #include "NativeReanimatedModule.h"
 
-#include <jsi/instrumentation.h>
-
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
@@ -368,17 +366,6 @@ jsi::Value NativeReanimatedModule::configureProps(
   configurePropsPlatformFunction(rt, uiProps, nativeProps);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  return jsi::Value::undefined();
-}
-
-jsi::Value NativeReanimatedModule::handleMemoryPressure(
-    jsi::Runtime &rt,
-    const jsi::Value &pressureLevel) {
-  int level = static_cast<int>(pressureLevel.asNumber());
-  scheduler->scheduleOnUI([=] {
-    runtimeHelper->uiRuntime()->instrumentation().collectGarbage(
-        "TRIM_MEMORY_RUNNING_CRITICAL");
-  });
   return jsi::Value::undefined();
 }
 

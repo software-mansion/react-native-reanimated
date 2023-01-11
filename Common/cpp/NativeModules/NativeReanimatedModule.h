@@ -88,8 +88,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
-  jsi::Value handleMemoryPressure(jsi::Runtime &rt, const jsi::Value &level)
-      override;
   jsi::Value configureLayoutAnimation(
       jsi::Runtime &rt,
       const jsi::Value &viewTag,

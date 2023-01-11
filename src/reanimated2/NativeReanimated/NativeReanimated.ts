@@ -108,10 +108,6 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  handleMemoryPressure(level: number): void {
-    this.InnerNativeModule.handleMemoryPressure(level);
-  }
-
   subscribeForKeyboardEvents(handler: ShareableRef<number>): number {
     return this.InnerNativeModule.subscribeForKeyboardEvents(handler);
   }

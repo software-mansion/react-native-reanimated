@@ -1,5 +1,4 @@
 #include "Shareables.h"
-#include "Logger.h"
 
 using namespace facebook;
 
@@ -58,33 +57,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
           : "expecting the object to be of type ShareableJSRef");
 }
 
-static int scount = 0;
-
-Shareable::Shareable(ValueType valueType) : valueType_(valueType) {
-  identifier = ++scount;
-//  auto message = "NEW -> " + std::to_string(count);
-//  Logger::log(message.c_str());
-}
-
-Shareable::~Shareable() {
-  scount--;
-//  auto message = "DELETE " + std::to_string(identifier) + " -> " + std::to_string(count);
-//  Logger::log(message.c_str());
-}
-
-static int rcount = 0;
-
-ShareableJSRef::ShareableJSRef(std::shared_ptr<Shareable> value) : value_(value) {
-  identifier = ++rcount;
-//  auto message = "NEW -> " + std::to_string(rcount);
-//  Logger::log(message.c_str());
-}
-
-ShareableJSRef::~ShareableJSRef() {
-  rcount--;
-//  auto message = "DELETE " + std::to_string(identifier) + " -> " + std::to_string(rcount);
-//  Logger::log(message.c_str());
-}
+Shareable::~Shareable() {}
 
 #if HAS_JS_WEAK_OBJECTS
 

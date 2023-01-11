@@ -1,15 +1,7 @@
-import Animated, { PinwheelOut, runOnUI } from 'react-native-reanimated';
+import Animated, { PinwheelOut } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-
-function collectGarbage() {
-  global.gc();
-  runOnUI(() => {
-    'worklet';
-    global.gc();
-  })();
-}
 
 export function DeleteAncestorOfExiting() {
   const [outer, setOuter] = React.useState(false);
@@ -24,8 +16,6 @@ export function DeleteAncestorOfExiting() {
         }}
         title="Toggle Outer"
       />
-      <Button onPress={collectGarbage} title="GC" />
-
       <Button onPress={() => setInner(!inner)} title="Toggle Inner" />
       {outer && (
         <View style={styles.outerBox}>
