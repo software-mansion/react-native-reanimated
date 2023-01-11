@@ -65,16 +65,20 @@ def resolveClientSideBuild() {
         return property("clientSideBuild") == "true"
     }
 
-    if (isDeveloperMode()) {
+    if (isDeveloperMode() || isPackageBuild()) {
         return false
     }
 
     return true
 }
 
+def isPackageBuild() {
+    return System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
+}
+
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false) || System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
+    return safeAppExtGet("isReanimatedExampleApp", false)
 }
 
 def isNewArchitectureEnabled() {
@@ -91,7 +95,7 @@ def resolveReactNativeDirectory() {
         return file(reactNativeLocation)
     }
 
-    if (isDeveloperMode()) {
+    if (isDeveloperMode() || isPackageBuild()) {
         return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
     }
 
@@ -318,7 +322,7 @@ def shouldBuildFromSource(aar, jsRuntimeName) { // Reanimated2 only
     if (jsRuntimeName == "v8") {
         return true
     }
-    else if (isDeveloperMode()) {
+    else if (isDeveloperMode() || isPackageBuild()) {
         // Example app
         return true
     }
@@ -437,7 +441,11 @@ android {
         }
     }
     defaultConfig {
-        minSdkVersion safeExtGet("minSdkVersion", 16)
+        if (REACT_NATIVE_MINOR_VERSION >= 71 && isPackageBuild()) {
+            minSdkVersion safeExtGet("minSdkVersion", 21)
+        } else {
+            minSdkVersion safeExtGet("minSdkVersion", 16)
+        }
         targetSdkVersion safeExtGet("targetSdkVersion", 30)
         versionCode 1
         versionName "1.0"
@@ -1024,13 +1032,21 @@ dependencies {
     implementation "androidx.core:core:1.6.0"
 
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
-        implementation "com.facebook.react:react-android" // version substituted by RNGP
+        if (isPackageBuild()) {
+            implementation "com.facebook.react:react-android:+"
+        } else {
+            implementation "com.facebook.react:react-android:" // version substituted by RNGP
+        }
         if (JS_RUNTIME == "hermes") {
-            implementation "com.facebook.react:hermes-android" // version substituted by RNGP
+            if (isPackageBuild()) {
+                implementation "com.facebook.react:hermes-android:+"
+            } else {
+                implementation "com.facebook.react:hermes-android:" // version substituted by RNGP
+            }
         }
     } else {
         implementation "com.facebook.react:react-native:+" // From node_modules
-        if (isDeveloperMode() && !isNewArchitectureEnabled()) {
+        if ((isDeveloperMode() || isPackageBuild()) && !isNewArchitectureEnabled()) {
             implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
         }
         else {

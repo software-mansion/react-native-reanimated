@@ -7,6 +7,10 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from '../src';
+import {
+  withReanimatedTimer,
+  advanceAnimationByTime,
+} from '../src/reanimated2/jestUtils';
 
 describe('colors interpolation', () => {
   it('interpolates rgb without gamma correction', () => {
@@ -147,32 +151,30 @@ describe('colors interpolation', () => {
   }
 
   it('interpolates with withTiming animation', () => {
-    jest.useFakeTimers();
+    withReanimatedTimer(() => {
+      const { getByTestId } = render(<TestComponent />);
+      const view = getByTestId('view');
+      const button = getByTestId('button');
 
-    const { getByTestId } = render(<TestComponent />);
-    const view = getByTestId('view');
-    const button = getByTestId('button');
+      expect(view).toHaveAnimatedStyle({ backgroundColor: '#105060' }, true);
 
-    expect(view).toHaveAnimatedStyle({ backgroundColor: '#105060' }, true);
+      fireEvent.press(button);
+      advanceAnimationByTime(250);
 
-    fireEvent.press(button);
-    jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
+      expect(view).toHaveAnimatedStyle(
+        { backgroundColor: 'rgba(72, 119, 72, 1)' },
+        true
+      );
 
-    expect(view).toHaveAnimatedStyle(
-      { backgroundColor: 'rgba(71, 117, 73, 1)' },
-      true
-    );
+      advanceAnimationByTime(250);
 
-    jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
+      expect(view).toHaveAnimatedStyle(
+        { backgroundColor: 'rgba(96, 144, 32, 1)' },
+        true
+      );
 
-    expect(view).toHaveAnimatedStyle(
-      { backgroundColor: 'rgba(96, 144, 32, 1)' },
-      true
-    );
-
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+      jest.runOnlyPendingTimers();
+      jest.useRealTimers();
+    });
   });
 });
