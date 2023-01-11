@@ -545,36 +545,33 @@ void NativeReanimatedModule::performOperations() {
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+    auto lock = newestShadowNodesRegistry_->createLock();
+
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
       ShadowTreeCloner shadowTreeCloner{
           newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
-      {
-        // lock once due to performance reasons
-        auto lock = newestShadowNodesRegistry_->createLock();
+      for (const auto &pair : copiedOperationsQueue) {
+        const ShadowNodeFamily &family = pair.first->getFamily();
+        react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        for (const auto &pair : copiedOperationsQueue) {
-          const ShadowNodeFamily &family = pair.first->getFamily();
-          react_native_assert(family.getSurfaceId() == surfaceId_);
+        auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            rootNode, family, RawProps(rt, *pair.second));
 
-          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-              rootNode, family, RawProps(rt, *pair.second));
-
-          if (newRootNode == nullptr) {
-            // this happens when React removed the component but Reanimated
-            // still tries to animate it, let's skip update for this specific
-            // component
-            continue;
-          }
-          rootNode = newRootNode;
+        if (newRootNode == nullptr) {
+          // this happens when React removed the component but Reanimated
+          // still tries to animate it, let's skip update for this specific
+          // component
+          continue;
         }
+        rootNode = newRootNode;
+      }
 
-        // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-        for (auto tag : copiedTagsToRemove) {
-          newestShadowNodesRegistry_->remove(tag);
-        }
+      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+      for (auto tag : copiedTagsToRemove) {
+        newestShadowNodesRegistry_->remove(tag);
       }
 
       shadowTreeCloner.updateYogaChildren();
@@ -599,9 +596,7 @@ void NativeReanimatedModule::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-
-  // TODO: use uiManager_->dispatchCommand once it's public
-  UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
+  uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
 jsi::Value NativeReanimatedModule::measure(
@@ -610,11 +605,8 @@ jsi::Value NativeReanimatedModule::measure(
   // based on implementation from UIManagerBinding.cpp
 
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  // TODO: use uiManager_->getRelativeLayoutMetrics once it's public
-  // auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
-  //     *shadowNode, nullptr, {/* .includeTransform = */ true});
-  auto layoutMetrics = UIManager_getRelativeLayoutMetrics(
-      uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
+  auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
+      *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
     // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
@@ -628,7 +620,8 @@ jsi::Value NativeReanimatedModule::measure(
 
   auto layoutableShadowNode =
       traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-  facebook::react::Point originRelativeToParent = layoutableShadowNode
+  facebook::react::Point originRelativeToParent =
+      layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin
       : facebook::react::Point();
 
