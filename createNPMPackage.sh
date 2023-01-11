@@ -11,7 +11,7 @@ version_name=("71" "70" "69" "68" "67")
 
 for index in {0..4}
 do
-  yarn add react-native@"${versions[$index]}"
+  yarn add react-native@"${versions[$index]}" --dev
   for for_hermes in "True" "False"
   do
     engine="jsc"
@@ -32,7 +32,10 @@ do
   done
 done
 
-# yarn add react-native@"${versions[0]}" --dev # this line is removed just for CI, `JavaScript heap out of memory`
+git restore yarn.lock
+git restore package.json
+rm -rf node_modules
+yarn add react-native@"${versions[0]}" --dev
 
 cp -R android/build build_output
 cd android && REANIMATED_PACKAGE_BUILD="1" ./gradlew clean && cd ..
