@@ -32,7 +32,7 @@ do
   done
 done
 
-yarn add react-native@"${versions[0]}" --dev
+# yarn add react-native@"${versions[0]}" --dev # this line is removed just for CI, `JavaScript heap out of memory`
 
 cp -R android/build build_output
 cd android && REANIMATED_PACKAGE_BUILD="1" ./gradlew clean && cd ..
