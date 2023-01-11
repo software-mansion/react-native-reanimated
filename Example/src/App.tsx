@@ -30,7 +30,10 @@ import {
   createStackNavigator,
 } from '@react-navigation/stack';
 
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import ChatHeadsExample from './ChatHeadsExample';
@@ -51,27 +54,24 @@ import { RectButton } from 'react-native-gesture-handler';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
-import AnimatedSensorExample from './AnimatedSensorExample';
-import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
-import AnimatedKeyboardExample from './AnimatedKeyboardExample';
-import ScrollViewOffsetExample from './ScrollViewOffsetExample';
-import { 
-  CardExample, 
-  CustomTransitionExample, 
-  GalleryExample, 
-  HeadersExample, 
-  ImageExample, 
-  LayoutAnimationExample, 
-  ManyTagsExample, 
-  MixedPropsExample, 
-  ParentMarginExample, 
-  RestoreStateExample, 
-} from './SharedElementTransition';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
+import {
+  CardExample,
+  CustomTransitionExample,
+  GalleryExample,
+  HeadersExample,
+  ImageExample,
+  LayoutAnimationExample,
+  ManyTagsExample,
+  MixedPropsExample,
+  ParentMarginExample,
+  RestoreStateExample,
+} from './SharedElementTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -123,6 +123,7 @@ const SCREENS: Screens = {
   RestoreStateExample: {
     screen: RestoreStateExample,
     title: '⚠️ [SET] RestoreStateExample',
+  },
   ColorInterpolation: {
     screen: ColorInterpolationExample,
     title: 'Color interpolation',
