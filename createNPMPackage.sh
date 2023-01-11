@@ -32,10 +32,9 @@ do
   done
 done
 
-git restore yarn.lock
-git restore package.json
+git restore yarn.lock package.json
 rm -rf node_modules
-yarn add react-native@"${versions[0]}" --dev
+yarn
 
 cp -R android/build build_output
 cd android && REANIMATED_PACKAGE_BUILD="1" ./gradlew clean && cd ..

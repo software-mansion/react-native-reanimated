@@ -65,7 +65,7 @@ def resolveClientSideBuild() {
         return property("clientSideBuild") == "true"
     }
 
-    if (isDeveloperMode()) {
+    if (isDeveloperMode() || isPackageBuild()) {
         return false
     }
 
@@ -78,7 +78,7 @@ def isPackageBuild() {
 
 def isDeveloperMode() {
     // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false) || isPackageBuild()
+    return safeAppExtGet("isReanimatedExampleApp", false)
 }
 
 def isNewArchitectureEnabled() {
@@ -95,7 +95,7 @@ def resolveReactNativeDirectory() {
         return file(reactNativeLocation)
     }
 
-    if (isDeveloperMode()) {
+    if (isDeveloperMode() || isPackageBuild()) {
         return file("$projectDir/../${getPlaygroundAppName()}/node_modules/react-native")
     }
 
@@ -322,7 +322,7 @@ def shouldBuildFromSource(aar, jsRuntimeName) { // Reanimated2 only
     if (jsRuntimeName == "v8") {
         return true
     }
-    else if (isDeveloperMode()) {
+    else if (isDeveloperMode() || isPackageBuild()) {
         // Example app
         return true
     }
@@ -1046,7 +1046,7 @@ dependencies {
         }
     } else {
         implementation "com.facebook.react:react-native:+" // From node_modules
-        if (isDeveloperMode() && !isNewArchitectureEnabled()) {
+        if ((isDeveloperMode() || isPackageBuild()) && !isNewArchitectureEnabled()) {
             implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
         }
         else {
