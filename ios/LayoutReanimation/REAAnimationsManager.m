@@ -190,7 +190,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  [self setNewProps:newProps forView:view withComponentData:componentData];
+  [self setNewProps:newProps forView:view withComponentData:componentData convertFromAbsolute:NO];
 }
 
 - (void)setNewProps:(NSMutableDictionary *)newProps
