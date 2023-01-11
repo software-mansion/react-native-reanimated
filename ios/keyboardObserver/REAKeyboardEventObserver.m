@@ -26,6 +26,14 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
   _state = UNKNOWN;
+
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+
+  [notificationCenter addObserver:self
+                         selector:@selector(clearListeners)
+                             name:RCTBridgeDidInvalidateModulesNotification
+                           object:nil];
+
   return self;
 }
 
@@ -79,8 +87,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)runAnimation
 {
-  displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
-  [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  if (!displayLink) {
+    displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+    [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  }
 }
 
 - (void)stopAnimation
@@ -173,9 +183,12 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)unsubscribeFromKeyboardEvents:(int)listenerId
 {
   NSNumber *_listenerId = [NSNumber numberWithInt:listenerId];
-  [_listeners removeObjectForKey:_listenerId];
-  if ([_listeners count] == 0) {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self->_listeners removeObjectForKey:_listenerId];
+  if ([self->_listeners count] == 0) {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidHideNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidShowNotification object:nil];
   }
 }
 
@@ -190,6 +203,15 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
       self->_state = keyboardHeight == 0 ? CLOSED : OPEN;
     }
     [self updateKeyboardFrame];
+  });
+}
+
+- (void)clearListeners
+{
+  RCTUnsafeExecuteOnMainQueueSync(^() {
+    [self->_listeners removeAllObjects];
+    [self->displayLink invalidate];
+    self->displayLink = nil;
   });
 }
 
