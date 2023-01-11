@@ -58,8 +58,11 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction)
 #endif
 {
-  auto requestAnimationFrame = [=](FrameCallback callback) {
-    frameCallbacks.push_back(callback);
+  auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
+    auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
+    frameCallbacks.push_back([=](double timestamp) {
+      runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
+    });
     maybeRequestRender();
   };
 
@@ -174,24 +177,28 @@ NativeReanimatedModule::NativeReanimatedModule(
 
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
-    const jsi::Value &valueUnpacker,
-    const jsi::Value &layoutAnimationStartFunction) {
+    const jsi::Value &callGuard,
+    const jsi::Value &valueUnpacker) {
   if (!runtimeHelper) {
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
   }
+  runtimeHelper->callGuard =
+      std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
   runtimeHelper->valueUnpacker =
-      std::make_shared<CoreFunction>(runtimeHelper.get(), valueUnpacker);
+      std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
   if (runtimeHelper) {
+    runtimeHelper->callGuard = nullptr;
     runtimeHelper->valueUnpacker = nullptr;
-    // event handler registry stores some JSI values from UI runtime, so it has
-    // to go away before we tear down the runtime
+    // event handler registry and frame callbacks store some JSI values from UI
+    // runtime, so they have to go away before we tear down the runtime
     eventHandlerRegistry.reset();
+    frameCallbacks.clear();
     runtime.reset();
     // make sure uiRuntimeDestroyed is set after the runtime is deallocated
     runtimeHelper->uiRuntimeDestroyed = true;
@@ -205,13 +212,11 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  auto uiRuntime = runtimeHelper->uiRuntime();
-  frameCallbacks.push_back([=](double timestamp) {
-    jsi::Runtime &rt = *uiRuntime;
+  scheduler->scheduleOnUI([=] {
+    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
-    workletValue.asObject(rt).asFunction(rt).call(rt);
+    runtimeHelper->runOnUIGuarded(workletValue);
   });
-  maybeRequestRender();
 }
 
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
@@ -540,36 +545,33 @@ void NativeReanimatedModule::performOperations() {
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+    auto lock = newestShadowNodesRegistry_->createLock();
+
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
       ShadowTreeCloner shadowTreeCloner{
           newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
-      {
-        // lock once due to performance reasons
-        auto lock = newestShadowNodesRegistry_->createLock();
+      for (const auto &pair : copiedOperationsQueue) {
+        const ShadowNodeFamily &family = pair.first->getFamily();
+        react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        for (const auto &pair : copiedOperationsQueue) {
-          const ShadowNodeFamily &family = pair.first->getFamily();
-          react_native_assert(family.getSurfaceId() == surfaceId_);
+        auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            rootNode, family, RawProps(rt, *pair.second));
 
-          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-              rootNode, family, RawProps(rt, *pair.second));
-
-          if (newRootNode == nullptr) {
-            // this happens when React removed the component but Reanimated
-            // still tries to animate it, let's skip update for this specific
-            // component
-            continue;
-          }
-          rootNode = newRootNode;
+        if (newRootNode == nullptr) {
+          // this happens when React removed the component but Reanimated
+          // still tries to animate it, let's skip update for this specific
+          // component
+          continue;
         }
+        rootNode = newRootNode;
+      }
 
-        // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-        for (auto tag : copiedTagsToRemove) {
-          newestShadowNodesRegistry_->remove(tag);
-        }
+      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+      for (auto tag : copiedTagsToRemove) {
+        newestShadowNodesRegistry_->remove(tag);
       }
 
       shadowTreeCloner.updateYogaChildren();
@@ -594,9 +596,7 @@ void NativeReanimatedModule::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-
-  // TODO: use uiManager_->dispatchCommand once it's public
-  UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
+  uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
 jsi::Value NativeReanimatedModule::measure(
@@ -605,11 +605,8 @@ jsi::Value NativeReanimatedModule::measure(
   // based on implementation from UIManagerBinding.cpp
 
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  // TODO: use uiManager_->getRelativeLayoutMetrics once it's public
-  // auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
-  //     *shadowNode, nullptr, {/* .includeTransform = */ true});
-  auto layoutMetrics = UIManager_getRelativeLayoutMetrics(
-      uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
+  auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
+      *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
     // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
@@ -623,7 +620,8 @@ jsi::Value NativeReanimatedModule::measure(
 
   auto layoutableShadowNode =
       traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-  facebook::react::Point originRelativeToParent = layoutableShadowNode
+  facebook::react::Point originRelativeToParent =
+      layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin
       : facebook::react::Point();
 

@@ -1,6 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { ShareableRef } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { registerWorkletStackDetails } from './errors';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -53,6 +54,12 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
         // this is a remote function
         toAdapt = value;
       } else {
+        if (__DEV__ && value.__workletHash !== undefined) {
+          registerWorkletStackDetails(
+            value.__workletHash,
+            value.__stackDetails
+          );
+        }
         toAdapt = {};
         for (const [key, element] of Object.entries(value)) {
           toAdapt[key] = makeShareableCloneRecursive(element);

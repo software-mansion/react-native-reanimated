@@ -1,6 +1,6 @@
 def try_to_parse_react_native_package_json(node_modules_dir)
   react_native_package_json_path = File.join(node_modules_dir, 'react-native/package.json')
-  if !File.exists?(react_native_package_json_path)
+  if !File.exist?(react_native_package_json_path)
     return nil
   end
   return JSON.parse(File.read(react_native_package_json_path))
@@ -34,6 +34,9 @@ def find_config()
   result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
   result[:react_native_minor_version] = react_native_json['version'].split('.')[1].to_i
+  if result[:react_native_minor_version] == 0 # nightly
+    result[:react_native_minor_version] = 1000
+  end
   result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
   result[:reanimated_node_modules_dir] = File.expand_path(File.join(__dir__, '..', '..'))
 

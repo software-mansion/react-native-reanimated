@@ -1,11 +1,6 @@
 #import <RNReanimated/REAInitializer.h>
 #import <RNReanimated/REAUIManager.h>
-
-#ifdef REANIMATED_VERSION
-#define STRINGIZE(x) #x
-#define STRINGIZE2(x) STRINGIZE(x)
-#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
-#endif // REANIMATED_VERSION
+#import <RNReanimated/ReanimatedVersion.h>
 
 @interface RCTEventDispatcher (Reanimated)
 
@@ -64,7 +59,7 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
 
     runtime.global().setProperty(runtime, "_IS_FABRIC", false);
 
-    auto version = jsi::String::createFromUtf8(runtime, REANIMATED_VERSION_STRING);
+    auto version = getReanimatedVersionString(runtime);
     runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
 
     runtime.global().setProperty(

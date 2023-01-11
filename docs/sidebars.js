@@ -64,6 +64,7 @@ module.exports = {
             'api/miscellaneous/interpolate',
             'api/miscellaneous/runOnJS',
             'api/miscellaneous/runOnUI',
+            'api/miscellaneous/interpolateColors',
           ],
         },
       ],

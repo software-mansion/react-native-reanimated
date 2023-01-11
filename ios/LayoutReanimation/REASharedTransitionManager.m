@@ -2,6 +2,11 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
 
+#if __has_include(<RNScreens/RNSScreen.h>)
+#import <RNScreens/RNSScreen.h>
+#import <RNScreens/RNSScreenStack.h>
+#endif
+
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
@@ -13,9 +18,12 @@
   BOOL _isSharedTransitionActive;
   NSMutableArray<REASharedElement *> *_sharedElements;
   REAAnimationsManager *_animationManager;
+  NSMutableSet<NSNumber *> *_stackDetectedChange;
+  NSMutableSet<NSNumber *> *_stackHasObserver;
+  NSMutableSet<NSNumber *> *_screenHasObserver;
 }
 
-- (instancetype)init:(REAAnimationsManager *)animationManager
+- (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager
 {
   if (self = [super init]) {
     _snapshotRegistry = [NSMutableDictionary new];
@@ -26,6 +34,9 @@
     _isSharedTransitionActive = NO;
     _sharedElements = [NSMutableArray new];
     _animationManager = animationManager;
+    _stackDetectedChange = [NSMutableSet new];
+    _stackHasObserver = [NSMutableSet new];
+    _screenHasObserver = [NSMutableSet new];
   }
   return self;
 }
@@ -39,6 +50,10 @@
   _sharedTransitionInParentIndex = nil;
   _sharedElements = nil;
   _animationManager = nil;
+}
+
+- (void)tmp:(NSNumber *)viewTag
+{
 }
 
 - (NSArray<UIView *> *)getCurrentSharedTransitionViews
@@ -63,77 +78,100 @@
   _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
 }
 
-- (void)setupSyncSharedTransitionForViews:(NSArray<UIView *> *)views
+- (BOOL)setupSyncSharedTransitionForViews:(NSArray<UIView *> *)views
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
   NSArray<REASharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
                                                                            withNewElements:NO];
   if ([sharedElements count] == 0) {
-    return;
+    return NO;
   }
   [self setupTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
   [self startSharedTransition:sharedElements];
+  return YES;
 }
 
 - (NSArray *)sortViewsByTags:(NSArray *)views
 {
   return [views sortedArrayUsingComparator:^NSComparisonResult(UIView *view1, UIView *view2) {
-    if ([view1.reactTag intValue] > [view2.reactTag intValue]) {
-      return (NSComparisonResult)NSOrderedAscending;
-    }
-    if ([view1.reactTag intValue] < [view2.reactTag intValue]) {
-      return (NSComparisonResult)NSOrderedDescending;
-    }
-    return (NSComparisonResult)NSOrderedSame;
+    return [view2.reactTag compare:view1.reactTag];
   }];
 }
 
 - (NSMutableArray<REASharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
-                                                             withNewElements:(BOOL)withNewElements
+                                                             withNewElements:(BOOL)addedNewScreen
 {
-  NSMutableSet<NSNumber *> *viewTags = [NSMutableSet new];
-  if (!withNewElements) {
-    for (UIView *view in sharedViews) {
-      [viewTags addObject:view.reactTag];
-    }
-  }
   NSMutableArray<REASharedElement *> *sharedElements = [NSMutableArray new];
   for (UIView *sharedView in sharedViews) {
-    NSNumber *targetViewTag = _findTheOtherForSharedTransition(sharedView.reactTag);
-    bool bothAreRemoved = !withNewElements && [viewTags containsObject:targetViewTag];
-    if (targetViewTag == nil) {
+    // add observers
+    UIView *sharedViewScreen = [self getParentScreen:sharedView];
+    UIView *stack = [self getScreenStack:sharedViewScreen];
+    if (addedNewScreen) {
+      [self observeStackChanges:stack];
+      [self observeChanges:sharedViewScreen];
+    }
+
+    // find sibling for shared view
+    NSNumber *siblingViewTag = _findTheOtherForSharedTransition(sharedView.reactTag);
+    UIView *siblingView = nil;
+    do {
+      siblingView = [_animationManager viewForTag:siblingViewTag];
+      if (siblingView == nil) {
+        [self clearAllSharedConfigsForViewTag:siblingViewTag];
+        siblingViewTag = _findTheOtherForSharedTransition(sharedView.reactTag);
+      }
+    } while (siblingView == nil && siblingViewTag != nil);
+
+    if (siblingView == nil) {
       // the sibling of shared view doesn't exist yet
       continue;
     }
+
     UIView *viewSource;
     UIView *viewTarget;
-    if (withNewElements) {
-      viewSource = [_animationManager viewForTag:targetViewTag];
+    if (addedNewScreen) {
+      viewSource = siblingView;
       viewTarget = sharedView;
-      UIView *viewTargetParentScreen = [self getParentScreen:viewTarget];
-      if (viewTargetParentScreen != nil) {
-        [self observeChanges:viewTargetParentScreen];
-      }
-      UIView *viewSourceParentScreen = [self getParentScreen:viewSource];
-      if (viewSourceParentScreen != nil) {
-        [self unobserveChanges:viewSourceParentScreen];
-      }
     } else {
       viewSource = sharedView;
-      viewTarget = [_animationManager viewForTag:targetViewTag];
+      viewTarget = siblingView;
     }
-    if (bothAreRemoved) {
-      // case for nested stack
-      [self clearAllSharedConfigsForView:viewSource];
-      [self clearAllSharedConfigsForView:viewTarget];
-      continue;
+
+    // check right target screen configuration
+    int screensCount = [stack.reactSubviews count];
+    if (addedNewScreen) {
+      // is under top
+      if (screensCount - 2 < 0) {
+        continue;
+      }
+      UIView *viewSourceParentScreen = [self getParentScreen:viewSource];
+      UIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
+      if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag]) {
+        continue;
+      }
+    } else {
+      // is on top
+      if (screensCount - 1 < 0) {
+        continue;
+      }
+      UIView *viewTargetParentScreen = [self getParentScreen:viewTarget];
+      UIView *stackTop = stack.reactSubviews[screensCount - 1];
+      if (![stackTop.reactTag isEqual:viewTargetParentScreen.reactTag]) {
+        continue;
+      }
     }
 
     REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] init:viewSource withParent:viewSource.superview];
-    REASnapshot *targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
     _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
-    _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+
+    REASnapshot *targetViewSnapshot;
+    if (addedNewScreen) {
+      targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
+      _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+    } else {
+      targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
+    }
 
     [_currentSharedTransitionViews addObject:viewSource];
     [_currentSharedTransitionViews addObject:viewTarget];
@@ -149,19 +187,46 @@
 
 - (UIView *)getParentScreen:(UIView *)view
 {
+#if __has_include(<RNScreens/RNSScreen.h>)
   UIView *screen = view;
-  while (![NSStringFromClass([screen class]) isEqualToString:@"RNSScreenView"] && screen.superview != nil) {
+  while (![screen isKindOfClass:[RNSScreenView class]] && screen.superview != nil) {
     screen = screen.superview;
   }
-  if ([NSStringFromClass([screen class]) isEqualToString:@"RNSScreenView"]) {
+  if ([screen isKindOfClass:[RNSScreenView class]]) {
     return screen;
   }
+#endif
+  return nil;
+}
+
+- (UIView *)getScreenStack:(UIView *)view
+{
+#if __has_include(<RNScreens/RNSScreen.h>)
+  if ([view isKindOfClass:[RNSScreenView class]]) {
+    if (view.reactSuperview != nil) {
+      if ([view.reactSuperview isKindOfClass:[RNSScreenStackView class]]) {
+        return view.reactSuperview;
+      }
+    }
+  }
+  while (![view isKindOfClass:[RNSScreenStackView class]] && view.superview != nil) {
+    view = view.superview;
+  }
+  if ([view isKindOfClass:[RNSScreenStackView class]]) {
+    return view;
+  }
+#endif
   return nil;
 }
 
 - (void)observeChanges:(UIView *)view
 {
-  [view addObserver:self forKeyPath:@"transitionDuration" options:NSKeyValueObservingOptionNew context:nil];
+  if ([_screenHasObserver containsObject:view.reactTag]) {
+    return;
+  }
+  [_screenHasObserver addObject:view.reactTag];
+
+  [view addObserver:self forKeyPath:@"transitionDuration" options:NSKeyValueObservingOptionNew context:@"reanimated"];
   [view addObserver:self forKeyPath:@"activityState" options:NSKeyValueObservingOptionNew context:nil];
 
   static dispatch_once_t onceToken;
@@ -177,12 +242,31 @@
   });
 }
 
-- (void)unobserveChanges:(UIView *)view
+- (void)observeStackChanges:(UIView *)stack
 {
-  if ([view observationInfo] != nil) {
-    [view removeObserver:self forKeyPath:@"transitionDuration"];
-    [view removeObserver:self forKeyPath:@"activityState"];
+#if __has_include(<RNScreens/RNSScreen.h>)
+  if (![stack isKindOfClass:[RNSScreenStackView class]]) {
+    return;
   }
+  if ([_stackHasObserver containsObject:stack.reactTag]) {
+    return;
+  }
+  [_stackHasObserver addObject:stack.reactTag];
+  [stack addObserver:self forKeyPath:@"window" options:NSKeyValueObservingOptionNew context:nil];
+
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    [self swizzlMethod:@selector(maybeAddToParentAndUpdateContainer)
+                  with:@selector(swizzled_maybeAddToParentAndUpdateContainer)
+              forClass:[stack class]];
+  });
+#endif
+}
+
+- (void)swizzled_maybeAddToParentAndUpdateContainer
+{
+  [self swizzled_maybeAddToParentAndUpdateContainer];
+  [self setValue:[self valueForKey:@"window"] forKey:@"window"];
 }
 
 - (void)swizzlMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
@@ -213,7 +297,7 @@
   // get RNScreenView from RNScreen to call KVO on RNScreenView because
   // RNScreen doesn't contains writable public property.
   UIView *view = [self valueForKey:@"screenView"];
-  // call KVO to run runAsyncStaredTransition from Reanimated
+  // call KVO to run runAsyncSharedTransition from Reanimated
   [view setValue:[view valueForKey:@"transitionDuration"] forKey:@"transitionDuration"];
 }
 
@@ -221,7 +305,7 @@
 {
   // call original method from react-native-screens, self == RNScreenView
   [self swizzled_notifyWillDisappear];
-  // call KVO to run runAsyncStaredTransition from Reanimated
+  // call KVO to run runAsyncSharedTransition from Reanimated
   [self setValue:[self valueForKey:@"activityState"] forKey:@"activityState"];
 }
 
@@ -231,13 +315,57 @@
                        context:(void *)context
 {
   UIView *screen = (UIView *)object;
-  if ([keyPath isEqualToString:@"transitionDuration"]) {
-    if (screen.superview != nil) {
-      [self runAsyncStaredTransition];
-    }
-  } else if ([keyPath isEqualToString:@"activityState"]) {
-    [self runSharedTransitionForSharedViewsOnScreen:screen];
+  UIView *stack = screen;
+  while (stack != nil && ![stack isKindOfClass:[RNSScreenStackView class]]) {
+    stack = stack.superview;
   }
+
+  if ([keyPath isEqualToString:@"transitionDuration"]) { // added new screen (push)
+    if (screen.superview != nil) {
+      [self runAsyncSharedTransition];
+      [_stackDetectedChange removeObject:stack.reactTag];
+    }
+  } else if ([keyPath isEqualToString:@"activityState"]) { // removed screen from top (removed from stack or covered by
+                                                           // another screen)
+    if (stack != nil && [_stackDetectedChange containsObject:stack.reactTag]) {
+      if ([self isScreen:screen outsideStack:stack]) {
+        [self runSharedTransitionForSharedViewsOnScreen:screen];
+      } else {
+        [_animationManager
+            visitTree:screen
+                block:^int(id<RCTComponent> view) {
+                  if ([self->_animationManager hasAnimationForTag:view.reactTag type:@"sharedElementTransition"]) {
+                    REASnapshot *snapshot = [[REASnapshot alloc] init:view withParent:((UIView *)view).superview];
+                    self->_snapshotRegistry[view.reactTag] = snapshot;
+                  }
+                  return false;
+                }];
+      }
+      [_stackDetectedChange removeObject:stack.reactTag];
+    } else { // removed stack
+      for (UIView *child in stack.reactSubviews) {
+        [_animationManager visitTree:child
+                               block:^int(id<RCTComponent> _Nonnull view) {
+                                 [self clearAllSharedConfigsForView:(UIView *)view];
+                                 return false;
+                               }];
+        [_screenHasObserver removeObject:child.reactTag];
+      }
+      [_stackHasObserver removeObject:stack.reactTag];
+    }
+  } else if ([keyPath isEqualToString:@"window"]) { // change in stack
+    [_stackDetectedChange addObject:stack.reactTag];
+  }
+}
+
+- (BOOL)isScreen:(UIView *)screen outsideStack:(UIView *)stack
+{
+  for (UIView *child in stack.reactSubviews) {
+    if ([child.reactTag isEqual:screen.reactTag]) {
+      return NO;
+    }
+  }
+  return YES;
 }
 
 - (void)runSharedTransitionForSharedViewsOnScreen:(UIView *)screen
@@ -251,13 +379,15 @@
                            }
                            return false;
                          }];
-  [self setupSyncSharedTransitionForViews:removedView];
-  for (UIView *view in removedView) {
-    [_animationManager clearAnimationConfigForTag:view.reactTag];
+  BOOL startedAnimation = [self setupSyncSharedTransitionForViews:removedView];
+  if (startedAnimation) {
+    for (UIView *view in removedView) {
+      [_animationManager clearAnimationConfigForTag:view.reactTag];
+    }
   }
 }
 
-- (void)runAsyncStaredTransition
+- (void)runAsyncSharedTransition
 {
   if ([_sharedElements count] == 0) {
     return;
@@ -344,9 +474,15 @@
     int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
     [parent insertSubview:view atIndex:childIndex];
     REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[view.reactTag];
+    BOOL isScreenDetached = [self getParentScreen:view].superview == nil;
+    NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
+    if (isScreenDetached) {
+      viewSourcePreviousSnapshot.values[@"originY"] = viewSourcePreviousSnapshot.values[@"originYByParent"];
+    }
     [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
                                                  forTag:view.reactTag
                                      isSharedTransition:YES];
+    viewSourcePreviousSnapshot.values[@"originY"] = originY;
     [_currentSharedTransitionViews removeObject:view];
   }
   if ([_currentSharedTransitionViews count] == 0) {
@@ -366,8 +502,18 @@
 - (void)clearAllSharedConfigsForView:(UIView *)view
 {
   NSNumber *viewTag = view.reactTag;
-  [_snapshotRegistry removeObjectForKey:viewTag];
-  [_animationManager clearAnimationConfigForTag:viewTag];
+  if (viewTag != nil) {
+    [_snapshotRegistry removeObjectForKey:viewTag];
+    [_animationManager clearAnimationConfigForTag:viewTag];
+  }
+}
+
+- (void)clearAllSharedConfigsForViewTag:(NSNumber *)viewTag
+{
+  if (viewTag != nil) {
+    [_snapshotRegistry removeObjectForKey:viewTag];
+    [_animationManager clearAnimationConfigForTag:viewTag];
+  }
 }
 
 @end

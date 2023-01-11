@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ViewGroupManager;
+import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import java.util.Set;
 
 public class SharedTransitionManager {
   private final AnimationsManager mAnimationsManager;
+  private NativeMethodsHolder mNativeMethodsHolder;
   private final List<View> mAddedSharedViews = new ArrayList<>();
   private final Map<Integer, View> mSharedTransitionParent = new HashMap<>();
   private final Map<Integer, Integer> mSharedTransitionInParentIndex = new HashMap<>();
@@ -44,19 +46,23 @@ public class SharedTransitionManager {
   }
 
   protected void viewsDidLayout() {
-    setupStaredTransitionForViews(mAddedSharedViews, true);
+    setupSharedTransitionForViews(mAddedSharedViews, true);
     mAddedSharedViews.clear();
   }
 
   protected void viewsDidRemoved() {
-    setupStaredTransitionForViews(mRemovedSharedViews, false);
+    setupSharedTransitionForViews(mRemovedSharedViews, false);
     for (View removedSharedView : mRemovedSharedViews) {
       visitTree(removedSharedView.getId(), true);
     }
     mRemovedSharedViews.clear();
   }
 
-  private void setupStaredTransitionForViews(List<View> sharedViews, boolean withNewElements) {
+  protected void setNativeMethods(NativeMethodsHolder nativeMethods) {
+    mNativeMethodsHolder = nativeMethods;
+  }
+
+  private void setupSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
     if (sharedViews.isEmpty()) {
       return;
     }
@@ -76,9 +82,9 @@ public class SharedTransitionManager {
   }
 
   private List<SharedElement> getSharedElementForCurrentTransition(
-      List<View> sharedViews, boolean withNewElements) {
+      List<View> sharedViews, boolean addedNewScreen) {
     Set<Integer> viewTags = new HashSet<>();
-    if (!withNewElements) {
+    if (!addedNewScreen) {
       for (View view : sharedViews) {
         viewTags.add(view.getId());
       }
@@ -87,25 +93,18 @@ public class SharedTransitionManager {
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
         mAnimationsManager.getReanimatedNativeHierarchyManager();
     for (View sharedView : sharedViews) {
-      int targetViewTag =
-          mAnimationsManager
-              .getNativeMethodsHolder()
-              .findTheOtherForSharedTransition(sharedView.getId());
-      boolean bothAreRemoved = !withNewElements && viewTags.contains(targetViewTag);
+      int targetViewTag = mNativeMethodsHolder.findTheOtherForSharedTransition(sharedView.getId());
+      boolean bothAreRemoved = !addedNewScreen && viewTags.contains(targetViewTag);
       if (targetViewTag < 0) {
         continue;
       }
       View viewSource, viewTarget;
-      if (withNewElements) {
+      if (addedNewScreen) {
         viewSource = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
         viewTarget = sharedView;
       } else {
         viewSource = sharedView;
         viewTarget = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
-      }
-      if (withNewElements) {
-        makeSnapshot(viewSource);
-        makeSnapshot(viewTarget);
       }
       if (bothAreRemoved) {
         // case for nested stack
@@ -114,6 +113,43 @@ public class SharedTransitionManager {
         continue;
       }
 
+      View viewSourceScreen = findScreen(viewSource);
+      View viewTargetScreen = findScreen(viewTarget);
+      if (viewSourceScreen == null || viewTargetScreen == null) {
+        continue;
+      }
+
+      ViewGroup stack = (ViewGroup) findStack(viewSourceScreen);
+      if (stack == null) {
+        continue;
+      }
+
+      ViewGroupManager stackViewGroupManager =
+              (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
+      int screensCount = stackViewGroupManager.getChildCount(stack);
+
+      if (screensCount - 2 < 0) {
+        continue;
+      }
+
+      View topScreen = stackViewGroupManager.getChildAt(stack, screensCount - 1);
+      View secondScreen = stackViewGroupManager.getChildAt(stack, screensCount - 2);
+      boolean isRightConfiguration;
+      if (addedNewScreen) {
+        isRightConfiguration = secondScreen.getId() == viewSourceScreen.getId()
+                               && topScreen.getId() == viewTargetScreen.getId();
+      } else {
+        isRightConfiguration = topScreen.getId() == viewSourceScreen.getId()
+                               && secondScreen.getId() == viewTargetScreen.getId();
+      }
+      if (!isRightConfiguration) {
+        continue;
+      }
+
+      if (addedNewScreen) {
+        makeSnapshot(viewSource);
+        makeSnapshot(viewTarget);
+      }
       Snapshot sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
 
@@ -183,9 +219,7 @@ public class SharedTransitionManager {
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    mAnimationsManager
-        .getNativeMethodsHolder()
-        .startAnimation(view.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimation(view.getId(), "sharedElementTransition", preparedValues);
   }
 
   protected void finishSharedAnimation(int tag) {
@@ -207,6 +241,10 @@ public class SharedTransitionManager {
         parentViewGroup.addView(view);
       }
       Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(view.getId());
+      int originY = viewSourcePreviousSnapshot.originY;
+      if (findStack(view) == null) {
+        viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.originYByParent;
+      }
       Map<String, Object> snapshotMap = viewSourcePreviousSnapshot.toBasicMap();
       Map<String, Object> preparedValues = new HashMap<>();
       for (String key : snapshotMap.keySet()) {
@@ -214,6 +252,7 @@ public class SharedTransitionManager {
         preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
       }
       mAnimationsManager.progressLayoutAnimation(view.getId(), preparedValues, true);
+      viewSourcePreviousSnapshot.originY = originY;
       mCurrentSharedTransitionViews.remove(view);
     }
     if (mCurrentSharedTransitionViews.isEmpty()) {
@@ -230,8 +269,35 @@ public class SharedTransitionManager {
     }
   }
 
+  private View findScreen(View view) {
+    ViewParent parent = view.getParent();
+    while (parent != null) {
+      if (parent.getClass().getSimpleName().equals("Screen")) {
+        return (View) parent;
+      }
+      parent = parent.getParent();
+    }
+    return null;
+  }
+
+  private View findStack(View view) {
+    ViewParent parent = view.getParent();
+    while (parent != null) {
+      if (parent.getClass().getSimpleName().equals("ScreenStack")) {
+        return (View) parent;
+      }
+      parent = parent.getParent();
+    }
+    return null;
+  }
+
   protected void makeSnapshot(View view) {
-    mSnapshotRegistry.put(view.getId(), new Snapshot(view));
+    Snapshot snapshot = new Snapshot(view);
+    View screen = findScreen(view);
+    if (screen != null) {
+      snapshot.originY -= screen.getTop();
+    }
+    mSnapshotRegistry.put(view.getId(), snapshot);
   }
 
   protected void visitTreeForTags(int[] viewTags, boolean clearConfig) {
@@ -247,8 +313,8 @@ public class SharedTransitionManager {
     if (tag == -1) {
       return;
     }
-    ViewGroup viewGroup = null;
-    ViewGroupManager viewGroupManager = null;
+    ViewGroup viewGroup;
+    ViewGroupManager<ViewGroup> viewGroupManager;
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
         mAnimationsManager.getReanimatedNativeHierarchyManager();
     try {
@@ -258,7 +324,7 @@ public class SharedTransitionManager {
         makeSnapshot(view);
       }
       if (clearConfig) {
-        mAnimationsManager.getNativeMethodsHolder().clearAnimationConfig(tag);
+        mNativeMethodsHolder.clearAnimationConfig(tag);
       }
 
       if (!(view instanceof ViewGroup)) {
@@ -270,7 +336,7 @@ public class SharedTransitionManager {
     } catch (IllegalViewOperationException e) {
       return;
     }
-    if (viewGroup == null || viewGroupManager == null) {
+    if (viewGroupManager == null) {
       return;
     }
     for (int i = 0; i < viewGroupManager.getChildCount(viewGroup); i++) {
@@ -279,9 +345,20 @@ public class SharedTransitionManager {
     }
   }
 
+  void visitTreeAndMakeSnapshot(View view) {
+    if (!(view instanceof ViewGroup)) {
+      return;
+    }
+    ViewGroup viewGroup = (ViewGroup) view;
+    for (int i = 0; i < viewGroup.getChildCount(); i++) {
+      View child = viewGroup.getChildAt(i);
+      visitTreeAndMakeSnapshot(child);
+    }
+  }
+
   private void clearAllSharedConfigsForView(View view) {
     int viewTag = view.getId();
     mSnapshotRegistry.remove(viewTag);
-    mAnimationsManager.getNativeMethodsHolder().clearAnimationConfig(viewTag);
+    mNativeMethodsHolder.clearAnimationConfig(viewTag);
   }
 }

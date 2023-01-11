@@ -23,6 +23,7 @@ Currently supported formats are:
 - `"#rgba"`
 - `"#rrggbb"`
 - `"#rrggbbaa"`
+- CSS colors like `"red"` or `"blanchedalmond"` (full list here: https://www.w3.org/TR/css-color-3/#svg-color)
 
 #### `options` [object]
 

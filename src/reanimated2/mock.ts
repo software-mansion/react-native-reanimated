@@ -7,6 +7,28 @@ const NOOP = () => {
 const ID = (t) => t;
 const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
 
+class BaseAnimationMock {
+  duration(_: number) {
+    return this;
+  }
+
+  delay(_: number) {
+    return this;
+  }
+
+  withCallback(_: (finsihed: boolean) => void) {
+    return this;
+  }
+
+  randomDelay() {
+    return this;
+  }
+
+  withInitialValues() {
+    return this;
+  }
+}
+
 const ReanimatedV2 = {
   useSharedValue: (v) => ({ value: v }),
   useDerivedValue: (a) => ({ value: a() }),
@@ -74,6 +96,89 @@ const ReanimatedV2 = {
   runOnJS: (fn) => fn,
   runOnUI: (fn) => fn,
 };
+
+[
+  'FadeIn',
+  'FadeInRight',
+  'FadeInLeft',
+  'FadeInUp',
+  'FadFadeInDown',
+  'FadeOut',
+  'FadeOutRight',
+  'FadeOutLeft',
+  'FadeOutUp',
+  'FadeOutDown',
+
+  'FlipInYLeft',
+  'FlipInXDown',
+  'FlipInYRight',
+  'FlipInEasyX',
+  'FlipInEasyY',
+  'FlipOutXUp',
+  'FlipOutYLeft',
+  'FlipOutXDown',
+  'FlipOutYRight',
+  'FlipOutEasyX',
+  'FlipOutEasyY',
+
+  'StretchInY',
+  'StretchOutX',
+  'StretchOutY',
+  'SlideInLeft',
+  'SlideOutRight',
+  'SlideOutLeft',
+  'SlideInUp',
+  'SlideInDown',
+  'SlideOutUp',
+
+  'ZoomInRotate',
+  'ZoomInLeft',
+  'ZoomInRight',
+  'ZoomInUp',
+  'ZoomInDown',
+  'ZoomInEasyUp',
+  'ZoomInEasyDown',
+  'ZoomOut',
+  'ZoomOutRotate',
+  'ZoomOutLeft',
+  'ZoomOutRight',
+  'ZoomOutUp',
+  'ZoomOutDown',
+  'ZoomOutEasyUp',
+  'ZoomOutEasyDown',
+
+  'BounceInDown',
+  'BounceInUp',
+  'BounceInLeft',
+  'BounceInRight',
+  'BounceOut',
+  'BounceOutDown',
+  'BounceOutUp',
+  'BounceOutLeft',
+  'BounceOutRight',
+
+  'LightSpeedInLeft',
+  'LightSpeedOutRight',
+  'LightSpeedOutLeft',
+
+  'PinwheelOut',
+
+  'RotateInDownRight',
+  'RotateInUpLeft',
+  'RotateInUpRight',
+  'RotateOutDownLeft',
+  'RotateOutDownRight',
+  'RotateOutUpLeft',
+  'RotateOutUpRight',
+
+  'RollInRight',
+  'RollOutLeft',
+  'RollOutRight',
+].forEach((k) =>
+  Object.assign(ReanimatedV2, {
+    [k]: new BaseAnimationMock(),
+  })
+);
 
 module.exports = {
   ...ReanimatedV2,

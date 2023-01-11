@@ -49,8 +49,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void installCoreFunctions(
       jsi::Runtime &rt,
-      const jsi::Value &workletMaker,
-      const jsi::Value &layoutAnimationStartFunction) override;
+      const jsi::Value &callGuard,
+      const jsi::Value &valueUnpacker) override;
 
   jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
       override;
