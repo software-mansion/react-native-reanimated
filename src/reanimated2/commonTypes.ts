@@ -67,7 +67,7 @@ export type ShareableSyncDataHolderRef<T> = {
 export type MapperRegistry = {
   start: (
     mapperID: number,
-    worklet: () => void,
+    worklet: (frameTimestamp: number) => void,
     inputs: SharedValue<any>[],
     outputs?: SharedValue<any>[]
   ) => void;

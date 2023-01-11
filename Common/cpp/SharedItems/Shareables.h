@@ -86,10 +86,9 @@ class JSRuntimeHelper {
   }
 
   template <typename... Args>
-  inline void
-  runOnUIGuarded(double timestamp, const jsi::Value &function, Args &&...args) {
+  inline void runOnUIGuarded(const jsi::Value &function, Args &&...args) {
     jsi::Runtime &rt = *uiRuntime_;
-    callGuard->call(rt, jsi::Value(timestamp), function, args...);
+    callGuard->call(rt, function, args...);
   }
 };
 

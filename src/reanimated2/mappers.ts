@@ -4,7 +4,7 @@ import { runOnUI } from './threads';
 export type Mapper = {
   id: number;
   dirty: boolean;
-  worklet: () => void;
+  worklet: (frameTimestamp: number) => void;
   inputs: SharedValue<any>[];
   outputs?: SharedValue<any>[];
 };
@@ -82,7 +82,7 @@ export function createMapperRegistry() {
     for (const mapper of sortedMappers) {
       if (mapper.dirty) {
         mapper.dirty = false;
-        mapper.worklet();
+        mapper.worklet(7);
       }
     }
   }
@@ -115,7 +115,7 @@ export function createMapperRegistry() {
   return {
     start: (
       mapperID: number,
-      worklet: () => void,
+      worklet: (frameTimestamp: number) => void,
       inputs: SharedValue<any>[],
       outputs?: SharedValue<any>[]
     ) => {
@@ -152,7 +152,7 @@ export function createMapperRegistry() {
 let MAPPER_ID = 9999;
 
 export function startMapper(
-  worklet: () => void,
+  worklet: (frameTimestamp: number) => void,
   inputs: any[] = [],
   outputs: any[] = []
 ): number {

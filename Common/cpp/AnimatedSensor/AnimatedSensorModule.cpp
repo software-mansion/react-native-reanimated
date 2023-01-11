@@ -39,6 +39,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
         auto handler = shareableHandler->getJSValue(rt);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           jsi::Object value(rt);
+          value.setProperty(rt, "timestamp", getCurrentTime());
           value.setProperty(rt, "qx", newValues[0]);
           value.setProperty(rt, "qy", newValues[1]);
           value.setProperty(rt, "qz", newValues[2]);
@@ -46,13 +47,14 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(rt, "yaw", newValues[4]);
           value.setProperty(rt, "pitch", newValues[5]);
           value.setProperty(rt, "roll", newValues[6]);
-          runtimeHelper->runOnUIGuarded(getCurrentTime(), handler, value);
+          runtimeHelper->runOnUIGuarded(handler, value);
         } else {
           jsi::Object value(rt);
+          value.setProperty(rt, "timestamp", getCurrentTime());
           value.setProperty(rt, "x", newValues[0]);
           value.setProperty(rt, "y", newValues[1]);
           value.setProperty(rt, "z", newValues[2]);
-          runtimeHelper->runOnUIGuarded(getCurrentTime(), handler, value);
+          runtimeHelper->runOnUIGuarded(handler, value);
         }
       });
   if (sensorId != -1) {
