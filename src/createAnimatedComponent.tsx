@@ -241,7 +241,7 @@ export default function createAnimatedComponent(
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = findNodeHandle(options?.setNativeProps ? this : node);
       const componentName = Component.displayName || Component.name;
 
       if (componentName?.endsWith('FlashList') && this._component) {
