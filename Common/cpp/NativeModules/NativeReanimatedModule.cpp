@@ -61,8 +61,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=](double timestamp) {
-      runtimeHelper->runOnUIGuarded(
-          timestamp, *jsFunction, jsi::Value(timestamp));
+      runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
     });
     maybeRequestRender();
   };
@@ -169,7 +168,6 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
 #endif
-  getCurrentTimeFunction = platformDepMethodsHolder.getCurrentTime;
   subscribeForKeyboardEventsFunction =
       platformDepMethodsHolder.subscribeForKeyboardEvents;
   unsubscribeFromKeyboardEventsFunction =
@@ -213,11 +211,10 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  TimeProviderFunction getCurrentTime = getCurrentTimeFunction;
   scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
-    runtimeHelper->runOnUIGuarded(getCurrentTime(), workletValue);
+    runtimeHelper->runOnUIGuarded(workletValue);
   });
 }
 
@@ -412,20 +409,10 @@ void NativeReanimatedModule::maybeRequestRender() {
 }
 
 void NativeReanimatedModule::onRender(double timestampMs) {
-  try {
-    std::vector<FrameCallback> callbacks = frameCallbacks;
-    frameCallbacks.clear();
-    for (auto &callback : callbacks) {
-      callback(timestampMs);
-    }
-  } catch (std::exception &e) {
-    std::string str = e.what();
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  } catch (...) {
-    std::string str = "OnRender error";
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
+  std::vector<FrameCallback> callbacks = frameCallbacks;
+  frameCallbacks.clear();
+  for (auto &callback : callbacks) {
+    callback(timestampMs);
   }
 }
 
@@ -648,12 +635,10 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
-  auto getCurrentTime = getCurrentTimeFunction;
   return subscribeForKeyboardEventsFunction([=](int keyboardState, int height) {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto handler = shareableHandler->getJSValue(rt);
-    runtimeHelper->runOnUIGuarded(
-        getCurrentTime(), handler, jsi::Value(height));
+    runtimeHelper->runOnUIGuarded(handler, jsi::Value(height));
   });
 }
 
