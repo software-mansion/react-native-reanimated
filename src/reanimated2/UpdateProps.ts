@@ -42,7 +42,13 @@ function updatePropsPaperBatched(
   if (batchedUpdatesCount.count === 1) {
     global.setImmediate(() => {
       'worklet';
-      _updatePropsPaper(batchedUpdates);
+      const obj: Record<string, any> = {};
+      for (const [viewTag, updates] of Object.entries(batchedUpdates)) {
+        for (const [prop, value] of Object.entries(updates)) {
+          obj[`${viewTag}_${prop}`] = value;
+        }
+      }
+      _updatePropsPaper(obj);
       batchedUpdates = {};
       batchedUpdatesCount.count = 0;
     });
