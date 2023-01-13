@@ -483,8 +483,9 @@ export default function createAnimatedComponent(
           has('current', value) &&
           value.current instanceof WorkletEventHandler
         ) {
-          if (value.current.eventNames.length > 0) {
-            value.current.eventNames.forEach((eventName) => {
+          const { eventNames } = value.current;
+          if (eventNames.length > 0) {
+            eventNames.forEach((eventName) => {
               props[eventName] = has('listeners', value.current)
                 ? (value.current.listeners as Record<string, unknown>)[
                     eventName
@@ -493,8 +494,8 @@ export default function createAnimatedComponent(
             });
             if (
               Platform.OS === 'android' &&
-              (value.current.eventNames.includes('onMomentumScrollBegin') ||
-                value.current.eventNames.includes('onMomentumScrollEnd')) &&
+              (eventNames.includes('onMomentumScrollBegin') ||
+                eventNames.includes('onMomentumScrollEnd')) &&
               this.props.onMomentumScrollBegin === undefined &&
               this.props.onMomentumScrollEnd === undefined
             ) {
