@@ -159,6 +159,7 @@ else()
             JSI_LIB
             jsi
             PATHS ${LIBRN_DIR}
+            NO_DEFAULT_PATH
             NO_CMAKE_FIND_ROOT_PATH
         )
     endif()
@@ -167,6 +168,7 @@ else()
         GLOG_LIB
         glog
         PATHS ${LIBRN_DIR}
+        NO_DEFAULT_PATH
         NO_CMAKE_FIND_ROOT_PATH
     )
 
@@ -174,6 +176,7 @@ else()
         FBJNI_LIB
         fbjni
         PATHS ${LIBRN_DIR}
+        NO_DEFAULT_PATH
         NO_CMAKE_FIND_ROOT_PATH
     )
 
@@ -182,6 +185,7 @@ else()
             FOLLY_LIB
             folly_json
             PATHS ${LIBRN_DIR}
+            NO_DEFAULT_PATH
             NO_CMAKE_FIND_ROOT_PATH
         )
     else()
@@ -189,6 +193,7 @@ else()
             FOLLY_LIB
             folly_runtime
             PATHS ${LIBRN_DIR}
+            NO_DEFAULT_PATH
             NO_CMAKE_FIND_ROOT_PATH
         )
     endif()
@@ -197,6 +202,7 @@ else()
         REACTNATIVEJNI_LIB
         reactnativejni
         PATHS ${LIBRN_DIR}
+        NO_DEFAULT_PATH
         NO_CMAKE_FIND_ROOT_PATH
     )
 
@@ -245,6 +251,7 @@ if(${JS_RUNTIME} STREQUAL "hermes")
                 HERMES_EXECUTOR_LIB
                 hermes-executor-debug
                 PATHS ${LIBRN_DIR}
+                NO_DEFAULT_PATH
                 NO_CMAKE_FIND_ROOT_PATH
             )
         endif()
@@ -265,6 +272,7 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
             V8EXECUTOR_LIB
             v8executor
             PATHS ${V8_SO_DIR}
+            NO_DEFAULT_PATH
             NO_CMAKE_FIND_ROOT_PATH
     )
     target_link_libraries(
@@ -280,6 +288,7 @@ elseif(${JS_RUNTIME} STREQUAL "jsc")
             JSEXECUTOR_LIB
             jscexecutor
             PATHS ${LIBRN_DIR}
+            NO_DEFAULT_PATH
             NO_CMAKE_FIND_ROOT_PATH
         )
     endif()
