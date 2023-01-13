@@ -212,8 +212,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mExitingViews.remove(tag);
       maybeDropAncestors(view);
 
-      ViewGroup parent = (ViewGroup) exitingView.getParent();
-      removeView(exitingView, parent);
+      ViewGroup parent = (ViewGroup) view.getParent();
+      removeView(view, parent);
     }
   }
 

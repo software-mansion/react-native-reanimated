@@ -4,7 +4,9 @@ import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.annotation.Nullable;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -16,6 +18,7 @@ import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;
+
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -141,13 +144,13 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       } catch (IllegalViewOperationException e) {
         // (IllegalViewOperationException) == (vm == null)
         e.printStackTrace();
-cancelAnimationsInSubviews(view);
+        cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
         return;
       }
       String parentName = screenParentViewManager.getName();
       if (parentName.equals("RNSScreenStack")) {
-cancelAnimationsInSubviews(view);
+        cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
         return;
       }
