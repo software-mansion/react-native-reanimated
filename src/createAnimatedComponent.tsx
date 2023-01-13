@@ -491,6 +491,16 @@ export default function createAnimatedComponent(
                   ]
                 : dummyListener;
             });
+            if (
+              Platform.OS === 'android' &&
+              (value.current.eventNames.includes('onMomentumScrollBegin') ||
+                value.current.eventNames.includes('onMomentumScrollEnd')) &&
+              this.props.onMomentumScrollBegin === undefined &&
+              this.props.onMomentumScrollEnd === undefined
+            ) {
+              // force sendMomentumEvents to be true
+              props.onMomentumScrollEnd = dummyListener;
+            }
           } else {
             props[key] = dummyListener;
           }
