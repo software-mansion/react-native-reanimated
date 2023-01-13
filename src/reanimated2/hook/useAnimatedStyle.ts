@@ -244,7 +244,7 @@ function styleUpdater(
         requestAnimationFrame(frame);
       }
     }
-    state.last = Object.assign({}, oldValues, newValues);
+    state.last = Object.assign(oldValues, newValues);
     const style = getStyleWithoutAnimations(state.last);
     if (style) {
       updateProps(viewDescriptors, style, maybeViewRef);
