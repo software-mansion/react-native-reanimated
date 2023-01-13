@@ -39,6 +39,9 @@ jsi::Value AnimatedSensorModule::registerSensor(
         auto handler = shareableHandler->getJSValue(rt);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           jsi::Object value(rt);
+          // TODO: timestamp should be provided by the platform implementation
+          // such that the native side has a chance of providing a true event
+          // timestamp
           value.setProperty(rt, "timestamp", getCurrentTime());
           value.setProperty(rt, "qx", newValues[0]);
           value.setProperty(rt, "qy", newValues[1]);

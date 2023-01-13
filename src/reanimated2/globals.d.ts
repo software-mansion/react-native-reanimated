@@ -62,7 +62,6 @@ declare global {
     commandName: string,
     args: Array<unknown>
   ) => void;
-  const _chronoNow: () => number;
   const performance: { now: () => number };
   const ReanimatedDataMock: {
     now: () => number;
@@ -120,7 +119,6 @@ declare global {
         commandName: string,
         args: Array<unknown>
       ) => void;
-      _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationsManager: {
         start: LayoutAnimationStartFunction;

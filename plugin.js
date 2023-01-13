@@ -33,7 +33,6 @@ const globals = new Set([
   'this',
   'console',
   'performance',
-  '_chronoNow',
   'Date',
   'Array',
   'ArrayBuffer',

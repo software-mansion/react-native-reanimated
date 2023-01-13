@@ -153,6 +153,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       scheduleOnJS,
       makeShareableClone,
       updateDataSynchronously,
+      platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,

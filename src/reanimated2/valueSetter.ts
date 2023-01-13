@@ -2,27 +2,6 @@ import { AnimationObject, AnimatableValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 export { stopMapper } from './mappers';
 
-function tester() {
-  function fromImmediate() {
-    console.log('from immediate', performance.now());
-  }
-  function nextFrame() {
-    console.log('next frame', performance.now());
-  }
-  function firstAnimationFrame() {
-    console.log('FIRST', performance.now());
-    setImmediate(() => {
-      console.log('IMMEDIATE', performance.now());
-      requestAnimationFrame(fromImmediate);
-    });
-    requestAnimationFrame(nextFrame);
-  }
-  requestAnimationFrame(firstAnimationFrame);
-  requestAnimationFrame(() => {
-    console.log('SECOND', performance.now());
-  });
-}
-
 export function valueSetter(sv: any, value: any): void {
   'worklet';
   const previousAnimation = sv._animation;
@@ -52,7 +31,7 @@ export function valueSetter(sv: any, value: any): void {
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
-    const currentTimestamp = performance.now();
+    const currentTimestamp = global.__frameTimestamp || performance.now();
     initializeAnimation(currentTimestamp);
     const step = (timestamp: number) => {
       if (animation.cancelled) {
