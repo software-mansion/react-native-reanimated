@@ -19,13 +19,8 @@
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
-
-#ifdef REANIMATED_VERSION
-#define STRINGIZE(x) #x
-#define STRINGIZE2(x) STRINGIZE(x)
-#define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
-#endif // REANIMATED_VERSION
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -222,7 +217,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     runtime.global().setProperty(runtime, "_IS_FABRIC", true);
 
-    auto version = jsi::String::createFromUtf8(runtime, REANIMATED_VERSION_STRING);
+    auto version = getReanimatedVersionString(runtime);
     runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
 
     runtime.global().setProperty(

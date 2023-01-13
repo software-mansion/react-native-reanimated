@@ -58,6 +58,7 @@ import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
+import { ColorInterpolationExample } from './ColorInterpolationExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -70,6 +71,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  ColorInterpolation: {
+    screen: ColorInterpolationExample,
+    title: 'Color interpolation',
+  },
   DeleteAncestorOfExiting: {
     screen: DeleteAncestorOfExiting,
     title: '🆕 Deleting view with an exiting animation',
