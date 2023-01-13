@@ -175,7 +175,6 @@ function runAnimations(
 }
 
 function styleUpdater(
-  frameTimestamp: number,
   viewDescriptors: SharedValue<Descriptor[]>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
@@ -188,9 +187,11 @@ function styleUpdater(
   const oldValues = state.last;
 
   let hasAnimations = false;
+  let frameTimestamp: number | undefined;
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
+      frameTimestamp = global.__frameTimestamp || performance.now();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -240,7 +241,7 @@ function styleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      frame(frameTimestamp);
+      frame(frameTimestamp!);
     }
     state.last = Object.assign({}, oldValues, newValues);
     const style = getStyleWithoutAnimations(state.last);
@@ -260,7 +261,6 @@ function styleUpdater(
 }
 
 function jestStyleUpdater(
-  frameTimestamp: number,
   viewDescriptors: SharedValue<Descriptor[]>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
@@ -276,6 +276,7 @@ function jestStyleUpdater(
 
   // extract animated props
   let hasAnimations = false;
+  let frameTimestamp: number | undefined;
   Object.keys(animations).forEach((key) => {
     const value = newValues[key];
     if (!isAnimated(value)) {
@@ -285,6 +286,7 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
+      frameTimestamp = global.__frameTimestamp || performance.now();
       prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
@@ -338,7 +340,7 @@ function jestStyleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      frame(frameTimestamp);
+      frame(frameTimestamp!);
     }
   } else {
     state.isAnimationCancelled = true;
@@ -454,10 +456,9 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     }
 
     if (isJest()) {
-      fun = (frameTimestamp: number) => {
+      fun = () => {
         'worklet';
         jestStyleUpdater(
-          frameTimestamp,
           sharableViewDescriptors,
           updater,
           remoteState,
@@ -468,10 +469,9 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         );
       };
     } else {
-      fun = (frameTimestamp: number) => {
+      fun = () => {
         'worklet';
         styleUpdater(
-          frameTimestamp,
           sharableViewDescriptors,
           updaterFn,
           remoteState,

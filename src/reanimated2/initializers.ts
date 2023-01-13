@@ -2,7 +2,6 @@ import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest } from './PlatformChecker';
 import { runOnUI, runOnJS } from './threads';
-import { AppState } from 'react-native';
 
 // callGuard is only used with debug builds
 function callGuardDEV<T extends Array<any>, U>(
@@ -91,6 +90,7 @@ function setupSetImmediate() {
 
   let immediateCalbacks: Array<() => void> = [];
 
+  // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
   global.setImmediate = (callback: () => void): number => {
     immediateCalbacks.push(callback);
     return -1;

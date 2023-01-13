@@ -11,8 +11,7 @@ AnimatedSensorModule::AnimatedSensorModule(
     const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
       platformUnregisterSensorFunction_(
-          platformDepMethodsHolder.unregisterSensor),
-      timeProviderFunction_(platformDepMethodsHolder.getCurrentTime) {}
+          platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
   // It is called during app reload because app reload doesn't call hooks
@@ -31,7 +30,6 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
-  TimeProviderFunction getCurrentTime = timeProviderFunction_;
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType, interval.asNumber(), [=](double newValues[]) {
@@ -42,7 +40,6 @@ jsi::Value AnimatedSensorModule::registerSensor(
           // TODO: timestamp should be provided by the platform implementation
           // such that the native side has a chance of providing a true event
           // timestamp
-          value.setProperty(rt, "timestamp", getCurrentTime());
           value.setProperty(rt, "qx", newValues[0]);
           value.setProperty(rt, "qy", newValues[1]);
           value.setProperty(rt, "qz", newValues[2]);
@@ -53,7 +50,6 @@ jsi::Value AnimatedSensorModule::registerSensor(
           runtimeHelper->runOnUIGuarded(handler, value);
         } else {
           jsi::Object value(rt);
-          value.setProperty(rt, "timestamp", getCurrentTime());
           value.setProperty(rt, "x", newValues[0]);
           value.setProperty(rt, "y", newValues[1]);
           value.setProperty(rt, "z", newValues[2]);

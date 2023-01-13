@@ -152,7 +152,7 @@ export function createMapperRegistry() {
 let MAPPER_ID = 9999;
 
 export function startMapper(
-  worklet: (frameTimestamp: number) => void,
+  worklet: () => void,
   inputs: any[] = [],
   outputs: any[] = []
 ): number {

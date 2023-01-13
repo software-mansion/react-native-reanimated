@@ -221,8 +221,7 @@ void RuntimeDecorator::decorateUIRuntime(
                             const jsi::Value &thisValue,
                             const jsi::Value *args,
                             size_t count) -> jsi::Value {
-    auto currentTime = getCurrentTime();
-    return jsi::Value(currentTime);
+    return jsi::Value(getCurrentTime());
   };
   jsi::Object performance(rt);
   performance.setProperty(

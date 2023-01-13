@@ -288,6 +288,8 @@ void NativeProxy::installJSIBindings(
       [weakModule, getCurrentTime](
           std::string eventName, std::string eventAsString) {
         if (auto module = weakModule.lock()) {
+          // TODO: event time should be extracted from the system event object
+          // instead of using the current time here.
           module->onEvent(getCurrentTime(), eventName, eventAsString);
         }
       });
@@ -298,7 +300,7 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
-  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
+  module->setNewestShadowNodesRegistry(newezstShadowNodesRegistry_);
   newestShadowNodesRegistry_ = nullptr;
 #endif
   //  removed temporary, new event listener mechanism need fix on the RN side

@@ -1,9 +1,8 @@
-import { Button, Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 import Animated, {
   Easing,
-  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -81,32 +80,10 @@ function Bokeh({ count }: BokehProps) {
   );
 }
 
-function something() {
-  runOnUI(() => {
-    'worklet';
-  })();
-}
-
 export default function App() {
-  const vv = useSharedValue(0.5);
-  const stylez = useAnimatedStyle(() => {
-    return {
-      width: 50,
-      height: 50,
-      backgroundColor: 'red',
-      opacity: vv.value,
-    };
-  });
   return (
     <View style={styles.container}>
-      {/* <Bokeh count={100} /> */}
-      <Button
-        title="Press me"
-        onPress={() => {
-          vv.value = withTiming(1, { duration: 1000 });
-        }}
-      />
-      <Animated.View style={stylez} />
+      <Bokeh count={100} />
     </View>
   );
 }

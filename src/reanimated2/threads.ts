@@ -5,7 +5,7 @@ import {
   makeShareableCloneRecursive,
 } from './shareables';
 
-let _runOnUIQueue = [];
+let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
