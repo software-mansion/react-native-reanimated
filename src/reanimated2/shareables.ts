@@ -65,13 +65,14 @@ export function makeShareableCloneRecursive<T>(
           if (__DEV__) {
             registerWorkletStackDetails(
               value.__workletHash,
-              value.__initData.stackDetails
+              value.__stackDetails
             );
+            delete value.__stackDetails;
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means
           // that the __initData field that contains long strings represeting the
-          // worklet code, source map, and locaiton, will always be
+          // worklet code, source map, and location, will always be
           // serialized/deserialized once.
           toAdapt.__initData = makeShareableCloneRecursive(
             value.__initData,

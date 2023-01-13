@@ -30,7 +30,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     handleCache = global.__handleCache = new WeakMap();
   }
   const workletHash = objectToUnpack.__workletHash;
-  if (workletHash) {
+  if (workletHash !== undefined) {
     let workletFun = workletsCache.get(workletHash);
     if (workletFun === undefined) {
       const initData = objectToUnpack.__initData;

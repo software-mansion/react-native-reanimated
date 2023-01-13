@@ -148,8 +148,6 @@ const blacklistedFunctions = new Set([
   'includes',
 ]);
 
-const possibleOptFunction = new Set(['interpolate']);
-
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
   'Tap',
@@ -429,7 +427,6 @@ function makeWorklet(t, fun, state) {
 
   const closure = new Map();
   const closureGenerator = new ClosureGenerator();
-  const options = {};
 
   // remove 'worklet'; directive before generating string
   fun.traverse({
@@ -471,13 +468,6 @@ function makeWorklet(t, fun, state) {
     inputSourceMap: codeObject.map,
   });
 
-  if (
-    fun.parent &&
-    fun.parent.callee &&
-    fun.parent.callee.name === 'useAnimatedStyle'
-  ) {
-    options.optFlags = isPossibleOptimization(transformed.ast);
-  }
   traverse(transformed.ast, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
@@ -618,15 +608,27 @@ function makeWorklet(t, fun, state) {
 
   if (!isRelease()) {
     statements.unshift(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(initDataId, t.identifier('stackDetails'), false),
+      t.variableDeclaration('const', [
+        t.variableDeclarator(
+          t.identifier('_e'),
           t.arrayExpression([
             t.newExpression(t.identifier('Error'), []),
             t.numericLiteral(lineOffset),
             t.numericLiteral(-20), // the placement of opening bracket after Exception in line that defined '_e' variable
           ])
+        ),
+      ])
+    );
+    statements.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__stackDetails'),
+            false
+          ),
+          t.identifier('_e')
         )
       )
     );
@@ -848,32 +850,6 @@ function processWorklets(t, path, state) {
       });
     }
   }
-}
-
-const FUNCTIONLESS_FLAG = 0b00000001;
-const STATEMENTLESS_FLAG = 0b00000010;
-
-function isPossibleOptimization(fun) {
-  let isFunctionCall = false;
-  let isStatement = false;
-  traverse(fun, {
-    CallExpression(path) {
-      if (!possibleOptFunction.has(path.node.callee.name)) {
-        isFunctionCall = true;
-      }
-    },
-    IfStatement() {
-      isStatement = true;
-    },
-  });
-  let flags = 0;
-  if (!isFunctionCall) {
-    flags = flags | FUNCTIONLESS_FLAG;
-  }
-  if (!isStatement) {
-    flags = flags | STATEMENTLESS_FLAG;
-  }
-  return flags;
 }
 
 module.exports = function ({ types: t }) {
