@@ -28,6 +28,7 @@ var f = function () {
   return _f;
 }();"
 `;
+
 exports[`babel plugin doesn't capture globals 1`] = `
 "var f = function () {
   var _e = [new Error(), 1, -20];
@@ -67,6 +68,100 @@ exports[`babel plugin doesn't transform string literals 1`] = `
   _f.__stackDetails = _e;
   return _f;
 }();"
+`;
+
+exports[`babel plugin supports SequenceExpression 1`] = `
+"function App() {
+  (0, fun)({
+    onStart: function onStart() {}
+  }, []);
+}"
+`;
+
+exports[`babel plugin supports SequenceExpression, many arguments 1`] = `
+"function App() {
+  (0, 3, fun)({
+    onStart: function () {
+      var _e = [new Error(), 1, -20];
+
+      var _f = function _f() {};
+
+      _f._closure = {};
+      _f.asString = \\"function onStart(){}\\";
+      _f.__workletHash = 4434179069699;
+      _f.__location = \\"${ process.cwd() }/jest tests fixture\\";
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
+`;
+
+exports[`babel plugin supports SequenceExpression, with objectHook 1`] = `
+"function App() {
+  (0, useAnimatedGestureHandler)({
+    onStart: function () {
+      var _e = [new Error(), 1, -20];
+
+      var _f = function _f() {};
+
+      _f._closure = {};
+      _f.asString = \\"function onStart(){}\\";
+      _f.__workletHash = 4434179069699;
+      _f.__location = \\"${ process.cwd() }/jest tests fixture\\";
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
+`;
+
+exports[`babel plugin supports SequenceExpression, with worklet 1`] = `
+"function App() {
+  (0, fun)({
+    onStart: function () {
+      var _e = [new Error(), 1, -20];
+
+      var _f = function _f() {};
+
+      _f._closure = {};
+      _f.asString = \\"function onStart(){}\\";
+      _f.__workletHash = 4434179069699;
+      _f.__location = \\"${ process.cwd() }/jest tests fixture\\";
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
+`;
+
+exports[`babel plugin supports SequenceExpression, with worklet closure 1`] = `
+"function App() {
+  var obj = {
+    a: 1,
+    b: 2
+  };
+  (0, fun)({
+    onStart: function () {
+      var _e = [new Error(), -2, -20];
+
+      var _f = function _f() {
+        var a = obj.a;
+      };
+
+      _f._closure = {
+        obj: {
+          a: obj.a
+        }
+      };
+      _f.asString = \\"function onStart(){const{obj}=this._closure;const a=obj.a;}\\";
+      _f.__workletHash = 16676723780973;
+      _f.__location = \\"${ process.cwd() }/jest tests fixture\\";
+      _f.__stackDetails = _e;
+      return _f;
+    }()
+  }, []);
+}"
 `;
 
 exports[`babel plugin supports recursive calls 1`] = `

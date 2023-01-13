@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -31,6 +32,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private UIManagerModule mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
 
+  private HashSet<Integer> mEnteringViews = new HashSet<>();
+  private HashMap<Integer, Rect> mEnteringViewTargetValues = new HashMap<>();
   private HashMap<Integer, View> mExitingViews = new HashMap<>();
   private HashMap<Integer, Integer> mExitingSubviewCountMap = new HashMap<>();
   private HashSet<Integer> mAncestorsToRemove = new HashSet<>();
@@ -101,6 +104,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (targetValues != null) {
       HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues, true);
       mNativeMethodsHolder.startAnimation(tag, "entering", preparedValues);
+      mEnteringViews.add(tag);
     }
   }
 
@@ -112,11 +116,28 @@ public class AnimationsManager implements ViewHierarchyObserver {
     int tag = view.getId();
 
     if (!hasAnimationForTag(tag, "layout")) {
+      if (mEnteringViews.contains(tag)) {
+        // store values to restore after `entering` finishes
+        mEnteringViewTargetValues.put(
+            tag,
+            new Rect(
+                after.originX,
+                after.originY,
+                after.originX + after.width,
+                after.originY + after.height));
+        // restore layout before the update, so the `entering`
+        // can continue from its current location
+        view.layout(
+            before.originX,
+            before.originY,
+            before.originX + before.width,
+            before.originY + before.height);
+      }
       return;
     }
 
-    HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
+    HashMap<String, Object> targetValues = after.toTargetMap();
 
     // If startValues are equal to targetValues it means that there was no UI Operation changing
     // layout of the View. So dirtiness of that View is false positive
@@ -165,18 +186,30 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
-    View exitingView = mExitingViews.get(tag);
-    if (exitingView != null && removeView) {
-      if (exitingView instanceof ViewGroup && mAncestorsToRemove.contains(tag)) {
-        cancelAnimationsInSubviews((ViewGroup) exitingView);
+    View view = resolveView(tag);
+
+    if (view == null) {
+      return;
+    }
+
+    Rect target = mEnteringViewTargetValues.get(tag);
+    if (!removeView && mEnteringViews.contains(tag) && target != null) {
+      view.layout(target.left, target.top, target.right, target.bottom);
+    }
+    mEnteringViews.remove(tag);
+    mEnteringViewTargetValues.remove(tag);
+
+    if (removeView) {
+      if (view instanceof ViewGroup && mAncestorsToRemove.contains(tag)) {
+        cancelAnimationsInSubviews((ViewGroup) view);
       }
 
       mExitingViews.remove(tag);
-      maybeDropAncestors(exitingView);
+      maybeDropAncestors(view);
 
-      ViewGroup parent = (ViewGroup) exitingView.getParent();
+      ViewGroup parent = (ViewGroup) view.getParent();
       if (parent != null) {
-        removeView(exitingView, parent);
+        removeView(view, parent);
       }
     }
   }
