@@ -1,5 +1,10 @@
 import { NativeModules } from 'react-native';
-import { ShareableRef, ShareableSyncDataHolderRef } from '../commonTypes';
+import {
+  ShareableRef,
+  ShareableSyncDataHolderRef,
+  Value3D,
+  ValueRotation,
+} from '../commonTypes';
 import { LayoutAnimationFunction } from '../layoutReanimation';
 import { version as jsVersion } from '../../../package.json';
 
@@ -88,7 +93,7 @@ export class NativeReanimated {
   registerSensor<T>(
     sensorType: number,
     interval: number,
-    handler: ShareableRef<T>
+    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
     return this.InnerNativeModule.registerSensor(sensorType, interval, handler);
   }
