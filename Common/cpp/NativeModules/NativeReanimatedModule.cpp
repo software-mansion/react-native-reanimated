@@ -199,9 +199,9 @@ NativeReanimatedModule::~NativeReanimatedModule() {
     // runtime, so they have to go away before we tear down the runtime
     eventHandlerRegistry.reset();
     frameCallbacks.clear();
+    runtime.reset();
     // make sure uiRuntimeDestroyed is set after the runtime is deallocated
     runtimeHelper->uiRuntimeDestroyed = true;
-    runtime.reset();
   }
 }
 
