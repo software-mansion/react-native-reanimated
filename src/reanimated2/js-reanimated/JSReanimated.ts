@@ -76,8 +76,8 @@ export default class JSReanimated extends NativeReanimated {
           2.0 * (qy * qz + qw * qx),
           qw * qw - qx * qx - qy * qy + qz * qz
         );
-        const roll = Math.sin(-2.0 * (qx * qz - qw * qy));
-        const pitch = Math.atan2(
+        const pitch = Math.sin(-2.0 * (qx * qz - qw * qy));
+        const roll = Math.atan2(
           2.0 * (qx * qy + qw * qz),
           qw * qw + qx * qx - qy * qy - qz * qz
         );
