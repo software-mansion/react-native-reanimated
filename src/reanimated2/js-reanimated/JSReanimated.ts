@@ -1,29 +1,12 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
 import { isJest } from '../PlatformChecker';
-
-declare global {
-  interface Window {
-    Accelerometer: any;
-    GravitySensor: any;
-    Gyroscope: any;
-    Magnetometer: any;
-    AbsoluteOrientationSensor: any;
-    Sensor: any;
-  }
-}
-
-export enum SensorType {
-  ACCELEROMETER = 1,
-  GYROSCOPE = 2,
-  GRAVITY = 3,
-  MAGNETIC_FIELD = 4,
-  ROTATION = 5,
-}
+import { SensorType } from '../hook/useAnimatedSensor';
+import { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
-  sensors = new Map<number, Window['Sensor']>();
+  sensors = new Map<number, WebSensor>();
 
   constructor() {
     super(false);
@@ -83,7 +66,7 @@ export default class JSReanimated extends NativeReanimated {
       return -1;
     }
 
-    const sensor = this.initializeSensor(sensorType, interval);
+    const sensor: WebSensor = this.initializeSensor(sensorType, interval);
     sensor.addEventListener('reading', () => {
       if (sensorType === SensorType.ROTATION) {
         const [qw, qx, qy, qz] = sensor.quaternion;
@@ -93,8 +76,8 @@ export default class JSReanimated extends NativeReanimated {
           2.0 * (qy * qz + qw * qx),
           qw * qw - qx * qx - qy * qy + qz * qz
         );
-        const pitch = Math.sin(-2.0 * (qx * qz - qw * qy));
-        const roll = Math.atan2(
+        const roll = Math.sin(-2.0 * (qx * qz - qw * qy));
+        const pitch = Math.atan2(
           2.0 * (qx * qy + qw * qz),
           qw * qw + qx * qx - qy * qy - qz * qz
         );
@@ -111,7 +94,7 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   unregisterSensor(id: number): void {
-    const sensor: Window['Sensor'] = this.sensors.get(id);
+    const sensor: WebSensor | undefined = this.sensors.get(id);
     if (sensor !== undefined) {
       sensor.stop();
       this.sensors.delete(id);
@@ -129,7 +112,7 @@ export default class JSReanimated extends NativeReanimated {
     // noop
   }
 
-  initializeSensor(sensorType: SensorType, interval: number): Window['Sensor'] {
+  initializeSensor(sensorType: SensorType, interval: number): WebSensor {
     const config =
       interval === -1
         ? { referenceFrame: 'device' }
