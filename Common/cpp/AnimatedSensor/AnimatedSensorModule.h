@@ -37,6 +37,7 @@ class AnimatedSensorModule {
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer);
   void unregisterSensor(const jsi::Value &sensorId);
+  void unregisterAllSensors();
 };
 
 } // namespace reanimated
