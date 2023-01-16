@@ -161,7 +161,7 @@ export default class JSReanimated extends NativeReanimated {
       case SensorType.ACCELEROMETER:
         return 'Accelerometer';
       case SensorType.GRAVITY:
-        return 'Gravity';
+        return 'GravitySensor';
       case SensorType.GYROSCOPE:
         return 'Gyroscope';
       case SensorType.MAGNETIC_FIELD:
