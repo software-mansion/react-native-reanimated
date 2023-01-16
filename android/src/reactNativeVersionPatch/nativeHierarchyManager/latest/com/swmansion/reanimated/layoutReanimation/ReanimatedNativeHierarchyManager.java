@@ -85,6 +85,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     if (view.getWidth() == 0 || view.getHeight() == 0) {
       if (!mAnimationsManager.hasAnimationForTag(view.getId(), "entering")) {
         super.applyLayoutUpdate(view, x, y, width, height);
+        mAnimationsManager.maybeRegisterSharedView(view);
         return;
       }
       view.layout(x, y, x + width, y + height);
@@ -242,19 +243,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       return;
     }
     try {
-      View viewToUpdate = this.resolveView(tag);
       ViewManager viewManager = this.resolveViewManager(tag);
       String viewManagerName = viewManager.getName();
       View container = resolveView(parentTag);
       if (container != null
           && viewManagerName.equals("RNSScreen")
           && this.mReaLayoutAnimator != null) {
-        this.mReaLayoutAnimator.applyLayoutUpdate(
-            viewToUpdate,
-            (int) container.getX(),
-            (int) container.getY(),
-            container.getWidth(),
-            container.getHeight());
         ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
       }
     } catch (IllegalViewOperationException e) {

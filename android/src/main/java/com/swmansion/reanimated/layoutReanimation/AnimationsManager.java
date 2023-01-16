@@ -92,10 +92,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (isCatalystInstanceDestroyed) {
       return;
     }
-
-    if (hasAnimationForTag(view.getId(), "sharedElementTransition")) {
-      mSharedTransitionManager.notifyAboutNewView(view);
-    }
+    maybeRegisterSharedView(view);
 
     if (!hasAnimationForTag(view.getId(), "entering")) {
       return;
@@ -171,6 +168,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
       preparedValues.put(key, preparedStartValues.get(key));
     }
     mNativeMethodsHolder.startAnimation(tag, "layout", preparedValues);
+  }
+
+  public void maybeRegisterSharedView(View view) {
+    if (hasAnimationForTag(view.getId(), "sharedElementTransition")) {
+      mSharedTransitionManager.notifyAboutNewView(view);
+    }
   }
 
   public void progressLayoutAnimation(

@@ -7,7 +7,6 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ViewGroupManager;
-import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -125,7 +124,7 @@ public class SharedTransitionManager {
       }
 
       ViewGroupManager stackViewGroupManager =
-              (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
+          (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
       int screensCount = stackViewGroupManager.getChildCount(stack);
 
       if (screensCount - 2 < 0) {
@@ -136,11 +135,13 @@ public class SharedTransitionManager {
       View secondScreen = stackViewGroupManager.getChildAt(stack, screensCount - 2);
       boolean isRightConfiguration;
       if (addedNewScreen) {
-        isRightConfiguration = secondScreen.getId() == viewSourceScreen.getId()
-                               && topScreen.getId() == viewTargetScreen.getId();
+        isRightConfiguration =
+            secondScreen.getId() == viewSourceScreen.getId()
+                && topScreen.getId() == viewTargetScreen.getId();
       } else {
-        isRightConfiguration = topScreen.getId() == viewSourceScreen.getId()
-                               && secondScreen.getId() == viewTargetScreen.getId();
+        isRightConfiguration =
+            topScreen.getId() == viewSourceScreen.getId()
+                && secondScreen.getId() == viewTargetScreen.getId();
       }
       if (!isRightConfiguration) {
         continue;
@@ -153,8 +154,12 @@ public class SharedTransitionManager {
       Snapshot sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
 
-      mCurrentSharedTransitionViews.add(viewSource);
-      mCurrentSharedTransitionViews.add(viewTarget);
+      if (!mCurrentSharedTransitionViews.contains(viewSource)) {
+        mCurrentSharedTransitionViews.add(viewSource);
+      }
+      if (!mCurrentSharedTransitionViews.contains(viewTarget)) {
+        mCurrentSharedTransitionViews.add(viewTarget);
+      }
       SharedElement sharedElement =
           new SharedElement(viewSource, sourceViewSnapshot, viewTarget, targetViewSnapshot);
       sharedElements.add(sharedElement);
@@ -181,17 +186,21 @@ public class SharedTransitionManager {
       View viewSource = sharedElement.sourceView;
       View viewTarget = sharedElement.targetView;
 
-      mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
-      mSharedTransitionInParentIndex.put(
-          viewSource.getId(), ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource));
-      ((ViewGroup) viewSource.getParent()).removeView(viewSource);
-      ((ViewGroup) mTransitionContainer).addView(viewSource);
+      if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
+        mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
+        mSharedTransitionInParentIndex.put(
+            viewSource.getId(), ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource));
+        ((ViewGroup) viewSource.getParent()).removeView(viewSource);
+        ((ViewGroup) mTransitionContainer).addView(viewSource);
+      }
 
-      mSharedTransitionParent.put(viewTarget.getId(), (View) viewTarget.getParent());
-      mSharedTransitionInParentIndex.put(
-          viewTarget.getId(), ((ViewGroup) viewTarget.getParent()).indexOfChild(viewTarget));
-      ((ViewGroup) viewTarget.getParent()).removeView(viewTarget);
-      ((ViewGroup) mTransitionContainer).addView(viewTarget);
+      if (!mSharedTransitionParent.containsKey(viewTarget.getId())) {
+        mSharedTransitionParent.put(viewTarget.getId(), (View) viewTarget.getParent());
+        mSharedTransitionInParentIndex.put(
+            viewTarget.getId(), ((ViewGroup) viewTarget.getParent()).indexOfChild(viewTarget));
+        ((ViewGroup) viewTarget.getParent()).removeView(viewTarget);
+        ((ViewGroup) mTransitionContainer).addView(viewTarget);
+      }
     }
   }
 
