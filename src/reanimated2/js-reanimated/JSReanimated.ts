@@ -23,7 +23,7 @@ export enum SensorType {
 
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
-  sensors = new Map<number, any>();
+  sensors = new Map<number, Window['Sensor']>();
 
   constructor() {
     super(false);
@@ -86,32 +86,22 @@ export default class JSReanimated extends NativeReanimated {
     const sensor = this.initializeSensor(sensorType, interval);
     sensor.addEventListener('reading', () => {
       if (sensorType === SensorType.ROTATION) {
-        const qw = sensor.quaternion[0];
-        const qx = sensor.quaternion[1];
-        const qy = sensor.quaternion[2];
-        const qz = sensor.quaternion[3];
+        const [qw, qx, qy, qz] = sensor.quaternion;
 
-        eventHandler({
-          qw: qw,
-          qx: qx,
-          qy: qy,
-          qz: qz,
-          yaw: Math.atan2(
-            2.0 * (qy * qz + qw * qx),
-            qw * qw - qx * qx - qy * qy + qz * qz
-          ),
-          pitch: Math.sin(-2.0 * (qx * qz - qw * qy)),
-          roll: Math.atan2(
-            2.0 * (qx * qy + qw * qz),
-            qw * qw + qx * qx - qy * qy - qz * qz
-          ),
-        });
+        // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
+        const yaw = Math.atan2(
+          2.0 * (qy * qz + qw * qx),
+          qw * qw - qx * qx - qy * qy + qz * qz
+        );
+        const pitch = Math.sin(-2.0 * (qx * qz - qw * qy));
+        const roll = Math.atan2(
+          2.0 * (qx * qy + qw * qz),
+          qw * qw + qx * qx - qy * qy - qz * qz
+        );
+        eventHandler({ qw, qx, qy, qz, yaw, pitch, roll });
       } else {
-        eventHandler({
-          x: sensor.x,
-          y: sensor.y,
-          z: sensor.z,
-        });
+        const { x, y, z } = sensor;
+        eventHandler({ x, y, z });
       }
     });
     sensor.start();
@@ -122,8 +112,10 @@ export default class JSReanimated extends NativeReanimated {
 
   unregisterSensor(id: number): void {
     const sensor: Window['Sensor'] = this.sensors.get(id);
-    sensor.stop();
-    this.sensors.delete(id);
+    if (sensor !== undefined) {
+      sensor.stop();
+      this.sensors.delete(id);
+    }
   }
 
   subscribeForKeyboardEvents(_: ShareableRef<number>): number {
