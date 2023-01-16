@@ -372,7 +372,7 @@ class ShareableSynchronizedDataHolder
   std::shared_ptr<Shareable> data_;
   std::shared_ptr<jsi::Value> uiValue_;
   std::shared_ptr<jsi::Value> rnValue_;
-  std::mutex dataAccessLock_;
+  std::mutex dataAccessMutex_; // Protects `data_`.
 
  public:
   ShareableSynchronizedDataHolder(
@@ -384,7 +384,7 @@ class ShareableSynchronizedDataHolder
         data_(extractShareableOrThrow(rt, initialValue)) {}
 
   jsi::Value get(jsi::Runtime &rt) {
-    std::unique_lock<std::mutex> read_lock(dataAccessLock_);
+    std::unique_lock<std::mutex> read_lock(dataAccessMutex_);
     if (runtimeHelper_->isUIRuntime(rt)) {
       if (uiValue_ == nullptr) {
         auto value = data_->getJSValue(rt);
@@ -405,7 +405,7 @@ class ShareableSynchronizedDataHolder
   }
 
   void set(jsi::Runtime &rt, const jsi::Value &data) {
-    std::unique_lock<std::mutex> write_lock(dataAccessLock_);
+    std::unique_lock<std::mutex> write_lock(dataAccessMutex_);
     data_ = extractShareableOrThrow(rt, data);
     uiValue_.reset();
     rnValue_.reset();
