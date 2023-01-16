@@ -212,6 +212,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     [self->_listeners removeAllObjects];
     [self->displayLink invalidate];
     self->displayLink = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
   });
 }
 
