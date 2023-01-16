@@ -165,8 +165,12 @@
       targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
     }
 
-    [_currentSharedTransitionViews addObject:viewSource];
-    [_currentSharedTransitionViews addObject:viewTarget];
+    if (![_currentSharedTransitionViews containsObject:viewSource]) {
+      [_currentSharedTransitionViews addObject:viewSource];
+    }
+    if (![_currentSharedTransitionViews containsObject:viewTarget]) {
+      [_currentSharedTransitionViews addObject:viewTarget];
+    }
 
     REASharedElement *sharedElement = [[REASharedElement alloc] initWithSourceView:viewSource
                                                                 sourceViewSnapshot:sourceViewSnapshot
@@ -419,15 +423,19 @@
   for (REASharedElement *sharedElement in sharedElements) {
     UIView *viewSource = sharedElement.sourceView;
     UIView *viewTarget = sharedElement.targetView;
-    _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
-    _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
-    [viewSource removeFromSuperview];
-    [_transitionContainer addSubview:viewSource];
+    if (_sharedTransitionParent[viewSource.reactTag] == nil) {
+      _sharedTransitionParent[viewSource.reactTag] = viewSource.superview;
+      _sharedTransitionInParentIndex[viewSource.reactTag] = @([viewSource.superview.subviews indexOfObject:viewSource]);
+      [viewSource removeFromSuperview];
+      [_transitionContainer addSubview:viewSource];
+    }
 
-    _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
-    _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
-    [viewTarget removeFromSuperview];
-    [_transitionContainer addSubview:viewTarget];
+    if (_sharedTransitionParent[viewTarget.reactTag] == nil) {
+      _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
+      _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
+      [viewTarget removeFromSuperview];
+      [_transitionContainer addSubview:viewTarget];
+    }
   }
 }
 
