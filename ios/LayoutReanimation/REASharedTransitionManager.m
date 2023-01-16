@@ -32,7 +32,6 @@
     _isSharedTransitionActive = NO;
     _sharedElements = [NSMutableArray new];
     _animationManager = animationManager;
-    _stackHasObserver = [NSMutableSet new];
     _screenHasObserver = [NSMutableSet new];
   }
   return self;
