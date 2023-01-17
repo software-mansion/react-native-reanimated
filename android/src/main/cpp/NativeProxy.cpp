@@ -193,8 +193,11 @@ void NativeProxy::installJSIBindings(
   };
 
   auto subscribeForKeyboardEventsFunction =
-      [this](std::function<void(int, int)> keyboardEventDataUpdater) -> int {
-    return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
+      [this](
+          std::function<void(int, int)> keyboardEventDataUpdater,
+          bool isStatusBarTranslucent) -> int {
+    return subscribeForKeyboardEvents(
+        std::move(keyboardEventDataUpdater), isStatusBarTranslucent);
   };
 
   auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
@@ -520,15 +523,18 @@ void NativeProxy::configureProps(
 }
 
 int NativeProxy::subscribeForKeyboardEvents(
-    std::function<void(int, int)> keyboardEventDataUpdater) {
-  auto method = javaPart_->getClass()
-                    ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
-                        "subscribeForKeyboardEvents");
+    std::function<void(int, int)> keyboardEventDataUpdater,
+    bool isStatusBarTranslucent) {
+  auto method =
+      javaPart_->getClass()
+          ->getMethod<int(KeyboardEventDataUpdater::javaobject, bool)>(
+              "subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),
       KeyboardEventDataUpdater::newObjectCxxArgs(
           std::move(keyboardEventDataUpdater))
-          .get());
+          .get(),
+      isStatusBarTranslucent);
 }
 
 void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {

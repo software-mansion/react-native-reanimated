@@ -664,15 +664,18 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
-    const jsi::Value &handlerWorklet) {
+    const jsi::Value &handlerWorklet,
+    const jsi::Value &isStatusBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
   auto uiRuntime = runtimeHelper->uiRuntime();
-  return subscribeForKeyboardEventsFunction([=](int keyboardState, int height) {
-    jsi::Runtime &rt = *uiRuntime;
-    auto handler = shareableHandler->getJSValue(rt);
-    handler.asObject(rt).asFunction(rt).call(
-        rt, jsi::Value(keyboardState), jsi::Value(height));
-  });
+  return subscribeForKeyboardEventsFunction(
+      [=](int keyboardState, int height) {
+        jsi::Runtime &rt = *uiRuntime;
+        auto handler = shareableHandler->getJSValue(rt);
+        handler.asObject(rt).asFunction(rt).call(
+            rt, jsi::Value(keyboardState), jsi::Value(height));
+      },
+      isStatusBarTranslucent.asBool());
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(

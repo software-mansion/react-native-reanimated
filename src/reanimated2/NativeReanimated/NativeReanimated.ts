@@ -119,8 +119,14 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  subscribeForKeyboardEvents(handler: ShareableRef<number>): number {
-    return this.InnerNativeModule.subscribeForKeyboardEvents(handler);
+  subscribeForKeyboardEvents(
+    handler: ShareableRef<number>,
+    isStatusBarTranslucent: boolean
+  ): number {
+    return this.InnerNativeModule.subscribeForKeyboardEvents(
+      handler,
+      isStatusBarTranslucent
+    );
   }
 
   unsubscribeFromKeyboardEvents(listenerId: number): void {

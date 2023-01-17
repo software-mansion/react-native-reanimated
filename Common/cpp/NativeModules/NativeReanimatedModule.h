@@ -148,7 +148,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
   jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
-      const jsi::Value &keyboardEventContainer) override;
+      const jsi::Value &keyboardEventContainer,
+      const jsi::Value &isStatusBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;

@@ -40,6 +40,7 @@ public class ReanimatedKeyboardEventListener {
   private int nextListenerId = 0;
   private KeyboardState state;
   private final HashMap<Integer, KeyboardEventDataUpdater> listeners = new HashMap<>();
+  private boolean isStatusBarTranslucent = false;
 
   public ReanimatedKeyboardEventListener(WeakReference<ReactApplicationContext> reactContext) {
     this.reactContext = reactContext;
@@ -68,7 +69,11 @@ public class ReanimatedKeyboardEventListener {
           FrameLayout.LayoutParams params =
               new FrameLayout.LayoutParams(
                   FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-          params.setMargins(0, paddingTop, 0, paddingBottom);
+          if (isStatusBarTranslucent) {
+            params.setMargins(0, 0, 0, 0);
+          } else {
+            params.setMargins(0, paddingTop, 0, paddingBottom);
+          }
           content.setLayoutParams(params);
           return insets;
         });
@@ -127,9 +132,11 @@ public class ReanimatedKeyboardEventListener {
     ViewCompat.setWindowInsetsAnimationCallback(rootView, new WindowInsetsCallback());
   }
 
-  public int subscribeForKeyboardEvents(KeyboardEventDataUpdater updater) {
+  public int subscribeForKeyboardEvents(
+      KeyboardEventDataUpdater updater, boolean isStatusBarTranslucent) {
     int listenerId = nextListenerId++;
     if (listeners.isEmpty()) {
+      this.isStatusBarTranslucent = isStatusBarTranslucent;
       setUpCallbacks();
     }
     listeners.put(listenerId, updater);
