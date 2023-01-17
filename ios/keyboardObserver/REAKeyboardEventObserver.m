@@ -18,6 +18,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   int _windowsCount;
   UIView *_keyboardView;
   KeyboardState _state;
+  bool _shouldInvalidateDisplayLink;
 }
 
 - (instancetype)init
@@ -26,6 +27,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
   _state = UNKNOWN;
+  _shouldInvalidateDisplayLink = false;
   return self;
 }
 
@@ -85,9 +87,11 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)stopAnimation
 {
-  [displayLink invalidate];
-  displayLink = nil;
   [self updateKeyboardFrame];
+  // there might be a case that keyboard will change height in the next frame
+  // (for example changing keyboard language so that suggestions appear)
+  // so we invalidate display link after we handle that in the next frame
+  _shouldInvalidateDisplayLink = true;
 }
 
 - (void)updateKeyboardFrame
@@ -100,6 +104,12 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   CGFloat keyboardHeight = [self computeKeyboardHeight:keyboardView];
   for (NSString *key in _listeners.allKeys) {
     ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
+  }
+
+  if (_shouldInvalidateDisplayLink) {
+    _shouldInvalidateDisplayLink = false;
+    [displayLink invalidate];
+    displayLink = nil;
   }
 }
 
