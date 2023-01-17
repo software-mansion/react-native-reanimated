@@ -69,7 +69,7 @@ public class ReanimatedKeyboardEventListener {
           FrameLayout.LayoutParams params =
               new FrameLayout.LayoutParams(
                   FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-          if(isStatusBarTranslucent) {
+          if (isStatusBarTranslucent) {
             params.setMargins(0, 0, 0, 0);
           } else {
             params.setMargins(0, paddingTop, 0, paddingBottom);
@@ -132,7 +132,8 @@ public class ReanimatedKeyboardEventListener {
     ViewCompat.setWindowInsetsAnimationCallback(rootView, new WindowInsetsCallback());
   }
 
-  public int subscribeForKeyboardEvents(KeyboardEventDataUpdater updater, boolean isStatusBarTranslucent) {
+  public int subscribeForKeyboardEvents(
+      KeyboardEventDataUpdater updater, boolean isStatusBarTranslucent) {
     int listenerId = nextListenerId++;
     if (listeners.isEmpty()) {
       this.isStatusBarTranslucent = isStatusBarTranslucent;
