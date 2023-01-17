@@ -164,16 +164,6 @@ export function parseColors(updates: AnimatedStyle): void {
   }
 }
 
-export function canApplyOptimalisation(upadterFn: WorkletFunction): number {
-  const FUNCTIONLESS_FLAG = 0b00000001;
-  const STATEMENTLESS_FLAG = 0b00000010;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const optimalization = upadterFn.__optimalization!;
-  return (
-    optimalization & FUNCTIONLESS_FLAG && optimalization & STATEMENTLESS_FLAG
-  );
-}
-
 export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   'worklet';
   const propsToCheck: NestedObjectValues<AnimationObject>[] = [prop];

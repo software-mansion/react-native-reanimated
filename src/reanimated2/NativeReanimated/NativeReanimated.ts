@@ -41,8 +41,14 @@ export class NativeReanimated {
     );
   }
 
-  makeShareableClone<T>(value: T): ShareableRef<T> {
-    return this.InnerNativeModule.makeShareableClone(value);
+  makeShareableClone<T>(
+    value: T,
+    shouldPersistRemote: boolean
+  ): ShareableRef<T> {
+    return this.InnerNativeModule.makeShareableClone(
+      value,
+      shouldPersistRemote
+    );
   }
 
   makeSynchronizedDataHolder<T>(

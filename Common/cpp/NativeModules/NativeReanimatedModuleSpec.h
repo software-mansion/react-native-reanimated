@@ -30,7 +30,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   // SharedValue
   virtual jsi::Value makeShareableClone(
       jsi::Runtime &rt,
-      const jsi::Value &value) = 0;
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote) = 0;
 
   // Synchronized data objects
   virtual jsi::Value makeSynchronizedDataHolder(

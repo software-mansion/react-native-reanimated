@@ -29,18 +29,20 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     workletsCache = global.__workletsCache = new Map();
     handleCache = global.__handleCache = new WeakMap();
   }
-  if (objectToUnpack.__workletHash) {
-    let workletFun = workletsCache.get(objectToUnpack.__workletHash);
+  const workletHash = objectToUnpack.__workletHash;
+  if (workletHash !== undefined) {
+    let workletFun = workletsCache.get(workletHash);
     if (workletFun === undefined) {
+      const initData = objectToUnpack.__initData;
       if (global.evalWithSourceMap) {
         // if the runtime (hermes only for now) supports loading source maps
         // we want to use the proper filename for the location as it guarantees
         // that debugger understands and loads the source code of the file where
         // the worklet is defined.
         workletFun = global.evalWithSourceMap(
-          '(' + objectToUnpack.asString + '\n)',
-          objectToUnpack.__location,
-          objectToUnpack.__sourceMap
+          '(' + initData.code + '\n)',
+          initData.location,
+          initData.sourceMap
         ) as (...args: any[]) => any;
       } else if (global.evalWithSourceUrl) {
         // if the runtime doesn't support loading source maps, in dev mode we
@@ -48,17 +50,17 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
         // the actual file location we use worklet hash, as it the allows us to
         // properly symbolicate traces (see errors.ts for details)
         workletFun = global.evalWithSourceUrl(
-          '(' + objectToUnpack.asString + '\n)',
-          `worklet_${objectToUnpack.__workletHash}`
+          '(' + initData.code + '\n)',
+          `worklet_${workletHash}`
         ) as (...args: any[]) => any;
       } else {
         // in release we use the regular eval to save on JSI calls
         // eslint-disable-next-line no-eval
-        workletFun = eval('(' + objectToUnpack.asString + '\n)') as (
+        workletFun = eval('(' + initData.code + '\n)') as (
           ...args: any[]
         ) => any;
       }
-      workletsCache.set(objectToUnpack.__workletHash, workletFun);
+      workletsCache.set(workletHash, workletFun);
     }
     const functionInstance = workletFun.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;

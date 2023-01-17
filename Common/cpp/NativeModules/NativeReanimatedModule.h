@@ -52,8 +52,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &callGuard,
       const jsi::Value &valueUnpacker) override;
 
-  jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
-      override;
+  jsi::Value makeShareableClone(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote) override;
 
   jsi::Value makeSynchronizedDataHolder(
       jsi::Runtime &rt,
