@@ -675,7 +675,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
         handler.asObject(rt).asFunction(rt).call(
             rt, jsi::Value(keyboardState), jsi::Value(height));
       },
-      isStatusBarTranslucent.asBool());
+      isStatusBarTranslucent.getBool());
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
