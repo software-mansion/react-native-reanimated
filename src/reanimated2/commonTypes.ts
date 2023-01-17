@@ -195,3 +195,7 @@ export interface MeasuredDimensions {
   pageX: number;
   pageY: number;
 }
+
+export interface AnimatedKeyboardOptions {
+  isStatusBarTranslucentAndroid?: boolean;
+}
