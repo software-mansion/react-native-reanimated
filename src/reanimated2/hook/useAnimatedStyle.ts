@@ -253,7 +253,7 @@ function styleUpdater(
         requestFrame(frame);
       }
     }
-    state.last = Object.assign({}, oldValues, newValues);
+    state.last = Object.assign(oldValues, newValues);
     const style = getStyleWithoutAnimations(state.last);
     if (style) {
       updateProps(viewDescriptors, style, maybeViewRef);
@@ -263,7 +263,7 @@ function styleUpdater(
     state.animations = [];
 
     const diff = styleDiff(oldValues, newValues);
-    state.last = Object.assign({}, oldValues, newValues);
+    state.last = Object.assign(oldValues, diff);
     if (diff) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
@@ -361,7 +361,7 @@ function jestStyleUpdater(
 
   // calculate diff
   const diff = styleDiff(oldValues, newValues);
-  state.last = Object.assign({}, oldValues, newValues);
+  state.last = Object.assign(oldValues, diff);
 
   if (Object.keys(diff).length !== 0) {
     updatePropsJestWrapper(
