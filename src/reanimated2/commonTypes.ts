@@ -79,7 +79,6 @@ export type Context = Record<string, unknown>;
 export interface WorkletFunction {
   _closure?: Context;
   __workletHash?: number;
-  __optimalization?: number;
 }
 
 export interface BasicWorkletFunction<T> extends WorkletFunction {
