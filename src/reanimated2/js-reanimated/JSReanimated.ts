@@ -1,7 +1,11 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
-import { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
+import {
+  SensorType,
+  ShareableRef,
+  Value3D,
+  ValueRotation,
+} from '../commonTypes';
 import { isJest } from '../PlatformChecker';
-import { SensorType } from '../hook/useAnimatedSensor';
 import { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
