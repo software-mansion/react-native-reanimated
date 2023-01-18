@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import static java.lang.Float.NaN;
 
 import android.view.View;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -10,7 +11,9 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
@@ -405,7 +408,43 @@ public class NodesManager implements EventDispatcherListener {
     return result;
   }
 
-  private static void addProp(JavaOnlyMap propMap, String key, Object value) {
+  private static WritableMap copyReadableMap(ReadableMap map) {
+    WritableMap copy = Arguments.createMap();
+    copy.merge(map);
+    return copy;
+  }
+
+  private static WritableArray copyReadableArray(ReadableArray array) {
+    WritableArray copy = Arguments.createArray();
+    for (int i = 0; i < array.size(); i++) {
+      ReadableType type = array.getType(i);
+      switch (type) {
+        case Boolean:
+          copy.pushBoolean(array.getBoolean(i));
+          break;
+        case String:
+          copy.pushString(array.getString(i));
+          break;
+        case Null:
+          copy.pushNull();
+          break;
+        case Number:
+          copy.pushDouble(array.getDouble(i));
+          break;
+        case Map:
+          copy.pushMap(copyReadableMap(array.getMap(i)));
+          break;
+        case Array:
+          copy.pushArray(copyReadableArray(array.getArray(i)));
+          break;
+        default:
+          throw new IllegalStateException("Unknown type of ReadableArray");
+      }
+    }
+    return copy;
+  }
+
+  private static void addProp(WritableMap propMap, String key, Object value) {
     if (value == null) {
       propMap.putNull(key);
     } else if (value instanceof Double) {
@@ -419,9 +458,17 @@ public class NodesManager implements EventDispatcherListener {
     } else if (value instanceof String) {
       propMap.putString(key, (String) value);
     } else if (value instanceof ReadableArray) {
-      propMap.putArray(key, (ReadableArray) value);
+      if (!(value instanceof WritableArray)) {
+        propMap.putArray(key, copyReadableArray((ReadableArray) value));
+      } else {
+        propMap.putArray(key, (ReadableArray) value);
+      }
     } else if (value instanceof ReadableMap) {
-      propMap.putMap(key, (ReadableMap) value);
+      if (!(value instanceof WritableMap)) {
+        propMap.putMap(key, copyReadableMap((ReadableMap) value));
+      } else {
+        propMap.putMap(key, (ReadableMap) value);
+      }
     } else {
       throw new IllegalStateException("Unknown type of animated value");
     }
