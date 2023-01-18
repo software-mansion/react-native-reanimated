@@ -116,6 +116,13 @@ function setupRequestAnimationFrame() {
 
   let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
 
+  global.__flushAnimationFrame = (frameTimestamp: number) => {
+    const currentCallbacks = animationFrameCallbacks;
+    animationFrameCallbacks = [];
+    currentCallbacks.forEach((f) => f(frameTimestamp));
+    global.__flushImmediates();
+  };
+
   global.requestAnimationFrame = (
     callback: (timestamp: number) => void
   ): number => {
@@ -126,10 +133,7 @@ function setupRequestAnimationFrame() {
       // the callbacks are run, we clear the array.
       nativeRequestAnimationFrame((timestamp) => {
         global.__frameTimestamp = timestamp;
-        const currentCallbacks = animationFrameCallbacks;
-        animationFrameCallbacks = [];
-        currentCallbacks.forEach((f) => f(timestamp));
-        global.__flushImmediates();
+        global.__flushAnimationFrame(timestamp);
         global.__frameTimestamp = undefined;
       });
     }

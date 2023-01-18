@@ -136,6 +136,7 @@ declare global {
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
       __flushImmediates: () => void;
+      __flushAnimationFrame: (frameTimestamp: number) => void;
       requestAnimationFrame: (callback: (time: number) => void) => number;
       setImmediate: (callback: (time: number) => void) => number;
       console: Console;

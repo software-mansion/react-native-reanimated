@@ -114,9 +114,16 @@ export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
 ): string {
+  function handleAndFlushImmediates(eventTimestamp: number, event: T) {
+    'worklet';
+    global.__frameTimestamp = eventTimestamp;
+    eventHandler(event);
+    global.__flushAnimationFrame(eventTimestamp);
+    global.__frameTimestamp = undefined;
+  }
   return NativeReanimatedModule.registerEventHandler(
     eventHash,
-    makeShareableCloneRecursive(eventHandler)
+    makeShareableCloneRecursive(handleAndFlushImmediates)
   );
 }
 
