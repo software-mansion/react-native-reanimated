@@ -20,7 +20,6 @@ import { initializeUIRuntime } from './initializers';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { getTimestamp } from './time';
 
 export type ReanimatedConsole = Pick<
   Console,

@@ -15,8 +15,6 @@ declare global {
   const _WORKLET: boolean;
   const _IS_FABRIC: boolean;
   const _REANIMATED_VERSION_CPP: string;
-  const _frameTimestamp: number | null;
-  const _eventTimestamp: number;
   const __reanimatedModuleProxy: NativeReanimated;
   const evalWithSourceMap: (
     js: string,
@@ -62,7 +60,6 @@ declare global {
     commandName: string,
     args: Array<unknown>
   ) => void;
-  const _chronoNow: () => number;
   const performance: { now: () => number };
   const ReanimatedDataMock: {
     now: () => number;
@@ -72,6 +69,7 @@ declare global {
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
   const requestAnimationFrame: (callback: (time: number) => void) => number;
+  const setImmediate: (callback: (time: number) => void) => number;
   const console: Console;
   const _setImmediateFunction: (() => void) | undefined;
 
@@ -80,9 +78,8 @@ declare global {
       _WORKLET: boolean;
       _IS_FABRIC: boolean;
       _REANIMATED_VERSION_CPP: string;
-      _frameTimestamp: number | null;
-      _eventTimestamp: number;
       __reanimatedModuleProxy: NativeReanimated;
+      __frameTimestamp?: number;
       evalWithSourceMap: (
         js: string,
         sourceURL: string,
@@ -121,7 +118,6 @@ declare global {
         commandName: string,
         args: Array<unknown>
       ) => void;
-      _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationsManager: {
         start: LayoutAnimationStartFunction;
@@ -136,7 +132,9 @@ declare global {
       __workletsCache?: Map<string, (...args: any[]) => any>;
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
+      __flushImmediates: () => void;
       requestAnimationFrame: (callback: (time: number) => void) => number;
+      setImmediate: (callback: (time: number) => void) => number;
       console: Console;
       _setImmediateFunction: (() => void) | undefined;
     }

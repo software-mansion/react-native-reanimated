@@ -5,6 +5,8 @@ import {
   makeShareableCloneRecursive,
 } from './shareables';
 
+let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
+
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
@@ -14,12 +16,22 @@ export function runOnUI<A extends any[], R>(
     }
   }
   return (...args) => {
-    NativeReanimatedModule.scheduleOnUI(
-      makeShareableCloneRecursive(() => {
-        'worklet';
-        return worklet(...args);
-      })
-    );
+    _runOnUIQueue.push([worklet, args]);
+    if (_runOnUIQueue.length === 1) {
+      setImmediate(() => {
+        const queue = _runOnUIQueue;
+        _runOnUIQueue = [];
+        NativeReanimatedModule.scheduleOnUI(
+          makeShareableCloneRecursive(() => {
+            'worklet';
+            queue.forEach(([worklet, args]) => {
+              worklet(...args);
+            });
+            global.__flushImmediates();
+          })
+        );
+      });
+    }
   };
 }
 

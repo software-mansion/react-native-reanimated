@@ -30,15 +30,16 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
-  auto uiRuntime = runtimeHelper->uiRuntime();
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType, interval.asNumber(), [=](double newValues[]) {
-        jsi::Runtime &rt = *uiRuntime;
-        auto handler =
-            shareableHandler->getJSValue(rt).asObject(rt).asFunction(rt);
+        jsi::Runtime &rt = *runtimeHelper->uiRuntime();
+        auto handler = shareableHandler->getJSValue(rt);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           jsi::Object value(rt);
+          // TODO: timestamp should be provided by the platform implementation
+          // such that the native side has a chance of providing a true event
+          // timestamp
           value.setProperty(rt, "qx", newValues[0]);
           value.setProperty(rt, "qy", newValues[1]);
           value.setProperty(rt, "qz", newValues[2]);
@@ -46,13 +47,13 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(rt, "yaw", newValues[4]);
           value.setProperty(rt, "pitch", newValues[5]);
           value.setProperty(rt, "roll", newValues[6]);
-          handler.call(rt, value);
+          runtimeHelper->runOnUIGuarded(handler, value);
         } else {
           jsi::Object value(rt);
           value.setProperty(rt, "x", newValues[0]);
           value.setProperty(rt, "y", newValues[1]);
           value.setProperty(rt, "z", newValues[2]);
-          handler.call(rt, value);
+          runtimeHelper->runOnUIGuarded(handler, value);
         }
       });
   if (sensorId != -1) {

@@ -87,6 +87,60 @@ Possible solutions are:
   }
 }
 
+function setupSetImmediate() {
+  'worklet';
+
+  let immediateCalbacks: Array<() => void> = [];
+
+  // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
+  global.setImmediate = (callback: () => void): number => {
+    immediateCalbacks.push(callback);
+    return -1;
+  };
+
+  global.__flushImmediates = () => {
+    for (let index = 0; index < immediateCalbacks.length; index += 1) {
+      // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
+      immediateCalbacks[index]();
+    }
+    immediateCalbacks = [];
+  };
+}
+
+function setupRequestAnimationFrame() {
+  'worklet';
+
+  // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
+  // so we avoid doing requestAnimationFrame batching in Jest environment.
+  const nativeRequestAnimationFrame = global.requestAnimationFrame;
+
+  let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
+
+  global.requestAnimationFrame = (
+    callback: (timestamp: number) => void
+  ): number => {
+    animationFrameCallbacks.push(callback);
+    if (animationFrameCallbacks.length === 1) {
+      // We schedule native requestAnimationFrame only when the first callback
+      // is added and then use it to execute all the enqueued callbacks. Once
+      // the callbacks are run, we clear the array.
+      nativeRequestAnimationFrame((timestamp) => {
+        global.__frameTimestamp = timestamp;
+        const currentCallbacks = animationFrameCallbacks;
+        animationFrameCallbacks = [];
+        currentCallbacks.forEach((f) => f(timestamp));
+        global.__flushImmediates();
+        global.__frameTimestamp = undefined;
+      });
+    }
+    // Reanimated currently does not support cancelling calbacks requested with
+    // requestAnimationFrame. We return -1 as identifier which isn't in line
+    // with the spec but it should give users better clue in case they actually
+    // attempt to store the value returned from rAF and use it for cancelling.
+    return -1;
+  };
+}
+
 export function initializeUIRuntime() {
   NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);
 
@@ -116,39 +170,8 @@ export function initializeUIRuntime() {
     };
 
     if (!IS_JEST) {
-      // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
-      // so we avoid doing requestAnimationFrame batching in Jest environment.
-      const nativeRequestAnimationFrame = global.requestAnimationFrame;
-      let callbacks: Array<(time: number) => void> = [];
-      global.requestAnimationFrame = (
-        callback: (timestamp: number) => void
-      ): number => {
-        callbacks.push(callback);
-        if (callbacks.length === 1) {
-          // We schedule native requestAnimationFrame only when the first callback
-          // is added and then use it to execute all the enqueued callbacks. Once
-          // the callbacks are run, we clear the array.
-          nativeRequestAnimationFrame((timestamp) => {
-            const currentCallbacks = callbacks;
-            callbacks = [];
-            currentCallbacks.forEach((f) => f(timestamp));
-            if (global._setImmediateFunction !== undefined) {
-              global._setImmediateFunction();
-              global._setImmediateFunction = undefined;
-            }
-          });
-        }
-        // Reanimated currently does not support cancelling callbacks requested with
-        // requestAnimationFrame. We return -1 as identifier which isn't in line
-        // with the spec but it should give users better clue in case they actually
-        // attempt to store the value returned from rAF and use it for cancelling.
-        return -1;
-      };
-
-      // @ts-ignore fix types
-      global.setImmediate = (callback: () => void) => {
-        global._setImmediateFunction = callback;
-      };
+      setupSetImmediate();
+      setupRequestAnimationFrame();
     }
   })();
 }

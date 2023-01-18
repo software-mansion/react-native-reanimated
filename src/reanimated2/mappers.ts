@@ -4,7 +4,7 @@ import { runOnUI } from './threads';
 export type Mapper = {
   id: number;
   dirty: boolean;
-  worklet: () => void;
+  worklet: (frameTimestamp: number) => void;
   inputs: SharedValue<any>[];
   outputs?: SharedValue<any>[];
 };
@@ -14,7 +14,7 @@ export function createMapperRegistry() {
   const mappers = new Map();
   let sortedMappers: Mapper[] = [];
 
-  let frameRequested = false;
+  let runRequested = false;
 
   function updateMappersOrder() {
     // sort mappers topologically
@@ -74,23 +74,23 @@ export function createMapperRegistry() {
     sortedMappers = newOrder;
   }
 
-  function mapperFrame() {
-    frameRequested = false;
+  function mapperRun() {
+    runRequested = false;
     if (mappers.size !== sortedMappers.length) {
       updateMappersOrder();
     }
     for (const mapper of sortedMappers) {
       if (mapper.dirty) {
         mapper.dirty = false;
-        mapper.worklet();
+        mapper.worklet(7);
       }
     }
   }
 
   function maybeRequestUpdates() {
-    if (!frameRequested) {
-      requestAnimationFrame(mapperFrame);
-      frameRequested = true;
+    if (!runRequested) {
+      setImmediate(mapperRun);
+      runRequested = true;
     }
   }
 
@@ -115,7 +115,7 @@ export function createMapperRegistry() {
   return {
     start: (
       mapperID: number,
-      worklet: () => void,
+      worklet: (frameTimestamp: number) => void,
       inputs: SharedValue<any>[],
       outputs?: SharedValue<any>[]
     ) => {
