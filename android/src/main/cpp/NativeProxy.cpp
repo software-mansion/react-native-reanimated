@@ -132,7 +132,7 @@ void NativeProxy::installJSIBindings(
     return static_cast<double>(output);
   };
 
-  auto requestRender = [this, getCurrentTime](
+  auto requestRender = [this](
                            std::function<void(double)> onRender,
                            jsi::Runtime &rt) { this->requestRender(onRender); };
 
