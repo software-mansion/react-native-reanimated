@@ -28,7 +28,6 @@ import com.facebook.systrace.Systrace;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -335,28 +334,12 @@ public class NodesManager implements EventDispatcherListener {
   public void updateProps(ReadableMap updates) {
     Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "NodesManager#updateProps");
 
-    HashMap<Integer, JavaOnlyMap> hashMap = new HashMap<>();
-
     Iterator<Map.Entry<String, Object>> iterator = updates.getEntryIterator();
     while (iterator.hasNext()) {
       Map.Entry<String, Object> entry = iterator.next();
       String key = entry.getKey();
-      int index = key.indexOf('_');
-      int viewTag = Integer.parseInt(key.substring(0, index));
-      String propName = key.substring(index + 1);
-      Object value = entry.getValue();
-
-      JavaOnlyMap props = hashMap.get(viewTag);
-      if (props == null) {
-        props = new JavaOnlyMap();
-        hashMap.put(viewTag, props);
-      }
-      addProp(props, propName, value);
-    }
-
-    for (Map.Entry<Integer, JavaOnlyMap> entry : hashMap.entrySet()) {
-      int viewTag = entry.getKey();
-      JavaOnlyMap props = entry.getValue();
+      int viewTag = Integer.parseInt(key);
+      ReadableMap props = (ReadableMap) entry.getValue();
 
       boolean hasNativeProps = false;
       boolean hasJsProps = false;

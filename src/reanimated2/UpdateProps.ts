@@ -40,17 +40,9 @@ function updatePropsPaperBatched(
   }
   if (!global.__batchScheduled) {
     setImmediate(() => {
-      const obj: Record<string, any> = {};
-      for (const [viewTag, updates] of Object.entries(
-        global.__batchedUpdates
-      )) {
-        for (const [prop, value] of Object.entries(updates)) {
-          obj[`${viewTag}_${prop}`] = value;
-        }
-      }
+      _updatePropsPaper(global.__batchedUpdates);
       global.__batchedUpdates = {};
       global.__batchScheduled = false;
-      _updatePropsPaper(obj);
     });
   }
   global.__batchedUpdates[tag] = updates;
