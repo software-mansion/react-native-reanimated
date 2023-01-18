@@ -292,7 +292,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   static REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
   auto subscribeForKeyboardEventsFunction =
-      [](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater) {
+      [](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater, bool isStatusBarTranslucent) {
+        // ignore isStatusBarTranslucent - it's Android only
         return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
           keyboardEventDataUpdater(keyboardState, height);
         }];

@@ -148,8 +148,6 @@ const blacklistedFunctions = new Set([
   'includes',
 ]);
 
-const possibleOptFunction = new Set(['interpolate']);
-
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
   'Tap',
@@ -429,7 +427,6 @@ function makeWorklet(t, fun, state) {
 
   const closure = new Map();
   const closureGenerator = new ClosureGenerator();
-  const options = {};
 
   // remove 'worklet'; directive before generating string
   fun.traverse({
@@ -471,13 +468,6 @@ function makeWorklet(t, fun, state) {
     inputSourceMap: codeObject.map,
   });
 
-  if (
-    fun.parent &&
-    fun.parent.callee &&
-    fun.parent.callee.name === 'useAnimatedStyle'
-  ) {
-    options.optFlags = isPossibleOptimization(transformed.ast);
-  }
   traverse(transformed.ast, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
@@ -552,6 +542,35 @@ function makeWorklet(t, fun, state) {
     lineOffset -= closure.size + 2;
   }
 
+  const pathForStringDefinitions = fun.parentPath.isProgram()
+    ? fun
+    : fun.findParent((path) => path.parentPath.isProgram());
+
+  const initDataId =
+    pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
+      `worklet_${workletHash}_init_data`
+    );
+
+  const initDataObjectExpression = t.objectExpression([
+    t.objectProperty(t.identifier('code'), t.stringLiteral(funString)),
+    t.objectProperty(t.identifier('location'), t.stringLiteral(location)),
+  ]);
+
+  if (sourceMapString) {
+    initDataObjectExpression.properties.push(
+      t.objectProperty(
+        t.identifier('__sourceMap'),
+        t.stringLiteral(sourceMapString)
+      )
+    );
+  }
+
+  pathForStringDefinitions.insertBefore(
+    t.variableDeclaration('const', [
+      t.variableDeclarator(initDataId, initDataObjectExpression),
+    ])
+  );
+
   const statements = [
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),
@@ -566,8 +585,12 @@ function makeWorklet(t, fun, state) {
     t.expressionStatement(
       t.assignmentExpression(
         '=',
-        t.memberExpression(privateFunctionId, t.identifier('asString'), false),
-        t.stringLiteral(funString)
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__initData'),
+          false
+        ),
+        initDataId
       )
     ),
     t.expressionStatement(
@@ -581,34 +604,7 @@ function makeWorklet(t, fun, state) {
         t.numericLiteral(workletHash)
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('__location'),
-          false
-        ),
-        t.stringLiteral(location)
-      )
-    ),
   ];
-
-  if (sourceMapString) {
-    statements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__sourceMap'),
-            false
-          ),
-          t.stringLiteral(sourceMapString)
-        )
-      )
-    );
-  }
 
   if (!isRelease()) {
     statements.unshift(
@@ -633,22 +629,6 @@ function makeWorklet(t, fun, state) {
             false
           ),
           t.identifier('_e')
-        )
-      )
-    );
-  }
-
-  if (options && options.optFlags) {
-    statements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__optimalization'),
-            false
-          ),
-          t.numericLiteral(options.optFlags)
         )
       )
     );
@@ -870,32 +850,6 @@ function processWorklets(t, path, state) {
       });
     }
   }
-}
-
-const FUNCTIONLESS_FLAG = 0b00000001;
-const STATEMENTLESS_FLAG = 0b00000010;
-
-function isPossibleOptimization(fun) {
-  let isFunctionCall = false;
-  let isStatement = false;
-  traverse(fun, {
-    CallExpression(path) {
-      if (!possibleOptFunction.has(path.node.callee.name)) {
-        isFunctionCall = true;
-      }
-    },
-    IfStatement() {
-      isStatement = true;
-    },
-  });
-  let flags = 0;
-  if (!isFunctionCall) {
-    flags = flags | FUNCTIONLESS_FLAG;
-  }
-  if (!isStatement) {
-    flags = flags | STATEMENTLESS_FLAG;
-  }
-  return flags;
 }
 
 module.exports = function ({ types: t }) {
