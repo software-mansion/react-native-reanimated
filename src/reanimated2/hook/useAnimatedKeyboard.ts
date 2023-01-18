@@ -4,9 +4,15 @@ import {
   subscribeForKeyboardEvents,
   unsubscribeFromKeyboardEvents,
 } from '../core';
-import { AnimatedKeyboardInfo, KeyboardState } from '../commonTypes';
+import {
+  AnimatedKeyboardInfo,
+  AnimatedKeyboardOptions,
+  KeyboardState,
+} from '../commonTypes';
 
-export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
+export function useAnimatedKeyboard(
+  options: AnimatedKeyboardOptions = { isStatusBarTranslucentAndroid: false }
+): AnimatedKeyboardInfo {
   const ref = useRef<AnimatedKeyboardInfo | null>(null);
   const listenerId = useRef<number>(-1);
   const isSubscribed = useRef<boolean>(false);
@@ -20,7 +26,7 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
       'worklet';
       keyboardEventData.state.value = state;
       keyboardEventData.height.value = height;
-    });
+    }, options);
     ref.current = keyboardEventData;
     isSubscribed.current = true;
   }
@@ -32,7 +38,7 @@ export function useAnimatedKeyboard(): AnimatedKeyboardInfo {
         'worklet';
         keyboardEventData.state.value = state;
         keyboardEventData.height.value = height;
-      });
+      }, options);
       isSubscribed.current = true;
     }
     return () => {

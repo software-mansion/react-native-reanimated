@@ -103,7 +103,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
 
   auto makeShareableClone = [this](jsi::Runtime &rt, const jsi::Value &value) {
-    return this->makeShareableClone(rt, value);
+    return this->makeShareableClone(rt, value, jsi::Value::undefined());
   };
 
   auto updateDataSynchronously =
@@ -250,7 +250,8 @@ jsi::Value NativeReanimatedModule::getDataSynchronously(
 
 jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
-    const jsi::Value &value) {
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -262,15 +263,24 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       shareable = std::make_shared<ShareableRemoteFunction>(
           runtimeHelper, rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
-      shareable = std::make_shared<ShareableArray>(
-          runtimeHelper, rt, object.asArray(rt));
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable = std::make_shared<RetainingShareable<ShareableArray>>(
+            runtimeHelper, rt, object.asArray(rt));
+      } else {
+        shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
+      }
 #ifdef RCT_NEW_ARCH_ENABLED
     } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
       shareable = std::make_shared<ShareableShadowNodeWrapper>(
           runtimeHelper, rt, object);
 #endif
     } else {
-      shareable = std::make_shared<ShareableObject>(runtimeHelper, rt, object);
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+            runtimeHelper, rt, object);
+      } else {
+        shareable = std::make_shared<ShareableObject>(rt, object);
+      }
     }
   } else if (value.isString()) {
     shareable = std::make_shared<ShareableString>(rt, value.asString(rt));
@@ -547,36 +557,33 @@ void NativeReanimatedModule::performOperations() {
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+    auto lock = newestShadowNodesRegistry_->createLock();
+
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
       ShadowTreeCloner shadowTreeCloner{
           newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
-      {
-        // lock once due to performance reasons
-        auto lock = newestShadowNodesRegistry_->createLock();
+      for (const auto &pair : copiedOperationsQueue) {
+        const ShadowNodeFamily &family = pair.first->getFamily();
+        react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        for (const auto &pair : copiedOperationsQueue) {
-          const ShadowNodeFamily &family = pair.first->getFamily();
-          react_native_assert(family.getSurfaceId() == surfaceId_);
+        auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            rootNode, family, RawProps(rt, *pair.second));
 
-          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-              rootNode, family, RawProps(rt, *pair.second));
-
-          if (newRootNode == nullptr) {
-            // this happens when React removed the component but Reanimated
-            // still tries to animate it, let's skip update for this specific
-            // component
-            continue;
-          }
-          rootNode = newRootNode;
+        if (newRootNode == nullptr) {
+          // this happens when React removed the component but Reanimated
+          // still tries to animate it, let's skip update for this specific
+          // component
+          continue;
         }
+        rootNode = newRootNode;
+      }
 
-        // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-        for (auto tag : copiedTagsToRemove) {
-          newestShadowNodesRegistry_->remove(tag);
-        }
+      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+      for (auto tag : copiedTagsToRemove) {
+        newestShadowNodesRegistry_->remove(tag);
       }
 
       shadowTreeCloner.updateYogaChildren();
@@ -661,15 +668,18 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
-    const jsi::Value &handlerWorklet) {
+    const jsi::Value &handlerWorklet,
+    const jsi::Value &isStatusBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
   auto uiRuntime = runtimeHelper->uiRuntime();
-  return subscribeForKeyboardEventsFunction([=](int keyboardState, int height) {
-    jsi::Runtime &rt = *uiRuntime;
-    auto handler = shareableHandler->getJSValue(rt);
-    handler.asObject(rt).asFunction(rt).call(
-        rt, jsi::Value(keyboardState), jsi::Value(height));
-  });
+  return subscribeForKeyboardEventsFunction(
+      [=](int keyboardState, int height) {
+        jsi::Runtime &rt = *uiRuntime;
+        auto handler = shareableHandler->getJSValue(rt);
+        handler.asObject(rt).asFunction(rt).call(
+            rt, jsi::Value(keyboardState), jsi::Value(height));
+      },
+      isStatusBarTranslucent.getBool());
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(

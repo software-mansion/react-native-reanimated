@@ -28,13 +28,18 @@ export function registerShareableMapping(
 }
 
 export function makeShareableShadowNodeWrapper<T>(shadowNodeWrapper: T): T {
-  const adoptedSNW =
-    NativeReanimatedModule.makeShareableClone(shadowNodeWrapper);
+  const adoptedSNW = NativeReanimatedModule.makeShareableClone(
+    shadowNodeWrapper,
+    false
+  );
   registerShareableMapping(shadowNodeWrapper, adoptedSNW);
   return shadowNodeWrapper;
 }
 
-export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
+export function makeShareableCloneRecursive<T>(
+  value: any,
+  shouldPersistRemote = false
+): ShareableRef<T> {
   if (USE_STUB_IMPLEMENTATION) {
     return value;
   }
@@ -54,13 +59,28 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
         // this is a remote function
         toAdapt = value;
       } else {
-        if (__DEV__ && value.__workletHash !== undefined) {
-          registerWorkletStackDetails(
-            value.__workletHash,
-            value.__stackDetails
-          );
-        }
         toAdapt = {};
+        if (value.__workletHash !== undefined) {
+          // we are converting a worklet
+          if (__DEV__) {
+            registerWorkletStackDetails(
+              value.__workletHash,
+              value.__stackDetails
+            );
+            delete value.__stackDetails;
+          }
+          // to save on transferring static __initData field of worklet structure
+          // we request shareable value to persist its UI counterpart. This means
+          // that the __initData field that contains long strings represeting the
+          // worklet code, source map, and location, will always be
+          // serialized/deserialized once.
+          toAdapt.__initData = makeShareableCloneRecursive(
+            value.__initData,
+            true
+          );
+          delete value.__initData;
+        }
+
         for (const [key, element] of Object.entries(value)) {
           toAdapt[key] = makeShareableCloneRecursive(element);
         }
@@ -71,16 +91,19 @@ export function makeShareableCloneRecursive<T>(value: any): ShareableRef<T> {
         // shareable. Meaning that they may be doing a faulty assumption in their
         // code expecting that the updates are going to automatically populate to
         // the object sent to the UI thread. If the user really wants some objects
-        // to be mutable they should use share values instead.
+        // to be mutable they should use shared values instead.
         Object.freeze(value);
       }
-      const adopted = NativeReanimatedModule.makeShareableClone(toAdapt);
+      const adopted = NativeReanimatedModule.makeShareableClone(
+        toAdapt,
+        shouldPersistRemote
+      );
       _shareableCache.set(value, adopted);
       _shareableCache.set(adopted, _shareableFlag);
       return adopted;
     }
   }
-  return NativeReanimatedModule.makeShareableClone(value);
+  return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
 }
 
 export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {

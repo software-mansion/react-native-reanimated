@@ -473,7 +473,7 @@ android {
         debug {
             externalNativeBuild {
                 cmake {
-                    if (JS_RUNTIME == "hermes") {
+                    if (JS_RUNTIME == "hermes" && !REANIMATED_PACKAGE_BUILD) {
                         arguments "-DHERMES_ENABLE_DEBUGGER=1"
                     } else {
                         arguments "-DHERMES_ENABLE_DEBUGGER=0"

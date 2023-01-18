@@ -1,6 +1,6 @@
 def try_to_parse_react_native_package_json(node_modules_dir)
   react_native_package_json_path = File.join(node_modules_dir, 'react-native/package.json')
-  if !File.exists?(react_native_package_json_path)
+  if !File.exist?(react_native_package_json_path)
     return nil
   end
   return JSON.parse(File.read(react_native_package_json_path))
