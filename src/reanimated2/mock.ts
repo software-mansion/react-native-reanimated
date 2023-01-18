@@ -102,7 +102,7 @@ const ReanimatedV2 = {
   'FadeInRight',
   'FadeInLeft',
   'FadeInUp',
-  'FadFadeInDown',
+  'FadeInDown',
   'FadeOut',
   'FadeOutRight',
   'FadeOutLeft',
