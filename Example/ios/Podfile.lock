@@ -388,8 +388,8 @@ PODS:
     - React-jsi (= 0.71.0-rc.5)
     - React-logger (= 0.71.0-rc.5)
     - React-perflogger (= 0.71.0-rc.5)
-  - RNCMaskedView (0.2.8):
-    - React-Core
+  - RNCMaskedView (0.1.10):
+    - React
   - RNCPicker (1.8.1):
     - React-Core
   - RNGestureHandler (2.8.0):
@@ -493,7 +493,7 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
-  - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
+  - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
   - "RNCPicker (from `../node_modules/@react-native-community/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../../`)
@@ -593,7 +593,7 @@ EXTERNAL SOURCES:
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
   RNCMaskedView:
-    :path: "../node_modules/@react-native-masked-view/masked-view"
+    :path: "../node_modules/@react-native-community/masked-view"
   RNCPicker:
     :path: "../node_modules/@react-native-community/picker"
   RNGestureHandler:
@@ -657,7 +657,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: 06d81498c64ce27065796bf44c6b101c7ab76e1f
   React-runtimeexecutor: b7dcd6b5cdef671b6177cae517a68e37437989e1
   ReactCommon: 22ec04726eb397686d75debf5ea97c09b6abab83
-  RNCMaskedView: bc0170f389056201c82a55e242e5d90070e18e5a
+  RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
   RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
   RNGestureHandler: 62232ba8f562f7dea5ba1b3383494eb5bf97a4d3
   RNReanimated: fbc356493970e3acddc15586b1bccb5eab3ff1ec
