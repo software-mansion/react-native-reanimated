@@ -75,6 +75,7 @@ export function createMapperRegistry() {
   }
 
   function mapperRun() {
+    console.log('MAPPER RUN');
     runRequested = false;
     if (mappers.size !== sortedMappers.length) {
       updateMappersOrder();
@@ -89,6 +90,7 @@ export function createMapperRegistry() {
 
   function maybeRequestUpdates() {
     if (!runRequested) {
+      console.log('SET IMM');
       setImmediate(mapperRun);
       runRequested = true;
     }
