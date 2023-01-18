@@ -34,27 +34,27 @@ function updatePropsPaperBatched(
   updates: StyleProps | AnimatedStyle
 ) {
   'worklet';
+
+  // initialize data structures
   if (global.__batchedUpdates === undefined) {
     global.__batchedUpdates = {}; // tag -> props
     global.__batchScheduled = false;
   }
+
+  // schedule flush
   if (!global.__batchScheduled) {
     setImmediate(() => {
-      const obj: Record<string, any> = {};
-      for (const [viewTag, updates] of Object.entries(
-        global.__batchedUpdates
-      )) {
-        for (const [prop, value] of Object.entries(updates)) {
-          obj[`${viewTag}_${prop}`] = value;
-        }
-      }
+      _updatePropsPaper(global.__batchedUpdates);
       global.__batchedUpdates = {};
       global.__batchScheduled = false;
-      _updatePropsPaper(obj);
     });
+    global.__batchScheduled = true;
   }
-  global.__batchedUpdates[tag] = updates;
-  global.__batchScheduled = true;
+
+  // add prop updates to batchw
+  for (const [prop, value] of Object.entries(updates)) {
+    global.__batchedUpdates[`${tag}_${prop}`] = value;
+  }
 }
 
 let updatePropsByPlatform;
