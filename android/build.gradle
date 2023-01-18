@@ -239,7 +239,7 @@ def JS_RUNTIME = {
 
     // Check if Hermes is enabled in app setup
     def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
-    if ((REACT_NATIVE_MINOR_VERSION >= 71 && appProject?.hermesEnabled?.toBoolean()) || appProject?.ext?.react?.enableHermes?.toBoolean()) {
+    if ((REACT_NATIVE_MINOR_VERSION >= 71) || appProject?.ext?.react?.enableHermes?.toBoolean()) {
         return "hermes"
     }
 
