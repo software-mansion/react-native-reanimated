@@ -4,8 +4,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Dimensions, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import MaskedView from '@react-native-community/masked-view';
-
 import {
   initialHorRadius,
   initialSideWidth,
@@ -15,6 +13,7 @@ import {
 } from './WeaveHelpers';
 
 import React from 'react';
+import MaskedView from '@react-native-community/masked-view';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);
