@@ -71,8 +71,9 @@ export default class JSReanimated extends NativeReanimated {
     }
 
     const sensor: WebSensor = this.initializeSensor(sensorType, interval);
-    sensor.addEventListener('reading', () => {
-      if (sensorType === SensorType.ROTATION) {
+    let callback;
+    if (sensorType === SensorType.ROTATION) {
+      callback = () => {
         const [qw, qx, qy, qz] = sensor.quaternion;
 
         // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
@@ -86,11 +87,14 @@ export default class JSReanimated extends NativeReanimated {
           qw * qw + qx * qx - qy * qy - qz * qz
         );
         eventHandler({ qw, qx, qy, qz, yaw, pitch, roll });
-      } else {
+      };
+    } else {
+      callback = () => {
         const { x, y, z } = sensor;
         eventHandler({ x, y, z });
-      }
-    });
+      };
+    }
+    sensor.addEventListener('reading', callback);
     sensor.start();
 
     this.sensors.set(this.nextSensorId, sensor);
@@ -118,9 +122,9 @@ export default class JSReanimated extends NativeReanimated {
 
   initializeSensor(sensorType: SensorType, interval: number): WebSensor {
     const config =
-      interval === -1
+      interval <= 0
         ? { referenceFrame: 'device' }
-        : { frequency: 1 / interval };
+        : { frequency: 1000 / interval };
     switch (sensorType) {
       case SensorType.ACCELEROMETER:
         return new window.Accelerometer(config);
