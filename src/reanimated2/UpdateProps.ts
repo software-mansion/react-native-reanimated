@@ -28,31 +28,33 @@ export const colorProps = [
 
 export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
-let batchedUpdates: Record<number, StyleProps | AnimatedStyle> = {}; // tag -> props
-const batchedUpdatesCount: { count: number } = { count: 0 };
-
 function updatePropsPaperBatched(
   tag: number,
   _name: string,
   updates: StyleProps | AnimatedStyle
 ) {
   'worklet';
-  batchedUpdates[tag] = updates;
-  ++batchedUpdatesCount.count;
-  if (batchedUpdatesCount.count === 1) {
-    global.setImmediate(() => {
-      'worklet';
+  if (global.__batchedUpdates === undefined) {
+    global.__batchedUpdates = {}; // tag -> props
+    global.__batchScheduled = false;
+  }
+  if (!global.__batchScheduled) {
+    setImmediate(() => {
       const obj: Record<string, any> = {};
-      for (const [viewTag, updates] of Object.entries(batchedUpdates)) {
+      for (const [viewTag, updates] of Object.entries(
+        global.__batchedUpdates
+      )) {
         for (const [prop, value] of Object.entries(updates)) {
           obj[`${viewTag}_${prop}`] = value;
         }
       }
+      global.__batchedUpdates = {};
+      global.__batchScheduled = false;
       _updatePropsPaper(obj);
-      batchedUpdates = {};
-      batchedUpdatesCount.count = 0;
     });
   }
+  global.__batchedUpdates[tag] = updates;
+  global.__batchScheduled = true;
 }
 
 let updatePropsByPlatform;

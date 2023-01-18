@@ -71,7 +71,8 @@ declare global {
   const requestAnimationFrame: (callback: (time: number) => void) => number;
   const setImmediate: (callback: (time: number) => void) => number;
   const console: Console;
-  const _setImmediateFunction: (() => void) | undefined;
+  const __batchedUpdates: Record<number, StyleProps | AnimatedStyle>;
+  const __batchScheduled: boolean;
 
   namespace NodeJS {
     interface Global {
@@ -136,7 +137,8 @@ declare global {
       requestAnimationFrame: (callback: (time: number) => void) => number;
       setImmediate: (callback: (time: number) => void) => number;
       console: Console;
-      _setImmediateFunction: (() => void) | undefined;
+      __batchedUpdates: Record<number, StyleProps | AnimatedStyle>;
+      __batchScheduled: boolean;
     }
   }
 }
