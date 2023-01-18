@@ -30,7 +30,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   // SharedValue
   virtual jsi::Value makeShareableClone(
       jsi::Runtime &rt,
-      const jsi::Value &value) = 0;
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote) = 0;
 
   // Synchronized data objects
   virtual jsi::Value makeSynchronizedDataHolder(
@@ -72,7 +73,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   // keyboard
   virtual jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
-      const jsi::Value &keyboardEventContainer) = 0;
+      const jsi::Value &keyboardEventContainer,
+      const jsi::Value &isStatusBarTranslucent) = 0;
   virtual void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) = 0;

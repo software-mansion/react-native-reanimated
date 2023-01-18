@@ -79,7 +79,6 @@ export type Context = Record<string, unknown>;
 export interface WorkletFunction {
   _closure?: Context;
   __workletHash?: number;
-  __optimalization?: number;
 }
 
 export interface BasicWorkletFunction<T> extends WorkletFunction {
@@ -145,6 +144,14 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
   ) => void;
 }
 
+export enum SensorType {
+  ACCELEROMETER = 1,
+  GYROSCOPE = 2,
+  GRAVITY = 3,
+  MAGNETIC_FIELD = 4,
+  ROTATION = 5,
+}
+
 export interface NumericAnimation {
   current?: number;
 }
@@ -194,4 +201,8 @@ export interface MeasuredDimensions {
   height: number;
   pageX: number;
   pageY: number;
+}
+
+export interface AnimatedKeyboardOptions {
+  isStatusBarTranslucentAndroid?: boolean;
 }

@@ -1,14 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { makeMutable, registerSensor, unregisterSensor } from '../core';
-import { SharedValue, Value3D, ValueRotation } from '../commonTypes';
-
-export enum SensorType {
-  ACCELEROMETER = 1,
-  GYROSCOPE = 2,
-  GRAVITY = 3,
-  MAGNETIC_FIELD = 4,
-  ROTATION = 5,
-}
+import {
+  SensorType,
+  SharedValue,
+  Value3D,
+  ValueRotation,
+} from '../commonTypes';
 
 export type SensorConfig = {
   interval: number | 'auto';
