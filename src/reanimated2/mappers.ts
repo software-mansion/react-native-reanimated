@@ -115,7 +115,7 @@ export function createMapperRegistry() {
   return {
     start: (
       mapperID: number,
-      worklet: (frameTimestamp: number) => void,
+      worklet: () => void,
       inputs: SharedValue<any>[],
       outputs?: SharedValue<any>[]
     ) => {

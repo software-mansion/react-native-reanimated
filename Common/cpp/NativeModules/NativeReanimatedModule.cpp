@@ -647,7 +647,6 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
-  auto uiRuntime = runtimeHelper->uiRuntime();
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
         jsi::Runtime &rt = *runtimeHelper->uiRuntime();
