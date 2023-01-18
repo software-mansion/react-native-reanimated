@@ -23,7 +23,11 @@
 #elif __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
 #else
-#import <jsi/JSCRuntime.h>
+#if REACT_NATIVE_MINOR_VERSION >= 71
+#include <jsc/JSCRuntime.h>
+#else
+#include <jsi/JSCRuntime.h>
+#endif // REACT_NATIVE_MINOR_VERSION
 #endif
 
 namespace reanimated {
