@@ -94,7 +94,7 @@ class JSRuntimeHelper {
     // JavaScript and propagating them to the main React Native thread such that
     // they can be presented using RN's LogBox.
     jsi::Runtime &rt = *uiRuntime_;
-#if 1
+#ifdef DEBUG
     SystraceSection s("runOnUIGuarded");
     callGuard->call(rt, function, args...);
 #else
