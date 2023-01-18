@@ -12,8 +12,8 @@ import {
   maxVertRadius,
 } from './WeaveHelpers';
 
-import React from 'react';
 import MaskedView from '@react-native-community/masked-view';
+import React from 'react';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);
