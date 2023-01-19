@@ -852,6 +852,74 @@ function processWorklets(t, path, state) {
   }
 }
 
+function generateInlineStylesWarning(t, memberExpression) {
+  // change sharedvalue.value -> ((){console.warn("warning");return sharedvalue.value;})()
+  return t.callExpression(
+    t.arrowFunctionExpression(
+      [],
+      t.blockStatement([
+        t.expressionStatement(
+          t.callExpression(
+            t.memberExpression(t.identifier('console'), t.identifier('warn')),
+            [
+              t.stringLiteral(
+                "It looks like you might be using shared value's .value inside reanimated inline style. " +
+                  'This is probably not what you want to do. See documentation here: ' +
+                  'https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles'
+              ),
+            ]
+          )
+        ),
+        t.returnStatement(memberExpression.node),
+      ])
+    ),
+    []
+  );
+}
+
+function processPropertyValueForInlineStylesWarning(t, path) {
+  // if it's something like object.value then raise a warning
+  if (t.isMemberExpression(path)) {
+    if (path.get('property').node.name === 'value') {
+      path.replaceWith(generateInlineStylesWarning(t, path));
+    }
+  } else if (t.isCallExpression(path)) {
+    // for handling withTiming(sharedvalue.value)
+    const args = path.get('arguments');
+    for (const arg of args) {
+      processPropertyValueForInlineStylesWarning(t, arg);
+    }
+  }
+}
+
+function processStyleObjectForInlineStylesWarning(t, path) {
+  const properties = path.get('properties');
+  for (const property of properties) {
+    const value = property.get('value');
+    processPropertyValueForInlineStylesWarning(t, value);
+  }
+}
+
+function processInlineStylesWarning(t, path) {
+  if (path.get('name').node.name !== 'style') return;
+  if (!t.isJSXExpressionContainer(path.get('value'))) return;
+
+  const expression = path.get('value').get('expression');
+  // style={[{...}, {...}]}
+  if (t.isArrayExpression(expression)) {
+    const elements = expression.get('elements');
+    for (const element of elements) {
+      if (t.isObjectExpression(element)) {
+        processStyleObjectForInlineStylesWarning(t, element);
+      }
+    }
+  }
+  // style={{...}}
+  else if (t.isObjectExpression(expression)) {
+    processStyleObjectForInlineStylesWarning(t, expression);
+  }
+}
+
 module.exports = function ({ types: t }) {
   return {
     pre() {
@@ -872,6 +940,11 @@ module.exports = function ({ types: t }) {
         enter(path, state) {
           processIfWorkletNode(t, path, state);
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
+        },
+      },
+      JSXAttribute: {
+        enter(path, state) {
+          processInlineStylesWarning(t, path, state);
         },
       },
     },
