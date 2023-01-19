@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 public class SharedTransitionManager {
@@ -70,7 +69,7 @@ public class SharedTransitionManager {
   protected void doSnapshotForTopScreenViews(ViewGroup stack) {
     int screensCount = stack.getChildCount();
     if (screensCount > 0) {
-      View screen = ((ViewGroup)stack.getChildAt(0)).getChildAt(0);
+      View screen = ((ViewGroup) stack.getChildAt(0)).getChildAt(0);
       visitTreeAndMakeSnapshot(screen);
     }
   }

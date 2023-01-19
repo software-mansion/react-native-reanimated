@@ -97,8 +97,8 @@
   NSMutableArray<REASharedElement *> *sharedElements = [NSMutableArray new];
   for (UIView *sharedView in sharedViews) {
     // add observers
-    UIView *sharedViewScreen = [self getParentScreen:sharedView];
-    UIView *stack = [self getScreenStack:sharedViewScreen];
+    UIView *sharedViewScreen = [self getScreenForView:sharedView];
+    UIView *stack = [self getStackForView:sharedViewScreen];
     if (addedNewScreen) {
       [self observeChanges:sharedViewScreen];
     }
@@ -136,14 +136,14 @@
       if (screensCount - 2 < 0) {
         continue;
       }
-      UIView *viewSourceParentScreen = [self getParentScreen:viewSource];
+      UIView *viewSourceParentScreen = [self getScreenForView:viewSource];
       UIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
       if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag]) {
         continue;
       }
     } else {
       // is on top
-      UIView *viewTargetParentScreen = [self getParentScreen:viewTarget];
+      UIView *viewTargetParentScreen = [self getScreenForView:viewTarget];
       UIView *stackTarget = viewTargetParentScreen.reactViewController.navigationController.topViewController.view;
       if (stackTarget != viewTargetParentScreen) {
         continue;
@@ -177,7 +177,7 @@
   return sharedElements;
 }
 
-- (UIView *)getParentScreen:(UIView *)view
+- (UIView *)getScreenForView:(UIView *)view
 {
 #if __has_include(<RNScreens/RNSScreen.h>)
   UIView *screen = view;
@@ -191,7 +191,7 @@
   return nil;
 }
 
-- (UIView *)getScreenStack:(UIView *)view
+- (UIView *)getStackForView:(UIView *)view
 {
 #if __has_include(<RNScreens/RNSScreen.h>)
   if ([view isKindOfClass:[RNSScreenView class]]) {
@@ -201,7 +201,7 @@
       }
     }
   }
-  while (![view isKindOfClass:[RNSScreenStackView class]] && view.superview != nil) {
+  while (view != nil && ![view isKindOfClass:[RNSScreenStackView class]] && view.superview != nil) {
     view = view.superview;
   }
   if ([view isKindOfClass:[RNSScreenStackView class]]) {
@@ -218,7 +218,7 @@
   }
   [_screenHasObserver addObject:view.reactTag];
 
-  [view addObserver:self forKeyPath:@"transitionDuration" options:NSKeyValueObservingOptionNew context:@"reanimated"];
+  [view addObserver:self forKeyPath:@"transitionDuration" options:NSKeyValueObservingOptionNew context:nil];
   [view addObserver:self forKeyPath:@"activityState" options:NSKeyValueObservingOptionNew context:nil];
 
   static dispatch_once_t onceToken;
@@ -280,10 +280,7 @@
                        context:(void *)context
 {
   UIView *screen = (UIView *)object;
-  UIView *stack = screen;
-  while (stack != nil && ![stack isKindOfClass:[RNSScreenStackView class]]) {
-    stack = stack.superview;
-  }
+  UIView *stack = [self getStackForView:screen];
 
   if ([keyPath isEqualToString:@"transitionDuration"]) {
     // added new screen (push)
@@ -468,7 +465,7 @@
     int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
     [parent insertSubview:view atIndex:childIndex];
     REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[view.reactTag];
-    BOOL isScreenDetached = [self getParentScreen:view].superview == nil;
+    BOOL isScreenDetached = [self getScreenForView:view].superview == nil;
     NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
     if (isScreenDetached) {
       viewSourcePreviousSnapshot.values[@"originY"] = viewSourcePreviousSnapshot.values[@"originYByParent"];
