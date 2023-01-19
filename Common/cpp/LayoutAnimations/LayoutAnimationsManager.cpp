@@ -91,14 +91,11 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-int LayoutAnimationsManager::findTheOtherForSharedTransition(int tag) {
+int LayoutAnimationsManager::findSiblingForSharedView(int tag) {
   for (auto const &[key, group] : sharedTransitionGroups_) {
     auto position = std::find(group.begin(), group.end(), tag);
-    if (position != group.end()) {
-      int index = position - group.begin();
-      if (index > 0) {
-        return group[index - 1]; // get one before
-      }
+    if (position != group.end() && position != group.begin()) {
+      return *std::prev(position);
     }
   }
   return -1;

@@ -35,7 +35,7 @@ public class LayoutAnimations {
 
   public native boolean isLayoutAnimationEnabled();
 
-  public native int findTheOtherForSharedTransition(int tag);
+  public native int findSiblingForSharedView(int tag);
 
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     ReactApplicationContext context = mContext.get();

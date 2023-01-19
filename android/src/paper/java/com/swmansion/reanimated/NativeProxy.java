@@ -336,10 +336,10 @@ public class NativeProxy {
           }
 
           @Override
-          public int findTheOtherForSharedTransition(int tag) {
+          public int findSiblingForSharedView(int tag) {
             LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
             if (layoutAnimations != null) {
-              return layoutAnimations.findTheOtherForSharedTransition(tag);
+              return layoutAnimations.findSiblingForSharedView(tag);
             }
             return -1;
           }

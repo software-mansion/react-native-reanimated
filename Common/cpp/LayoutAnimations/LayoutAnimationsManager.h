@@ -30,7 +30,7 @@ class LayoutAnimationsManager {
       const std::string &type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(int tag);
-  int findTheOtherForSharedTransition(int tag);
+  int findSiblingForSharedView(int tag);
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;

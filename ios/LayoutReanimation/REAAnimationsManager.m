@@ -504,9 +504,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [_sharedTransitionManager viewsDidLayout];
 }
 
-- (void)setFindTheOtherForSharedTransitionBlock:(REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition
+- (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView
 {
-  [_sharedTransitionManager setFindTheOtherForSharedTransitionBlock:findTheOtherForSharedTransition];
+  [_sharedTransitionManager setFindSiblingForSharedViewBlock:findSiblingForSharedView];
 }
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type

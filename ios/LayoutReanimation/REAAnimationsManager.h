@@ -20,7 +20,7 @@ typedef void (^REAAnimationStartingBlock)(
     NSDictionary *_Nonnull yogaValues,
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
-typedef NSNumber *_Nullable (^REAFindTheOtherForSharedTransitionBlock)(NSNumber *_Nonnull tag);
+typedef NSNumber *_Nullable (^REAFindSiblingForSharedViewBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
 
 @interface REAAnimationsManager : NSObject
@@ -32,8 +32,7 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle
                                   forTag:(NSNumber *_Nonnull)tag
                       isSharedTransition:(BOOL)isSharedTransition;
-- (void)setFindTheOtherForSharedTransitionBlock:
-    (REAFindTheOtherForSharedTransitionBlock)findTheOtherForSharedTransition;
+- (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;

@@ -289,7 +289,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       ViewManager viewManager,
       ViewManager parentViewManager,
       Integer parentTag,
-      boolean convertFromAbsolute) {
+      boolean positionIsAbsolute) {
     float x =
         (props.get(Snapshot.ORIGIN_X) != null)
             ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
@@ -307,7 +307,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
             ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
             : PixelUtil.toDIPFromPixel(view.getHeight());
     updateLayout(
-        view, parentViewManager, parentTag, view.getId(), x, y, width, height, convertFromAbsolute);
+        view, parentViewManager, parentTag, view.getId(), x, y, width, height, positionIsAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
     props.remove(Snapshot.GLOBAL_ORIGIN_X);
@@ -358,7 +358,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       float yf,
       float widthf,
       float heightf,
-      boolean convertFromAbsolute) {
+      boolean positionIsAbsolute) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
@@ -413,7 +413,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
-      if (convertFromAbsolute) {
+      if (positionIsAbsolute) {
         Point newPoint = new Point(x, y);
         Point convertedPoint =
             convertRelativePointToScreenLocation(newPoint, (View) viewToUpdate.getParent());
@@ -592,16 +592,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.viewsDidLayout();
   }
 
-  public void viewsDidRemoved() {
-    mSharedTransitionManager.viewsDidRemoved();
+  public void notifyAboutViewsRemoving(int[] tagsToDelete) {
+    mSharedTransitionManager.onViewsRemoving(tagsToDelete);
   }
 
-  public void visitTreeForTags(int[] viewTags, boolean clearConfig) {
-    mSharedTransitionManager.visitTreeForTags(viewTags, clearConfig);
-  }
-
-  public void visitTreeAndMakeSnapshot(View view) {
-    mSharedTransitionManager.visitTreeAndMakeSnapshot(view);
+  public void doSnapshotForTopScreenViews(ViewGroup stack) {
+    mSharedTransitionManager.doSnapshotForTopScreenViews(stack);
   }
 
   protected NativeMethodsHolder getNativeMethodsHolder() {
