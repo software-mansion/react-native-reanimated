@@ -5,7 +5,6 @@ import {
   Context,
   NativeEvent,
   NestedObjectValues,
-  StyleProps,
   WorkletFunction,
   AnimationObject,
 } from '../commonTypes';
@@ -178,44 +177,22 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   return false;
 }
 
-export function styleDiff<T extends AnimatedStyle>(
-  oldStyle: AnimatedStyle,
-  newStyle: AnimatedStyle
-): Partial<T> {
+export function shallowEqual(a: any, b: any) {
   'worklet';
-  const diff: any = {};
-  for (const key in oldStyle) {
-    if (newStyle[key] === undefined) {
-      diff[key] = null;
+  let aKeys = 0;
+  for (const key in a) {
+    aKeys += 1;
+    if (b[key] === a[key]) {
+      return false;
     }
   }
-  for (const key in newStyle) {
-    const value = newStyle[key];
-    const oldValue = oldStyle[key];
-
-    if (isAnimated(value)) {
-      // do nothing
-      continue;
-    }
-    if (oldValue !== value) {
-      diff[key] = value;
-    }
+  // we use for loop here, as we want to avoid calling Object.keys that allocates new array
+  let bKeys = 0;
+  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
+  for (const key in b) {
+    bKeys += 1;
   }
-  return diff;
-}
-
-export function getStyleWithoutAnimations(newStyle: AnimatedStyle): StyleProps {
-  'worklet';
-  const diff: StyleProps = {};
-
-  for (const key in newStyle) {
-    const value = newStyle[key];
-    if (isAnimated(value)) {
-      continue;
-    }
-    diff[key] = value;
-  }
-  return diff;
+  return aKeys === bKeys;
 }
 
 export const validateAnimatedStyles = (styles: AnimatedStyle): void => {
