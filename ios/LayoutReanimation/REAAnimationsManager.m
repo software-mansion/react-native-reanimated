@@ -111,11 +111,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     view = [_exitingViews objectForKey:tag];
   }
   if (view == nil) {
-    for (UIView *sharedElement in [_sharedTransitionManager getCurrentSharedTransitionViews]) {
-      if ([sharedElement.reactTag intValue] == [tag intValue]) {
-        return sharedElement;
-      }
-    }
+    view = [_sharedTransitionManager getTransitioningView:tag];
   }
   return view;
 }

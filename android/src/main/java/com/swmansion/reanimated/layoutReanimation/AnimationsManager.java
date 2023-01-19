@@ -415,8 +415,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else {
       if (positionIsAbsolute) {
         Point newPoint = new Point(x, y);
-        Point convertedPoint =
-            convertRelativePointToScreenLocation(newPoint, (View) viewToUpdate.getParent());
+        View viewToUpdateParent = (View) viewToUpdate.getParent();
+        Point convertedPoint = convertAbsoluteToParentRelative(newPoint, viewToUpdateParent);
         x = convertedPoint.x;
         y = convertedPoint.y;
       }
@@ -579,7 +579,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private Point convertRelativePointToScreenLocation(Point fromPoint, View parentView) {
+  private Point convertAbsoluteToParentRelative(Point fromPoint, View parentView) {
     int[] toCord = {0, 0};
     if (parentView != null) {
       parentView.getLocationOnScreen(toCord);

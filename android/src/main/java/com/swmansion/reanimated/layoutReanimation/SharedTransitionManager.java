@@ -27,7 +27,7 @@ public class SharedTransitionManager {
   private final Map<Integer, Integer> mSharedTransitionInParentIndex = new HashMap<>();
   private boolean mIsSharedTransitionActive;
   private final Map<Integer, Snapshot> mSnapshotRegistry = new HashMap<>();
-  private final List<View> mCurrentSharedTransitionViews = new ArrayList<>();
+  private final Map<Integer, View> mCurrentSharedTransitionViews = new HashMap<>();
   private View mTransitionContainer;
   private final List<View> mRemovedSharedViews = new ArrayList<>();
 
@@ -45,12 +45,7 @@ public class SharedTransitionManager {
 
   @Nullable
   protected View getTransitioningView(int tag) {
-    for (View sharedElement : mCurrentSharedTransitionViews) {
-      if (sharedElement.getId() == tag) {
-        return sharedElement;
-      }
-    }
-    return null;
+    return mCurrentSharedTransitionViews.get(tag);
   }
 
   protected void viewsDidLayout() {
@@ -177,11 +172,11 @@ public class SharedTransitionManager {
       Snapshot sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
 
-      if (!mCurrentSharedTransitionViews.contains(viewSource)) {
-        mCurrentSharedTransitionViews.add(viewSource);
+      if (!mCurrentSharedTransitionViews.containsKey(viewSource.getId())) {
+        mCurrentSharedTransitionViews.put(viewSource.getId(), viewSource);
       }
-      if (!mCurrentSharedTransitionViews.contains(viewTarget)) {
-        mCurrentSharedTransitionViews.add(viewTarget);
+      if (!mCurrentSharedTransitionViews.containsKey(viewTarget.getId())) {
+        mCurrentSharedTransitionViews.put(viewTarget.getId(), viewTarget);
       }
       SharedElement sharedElement =
           new SharedElement(viewSource, sourceViewSnapshot, viewTarget, targetViewSnapshot);
@@ -258,13 +253,7 @@ public class SharedTransitionManager {
   }
 
   protected void finishSharedAnimation(int tag) {
-    View view = null;
-    for (View sharedView : mCurrentSharedTransitionViews) {
-      if (sharedView.getId() == tag) {
-        view = sharedView;
-        break;
-      }
-    }
+    View view = mCurrentSharedTransitionViews.get(tag);
     if (view != null) {
       ((ViewGroup) mTransitionContainer).removeView(view);
       View parentView = mSharedTransitionParent.get(view.getId());
@@ -288,7 +277,7 @@ public class SharedTransitionManager {
       }
       mAnimationsManager.progressLayoutAnimation(view.getId(), preparedValues, true);
       viewSourcePreviousSnapshot.originY = originY;
-      mCurrentSharedTransitionViews.remove(view);
+      mCurrentSharedTransitionViews.remove(view.getId());
     }
     if (mCurrentSharedTransitionViews.isEmpty()) {
       mSharedTransitionParent.clear();
@@ -299,7 +288,6 @@ public class SharedTransitionManager {
           ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
         }
       }
-      mCurrentSharedTransitionViews.clear();
       mIsSharedTransitionActive = false;
     }
   }
