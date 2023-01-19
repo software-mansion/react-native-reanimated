@@ -113,6 +113,12 @@ export interface AdapterWorkletFunction extends WorkletFunction {
 
 export type AnimatableValue = number | string | Array<number>;
 
+export interface AnimationFunctionCall {
+  functionName: string;
+  functionArguments: any[];
+  animatedArgumentsIndices: number[];
+}
+
 export interface AnimationObject {
   [key: string]: any;
   callback: AnimationCallback;
@@ -132,6 +138,7 @@ export interface AnimationObject {
     timestamp: Timestamp,
     previousAnimation: any
   ) => void;
+  animationFunctionCall?: AnimationFunctionCall;
 }
 
 export interface Animation<T extends AnimationObject> extends AnimationObject {

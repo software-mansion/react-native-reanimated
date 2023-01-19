@@ -11,8 +11,18 @@ export function withSequence(
   ..._animations: NextAnimation<AnimationObject>[]
 ): Animation<SequenceAnimation> {
   'worklet';
+
+  const animationFunctionCall = {
+    functionName: 'withSequence',
+    // eslint-disable-next-line prefer-rest-params
+    functionArguments: [...arguments],
+    // eslint-disable-next-line prefer-rest-params
+    animatedArgumentsIndices: [...arguments].map((_, i) => i),
+  };
+
   return defineAnimation<SequenceAnimation>(
     _animations[0] as SequenceAnimation,
+    animationFunctionCall,
     () => {
       'worklet';
       const animations = _animations.map((a) => {

@@ -1,4 +1,4 @@
-import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
+import React, { Component, ComponentType, MutableRefObject } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
@@ -18,22 +18,19 @@ import {
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
-  BaseAnimationBuilder,
-  EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
-import {
-  SharedValue,
-  StyleProps,
-  ShadowNodeWrapper,
-} from './reanimated2/commonTypes';
-import {
-  ViewDescriptorsSet,
-  ViewRefSet,
-} from './reanimated2/ViewDescriptorsSet';
+import { StyleProps, ShadowNodeWrapper } from './reanimated2/commonTypes';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import { makeShareableShadowNodeWrapper } from './reanimated2/shareables';
+import { flattenArray } from './reanimated2/utils';
+import {
+  AnimatedComponentProps,
+  AnimatedProps,
+  InitialComponentProps,
+} from './AnimatedComponent';
+import { withInlineStyles } from './withInlineStyles';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -57,26 +54,6 @@ function maybeBuild(
   } else {
     return layoutAnimationOrBuilder;
   }
-}
-
-type NestedArray<T> = T | NestedArray<T>[];
-function flattenArray<T>(array: NestedArray<T>): T[] {
-  if (!Array.isArray(array)) {
-    return [array];
-  }
-  const resultArr: T[] = [];
-
-  const _flattenArray = (arr: NestedArray<T>[]): void => {
-    arr.forEach((item) => {
-      if (Array.isArray(item)) {
-        _flattenArray(item);
-      } else {
-        resultArr.push(item);
-      }
-    });
-  };
-  _flattenArray(array);
-  return resultArr;
 }
 
 function onlyAnimatedStyles(styles: StyleProps[]) {
@@ -108,33 +85,6 @@ const has = <K extends string>(
   return false;
 };
 
-interface AnimatedProps extends Record<string, unknown> {
-  viewDescriptors?: ViewDescriptorsSet;
-  viewsRef?: ViewRefSet<unknown>;
-  initial?: SharedValue<StyleProps>;
-}
-
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
-  style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  animatedStyle?: StyleProps;
-  layout?:
-    | BaseAnimationBuilder
-    | ILayoutAnimationBuilder
-    | typeof BaseAnimationBuilder;
-  entering?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-  exiting?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | Keyframe;
-};
-
 type Options<P> = {
   setNativeProps: (ref: ComponentRef, props: P) => void;
 };
@@ -142,11 +92,6 @@ type Options<P> = {
 interface ComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => ComponentRef;
-}
-
-export interface InitialComponentProps extends Record<string, unknown> {
-  ref?: Ref<Component>;
-  collapsable?: boolean;
 }
 
 export default function createAnimatedComponent(
@@ -528,9 +473,11 @@ export default function createAnimatedComponent(
     Component.displayName || Component.name || 'Component'
   })`;
 
+  const AnimatedComponentWithInlineStyles = withInlineStyles(AnimatedComponent);
+
   return React.forwardRef<Component>((props, ref) => {
     return (
-      <AnimatedComponent
+      <AnimatedComponentWithInlineStyles
         {...props}
         {...(ref === null ? null : { forwardedRef: ref })}
       />

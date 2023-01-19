@@ -6,6 +6,7 @@ import {
   Animation,
   Timestamp,
   AnimationCallback,
+  AnimationFunctionCall,
 } from '../commonTypes';
 
 export interface HigherOrderAnimation {
@@ -49,4 +50,5 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
     previousAnimation: StyleLayoutAnimation
   ) => void;
   callback?: AnimationCallback;
+  animationFunctionCall?: AnimationFunctionCall;
 }

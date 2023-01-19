@@ -44,7 +44,14 @@ export function withDecay(
 ): Animation<DecayAnimation> {
   'worklet';
 
-  return defineAnimation<DecayAnimation>(0, () => {
+  const animationFunctionCall = {
+    functionName: 'withDecay',
+    // eslint-disable-next-line prefer-rest-params
+    functionArguments: [...arguments],
+    animatedArgumentsIndices: [0],
+  };
+
+  return defineAnimation<DecayAnimation>(0, animationFunctionCall, () => {
     'worklet';
     const config: DefaultDecayConfig = {
       deceleration: 0.998,
