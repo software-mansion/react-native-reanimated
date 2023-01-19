@@ -310,8 +310,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
         view, parentViewManager, parentTag, view.getId(), x, y, width, height, positionIsAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
-    props.remove(Snapshot.GLOBAL_ORIGIN_X);
-    props.remove(Snapshot.GLOBAL_ORIGIN_Y);
+    props.remove(Snapshot.ABSOLUTE_ORIGIN_X);
+    props.remove(Snapshot.ABSOLUTE_ORIGIN_Y);
     props.remove(Snapshot.WIDTH);
     props.remove(Snapshot.HEIGHT);
 
