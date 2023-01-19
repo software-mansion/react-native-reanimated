@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -15,6 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 public class SharedTransitionManager {
   private final AnimationsManager mAnimationsManager;
@@ -40,8 +43,14 @@ public class SharedTransitionManager {
     mRemovedSharedViews.add(view);
   }
 
-  protected List<View> getCurrentSharedTransitionViews() {
-    return mCurrentSharedTransitionViews;
+  @Nullable
+  protected View getTransitioningView(int tag) {
+    for (View sharedElement : mCurrentSharedTransitionViews) {
+      if (sharedElement.getId() == tag) {
+        return sharedElement;
+      }
+    }
+    return null;
   }
 
   protected void viewsDidLayout() {
@@ -185,8 +194,11 @@ public class SharedTransitionManager {
     if (!mIsSharedTransitionActive) {
       mIsSharedTransitionActive = true;
       ReactContext context = mAnimationsManager.getContext();
-      ViewGroup mainWindow =
-          (ViewGroup) context.getCurrentActivity().getWindow().getDecorView().getRootView();
+      Activity currentActivity = context.getCurrentActivity();
+      if (currentActivity == null) {
+        return;
+      }
+      ViewGroup mainWindow = (ViewGroup) currentActivity.getWindow().getDecorView().getRootView();
       if (mTransitionContainer == null) {
         mTransitionContainer = new ReactViewGroup(context);
       }
@@ -292,6 +304,7 @@ public class SharedTransitionManager {
     }
   }
 
+  @Nullable
   private View findScreen(View view) {
     ViewParent parent = view.getParent();
     while (parent != null) {
@@ -303,6 +316,7 @@ public class SharedTransitionManager {
     return null;
   }
 
+  @Nullable
   private View findStack(View view) {
     ViewParent parent = view.getParent();
     while (parent != null) {

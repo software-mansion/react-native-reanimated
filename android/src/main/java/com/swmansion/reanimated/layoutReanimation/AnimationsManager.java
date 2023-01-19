@@ -555,10 +555,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (mExitingViews.containsKey(tag)) {
       return mExitingViews.get(tag);
     } else {
-      for (View sharedElement : mSharedTransitionManager.getCurrentSharedTransitionViews()) {
-        if (sharedElement.getId() == tag) {
-          return sharedElement;
-        }
+      View view = mSharedTransitionManager.getTransitioningView(tag);
+      if (view != null) {
+        return view;
       }
     }
 
