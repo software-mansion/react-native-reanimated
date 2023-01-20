@@ -317,7 +317,7 @@ public class NativeProxy {
               }
 
               @Override
-              public int findTheOtherForSharedTransition(int tag) {
+              public int findSiblingForSharedView(int tag) {
                 return -1;
               }
 

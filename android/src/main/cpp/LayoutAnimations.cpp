@@ -68,13 +68,13 @@ bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
 
-void LayoutAnimations::setFindTheOtherForSharedTransition(
-    FindTheOtherForSharedTransitionBlock findTheOtherForSharedTransitionBlock) {
-  findTheOtherForSharedTransitionBlock_ = findTheOtherForSharedTransitionBlock;
+void LayoutAnimations::setFindSiblingForSharedView(
+    FindSiblingForSharedViewBlock findSiblingForSharedViewBlock) {
+  findSiblingForSharedViewBlock_ = findSiblingForSharedViewBlock;
 }
 
-int LayoutAnimations::findTheOtherForSharedTransition(int tag) {
-  return findTheOtherForSharedTransitionBlock_(tag);
+int LayoutAnimations::findSiblingForSharedView(int tag) {
+  return findSiblingForSharedViewBlock_(tag);
 }
 
 void LayoutAnimations::registerNatives() {
@@ -91,8 +91,8 @@ void LayoutAnimations::registerNatives() {
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),
       makeNativeMethod(
-          "findTheOtherForSharedTransition",
-          LayoutAnimations::findTheOtherForSharedTransition),
+          "findSiblingForSharedView",
+          LayoutAnimations::findSiblingForSharedView),
   });
 }
 }; // namespace reanimated

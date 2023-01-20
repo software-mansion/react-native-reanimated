@@ -91,14 +91,15 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-int LayoutAnimationsManager::findTheOtherForSharedTransition(int tag) {
+int LayoutAnimationsManager::findSiblingForSharedView(int tag) {
+  /*
+    The top screen on the stack triggers the animation, so we need to find
+    the sibling view registered in the past. That's why we look backward.
+   */
   for (auto const &[key, group] : sharedTransitionGroups_) {
     auto position = std::find(group.begin(), group.end(), tag);
-    if (position != group.end()) {
-      int index = position - group.begin();
-      if (index > 0) {
-        return group[index - 1]; // get one before
-      }
+    if (position != group.end() && position != group.begin()) {
+      return *std::prev(position);
     }
   }
   return -1;

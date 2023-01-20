@@ -243,12 +243,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       return;
     }
     try {
-      ViewManager viewManager = this.resolveViewManager(tag);
+      ViewManager viewManager = resolveViewManager(tag);
       String viewManagerName = viewManager.getName();
       View container = resolveView(parentTag);
       if (container != null
           && viewManagerName.equals("RNSScreen")
-          && this.mReaLayoutAnimator != null) {
+          && mReaLayoutAnimator != null) {
         ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
       }
     } catch (IllegalViewOperationException e) {
@@ -280,15 +280,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     }
 
     // we don't want layout animations in native-stack since it is currently buggy there
+    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
       if (tagsToDelete == null) {
-        int screensCount = viewGroup.getChildCount();
-        if (screensCount > 0) {
-          View screen = ((ViewGroup)viewGroup.getChildAt(0)).getChildAt(0);
-          tryToDoSnapshots(screen);
-        }
+        animationsManager.doSnapshotForTopScreenViews(viewGroup);
       } else {
-        maybeNotifyAboutViewsRemoving(tagsToDelete);
+        animationsManager.notifyAboutViewsRemoving(tagsToDelete);
       }
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
       return;
@@ -342,7 +339,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         pendingTags.clear();
       }
     }
-    maybeNotifyAboutViewsRemoving(tagsToDelete);
+    animationsManager.notifyAboutViewsRemoving(tagsToDelete);
     super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
@@ -351,20 +348,6 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       }
     }
     super.manageChildren(tag, null, null, tagsToDelete);
-  }
-
-  private void maybeNotifyAboutViewsRemoving(int[] tagsToDelete) {
-    if (tagsToDelete != null) {
-      AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
-      animationsManager.visitTreeForTags(tagsToDelete, false);
-      animationsManager.viewsDidRemoved();
-      animationsManager.visitTreeForTags(tagsToDelete, true);
-    }
-  }
-
-  private void tryToDoSnapshots(View screen) {
-    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
-    animationsManager.visitTreeAndMakeSnapshot(screen);
   }
 
   public void publicDropView(View view) {

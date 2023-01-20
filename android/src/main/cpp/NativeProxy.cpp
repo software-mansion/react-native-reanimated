@@ -232,11 +232,13 @@ void NativeProxy::installJSIBindings(
       std::make_shared<AndroidErrorHandler>(scheduler_);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
-  auto progressLayoutAnimation = [this, wrt](
-                                     int tag, const jsi::Object &newProps, bool isSharedTransition) {
-    auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
-    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, newPropsJNI, isSharedTransition);
-  };
+  auto progressLayoutAnimation =
+      [this, wrt](
+          int tag, const jsi::Object &newProps, bool isSharedTransition) {
+        auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
+        this->layoutAnimations->cthis()->progressLayoutAnimation(
+            tag, newPropsJNI, isSharedTransition);
+      };
 
   auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
     this->layoutAnimations->cthis()->endLayoutAnimation(
@@ -370,12 +372,11 @@ void NativeProxy::installJSIBindings(
             tag);
       });
 
-  layoutAnimations->cthis()->setFindTheOtherForSharedTransition(
-      [weakModule](int tag) {
-        return weakModule.lock()
-            ->layoutAnimationsManager()
-            .findTheOtherForSharedTransition(tag);
-      });
+  layoutAnimations->cthis()->setFindSiblingForSharedView([weakModule](int tag) {
+    return weakModule.lock()
+        ->layoutAnimationsManager()
+        .findSiblingForSharedView(tag);
+  });
 
   runtime_->global().setProperty(
       *runtime_,
