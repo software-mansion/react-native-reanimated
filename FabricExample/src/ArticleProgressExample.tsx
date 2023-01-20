@@ -35,13 +35,13 @@ export default function ArticleProgressExample() {
     const scrollViewHeightOffset =
       (measuredScroll.height / maxOffset) * scrollHandler.value;
 
-    return {
-      width: Math.max(
-        ((scrollHandler.value + scrollViewHeightOffset) / measuredText.height) *
-          measuredScroll.width,
-        0
-      ),
-    };
+    const width = Math.max(
+      ((scrollHandler.value + scrollViewHeightOffset) / measuredText.height) *
+        measuredScroll.width,
+      0
+    );
+
+    return { width };
   }, []);
 
   return (
