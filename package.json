@@ -77,7 +77,6 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
-    "convert-source-map": "^1.7.0",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "setimmediate": "^1.0.5",
@@ -122,6 +121,7 @@
     "jest": "^27.5.1",
     "lint-staged": "^11.2.0",
     "madge": "^5.0.1",
+    "metro-react-native-babel-preset": "^0.74.0",
     "prettier": "^2.5.1",
     "react": "17.0.2",
     "react-native": "0.71.0-rc.5",
@@ -161,5 +161,8 @@
     "./lib/reanimated2/core",
     "./lib/reanimated2/js-reanimated/global",
     "./lib/index"
-  ]
+  ],
+  "resolutions": {
+    "@babel/core": "7.20.12"
+  }
 }
