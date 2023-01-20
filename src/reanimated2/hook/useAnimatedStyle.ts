@@ -256,7 +256,7 @@ function styleUpdater(
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    if (shallowEqual(oldValues, newValues)) {
+    if (!shallowEqual(oldValues, newValues)) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
   }
@@ -356,7 +356,7 @@ function jestStyleUpdater(
   // calculate diff
   state.last = newValues;
 
-  if (shallowEqual(oldValues, newValues)) {
+  if (!shallowEqual(oldValues, newValues)) {
     updatePropsJestWrapper(
       viewDescriptors,
       newValues,
