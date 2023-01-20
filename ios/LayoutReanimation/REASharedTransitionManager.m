@@ -129,11 +129,11 @@
       viewTarget = siblingView;
     }
 
-    // check right target screen configuration
+    // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
     if (addedNewScreen) {
       // is under top
-      if (screensCount - 2 < 0) {
+      if (screensCount < 2) {
         continue;
       }
       UIView *viewSourceParentScreen = [self getScreenForView:viewSource];
@@ -225,16 +225,16 @@
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
     UIViewController *viewController = [view valueForKey:@"controller"];
-    [self swizzlMethod:@selector(viewDidLayoutSubviews)
-                  with:@selector(swizzled_viewDidLayoutSubviews)
-              forClass:[viewController class]];
-    [self swizzlMethod:@selector(notifyWillDisappear)
-                  with:@selector(swizzled_notifyWillDisappear)
-              forClass:[view class]];
+    [self swizzleMethod:@selector(viewDidLayoutSubviews)
+                   with:@selector(swizzled_viewDidLayoutSubviews)
+               forClass:[viewController class]];
+    [self swizzleMethod:@selector(notifyWillDisappear)
+                   with:@selector(swizzled_notifyWillDisappear)
+               forClass:[view class]];
   });
 }
 
-- (void)swizzlMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
+- (void)swizzleMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
 {
   Class class = [self class];
   Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
@@ -314,7 +314,7 @@
       for (UIView *child in stack.reactSubviews) {
         [_animationManager visitTree:child
                                block:^int(id<RCTComponent> _Nonnull view) {
-                                 [self clearAllSharedConfigsForView:(UIView *)view];
+                                 [self clearAllSharedConfigsForViewTag:view.reactTag];
                                  return false;
                                }];
         [_screenHasObserver removeObject:child.reactTag];
@@ -336,7 +336,7 @@
 - (BOOL)isScreen:(UIView *)screen onTopOfStack:(UIView *)stack
 {
   int screenCount = stack.reactSubviews.count;
-  return screenCount > 0 && screen == stack.reactSubviews[screenCount - 1];
+  return screenCount > 0 && screen == stack.reactSubviews.lastObject;
 }
 
 - (BOOL)isRemovedFromHigherStack:(UIView *)screen
@@ -357,18 +357,18 @@
 
 - (void)runSharedTransitionForSharedViewsOnScreen:(UIView *)screen
 {
-  NSMutableArray<UIView *> *removedView = [NSMutableArray new];
+  NSMutableArray<UIView *> *removedViews = [NSMutableArray new];
   [_animationManager visitTree:screen
                          block:^int(id<RCTComponent> view) {
                            if ([self->_animationManager hasAnimationForTag:view.reactTag
                                                                       type:@"sharedElementTransition"]) {
-                             [removedView addObject:(UIView *)view];
+                             [removedViews addObject:(UIView *)view];
                            }
                            return false;
                          }];
-  BOOL startedAnimation = [self setupSyncSharedTransitionForViews:removedView];
+  BOOL startedAnimation = [self setupSyncSharedTransitionForViews:removedViews];
   if (startedAnimation) {
-    for (UIView *view in removedView) {
+    for (UIView *view in removedViews) {
       [_animationManager clearAnimationConfigForTag:view.reactTag];
     }
   }
@@ -400,7 +400,7 @@
 
 - (void)setupTransitionContainer
 {
-  if (_isSharedTransitionActive == NO) {
+  if (!_isSharedTransitionActive) {
     _isSharedTransitionActive = YES;
     UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
     if (_transitionContainer == nil) {
@@ -487,15 +487,6 @@
 - (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView
 {
   _findSiblingForSharedView = findSiblingForSharedView;
-}
-
-- (void)clearAllSharedConfigsForView:(UIView *)view
-{
-  NSNumber *viewTag = view.reactTag;
-  if (viewTag != nil) {
-    [_snapshotRegistry removeObjectForKey:viewTag];
-    [_animationManager clearAnimationConfigForTag:viewTag];
-  }
 }
 
 - (void)clearAllSharedConfigsForViewTag:(NSNumber *)viewTag

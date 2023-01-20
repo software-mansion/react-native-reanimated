@@ -165,8 +165,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
                                   forTag:(NSNumber *)tag
                       isSharedTransition:(BOOL)isSharedTransition
 {
-  NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
+  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
   [self setNewProps:[newStyle mutableCopy]
                   forView:[self viewForTag:tag]
         withComponentData:componentData
@@ -184,8 +184,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view
 {
-  NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
+  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
   [self setNewProps:newProps forView:view withComponentData:componentData convertFromAbsolute:NO];
 }
 
@@ -459,17 +459,17 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)removeAnimationsFromSubtree:(UIView *)view
 {
-  NSMutableArray<UIView *> *removedView = [NSMutableArray new];
+  NSMutableArray<UIView *> *removedViews = [NSMutableArray new];
   REANodeFind(view, ^int(id<RCTComponent> view) {
     if (self->_hasAnimationForTag(view.reactTag, @"sharedElementTransition")) {
-      [removedView addObject:(UIView *)view];
+      [removedViews addObject:(UIView *)view];
     } else {
       self->_clearAnimationConfigForTag(view.reactTag);
     }
     return false;
   });
-  [_sharedTransitionManager setupSyncSharedTransitionForViews:removedView];
-  for (UIView *view in removedView) {
+  [_sharedTransitionManager setupSyncSharedTransitionForViews:removedViews];
+  for (UIView *view in removedViews) {
     self->_clearAnimationConfigForTag(view.reactTag);
   }
 }

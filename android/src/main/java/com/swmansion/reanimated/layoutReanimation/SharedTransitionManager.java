@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -69,8 +70,13 @@ public class SharedTransitionManager {
   protected void doSnapshotForTopScreenViews(ViewGroup stack) {
     int screensCount = stack.getChildCount();
     if (screensCount > 0) {
-      View screen = ((ViewGroup) stack.getChildAt(0)).getChildAt(0);
-      visitTreeAndMakeSnapshot(screen);
+      View firstStackChild = stack.getChildAt(0);
+      if (firstStackChild instanceof ViewGroup) {
+        View screen = ((ViewGroup) firstStackChild).getChildAt(0);
+        visitTreeAndMakeSnapshot(screen);
+      } else {
+        Log.e("[Reanimated]", "Unable to recognize screen on stack.");
+      }
     }
   }
 
@@ -144,23 +150,23 @@ public class SharedTransitionManager {
           (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
       int screensCount = stackViewGroupManager.getChildCount(stack);
 
-      if (screensCount - 2 < 0) {
+      if (screensCount < 2) {
         continue;
       }
 
       View topScreen = stackViewGroupManager.getChildAt(stack, screensCount - 1);
       View secondScreen = stackViewGroupManager.getChildAt(stack, screensCount - 2);
-      boolean isRightConfiguration;
+      boolean isValidConfiguration;
       if (addedNewScreen) {
-        isRightConfiguration =
+        isValidConfiguration =
             secondScreen.getId() == viewSourceScreen.getId()
                 && topScreen.getId() == viewTargetScreen.getId();
       } else {
-        isRightConfiguration =
+        isValidConfiguration =
             topScreen.getId() == viewSourceScreen.getId()
                 && secondScreen.getId() == viewTargetScreen.getId();
       }
-      if (!isRightConfiguration) {
+      if (!isValidConfiguration) {
         continue;
       }
 
@@ -192,11 +198,11 @@ public class SharedTransitionManager {
       if (currentActivity == null) {
         return;
       }
-      ViewGroup mainWindow = (ViewGroup) currentActivity.getWindow().getDecorView().getRootView();
+      ViewGroup rootView = (ViewGroup) currentActivity.getWindow().getDecorView().getRootView();
       if (mTransitionContainer == null) {
         mTransitionContainer = new ReactViewGroup(context);
       }
-      mainWindow.addView(mTransitionContainer);
+      rootView.addView(mTransitionContainer);
       mTransitionContainer.bringToFront();
     }
   }
@@ -374,6 +380,7 @@ public class SharedTransitionManager {
       return;
     }
     ViewGroup viewGroup = (ViewGroup) view;
+    makeSnapshot(view);
     for (int i = 0; i < viewGroup.getChildCount(); i++) {
       View child = viewGroup.getChildAt(i);
       visitTreeAndMakeSnapshot(child);

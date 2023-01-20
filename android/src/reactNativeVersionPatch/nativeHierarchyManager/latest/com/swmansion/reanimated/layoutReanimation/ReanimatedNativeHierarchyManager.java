@@ -243,12 +243,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       return;
     }
     try {
-      ViewManager viewManager = this.resolveViewManager(tag);
+      ViewManager viewManager = resolveViewManager(tag);
       String viewManagerName = viewManager.getName();
       View container = resolveView(parentTag);
       if (container != null
           && viewManagerName.equals("RNSScreen")
-          && this.mReaLayoutAnimator != null) {
+          && mReaLayoutAnimator != null) {
         ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
       }
     } catch (IllegalViewOperationException e) {
