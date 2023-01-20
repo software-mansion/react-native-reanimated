@@ -161,5 +161,8 @@
     "./lib/reanimated2/core",
     "./lib/reanimated2/js-reanimated/global",
     "./lib/index"
-  ]
+  ],
+  "resolutions": {
+    "@babel/core": "7.20.12"
+  }
 }
