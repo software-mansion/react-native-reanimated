@@ -272,7 +272,10 @@ function jestStyleUpdater(
 ): void {
   'worklet';
   const animations: AnimatedStyle = state.animations ?? {};
+  // in jest _WORKLET is never set, but we rely on it in inline styles
+  global._WORKLET = true;
   const newValues = updater() ?? {};
+  global._WORKLET = false;
   const oldValues = state.last;
 
   // extract animated props

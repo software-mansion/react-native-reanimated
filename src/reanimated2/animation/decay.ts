@@ -48,7 +48,7 @@ export function withDecay(
     functionName: 'withDecay',
     // eslint-disable-next-line prefer-rest-params
     functionArguments: [...arguments],
-    animatedArgumentsIndices: [0],
+    animatedArgumentsIndices: [],
   };
 
   return defineAnimation<DecayAnimation>(0, animationFunctionCall, () => {

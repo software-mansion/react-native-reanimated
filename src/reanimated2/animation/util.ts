@@ -26,6 +26,7 @@ import {
   AnimationFunctionCall,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
+import { isJest } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
 
@@ -278,7 +279,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !NativeReanimatedModule.native) {
+  if (_WORKLET || (!NativeReanimatedModule.native && !isJest())) {
     return create();
   }
   // @ts-ignore: eslint-disable-line
