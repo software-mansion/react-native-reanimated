@@ -7,7 +7,7 @@ var objX = {
 };
 var _worklet_5359970077727_init_data = {
   code: \\"function f(){const{x,objX}=this._closure;return{res:x+objX.x};}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var f = function () {
@@ -35,7 +35,7 @@ var f = function () {
 exports[`babel plugin doesn't capture globals 1`] = `
 "var _worklet_13298016111221_init_data = {
   code: \\"function f(){console.log('test');}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var f = function () {
@@ -70,7 +70,7 @@ exports[`babel plugin doesn't transform standard callback functions 1`] = `
 exports[`babel plugin doesn't transform string literals 1`] = `
 "var _worklet_9810417751380_init_data = {
   code: \\"function foo(x){const bar='worklet';const baz=\\\\\\"worklet\\\\\\";}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -152,7 +152,7 @@ exports[`babel plugin supports SequenceExpression 1`] = `
 exports[`babel plugin supports SequenceExpression, many arguments 1`] = `
 "var _worklet_4434179069699_init_data = {
   code: \\"function onStart(){}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 function App() {
@@ -175,7 +175,7 @@ function App() {
 exports[`babel plugin supports SequenceExpression, with objectHook 1`] = `
 "var _worklet_4434179069699_init_data = {
   code: \\"function onStart(){}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 function App() {
@@ -198,7 +198,7 @@ function App() {
 exports[`babel plugin supports SequenceExpression, with worklet 1`] = `
 "var _worklet_4434179069699_init_data = {
   code: \\"function onStart(){}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 function App() {
@@ -221,7 +221,7 @@ function App() {
 exports[`babel plugin supports SequenceExpression, with worklet closure 1`] = `
 "var _worklet_16676723780973_init_data = {
   code: \\"function onStart(){const{obj}=this._closure;const a=obj.a;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 function App() {
@@ -255,7 +255,7 @@ exports[`babel plugin supports recursive calls 1`] = `
 "var a = 1;
 var _worklet_2022702330805_init_data = {
   code: \\"function foo(t){const foo=this._recur;const{a}=this._closure;if(t>0){return a+foo(t-1);}}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -286,7 +286,7 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
 
 var _worklet_16669311443114_init_data = {
   code: \\"function anonymous(){const{offset}=this._closure;return{transform:[{translateX:offset.value*255}]};}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 function Box() {
@@ -324,7 +324,7 @@ function Box() {
 exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `
 "var _worklet_3161057533258_init_data = {
   code: \\"function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -346,7 +346,7 @@ var foo = function () {
 exports[`babel plugin transforms spread operator in worklets for function arguments 1`] = `
 "var _worklet_9866931756941_init_data = {
   code: \\"function foo(...args){console.log(args);}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -375,7 +375,7 @@ var _toConsumableArray2 = _interopRequireDefault(require(\\"@babel/runtime/helpe
 
 var _worklet_2015887751437_init_data = {
   code: \\"function foo(arg){console.log(...arg);}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -398,7 +398,7 @@ var foo = function () {
 exports[`babel plugin transforms spread operator in worklets for objects 1`] = `
 "var _worklet_792186851025_init_data = {
   code: \\"function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -428,7 +428,7 @@ var foo = function () {
 exports[`babel plugin workletizes ArrowFunctionExpression 1`] = `
 "var _worklet_16347365292089_init_data = {
   code: \\"function anonymous(x){return x+2;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -449,7 +449,7 @@ var foo = function () {
 exports[`babel plugin workletizes FunctionDeclaration 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: \\"function foo(x){return x+2;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -476,7 +476,7 @@ var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/cre
 
 var _worklet_10436985806815_init_data = {
   code: \\"function get(){const{x}=this._closure;return x+2;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var Foo = function () {
@@ -509,7 +509,7 @@ var Foo = function () {
 exports[`babel plugin workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_9645206935615_init_data = {
   code: \\"function anonymous(){return{width:50};}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new Error(), 1, -20];
@@ -531,7 +531,7 @@ var animatedStyle = useAnimatedStyle(function () {
 exports[`babel plugin workletizes hook wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_6275510763626_init_data = {
   code: \\"function foo(){return{width:50};}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new Error(), 1, -20];
@@ -553,7 +553,7 @@ var animatedStyle = useAnimatedStyle(function () {
 exports[`babel plugin workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_9645206935615_init_data = {
   code: \\"function anonymous(){return{width:50};}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new Error(), 1, -20];
@@ -581,7 +581,7 @@ var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/cre
 
 var _worklet_16974800582491_init_data = {
   code: \\"function bar(x){return x+2;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var Foo = function () {
@@ -612,7 +612,7 @@ var Foo = function () {
 exports[`babel plugin workletizes named FunctionExpression 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: \\"function foo(x){return x+2;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
@@ -633,7 +633,7 @@ var foo = function () {
 exports[`babel plugin workletizes object hook wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: \\"function anonymous(event){console.log(event);}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -655,7 +655,7 @@ useAnimatedGestureHandler({
 exports[`babel plugin workletizes object hook wrapped ObjectMethod automatically 1`] = `
 "var _worklet_338158776260_init_data = {
   code: \\"function onStart(event){console.log(event);}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -677,7 +677,7 @@ useAnimatedGestureHandler({
 exports[`babel plugin workletizes object hook wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_338158776260_init_data = {
   code: \\"function onStart(event){console.log(event);}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -699,7 +699,7 @@ useAnimatedGestureHandler({
 exports[`babel plugin workletizes object hook wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: \\"function anonymous(event){console.log(event);}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -723,15 +723,15 @@ exports[`babel plugin workletizes possibly chained gesture object callback funct
 
 var _worklet_15393478329680_init_data = {
   code: \\"function anonymous(){console.log('onBegin');}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var _worklet_12748187344900_init_data = {
   code: \\"function anonymous(_event){console.log('onStart');}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var _worklet_232586479291_init_data = {
   code: \\"function anonymous(_event,_success){console.log('onEnd');}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(function () {
@@ -782,7 +782,7 @@ var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/cre
 
 var _worklet_16974800582491_init_data = {
   code: \\"function bar(x){return x+2;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var Foo = function () {
@@ -813,7 +813,7 @@ var Foo = function () {
 exports[`babel plugin workletizes unnamed FunctionExpression 1`] = `
 "var _worklet_16347365292089_init_data = {
   code: \\"function anonymous(x){return x+2;}\\",
-  location: \\"/Users/angelikaserwa/Projects/react-native-reanimated/jest tests fixture\\"
+  location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
