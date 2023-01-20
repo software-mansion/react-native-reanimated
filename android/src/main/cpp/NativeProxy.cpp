@@ -208,28 +208,27 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       ReanimatedRuntime::make(runtime_, jsQueue);
 
+  auto &rt = *runtime_;
+
   auto workletRuntimeValue =
-      runtime_->global()
-          .getProperty(*runtime_, "ArrayBuffer")
-          .asObject(*runtime_)
-          .asFunction(*runtime_)
-          .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void *))});
+      rt.global()
+          .getPropertyAsObject(rt, "ArrayBuffer")
+          .asFunction(rt)
+          .callAsConstructor(rt, {static_cast<double>(sizeof(void *))});
   uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
-      workletRuntimeValue.getObject(*runtime_).getArrayBuffer(*runtime_).data(
-          *runtime_));
+      workletRuntimeValue.getObject(rt).getArrayBuffer(rt).data(rt));
   workletRuntimeData[0] = reinterpret_cast<uintptr_t>(animatedRuntime.get());
 
-  runtime_->global().setProperty(
-      *runtime_, "_WORKLET_RUNTIME", workletRuntimeValue);
+  rt.global().setProperty(rt, "_WORKLET_RUNTIME", workletRuntimeValue);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", true);
+  rt.global().setProperty(rt, "_IS_FABRIC", true);
 #else
-  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
+  rt.global().setProperty(rt, "_IS_FABRIC", false);
 #endif
 
-  auto version = getReanimatedVersionString(*runtime_);
-  runtime_->global().setProperty(*runtime_, "_REANIMATED_VERSION_CPP", version);
+  auto version = getReanimatedVersionString(rt);
+  rt.global().setProperty(rt, "_REANIMATED_VERSION_CPP", version);
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
@@ -373,10 +372,10 @@ void NativeProxy::installJSIBindings(
             tag);
       });
 
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(*runtime_, module));
+  rt.global().setProperty(
+      rt,
+      jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
+      jsi::Object::createFromHostObject(rt, module));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
