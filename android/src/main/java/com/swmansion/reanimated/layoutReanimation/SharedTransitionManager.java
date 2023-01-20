@@ -100,6 +100,11 @@ public class SharedTransitionManager {
   }
 
   private void sortViewsByTags(List<View> views) {
+    /*
+      All shared views during the transition have the same parent. It is problematic if parent
+      view and their children are in the same transition. To keep the valid order in the z-axis,
+      we need to sort views by tags. Parent tag is lower than children tags.
+    */
     Collections.sort(views, (v1, v2) -> Integer.compare(v2.getId(), v1.getId()));
   }
 

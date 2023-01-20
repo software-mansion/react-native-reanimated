@@ -86,6 +86,11 @@
 
 - (NSArray *)sortViewsByTags:(NSArray *)views
 {
+  /*
+    All shared views during the transition have the same parent. It is problematic if parent
+    view and their children are in the same transition. To keep the valid order in the z-axis,
+    we need to sort views by tags. Parent tag is lower than children tags.
+  */
   return [views sortedArrayUsingComparator:^NSComparisonResult(UIView *view1, UIView *view2) {
     return [view2.reactTag compare:view1.reactTag];
   }];
