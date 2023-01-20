@@ -1,7 +1,13 @@
 import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest } from './PlatformChecker';
-import { runOnUI, runOnJS } from './threads';
+import {
+  runOnUI,
+  runOnJS,
+  setupSetImmediate,
+  flushImmediates,
+  runOnUIImmediately,
+} from './threads';
 
 // callGuard is only used with debug builds
 function callGuardDEV<T extends Array<any>, U>(
@@ -87,26 +93,6 @@ Possible solutions are:
   }
 }
 
-function setupSetImmediate() {
-  'worklet';
-
-  let immediateCalbacks: Array<() => void> = [];
-
-  // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.setImmediate = (callback: () => void): number => {
-    immediateCalbacks.push(callback);
-    return -1;
-  };
-
-  global.__flushImmediates = () => {
-    for (let index = 0; index < immediateCalbacks.length; index += 1) {
-      // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
-      immediateCalbacks[index]();
-    }
-    immediateCalbacks = [];
-  };
-}
-
 function setupRequestAnimationFrame() {
   'worklet';
 
@@ -120,7 +106,7 @@ function setupRequestAnimationFrame() {
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
     currentCallbacks.forEach((f) => f(frameTimestamp));
-    global.__flushImmediates();
+    flushImmediates();
   };
 
   global.requestAnimationFrame = (
@@ -150,8 +136,19 @@ export function initializeUIRuntime() {
 
   const IS_JEST = isJest();
 
+  if (IS_JEST) {
+    // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
+    // the method directly using setTimeout, therefore the callback doesn't get the
+    // expected timestamp as the only argument: https://github.com/facebook/react-native/blob/main/jest/setup.js#L28
+    // We override this setup here to make sure that callbacks get the proper timestamps
+    // when executed. FOr non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
+    global.requestAnimationFrame = (callback: (timestamp: number) => void) => {
+      return setTimeout(() => callback(performance.now()), 0);
+    };
+  }
+
   const capturableConsole = console;
-  runOnUI(() => {
+  runOnUIImmediately(() => {
     'worklet';
     // setup error handler
     global.ErrorUtils = {

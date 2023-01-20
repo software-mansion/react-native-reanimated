@@ -1,4 +1,4 @@
-import { runOnUI } from '../core';
+import { runOnUIImmediately } from '../threads';
 
 type CallbackDetails = {
   callback: (frameInfo: FrameInfo) => void;
@@ -24,7 +24,7 @@ export interface FrameCallbackRegistryUI {
   manageStateFrameCallback: (callbackId: number, state: boolean) => void;
 }
 
-export const prepareUIRegistry = runOnUI(() => {
+export const prepareUIRegistry = runOnUIImmediately(() => {
   'worklet';
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {
