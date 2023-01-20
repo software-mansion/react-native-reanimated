@@ -150,7 +150,8 @@ declare module 'react-native-reanimated' {
             | AnimatedNode<
                 // allow `number` where `string` normally is to support colors
                 S[K] extends ColorValue | undefined ? S[K] | number : S[K]
-              >;
+              >
+            | SharedValue<AnimatableValue>;
     };
 
     export type StylesOrDefault<T> = 'style' extends keyof T
