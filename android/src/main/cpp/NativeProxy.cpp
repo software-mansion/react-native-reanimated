@@ -373,9 +373,12 @@ void NativeProxy::installJSIBindings(
       });
 
   layoutAnimations->cthis()->setFindSiblingForSharedView([weakModule](int tag) {
-    return weakModule.lock()
-        ->layoutAnimationsManager()
-        .findSiblingForSharedView(tag);
+    if (auto module = weakModule.lock()) {
+      return module->layoutAnimationsManager().findSiblingForSharedView(tag);
+    } else {
+      return -1;
+    }
+    w
   });
 
   runtime_->global().setProperty(

@@ -21,8 +21,7 @@ void LayoutAnimationsManager::configureAnimation(
   } else if (type == "sharedElementTransition") {
     sharedTransitionAnimations_[tag] = config;
     sharedTransitionGroups_.try_emplace(sharedTransitionTag);
-    auto &group = sharedTransitionGroups_[sharedTransitionTag];
-    group.push_back(tag);
+    sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
   }
 }
 
@@ -31,13 +30,13 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     const std::string &type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == "entering") {
-    return collection::mapContains(enteringAnimations_, tag);
+    return collection::contains(enteringAnimations_, tag);
   } else if (type == "exiting") {
-    return collection::mapContains(exitingAnimations_, tag);
+    return collection::contains(exitingAnimations_, tag);
   } else if (type == "layout") {
-    return collection::mapContains(layoutAnimations_, tag);
+    return collection::contains(layoutAnimations_, tag);
   } else if (type == "sharedElementTransition") {
-    return collection::mapContains(sharedTransitionAnimations_, tag);
+    return collection::contains(sharedTransitionAnimations_, tag);
   }
   return false;
 }
@@ -96,7 +95,7 @@ int LayoutAnimationsManager::findSiblingForSharedView(int tag) {
     The top screen on the stack triggers the animation, so we need to find
     the sibling view registered in the past. That's why we look backward.
    */
-  for (auto const &[key, group] : sharedTransitionGroups_) {
+  for (auto const &[_, group] : sharedTransitionGroups_) {
     auto position = std::find(group.begin(), group.end(), tag);
     if (position != group.end() && position != group.begin()) {
       return *std::prev(position);

@@ -289,7 +289,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       ViewManager viewManager,
       ViewManager parentViewManager,
       Integer parentTag,
-      boolean positionIsAbsolute) {
+      boolean isPositionAbsolute) {
     float x =
         (props.get(Snapshot.ORIGIN_X) != null)
             ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
@@ -307,7 +307,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
             ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
             : PixelUtil.toDIPFromPixel(view.getHeight());
     updateLayout(
-        view, parentViewManager, parentTag, view.getId(), x, y, width, height, positionIsAbsolute);
+        view, parentViewManager, parentTag, view.getId(), x, y, width, height, isPositionAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
     props.remove(Snapshot.ABSOLUTE_ORIGIN_X);
@@ -358,7 +358,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       float yf,
       float widthf,
       float heightf,
-      boolean positionIsAbsolute) {
+      boolean isPositionAbsolute) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
@@ -413,7 +413,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
-      if (positionIsAbsolute) {
+      if (isPositionAbsolute) {
         Point newPoint = new Point(x, y);
         View viewToUpdateParent = (View) viewToUpdate.getParent();
         Point convertedPoint = convertAbsoluteToParentRelative(newPoint, viewToUpdateParent);
@@ -580,11 +580,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private Point convertAbsoluteToParentRelative(Point fromPoint, View parentView) {
-    int[] toCord = {0, 0};
+    int[] toPoint = {0, 0};
     if (parentView != null) {
-      parentView.getLocationOnScreen(toCord);
+      parentView.getLocationOnScreen(toPoint);
     }
-    return new Point(fromPoint.x - toCord[0], fromPoint.y - toCord[1]);
+    return new Point(fromPoint.x - toPoint[0], fromPoint.y - toPoint[1]);
   }
 
   public void viewsDidLayout() {
