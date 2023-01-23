@@ -302,8 +302,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSNumber *parentTag = _exitingParentTags[child.reactTag];
   [_exitingParentTags removeObjectForKey:child.reactTag];
 
-  UIViewController *childController = child.reactViewController;
-
   while ((parent != nil || parentTag != nil) && ![parent isKindOfClass:[RCTRootView class]]) {
     UIView *view = parent;
     NSNumber *viewTag = parentTag;
