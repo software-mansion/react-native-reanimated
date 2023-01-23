@@ -33,6 +33,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary<NSNumber *, REASnapshot *> *_enteringViewTargetValues;
   NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
   NSMutableDictionary<NSNumber *, NSNumber *> *_exitingSubviewsCountMap;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_exitingParentTags;
   NSMutableSet<NSNumber *> *_ancestorsToRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
@@ -59,6 +60,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _exitingViews = [NSMutableDictionary new];
     _exitingSubviewsCountMap = [NSMutableDictionary new];
     _ancestorsToRemove = [NSMutableSet new];
+    _exitingParentTags = [NSMutableDictionary new];
     _enteringViews = [NSMutableSet new];
     _enteringViewTargetValues = [NSMutableDictionary new];
 
@@ -273,11 +275,22 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)registerExitingAncestors:(UIView *)child exitingSubviewsCount:(int)exitingSubviewsCount
 {
+  NSNumber *childTag = child.reactTag;
   UIView *parent = child.superview;
-  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
-    if (parent.reactTag != nil) {
+
+  UIViewController *childController = child.reactViewController;
+
+  // only register ancestors whose `reactViewController` is the same as `child`'s.
+  // The idea is that, if a whole ViewController is unmounted, we won't want to run
+  // the exiting animation since all the views will disappear immediately anyway
+  while (parent != nil && parent.reactViewController == childController &&
+         ![parent isKindOfClass:[RCTRootView class]]) {
+    NSNumber *parentTag = parent.reactTag;
+    if (parentTag != nil) {
       _exitingSubviewsCountMap[parent.reactTag] =
           @([_exitingSubviewsCountMap[parent.reactTag] intValue] + exitingSubviewsCount);
+      _exitingParentTags[childTag] = parentTag;
+      childTag = parentTag;
     }
     parent = parent.superview;
   }
@@ -286,12 +299,37 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)maybeDropAncestors:(UIView *)child
 {
   UIView *parent = child.superview;
-  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+  NSNumber *parentTag = _exitingParentTags[child.reactTag];
+  [_exitingParentTags removeObjectForKey:child.reactTag];
+
+  while ((parent != nil || parentTag != nil) && ![parent isKindOfClass:[RCTRootView class]]) {
     UIView *view = parent;
+    NSNumber *viewTag = parentTag;
+    parentTag = _exitingParentTags[viewTag];
+    UIView *viewByTag = [self viewForTag:viewTag];
     parent = view.superview;
+
+    if (view == nil) {
+      if (viewByTag == nil) {
+        // the view was already removed from both native and RN hierarchies
+        // we can safely forget that it had any animated children
+        [_ancestorsToRemove removeObject:viewTag];
+        [_exitingSubviewsCountMap removeObjectForKey:viewTag];
+        [_exitingParentTags removeObjectForKey:viewTag];
+        continue;
+      }
+      // the child was dettached from view, but view is still
+      // in the native and RN hierarchy
+      view = viewByTag;
+    }
+
     if (view.reactTag == nil) {
+      // we skip over views with no tag when registering parent tags,
+      // so we shouldn't go to the parent of viewTag yet
+      parentTag = viewTag;
       continue;
     }
+
     int trackingCount = [_exitingSubviewsCountMap[view.reactTag] intValue] - 1;
     if (trackingCount <= 0) {
       if ([_ancestorsToRemove containsObject:view.reactTag]) {
@@ -301,6 +339,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
         }
       }
       [_exitingSubviewsCountMap removeObjectForKey:view.reactTag];
+      [_exitingParentTags removeObjectForKey:view.reactTag];
     } else {
       _exitingSubviewsCountMap[view.reactTag] = @(trackingCount);
     }
@@ -313,6 +352,19 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (!view.reactTag) {
     return NO;
   }
+
+  UIViewController *viewController = view.reactViewController;
+
+  // `startAnimationsRecursive:shouldRemoveSubviewsWithoutAnimations:`
+  // is called on a detached view tree, so the `viewController` should be `nil`.
+  // If it's not, we're descending into another `UIViewController`.
+  // We don't want to run animations inside it (since it causes issues with RNScreens),
+  // so instead clean up the subtree and return `NO`.
+  if (viewController != nil) {
+    [self removeAnimationsFromSubtree:view];
+    return NO;
+  }
+
   BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting") || [_exitingViews objectForKey:view.reactTag];
   BOOL hasAnimatedChildren = NO;
   shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
