@@ -40,6 +40,16 @@ NS_ASSUME_NONNULL_BEGIN
   _values[@"globalOriginY"] = _values[@"originY"];
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
+  
+  _values[@"backgroundColor"] = view.backgroundColor;
+  _values[@"opacity"] = @(view.alpha);
+  _values[@"borderRadius"] = @(view.layer.cornerRadius);
+  
+  // source: https://developer.apple.com/documentation/corefoundation/cgaffinetransform?language=objc
+  CGAffineTransform matrix = view.transform;
+  CGPoint viewCenter = view.center;
+  _values[@"translateX"] = @(matrix.a * viewCenter.x + matrix.c * viewCenter.y + matrix.tx);
+  _values[@"translateY"] = @(matrix.b * viewCenter.x + matrix.b * viewCenter.y + matrix.ty);
 
   return self;
 }

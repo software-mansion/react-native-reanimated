@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.view.ViewGroup;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -42,6 +43,9 @@ public class Snapshot {
   public int globalOriginX;
   public int globalOriginY;
   public int topInsetFromParent;
+
+  public double opacity;
+  public int backgroundColor;
 
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
@@ -89,6 +93,9 @@ public class Snapshot {
     width = view.getWidth();
     height = view.getHeight();
     topInsetFromParent = view.getTop();
+    opacity = view.getAlpha();
+    backgroundColor = ((ColorDrawable) view.getBackground()).getColor();
+    view.getb
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
