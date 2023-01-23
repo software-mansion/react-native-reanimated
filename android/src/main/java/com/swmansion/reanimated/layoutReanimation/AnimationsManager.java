@@ -487,6 +487,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
+  public void cancelAnimationsInSubviews(View view) {
+    cancelAnimationsRecursive(view);
+    clearAnimationConfigRecursive(view);
+  }
+
   private void registerExitingAncestors(View view) {
     View parent = (View) view.getParent();
     while (parent != null && !(parent instanceof RootView)) {

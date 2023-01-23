@@ -280,6 +280,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
   UIViewController *childController = child.reactViewController;
 
+  // only register ancestors whose `reactViewController` is the same as `child`'s.
+  // The idea is that, if a whole ViewController is unmounted, we won't want to run
+  // the exiting animation since all the views will disappear immediately anyway
   while (parent != nil && parent.reactViewController == childController &&
          ![parent isKindOfClass:[RCTRootView class]]) {
     NSNumber *parentTag = parent.reactTag;

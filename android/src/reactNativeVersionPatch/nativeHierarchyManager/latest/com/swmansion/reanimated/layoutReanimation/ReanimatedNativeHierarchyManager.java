@@ -126,7 +126,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
-      cancelAnimationsInSubviews(view);
+      mAnimationsManager.cancelAnimationsInSubviews(view);
       super.deleteView(view, listener);
       return;
     }
@@ -144,13 +144,13 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       } catch (IllegalViewOperationException e) {
         // (IllegalViewOperationException) == (vm == null)
         e.printStackTrace();
-        cancelAnimationsInSubviews(view);
+        mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
         return;
       }
       String parentName = screenParentViewManager.getName();
       if (parentName.equals("RNSScreenStack")) {
-        cancelAnimationsInSubviews(view);
+        mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
         return;
       }
@@ -165,16 +165,15 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     return mAnimationsManager.isLayoutAnimationEnabled();
   }
 
-  public void cancelAnimationsInSubviews(View view) {
-    mAnimationsManager.cancelAnimationsRecursive(view);
-    mAnimationsManager.clearAnimationConfigRecursive(view);
+  public AnimationsManager getAnimationsManager() {
+    return mAnimationsManager;
   }
 }
 
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
   private final HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap<>();
   private final HashMap<Integer, Runnable> cleanerCallback = new HashMap<>();
-  private final LayoutAnimationController mReaLayoutAnimator;
+  private final ReaLayoutAnimator mReaLayoutAnimator;
   private final HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
   private boolean initOk = true;
 
@@ -268,7 +267,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (indicesToRemove != null && mReaLayoutAnimator instanceof ReaLayoutAnimator) {
         for (int index : indicesToRemove) {
           View child = viewGroupManager.getChildAt(viewGroup, index);
-          ((ReaLayoutAnimator) mReaLayoutAnimator).cancelAnimationsInSubviews(child);
+          mReaLayoutAnimator.getAnimationsManager().cancelAnimationsInSubviews(child);
         }
       }
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
