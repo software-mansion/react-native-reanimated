@@ -34,6 +34,7 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
                       isSharedTransition:(BOOL)isSharedTransition;
 - (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
+- (void)endAnimationsRecursive:(UIView *)view;
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view;

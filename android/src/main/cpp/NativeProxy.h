@@ -212,7 +212,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
   int subscribeForKeyboardEvents(
-      std::function<void(int, int)> keyboardEventDataUpdater);
+      std::function<void(int, int)> keyboardEventDataUpdater,
+      bool isStatusBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing

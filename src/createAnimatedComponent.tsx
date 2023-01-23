@@ -192,15 +192,17 @@ export default function createAnimatedComponent(
       this._attachAnimatedStyles();
     }
 
+    _getEventViewRef() {
+      // Make sure to get the scrollable node for components that implement
+      // `ScrollResponder.Mixin`.
+      return this._component?.getScrollableNode
+        ? this._component.getScrollableNode()
+        : this._component;
+    }
+
     _attachNativeEvents() {
-      let viewTag = findNodeHandle(this);
-
-      const componentName = Component.displayName || Component.name;
-
-      if (componentName?.endsWith('FlashList') && this._component) {
-        // @ts-ignore it's FlashList specific: https://github.com/Shopify/flash-list/blob/218f314e63806b4fe926741ef73f8b9cd6ebc7eb/src/FlashList.tsx#L824
-        viewTag = findNodeHandle(this._component.recyclerlistview_unsafe);
-      }
+      const node = this._getEventViewRef();
+      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
 
       for (const key in this.props) {
         const prop = this.props[key];

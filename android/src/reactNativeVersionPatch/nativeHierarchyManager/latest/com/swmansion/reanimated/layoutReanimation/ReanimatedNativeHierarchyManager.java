@@ -4,7 +4,9 @@ import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.annotation.Nullable;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -16,6 +18,7 @@ import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;
+
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -125,6 +128,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
+      mAnimationsManager.cancelAnimationsInSubviews(view);
       super.deleteView(view, listener);
       return;
     }
@@ -142,11 +146,13 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       } catch (IllegalViewOperationException e) {
         // (IllegalViewOperationException) == (vm == null)
         e.printStackTrace();
+        mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
         return;
       }
       String parentName = screenParentViewManager.getName();
       if (parentName.equals("RNSScreenStack")) {
+        mAnimationsManager.cancelAnimationsInSubviews(view);
         super.deleteView(view, listener);
         return;
       }
@@ -169,7 +175,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
   private final HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap<>();
   private final HashMap<Integer, Runnable> cleanerCallback = new HashMap<>();
-  private final LayoutAnimationController mReaLayoutAnimator;
+  private final ReaLayoutAnimator mReaLayoutAnimator;
   private final HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
   private boolean initOk = true;
 
@@ -286,6 +292,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         animationsManager.doSnapshotForTopScreenViews(viewGroup);
       } else {
         animationsManager.notifyAboutViewsRemoving(tagsToDelete);
+      }
+      if (indicesToRemove != null && mReaLayoutAnimator instanceof ReaLayoutAnimator) {
+        for (int index : indicesToRemove) {
+          View child = viewGroupManager.getChildAt(viewGroup, index);
+          mReaLayoutAnimator.getAnimationsManager().cancelAnimationsInSubviews(child);
+        }
       }
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
       return;

@@ -38,13 +38,13 @@
     "expo-asset": "^8.2.0",
     "react": "18.2.0",
     "react-dom": "^16.13.1",
-    "react-native": "0.71.0-rc.5",
-    "react-native-gesture-handler": "^2.8.0",
+    "react-native": "0.71.1",
+    "react-native-gesture-handler": "^2.9.0",
     "react-native-pager-view": "^5.4.1",
-    "react-native-safe-area-context": "^4.4.1",
-    "react-native-screens": "^3.18.2",
+    "react-native-safe-area-context": "^4.5.0",
+    "react-native-screens": "^3.19.0",
     "react-native-status-bar-height": "^2.4.0",
-    "react-native-svg": "^13.6.0",
+    "react-native-svg": "^13.7.0",
     "react-native-web": "^0.14.7"
   },
   "devDependencies": {
