@@ -194,7 +194,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
 
-    if (viewManager == null || parentViewManager == null) {
+    if (viewManager == null /*|| parentViewManager == null*/) {
       return;
     }
 

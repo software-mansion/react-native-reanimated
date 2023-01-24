@@ -511,19 +511,12 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)removeAnimationsFromSubtree:(UIView *)view
 {
-  NSMutableArray<UIView *> *removedViews = [NSMutableArray new];
   REANodeFind(view, ^int(id<RCTComponent> view) {
-    if (self->_hasAnimationForTag(view.reactTag, @"sharedElementTransition")) {
-      [removedViews addObject:(UIView *)view];
-    } else {
+    if (!self->_hasAnimationForTag(view.reactTag, @"sharedElementTransition")) {
       self->_clearAnimationConfigForTag(view.reactTag);
     }
     return false;
   });
-  [_sharedTransitionManager setupSyncSharedTransitionForViews:removedViews];
-  for (UIView *view in removedViews) {
-    self->_clearAnimationConfigForTag(view.reactTag);
-  }
 }
 
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before
