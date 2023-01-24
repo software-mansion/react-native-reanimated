@@ -277,7 +277,7 @@ public class SharedTransitionManager {
       Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(view.getId());
       int originY = viewSourcePreviousSnapshot.originY;
       if (findStack(view) == null) {
-        viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.originYByParent;
+        viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.topInsetFromParent;
       }
       Map<String, Object> snapshotMap = viewSourcePreviousSnapshot.toBasicMap();
       Map<String, Object> preparedValues = new HashMap<>();

@@ -296,35 +296,45 @@
     // removed screen from top (removed from stack or covered by another screen)
     bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
     if (stack != nil && !isRemovedInParentStack) {
-      if ([self isScreen:screen outsideStack:stack]) {
-        // screen is removed from React tree ( navigation.navigate(<screenName>) )
-        [self runSharedTransitionForSharedViewsOnScreen:screen];
-      } else if ([self isScreen:screen onTopOfStack:stack]) {
-        // click on button goBack on native header
+      bool shouldRunTransition =
+          [self isScreen:screen
+              outsideStack:stack] // screen is removed from React tree (navigation.navigate(<screenName>))
+          || [self isScreen:screen onTopOfStack:stack]; // click on button goBack on native header
+      if (shouldRunTransition) {
         [self runSharedTransitionForSharedViewsOnScreen:screen];
       } else {
-        [_animationManager visitTree:screen
-                               block:^int(id<RCTComponent> view) {
-                                 if ([self->_animationManager hasAnimationForTag:view.reactTag
-                                                                            type:@"sharedElementTransition"]) {
-                                   REASnapshot *snapshot = [[REASnapshot alloc] init:(UIView *)view
-                                                                          withParent:((UIView *)view).superview];
-                                   self->_snapshotRegistry[view.reactTag] = snapshot;
-                                 }
-                                 return false;
-                               }];
+        [self doSnapshotForScreenViews:screen];
       }
     } else {
       // removed stack
-      for (UIView *child in stack.reactSubviews) {
-        [_animationManager visitTree:child
-                               block:^int(id<RCTComponent> _Nonnull view) {
-                                 [self clearAllSharedConfigsForViewTag:view.reactTag];
-                                 return false;
-                               }];
-        [_screenHasObserver removeObject:child.reactTag];
-      }
+      [self clearConfigForStack:stack];
     }
+  }
+}
+
+- (void)doSnapshotForScreenViews:(UIView *)screen
+{
+  [_animationManager visitTree:screen
+                         block:^int(id<RCTComponent> view) {
+                           NSNumber *viewTag = view.reactTag;
+                           if ([self->_animationManager hasAnimationForTag:viewTag type:@"sharedElementTransition"]) {
+                             REASnapshot *snapshot = [[REASnapshot alloc] init:(UIView *)view
+                                                                    withParent:((UIView *)view).superview];
+                             self->_snapshotRegistry[viewTag] = snapshot;
+                           }
+                           return false;
+                         }];
+}
+
+- (void)clearConfigForStack:(UIView *)stack
+{
+  for (UIView *child in stack.reactSubviews) {
+    [_animationManager visitTree:child
+                           block:^int(id<RCTComponent> _Nonnull view) {
+                             [self clearAllSharedConfigsForViewTag:view.reactTag];
+                             return false;
+                           }];
+    [_screenHasObserver removeObject:child.reactTag];
   }
 }
 

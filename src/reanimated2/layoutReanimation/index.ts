@@ -2,4 +2,4 @@ import './animationsManager';
 export * from './animationBuilder';
 export * from './defaultAnimations';
 export * from './defaultTransitions';
-export * from './sharedTransition';
+export * from './sharedTransitions';

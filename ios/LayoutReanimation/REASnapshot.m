@@ -38,11 +38,8 @@ NS_ASSUME_NONNULL_BEGIN
   _values[@"originYByParent"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height / 2.0];
   _values[@"globalOriginX"] = _values[@"originX"];
   _values[@"globalOriginY"] = _values[@"originY"];
-  _values[@"globalOriginX"] = [NSNumber numberWithDouble:absolutePosition.x - view.bounds.size.width / 2.0];
-  _values[@"globalOriginY"] = [NSNumber numberWithDouble:absolutePosition.y - view.bounds.size.height / 2.0];
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
-  //  UIColor *color = view.backgroundColor;
 
   return self;
 }
