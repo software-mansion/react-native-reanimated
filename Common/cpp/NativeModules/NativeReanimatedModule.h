@@ -52,8 +52,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &callGuard,
       const jsi::Value &valueUnpacker) override;
 
-  jsi::Value makeShareableClone(jsi::Runtime &rt, const jsi::Value &value)
-      override;
+  jsi::Value makeShareableClone(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote) override;
 
   jsi::Value makeSynchronizedDataHolder(
       jsi::Runtime &rt,
@@ -147,7 +149,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
   jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
-      const jsi::Value &keyboardEventContainer) override;
+      const jsi::Value &keyboardEventContainer,
+      const jsi::Value &isStatusBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;

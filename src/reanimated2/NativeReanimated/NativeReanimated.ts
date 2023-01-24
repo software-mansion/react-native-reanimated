@@ -1,5 +1,10 @@
 import { NativeModules } from 'react-native';
-import { ShareableRef, ShareableSyncDataHolderRef } from '../commonTypes';
+import {
+  ShareableRef,
+  ShareableSyncDataHolderRef,
+  Value3D,
+  ValueRotation,
+} from '../commonTypes';
 import { LayoutAnimationFunction } from '../layoutReanimation';
 import { checkVersion } from '../platform-specific/checkVersion';
 
@@ -36,8 +41,14 @@ export class NativeReanimated {
     );
   }
 
-  makeShareableClone<T>(value: T): ShareableRef<T> {
-    return this.InnerNativeModule.makeShareableClone(value);
+  makeShareableClone<T>(
+    value: T,
+    shouldPersistRemote: boolean
+  ): ShareableRef<T> {
+    return this.InnerNativeModule.makeShareableClone(
+      value,
+      shouldPersistRemote
+    );
   }
 
   makeSynchronizedDataHolder<T>(
@@ -64,7 +75,7 @@ export class NativeReanimated {
   registerSensor<T>(
     sensorType: number,
     interval: number,
-    handler: ShareableRef<T>
+    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
     return this.InnerNativeModule.registerSensor(sensorType, interval, handler);
   }
@@ -114,8 +125,14 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  subscribeForKeyboardEvents(handler: ShareableRef<number>): number {
-    return this.InnerNativeModule.subscribeForKeyboardEvents(handler);
+  subscribeForKeyboardEvents(
+    handler: ShareableRef<number>,
+    isStatusBarTranslucent: boolean
+  ): number {
+    return this.InnerNativeModule.subscribeForKeyboardEvents(
+      handler,
+      isStatusBarTranslucent
+    );
   }
 
   unsubscribeFromKeyboardEvents(listenerId: number): void {

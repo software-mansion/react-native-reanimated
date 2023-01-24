@@ -66,7 +66,7 @@ using ConfigurePropsFunction = std::function<void(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps)>;
 using KeyboardEventSubscribeFunction =
-    std::function<int(std::function<void(int, int)>)>;
+    std::function<int(std::function<void(int, int)>, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 
 struct PlatformDepMethodsHolder {

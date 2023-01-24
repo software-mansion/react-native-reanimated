@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class AnimationsManager implements ViewHierarchyObserver {
   private WeakReference<Scheduler> mScheduler;
@@ -193,6 +194,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
 
+    if (viewManager == null) {
+      return;
+    }
+
     setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
   }
 
@@ -219,9 +224,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       maybeDropAncestors(view);
 
       ViewGroup parent = (ViewGroup) view.getParent();
-      if (parent != null) {
-        removeView(view, parent);
-      }
+      removeView(view, parent);
     }
     mSharedTransitionManager.finishSharedAnimation(tag);
   }
@@ -434,6 +437,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private boolean removeOrAnimateExitRecursive(View view, ViewGroup parent, boolean shouldRemove) {
     int tag = view.getId();
+    ViewManager viewManager = resolveViewManager(tag);
+
+    if (viewManager != null && viewManager.getName().equals("RNSScreenStack")) {
+      cancelAnimationsRecursive(view);
+      return false;
+    }
+
     boolean hasExitAnimation = hasAnimationForTag(tag, "exiting") || mExitingViews.containsKey(tag);
     boolean hasAnimatedChildren = false;
     shouldRemove = shouldRemove && !hasExitAnimation;
@@ -490,6 +500,28 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return true;
   }
 
+  public void clearAnimationConfigForTag(int tag) {
+    View view = resolveView(tag);
+    if (view != null) {
+      clearAnimationConfigRecursive(view);
+    }
+  }
+
+  public void clearAnimationConfigRecursive(View view) {
+    mNativeMethodsHolder.clearAnimationConfig(view.getId());
+    if (view instanceof ViewGroup) {
+      ViewGroup viewGroup = (ViewGroup) view;
+      for (int i = 0; i < viewGroup.getChildCount(); i++) {
+        clearAnimationConfigRecursive(viewGroup.getChildAt(i));
+      }
+    }
+  }
+
+  public void cancelAnimationsInSubviews(View view) {
+    cancelAnimationsRecursive(view);
+    clearAnimationConfigRecursive(view);
+  }
+
   private void registerExitingAncestors(View view) {
     View parent = (View) view.getParent();
     while (parent != null && !(parent instanceof RootView)) {
@@ -524,7 +556,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private void removeView(View view, ViewGroup parent) {
+  private void removeView(View view, @Nullable ViewGroup parent) {
     int tag = view.getId();
     if (mCallbacks.containsKey(tag)) {
       Runnable callback = mCallbacks.get(tag);
@@ -536,7 +568,17 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mReanimatedNativeHierarchyManager.publicDropView(view);
     }
 
-    parent.removeView(view);
+    if (parent != null) {
+      parent.removeView(view);
+    }
+  }
+
+  public void cancelAnimationsRecursive(View view) {
+    if (mExitingViews.containsKey(view.getId())) {
+      endLayoutAnimation(view.getId(), true, true);
+    } else if (view instanceof ViewGroup && mExitingSubviewCountMap.containsKey(view.getId())) {
+      cancelAnimationsInSubviews((ViewGroup) view);
+    }
   }
 
   private void cancelAnimationsInSubviews(ViewGroup view) {
@@ -545,7 +587,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
       if (mExitingViews.containsKey(child.getId())) {
         endLayoutAnimation(child.getId(), true, true);
-      } else if (child instanceof ViewGroup && mAncestorsToRemove.contains(child.getId())) {
+      } else if (child instanceof ViewGroup && mExitingSubviewCountMap.containsKey(child.getId())) {
         cancelAnimationsInSubviews((ViewGroup) child);
       }
     }
@@ -565,7 +607,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return mUIManager.resolveView(tag);
     } catch (IllegalViewOperationException e) {
       // view has been removed already
-      e.printStackTrace();
       return null;
     }
   }
@@ -574,7 +615,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     try {
       return mReanimatedNativeHierarchyManager.resolveViewManager(tag);
     } catch (Exception e) {
-      e.printStackTrace();
       return null;
     }
   }

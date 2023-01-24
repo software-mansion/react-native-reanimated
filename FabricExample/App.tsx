@@ -126,15 +126,15 @@ const EXAMPLES = [
     component: ScrollToExample,
   },
   {
-    name: 'ScrollViewPositionExample',
+    name: 'ScrollViewOffsetExample',
     icon: '𝌍',
-    title: 'useScrollViewPosition',
+    title: 'useScrollViewOffset',
     component: ScrollViewOffsetExample,
   },
   {
     name: 'ArticleProgressExample',
     icon: '📰',
-    title: 'Article Progress Example',
+    title: 'Article progress',
     component: ArticleProgressExample,
   },
   {

@@ -568,7 +568,14 @@ declare module 'react-native-reanimated' {
     height: SharedValue<number>;
     state: SharedValue<KeyboardState>;
   };
-  export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
+
+  export interface AnimatedKeyboardOptions {
+    isStatusBarTranslucentAndroid?: boolean;
+  }
+
+  export function useAnimatedKeyboard(
+    options?: AnimatedKeyboardOptions
+  ): AnimatedKeyboardInfo;
 
   export function useScrollViewOffset(
     aref: RefObject<Animated.ScrollView>
