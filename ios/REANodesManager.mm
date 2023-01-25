@@ -442,6 +442,10 @@ using namespace facebook::react;
 
   void (^addBlock)(NSString *key, id obj, BOOL *stop) = ^(NSString *key, id obj, BOOL *stop) {
     if ([self.uiProps containsObject:key]) {
+      if ([obj isKindOfClass:[NSDictionary class]]) {
+        NSData *data = [NSJSONSerialization dataWithJSONObject:obj options:NSJSONWritingPrettyPrinted error:nil];
+        obj = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+      }
       uiProps[key] = obj;
     } else if ([self.nativeProps containsObject:key]) {
       nativeProps[key] = obj;
