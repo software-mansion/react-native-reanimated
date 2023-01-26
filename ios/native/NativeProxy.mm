@@ -407,7 +407,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager setFindSiblingForSharedViewBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
     if (auto reaModule = weakModule.lock()) {
       int resultTag = reaModule->layoutAnimationsManager().findSiblingForSharedView([tag intValue]);
-      return @(resultTag);
+      return resultTag == -1 ? nil : @(resultTag);
     }
     return nil;
   }];

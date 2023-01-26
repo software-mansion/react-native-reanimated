@@ -134,9 +134,16 @@
       viewTarget = siblingView;
     }
 
+    UIView *maybeParentScreen = stack.superview;
+    bool isModal = false;
+    if (maybeParentScreen) {
+      NSNumber *presentationMode = [maybeParentScreen valueForKey:@"stackPresentation"];
+      isModal = ![presentationMode isEqual:@(0)];
+    }
+
     // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
-    if (addedNewScreen) {
+    if (addedNewScreen && !isModal) {
       // is under top
       if (screensCount < 2) {
         continue;
@@ -146,7 +153,7 @@
       if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag]) {
         continue;
       }
-    } else {
+    } else if (!addedNewScreen) {
       // is on top
       UIView *viewTargetParentScreen = [self getScreenForView:viewTarget];
       UIView *stackTarget = viewTargetParentScreen.reactViewController.navigationController.topViewController.view;
