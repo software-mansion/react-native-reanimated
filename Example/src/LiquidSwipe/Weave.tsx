@@ -12,12 +12,13 @@ import {
   maxVertRadius,
 } from './WeaveHelpers';
 
-import MaskedView from '@react-native-community/masked-view';
+import MaskedView from '@react-native-masked-view/masked-view';
 import React from 'react';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default ({ centerY, progress, isBack, children }: any) => {
   const sideWidth = useDerivedValue(() => {
     const p1 = 0.2;
