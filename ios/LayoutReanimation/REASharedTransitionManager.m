@@ -139,10 +139,12 @@
 
     UIView *maybeParentScreen = stack.superview;
     bool isModal = false;
-    if (maybeParentScreen) {
+#if __has_include(<RNScreens/RNSScreen.h>)
+    if ([maybeParentScreen isKindOfClass:[RNSScreenView class]]) {
       NSNumber *presentationMode = [maybeParentScreen valueForKey:@"stackPresentation"];
       isModal = ![presentationMode isEqual:@(0)];
     }
+#endif
 
     // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
@@ -309,11 +311,14 @@
   } else if ([keyPath isEqualToString:@"activityState"]) {
     // removed screen from top (removed from stack or covered by another screen)
     bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
-    if (stack != nil && !isRemovedInParentStack) {
+    if (!isRemovedInParentStack) {
       bool shouldRunTransition =
-          [self isScreen:screen
-              outsideStack:stack] // screen is removed from React tree (navigation.navigate(<screenName>))
-          || [self isScreen:screen onTopOfStack:stack]; // click on button goBack on native header
+          // possily modal
+          stack == nil
+          // screen is removed from React tree (navigation.navigate(<screenName>))
+          || [self isScreen:screen outsideStack:stack]
+          // click on button goBack on native header
+          || [self isScreen:screen onTopOfStack:stack];
       if (shouldRunTransition) {
         [self runSharedTransitionForSharedViewsOnScreen:screen];
       } else {
