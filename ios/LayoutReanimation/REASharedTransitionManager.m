@@ -19,6 +19,7 @@
   NSMutableArray<REASharedElement *> *_sharedElements;
   REAAnimationsManager *_animationManager;
   NSMutableSet<NSNumber *> *_screenHasObserver;
+  NSMutableSet<NSNumber *> *_shouldBeHidden;
 }
 
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager
@@ -33,6 +34,7 @@
     _sharedElements = [NSMutableArray new];
     _animationManager = animationManager;
     _screenHasObserver = [NSMutableSet new];
+    _shouldBeHidden = [NSMutableSet new];
   }
   return self;
 }
@@ -46,6 +48,7 @@
   _sharedTransitionInParentIndex = nil;
   _sharedElements = nil;
   _animationManager = nil;
+  _shouldBeHidden = nil;
 }
 
 - (UIView *)getTransitioningView:(NSNumber *)tag
@@ -160,6 +163,10 @@
       if (stackTarget != viewTargetParentScreen) {
         continue;
       }
+    }
+
+    if (isModal) {
+      [_shouldBeHidden addObject:viewSource.reactTag];
     }
 
     REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] init:viewSource withParent:viewSource.superview];
@@ -312,6 +319,7 @@
       } else {
         [self doSnapshotForScreenViews:screen];
       }
+      [self restoreViewsVisibility];
     } else {
       // removed stack
       [self clearConfigForStack:stack];
@@ -343,6 +351,15 @@
                            }];
     [_screenHasObserver removeObject:child.reactTag];
   }
+}
+
+- (void)restoreViewsVisibility
+{
+  for (NSNumber *viewTag in _shouldBeHidden) {
+    UIView *view = [_animationManager viewForTag:viewTag];
+    view.hidden = NO;
+  }
+  [_shouldBeHidden removeAllObjects];
 }
 
 - (BOOL)isScreen:(UIView *)screen outsideStack:(UIView *)stack
@@ -481,22 +498,26 @@
 
 - (void)finishSharedAnimation:(UIView *)view
 {
-  if (_currentSharedTransitionViews[view.reactTag]) {
+  NSNumber *viewTag = view.reactTag;
+  if (_currentSharedTransitionViews[viewTag]) {
     [view removeFromSuperview];
-    UIView *parent = _sharedTransitionParent[view.reactTag];
-    int childIndex = [_sharedTransitionInParentIndex[view.reactTag] intValue];
+    UIView *parent = _sharedTransitionParent[viewTag];
+    int childIndex = [_sharedTransitionInParentIndex[viewTag] intValue];
     [parent insertSubview:view atIndex:childIndex];
-    REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[view.reactTag];
+    REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[viewTag];
     BOOL isScreenDetached = [self getScreenForView:view].superview == nil;
     NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
     if (isScreenDetached) {
       viewSourcePreviousSnapshot.values[@"originY"] = viewSourcePreviousSnapshot.values[@"originYByParent"];
     }
     [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
-                                                 forTag:view.reactTag
+                                                 forTag:viewTag
                                      isSharedTransition:YES];
     viewSourcePreviousSnapshot.values[@"originY"] = originY;
-    [_currentSharedTransitionViews removeObjectForKey:view.reactTag];
+    [_currentSharedTransitionViews removeObjectForKey:viewTag];
+    if ([_shouldBeHidden containsObject:viewTag]) {
+      view.hidden = YES;
+    }
   }
   if ([_currentSharedTransitionViews count] == 0) {
     [_sharedTransitionParent removeAllObjects];
