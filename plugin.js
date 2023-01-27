@@ -874,7 +874,6 @@ module.exports = function ({ types: t }) {
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
         },
       },
-      ExportNamedDeclaration: ExportNamedDeclarationFn,
     },
   };
 };
