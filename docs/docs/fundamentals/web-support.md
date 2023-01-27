@@ -106,6 +106,8 @@ const sv = useSharedValue(0);
 const dv = useDerivedValue(() => sv.value + 1, [sv]); // dep array here
 ```
 
+Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependency array.
+
 > Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
 
 ### ESLint Support
