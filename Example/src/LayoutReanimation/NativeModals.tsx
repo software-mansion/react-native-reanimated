@@ -67,7 +67,7 @@ const App = ({
       </Pressable>
       <Pressable
         style={[styles.button, styles.buttonOpen]}
-        onPress={() => navigation.goBack()}>
+        onPress={() => navigation.navigate('Home')}>
         <Text style={styles.textStyle}>Go back</Text>
       </Pressable>
     </View>
