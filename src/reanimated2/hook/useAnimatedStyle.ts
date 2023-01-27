@@ -20,7 +20,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../ViewDescriptorsSet';
-import { isJest } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import {
   AnimationObject,
   Timestamp,
