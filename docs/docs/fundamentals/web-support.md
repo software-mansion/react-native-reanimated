@@ -108,6 +108,28 @@ const dv = useDerivedValue(() => sv.value + 1, [sv]); // dep array here
 
 > Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
 
+### ESLint Support
+
+When you use hooks from React, they give you nice suggestions from ESLint to include all dependencies. In order to add this support to Reanimated hooks, add the following to your ESLint config:
+
+
+To enforce this with your ESLint plugin, you can use the `additionalHooks` field in your ESLint config:
+
+```json
+{
+  "rules": {
+    "react-hooks/exhaustive-deps": [
+      "error",
+      {
+        "additionalHooks": "(useMotiPressableTransition|useMotiPressable|useMotiPressables|useMotiPressableAnimatedProps|useInterpolateMotiPressable)"
+      }
+    ]
+  }
+}
+```
+
+This assumes you've already installed the `react-hooks` eslint [plugin](https://www.npmjs.com/package/eslint-plugin-react-hooks).
+
 ## Next.js Compatibility
 
 There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the ["Web without a Babel plugin"](#web-without-a-babel-plugin) instructions above.
