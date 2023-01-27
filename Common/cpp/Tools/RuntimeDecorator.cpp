@@ -1,9 +1,9 @@
 #include "RuntimeDecorator.h"
+#include <jsi/instrumentation.h>
 #include <chrono>
 #include <memory>
 #include <unordered_map>
-#include "LayoutAnimationsProxy.h"
-#include "MutableValue.h"
+#include <utility>
 #include "ReanimatedHiddenHeaders.h"
 
 namespace reanimated {
@@ -30,10 +30,32 @@ void RuntimeDecorator::decorateRuntime(
   rt.global().setProperty(
       rt, "_LABEL", jsi::String::createFromAscii(rt, label));
 
-  jsi::Object dummyGlobal(rt);
-  rt.global().setProperty(rt, "global", dummyGlobal);
+  rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
+#ifdef DEBUG
+  auto evalWithSourceUrl = [](jsi::Runtime &rt,
+                              const jsi::Value &thisValue,
+                              const jsi::Value *args,
+                              size_t count) -> jsi::Value {
+    auto code = std::make_shared<const jsi::StringBuffer>(
+        args[0].asString(rt).utf8(rt));
+    std::string url;
+    if (count > 1 && args[1].isString()) {
+      url = args[1].asString(rt).utf8(rt);
+    }
+
+    return rt.evaluateJavaScript(code, url);
+  };
+
+  rt.global().setProperty(
+      rt,
+      "evalWithSourceUrl",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
+          1,
+          evalWithSourceUrl));
+#endif // DEBUG
 
   auto callback = [](jsi::Runtime &rt,
                      const jsi::Value &thisValue,
@@ -54,22 +76,6 @@ void RuntimeDecorator::decorateRuntime(
   jsi::Value log = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
   rt.global().setProperty(rt, "_log", log);
-
-  auto setGlobalConsole = [](jsi::Runtime &rt,
-                             const jsi::Value &thisValue,
-                             const jsi::Value *args,
-                             size_t count) -> jsi::Value {
-    rt.global().setProperty(rt, "console", args[0]);
-    return jsi::Value::undefined();
-  };
-  rt.global().setProperty(
-      rt,
-      "_setGlobalConsole",
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "_setGlobalConsole"),
-          1,
-          setGlobalConsole));
 
   auto chronoNow = [](jsi::Runtime &rt,
                       const jsi::Value &thisValue,
@@ -105,11 +111,15 @@ void RuntimeDecorator::decorateUIRuntime(
     const ScrollToFunction scrollTo,
 #endif
     const RequestFrameFunction requestFrame,
+    const ScheduleOnJSFunction scheduleOnJS,
+    const MakeShareableCloneFunction makeShareableClone,
+    const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
     const RegisterSensorFunction registerSensor,
     const UnregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
-    std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
+    const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
+    const EndLayoutAnimationFunction endLayoutAnimationFunction) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
@@ -221,16 +231,48 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    auto fun =
-        std::make_shared<jsi::Function>(args[0].asObject(rt).asFunction(rt));
-    requestFrame([&rt, fun](double timestampMs) {
-      fun->call(rt, jsi::Value(timestampMs));
-    });
+    requestFrame(rt, std::move(args[0]));
     return jsi::Value::undefined();
   };
   jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
   rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
+
+  auto clb4 = [scheduleOnJS](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    scheduleOnJS(rt, args[0], args[1]);
+    return jsi::Value::undefined();
+  };
+  jsi::Value scheduleOnJSFun = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_scheduleOnJS"), 2, clb4);
+  rt.global().setProperty(rt, "_scheduleOnJS", scheduleOnJSFun);
+
+  auto clb5 = [makeShareableClone](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  const size_t count) -> jsi::Value {
+    return makeShareableClone(rt, std::move(args[0]));
+  };
+  jsi::Value makeShareableCloneFun = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_makeShareableClone"), 1, clb5);
+  rt.global().setProperty(rt, "_makeShareableClone", makeShareableCloneFun);
+
+  auto clb51 = [updateDataSynchronously](
+                   jsi::Runtime &rt,
+                   const jsi::Value &thisValue,
+                   const jsi::Value *args,
+                   const size_t count) -> jsi::Value {
+    updateDataSynchronously(rt, std::move(args[0]), std::move(args[1]));
+    return jsi::Value::undefined();
+  };
+  jsi::Value updateDataSynchronouslyFun = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_updateDataSynchronously"), 1, clb51);
+  rt.global().setProperty(
+      rt, "_updateDataSynchronously", updateDataSynchronouslyFun);
 
   auto clb6 = [getCurrentTime](
                   jsi::Runtime &rt,
@@ -247,42 +289,30 @@ void RuntimeDecorator::decorateUIRuntime(
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 
   // layout animation
-  std::weak_ptr<LayoutAnimationsProxy> layoutProxy = layoutAnimationsProxy;
-  auto clb7 = [layoutProxy](
+  auto clb7 = [progressLayoutAnimationFunction](
                   jsi::Runtime &rt,
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
-    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
-    if (layoutProxy.expired()) {
-      return jsi::Value::undefined();
-    }
-    proxy->startObserving(
-        args[0].asNumber(),
-        args[1].asObject(rt).getHostObject<MutableValue>(rt),
-        rt);
+    progressLayoutAnimationFunction(args[0].asNumber(), args[1].asObject(rt));
     return jsi::Value::undefined();
   };
-  jsi::Value _startObservingProgress = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_startObservingProgress"), 0, clb7);
-  rt.global().setProperty(
-      rt, "_startObservingProgress", _startObservingProgress);
+  jsi::Value _notifyAboutProgress = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_notifyAboutProgress"), 2, clb7);
+  rt.global().setProperty(rt, "_notifyAboutProgress", _notifyAboutProgress);
 
-  auto clb8 = [layoutProxy](
+  auto clb8 = [endLayoutAnimationFunction](
                   jsi::Runtime &rt,
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
-    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
-    if (layoutProxy.expired()) {
-      return jsi::Value::undefined();
-    }
-    proxy->stopObserving(args[0].asNumber(), args[1].getBool());
+    endLayoutAnimationFunction(
+        args[0].asNumber(), args[1].getBool(), args[2].getBool());
     return jsi::Value::undefined();
   };
-  jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
-  rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
+  jsi::Value _notifyAboutEnd = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_notifyAboutEnd"), 2, clb8);
+  rt.global().setProperty(rt, "_notifyAboutEnd", _notifyAboutEnd);
 
   auto clb9 = [setGestureState](
                   jsi::Runtime &rt,

@@ -1,25 +1,15 @@
 /* global _frameTimestamp */
 import { MutableRefObject, useEffect, useRef } from 'react';
 
-import {
-  startMapper,
-  stopMapper,
-  makeRemote,
-  requestFrame,
-  getTimestamp,
-  makeMutable,
-} from '../core';
+import { startMapper, stopMapper, makeRemote, getTimestamp } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
 import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
-  canApplyOptimalisation,
   getStyleWithoutAnimations,
-  hasColorProps,
   isAnimated,
-  parseColors,
   styleDiff,
   validateAnimatedStyles,
 } from './utils';
@@ -30,7 +20,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../ViewDescriptorsSet';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest } from '../PlatformChecker';
 import {
   AnimationObject,
   Timestamp,
@@ -61,7 +51,7 @@ interface AnimationRef {
     updater: () => AnimatedStyle;
   };
   remoteState: AnimatedState;
-  sharableViewDescriptors: SharedValue<Descriptor[]>;
+  viewDescriptors: ViewDescriptorsSet;
 }
 
 function prepareAnimation(
@@ -71,13 +61,13 @@ function prepareAnimation(
 ): void {
   'worklet';
   if (Array.isArray(animatedProp)) {
-    animatedProp.forEach((prop, index) =>
+    animatedProp.forEach((prop, index) => {
       prepareAnimation(
         prop,
         lastAnimation && lastAnimation[index],
         lastValue && lastValue[index]
-      )
-    );
+      );
+    });
     // return animatedProp;
   }
   if (typeof animatedProp === 'object' && animatedProp.onFrame) {
@@ -207,8 +197,9 @@ function styleUpdater(
   }
 
   if (hasAnimations) {
-    const frame = (timestamp: Timestamp) => {
+    const frame = (_timestamp?: Timestamp) => {
       const { animations, last, isAnimationCancelled } = state;
+      const timestamp = _timestamp ?? getTimestamp();
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
         return;
@@ -237,7 +228,7 @@ function styleUpdater(
       }
 
       if (!allFinished) {
-        requestFrame(frame);
+        requestAnimationFrame(frame);
       } else {
         state.isAnimationRunning = false;
       }
@@ -250,7 +241,7 @@ function styleUpdater(
       if (_frameTimestamp) {
         frame(_frameTimestamp);
       } else {
-        requestFrame(frame);
+        requestAnimationFrame(frame);
       }
     }
     state.last = Object.assign({}, oldValues, newValues);
@@ -301,8 +292,9 @@ function jestStyleUpdater(
     }
   });
 
-  function frame(timestamp: Timestamp) {
+  function frame(_timestamp?: Timestamp) {
     const { animations, last, isAnimationCancelled } = state;
+    const timestamp = _timestamp ?? getTimestamp();
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;
@@ -337,7 +329,7 @@ function jestStyleUpdater(
     }
 
     if (!allFinished) {
-      requestFrame(frame);
+      requestAnimationFrame(frame);
     } else {
       state.isAnimationRunning = false;
     }
@@ -351,7 +343,7 @@ function jestStyleUpdater(
       if (_frameTimestamp) {
         frame(_frameTimestamp);
       } else {
-        requestFrame(frame);
+        requestAnimationFrame(frame);
       }
     }
   } else {
@@ -407,7 +399,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
-  const viewDescriptors: ViewDescriptorsSet = makeViewDescriptorsSet();
   const initRef = useRef<AnimationRef>();
   let inputs = Object.values(updater._closure ?? {});
   if (shouldBeUseWeb()) {
@@ -443,24 +434,26 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         value: initialStyle,
         updater: updater,
       },
-      remoteState: makeRemote({ last: initialStyle }),
-      sharableViewDescriptors: makeMutable([]),
+      remoteState: makeRemote<AnimatedState>({
+        last: initialStyle,
+        animations: {},
+        isAnimationCancelled: false,
+        isAnimationRunning: false,
+      }),
+      viewDescriptors: makeViewDescriptorsSet(),
     };
-    viewDescriptors.rebuildsharableViewDescriptors(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      initRef.current!.sharableViewDescriptors
-    );
   }
-  dependencies.push(initRef.current?.sharableViewDescriptors.value);
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
+  const { initial, remoteState, viewDescriptors } = initRef.current!;
+  const sharableViewDescriptors = viewDescriptors.sharableViewDescriptors;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
+
+  dependencies.push(sharableViewDescriptors);
 
   useEffect(() => {
     let fun;
     let updaterFn = updater as BasicWorkletFunctionOptional<T>;
-    let optimalization = updater.__optimalization;
     if (adapters) {
       updaterFn = () => {
         'worklet';
@@ -470,40 +463,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         });
         return newValues;
       };
-    }
-
-    if (canApplyOptimalisation(updaterFn) && !shouldBeUseWeb()) {
-      if (hasColorProps(updaterFn())) {
-        updaterFn = () => {
-          'worklet';
-          const newValues = updaterFn();
-          const oldValues = remoteState.last;
-          const diff = styleDiff<T>(oldValues, newValues);
-          remoteState.last = Object.assign({}, oldValues, newValues);
-          parseColors(diff);
-          return diff;
-        };
-      } else {
-        updaterFn = () => {
-          'worklet';
-          const newValues = updaterFn();
-          const oldValues = remoteState.last;
-          const diff = styleDiff<T>(oldValues, newValues);
-          remoteState.last = Object.assign({}, oldValues, newValues);
-          return diff;
-        };
-      }
-    } else if (!shouldBeUseWeb()) {
-      optimalization = 0;
-      updaterFn = () => {
-        'worklet';
-        const style = updaterFn();
-        parseColors(style);
-        return style;
-      };
-    }
-    if (typeof updater.__optimalization !== undefined) {
-      updaterFn.__optimalization = optimalization;
     }
 
     if (isJest()) {
@@ -531,14 +490,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         );
       };
     }
-    const mapperId = startMapper(
-      fun,
-      inputs,
-      [],
-      updaterFn,
-      // TODO fix this
-      sharableViewDescriptors
-    );
+    const mapperId = startMapper(fun, inputs);
     return () => {
       stopMapper(mapperId);
     };

@@ -55,21 +55,35 @@ To use Reanimated 2 built from the main branch:
 
 ## Babel plugin
 
-Add Reanimated's babel plugin to your `babel.config.js`:
+Add Reanimated's Babel plugin to your `babel.config.js`:
 
-```js {5}
+```js {7}
   module.exports = {
+    presets: [
       ...
-      plugins: [
-          ...
-          'react-native-reanimated/plugin',
-      ],
+    ],
+    plugins: [
+      ...
+      'react-native-reanimated/plugin',
+    ],
   };
 ```
 
 :::caution
 
 Reanimated plugin has to be listed last.
+
+:::
+
+:::info
+
+After adding the `react-native-reanimated/plugin` to your project you may encounter a false-positive "Reanimated 2 failed to create a worklet" error. In most cases, this can be fixed by cleaning the application's cache. Depending on your workflow or favourite package manager that could be done by:
+
+- `yarn start --reset-cache`
+- `npm start -- --reset-cache`
+- `expo start -c`
+
+or other.
 
 :::
 
@@ -124,7 +138,7 @@ You can refer [to this diff](https://github.com/software-mansion-labs/reanimated
 
 ### Proguard
 
-If you're using Proguard, make sure to add rule preventing it from optimizing Turbomodule classes:
+If you're using Proguard, make sure to add the rule preventing it from optimizing Turbomodule classes:
 
 ```
 -keep class com.facebook.react.turbomodule.** { *; }

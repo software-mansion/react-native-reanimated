@@ -1,0 +1,12 @@
+name: Build release npm package, Reanimated 2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-build-workflow-rea-v2:
+    uses: ./.github/workflows/build-npm-package-action.yml
+    with:
+      version: release
+      ref: Reanimated2
+      upload_binaries: true

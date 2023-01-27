@@ -1,19 +1,19 @@
-import React from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useDerivedValue,
 } from 'react-native-reanimated';
+import { Dimensions, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import MaskedView from '@react-native-community/masked-view';
-
 import {
   initialHorRadius,
-  maxHorRadius,
-  initialVertRadius,
-  maxVertRadius,
   initialSideWidth,
+  initialVertRadius,
+  maxHorRadius,
+  maxVertRadius,
 } from './WeaveHelpers';
+
+import MaskedView from '@react-native-community/masked-view';
+import React from 'react';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -180,6 +180,7 @@ export default ({ centerY, progress, isBack, children }: any) => {
     </Svg>
   );
   return (
+    // @ts-ignore fixes "JSX element class does not support attributes because it does not have a 'props' property."
     <MaskedView style={StyleSheet.absoluteFill} maskElement={maskElement}>
       {children}
     </MaskedView>

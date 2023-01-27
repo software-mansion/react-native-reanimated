@@ -7,6 +7,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
@@ -18,6 +19,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
+import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
@@ -90,6 +92,18 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  public static class KeyboardEventDataUpdater {
+    @DoNotStrip private final HybridData mHybridData;
+
+    @DoNotStrip
+    private KeyboardEventDataUpdater(HybridData hybridData) {
+      mHybridData = hybridData;
+    }
+
+    public native void keyboardEventDataUpdater(int keyboardState, int height);
+  }
+
+  @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
@@ -98,6 +112,7 @@ public class NativeProxy {
   private Scheduler mScheduler = null;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
+  private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
 
@@ -116,6 +131,7 @@ public class NativeProxy {
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
+    reanimatedKeyboardEventListener = new ReanimatedKeyboardEventListener(mContext);
     addDevMenuOption();
 
     GestureHandlerStateManager tempHandlerStateManager;
@@ -137,7 +153,7 @@ public class NativeProxy {
       Scheduler scheduler,
       LayoutAnimations LayoutAnimations);
 
-  private native void installJSIBindings();
+  private native void installJSIBindings(MessageQueueThread messageQueueThread);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
@@ -201,14 +217,12 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private String getUptime() {
+  private long getCurrentTime() {
     if (slowAnimationsEnabled) {
       final long ANIMATIONS_DRAG_FACTOR = 10;
-      return Long.toString(
-          this.firstUptime
-              + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+      return this.firstUptime + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR;
     } else {
-      return Long.toString(SystemClock.uptimeMillis());
+      return SystemClock.uptimeMillis();
     }
   }
 
@@ -250,6 +264,16 @@ public class NativeProxy {
     reanimatedSensorContainer.unregisterSensor(sensorId);
   }
 
+  @DoNotStrip
+  private int subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater, boolean isStatusBarTranslucent) {
+    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater, isStatusBarTranslucent);
+  }
+
+  @DoNotStrip
+  private void unsubscribeFromKeyboardEvents(int listenerId) {
+    reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
   public void onCatalystInstanceDestroy() {
     mScheduler.deactivate();
     mHybridData.resetNative();
@@ -261,7 +285,8 @@ public class NativeProxy {
       return;
     }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
-    installJSIBindings();
+    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    installJSIBindings(messageQueueThread);
     AnimationsManager animationsManager =
         mContext
             .get()
@@ -273,7 +298,7 @@ public class NativeProxy {
     animationsManager.setNativeMethods(
         new NativeMethodsHolder() {
           @Override
-          public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
+          public void startAnimation(int tag, String type, HashMap<String, Float> values) {
             LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
             if (LayoutAnimations != null) {
               HashMap<String, String> preparedValues = new HashMap<>();
@@ -285,16 +310,29 @@ public class NativeProxy {
           }
 
           @Override
-          public void removeConfigForTag(int tag) {
-            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-            if (LayoutAnimations != null) {
-              LayoutAnimations.removeConfigForTag(tag);
+          public boolean isLayoutAnimationEnabled() {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.isLayoutAnimationEnabled();
             }
+            return false;
           }
 
           @Override
-          public boolean isLayoutAnimationEnabled() {
-            return LayoutAnimations.isLayoutAnimationEnabled();
+          public boolean hasAnimation(int tag, String type) {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.hasAnimationForTag(tag, type);
+            }
+            return false;
+          }
+
+          @Override
+          public void clearAnimationConfig(int tag) {
+              LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+              if (layoutAnimations != null) {
+                layoutAnimations.clearAnimationConfigForTag(tag);
+              }
           }
         });
   }

@@ -8,47 +8,57 @@ import {
   Platform,
   UIManager,
   ScrollView,
+  Pressable,
 } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-import {
-  createStackNavigator,
-  StackNavigationProp,
-} from '@react-navigation/stack';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
+  BasicLayoutAnimation,
+  BasicNestedAnimation,
+  BasicNestedLayoutAnimation,
   Carousel,
+  CombinedTest,
   CustomLayoutAnimationScreen,
   DefaultAnimations,
+  DeleteAncestorOfExiting,
   Modal,
   ModalNewAPI,
   MountingUnmounting,
+  NativeModals,
+  NestedTest,
+  NestedNativeStacksWithLayout,
   SpringLayoutAnimation,
   SwipeableList,
-  NativeModals,
 } from './LayoutReanimation';
 
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import ChatHeadsExample from './ChatHeadsExample';
-import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
+import FrameCallbackExample from './FrameCallbackExample';
+import InvertedFlatListExample from './InvertedFlatListExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import { PagerExample } from './CustomHandler';
 import { ReactionsCounterExample } from './ReactionsCounterExample';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
-import WobbleExample from './WobbleExample';
-import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
-import AnimatedSensorExample from './AnimatedSensorExample';
-import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
+import WobbleExample from './WobbleExample';
+import { ColorInterpolationExample } from './ColorInterpolationExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -61,13 +71,53 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  ColorInterpolation: {
+    screen: ColorInterpolationExample,
+    title: 'Color interpolation',
+  },
+  DeleteAncestorOfExiting: {
+    screen: DeleteAncestorOfExiting,
+    title: '🆕 Deleting view with an exiting animation',
+  },
+  NestedNativeStacksWithLayout: {
+    screen: NestedNativeStacksWithLayout,
+    title: '🆕 Nested NativeStacks with layout',
+  },
+  BasicLayoutAnimation: {
+    screen: BasicLayoutAnimation,
+    title: '🆕 Basic layout animation',
+  },
+  BasicNestedAnimation: {
+    screen: BasicNestedAnimation,
+    title: '🆕 Basic nested animation',
+  },
+  BasicNestedLayoutAnimation: {
+    screen: BasicNestedLayoutAnimation,
+    title: '🆕 Basic nested layout animation',
+  },
+  NestedLayoutAnimations: {
+    screen: NestedTest,
+    title: '🆕 Nested layout animations',
+  },
+  CombinedLayoutAnimations: {
+    screen: CombinedTest,
+    title: '🆕 Entering and Exiting with Layout',
+  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
   },
+  AnimatedKeyboard: {
+    screen: AnimatedKeyboardExample,
+    title: '🆕 Use Animated Keyboard',
+  },
   AnimatedSensor: {
     screen: AnimatedSensorExample,
     title: '🆕 Use Animated Sensor',
+  },
+  FrameCallbackExample: {
+    screen: FrameCallbackExample,
+    title: '🆕 Frame callback example',
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,
@@ -149,6 +199,10 @@ const SCREENS: Screens = {
     screen: ScrollEventExample,
     title: 'Scroll Events',
   },
+  ScrollViewOffsetExample: {
+    screen: ScrollViewOffsetExample,
+    title: 'ScrollView offset',
+  },
   ChatHeadsExample: {
     screen: ChatHeadsExample,
     title: 'Chat Heads',
@@ -184,6 +238,10 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
+  },
+  InvertedFlatListExample: {
+    screen: InvertedFlatListExample,
+    title: 'Inverted FlatList Example',
   },
 };
 
@@ -228,16 +286,16 @@ export function MainScreenItem({
 }: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
-    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+    <Pressable style={styles.button} onPress={() => onPressItem(item)}>
       <Text style={styles.buttonText}>{screens[key].title || key}</Text>
-    </RectButton>
+    </Pressable>
   );
 }
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const Reanimated2 = () => (
-  <Stack.Navigator detachInactiveScreens={false}>
+  <Stack.Navigator>
     <Stack.Screen
       name="Home"
       options={{ title: '🎬 Reanimated 2.x Examples' }}

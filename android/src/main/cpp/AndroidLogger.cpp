@@ -1,6 +1,9 @@
-#include "AndroidLogger.h"
 #include <android/log.h>
+#include <memory>
+
+#include "AndroidLogger.h"
 #include "Logger.h"
+
 #define APPNAME "NATIVE_REANIMATED"
 
 namespace reanimated {

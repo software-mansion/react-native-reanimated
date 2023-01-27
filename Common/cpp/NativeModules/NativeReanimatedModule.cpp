@@ -8,92 +8,48 @@
 #include <functional>
 #include <memory>
 #include <thread>
+#include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
+#include "ShadowTreeCloner.h"
 #endif
 
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
-#include "FrozenObject.h"
-#include "JSIStoreValueUser.h"
-#include "Mapper.h"
-#include "MapperRegistry.h"
-#include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
-#include "ShareableValue.h"
+#include "Shareables.h"
 #include "WorkletEventHandler.h"
 
 using namespace facebook;
 
 namespace reanimated {
 
-void extractMutables(
-    jsi::Runtime &rt,
-    std::shared_ptr<ShareableValue> sv,
-    std::vector<std::shared_ptr<MutableValue>> &res) {
-  switch (sv->type) {
-    case ValueType::MutableValueType: {
-      auto &mutableValue = ValueWrapper::asMutableValue(sv->valueContainer);
-      res.push_back(mutableValue);
-      break;
-    }
-    case ValueType::FrozenArrayType:
-      for (auto &it : ValueWrapper::asFrozenArray(sv->valueContainer)) {
-        extractMutables(rt, it, res);
-      }
-      break;
-    case ValueType::RemoteObjectType:
-    case ValueType::FrozenObjectType:
-      for (auto &it : ValueWrapper::asFrozenObject(sv->valueContainer)->map) {
-        extractMutables(rt, it.second, res);
-      }
-      break;
-    default:
-      break;
-  }
-}
-
-std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(
-    jsi::Runtime &rt,
-    const jsi::Array &array,
-    NativeReanimatedModule *module) {
-  std::vector<std::shared_ptr<MutableValue>> res;
-  for (size_t i = 0, size = array.size(rt); i < size; i++) {
-    auto shareable =
-        ShareableValue::adapt(rt, array.getValueAtIndex(rt, i), module);
-    extractMutables(rt, shareable, res);
-  }
-  return res;
-}
-
 NativeReanimatedModule::NativeReanimatedModule(
-    std::shared_ptr<CallInvoker> jsInvoker,
-    std::shared_ptr<Scheduler> scheduler,
-    std::shared_ptr<jsi::Runtime> rt,
-    std::shared_ptr<ErrorHandler> errorHandler,
+    const std::shared_ptr<CallInvoker> &jsInvoker,
+    const std::shared_ptr<Scheduler> &scheduler,
+    const std::shared_ptr<jsi::Runtime> &rt,
+    const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
         propObtainer,
 #endif
-    std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
-      mapperRegistry(std::make_shared<MapperRegistry>()),
-      eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
+      eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
       propObtainer(propObtainer),
 #endif
-      animatedSensorModule(platformDepMethodsHolder, this),
+      animatedSensorModule(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
@@ -102,12 +58,58 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.configurePropsFunction)
 #endif
 {
-  auto requestAnimationFrame = [=](FrameCallback callback) {
-    frameCallbacks.push_back(callback);
+  auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
+    auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
+    frameCallbacks.push_back([=](double timestamp) {
+      runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
+    });
     maybeRequestRender();
   };
 
-  this->layoutAnimationsProxy = layoutAnimationsProxy;
+  auto scheduleOnJS = [this](
+                          jsi::Runtime &rt,
+                          const jsi::Value &remoteFun,
+                          const jsi::Value &argsValue) {
+    auto shareableRemoteFun = extractShareableOrThrow<ShareableRemoteFunction>(
+        rt,
+        remoteFun,
+        "Incompatible object passed to scheduleOnJS. It is only allowed to schedule functions defined on the React Native JS runtime this way.");
+    auto shareableArgs = argsValue.isUndefined()
+        ? nullptr
+        : extractShareableOrThrow(rt, argsValue);
+    auto jsRuntime = this->runtimeHelper->rnRuntime();
+    this->scheduler->scheduleOnJS([=] {
+      jsi::Runtime &rt = *jsRuntime;
+      auto remoteFun = shareableRemoteFun->getJSValue(rt);
+      if (shareableArgs == nullptr) {
+        // fast path for remote function w/o arguments
+        remoteFun.asObject(rt).asFunction(rt).call(rt);
+      } else {
+        auto argsArray = shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
+        auto argsSize = argsArray.size(rt);
+        // number of arguments is typically relatively small so it is ok to
+        // to use VLAs here, hence disabling the lint rule
+        jsi::Value args[argsSize]; // NOLINT(runtime/arrays)
+        for (size_t i = 0; i < argsSize; i++) {
+          args[i] = argsArray.getValueAtIndex(rt, i);
+        }
+        remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
+      }
+    });
+  };
+
+  auto makeShareableClone = [this](jsi::Runtime &rt, const jsi::Value &value) {
+    return this->makeShareableClone(rt, value, jsi::Value::undefined());
+  };
+
+  auto updateDataSynchronously =
+      [this](
+          jsi::Runtime &rt,
+          const jsi::Value &synchronizedDataHolderRef,
+          const jsi::Value &newData) {
+        return this->updateDataSynchronously(
+            rt, synchronizedDataHolderRef, newData);
+      };
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](
@@ -148,11 +150,15 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.scrollToFunction,
 #endif
       requestAnimationFrame,
+      scheduleOnJS,
+      makeShareableClone,
+      updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
-      layoutAnimationsProxy);
+      platformDepMethodsHolder.progressLayoutAnimation,
+      platformDepMethodsHolder.endLayoutAnimation);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
@@ -163,91 +169,129 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
 #endif
+  subscribeForKeyboardEventsFunction =
+      platformDepMethodsHolder.subscribeForKeyboardEvents;
+  unsubscribeFromKeyboardEventsFunction =
+      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
-    const jsi::Value &valueSetter) {
-  this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
-}
-
-jsi::Value NativeReanimatedModule::makeShareable(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this)->getValue(rt);
-}
-
-jsi::Value NativeReanimatedModule::makeMutable(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this, ValueType::MutableValueType)
-      ->getValue(rt);
-}
-
-jsi::Value NativeReanimatedModule::makeRemote(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)
-      ->getValue(rt);
-}
-
-jsi::Value NativeReanimatedModule::startMapper(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet,
-    const jsi::Value &inputs,
-    const jsi::Value &outputs,
-    const jsi::Value &updater,
-    const jsi::Value &viewDescriptors) {
-  static unsigned long MAPPER_ID = 1;
-
-  unsigned long newMapperId = MAPPER_ID++;
-  auto mapperShareable = ShareableValue::adapt(rt, worklet, this);
-  auto inputMutables =
-      extractMutablesFromArray(rt, inputs.asObject(rt).asArray(rt), this);
-  auto outputMutables =
-      extractMutablesFromArray(rt, outputs.asObject(rt).asArray(rt), this);
-
-  int optimalizationLvl = 0;
-  auto optimalization =
-      updater.asObject(rt).getProperty(rt, "__optimalization");
-  if (optimalization.isNumber()) {
-    optimalizationLvl = optimalization.asNumber();
+    const jsi::Value &callGuard,
+    const jsi::Value &valueUnpacker) {
+  if (!runtimeHelper) {
+    // initialize runtimeHelper here if not already present. We expect only one
+    // instace of the helper to exists.
+    runtimeHelper =
+        std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
   }
-  auto updaterSV = ShareableValue::adapt(rt, updater, this);
-  auto viewDescriptorsSV = ShareableValue::adapt(rt, viewDescriptors, this);
-
-  scheduler->scheduleOnUI([=] {
-    auto mapperFunction =
-        mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(
-            *runtime);
-    std::shared_ptr<jsi::Function> mapperFunctionPointer =
-        std::make_shared<jsi::Function>(std::move(mapperFunction));
-
-    std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(
-        this,
-        newMapperId,
-        mapperFunctionPointer,
-        inputMutables,
-        outputMutables);
-    if (optimalizationLvl > 0) {
-      mapperPointer->enableFastMode(
-          optimalizationLvl, updaterSV, viewDescriptorsSV);
-    }
-    mapperRegistry->startMapper(mapperPointer);
-    maybeRequestRender();
-  });
-
-  return jsi::Value(static_cast<double>(newMapperId));
+  runtimeHelper->callGuard =
+      std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
+  runtimeHelper->valueUnpacker =
+      std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 }
 
-void NativeReanimatedModule::stopMapper(
+NativeReanimatedModule::~NativeReanimatedModule() {
+  if (runtimeHelper) {
+    runtimeHelper->callGuard = nullptr;
+    runtimeHelper->valueUnpacker = nullptr;
+    // event handler registry and frame callbacks store some JSI values from UI
+    // runtime, so they have to go away before we tear down the runtime
+    eventHandlerRegistry.reset();
+    frameCallbacks.clear();
+    runtime.reset();
+    // make sure uiRuntimeDestroyed is set after the runtime is deallocated
+    runtimeHelper->uiRuntimeDestroyed = true;
+  }
+}
+
+void NativeReanimatedModule::scheduleOnUI(
     jsi::Runtime &rt,
-    const jsi::Value &mapperId) {
-  unsigned long id = mapperId.asNumber();
+    const jsi::Value &worklet) {
+  auto shareableWorklet = extractShareableOrThrow(rt, worklet);
+  assert(
+      shareableWorklet->valueType() == Shareable::WorkletType &&
+      "only worklets can be scheduled to run on UI");
   scheduler->scheduleOnUI([=] {
-    mapperRegistry->stopMapper(id);
-    maybeRequestRender();
+    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
+    auto workletValue = shareableWorklet->getJSValue(rt);
+    runtimeHelper->runOnUIGuarded(workletValue);
   });
+}
+
+jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
+    jsi::Runtime &rt,
+    const jsi::Value &initialShareable) {
+  auto dataHolder = std::make_shared<ShareableSynchronizedDataHolder>(
+      runtimeHelper, rt, initialShareable);
+  return dataHolder->getJSValue(rt);
+}
+
+void NativeReanimatedModule::updateDataSynchronously(
+    jsi::Runtime &rt,
+    const jsi::Value &synchronizedDataHolderRef,
+    const jsi::Value &newData) {
+  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
+      rt, synchronizedDataHolderRef);
+  dataHolder->set(rt, newData);
+}
+
+jsi::Value NativeReanimatedModule::getDataSynchronously(
+    jsi::Runtime &rt,
+    const jsi::Value &synchronizedDataHolderRef) {
+  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
+      rt, synchronizedDataHolderRef);
+  return dataHolder->get(rt);
+}
+
+jsi::Value NativeReanimatedModule::makeShareableClone(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote) {
+  std::shared_ptr<Shareable> shareable;
+  if (value.isObject()) {
+    auto object = value.asObject(rt);
+    if (!object.getProperty(rt, "__workletHash").isUndefined()) {
+      shareable = std::make_shared<ShareableWorklet>(runtimeHelper, rt, object);
+    } else if (!object.getProperty(rt, "__init").isUndefined()) {
+      shareable = std::make_shared<ShareableHandle>(runtimeHelper, rt, object);
+    } else if (object.isFunction(rt)) {
+      shareable = std::make_shared<ShareableRemoteFunction>(
+          runtimeHelper, rt, object.asFunction(rt));
+    } else if (object.isArray(rt)) {
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable = std::make_shared<RetainingShareable<ShareableArray>>(
+            runtimeHelper, rt, object.asArray(rt));
+      } else {
+        shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
+      }
+#ifdef RCT_NEW_ARCH_ENABLED
+    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
+      shareable = std::make_shared<ShareableShadowNodeWrapper>(
+          runtimeHelper, rt, object);
+#endif
+    } else {
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+            runtimeHelper, rt, object);
+      } else {
+        shareable = std::make_shared<ShareableObject>(rt, object);
+      }
+    }
+  } else if (value.isString()) {
+    shareable = std::make_shared<ShareableString>(rt, value.asString(rt));
+  } else if (value.isUndefined()) {
+    shareable = std::make_shared<ShareableScalar>();
+  } else if (value.isNull()) {
+    shareable = std::make_shared<ShareableScalar>(nullptr);
+  } else if (value.isBool()) {
+    shareable = std::make_shared<ShareableScalar>(value.getBool());
+  } else if (value.isNumber()) {
+    shareable = std::make_shared<ShareableScalar>(value.getNumber());
+  } else {
+    throw std::runtime_error("attempted to convert an unsupported value type");
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
@@ -258,12 +302,12 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   unsigned long newRegistrationId = EVENT_HANDLER_ID++;
   auto eventName = eventHash.asString(rt).utf8(rt);
-  auto handlerShareable = ShareableValue::adapt(rt, worklet, this);
+  auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
   scheduler->scheduleOnUI([=] {
+    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto handlerFunction =
-        handlerShareable->getValue(*runtime).asObject(*runtime).asFunction(
-            *runtime);
+        handlerShareable->getJSValue(rt).asObject(rt).asFunction(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventName, std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(handler);
@@ -331,6 +375,18 @@ jsi::Value NativeReanimatedModule::configureProps(
   return jsi::Value::undefined();
 }
 
+jsi::Value NativeReanimatedModule::configureLayoutAnimation(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &type,
+    const jsi::Value &config) {
+  layoutAnimationsManager_.configureAnimation(
+      viewTag.asNumber(),
+      type.asString(rt).utf8(rt),
+      extractShareableOrThrow(rt, config));
+  return jsi::Value::undefined();
+}
+
 void NativeReanimatedModule::onEvent(
     std::string eventName,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -345,10 +401,6 @@ void NativeReanimatedModule::onEvent(
 #else
     eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
 #endif
-    mapperRegistry->execute(*runtime);
-    if (mapperRegistry->needRunOnRender()) {
-      maybeRequestRender();
-    }
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
@@ -379,11 +431,6 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     for (auto &callback : callbacks) {
       callback(timestampMs);
     }
-    mapperRegistry->execute(*runtime);
-
-    if (mapperRegistry->needRunOnRender()) {
-      maybeRequestRender();
-    }
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
@@ -399,9 +446,9 @@ jsi::Value NativeReanimatedModule::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
     const jsi::Value &interval,
-    const jsi::Value &sensorDataContainer) {
+    const jsi::Value &sensorDataHandler) {
   return animatedSensorModule.registerSensor(
-      rt, sensorType, interval, sensorDataContainer);
+      rt, runtimeHelper, sensorType, interval, sensorDataHandler);
 }
 
 void NativeReanimatedModule::unregisterSensor(
@@ -503,56 +550,39 @@ void NativeReanimatedModule::performOperations() {
 
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  auto contextContainer = getContextContainerFromUIManager(
-      &*uiManager_); // TODO: use Scheduler::getContextContainer
-  PropsParserContext propsParserContext{surfaceId_, *contextContainer};
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
-      // lock once due to performance reasons
-      auto lock = newestShadowNodesRegistry_->createLock();
+    auto lock = newestShadowNodesRegistry_->createLock();
 
+    shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
+
+      ShadowTreeCloner shadowTreeCloner{
+          newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
       for (const auto &pair : copiedOperationsQueue) {
         const ShadowNodeFamily &family = pair.first->getFamily();
         react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        auto newRootNode =
-            rootNode->cloneTree(family, [&](ShadowNode const &oldShadowNode) {
-              const auto newest =
-                  newestShadowNodesRegistry_->get(oldShadowNode.getTag());
-
-              const auto &source = newest == nullptr ? oldShadowNode : *newest;
-
-              const auto newProps = source.getComponentDescriptor().cloneProps(
-                  propsParserContext,
-                  source.getProps(),
-                  RawProps(rt, *pair.second));
-
-              return source.clone({/* .props = */ newProps});
-            });
+        auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+            rootNode, family, RawProps(rt, *pair.second));
 
         if (newRootNode == nullptr) {
-          // this happens when React removed the component but Reanimated still
-          // tries to animate it, let's skip update for this specific component
+          // this happens when React removed the component but Reanimated
+          // still tries to animate it, let's skip update for this specific
+          // component
           continue;
         }
         rootNode = newRootNode;
-
-        auto ancestors = family.getAncestors(*rootNode);
-        for (const auto &pair : ancestors) {
-          const auto &parent = pair.first.get();
-          const auto &child = parent.getChildren().at(pair.second);
-          newestShadowNodesRegistry_->set(child, parent.getTag());
-        }
       }
 
       // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
       for (auto tag : copiedTagsToRemove) {
         newestShadowNodesRegistry_->remove(tag);
       }
+
+      shadowTreeCloner.updateYogaChildren();
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });
@@ -574,9 +604,7 @@ void NativeReanimatedModule::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-
-  // TODO: use uiManager_->dispatchCommand once it's public
-  UIManager_dispatchCommand(uiManager_, shadowNode, commandName, args);
+  uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
 jsi::Value NativeReanimatedModule::measure(
@@ -585,21 +613,23 @@ jsi::Value NativeReanimatedModule::measure(
   // based on implementation from UIManagerBinding.cpp
 
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  // TODO: use uiManager_->getRelativeLayoutMetrics once it's public
-  // auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
-  //     *shadowNode, nullptr, {/* .includeTransform = */ true});
-  auto layoutMetrics = UIManager_getRelativeLayoutMetrics(
-      uiManager_, *shadowNode, nullptr, {/* .includeTransform = */ true});
+  auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
+      *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
-    return jsi::Value::undefined();
+    // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`, most
+    // likely due to the type of measure callback function which accepts just an
+    // array of numbers (not null). In Reanimated, `measure` returns
+    // `MeasuredDimensions | null`.
+    return jsi::Value::null();
   }
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   auto layoutableShadowNode =
       traitCast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-  facebook::react::Point originRelativeToParent = layoutableShadowNode
+  facebook::react::Point originRelativeToParent =
+      layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin
       : facebook::react::Point();
 
@@ -631,5 +661,27 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
   newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
+
+jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &handlerWorklet,
+    const jsi::Value &isStatusBarTranslucent) {
+  auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
+  auto uiRuntime = runtimeHelper->uiRuntime();
+  return subscribeForKeyboardEventsFunction(
+      [=](int keyboardState, int height) {
+        jsi::Runtime &rt = *uiRuntime;
+        auto handler = shareableHandler->getJSValue(rt);
+        handler.asObject(rt).asFunction(rt).call(
+            rt, jsi::Value(keyboardState), jsi::Value(height));
+      },
+      isStatusBarTranslucent.getBool());
+}
+
+void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &listenerId) {
+  unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
+}
 
 } // namespace reanimated

@@ -29,14 +29,14 @@ Currently supported formats are:
 Object carrying spring configuration.
 Allowed parameters are listed below:
 
-| Options                   | Default | Description |
-| ------------------------- | ------- | ----------- |
-| damping                   | 10      |             |
-| mass                      | 1       |             |
-| stiffness                 | 100     |             |
-| overshootClamping         | false   |             |
-| restDisplacementThreshold | 0.01    |             |
-| restSpeedThreshold        | 2       |             |
+| Options                   | Default | Description                                                                       |
+| ------------------------- | ------- | --------------------------------------------------------------------------------- |
+| damping                   | 10      | How hard the animation decelerates.                                               |
+| mass                      | 1       | The weight of the spring. Reducing this value makes the animation faster.         |
+| stiffness                 | 100     | How bouncy the animation is.                                                      |
+| overshootClamping         | false   | Whether the animation can bounce over the specified value.                        |
+| restDisplacementThreshold | 0.01    | The displacement below which the spring is considered to be at rest.              |
+| restSpeedThreshold        | 2       | The speed in pixels per second from which the spring is considered to be at rest. |
 
 #### `callback` [function]\(optional\)
 

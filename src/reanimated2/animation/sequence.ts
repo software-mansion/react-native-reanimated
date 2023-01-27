@@ -63,11 +63,6 @@ export function withSequence(
         now: Timestamp,
         previousAnimation: SequenceAnimation
       ): void {
-        if (animations.length === 1) {
-          throw Error(
-            'withSequence() animation require more than one animation as argument'
-          );
-        }
         animation.animationIndex = 0;
         if (previousAnimation === undefined) {
           previousAnimation = animations[
@@ -87,17 +82,4 @@ export function withSequence(
       } as SequenceAnimation;
     }
   );
-}
-
-/**
- * @deprecated Kept for backward compatibility. Will be removed soon.
- */
-export function sequence(
-  ..._animations: NextAnimation<SequenceAnimation>[]
-): Animation<SequenceAnimation> {
-  'worklet';
-  console.warn(
-    'Method `sequence` is deprecated. Please use `withSequence` instead'
-  );
-  return withSequence(..._animations);
 }

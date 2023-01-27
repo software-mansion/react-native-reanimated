@@ -23,6 +23,7 @@ Currently supported formats are:
 - `"#rgba"`
 - `"#rrggbb"`
 - `"#rrggbbaa"`
+- CSS colors like `"red"` or `"blanchedalmond"` (full list here: https://www.w3.org/TR/css-color-3/#svg-color)
 
 #### `options` [object]
 
@@ -34,7 +35,7 @@ Allowed parameters are listed below:
 | duration | 300                | How long the animation should last                     |
 | easing   | in-out quad easing | Worklet that drives the easing curve for the animation |
 
-For `easing` parameter we recommend using one of the pre-configured worklets defined in `Easing` module.
+For the `easing` parameter we recommend using one of the pre-configured worklets defined in the `Easing` module.
 
 #### `callback` [function]\(optional\)
 

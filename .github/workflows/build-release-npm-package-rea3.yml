@@ -1,0 +1,10 @@
+name: Build release npm package, Reanimated 3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-build-workflow-rea-v3:
+    uses: ./.github/workflows/build-npm-package-action.yml
+    with:
+      version: release

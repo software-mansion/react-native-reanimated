@@ -1,27 +1,23 @@
+#include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 
 #include <memory>
 #include <string>
 
-#if FOR_HERMES
-#include <hermes/hermes.h>
-#else
-#include <jsi/JSCRuntime.h>
-#endif
-
-#include <android/log.h>
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
-#include "LayoutAnimationsProxy.h"
+#include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
+#include "ReanimatedRuntime.h"
+#include "ReanimatedVersion.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <JFabricUIManager.h>
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
@@ -65,10 +61,6 @@ NativeProxy::NativeProxy(
 }
 
 NativeProxy::~NativeProxy() {
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Value::undefined());
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
 }
@@ -103,7 +95,9 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 void NativeProxy::installJSIBindings(
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
+    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager
 #endif
@@ -132,11 +126,10 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto getCurrentTime = [this]() {
-    auto method =
-        javaPart_->getClass()->getMethod<local_ref<JString>()>("getUptime");
-    local_ref<JString> output = method(javaPart_.get());
-    return static_cast<double>(
-        std::strtoll(output->toStdString().c_str(), NULL, 10));
+    static const auto method =
+        javaPart_->getClass()->getMethod<jlong()>("getCurrentTime");
+    jlong output = method(javaPart_.get());
+    return static_cast<double>(output);
   };
 
   auto requestRender = [this, getCurrentTime](
@@ -198,55 +191,59 @@ void NativeProxy::installJSIBindings(
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
-#if FOR_HERMES
-  auto config =
-      ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
+
+  auto subscribeForKeyboardEventsFunction =
+      [this](
+          std::function<void(int, int)> keyboardEventDataUpdater,
+          bool isStatusBarTranslucent) -> int {
+    return subscribeForKeyboardEvents(
+        std::move(keyboardEventDataUpdater), isStatusBarTranslucent);
+  };
+
+  auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
+    unsubscribeFromKeyboardEvents(listenerId);
+  };
+
+  auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::hermes::makeHermesRuntime(config.build());
-#else
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::jsc::makeJSCRuntime();
-#endif
+      ReanimatedRuntime::make(runtime_, jsQueue);
+
+  auto &rt = *runtime_;
+
   auto workletRuntimeValue =
-      runtime_->global()
-          .getProperty(*runtime_, "ArrayBuffer")
-          .asObject(*runtime_)
-          .asFunction(*runtime_)
-          .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void *))});
+      rt.global()
+          .getPropertyAsObject(rt, "ArrayBuffer")
+          .asFunction(rt)
+          .callAsConstructor(rt, {static_cast<double>(sizeof(void *))});
   uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
-      workletRuntimeValue.getObject(*runtime_).getArrayBuffer(*runtime_).data(
-          *runtime_));
+      workletRuntimeValue.getObject(rt).getArrayBuffer(rt).data(rt));
   workletRuntimeData[0] = reinterpret_cast<uintptr_t>(animatedRuntime.get());
 
-  runtime_->global().setProperty(
-      *runtime_, "_WORKLET_RUNTIME", workletRuntimeValue);
+  rt.global().setProperty(rt, "_WORKLET_RUNTIME", workletRuntimeValue);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", true);
+  rt.global().setProperty(rt, "_IS_FABRIC", true);
 #else
-  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
+  rt.global().setProperty(rt, "_IS_FABRIC", false);
 #endif
+
+  auto version = getReanimatedVersionString(rt);
+  rt.global().setProperty(rt, "_REANIMATED_VERSION_CPP", version);
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
-
-  // Layout Animations Start
-
-  auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
-  };
-
-  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-    this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
-  };
-
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(
-          notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
 
-  // Layout Animations End
+  auto progressLayoutAnimation = [this, wrt](
+                                     int tag, const jsi::Object &newProps) {
+    auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
+    this->layoutAnimations->cthis()->progressLayoutAnimation(tag, newPropsJNI);
+  };
+
+  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
+    this->layoutAnimations->cthis()->endLayoutAnimation(
+        tag, isCancelled, removeView);
+  };
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -259,9 +256,14 @@ void NativeProxy::installJSIBindings(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      progressLayoutAnimation,
+      endLayoutAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
-      setGestureStateFunction};
+      setGestureStateFunction,
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction,
+  };
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -273,12 +275,13 @@ void NativeProxy::installJSIBindings(
 #else
       propObtainer,
 #endif
-      layoutAnimationsProxy,
       platformDepMethodsHolder);
 
-  _nativeReanimatedModule = module;
+  scheduler_->setRuntimeManager(module);
 
+  _nativeReanimatedModule = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
+
 #ifdef RCT_NEW_ARCH_ENABLED
   this->registerEventHandler([weakModule, getCurrentTime](
                                  std::string eventName,
@@ -330,10 +333,49 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
 
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(*runtime_, module));
+  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
+
+  layoutAnimations->cthis()->setAnimationStartingBlock(
+      [wrt, weakModule, weakErrorHandler](
+          int tag,
+          alias_ref<JString> type,
+          alias_ref<JMap<jstring, jstring>> values) {
+        auto &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (const auto &entry : *values) {
+          try {
+            auto key =
+                jsi::String::createFromAscii(rt, entry.first->toStdString());
+            auto value = stod(entry.second->toStdString());
+            yogaValues.setProperty(rt, key, value);
+          } catch (std::invalid_argument e) {
+            if (auto errorHandler = weakErrorHandler.lock()) {
+              errorHandler->setError("Failed to convert value to number");
+              errorHandler->raise();
+            }
+          }
+        }
+
+        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, type->toStdString(), yogaValues);
+      });
+
+  layoutAnimations->cthis()->setHasAnimationBlock(
+      [weakModule](int tag, const std::string &type) {
+        return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
+            tag, type);
+      });
+
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
+      [weakModule](int tag) {
+        weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig(
+            tag);
+      });
+
+  rt.global().setProperty(
+      rt,
+      jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
+      jsi::Object::createFromHostObject(rt, module));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
@@ -477,6 +519,27 @@ void NativeProxy::configureProps(
       ReadableNativeArray::newObjectCxxArgs(
           jsi::dynamicFromValue(rt, nativeProps))
           .get());
+}
+
+int NativeProxy::subscribeForKeyboardEvents(
+    std::function<void(int, int)> keyboardEventDataUpdater,
+    bool isStatusBarTranslucent) {
+  auto method =
+      javaPart_->getClass()
+          ->getMethod<int(KeyboardEventDataUpdater::javaobject, bool)>(
+              "subscribeForKeyboardEvents");
+  return method(
+      javaPart_.get(),
+      KeyboardEventDataUpdater::newObjectCxxArgs(
+          std::move(keyboardEventDataUpdater))
+          .get(),
+      isStatusBarTranslucent);
+}
+
+void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>(
+      "unsubscribeFromKeyboardEvents");
+  method(javaPart_.get(), listenerId);
 }
 
 } // namespace reanimated
