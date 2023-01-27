@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavigationProp } from '@react-navigation/native';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, { SlideInLeft, SlideOutDown } from 'react-native-reanimated';
 import { View, Text, Button } from 'react-native';
 
