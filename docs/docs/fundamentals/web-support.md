@@ -30,13 +30,15 @@ module.exports = {
 If you use
 [playground](https://github.com/software-mansion-labs/reanimated-2-playground)
 app and want to start it in the browser just type:
+
 ```shell
 yarn web
 ```
 
-If you want to start the example applications from the 
+If you want to start the example applications from the
 [reanimated repository](https://github.com/software-mansion/react-native-reanimated)
 you need to run the following command inside the `Example` directory:
+
 ```shell
 yarn start-web
 ```
@@ -52,17 +54,14 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: [
-    'babel-polyfill', 
-    './index.js'
-  ],
+  entry: ['babel-polyfill', './index.js'],
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: './index.html',
     }),
     new webpack.EnvironmentPlugin({ JEST_WORKER_ID: null }),
-    new webpack.DefinePlugin({ process: { env: {} } })
+    new webpack.DefinePlugin({ process: { env: {} } }),
   ],
   module: {
     rules: [
@@ -73,7 +72,7 @@ module.exports = {
           options: {
             presets: [
               '@babel/preset-react',
-              { plugins: ['@babel/plugin-proposal-class-properties'] }
+              { plugins: ['@babel/plugin-proposal-class-properties'] },
             ],
           },
         },
@@ -81,8 +80,34 @@ module.exports = {
     ],
   },
   resolve: {
-    alias: { 'react-native$': 'react-native-web', },
+    alias: { 'react-native$': 'react-native-web' },
     extensions: ['.web.js', '.js'],
   },
 };
 ```
+
+## Web without a Babel plugin
+
+As of Reanimated `2.15`, the Babel plugin is optional on Web. Specifically, this refers to `react-native-reanimated/plugin`.
+
+If you're using Babel, then you should still use the plugin. However, if you're using Next.js, which relies on SWC instead of Babel, then this section may be for you.
+
+In order to use Reanimated on Web without a Babel/SWC plugin, you need to pass a dependency array whenever you use one of the following Reanimated hooks:
+
+- `useDerivedValue`
+- `useAnimatedStyle`
+- `useAnimatedProps`
+- `useAnimatedReaction`
+
+For example:
+
+```ts
+const sv = useSharedValue(0);
+const dv = useDerivedValue(() => sv.value + 1, [sv]); // dep array here
+```
+
+> Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
+
+## Next.js Compatibility
+
+There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the ["Web without a Babel plugin"](#web-without-a-babel-plugin) instructions above.
