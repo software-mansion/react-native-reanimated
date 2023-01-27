@@ -20,7 +20,7 @@ export function NativeModals() {
         name="Modal"
         options={{
           // comment below for native-stack to see if it works with normal screens
-          stackPresentation: 'modal',
+          presentation: 'modal',
         }}
         component={App}
       />
@@ -62,7 +62,7 @@ const App = ({
       </Pressable>
       <Pressable
         style={[styles.button, styles.buttonOpen]}
-        onPress={() => navigation.navigate('Modal')}>
+        onPress={() => navigation.push('Modal')}>
         <Text style={styles.textStyle}>Go to next Screen</Text>
       </Pressable>
       <Pressable
