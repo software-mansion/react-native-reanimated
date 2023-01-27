@@ -409,7 +409,13 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const viewDescriptors: ViewDescriptorsSet = makeViewDescriptorsSet();
   const initRef = useRef<AnimationRef>();
-  const inputs = Object.values(updater._closure ?? {});
+  let inputs = Object.values(updater._closure ?? {});
+  if (shouldBeUseWeb()) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
+  }
   const adaptersArray: AdapterWorkletFunction[] = adapters
     ? Array.isArray(adapters)
       ? adapters
