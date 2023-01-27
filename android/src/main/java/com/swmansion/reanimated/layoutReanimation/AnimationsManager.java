@@ -555,6 +555,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     for (int i = view.getChildCount() - 1; i >= 0; i--) {
       View child = view.getChildAt(i);
 
+      if (child == null) {
+        continue;
+      }
+
       if (mExitingViews.containsKey(child.getId())) {
         endLayoutAnimation(child.getId(), true, true);
       } else if (child instanceof ViewGroup && mExitingSubviewCountMap.containsKey(child.getId())) {
