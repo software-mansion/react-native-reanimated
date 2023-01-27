@@ -121,7 +121,7 @@ To enforce this with your ESLint plugin, you can use the `additionalHooks` field
     "react-hooks/exhaustive-deps": [
       "error",
       {
-        "additionalHooks": "(useMotiPressableTransition|useMotiPressable|useMotiPressables|useMotiPressableAnimatedProps|useInterpolateMotiPressable)"
+        "additionalHooks": "(useAnimatedStyle|useDerivedValue|useAnimatedProps|useAnimatedReaction)"
       }
     ]
   }
