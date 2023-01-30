@@ -26,13 +26,20 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
-  auto uiRuntime = runtimeHelper->uiRuntime();
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType,
       interval.asNumber(),
-      [uiRuntime, sensorType, shareableHandler](double newValues[]) {
-        jsi::Runtime &rt = *uiRuntime;
+      [sensorType,
+       shareableHandler,
+       weakRuntimeHelper =
+           std::weak_ptr<JSRuntimeHelper>(runtimeHelper)](double newValues[]) {
+        auto runtimeHelper = weakRuntimeHelper.lock();
+        if (runtimeHelper == nullptr || runtimeHelper->uiRuntimeDestroyed) {
+          return;
+        }
+
+        auto &rt = *runtimeHelper->uiRuntime();
         auto handler =
             shareableHandler->getJSValue(rt).asObject(rt).asFunction(rt);
         if (sensorType == SensorType::ROTATION_VECTOR) {
