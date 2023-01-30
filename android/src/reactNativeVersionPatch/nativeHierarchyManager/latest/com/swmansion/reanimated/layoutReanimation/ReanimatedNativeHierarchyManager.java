@@ -255,7 +255,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (container != null
           && viewManagerName.equals("RNSScreen")
           && mReaLayoutAnimator != null) {
-        ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
+        mReaLayoutAnimator.getAnimationsManager().viewsDidLayout();
       }
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)

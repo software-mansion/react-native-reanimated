@@ -298,12 +298,24 @@ public class NativeProxy {
     animationsManager.setNativeMethods(
         new NativeMethodsHolder() {
           @Override
-          public void startAnimation(int tag, String type, HashMap<String, Float> values) {
+          public void startAnimation(int tag, String type, HashMap<String, Object> values) {
             LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
             if (LayoutAnimations != null) {
               HashMap<String, String> preparedValues = new HashMap<>();
               for (String key : values.keySet()) {
-                preparedValues.put(key, values.get(key).toString());
+                if (key.endsWith("TransformMatrix")) {
+                  preparedValues.put(
+                    key,
+                    values
+                      .get(key)
+                      .toString()
+                      .replace("[", "")
+                      .replace("]", "")
+                      .replace(",", "")
+                  );
+                } else {
+                  preparedValues.put(key, values.get(key).toString());
+                }
               }
               LayoutAnimations.startAnimationForTag(tag, type, preparedValues);
             }

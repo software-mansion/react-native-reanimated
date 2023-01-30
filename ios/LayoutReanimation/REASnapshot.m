@@ -41,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
 
+  // https://developer.apple.com/documentation/corefoundation/cgaffinetransform?language=objc
   UIView *transformedView;
   bool isTransformed = false;
   do {

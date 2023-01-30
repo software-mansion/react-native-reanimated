@@ -8,12 +8,14 @@ import com.facebook.react.uimanager.ViewManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class Snapshot {
   public static final String WIDTH = "width";
   public static final String HEIGHT = "height";
   public static final String ORIGIN_X = "originX";
   public static final String ORIGIN_Y = "originY";
+  public static final String TRANSFORM_MATRIX = "transformMatrix";
   public static final String ABSOLUTE_ORIGIN_X = "globalOriginX";
   public static final String ABSOLUTE_ORIGIN_Y = "globalOriginY";
 
@@ -21,6 +23,7 @@ public class Snapshot {
   public static final String CURRENT_HEIGHT = "currentHeight";
   public static final String CURRENT_ORIGIN_X = "currentOriginX";
   public static final String CURRENT_ORIGIN_Y = "currentOriginY";
+  public static final String CURRENT_TRANSFORM_MATRIX = "currentTransformMatrix";
   public static final String CURRENT_ABSOLUTE_ORIGIN_X = "currentGlobalOriginX";
   public static final String CURRENT_ABSOLUTE_ORIGIN_Y = "currentGlobalOriginY";
 
@@ -28,6 +31,7 @@ public class Snapshot {
   public static final String TARGET_HEIGHT = "targetHeight";
   public static final String TARGET_ORIGIN_X = "targetOriginX";
   public static final String TARGET_ORIGIN_Y = "targetOriginY";
+  public static final String TARGET_TRANSFORM_MATRIX = "targetTransformMatrix";
   public static final String TARGET_ABSOLUTE_ORIGIN_X = "targetGlobalOriginX";
   public static final String TARGET_ABSOLUTE_ORIGIN_Y = "targetGlobalOriginY";
 
@@ -42,6 +46,11 @@ public class Snapshot {
   public int globalOriginX;
   public int globalOriginY;
   public int topInsetFromParent;
+  public List<Float> transformMatrix = new ArrayList<>(Arrays.asList(
+          1f, 0f, 0f,
+          0f, 1f, 0f,
+          0f, 0f, 1f
+  ));
 
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
@@ -89,6 +98,43 @@ public class Snapshot {
     width = view.getWidth();
     height = view.getHeight();
     topInsetFromParent = view.getTop();
+
+    View transformedView = null;
+    boolean isTransformed = false;
+    do {
+      if (transformedView == null) {
+        transformedView = view;
+      } else {
+        if (!(transformedView.getParent() instanceof View)) {
+          break;
+        }
+        transformedView = (View) transformedView.getParent();
+      }
+      if (transformedView == null) {
+        break;
+      }
+      float[] transformArray = new float[9];
+      transformedView.getMatrix().getValues(transformArray);
+      isTransformed = transformArray[0] != 1  || transformArray[1] != 0 || transformArray[2] != 0
+                   || transformArray[3] != 0  || transformArray[4] != 1 || transformArray[5] != 0
+                   || transformArray[6] != 0  || transformArray[7] != 0 || transformArray[8] != 1;
+    } while (!isTransformed && transformedView != null);
+
+    if (isTransformed && transformedView != null) {
+      float[] transformMatrixArray = new float[9];
+      transformedView.getMatrix().getValues(transformMatrixArray);
+      transformMatrix = new ArrayList<>();
+      for (int i = 0; i < 9; i++) {
+        transformMatrix.add(transformMatrixArray[i]);
+      }
+      transformMatrix.set(0, transformedView.getScaleX());
+      transformMatrix.set(4, transformedView.getScaleY());
+      transformMatrix.set(2, transformedView.getTranslationX());
+      transformMatrix.set(5, transformedView.getTranslationY());
+
+      originX -= (width - width * transformedView.getScaleX()) / 2;
+      originY -= (height - height * transformedView.getScaleY()) / 2;
+    }
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
@@ -98,6 +144,7 @@ public class Snapshot {
     data.put(Snapshot.TARGET_ABSOLUTE_ORIGIN_X, globalOriginX);
     data.put(Snapshot.TARGET_HEIGHT, height);
     data.put(Snapshot.TARGET_WIDTH, width);
+    data.put(Snapshot.TARGET_TRANSFORM_MATRIX, transformMatrix);
   }
 
   private void addCurrentConfig(HashMap<String, Object> data) {
@@ -107,6 +154,7 @@ public class Snapshot {
     data.put(Snapshot.CURRENT_ABSOLUTE_ORIGIN_X, globalOriginX);
     data.put(Snapshot.CURRENT_HEIGHT, height);
     data.put(Snapshot.CURRENT_WIDTH, width);
+    data.put(Snapshot.CURRENT_TRANSFORM_MATRIX, transformMatrix);
   }
 
   private void addBasicConfig(HashMap<String, Object> data) {
@@ -116,6 +164,7 @@ public class Snapshot {
     data.put(Snapshot.ABSOLUTE_ORIGIN_X, globalOriginX);
     data.put(Snapshot.HEIGHT, height);
     data.put(Snapshot.WIDTH, width);
+    data.put(Snapshot.TRANSFORM_MATRIX, transformMatrix);
   }
 
   public HashMap<String, Object> toTargetMap() {
