@@ -298,10 +298,13 @@
     // removed screen from top (removed from stack or covered by another screen)
     bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
     if (stack != nil && !isRemovedInParentStack) {
-      bool shouldRunTransition =
-          [self isScreen:screen
-              outsideStack:stack] // screen is removed from React tree (navigation.navigate(<screenName>))
-          || [self isScreen:screen onTopOfStack:stack]; // click on button goBack on native header
+      bool isInteractive =
+          [[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"isInteractive"];
+      // screen is removed from React tree (navigation.navigate(<screenName>))
+      bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
+      // click on button goBack on native header
+      bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
+      bool shouldRunTransition = !isInteractive && (isScreenRemovedFromReactTree || isTriggeredByGoBackButton);
       if (shouldRunTransition) {
         [self runSharedTransitionForSharedViewsOnScreen:screen];
       } else {
