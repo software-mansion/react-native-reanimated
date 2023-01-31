@@ -12,7 +12,7 @@
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
   NSMutableDictionary<NSNumber *, UIView *> *_currentSharedTransitionViews;
-  REAFindSiblingForSharedViewBlock _findSiblingForSharedView;
+  REAFindPrecedingViewTagForTransitionBlock _findPrecedingViewTagForTransition;
   UIView *_transitionContainer;
   NSMutableArray<UIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
@@ -109,13 +109,13 @@
     }
 
     // find sibling for shared view
-    NSNumber *siblingViewTag = _findSiblingForSharedView(sharedView.reactTag);
+    NSNumber *siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
     UIView *siblingView = nil;
     do {
       siblingView = [_animationManager viewForTag:siblingViewTag];
       if (siblingView == nil) {
         [self clearAllSharedConfigsForViewTag:siblingViewTag];
-        siblingViewTag = _findSiblingForSharedView(sharedView.reactTag);
+        siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
       }
     } while (siblingView == nil && siblingViewTag != nil);
 
@@ -499,9 +499,10 @@
   }
 }
 
-- (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView
+- (void)setFindPrecedingViewTagForTransitionBlock:
+    (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition
 {
-  _findSiblingForSharedView = findSiblingForSharedView;
+  _findPrecedingViewTagForTransition = findPrecedingViewTagForTransition;
 }
 
 - (void)clearAllSharedConfigsForViewTag:(NSNumber *)viewTag

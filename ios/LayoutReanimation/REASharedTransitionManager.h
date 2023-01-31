@@ -9,7 +9,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)viewsDidLayout;
 - (BOOL)setupSyncSharedTransitionForViews:(NSArray<UIView *> *)views;
 - (void)finishSharedAnimation:(UIView *)view;
-- (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView;
+- (void)setFindPrecedingViewTagForTransitionBlock:
+    (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
 - (UIView *)getTransitioningView:(NSNumber *)tag;
 

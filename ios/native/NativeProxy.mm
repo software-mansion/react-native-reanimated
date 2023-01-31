@@ -404,9 +404,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
-  [animationsManager setFindSiblingForSharedViewBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
+  [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
     if (auto reaModule = weakModule.lock()) {
-      int resultTag = reaModule->layoutAnimationsManager().findSiblingForSharedView([tag intValue]);
+      int resultTag = reaModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
       return resultTag == -1 ? nil : @(resultTag);
     }
     return nil;

@@ -120,7 +120,7 @@ public class SharedTransitionManager {
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
         mAnimationsManager.getReanimatedNativeHierarchyManager();
     for (View sharedView : sharedViews) {
-      int targetViewTag = mNativeMethodsHolder.findSiblingForSharedView(sharedView.getId());
+      int targetViewTag = mNativeMethodsHolder.findPrecedingViewTagForTransition(sharedView.getId());
       boolean bothAreRemoved = !addedNewScreen && viewTags.contains(targetViewTag);
       if (targetViewTag < 0) {
         continue;

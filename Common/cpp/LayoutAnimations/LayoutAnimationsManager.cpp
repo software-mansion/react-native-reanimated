@@ -21,6 +21,7 @@ void LayoutAnimationsManager::configureAnimation(
   } else if (type == "sharedElementTransition") {
     sharedTransitionAnimations_[tag] = config;
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
+    viewTagToSharedTag_[tag] = sharedTransitionTag;
   }
 }
 
@@ -47,12 +48,16 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   layoutAnimations_.erase(tag);
 
   sharedTransitionAnimations_.erase(tag);
-  for (auto &[key, group] : sharedTransitionGroups_) {
-    auto position = std::find(group.begin(), group.end(), tag);
-    if (position != group.end()) {
-      group.erase(position);
-    }
+  auto const &groupName = viewTagToSharedTag_[tag];
+  auto &group = sharedTransitionGroups_[groupName];
+  auto position = std::find(group.begin(), group.end(), tag);
+  if (position != group.end()) {
+    group.erase(position);
   }
+  if (group.size() == 0) {
+    sharedTransitionGroups_.erase(groupName);
+  }
+  viewTagToSharedTag_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
@@ -97,12 +102,12 @@ void LayoutAnimationsManager::startLayoutAnimation(
   same transition tag) which has been added to that group directly before
   the one that we provide as an argument.
 */
-int LayoutAnimationsManager::findSiblingForSharedView(int tag) {
-  for (auto const &[_, group] : sharedTransitionGroups_) {
-    auto position = std::find(group.begin(), group.end(), tag);
-    if (position != group.end() && position != group.begin()) {
-      return *std::prev(position);
-    }
+int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
+  auto const &groupName = viewTagToSharedTag_[tag];
+  auto const &group = sharedTransitionGroups_[groupName];
+  auto position = std::find(group.begin(), group.end(), tag);
+  if (position != group.end() && position != group.begin()) {
+    return *std::prev(position);
   }
   return -1;
 }

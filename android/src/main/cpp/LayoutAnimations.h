@@ -16,7 +16,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       void(int, alias_ref<JString>, alias_ref<JMap<jstring, jstring>>)>;
   using HasAnimationBlock = std::function<bool(int, const std::string &)>;
   using ClearAnimationConfigBlock = std::function<void(int)>;
-  using FindSiblingForSharedViewBlock = std::function<int(int)>;
+  using FindPrecedingViewTagForTransitionBlock = std::function<int(int)>;
 
  public:
   static auto constexpr kJavaDescriptor =
@@ -36,8 +36,9 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
   void setClearAnimationConfigBlock(
       ClearAnimationConfigBlock clearAnimationConfigBlock);
-  void setFindSiblingForSharedView(
-      FindSiblingForSharedViewBlock findSiblingForSharedViewBlock);
+  void setFindPrecedingViewTagForTransition(
+      FindPrecedingViewTagForTransitionBlock
+          findPrecedingViewTagForTransitionBlock);
 
   void progressLayoutAnimation(
       int tag,
@@ -45,7 +46,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       bool isSharedTransition);
   void endLayoutAnimation(int tag, bool cancelled, bool removeView);
   void clearAnimationConfigForTag(int tag);
-  int findSiblingForSharedView(int tag);
+  int findPrecedingViewTagForTransition(int tag);
 
  private:
   friend HybridBase;
@@ -53,7 +54,8 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   AnimationStartingBlock animationStartingBlock_;
   HasAnimationBlock hasAnimationBlock_;
   ClearAnimationConfigBlock clearAnimationConfigBlock_;
-  FindSiblingForSharedViewBlock findSiblingForSharedViewBlock_;
+  FindPrecedingViewTagForTransitionBlock
+      findPrecedingViewTagForTransitionBlock_;
 
   explicit LayoutAnimations(
       jni::alias_ref<LayoutAnimations::jhybridobject> jThis);

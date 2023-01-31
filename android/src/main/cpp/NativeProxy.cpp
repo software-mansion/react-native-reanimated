@@ -374,13 +374,15 @@ void NativeProxy::installJSIBindings(
             tag);
       });
 
-  layoutAnimations->cthis()->setFindSiblingForSharedView([weakModule](int tag) {
-    if (auto module = weakModule.lock()) {
-      return module->layoutAnimationsManager().findSiblingForSharedView(tag);
-    } else {
-      return -1;
-    }
-  });
+  layoutAnimations->cthis()->setFindPrecedingViewTagForTransition(
+      [weakModule](int tag) {
+        if (auto module = weakModule.lock()) {
+          return module->layoutAnimationsManager()
+              .findPrecedingViewTagForTransition(tag);
+        } else {
+          return -1;
+        }
+      });
 
   rt.global().setProperty(
       rt,
