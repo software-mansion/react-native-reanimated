@@ -220,7 +220,7 @@
 
 - (void)observeChanges:(UIView *)view
 {
-  if ([_screenHasObserver containsObject:view.reactTag]) {
+  if (view == nil || [_screenHasObserver containsObject:view.reactTag]) {
     return;
   }
   [_screenHasObserver addObject:view.reactTag];
