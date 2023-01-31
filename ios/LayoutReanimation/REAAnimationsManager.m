@@ -108,13 +108,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (UIView *)viewForTag:(NSNumber *)tag
 {
-  UIView *view = [_reaUiManager viewForReactTag:tag];
-  if (view == nil) {
-    view = [_exitingViews objectForKey:tag];
-  }
-  if (view == nil) {
-    view = [_sharedTransitionManager getTransitioningView:tag];
-  }
+  UIView *view;
+  (view = [_reaUiManager viewForReactTag:tag]) || (view = [_exitingViews objectForKey:tag]) ||
+      (view = [_sharedTransitionManager getTransitioningView:tag]);
   return view;
 }
 

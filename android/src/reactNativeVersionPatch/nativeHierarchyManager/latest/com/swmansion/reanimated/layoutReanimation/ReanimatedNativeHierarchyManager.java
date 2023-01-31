@@ -25,7 +25,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 class ReaLayoutAnimator extends LayoutAnimationController {
@@ -291,7 +290,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (tagsToDelete == null) {
         animationsManager.doSnapshotForTopScreenViews(viewGroup);
       } else {
-        animationsManager.notifyAboutViewsRemoving(tagsToDelete);
+        animationsManager.notifyAboutViewsRemoval(tagsToDelete);
       }
       if (indicesToRemove != null && mReaLayoutAnimator instanceof ReaLayoutAnimator) {
         for (int index : indicesToRemove) {
@@ -351,7 +350,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         pendingTags.clear();
       }
     }
-    animationsManager.notifyAboutViewsRemoving(tagsToDelete);
+    animationsManager.notifyAboutViewsRemoval(tagsToDelete);
     super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);

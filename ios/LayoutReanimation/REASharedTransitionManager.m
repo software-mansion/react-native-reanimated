@@ -247,7 +247,7 @@
   IMP originalImp = method_getImplementation(originalMethod);
   IMP swizzledImp = method_getImplementation(swizzledMethod);
   class_replaceMethod(originalClass, swizzledSelector, originalImp, method_getTypeEncoding(originalMethod));
-  class_replaceMethod(originalClass, originalSelector, swizzledImp, method_getTypeEncoding(swizzledSelector));
+  class_replaceMethod(originalClass, originalSelector, swizzledImp, method_getTypeEncoding(swizzledMethod));
 }
 
 - (void)swizzled_viewDidLayoutSubviews

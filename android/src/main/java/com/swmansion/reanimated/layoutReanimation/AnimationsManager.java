@@ -313,8 +313,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
         view, parentViewManager, parentTag, view.getId(), x, y, width, height, isPositionAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
-    props.remove(Snapshot.ABSOLUTE_ORIGIN_X);
-    props.remove(Snapshot.ABSOLUTE_ORIGIN_Y);
+    props.remove(Snapshot.GLOBAL_ORIGIN_X);
+    props.remove(Snapshot.GLOBAL_ORIGIN_Y);
     props.remove(Snapshot.WIDTH);
     props.remove(Snapshot.HEIGHT);
 
@@ -631,16 +631,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.viewsDidLayout();
   }
 
-  public void notifyAboutViewsRemoving(int[] tagsToDelete) {
-    mSharedTransitionManager.onViewsRemoving(tagsToDelete);
+  public void notifyAboutViewsRemoval(int[] tagsToDelete) {
+    mSharedTransitionManager.onViewsRemoval(tagsToDelete);
   }
 
   public void doSnapshotForTopScreenViews(ViewGroup stack) {
     mSharedTransitionManager.doSnapshotForTopScreenViews(stack);
-  }
-
-  protected NativeMethodsHolder getNativeMethodsHolder() {
-    return mNativeMethodsHolder;
   }
 
   protected ReactContext getContext() {

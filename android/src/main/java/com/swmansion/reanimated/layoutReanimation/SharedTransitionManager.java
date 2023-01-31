@@ -49,15 +49,15 @@ public class SharedTransitionManager {
   }
 
   protected void viewsDidLayout() {
-    setupSharedTransitionForViews(mAddedSharedViews, true);
+    startSharedTransitionForViews(mAddedSharedViews, true);
     mAddedSharedViews.clear();
   }
 
-  protected void onViewsRemoving(int[] tagsToDelete) {
+  protected void onViewsRemoval(int[] tagsToDelete) {
     if (tagsToDelete != null) {
       visitTreeForTags(tagsToDelete, false);
 
-      setupSharedTransitionForViews(mRemovedSharedViews, false);
+      startSharedTransitionForViews(mRemovedSharedViews, false);
       for (View removedSharedView : mRemovedSharedViews) {
         visitTree(removedSharedView.getId(), true);
       }
@@ -84,13 +84,13 @@ public class SharedTransitionManager {
     mNativeMethodsHolder = nativeMethods;
   }
 
-  private void setupSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
+  private void startSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
     if (sharedViews.isEmpty()) {
       return;
     }
     sortViewsByTags(sharedViews);
     List<SharedElement> sharedElements =
-        getSharedElementForCurrentTransition(sharedViews, withNewElements);
+        getSharedElementsForCurrentTransition(sharedViews, withNewElements);
     if (sharedElements.isEmpty()) {
       return;
     }
@@ -108,7 +108,7 @@ public class SharedTransitionManager {
     Collections.sort(views, (v1, v2) -> Integer.compare(v2.getId(), v1.getId()));
   }
 
-  private List<SharedElement> getSharedElementForCurrentTransition(
+  private List<SharedElement> getSharedElementsForCurrentTransition(
       List<View> sharedViews, boolean addedNewScreen) {
     Set<Integer> viewTags = new HashSet<>();
     if (!addedNewScreen) {
@@ -237,18 +237,18 @@ public class SharedTransitionManager {
 
   private void startSharedTransition(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
-      onViewTransition(
+      startSharedAnimationForView(
           sharedElement.sourceView,
           sharedElement.sourceViewSnapshot,
           sharedElement.targetViewSnapshot);
-      onViewTransition(
+      startSharedAnimationForView(
           sharedElement.targetView,
           sharedElement.sourceViewSnapshot,
           sharedElement.targetViewSnapshot);
     }
   }
 
-  private void onViewTransition(View view, Snapshot before, Snapshot after) {
+  private void startSharedAnimationForView(View view, Snapshot before, Snapshot after) {
     HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
 

@@ -20,7 +20,6 @@ void LayoutAnimationsManager::configureAnimation(
     layoutAnimations_[tag] = config;
   } else if (type == "sharedElementTransition") {
     sharedTransitionAnimations_[tag] = config;
-    sharedTransitionGroups_.try_emplace(sharedTransitionTag);
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
   }
 }
@@ -90,11 +89,15 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
+/*
+  The top screen on the stack triggers the animation, so we need to find
+  the sibling view registered in the past. That's why we look backward.
+
+  We need to find view registered in the same transition group (with the
+  same transition tag) which has been added to that group directly before
+  the one that we provide as an argument.
+*/
 int LayoutAnimationsManager::findSiblingForSharedView(int tag) {
-  /*
-    The top screen on the stack triggers the animation, so we need to find
-    the sibling view registered in the past. That's why we look backward.
-   */
   for (auto const &[_, group] : sharedTransitionGroups_) {
     auto position = std::find(group.begin(), group.end(), tag);
     if (position != group.end() && position != group.begin()) {
