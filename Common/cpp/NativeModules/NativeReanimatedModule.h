@@ -97,11 +97,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &config) override;
 
   void onRender(double timestampMs);
-#ifdef RCT_NEW_ARCH_ENABLED
-  void onEvent(std::string eventName, jsi::Value &&eventAsString);
-#else
-  void onEvent(std::string eventName, std::string eventAsString);
-#endif
+
+  void onEvent(std::string eventName, jsi::Value &&payload);
+
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();

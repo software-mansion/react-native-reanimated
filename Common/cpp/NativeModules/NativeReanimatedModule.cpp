@@ -389,18 +389,9 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 
 void NativeReanimatedModule::onEvent(
     std::string eventName,
-#ifdef RCT_NEW_ARCH_ENABLED
-    jsi::Value &&payload
-#else
-    std::string eventAsString
-#endif
-    /**/) {
+    jsi::Value &&payload) {
   try {
-#ifdef RCT_NEW_ARCH_ENABLED
     eventHandlerRegistry->processEvent(*runtime, eventName, payload);
-#else
-    eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
-#endif
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
@@ -477,6 +468,7 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   }
   return false;
 }
+#endif // RCT_NEW_ARCH_ENABLED
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
@@ -495,6 +487,7 @@ bool NativeReanimatedModule::handleEvent(
   return false;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
