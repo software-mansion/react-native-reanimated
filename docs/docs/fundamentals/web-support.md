@@ -30,15 +30,13 @@ module.exports = {
 If you use
 [playground](https://github.com/software-mansion-labs/reanimated-2-playground)
 app and want to start it in the browser just type:
-
 ```shell
 yarn web
 ```
 
-If you want to start the example applications from the
+If you want to start the example applications from the 
 [reanimated repository](https://github.com/software-mansion/react-native-reanimated)
 you need to run the following command inside the `Example` directory:
-
 ```shell
 yarn start-web
 ```
@@ -54,14 +52,17 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: ['babel-polyfill', './index.js'],
+  entry: [
+    'babel-polyfill', 
+    './index.js'
+  ],
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: './index.html',
     }),
     new webpack.EnvironmentPlugin({ JEST_WORKER_ID: null }),
-    new webpack.DefinePlugin({ process: { env: {} } }),
+    new webpack.DefinePlugin({ process: { env: {} } })
   ],
   module: {
     rules: [
@@ -72,7 +73,7 @@ module.exports = {
           options: {
             presets: [
               '@babel/preset-react',
-              { plugins: ['@babel/plugin-proposal-class-properties'] },
+              { plugins: ['@babel/plugin-proposal-class-properties'] }
             ],
           },
         },
@@ -80,7 +81,7 @@ module.exports = {
     ],
   },
   resolve: {
-    alias: { 'react-native$': 'react-native-web' },
+    alias: { 'react-native$': 'react-native-web', },
     extensions: ['.web.js', '.js'],
   },
 };
