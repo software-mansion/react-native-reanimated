@@ -76,11 +76,11 @@ const SimpleContainer = () => {
   return (
     <Stack.Navigator
       detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
         animationEnabled: false,
         headerStyle: { backgroundColor: 'red' },
         gestureEnabled: true,
+        presentation: 'modal',
         // cardOverlayEnabled: true,
       }}>
       <Stack.Screen component={Screen1} name="Screen1" />
@@ -96,11 +96,11 @@ const App = () => {
   return (
     <Stack.Navigator
       detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
         animationEnabled: false,
         headerStyle: { backgroundColor: 'red' },
         gestureEnabled: true,
+        presentation: 'modal',
         // cardOverlayEnabled: true,
       }}>
       <Stack.Screen name="home" component={Home} />

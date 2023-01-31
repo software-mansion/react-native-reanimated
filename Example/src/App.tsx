@@ -11,7 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   BasicLayoutAnimation,

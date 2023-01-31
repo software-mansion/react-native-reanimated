@@ -459,6 +459,10 @@ void NativeReanimatedModule::unregisterSensor(
   animatedSensorModule.unregisterSensor(sensorId);
 }
 
+void NativeReanimatedModule::cleanupSensors() {
+  animatedSensorModule.unregisterAllSensors();
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::isThereAnyLayoutProp(
     jsi::Runtime &rt,

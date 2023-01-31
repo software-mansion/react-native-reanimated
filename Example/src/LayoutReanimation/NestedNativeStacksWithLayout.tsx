@@ -2,7 +2,7 @@ import Animated, { SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
 

@@ -63,6 +63,11 @@ NativeProxy::NativeProxy(
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
+
+  // cleanup all animated sensors here, since NativeProxy
+  // has already been destroyed when AnimatedSensorModule's
+  // destructor is ran
+  _nativeReanimatedModule->cleanupSensors();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
