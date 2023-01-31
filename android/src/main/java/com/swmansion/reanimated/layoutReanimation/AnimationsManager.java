@@ -402,7 +402,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     // Check if the parent of the view has to layout the view, or the child has to lay itself out.
-    if (parentTag % 10 == 1) { // ParentIsARoot
+    if (parentTag % 10 == 1 && parentViewManager != null) { // parentTag % 10 == 1 - ParentIsARoot
       IViewManagerWithChildren parentViewManagerWithChildren;
       if (parentViewManager instanceof IViewManagerWithChildren) {
         parentViewManagerWithChildren = (IViewManagerWithChildren) parentViewManager;
