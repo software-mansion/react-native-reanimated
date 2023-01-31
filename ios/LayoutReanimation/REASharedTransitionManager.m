@@ -2,7 +2,7 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
 
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSScreen.h>) && __cplusplus
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSScreenStack.h>
 #endif
@@ -184,7 +184,7 @@
 
 - (UIView *)getScreenForView:(UIView *)view
 {
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSScreen.h>) && __cplusplus
   UIView *screen = view;
   while (![screen isKindOfClass:[RNSScreenView class]] && screen.superview != nil) {
     screen = screen.superview;
@@ -198,7 +198,7 @@
 
 - (UIView *)getStackForView:(UIView *)view
 {
-#if __has_include(<RNScreens/RNSScreen.h>)
+#if __has_include(<RNScreens/RNSScreen.h>) && __cplusplus
   if ([view isKindOfClass:[RNSScreenView class]]) {
     if (view.reactSuperview != nil) {
       if ([view.reactSuperview isKindOfClass:[RNSScreenStackView class]]) {

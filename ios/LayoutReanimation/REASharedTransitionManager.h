@@ -1,8 +1,6 @@
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REASnapshot.h>
 
-NS_ASSUME_NONNULL_BEGIN
-
 @interface REASharedTransitionManager : NSObject
 
 - (void)notifyAboutNewView:(UIView *)view;
@@ -15,5 +13,3 @@ NS_ASSUME_NONNULL_BEGIN
 - (UIView *)getTransitioningView:(NSNumber *)tag;
 
 @end
-
-NS_ASSUME_NONNULL_END
