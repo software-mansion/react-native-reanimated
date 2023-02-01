@@ -140,6 +140,6 @@ const dv = useDerivedValue(() => sv.value, [sv.value]);
 const dv = useDerivedValue(() => sv.value, [sv]);
 ```
 
-## Next.js Compatibility
+## Solito / Next.js Compatibility
 
 There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the ["Web without a Babel plugin"](#web-without-a-babel-plugin) instructions above.
