@@ -299,7 +299,7 @@
     bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
     if (stack != nil && !isRemovedInParentStack) {
       bool isInteractive =
-          [[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"isInteractive"];
+          [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
       // screen is removed from React tree (navigation.navigate(<screenName>))
       bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
       // click on button goBack on native header
