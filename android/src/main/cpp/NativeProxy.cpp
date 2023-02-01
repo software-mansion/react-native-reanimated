@@ -308,10 +308,10 @@ void NativeProxy::installJSIBindings(
       }
       std::string delimiter = "NativeMap:";
       auto positionToSplit = eventAsString.find(delimiter) + delimiter.size();
-      auto lastBracketCharactedPosition =
+      auto lastBracketCharacterPosition =
           eventAsString.size() - positionToSplit - 1;
       auto eventJSON =
-          eventAsString.substr(positionToSplit, lastBracketCharactedPosition);
+          eventAsString.substr(positionToSplit, lastBracketCharacterPosition);
       if (eventJSON.compare(std::string("null")) == 0) {
         return;
       }
