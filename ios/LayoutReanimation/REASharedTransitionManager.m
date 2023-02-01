@@ -220,6 +220,7 @@
 
 - (void)observeChanges:(UIView *)view
 {
+#if LOAD_SCREENS_HEADERS
   if (view == nil || [_screenHasObserver containsObject:view.reactTag]) {
     return;
   }
@@ -234,11 +235,12 @@
     UIViewController *viewController = [view valueForKey:@"controller"];
     [self swizzleMethod:@selector(viewDidLayoutSubviews)
                    with:@selector(swizzled_viewDidLayoutSubviews)
-               forClass:[viewController class]];
+               forClass:[RNSScreen class]];
     [self swizzleMethod:@selector(notifyWillDisappear)
                    with:@selector(swizzled_notifyWillDisappear)
-               forClass:[view class]];
+               forClass:[RNSScreenView class]];
   });
+#endif
 }
 
 - (void)swizzleMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
