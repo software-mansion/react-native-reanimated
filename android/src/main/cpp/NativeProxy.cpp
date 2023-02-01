@@ -287,40 +287,34 @@ void NativeProxy::installJSIBindings(
   _nativeReanimatedModule = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
 
-#ifdef RCT_NEW_ARCH_ENABLED
   this->registerEventHandler([weakModule, getCurrentTime](
-                                 std::string eventName,
-                                 std::string eventAsString) {
+                                 jni::alias_ref<JString> eventKey,
+                                 jni::alias_ref<react::WritableMap> event) {
+    // handles RCTEvents from RNGestureHandler
     if (auto module = weakModule.lock()) {
-      // handles RCTEvents from RNGestureHandler
-
+      auto eventName = eventKey->toString();
+      jsi::Runtime &rt = *module->runtime;
+      std::string eventAsString = "{NativeMap:null}";
+      if (event != nullptr) {
+        try {
+          eventAsString = event->toString();
+        } catch (std::exception &) {
+          // Events from other libraries may contain NaN or INF values which
+          // cannot be represented in JSON. See
+          // https://github.com/software-mansion/react-native-reanimated/issues/1776
+          // for details.
+          return;
+        }
+      }
       std::string eventJSON = eventAsString.substr(
           13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
-      jsi::Runtime &rt = *module->runtime;
       jsi::Value payload =
           jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
       // TODO: support NaN and INF values
       // TODO: convert event directly to jsi::Value without JSON serialization
-
       module->handleEvent(eventName, std::move(payload), getCurrentTime());
     }
   });
-#else
-  this->registerEventHandler(
-      [weakModule, getCurrentTime](
-          std::string eventName, std::string eventAsString) {
-        if (auto module = weakModule.lock()) {
-          jsi::Object global = module->runtime->global();
-          jsi::String eventTimestampName =
-              jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-          global.setProperty(
-              *module->runtime, eventTimestampName, getCurrentTime());
-          module->onEvent(eventName, eventAsString);
-          global.setProperty(
-              *module->runtime, eventTimestampName, jsi::Value::undefined());
-        }
-      });
-#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
@@ -414,7 +408,9 @@ void NativeProxy::requestRender(std::function<void(double)> onRender) {
 }
 
 void NativeProxy::registerEventHandler(
-    std::function<void(std::string, std::string)> handler) {
+    std::function<
+        void(jni::alias_ref<JString>, jni::alias_ref<react::WritableMap>)>
+        handler) {
   static auto method =
       javaPart_->getClass()->getMethod<void(EventHandler::javaobject)>(
           "registerEventHandler");
