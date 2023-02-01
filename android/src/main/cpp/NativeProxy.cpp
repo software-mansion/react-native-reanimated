@@ -292,19 +292,21 @@ void NativeProxy::installJSIBindings(
                                  jni::alias_ref<react::WritableMap> event) {
     // handles RCTEvents from RNGestureHandler
     if (auto module = weakModule.lock()) {
+      if (event == nullptr) {
+        return;
+      }
       auto eventName = eventKey->toString();
-      jsi::Runtime &rt = *module->runtime;
+
+      // TODO: convert event directly to jsi::Value without JSON serialization
       std::string eventAsString = "{NativeMap:null}";
-      if (event != nullptr) {
-        try {
-          eventAsString = event->toString();
-        } catch (std::exception &) {
-          // Events from other libraries may contain NaN or INF values which
-          // cannot be represented in JSON. See
-          // https://github.com/software-mansion/react-native-reanimated/issues/1776
-          // for details.
-          return;
-        }
+      try {
+        eventAsString = event->toString();
+      } catch (std::exception &) {
+        // Events from other libraries may contain NaN or INF values which
+        // cannot be represented in JSON. See
+        // https://github.com/software-mansion/react-native-reanimated/issues/1776
+        // for details.
+        return;
       }
       std::string delimiter = "NativeMap:";
       auto positionToSplit = eventAsString.find(delimiter) + delimiter.size();
@@ -315,9 +317,10 @@ void NativeProxy::installJSIBindings(
       if (eventJSON.compare(std::string("null")) == 0) {
         return;
       }
-      auto payload = jsi::Value::createFromJsonUtf8(
+      jsi::Runtime &rt = *module->runtime;
+      jsi::Value payload = jsi::Value::createFromJsonUtf8(
           rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
-      // TODO: convert event directly to jsi::Value without JSON serialization
+
       module->handleEvent(eventName, std::move(payload), getCurrentTime());
     }
   });
