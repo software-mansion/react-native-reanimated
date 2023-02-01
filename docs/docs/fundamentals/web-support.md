@@ -115,9 +115,6 @@ Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependenc
 
 When you use hooks from React, they give you nice suggestions from ESLint to include all dependencies. In order to add this support to Reanimated hooks, add the following to your ESLint config:
 
-
-To enforce this with your ESLint plugin, you can use the `additionalHooks` field in your ESLint config:
-
 ```json
 {
   "rules": {
