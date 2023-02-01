@@ -228,7 +228,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
     // noop
   };
 
@@ -254,9 +254,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle) {
+  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(*wrt.lock(), newStyle);
-    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict forTag:@(tag)];
+    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
+                                                     forTag:@(tag)
+                                         isSharedTransition:isSharedTransition];
   };
 
   auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
@@ -400,6 +402,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
     weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+  }];
+
+  [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
+    if (auto reaModule = weakModule.lock()) {
+      int resultTag = reaModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
+      return resultTag == -1 ? nil : @(resultTag);
+    }
+    return nil;
   }];
 #endif
 

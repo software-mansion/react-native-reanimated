@@ -316,6 +316,8 @@
     // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the
     // private field
     [uiManager setNextLayoutAnimationGroup:nil];
+
+    [self->_animationsManager viewsDidLayout];
   };
 }
 

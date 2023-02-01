@@ -87,6 +87,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     if (view.getWidth() == 0 || view.getHeight() == 0) {
       if (!mAnimationsManager.hasAnimationForTag(view.getId(), "entering")) {
         super.applyLayoutUpdate(view, x, y, width, height);
+        mAnimationsManager.maybeRegisterSharedView(view);
         return;
       }
       view.layout(x, y, x + width, y + height);
@@ -240,6 +241,27 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     return !initOk || !((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled();
   }
 
+  public synchronized void updateLayout(
+      int parentTag, int tag, int x, int y, int width, int height) {
+    super.updateLayout(parentTag, tag, x, y, width, height);
+    if (isLayoutAnimationDisabled()) {
+      return;
+    }
+    try {
+      ViewManager viewManager = resolveViewManager(tag);
+      String viewManagerName = viewManager.getName();
+      View container = resolveView(parentTag);
+      if (container != null
+          && viewManagerName.equals("RNSScreen")
+          && mReaLayoutAnimator != null) {
+        ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
+      }
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
+    }
+  }
+
   @Override
   public synchronized void manageChildren(
       int tag,
@@ -263,7 +285,13 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     }
 
     // we don't want layout animations in native-stack since it is currently buggy there
+    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
+      if (tagsToDelete == null) {
+        animationsManager.doSnapshotForTopScreenViews(viewGroup);
+      } else {
+        animationsManager.notifyAboutViewsRemoval(tagsToDelete);
+      }
       if (indicesToRemove != null && mReaLayoutAnimator instanceof ReaLayoutAnimator) {
         for (int index : indicesToRemove) {
           View child = viewGroupManager.getChildAt(viewGroup, index);
@@ -322,7 +350,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         pendingTags.clear();
       }
     }
-
+    animationsManager.notifyAboutViewsRemoval(tagsToDelete);
     super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);

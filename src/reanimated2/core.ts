@@ -192,11 +192,13 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: string,
-  config: LayoutAnimationFunction | Keyframe
+  config: LayoutAnimationFunction | Keyframe,
+  sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
     viewTag,
     type,
+    sharedTransitionTag,
     makeShareableCloneRecursive(config)
   );
 }
