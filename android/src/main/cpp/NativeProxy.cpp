@@ -306,11 +306,17 @@ void NativeProxy::installJSIBindings(
           return;
         }
       }
-      std::string eventJSON = eventAsString.substr(
-          13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
-      jsi::Value payload =
-          jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
-      // TODO: support NaN and INF values
+      std::string delimiter = "NativeMap:";
+      auto positionToSplit = eventAsString.find(delimiter) + delimiter.size();
+      auto lastBracketCharactedPosition =
+          eventAsString.size() - positionToSplit - 1;
+      auto eventJSON =
+          eventAsString.substr(positionToSplit, lastBracketCharactedPosition);
+      if (eventJSON.compare(std::string("null")) == 0) {
+        return;
+      }
+      auto payload = jsi::Value::createFromJsonUtf8(
+          rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
       // TODO: convert event directly to jsi::Value without JSON serialization
       module->handleEvent(eventName, std::move(payload), getCurrentTime());
     }
