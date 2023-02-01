@@ -130,6 +130,18 @@ When you use hooks from React, they give you nice suggestions from ESLint to inc
 
 This assumes you've already installed the `react-hooks` eslint [plugin](https://www.npmjs.com/package/eslint-plugin-react-hooks).
 
+If you're using ESLint autofix, the ESLint plugin may add `.value` to the dependency arrays, rather than the root dependency. In these cases, you should update the array yourself.
+
+```tsx
+const sv = useSharedValue(0)
+
+// 🚨 bad, sv.value is in the array
+const dv = useDerivedValue(() => sv.value, [sv.value]);
+
+// ✅ good, sv is in the array
+const dv = useDerivedValue(() => sv.value, [sv]);
+```
+
 ## Next.js Compatibility
 
 There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the ["Web without a Babel plugin"](#web-without-a-babel-plugin) instructions above.
