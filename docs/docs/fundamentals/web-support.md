@@ -89,9 +89,7 @@ module.exports = {
 
 ## Web without a Babel plugin
 
-As of Reanimated `2.15`, the Babel plugin is optional on Web. Specifically, this refers to `react-native-reanimated/plugin`.
-
-If you're using Babel, then you should still use the plugin. However, if you're using Next.js, which relies on SWC instead of Babel, then this section may be for you.
+As of Reanimated `2.15`, the Babel plugin (`react-native-reanimated/plugin`) is optional on Web.
 
 In order to use Reanimated on Web without a Babel/SWC plugin, you need to pass a dependency array whenever you use one of the following Reanimated hooks:
 
