@@ -57,7 +57,7 @@ class JSRuntimeHelper {
       const std::shared_ptr<Scheduler> &scheduler)
       : rnRuntime_(rnRuntime), uiRuntime_(uiRuntime), scheduler_(scheduler) {}
 
-  volatile bool uiRuntimeDestroyed;
+  volatile bool uiRuntimeDestroyed = false;
   std::unique_ptr<CoreFunction> callGuard;
   std::unique_ptr<CoreFunction> valueUnpacker;
 

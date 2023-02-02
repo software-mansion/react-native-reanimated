@@ -27,7 +27,11 @@ declare global {
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
   const _getTimestamp: () => number;
-  const _notifyAboutProgress: (tag: number, value: number) => void;
+  const _notifyAboutProgress: (
+    tag: number,
+    value: number,
+    isSharedTransition: boolean
+  ) => void;
   const _notifyAboutEnd: (
     tag: number,
     finished: boolean,

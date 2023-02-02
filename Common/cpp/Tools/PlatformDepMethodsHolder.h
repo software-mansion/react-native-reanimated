@@ -53,8 +53,8 @@ using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using TimeProviderFunction = std::function<double(void)>;
 
-using ProgressLayoutAnimationFunction =
-    std::function<void(int, const jsi::Object &newProps)>;
+using ProgressLayoutAnimationFunction = std::function<
+    void(int, const jsi::Object &newProps, bool isSharedTransition)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool, bool)>;
 
 using RegisterSensorFunction =

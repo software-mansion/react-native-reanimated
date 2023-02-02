@@ -27,12 +27,13 @@ void LayoutAnimations::startAnimationForTag(
 
 void LayoutAnimations::progressLayoutAnimation(
     int tag,
-    const jni::local_ref<JNIHelper::PropsMap> &updates) {
+    const jni::local_ref<JNIHelper::PropsMap> &updates,
+    bool isSharedTransition) {
   static const auto method =
       javaPart_->getClass()
-          ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+          ->getMethod<void(int, JMap<JString, JObject>::javaobject, bool)>(
               "progressLayoutAnimation");
-  method(javaPart_.get(), tag, updates.get());
+  method(javaPart_.get(), tag, updates.get(), isSharedTransition);
 }
 
 void LayoutAnimations::endLayoutAnimation(
@@ -67,6 +68,17 @@ bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
 
+void LayoutAnimations::setFindPrecedingViewTagForTransition(
+    FindPrecedingViewTagForTransitionBlock
+        findPrecedingViewTagForTransitionBlock) {
+  findPrecedingViewTagForTransitionBlock_ =
+      findPrecedingViewTagForTransitionBlock;
+}
+
+int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
+  return findPrecedingViewTagForTransitionBlock_(tag);
+}
+
 void LayoutAnimations::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
@@ -80,6 +92,9 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),
+      makeNativeMethod(
+          "findPrecedingViewTagForTransition",
+          LayoutAnimations::findPrecedingViewTagForTransition),
   });
 }
 }; // namespace reanimated

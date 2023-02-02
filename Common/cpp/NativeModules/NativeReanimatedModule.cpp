@@ -379,10 +379,12 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &type,
+    const jsi::Value &sharedTransitionTag,
     const jsi::Value &config) {
   layoutAnimationsManager_.configureAnimation(
       viewTag.asNumber(),
       type.asString(rt).utf8(rt),
+      sharedTransitionTag.asString(rt).utf8(rt),
       extractShareableOrThrow(rt, config));
   return jsi::Value::undefined();
 }
@@ -455,6 +457,10 @@ void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
+}
+
+void NativeReanimatedModule::cleanupSensors() {
+  animatedSensorModule.unregisterAllSensors();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

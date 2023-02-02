@@ -36,6 +36,8 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
     | Keyframe;
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: any;
 };
 
 export interface InitialComponentProps extends Record<string, unknown> {
