@@ -265,11 +265,9 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       } else {
         shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
       }
-#ifdef RCT_NEW_ARCH_ENABLED
-    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
-      shareable = std::make_shared<ShareableShadowNodeWrapper>(
-          runtimeHelper, rt, object);
-#endif
+    } else if (object.isHostObject(rt)) {
+      shareable = std::make_shared<ShareableHostObject>(
+          runtimeHelper, rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
