@@ -156,7 +156,7 @@ There is an experimental SWC plugin in the works. However, given that this may n
 
 ### Next.js Polyfill
 
-In order to use Reanimated with Next.js / Solito, you'll need to add the `raf` polyfill:
+In order to use Reanimated with Next.js / Solito, you'll need to add the `raf` polyfill for `requestAnimationFrame` to not throw on the server:
 
 ```sh
 yarn add raf
