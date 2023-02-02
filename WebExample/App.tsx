@@ -53,13 +53,11 @@ export default function App() {
   return (
     <View style={styles.container}>
       <GestureDetector gesture={gesture}>
-        <Animated.View>
-          <Animated.View style={[styles.ball, animatedStyle]}>
-            <Text style={styles.text}>I need Babel plugin</Text>
-          </Animated.View>
-          <WithoutBabelTest />
+        <Animated.View style={[styles.ball, animatedStyle]}>
+          <Text style={styles.text}>I need Babel plugin</Text>
         </Animated.View>
       </GestureDetector>
+      <WithoutBabelTest />
     </View>
   );
 }
