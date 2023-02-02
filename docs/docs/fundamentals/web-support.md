@@ -86,3 +86,84 @@ module.exports = {
   },
 };
 ```
+
+## Web without a Babel plugin
+
+As of Reanimated `2.15`, the Babel plugin (`react-native-reanimated/plugin`) is optional on Web, with some additional configuration.
+
+Reanimated hooks all accept optional dependency arrays. Under the hood, the Reanimated Babel plugin inserts these for you.
+
+In order to use Reanimated without a Babel/SWC plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
+
+Passing a dependency array is valid on both Web and native. Adding them will not negatively impact iOS or Android.
+
+Make sure the following hooks have a dependency array as the last argument:
+
+- `useDerivedValue`
+- `useAnimatedStyle`
+- `useAnimatedProps`
+- `useAnimatedReaction`
+
+For example:
+
+```ts
+const sv = useSharedValue(0);
+const dv = useDerivedValue(
+  () => sv.value + 1, 
+  [sv] // dependency array here
+);
+```
+
+Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependency array.
+
+> Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
+
+
+### ESLint Support
+
+When you use hooks from React, they give you nice suggestions from ESLint to include all dependencies. In order to add this support to Reanimated hooks, add the following to your ESLint config:
+
+```json
+{
+  "rules": {
+    "react-hooks/exhaustive-deps": [
+      "error",
+      {
+        "additionalHooks": "(useAnimatedStyle|useDerivedValue|useAnimatedProps)"
+      }
+    ]
+  }
+}
+```
+
+This assumes you've already installed the `react-hooks` eslint [plugin](https://www.npmjs.com/package/eslint-plugin-react-hooks).
+
+If you're using ESLint autofix, the ESLint plugin may add `.value` to the dependency arrays, rather than the root dependency. In these cases, you should update the array yourself.
+
+```tsx
+const sv = useSharedValue(0)
+
+// 🚨 bad, sv.value is in the array
+const dv = useDerivedValue(() => sv.value, [sv.value]);
+
+// ✅ good, sv is in the array
+const dv = useDerivedValue(() => sv.value, [sv]);
+```
+
+## Solito / Next.js Compatibility
+
+There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the ["Web without a Babel plugin"](#web-without-a-babel-plugin) instructions above.
+
+### Next.js Polyfill
+
+In order to use Reanimated with Next.js / Solito, you'll need to add the `raf` polyfill for `requestAnimationFrame` to not throw on the server:
+
+```sh
+yarn add raf
+```
+
+Add the following to the top of your `_app.tsx`:
+
+```ts
+import 'raf/polyfill'
+```
