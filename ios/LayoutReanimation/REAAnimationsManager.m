@@ -207,22 +207,22 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [newProps removeObjectForKey:@"width"];
   }
 
-  bool updateViewPosition = false;
+  bool needViewPositionUpdate = false;
   double centerX = view.center.x;
   double centerY = view.center.y;
   if (newProps[@"originX"]) {
-    updateViewPosition = true;
+    needViewPositionUpdate = true;
     double originX = [self getDoubleOrZero:newProps[@"originX"]];
     [newProps removeObjectForKey:@"originX"];
     centerX = originX + view.bounds.size.width / 2.0;
   }
   if (newProps[@"originY"]) {
-    updateViewPosition = true;
+    needViewPositionUpdate = true;
     double originY = [self getDoubleOrZero:newProps[@"originY"]];
     [newProps removeObjectForKey:@"originY"];
     centerY = originY + view.bounds.size.height / 2.0;
   }
-  if (updateViewPosition) {
+  if (needViewPositionUpdate) {
     CGPoint newCenter = CGPointMake(centerX, centerY);
     if (convertFromAbsolute) {
       UIView *window = UIApplication.sharedApplication.keyWindow;
