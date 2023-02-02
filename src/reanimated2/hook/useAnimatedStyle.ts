@@ -406,7 +406,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       // let web work without a Babel/SWC plugin
       inputs = dependencies;
     }
-    if (!inputs.length && !dependencies && !updater.__workletHash) {
+    if (__DEV__ && !inputs.length && !dependencies && !updater.__workletHash) {
       throw new Error(
         `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
         
