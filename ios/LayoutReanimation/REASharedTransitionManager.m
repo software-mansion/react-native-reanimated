@@ -318,25 +318,23 @@
 
 - (void)doSnapshotForScreenViews:(UIView *)screen
 {
-  [_animationManager visitTree:screen
-                         block:^int(id<RCTComponent> view) {
-                           NSNumber *viewTag = view.reactTag;
-                           if ([self->_animationManager hasAnimationForTag:viewTag type:@"sharedElementTransition"]) {
-                             REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(UIView *)view];
-                             self->_snapshotRegistry[viewTag] = snapshot;
-                           }
-                           return false;
-                         }];
+  REANodeFind(screen, ^int(id<RCTComponent> view) {
+    NSNumber *viewTag = view.reactTag;
+    if ([self->_animationManager hasAnimationForTag:viewTag type:@"sharedElementTransition"]) {
+      REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(UIView *)view];
+      self->_snapshotRegistry[viewTag] = snapshot;
+    }
+    return false;
+  });
 }
 
 - (void)clearConfigForStack:(UIView *)stack
 {
   for (UIView *child in stack.reactSubviews) {
-    [_animationManager visitTree:child
-                           block:^int(id<RCTComponent> _Nonnull view) {
-                             [self clearAllSharedConfigsForViewTag:view.reactTag];
-                             return false;
-                           }];
+    REANodeFind(child, ^int(id<RCTComponent> _Nonnull view) {
+      [self clearAllSharedConfigsForViewTag:view.reactTag];
+      return false;
+    });
     [_screenHasObserver removeObject:child.reactTag];
   }
 }
@@ -376,14 +374,12 @@
 - (void)runSharedTransitionForSharedViewsOnScreen:(UIView *)screen
 {
   NSMutableArray<UIView *> *removedViews = [NSMutableArray new];
-  [_animationManager visitTree:screen
-                         block:^int(id<RCTComponent> view) {
-                           if ([self->_animationManager hasAnimationForTag:view.reactTag
-                                                                      type:@"sharedElementTransition"]) {
-                             [removedViews addObject:(UIView *)view];
-                           }
-                           return false;
-                         }];
+  REANodeFind(screen, ^int(id<RCTComponent> view) {
+    if ([self->_animationManager hasAnimationForTag:view.reactTag type:@"sharedElementTransition"]) {
+      [removedViews addObject:(UIView *)view];
+    }
+    return false;
+  });
   BOOL startedAnimation = [self setupSyncSharedTransitionForViews:removedViews];
   if (startedAnimation) {
     for (UIView *view in removedViews) {

@@ -9,7 +9,7 @@
 
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
-static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
+BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   if (!view.reactTag) {
     return NO;
@@ -561,11 +561,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
                        depth:(NSNumber *)depth;
 {
   _startAnimationForTag(tag, type, yogaValues, depth);
-}
-
-- (void)visitTree:(UIView *)view block:(REATreeVisitor)block
-{
-  REANodeFind(view, block);
 }
 
 @end
