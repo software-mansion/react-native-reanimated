@@ -14,11 +14,7 @@ AnimatedSensorModule::AnimatedSensorModule(
           platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
-  // It is called during app reload because app reload doesn't call hooks
-  // unmounting
-  for (auto sensorId : sensorsIds_) {
-    platformUnregisterSensorFunction_(sensorId);
-  }
+  assert(sensorsIds_.empty());
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
@@ -30,11 +26,20 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
-  auto uiRuntime = runtimeHelper->uiRuntime();
 
   int sensorId = platformRegisterSensorFunction_(
-      sensorType, interval.asNumber(), [=](double newValues[]) {
-        jsi::Runtime &rt = *uiRuntime;
+      sensorType,
+      interval.asNumber(),
+      [sensorType,
+       shareableHandler,
+       weakRuntimeHelper =
+           std::weak_ptr<JSRuntimeHelper>(runtimeHelper)](double newValues[]) {
+        auto runtimeHelper = weakRuntimeHelper.lock();
+        if (runtimeHelper == nullptr || runtimeHelper->uiRuntimeDestroyed) {
+          return;
+        }
+
+        auto &rt = *runtimeHelper->uiRuntime();
         auto handler =
             shareableHandler->getJSValue(rt).asObject(rt).asFunction(rt);
         if (sensorType == SensorType::ROTATION_VECTOR) {
@@ -65,6 +70,13 @@ void AnimatedSensorModule::unregisterSensor(const jsi::Value &sensorId) {
   // It is called during sensor hook unmounting
   sensorsIds_.erase(sensorId.getNumber());
   platformUnregisterSensorFunction_(sensorId.asNumber());
+}
+
+void AnimatedSensorModule::unregisterAllSensors() {
+  for (auto sensorId : sensorsIds_) {
+    platformUnregisterSensorFunction_(sensorId);
+  }
+  sensorsIds_.clear();
 }
 
 } // namespace reanimated

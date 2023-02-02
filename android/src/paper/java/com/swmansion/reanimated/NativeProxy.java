@@ -265,8 +265,8 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private int subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater) {
-    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater);
+  private int subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater, boolean isStatusBarTranslucent) {
+    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater, isStatusBarTranslucent);
   }
 
   @DoNotStrip
@@ -333,6 +333,15 @@ public class NativeProxy {
               if (layoutAnimations != null) {
                 layoutAnimations.clearAnimationConfigForTag(tag);
               }
+          }
+
+          @Override
+          public int findPrecedingViewTagForTransition(int tag) {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.findPrecedingViewTagForTransition(tag);
+            }
+            return -1;
           }
         });
   }

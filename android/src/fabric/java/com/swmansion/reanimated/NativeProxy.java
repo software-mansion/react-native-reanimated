@@ -274,8 +274,8 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private int subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater) {
-    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater);
+  private int subscribeForKeyboardEvents(KeyboardEventDataUpdater keyboardEventDataUpdater, boolean isStatusBarTranslucent) {
+    return reanimatedKeyboardEventListener.subscribeForKeyboardEvents(keyboardEventDataUpdater, isStatusBarTranslucent);
   }
 
   @DoNotStrip
@@ -314,6 +314,11 @@ public class NativeProxy {
               @Override
               public boolean isLayoutAnimationEnabled() {
                 return false;
+              }
+
+              @Override
+              public int findPrecedingViewTagForTransition(int tag) {
+                return -1;
               }
 
               @Override

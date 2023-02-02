@@ -99,7 +99,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
 
   auto makeShareableClone = [this](jsi::Runtime &rt, const jsi::Value &value) {
-    return this->makeShareableClone(rt, value);
+    return this->makeShareableClone(rt, value, jsi::Value::undefined());
   };
 
   auto updateDataSynchronously =
@@ -246,7 +246,8 @@ jsi::Value NativeReanimatedModule::getDataSynchronously(
 
 jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
-    const jsi::Value &value) {
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -258,15 +259,24 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       shareable = std::make_shared<ShareableRemoteFunction>(
           runtimeHelper, rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
-      shareable = std::make_shared<ShareableArray>(
-          runtimeHelper, rt, object.asArray(rt));
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable = std::make_shared<RetainingShareable<ShareableArray>>(
+            runtimeHelper, rt, object.asArray(rt));
+      } else {
+        shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
+      }
 #ifdef RCT_NEW_ARCH_ENABLED
     } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
       shareable = std::make_shared<ShareableShadowNodeWrapper>(
           runtimeHelper, rt, object);
 #endif
     } else {
-      shareable = std::make_shared<ShareableObject>(runtimeHelper, rt, object);
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+            runtimeHelper, rt, object);
+      } else {
+        shareable = std::make_shared<ShareableObject>(rt, object);
+      }
     }
   } else if (value.isString()) {
     shareable = std::make_shared<ShareableString>(rt, value.asString(rt));
@@ -369,10 +379,12 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &type,
+    const jsi::Value &sharedTransitionTag,
     const jsi::Value &config) {
   layoutAnimationsManager_.configureAnimation(
       viewTag.asNumber(),
       type.asString(rt).utf8(rt),
+      sharedTransitionTag.asString(rt).utf8(rt),
       extractShareableOrThrow(rt, config));
   return jsi::Value::undefined();
 }
@@ -445,6 +457,10 @@ void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
+}
+
+void NativeReanimatedModule::cleanupSensors() {
+  animatedSensorModule.unregisterAllSensors();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -654,15 +670,18 @@ void NativeReanimatedModule::setNewestShadowNodesRegistry(
 
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
-    const jsi::Value &handlerWorklet) {
+    const jsi::Value &handlerWorklet,
+    const jsi::Value &isStatusBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
   auto uiRuntime = runtimeHelper->uiRuntime();
-  return subscribeForKeyboardEventsFunction([=](int keyboardState, int height) {
-    jsi::Runtime &rt = *uiRuntime;
-    auto handler = shareableHandler->getJSValue(rt);
-    handler.asObject(rt).asFunction(rt).call(
-        rt, jsi::Value(keyboardState), jsi::Value(height));
-  });
+  return subscribeForKeyboardEventsFunction(
+      [=](int keyboardState, int height) {
+        jsi::Runtime &rt = *uiRuntime;
+        auto handler = shareableHandler->getJSValue(rt);
+        handler.asObject(rt).asFunction(rt).call(
+            rt, jsi::Value(keyboardState), jsi::Value(height));
+      },
+      isStatusBarTranslucent.getBool());
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(

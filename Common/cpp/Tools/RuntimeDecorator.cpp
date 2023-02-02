@@ -294,11 +294,12 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
-    progressLayoutAnimationFunction(args[0].asNumber(), args[1].asObject(rt));
+    progressLayoutAnimationFunction(
+        args[0].asNumber(), args[1].asObject(rt), args[2].getBool());
     return jsi::Value::undefined();
   };
   jsi::Value _notifyAboutProgress = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_notifyAboutProgress"), 2, clb7);
+      rt, jsi::PropNameID::forAscii(rt, "_notifyAboutProgress"), 3, clb7);
   rt.global().setProperty(rt, "_notifyAboutProgress", _notifyAboutProgress);
 
   auto clb8 = [endLayoutAnimationFunction](

@@ -1,6 +1,11 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
-import { BasicWorkletFunction, Value3D, ValueRotation } from './commonTypes';
+import {
+  AnimatedKeyboardOptions,
+  BasicWorkletFunction,
+  Value3D,
+  ValueRotation,
+} from './commonTypes';
 import {
   makeShareableCloneRecursive,
   makeShareable as makeShareableUnwrapped,
@@ -121,10 +126,12 @@ export function unregisterEventHandler(id: string): void {
 }
 
 export function subscribeForKeyboardEvents(
-  eventHandler: (state: number, height: number) => void
+  eventHandler: (state: number, height: number) => void,
+  options: AnimatedKeyboardOptions
 ): number {
   return NativeReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(eventHandler)
+    makeShareableCloneRecursive(eventHandler),
+    options.isStatusBarTranslucentAndroid ?? false
   );
 }
 
@@ -185,11 +192,13 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: string,
-  config: LayoutAnimationFunction | Keyframe
+  config: LayoutAnimationFunction | Keyframe,
+  sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
     viewTag,
     type,
+    sharedTransitionTag,
     makeShareableCloneRecursive(config)
   );
 }
