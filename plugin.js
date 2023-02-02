@@ -853,7 +853,7 @@ function processWorklets(t, path, state) {
 }
 
 function generateInlineStylesWarning(t, memberExpression) {
-  // change sharedvalue.value -> ((){console.warn("warning");return sharedvalue.value;})()
+  // replaces `sharedvalue.value` with `((){console.warn("warning");return sharedvalue.value;})()`
   return t.callExpression(
     t.arrowFunctionExpression(
       [],
@@ -864,7 +864,8 @@ function generateInlineStylesWarning(t, memberExpression) {
             [
               t.stringLiteral(
                 "It looks like you might be using shared value's .value inside reanimated inline style. " +
-                  'This is probably not what you want to do. See documentation here: ' +
+                  'If you want a component to update when shared value changes you should use the shared value' +
+                  ' directly instead of its current state represented by `.value`. See documentation here: ' +
                   'https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles'
               ),
             ]

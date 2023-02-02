@@ -8,31 +8,40 @@ import Animated, {
   withSpring,
   withRepeat,
   withDelay,
+  SharedValue,
 } from '../src';
 
-const AnimatedSharedValueComponent = (props) => {
-  const widthSV = props.sharedValue;
-
+const AnimatedSharedValueComponent = ({
+  sharedValue,
+  style,
+}: {
+  sharedValue: SharedValue<number>;
+  style: any;
+}) => {
   return (
     <View>
-      <Animated.View testID="view" style={props.style} />
+      <Animated.View testID="view" style={style} />
       <Button
         testID="button"
         title="toggle"
         onPress={() => {
-          widthSV.value = 200;
+          sharedValue.value = 200;
         }}
       />
     </View>
   );
 };
 
-const AnimatedComponent = ({ style }) => {
-  const sharedVal = useSharedValue(100);
+const AnimatedComponent = ({
+  style,
+}: {
+  style: (sharedValue: SharedValue<number>) => any;
+}) => {
+  const sharedValue = useSharedValue(100);
   return (
     <AnimatedSharedValueComponent
-      sharedValue={sharedVal}
-      style={style(sharedVal)}
+      sharedValue={sharedValue}
+      style={style(sharedValue)}
     />
   );
 };
@@ -50,7 +59,7 @@ describe('inline styles', () => {
   it('works with shared value', async () => {
     jest.useRealTimers();
     const { getByTestId } = render(
-      <AnimatedComponent style={(sharedVal) => ({ width: sharedVal })} />
+      <AnimatedComponent style={(sharedValue) => ({ width: sharedValue })} />
     );
     const view = getByTestId('view');
     const button = getByTestId('button');
@@ -67,8 +76,8 @@ describe('inline styles', () => {
   it('works with withTiming', () => {
     const { getByTestId } = render(
       <AnimatedComponent
-        style={(sharedVal) => ({
-          width: withTiming(sharedVal, { duration: 200 }),
+        style={(sharedValue) => ({
+          width: withTiming(sharedValue, { duration: 200 }),
         })}
       />
     );
@@ -93,8 +102,8 @@ describe('inline styles', () => {
   it('works with withSpring', () => {
     const { getByTestId } = render(
       <AnimatedComponent
-        style={(sharedVal) => ({
-          width: withSpring(sharedVal),
+        style={(sharedValue) => ({
+          width: withSpring(sharedValue),
         })}
       />
     );
@@ -113,9 +122,9 @@ describe('inline styles', () => {
   it('works with withSequence', () => {
     const { getByTestId } = render(
       <AnimatedComponent
-        style={(sharedVal) => ({
+        style={(sharedValue) => ({
           width: withSequence(
-            withTiming(sharedVal, { duration: 200 }),
+            withTiming(sharedValue, { duration: 200 }),
             withTiming(0, { duration: 100 })
           ),
         })}
@@ -141,8 +150,12 @@ describe('inline styles', () => {
   it('works with withRepeat', () => {
     const { getByTestId } = render(
       <AnimatedComponent
-        style={(sharedVal) => ({
-          width: withRepeat(withTiming(sharedVal, { duration: 200 }), 2, true),
+        style={(sharedValue) => ({
+          width: withRepeat(
+            withTiming(sharedValue, { duration: 200 }),
+            2,
+            true
+          ),
         })}
       />
     );
@@ -167,8 +180,8 @@ describe('inline styles', () => {
   it('works with withDelay', () => {
     const { getByTestId } = render(
       <AnimatedComponent
-        style={(sharedVal) => ({
-          width: withDelay(200, withTiming(sharedVal, { duration: 200 })),
+        style={(sharedValue) => ({
+          width: withDelay(200, withTiming(sharedValue, { duration: 200 })),
         })}
       />
     );
@@ -193,11 +206,11 @@ describe('inline styles', () => {
   it('works with a very nested example', () => {
     const { getByTestId } = render(
       <AnimatedComponent
-        style={(sharedVal) => ({
+        style={(sharedValue) => ({
           width: withDelay(
             200,
             withSequence(
-              withRepeat(withTiming(sharedVal, { duration: 100 }), 2, true),
+              withRepeat(withTiming(sharedValue, { duration: 100 }), 2, true),
               withDelay(100, withTiming(400, { duration: 100 }))
             )
           ),

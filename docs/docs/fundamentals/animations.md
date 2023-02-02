@@ -101,33 +101,43 @@ It forces you to have everything defined in one place vs scattered around the co
 For simple animations in `useAnimatedStyle` hook without any calculations like this:
 
 ```js
-const animatedStyle = useAnimatedStyle(() => {
-  return {
-    width: withSpring(width.value),
-  };
-});
-<Animated.View style={animatedStyle} />
+function SomeComponent() {
+  const width = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(width.value),
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
 ```
 
 you can omit `useAnimatedStyle` and use inline styles like this to save some typing:
 
 ```js
-<Animated.View style={{ width: withSpring(width) }} />
+function SomeComponent() {
+  const width = useSharedValue(0);
+  return <Animated.View style={{ width: withSpring(width) }} />;
+}
+
 ```
 
 You can also use shared value directly in inline style:
 
 ```js
-<Animated.View style={{ width: width }} />
+function SomeComponent() {
+  const width = useSharedValue(0);
+  return <Animated.View style={{ width }} />;
+}
 ```
 
 The width of the view will change when `width` value changes.
 
-Note that we're not using `.value` getter in inline styles. If you use `width.value`, reanimated uses just current value of shared value. Let's look at an example:
+Note that we're not using `.value` getter in inline styles. If you use `width.value`, Reanimated uses just current value of shared value. Let's look at an example:
 
 ```js
 width.value = 5;
-...
+//...
 <Animated.View style={{ width: width.value }} />
 ```
 
@@ -137,7 +147,7 @@ is equivalent to:
 <Animated.View style={{ width: 5 }} />
 ```
 
-Passing a shared value without `.value` getter causes reanimated to watch for shared value changes.
+Passing a shared value without `.value` getter causes Reanimated to watch for shared value changes.
 
 
 ## Interrupting Animated Updates

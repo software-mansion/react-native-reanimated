@@ -94,7 +94,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, n
   return React.createElement(Animated.View, {
     style: {
       width: function () {
-        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. This is probably not what you want to do. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
+        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by \`.value\`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
         return sharedValue.value;
       }()
     }
@@ -107,7 +107,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, s
   return React.createElement(Animated.View, {
     style: [style, {
       width: withTiming(function () {
-        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. This is probably not what you want to do. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
+        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by \`.value\`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
         return sharedValue.value;
       }())
     }]
@@ -120,7 +120,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, w
   return React.createElement(Animated.View, {
     style: {
       width: withTiming(function () {
-        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. This is probably not what you want to do. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
+        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by \`.value\`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
         return sharedValue.value;
       }())
     }
@@ -133,7 +133,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, w
   return React.createElement(Animated.View, {
     style: {
       width: withSequence(withTiming(function () {
-        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. This is probably not what you want to do. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
+        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by \`.value\`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
         return sharedValue.value;
       }()), withTiming(0))
     }
