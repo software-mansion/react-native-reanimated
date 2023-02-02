@@ -163,12 +163,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
                                   forTag:(NSNumber *)tag
                       isSharedTransition:(BOOL)isSharedTransition
 {
-  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
-  [self setNewProps:[newStyle mutableCopy]
-                  forView:[self viewForTag:tag]
-        withComponentData:componentData
-      convertFromAbsolute:isSharedTransition];
+  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] convertFromAbsolute:isSharedTransition];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -182,16 +177,13 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view
 {
-  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
-  [self setNewProps:newProps forView:view withComponentData:componentData convertFromAbsolute:NO];
+  [self setNewProps:newProps forView:view convertFromAbsolute:NO];
 }
 
-- (void)setNewProps:(NSMutableDictionary *)newProps
-                forView:(UIView *)view
-      withComponentData:(RCTComponentData *)componentData
-    convertFromAbsolute:(BOOL)convertFromAbsolute
+- (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view convertFromAbsolute:(BOOL)convertFromAbsolute
 {
+  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
     double oldHeight = view.bounds.size.height;
