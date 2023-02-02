@@ -157,12 +157,12 @@
       }
     }
 
-    REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] init:viewSource withParent:viewSource.superview];
+    REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewSource];
     _snapshotRegistry[viewSource.reactTag] = sourceViewSnapshot;
 
     REASnapshot *targetViewSnapshot;
     if (addedNewScreen) {
-      targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
+      targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
       _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     } else {
       targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
@@ -322,8 +322,7 @@
                          block:^int(id<RCTComponent> view) {
                            NSNumber *viewTag = view.reactTag;
                            if ([self->_animationManager hasAnimationForTag:viewTag type:@"sharedElementTransition"]) {
-                             REASnapshot *snapshot = [[REASnapshot alloc] init:(UIView *)view
-                                                                    withParent:((UIView *)view).superview];
+                             REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(UIView *)view];
                              self->_snapshotRegistry[viewTag] = snapshot;
                            }
                            return false;
@@ -401,7 +400,7 @@
   NSMutableArray<REASharedElement *> *currentSharedElements = [NSMutableArray new];
   for (REASharedElement *sharedElement in _sharedElements) {
     UIView *viewTarget = sharedElement.targetView;
-    REASnapshot *targetViewSnapshot = [[REASnapshot alloc] init:viewTarget withParent:viewTarget.superview];
+    REASnapshot *targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
     _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     sharedElement.targetViewSnapshot = targetViewSnapshot;
     [currentSharedElements addObject:sharedElement];

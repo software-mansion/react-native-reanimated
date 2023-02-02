@@ -238,7 +238,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values frameConfig:(FrameConfigType)frameConfig
 {
-  UIView *windowView = UIApplication.sharedApplication.keyWindow;
   if (frameConfig == EnteringFrame) {
     NSDictionary *preparedData = @{
       @"targetWidth" : values[@"width"],
@@ -247,8 +246,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       @"targetOriginY" : values[@"originY"],
       @"targetGlobalOriginX" : values[@"globalOriginX"],
       @"targetGlobalOriginY" : values[@"globalOriginY"],
-      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+      @"windowWidth" : values[@"windowWidth"],
+      @"windowHeight" : values[@"windowHeight"]
     };
     return preparedData;
   } else {
@@ -259,8 +258,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       @"currentOriginY" : values[@"originY"],
       @"currentGlobalOriginX" : values[@"globalOriginX"],
       @"currentGlobalOriginY" : values[@"globalOriginY"],
-      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+      @"windowWidth" : values[@"windowWidth"],
+      @"windowHeight" : values[@"windowHeight"]
     };
     return preparedData;
   }
@@ -269,7 +268,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues
 {
-  UIView *windowView = UIApplication.sharedApplication.keyWindow;
   NSDictionary *preparedData = @{
     @"currentWidth" : currentValues[@"width"],
     @"currentHeight" : currentValues[@"height"],
@@ -283,8 +281,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     @"targetOriginY" : targetValues[@"originY"],
     @"targetGlobalOriginX" : targetValues[@"globalOriginX"],
     @"targetGlobalOriginY" : targetValues[@"globalOriginY"],
-    @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-    @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+    @"windowWidth" : currentValues[@"windowWidth"],
+    @"windowHeight" : currentValues[@"windowHeight"]
   };
   return preparedData;
 }
