@@ -3,9 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "rootDir": "..",
-    "baseUrl": "..",
     "paths": {
-      "react-native-reanimated": ["src"]
+      "react-native-reanimated": ["./src"]
     }
   }
 }
