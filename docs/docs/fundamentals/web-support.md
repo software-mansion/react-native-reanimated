@@ -89,9 +89,15 @@ module.exports = {
 
 ## Web without a Babel plugin
 
-As of Reanimated `2.15`, the Babel plugin (`react-native-reanimated/plugin`) is optional on Web.
+As of Reanimated `2.15`, the Babel plugin (`react-native-reanimated/plugin`) is optional on Web, with some additional configuration.
 
-In order to use Reanimated on Web without a Babel/SWC plugin, you need to pass a dependency array whenever you use one of the following Reanimated hooks:
+Reanimated hooks all accept optional dependency arrays. Under the hood, the Reanimated Babel plugin inserts these for you.
+
+In order to use Reanimated without a Babel/SWC plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
+
+Passing a dependency array is valid on both Web and native. Adding them will not negatively impact iOS or Android.
+
+Make sure the following hooks have a dependency array as the last argument:
 
 - `useDerivedValue`
 - `useAnimatedStyle`
@@ -102,12 +108,16 @@ For example:
 
 ```ts
 const sv = useSharedValue(0);
-const dv = useDerivedValue(() => sv.value + 1, [sv]); // dep array here
+const dv = useDerivedValue(
+  () => sv.value + 1, 
+  [sv] // dependency array here
+);
 ```
 
 Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependency array.
 
 > Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
+
 
 ### ESLint Support
 
