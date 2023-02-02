@@ -17,6 +17,16 @@ const _shareableCache = new WeakMap<
 // this is used to allow for a converted shareable to be passed to makeShareableClone
 const _shareableFlag = Symbol('shareable flag');
 
+const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
+
+function isHostObject(value: any): boolean {
+  // We could use JSI to determine whether an object is a host object, however
+  // the below workaround works well and is way faster than an additional JSI call.
+  // We use the fact that host objects have broken implementation of `hasOwnProperty`
+  // and hence return true for all `in` checks regardless of the key we ask for.
+  return MAGIC_KEY in value;
+}
+
 export function registerShareableMapping(
   shareable: any,
   shareableRef?: ShareableRef<any>
@@ -25,15 +35,6 @@ export function registerShareableMapping(
     return;
   }
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
-}
-
-export function makeShareableShadowNodeWrapper<T>(shadowNodeWrapper: T): T {
-  const adoptedSNW = NativeReanimatedModule.makeShareableClone(
-    shadowNodeWrapper,
-    false
-  );
-  registerShareableMapping(shadowNodeWrapper, adoptedSNW);
-  return shadowNodeWrapper;
 }
 
 export function makeShareableCloneRecursive<T>(
@@ -57,6 +58,11 @@ export function makeShareableCloneRecursive<T>(
         toAdapt = value.map((element) => makeShareableCloneRecursive(element));
       } else if (type === 'function' && value.__workletHash === undefined) {
         // this is a remote function
+        toAdapt = value;
+      } else if (isHostObject(value)) {
+        // for host objects we pass the reference to the object as shareable and
+        // then recreate new host object wrapping the same instance on the UI thread.
+        // there is no point of iterating over keys as we do for regular objects.
         toAdapt = value;
       } else {
         toAdapt = {};
