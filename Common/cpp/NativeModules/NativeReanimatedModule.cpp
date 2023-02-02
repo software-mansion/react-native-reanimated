@@ -389,7 +389,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 
 void NativeReanimatedModule::onEvent(
     const std::string &eventName,
-    jsi::Value &&payload) {
+    const jsi::Value &payload) {
   try {
     eventHandlerRegistry->processEvent(*runtime, eventName, payload);
   } catch (std::exception &e) {
@@ -472,14 +472,14 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
-    jsi::Value &&payload,
+    const jsi::Value &payload,
     double currentTime) {
   jsi::Runtime &rt = *runtime.get();
   jsi::Object global = rt.global();
   jsi::String eventTimestampName =
       jsi::String::createFromAscii(rt, "_eventTimestamp");
   global.setProperty(rt, eventTimestampName, currentTime);
-  onEvent(eventName, std::move(payload));
+  onEvent(eventName, payload);
   global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
 
   // TODO: return true if Reanimated successfully handled the event

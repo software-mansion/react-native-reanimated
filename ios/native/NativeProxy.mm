@@ -280,15 +280,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
-    id eventData = [event arguments][2];
-    if (![eventData isKindOfClass:[NSDictionary class]]) {
-      return;
-    }
     std::string eventName = [eventNameNSString UTF8String];
+    id eventData = [event arguments][2];
     jsi::Runtime &rt = *module->runtime;
-    jsi::Object payload = convertNSDictionaryToJSIObject(rt, eventData);
+    jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
-    module->handleEvent(eventName, std::move(payload), currentTime);
+    module->handleEvent(eventName, payload, currentTime);
   }];
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle

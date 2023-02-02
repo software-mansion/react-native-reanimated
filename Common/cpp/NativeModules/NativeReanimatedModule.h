@@ -98,7 +98,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void onRender(double timestampMs);
 
-  void onEvent(const std::string &eventName, jsi::Value &&payload);
+  void onEvent(const std::string &eventName, const jsi::Value &payload);
 
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
@@ -107,7 +107,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   bool handleEvent(
       const std::string &eventName,
-      jsi::Value &&payload,
+      const jsi::Value &payload,
       double currentTime);
 
 #ifdef RCT_NEW_ARCH_ENABLED
