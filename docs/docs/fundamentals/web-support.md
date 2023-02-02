@@ -153,3 +153,17 @@ const dv = useDerivedValue(() => sv.value, [sv]);
 ## Solito / Next.js Compatibility
 
 There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the ["Web without a Babel plugin"](#web-without-a-babel-plugin) instructions above.
+
+### Next.js Polyfill
+
+In order to use Reanimated with Next.js / Solito, you'll need to add the `raf` polyfill:
+
+```sh
+yarn add raf
+```
+
+Add the following to the top of your `_app.tsx`:
+
+```ts
+import 'raf/polyfill'
+```
