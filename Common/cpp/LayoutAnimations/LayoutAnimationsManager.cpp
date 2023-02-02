@@ -96,11 +96,10 @@ void LayoutAnimationsManager::startLayoutAnimation(
 
 /*
   The top screen on the stack triggers the animation, so we need to find
-  the sibling view registered in the past. That's why we look backward.
-
-  We need to find view registered in the same transition group (with the
-  same transition tag) which has been added to that group directly before
-  the one that we provide as an argument.
+  the sibling view registered in the past. This method finds view
+  registered in the same transition group (with the same transition tag)
+  which has been added to that group directly before the one that we
+  provide as an argument.
 */
 int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
   auto const &groupName = viewTagToSharedTag_[tag];
