@@ -98,7 +98,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void onRender(double timestampMs);
 
-  void onEvent(std::string eventName, jsi::Value &&payload);
+  void onEvent(const std::string &eventName, jsi::Value &&payload);
 
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 

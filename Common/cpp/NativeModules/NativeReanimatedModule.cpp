@@ -388,7 +388,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 }
 
 void NativeReanimatedModule::onEvent(
-    std::string eventName,
+    const std::string &eventName,
     jsi::Value &&payload) {
   try {
     eventHandlerRegistry->processEvent(*runtime, eventName, payload);
