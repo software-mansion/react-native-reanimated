@@ -24,7 +24,7 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 
 void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
-    std::string eventName,
+    const std::string &eventName,
     jsi::Value &eventPayload) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
@@ -44,7 +44,8 @@ void EventHandlerRegistry::processEvent(
   }
 }
 
-bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(std::string eventName) {
+bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(
+    const std::string &eventName) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto it = eventMappings.find(eventName);
   return (it != eventMappings.end()) && (!(it->second).empty());

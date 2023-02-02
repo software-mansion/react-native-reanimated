@@ -32,7 +32,7 @@ class EventHandlerRegistry {
       const std::string &eventName,
       jsi::Value &eventPayload);
 
-  bool isAnyHandlerWaitingForEvent(std::string eventName);
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName);
 };
 
 } // namespace reanimated
