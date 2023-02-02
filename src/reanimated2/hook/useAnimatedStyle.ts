@@ -406,6 +406,13 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       // let web work without a Babel/SWC plugin
       inputs = dependencies;
     }
+    if (!inputs.length && !dependencies && !updater.__workletHash) {
+      throw new Error(
+        `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
+        
+For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin`
+      );
+    }
   }
   const adaptersArray: AdapterWorkletFunction[] = adapters
     ? Array.isArray(adapters)
