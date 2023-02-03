@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include "JsiUtils.h"
 #include "ReanimatedHiddenHeaders.h"
 
 namespace reanimated {
@@ -115,8 +116,6 @@ void RuntimeDecorator::decorateUIRuntime(
     const MakeShareableCloneFunction makeShareableClone,
     const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
-    const RegisterSensorFunction registerSensor,
-    const UnregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
     const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
     const EndLayoutAnimationFunction endLayoutAnimationFunction) {
@@ -175,44 +174,16 @@ void RuntimeDecorator::decorateUIRuntime(
                       const size_t count) -> jsi::Value {
     return measure(rt, args[0]);
   };
+
+  jsi::Value measureFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, _measure);
+  rt.global().setProperty(rt, "_measure", measureFunction);
 #else
-  auto clb = [updateProps](
-                 jsi::Runtime &rt,
-                 const jsi::Value &thisValue,
-                 const jsi::Value *args,
-                 const size_t count) -> jsi::Value {
-    const auto viewTag = args[0].asNumber();
-    const jsi::Value *viewName = &args[1];
-    const auto params = args[2].asObject(rt);
-    updateProps(rt, viewTag, *viewName, params);
-    return jsi::Value::undefined();
-  };
-  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_updatePropsPaper"), 3, clb);
-  rt.global().setProperty(rt, "_updatePropsPaper", updatePropsHostFunction);
+  jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
+  jsi_utils::installJsiFunction(rt, "_scrollTo", scrollTo);
 
-  auto _scrollTo = [scrollTo](
-                       jsi::Runtime &rt,
-                       const jsi::Value &thisValue,
-                       const jsi::Value *args,
-                       const size_t count) -> jsi::Value {
-    int viewTag = static_cast<int>(args[0].asNumber());
-    double x = args[1].asNumber();
-    double y = args[2].asNumber();
-    bool animated = args[3].getBool();
-    scrollTo(viewTag, x, y, animated);
-    return jsi::Value::undefined();
-  };
-  jsi::Value scrollToFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_scrollTo"), 4, _scrollTo);
-  rt.global().setProperty(rt, "_scrollTo", scrollToFunction);
-
-  auto _measure = [measure](
-                      jsi::Runtime &rt,
-                      const jsi::Value &thisValue,
-                      const jsi::Value *args,
-                      const size_t count) -> jsi::Value {
-    int viewTag = static_cast<int>(args[0].asNumber());
+  std::function<jsi::Value(int)> _measure =
+      [&rt, measure](int viewTag) -> jsi::Value {
     auto result = measure(viewTag);
     jsi::Object resultObject(rt);
     for (auto &i : result) {
@@ -220,95 +191,27 @@ void RuntimeDecorator::decorateUIRuntime(
     }
     return resultObject;
   };
+
+  jsi_utils::installJsiFunction(rt, "_measure", _measure);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  jsi::Value measureFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, _measure);
-  rt.global().setProperty(rt, "_measure", measureFunction);
+  jsi_utils::installJsiFunction(rt, "requestAnimationFrame", requestFrame);
+  jsi_utils::installJsiFunction(rt, "_scheduleOnJS", scheduleOnJS);
+  jsi_utils::installJsiFunction(rt, "_makeShareableClone", makeShareableClone);
+  jsi_utils::installJsiFunction(
+      rt, "_updateDataSynchronously", updateDataSynchronously);
 
-  auto clb2 = [requestFrame](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    requestFrame(rt, std::move(args[0]));
-    return jsi::Value::undefined();
-  };
-  jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
-  rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
-
-  auto clb4 = [scheduleOnJS](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    scheduleOnJS(rt, args[0], args[1]);
-    return jsi::Value::undefined();
-  };
-  jsi::Value scheduleOnJSFun = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_scheduleOnJS"), 2, clb4);
-  rt.global().setProperty(rt, "_scheduleOnJS", scheduleOnJSFun);
-
-  auto clb5 = [makeShareableClone](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    return makeShareableClone(rt, std::move(args[0]));
-  };
-  jsi::Value makeShareableCloneFun = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_makeShareableClone"), 1, clb5);
-  rt.global().setProperty(rt, "_makeShareableClone", makeShareableCloneFun);
-
-  auto clb51 = [updateDataSynchronously](
-                   jsi::Runtime &rt,
-                   const jsi::Value &thisValue,
-                   const jsi::Value *args,
-                   const size_t count) -> jsi::Value {
-    updateDataSynchronously(rt, std::move(args[0]), std::move(args[1]));
-    return jsi::Value::undefined();
-  };
-  jsi::Value updateDataSynchronouslyFun = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_updateDataSynchronously"), 1, clb51);
-  rt.global().setProperty(
-      rt, "_updateDataSynchronously", updateDataSynchronouslyFun);
-
-  installJsiFunction(rt, "_getCurrentTime", getCurrentTime);
-
+  jsi_utils::installJsiFunction(rt, "_getCurrentTime", getCurrentTime);
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 
   // layout animation
-  installJsiFunction(
+  jsi_utils::installJsiFunction(
       rt, "_notifyAboutProgress", progressLayoutAnimationFunction);
+  jsi_utils::installJsiFunction(
+      rt, "_notifyAboutEnd", endLayoutAnimationFunction);
 
-  auto clb8 = [endLayoutAnimationFunction](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  size_t count) -> jsi::Value {
-    endLayoutAnimationFunction(
-        args[0].asNumber(), args[1].getBool(), args[2].getBool());
-    return jsi::Value::undefined();
-  };
-  jsi::Value _notifyAboutEnd = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_notifyAboutEnd"), 2, clb8);
-  rt.global().setProperty(rt, "_notifyAboutEnd", _notifyAboutEnd);
-
-  auto clb9 = [setGestureState](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  size_t count) -> jsi::Value {
-    int handlerTag = static_cast<int>(args[0].asNumber());
-    int newState = static_cast<int>(args[1].asNumber());
-    setGestureState(handlerTag, newState);
-    return jsi::Value::undefined();
-  };
-  jsi::Value setGestureStateFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_setGestureState"), 2, clb9);
-  rt.global().setProperty(rt, "_setGestureState", setGestureStateFunction);
+  jsi_utils::installJsiFunction(rt, "_setGestureState", setGestureState);
 }
 
 } // namespace reanimated

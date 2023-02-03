@@ -42,7 +42,7 @@ using UpdatePropsFunction = std::function<void(
     jsi::Runtime &rt,
     int viewTag,
     const jsi::Value &viewName,
-    const jsi::Object &object)>;
+    jsi::Object object)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
