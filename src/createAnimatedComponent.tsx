@@ -241,10 +241,10 @@ export default function createAnimatedComponent(
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (global._IS_FABRIC) {
-          const shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+          const viewTag = this._viewTag;
           runOnUI(() => {
             'worklet';
-            _removeShadowNodeFromRegistry(shadowNodeWrapper);
+            _removeShadowNodeFromRegistry(viewTag);
           })();
         }
       }

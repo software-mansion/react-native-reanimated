@@ -595,9 +595,8 @@ void NativeReanimatedModule::performOperations() {
 
 void NativeReanimatedModule::removeShadowNodeFromRegistry(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  tagsToRemove_.push_back(shadowNode->getTag());
+    const jsi::Value &tag) {
+  tagsToRemove_.push_back(tag.asNumber());
 }
 
 void NativeReanimatedModule::dispatchCommand(
