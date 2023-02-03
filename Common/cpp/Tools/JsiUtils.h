@@ -13,12 +13,41 @@ using namespace facebook;
 namespace reanimated {
 namespace jsi_utils {
 
+template <typename T, typename... Rest>
+inline typename std::
+    enable_if<std::is_same<T, double>::value, std::tuple<T, Rest...>>::type
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
+
+template <typename T, typename... Rest>
+inline typename std::
+    enable_if<std::is_same<T, int>::value, std::tuple<T, Rest...>>::type
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
+
+template <typename T, typename... Rest>
+inline typename std::
+    enable_if<std::is_same<T, bool>::value, std::tuple<T, Rest...>>::type
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
+
+template <typename T, typename... Rest>
+inline typename std::
+    enable_if<std::is_same<T, jsi::Object>::value, std::tuple<T, Rest...>>::type
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
+
+template <typename T, typename... Rest>
+inline typename std::enable_if<
+    std::is_same<T, jsi::Value const &>::value,
+    std::tuple<T, Rest...>>::type
+pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
+
+template <typename T, typename... Rest>
+inline typename std::enable_if<
+    std::is_same<T, jsi::Runtime &>::value,
+    std::tuple<T, Rest...>>::type
+pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
+
 template <typename... Targs>
-std::enable_if_t<(sizeof...(Targs) == 0), std::tuple<>> pushArgTypes(
-    jsi::Runtime &rt,
-    const jsi::Value &thisValue,
-    const jsi::Value *args,
-    const size_t count) {
+std::enable_if_t<(sizeof...(Targs) == 0), std::tuple<>>
+pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   assert(count == 0);
   return std::make_tuple();
 }
@@ -26,112 +55,40 @@ std::enable_if_t<(sizeof...(Targs) == 0), std::tuple<>> pushArgTypes(
 template <typename T, typename... Rest>
 inline typename std::
     enable_if<std::is_same<T, double>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, int>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, bool>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, jsi::Object>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::enable_if<
-    std::is_same<T, jsi::Value const &>::value,
-    std::tuple<T, Rest...>>::type
-pushArgTypes(
-    jsi::Runtime &rt,
-    const jsi::Value &thisValue,
-    const jsi::Value *args,
-    const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::enable_if<
-    std::is_same<T, jsi::Runtime &>::value,
-    std::tuple<T, Rest...>>::type
-pushArgTypes(
-    jsi::Runtime &rt,
-    const jsi::Value &thisValue,
-    const jsi::Value *args,
-    const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, double>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count) {
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   assert(count > 0);
-  auto arg = std::tuple<double>(args->asNumber());
-  auto rest = pushArgTypes<Rest...>(rt, thisValue, args + 1, count - 1);
+  auto arg = std::make_tuple<double>(args->asNumber());
+  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
   return std::tuple_cat(std::move(arg), std::move(rest));
 }
 
 template <typename T, typename... Rest>
 inline typename std::
     enable_if<std::is_same<T, int>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count) {
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   assert(count > 0);
-  auto arg = std::tuple<int>(args->asNumber());
-  auto rest = pushArgTypes<Rest...>(rt, thisValue, args + 1, count - 1);
+  auto arg = std::make_tuple<int>(args->asNumber());
+  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
   return std::tuple_cat(std::move(arg), std::move(rest));
 }
 
 template <typename T, typename... Rest>
 inline typename std::
     enable_if<std::is_same<T, bool>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count) {
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   assert(count > 0);
-  auto arg = std::tuple<bool>(args->asBool());
-  auto rest = pushArgTypes<Rest...>(rt, thisValue, std::next(args), count - 1);
+  auto arg = std::make_tuple(args->asBool());
+  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
   return std::tuple_cat(std::move(arg), std::move(rest));
 }
 
 template <typename T, typename... Rest>
 inline typename std::
     enable_if<std::is_same<T, jsi::Object>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        const size_t count) {
+    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   assert(count > 0);
   auto arg = std::make_tuple(args->asObject(rt));
-  auto rest = pushArgTypes<Rest...>(rt, thisValue, std::next(args), count - 1);
+  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
   return std::tuple_cat(std::move(arg), std::move(rest));
 }
 
@@ -139,13 +96,9 @@ template <typename T, typename... Rest>
 inline typename std::enable_if<
     std::is_same<T, jsi::Runtime &>::value,
     std::tuple<T, Rest...>>::type
-pushArgTypes(
-    jsi::Runtime &rt,
-    const jsi::Value &thisValue,
-    const jsi::Value *args,
-    const size_t count) {
+pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   auto arg = std::tie(rt);
-  auto rest = pushArgTypes<Rest...>(rt, thisValue, args, count);
+  auto rest = pushArgTypes<Rest...>(rt, args, count);
   return std::tuple_cat(arg, std::move(rest));
 }
 
@@ -153,13 +106,9 @@ template <typename T, typename... Rest>
 inline typename std::enable_if<
     std::is_same<T, jsi::Value const &>::value,
     std::tuple<T, Rest...>>::type
-pushArgTypes(
-    jsi::Runtime &rt,
-    const jsi::Value &thisValue,
-    const jsi::Value *args,
-    const size_t count) {
+pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   auto arg = std::tie(std::as_const(*args));
-  auto rest = pushArgTypes<Rest...>(rt, thisValue, std::next(args), count - 1);
+  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
   return std::tuple_cat(arg, std::move(rest));
 }
 
@@ -167,10 +116,9 @@ template <typename Ret, typename... Args>
 std::tuple<Args...> getArgsForFunction(
     std::function<Ret(Args...)> function,
     jsi::Runtime &rt,
-    const jsi::Value &thisValue,
     const jsi::Value *args,
     const size_t count) {
-  return pushArgTypes<Args...>(rt, thisValue, args, count);
+  return pushArgTypes<Args...>(rt, args, count);
 }
 
 template <typename Ret, typename... Args>
@@ -190,7 +138,7 @@ createJsiFunction(std::function<Ret(Args...)> function) {
              const jsi::Value &thisValue,
              const jsi::Value *args,
              const size_t count) {
-    auto argz = getArgsForFunction(function, rt, thisValue, args, count);
+    auto argz = getArgsForFunction(function, rt, args, count);
     return std::apply(function, std::move(argz));
   };
 }
@@ -207,7 +155,7 @@ createJsiFunction(std::function<void(Args...)> function) {
              const jsi::Value &thisValue,
              const jsi::Value *args,
              const size_t count) {
-    auto argz = getArgsForFunction(function, rt, thisValue, args, count);
+    auto argz = getArgsForFunction(function, rt, args, count);
     std::apply(function, std::move(argz));
     return jsi::Value::undefined();
   };

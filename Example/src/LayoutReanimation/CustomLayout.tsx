@@ -15,8 +15,6 @@ function CustomLayoutTransiton(): LayoutAnimationFunction {
     const isEvenLocal = isEven.value;
     isEven.value = 1 - isEven.value;
 
-    console.log(_getCurrentTime());
-
     return {
       animations: {
         originX: withDelay(
