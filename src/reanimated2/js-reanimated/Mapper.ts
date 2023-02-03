@@ -1,4 +1,5 @@
 import { NestedObjectValues } from '../commonTypes';
+import { shouldBeUseWeb } from '../PlatformChecker';
 import { JSReanimated } from './commonTypes';
 import MutableValue from './MutableValue';
 
@@ -49,6 +50,9 @@ export default class Mapper<T> {
         res.push(value);
       } else if (Array.isArray(value)) {
         value.forEach((v) => extractMutables(v));
+      } else if (isWebDomElement(value)) {
+        // do nothing on dom elements
+        // without this check, we get a "Maximum call size exceeded error"
       } else if (typeof value === 'object') {
         Object.keys(value).forEach((key) => {
           extractMutables(value[key]);
@@ -59,4 +63,32 @@ export default class Mapper<T> {
     extractMutables(array);
     return res;
   }
+}
+
+function isWebDomElement(value: any) {
+  if (!shouldBeUseWeb()) {
+    return false;
+  }
+
+  // https://stackoverflow.com/a/384380/7869175
+  function isWebNode(o: any) {
+    return typeof Node === 'object'
+      ? o instanceof Node
+      : o &&
+          typeof o === 'object' &&
+          typeof o.nodeType === 'number' &&
+          typeof o.nodeName === 'string';
+  }
+
+  function isWebElement(o: any) {
+    return typeof HTMLElement === 'object'
+      ? o instanceof HTMLElement // DOM2
+      : o &&
+          typeof o === 'object' &&
+          o !== null &&
+          o.nodeType === 1 &&
+          typeof o.nodeName === 'string';
+  }
+
+  return isWebNode(value) || isWebElement(value);
 }

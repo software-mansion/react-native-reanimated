@@ -24,7 +24,6 @@ import {
 } from './reanimated2/layoutReanimation';
 import { StyleProps, ShadowNodeWrapper } from './reanimated2/commonTypes';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
-import { makeShareableShadowNodeWrapper } from './reanimated2/shareables';
 import { flattenArray } from './reanimated2/utils';
 import {
   AnimatedComponentProps,
@@ -185,10 +184,10 @@ export default function createAnimatedComponent(
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (global._IS_FABRIC) {
-          const shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+          const viewTag = this._viewTag;
           runOnUI(() => {
             'worklet';
-            _removeShadowNodeFromRegistry(shadowNodeWrapper);
+            _removeShadowNodeFromRegistry(viewTag);
           })();
         }
       }
@@ -285,9 +284,7 @@ export default function createAnimatedComponent(
         }
 
         if (global._IS_FABRIC) {
-          shadowNodeWrapper = makeShareableShadowNodeWrapper(
-            getShadowNodeWrapperFromRef(this)
-          );
+          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
       this._viewTag = viewTag as number;
