@@ -20,8 +20,9 @@
   BOOL _isSharedTransitionActive;
   NSMutableArray<REASharedElement *> *_sharedElements;
   REAAnimationsManager *_animationManager;
-  NSMutableSet<NSNumber *> *_screenHasObserver;
 }
+
+static REASharedTransitionManager *_sharedTransitionManager;
 
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager
 {
@@ -34,7 +35,8 @@
     _isSharedTransitionActive = NO;
     _sharedElements = [NSMutableArray new];
     _animationManager = animationManager;
-    _screenHasObserver = [NSMutableSet new];
+    _sharedTransitionManager = self;
+    [self swizzleScreensMethods];
   }
   return self;
 }
@@ -106,9 +108,6 @@
     // add observers
     UIView *sharedViewScreen = [self getScreenForView:sharedView];
     UIView *stack = [self getStackForView:sharedViewScreen];
-    if (addedNewScreen) {
-      [self observeChanges:sharedViewScreen];
-    }
 
     // find sibling for shared view
     NSNumber *siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
@@ -218,21 +217,12 @@
   return nil;
 }
 
-- (void)observeChanges:(UIView *)view
+- (void)swizzleScreensMethods
 {
 #if LOAD_SCREENS_HEADERS
-  if (view == nil || [_screenHasObserver containsObject:view.reactTag]) {
-    return;
-  }
-  [_screenHasObserver addObject:view.reactTag];
-
-  [view addObserver:self forKeyPath:@"transitionDuration" options:NSKeyValueObservingOptionNew context:nil];
-  [view addObserver:self forKeyPath:@"activityState" options:NSKeyValueObservingOptionNew context:nil];
-
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
-    UIViewController *viewController = [view valueForKey:@"controller"];
     [self swizzleMethod:@selector(viewDidLayoutSubviews)
                    with:@selector(swizzled_viewDidLayoutSubviews)
                forClass:[RNSScreen class]];
@@ -256,63 +246,43 @@
 
 - (void)swizzled_viewDidLayoutSubviews
 {
-  /*
-    The screen header is added later than other screen children and changes their
-    position on the screen. That's why we need to make a snapshot after the header
-    mount. We don't want to add a strong dependency to the react-native-screens
-    library so we decided to use KVO from Obj-C. However, all properties of the
-    screen are updated without calling Obj-C's setters. We swizzled the method
-    `viewDidLayoutSubviews` - this method is called after the appearance of the header.
-    Then we call KVO to notify Reanimated observer about the attached header.
-  */
-
   // call original method from react-native-screens, self == RNScreen
   [self swizzled_viewDidLayoutSubviews];
-  // get RNScreenView from RNScreen to call KVO on RNScreenView because
-  // RNScreen doesn't contains writable public property.
-  UIView *view = [self valueForKey:@"screenView"];
-  // call KVO to run runAsyncSharedTransition from Reanimated
-  [view setValue:[view valueForKey:@"transitionDuration"] forKey:@"transitionDuration"];
+  UIView *screen = [self valueForKey:@"screenView"];
+  [_sharedTransitionManager screenAddedToStack:screen];
 }
 
 - (void)swizzled_notifyWillDisappear
 {
-  // call original method from react-native-screens, self == RNScreenView
+  // call original method from react-native-screens, self == RNSScreenView
   [self swizzled_notifyWillDisappear];
-  // call KVO to run runAsyncSharedTransition from Reanimated
-  [self setValue:[self valueForKey:@"activityState"] forKey:@"activityState"];
+  [_sharedTransitionManager screenRemovedFromStack:(UIView *)self];
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary<NSKeyValueChangeKey, id> *)change
-                       context:(void *)context
+- (void)screenAddedToStack:(UIView *)screen
 {
-  UIView *screen = (UIView *)object;
-  UIView *stack = [self getStackForView:screen];
+  if (screen.superview != nil) {
+    [self runAsyncSharedTransition];
+  }
+}
 
-  if ([keyPath isEqualToString:@"transitionDuration"]) {
-    // added new screen (push)
-    if (screen.superview != nil) {
-      [self runAsyncSharedTransition];
-    }
-  } else if ([keyPath isEqualToString:@"activityState"]) {
-    // removed screen from top (removed from stack or covered by another screen)
-    bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
-    if (stack != nil && !isRemovedInParentStack) {
-      bool shouldRunTransition =
-          [self isScreen:screen
-              outsideStack:stack] // screen is removed from React tree (navigation.navigate(<screenName>))
-          || [self isScreen:screen onTopOfStack:stack]; // click on button goBack on native header
-      if (shouldRunTransition) {
-        [self runSharedTransitionForSharedViewsOnScreen:screen];
-      } else {
-        [self doSnapshotForScreenViews:screen];
-      }
+- (void)screenRemovedFromStack:(UIView *)screen
+{
+  UIView *stack = [self getStackForView:screen];
+  bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
+  if (stack != nil && !isRemovedInParentStack) {
+    bool shouldRunTransition =
+        [self isScreen:screen
+            outsideStack:stack] // screen is removed from React tree (navigation.navigate(<screenName>))
+        || [self isScreen:screen onTopOfStack:stack]; // click on button goBack on native header
+    if (shouldRunTransition) {
+      [self runSharedTransitionForSharedViewsOnScreen:screen];
     } else {
-      // removed stack
-      [self clearConfigForStack:stack];
+      [self doSnapshotForScreenViews:screen];
     }
+  } else {
+    // removed stack
+    [self clearConfigForStack:stack];
   }
 }
 
@@ -335,7 +305,6 @@
       [self clearAllSharedConfigsForViewTag:view.reactTag];
       return false;
     });
-    [_screenHasObserver removeObject:child.reactTag];
   }
 }
 
