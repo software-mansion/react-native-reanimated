@@ -121,9 +121,21 @@ std::tuple<Args...> getArgsForFunction(
   return pushArgTypes<Args...>(rt, args, count);
 }
 
+template <typename... Args>
+inline std::enable_if_t<sizeof...(Args) == 0, size_t> countArgs() {
+  return 0;
+}
+
+template <typename First, typename... Rest>
+inline size_t countArgs() {
+  size_t countFirst = (typeid(First) != typeid(jsi::Runtime &) ? 1 : 0);
+  size_t countRest = countArgs<Rest...>();
+  return countFirst + countRest;
+}
+
 template <typename Ret, typename... Args>
 size_t getFunctionArgsCount(std::function<Ret(Args...)> function) {
-  return sizeof...(Args);
+  return countArgs<Args...>();
 }
 
 template <typename Ret, typename... Args>
