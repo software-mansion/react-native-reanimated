@@ -64,17 +64,17 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)viewsDidLayout
 {
-  [self setupAsyncSharedTransitionForViews:_addedSharedViews];
+  [self configureAsyncSharedTransitionForViews:_addedSharedViews];
   [_addedSharedViews removeAllObjects];
 }
 
-- (void)setupAsyncSharedTransitionForViews:(NSArray<UIView *> *)views
+- (void)configureAsyncSharedTransitionForViews:(NSArray<UIView *> *)views
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
   _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
 }
 
-- (BOOL)setupAndStartSharedTransitionForViews:(NSArray<UIView *> *)views
+- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
   NSArray<REASharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
@@ -82,7 +82,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([sharedElements count] == 0) {
     return NO;
   }
-  [self setupTransitionContainer];
+  [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
   [self startSharedTransition:sharedElements];
   return YES;
@@ -353,7 +353,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
-  BOOL startedAnimation = [self setupAndStartSharedTransitionForViews:removedViews];
+  BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews];
   if (startedAnimation) {
     for (UIView *view in removedViews) {
       [_animationManager clearAnimationConfigForTag:view.reactTag];
@@ -378,14 +378,14 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([currentSharedElements count] == 0) {
     return;
   }
-  [self setupTransitionContainer];
+  [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:_sharedElements];
   [self startSharedTransition:_sharedElements];
   [_addedSharedViews removeAllObjects];
   [_sharedElements removeObjectsInArray:currentSharedElements];
 }
 
-- (void)setupTransitionContainer
+- (void)configureTransitionContainer
 {
   if (!_isSharedTransitionActive) {
     _isSharedTransitionActive = YES;

@@ -288,7 +288,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
       if (tagsToDelete == null) {
-        animationsManager.doSnapshotOfTopScreenViews(viewGroup);
+        animationsManager.makeSnapshotOfTopScreenViews(viewGroup);
       } else {
         animationsManager.notifyAboutViewsRemoval(tagsToDelete);
       }

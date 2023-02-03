@@ -182,8 +182,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view convertFromAbsolute:(BOOL)convertFromAbsolute
 {
-  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
     double oldHeight = view.bounds.size.height;
@@ -199,22 +197,22 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [newProps removeObjectForKey:@"width"];
   }
 
-  bool needViewPositionUpdate = false;
+  bool needsViewPositionUpdate = false;
   double centerX = view.center.x;
   double centerY = view.center.y;
   if (newProps[@"originX"]) {
-    needViewPositionUpdate = true;
+    needsViewPositionUpdate = true;
     double originX = [self getDoubleOrZero:newProps[@"originX"]];
     [newProps removeObjectForKey:@"originX"];
     centerX = originX + view.bounds.size.width / 2.0;
   }
   if (newProps[@"originY"]) {
-    needViewPositionUpdate = true;
+    needsViewPositionUpdate = true;
     double originY = [self getDoubleOrZero:newProps[@"originY"]];
     [newProps removeObjectForKey:@"originY"];
     centerY = originY + view.bounds.size.height / 2.0;
   }
-  if (needViewPositionUpdate) {
+  if (needsViewPositionUpdate) {
     CGPoint newCenter = CGPointMake(centerX, centerY);
     if (convertFromAbsolute) {
       UIView *window = UIApplication.sharedApplication.keyWindow;
@@ -225,6 +223,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
   }
 
+  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
 }
 

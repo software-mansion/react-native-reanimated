@@ -639,7 +639,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.onViewsRemoval(tagsToDelete);
   }
 
-  public void doSnapshotOfTopScreenViews(ViewGroup stack) {
+  public void makeSnapshotOfTopScreenViews(ViewGroup stack) {
     mSharedTransitionManager.doSnapshotForTopScreenViews(stack);
   }
 
