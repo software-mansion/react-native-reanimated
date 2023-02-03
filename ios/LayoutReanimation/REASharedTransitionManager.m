@@ -74,7 +74,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
 }
 
-- (BOOL)setupSyncSharedTransitionForViews:(NSArray<UIView *> *)views
+- (BOOL)setupAndStartSharedTransitionForViews:(NSArray<UIView *> *)views
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
   NSArray<REASharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
@@ -349,7 +349,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
-  BOOL startedAnimation = [self setupSyncSharedTransitionForViews:removedViews];
+  BOOL startedAnimation = [self setupAndStartSharedTransitionForViews:removedViews];
   if (startedAnimation) {
     for (UIView *view in removedViews) {
       [_animationManager clearAnimationConfigForTag:view.reactTag];
