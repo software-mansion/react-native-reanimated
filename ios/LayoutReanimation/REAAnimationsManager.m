@@ -531,7 +531,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self setNewProps:before.values forView:view];
   }
 
-  if (_hasAnimationForTag(viewTag, @"sharedElementTransition")) {
+  if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"entering"]) {
     [_sharedTransitionManager notifyAboutNewView:view];
   }
 }
