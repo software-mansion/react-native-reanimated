@@ -62,19 +62,7 @@ class EventHandler : public HybridClass<EventHandler> {
   void receiveEvent(
       jni::alias_ref<JString> eventKey,
       jni::alias_ref<react::WritableMap> event) {
-    std::string eventAsString = "{NativeMap:null}";
-    if (event != nullptr) {
-      try {
-        eventAsString = event->toString();
-      } catch (std::exception &) {
-        // Events from other libraries may contain NaN or INF values which
-        // cannot be represented in JSON. See
-        // https://github.com/software-mansion/react-native-reanimated/issues/1776
-        // for details.
-        return;
-      }
-    }
-    handler_(eventKey->toString(), eventAsString);
+    handler_(eventKey, event);
   }
 
   static void registerNatives() {
@@ -86,10 +74,14 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  explicit EventHandler(std::function<void(std::string, std::string)> handler)
+  explicit EventHandler(std::function<void(
+                            jni::alias_ref<JString>,
+                            jni::alias_ref<react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
-  std::function<void(std::string, std::string)> handler_;
+  std::function<
+      void(jni::alias_ref<JString>, jni::alias_ref<react::WritableMap>)>
+      handler_;
 };
 
 class SensorSetter : public HybridClass<SensorSetter> {
@@ -199,8 +191,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   bool isAnyHandlerWaitingForEvent(std::string);
   void performOperations();
   void requestRender(std::function<void(double)> onRender);
-  void registerEventHandler(
-      std::function<void(std::string, std::string)> handler);
+  void registerEventHandler(std::function<void(
+                                jni::alias_ref<JString>,
+                                jni::alias_ref<react::WritableMap>)> handler);
   void setGestureState(int handlerTag, int newState);
   int registerSensor(
       int sensorType,
