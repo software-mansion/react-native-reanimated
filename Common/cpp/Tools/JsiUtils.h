@@ -1,11 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <stdio.h>
-#include <memory>
 #include <string>
 #include <tuple>
-#include <unordered_map>
 #include <utility>
 
 using namespace facebook;
