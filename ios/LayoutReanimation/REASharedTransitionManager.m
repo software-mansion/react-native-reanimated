@@ -22,6 +22,11 @@
   REAAnimationsManager *_animationManager;
 }
 
+/*
+  `_sharedTransitionManager` provides access to current REASharedTransitionManager
+  instance from swizzled methods in react-native-screens. Swizzled methos has
+  different context of execution (self != REASharedTransitionManager)
+*/
 static REASharedTransitionManager *_sharedTransitionManager;
 
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager
