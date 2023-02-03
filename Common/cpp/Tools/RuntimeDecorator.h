@@ -165,6 +165,23 @@ createJsiFunction(std::function<Ret(Args...)> function) {
              const jsi::Value *args,
              const size_t count) {
     auto argz = getArgsForFunction(function, rt, thisValue, args, count);
+    return std::apply(function, std::move(argz));
+  };
+}
+
+template <typename... Args>
+std::function<jsi::Value(
+    jsi::Runtime &,
+    const jsi::Value &,
+    const jsi::Value *,
+    const size_t)>
+createJsiFunction(std::function<void(Args...)> function) {
+  return [function](
+             jsi::Runtime &rt,
+             const jsi::Value &thisValue,
+             const jsi::Value *args,
+             const size_t count) {
+    auto argz = getArgsForFunction(function, rt, thisValue, args, count);
     std::apply(function, std::move(argz));
     return jsi::Value::undefined();
   };

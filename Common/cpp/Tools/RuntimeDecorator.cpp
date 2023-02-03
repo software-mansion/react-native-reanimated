@@ -274,16 +274,7 @@ void RuntimeDecorator::decorateUIRuntime(
   rt.global().setProperty(
       rt, "_updateDataSynchronously", updateDataSynchronouslyFun);
 
-  auto clb6 = [getCurrentTime](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    return getCurrentTime();
-  };
-  jsi::Value timeFun = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
-  rt.global().setProperty(rt, "_getCurrentTime", timeFun);
+  installJsiFunction(rt, "_getCurrentTime", getCurrentTime);
 
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
