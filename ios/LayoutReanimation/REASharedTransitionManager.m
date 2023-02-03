@@ -217,6 +217,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return nil;
 }
 
+/*
+  Method swizzling is used to get notification from react-native-screens
+  about push or pop screen from stack.
+*/
 - (void)swizzleScreensMethods
 {
 #if LOAD_SCREENS_HEADERS
