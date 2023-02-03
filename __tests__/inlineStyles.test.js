@@ -8,16 +8,9 @@ import Animated, {
   withSpring,
   withRepeat,
   withDelay,
-  SharedValue,
 } from '../src';
 
-const AnimatedSharedValueComponent = ({
-  sharedValue,
-  style,
-}: {
-  sharedValue: SharedValue<number>;
-  style: any;
-}) => {
+const AnimatedSharedValueComponent = ({ sharedValue, style }) => {
   return (
     <View>
       <Animated.View testID="view" style={style} />
@@ -32,11 +25,7 @@ const AnimatedSharedValueComponent = ({
   );
 };
 
-const AnimatedComponent = ({
-  style,
-}: {
-  style: (sharedValue: SharedValue<number>) => any;
-}) => {
+const AnimatedComponent = ({ style }) => {
   const sharedValue = useSharedValue(100);
   return (
     <AnimatedSharedValueComponent
