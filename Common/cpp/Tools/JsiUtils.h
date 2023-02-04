@@ -10,6 +10,38 @@ using namespace facebook;
 namespace reanimated {
 namespace jsi_utils {
 
+// `get` functions take a pointer to `jsi::Value` and
+// call an appropriate method to cast to the native type
+template <typename T>
+inline T get(jsi::Runtime &rt, const jsi::Value *value);
+
+template <>
+inline double get<double>(jsi::Runtime &rt, const jsi::Value *value) {
+  return value->asNumber();
+}
+
+template <>
+inline int get<int>(jsi::Runtime &rt, const jsi::Value *value) {
+  return value->asNumber();
+}
+
+template <>
+inline bool get<bool>(jsi::Runtime &rt, const jsi::Value *value) {
+  return value->asBool();
+}
+
+template <>
+inline jsi::Object get<jsi::Object>(jsi::Runtime &rt, const jsi::Value *value) {
+  return value->asObject(rt);
+}
+
+template <>
+inline jsi::Value const &get<jsi::Value const &>(
+    jsi::Runtime &rt,
+    const jsi::Value *value) {
+  return *value;
+}
+
 // `pushArgTypes` functions take a variadic template parameter of target (C++)
 // argument types `Targs` and a `jsi::Value` array `args`, and converts `args`
 // to a tuple of typed C++ arguments to be passed to the native implementation.
@@ -18,122 +50,24 @@ namespace jsi_utils {
 // correct specialization, and concatenating with the result of recursion on the
 // rest of `Targs`
 
-// BEGIN forward declarations for `pushArgTypes` specializations
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, double>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, int>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, bool>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, jsi::Object>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::enable_if<
-    std::is_same<T, jsi::Value const &>::value,
-    std::tuple<T, Rest...>>::type
-pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
-
-template <typename T, typename... Rest>
-inline typename std::enable_if<
-    std::is_same<T, jsi::Runtime &>::value,
-    std::tuple<T, Rest...>>::type
-pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count);
-// END forward declarations for `pushArgTypes` specializations
-
 // BEGIN implementations for `pushArgTypes` specializations.
 // specialization for empty `Targs` - returns an empty tuple
-template <typename... Targs>
-std::enable_if_t<(sizeof...(Targs) == 0), std::tuple<>>
+template <typename... Args>
+std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>>
 pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   assert(count == 0);
   return std::make_tuple();
 }
 
-// specialization for `First = double` - casts first of `args` to double and
-// calls recursively on the rest of `args`
+// calls `get<First>` on the first argument to retrieve the native type,
+// then calls recursively on the rest of `args`
+// and returns the concatenation of results
 template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, double>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  assert(count > 0);
-  auto arg = std::make_tuple<double>(args->asNumber());
-  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
-  return std::tuple_cat(std::move(arg), std::move(rest));
-}
-
-// specialization for `First = int` - casts first of `args` to int and calls
-// recursively on the rest of `args`
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, int>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  assert(count > 0);
-  auto arg = std::make_tuple<int>(args->asNumber());
-  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
-  return std::tuple_cat(std::move(arg), std::move(rest));
-}
-
-// specialization for `First = bool` - casts first of `args` to bool and calls
-// recursively on the rest of `args`
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, bool>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  assert(count > 0);
-  auto arg = std::make_tuple(args->asBool());
-  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
-  return std::tuple_cat(std::move(arg), std::move(rest));
-}
-
-// specialization for `First = jsi::Object` - casts first of `args` to a JSI
-// object and calls recursively on the rest of `args`
-template <typename T, typename... Rest>
-inline typename std::
-    enable_if<std::is_same<T, jsi::Object>::value, std::tuple<T, Rest...>>::type
-    pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  assert(count > 0);
-  auto arg = std::make_tuple(args->asObject(rt));
-  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
-  return std::tuple_cat(std::move(arg), std::move(rest));
-}
-
-// specialization for `First = jsi::Runtime&`. Passes the runtime this function
-// was called inside and calls recursively with `args`. This is because the
-// `jsi::Runtime&` parameters aren't passed from JS when the function is called
-// and are instead supplied by the JSI API in a separate argument to the native
-// function.
-template <typename T, typename... Rest>
-inline typename std::enable_if<
-    std::is_same<T, jsi::Runtime &>::value,
-    std::tuple<T, Rest...>>::type
+inline std::tuple<T, Rest...>
 pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  auto arg = std::tie(rt);
-  auto rest = pushArgTypes<Rest...>(rt, args, count);
-  return std::tuple_cat(arg, std::move(rest));
-}
-
-// specialization for `First = jsi::Value const &` - passes the first of `args`
-// and calls recursively on the rest of `args`
-template <typename T, typename... Rest>
-inline typename std::enable_if<
-    std::is_same<T, jsi::Value const &>::value,
-    std::tuple<T, Rest...>>::type
-pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  auto arg = std::tie(std::as_const(*args));
+  auto arg = std::tuple<T>(get<T>(rt, args));
   auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
-  return std::tuple_cat(arg, std::move(rest));
+  return std::tuple_cat(std::move(arg), std::move(rest));
 }
 // END implementations for `pushArgTypes` specializations.
 
@@ -148,67 +82,67 @@ std::tuple<Args...> getArgsForFunction(
   return pushArgTypes<Args...>(rt, args, count);
 }
 
-// counts the (non-`jsi::Runtime &`) arguments the on the `...Args`
-// list of types
-template <typename... Args>
-inline std::enable_if_t<sizeof...(Args) == 0, size_t> countArgs() {
-  return 0;
-}
-
-template <typename First, typename... Rest>
-inline size_t countArgs() {
-  size_t countFirst = (typeid(First) != typeid(jsi::Runtime &) ? 1 : 0);
-  size_t countRest = countArgs<Rest...>();
-  return countFirst + countRest;
-}
-
-// returns the number of (non-`jsi::Runtime &`) arguments
-// of `function`
+// returns a tuple with the result of casting `args` to appropriate
+// native C++ types needed to call `function`,
+// passing `rt` as the first argument
 template <typename Ret, typename... Args>
-size_t getFunctionArgsCount(std::function<Ret(Args...)> function) {
-  return countArgs<Args...>();
+std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
+    std::function<Ret(jsi::Runtime &, Args...)> function,
+    jsi::Runtime &rt,
+    const jsi::Value *args,
+    const size_t count) {
+  return std::tuple_cat(std::tie(rt), pushArgTypes<Args...>(rt, args, count));
+}
+
+// calls `function` with `args`
+template <typename Ret, typename... Args>
+inline jsi::Value apply(
+    std::function<Ret(Args...)> function,
+    std::tuple<Args...> args) {
+  return std::apply(function, std::move(args));
+}
+
+// calls void-returning `function` with `args`,
+// and returns `undefined`
+template <typename... Args>
+inline jsi::Value apply(
+    std::function<void(Args...)> function,
+    std::tuple<Args...> args) {
+  std::apply(function, std::move(args));
+  return jsi::Value::undefined();
 }
 
 // returns a function with JSI calling convention
-// from a native function `function` which takes
-// `...Args` arguments and returns `Ret`
-template <typename Ret, typename... Args>
+// from a native function `function`
+template <typename Fun>
 std::function<jsi::Value(
     jsi::Runtime &,
     const jsi::Value &,
     const jsi::Value *,
     const size_t)>
-createJsiFunction(std::function<Ret(Args...)> function) {
+createJsiFunction(Fun function) {
   return [function](
              jsi::Runtime &rt,
              const jsi::Value &thisValue,
              const jsi::Value *args,
              const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
-    return std::apply(function, std::move(argz));
+    return apply(function, std::move(argz));
   };
 }
 
-// returns a function with JSI calling convention
-// from a native function `function` which takes
-// `...Args` arguments and returns `void`
+// used to determine if `function<Ret(Args...)>`
+// takes `Runtime &` as its first argument
 template <typename... Args>
-std::function<jsi::Value(
-    jsi::Runtime &,
-    const jsi::Value &,
-    const jsi::Value *,
-    const size_t)>
-createJsiFunction(std::function<void(Args...)> function) {
-  return [function](
-             jsi::Runtime &rt,
-             const jsi::Value &thisValue,
-             const jsi::Value *args,
-             const size_t count) {
-    auto argz = getArgsForFunction(function, rt, args, count);
-    std::apply(function, std::move(argz));
-    return jsi::Value::undefined();
-  };
-}
+struct takes_runtime {
+  static constexpr size_t value = 0;
+};
+
+// specialization for `function<Ret(Runtime &, Rest...)`
+template <typename... Rest>
+struct takes_runtime<jsi::Runtime &, Rest...> {
+  static constexpr size_t value = 1;
+};
 
 // creates a JSI compatible function from `function`
 // and installs it as a global function named `name`
@@ -219,7 +153,7 @@ void installJsiFunction(
     std::string_view name,
     std::function<Ret(Args...)> function) {
   auto clb = createJsiFunction(function);
-  auto argsCount = getFunctionArgsCount(function);
+  auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
   jsi::Value jsiFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
   rt.global().setProperty(rt, name.data(), jsiFunction);
