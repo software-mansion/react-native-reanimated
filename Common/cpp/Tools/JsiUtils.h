@@ -154,5 +154,11 @@ void installJsiFunction(
   rt.global().setProperty(rt, name.data(), jsiFunction);
 }
 
+// this should take care of passing types convertible to `function`
+template <typename Fun>
+void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
+  installJsiFunction(rt, name, std::function(std::forward<Fun>(function)));
+}
+
 } // namespace jsi_utils
 } // namespace reanimated
