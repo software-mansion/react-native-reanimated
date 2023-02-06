@@ -126,7 +126,7 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
   jsi_utils::installJsiFunction(rt, "_scrollTo", scrollTo);
 
-  auto _measure = [&rt, measure](int viewTag) -> jsi::Value {
+  auto _measure = [measure](jsi::Runtime &rt, int viewTag) -> jsi::Value {
     auto result = measure(viewTag);
     jsi::Object resultObject(rt);
     for (auto &i : result) {
