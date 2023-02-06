@@ -312,9 +312,16 @@ void NativeProxy::installJSIBindings(
       if (eventJSON == "null") {
         return;
       }
+
       jsi::Runtime &rt = *module->runtime;
-      jsi::Value payload = jsi::Value::createFromJsonUtf8(
-          rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+      jsi::Value payload;
+      try {
+        payload = jsi::Value::createFromJsonUtf8(
+            rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+      } catch (std::exception &) {
+        // Ignore events with malformed JSON payload.
+        return;
+      }
 
       module->handleEvent(eventName, payload, getCurrentTime());
     }
