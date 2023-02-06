@@ -57,7 +57,10 @@ public class SharedTransitionManager {
     if (tagsToDelete != null) {
       visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
 
-      startSharedTransitionForViews(mRemovedSharedViews, false);
+      boolean startedAnimation = startSharedTransitionForViews(mRemovedSharedViews, false);
+      if (!startedAnimation) {
+        return;
+      }
       ConfigCleanerTreeVisitor configCleanerTreeVisitor = new ConfigCleanerTreeVisitor();
       for (View removedSharedView : mRemovedSharedViews) {
         visitTree(removedSharedView, configCleanerTreeVisitor);
@@ -85,19 +88,20 @@ public class SharedTransitionManager {
     mNativeMethodsHolder = nativeMethods;
   }
 
-  private void startSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
+  private boolean startSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
     if (sharedViews.isEmpty()) {
-      return;
+      return false;
     }
     sortViewsByTags(sharedViews);
     List<SharedElement> sharedElements =
         getSharedElementsForCurrentTransition(sharedViews, withNewElements);
     if (sharedElements.isEmpty()) {
-      return;
+      return false;
     }
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
     startSharedTransition(sharedElements);
+    return true;
   }
 
   private void sortViewsByTags(List<View> views) {
