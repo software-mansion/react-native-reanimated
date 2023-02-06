@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/REASnapshot.h>
+#import <React/UIView+React.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -40,6 +41,14 @@ NS_ASSUME_NONNULL_BEGIN
   _values[@"globalOriginY"] = _values[@"originY"];
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
+
+  UIView *navigationContainer = view.reactViewController.navigationController.view;
+  UIView *header = [navigationContainer.subviews count] > 1 ? navigationContainer.subviews[1] : nil;
+  if (header != nil) {
+    _values[@"headerHeight"] = @(header.frame.size.height);
+  } else {
+    _values[@"headerHeight"] = @(0);
+  }
 
   return self;
 }
