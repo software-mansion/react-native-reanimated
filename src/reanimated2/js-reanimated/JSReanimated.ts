@@ -64,6 +64,7 @@ export default class JSReanimated extends NativeReanimated {
   registerSensor(
     sensorType: SensorType,
     interval: number,
+    iosReferenceFrame: number,
     eventHandler: (data: Value3D | ValueRotation) => void
   ): number {
     if (!(this.getSensorName(sensorType) in window)) {

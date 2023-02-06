@@ -75,9 +75,15 @@ export class NativeReanimated {
   registerSensor<T>(
     sensorType: number,
     interval: number,
+    iosReferenceFrame: number,
     handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
-    return this.InnerNativeModule.registerSensor(sensorType, interval, handler);
+    return this.InnerNativeModule.registerSensor(
+      sensorType,
+      interval,
+      iosReferenceFrame,
+      handler
+    );
   }
 
   unregisterSensor(sensorId: number) {

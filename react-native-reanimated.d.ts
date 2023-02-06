@@ -498,9 +498,18 @@ declare module 'react-native-reanimated' {
     ROTATION = 5,
   }
 
-  export type SensorConfig = {
+  export enum IOSReferenceFrame {
+    XArbitraryZVertical = 0,
+    XArbitraryCorrectedZVertical = 1,
+    XMagneticNorthZVertical = 2,
+    XTrueNorthZVertical = 3,
+  }
+
+  export type SensorConfig = Partial<{
     interval: number | 'auto';
-  };
+    adjustToInterfaceOrientation: boolean;
+    iosReferenceFrame: IOSReferenceFrame;
+  }>;
 
   export type Value3D = {
     x: number;

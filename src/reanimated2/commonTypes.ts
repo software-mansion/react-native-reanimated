@@ -151,6 +151,12 @@ export enum SensorType {
   MAGNETIC_FIELD = 4,
   ROTATION = 5,
 }
+export enum IOSReferenceFrame {
+  XArbitraryZVertical,
+  XArbitraryCorrectedZVertical,
+  XMagneticNorthZVertical,
+  XTrueNorthZVertical,
+}
 
 export interface NumericAnimation {
   current?: number;
@@ -178,6 +184,13 @@ export type ValueRotation = {
   pitch: number;
   roll: number;
 };
+
+export enum InterfaceOrientation {
+  ROTATION_0 = 0,
+  ROTATION_90 = 90,
+  ROTATION_180 = 180,
+  ROTATION_270 = 270,
+}
 
 export type ShadowNodeWrapper = object;
 
