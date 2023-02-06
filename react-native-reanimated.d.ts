@@ -970,6 +970,16 @@ declare module 'react-native-reanimated' {
     restSpeedThreshold(
       restSpeedThresholdFactor: number
     ): ComplexAnimationBuilder;
+
+    static withInitialValues(
+      values: StyleProps
+    ): BaseAnimationBuilder
+
+    withInitialValues(
+      values: StyleProps
+    ): BaseAnimationBuilder
+
+    getAnimationAndConfig(): LayoutAnimationAndConfig
   }
 
   export class Layout extends ComplexAnimationBuilder {}
