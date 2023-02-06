@@ -330,10 +330,6 @@ public class SharedTransitionManager {
 
   protected void makeSnapshot(View view) {
     Snapshot snapshot = new Snapshot(view);
-    View screen = findScreen(view);
-    if (screen != null) {
-      snapshot.originY -= screen.getTop();
-    }
     mSnapshotRegistry.put(view.getId(), snapshot);
   }
 
@@ -403,7 +399,9 @@ public class SharedTransitionManager {
       return;
     }
     ViewGroup viewGroup = (ViewGroup) view;
-    makeSnapshot(view);
+    if (mAnimationsManager.hasAnimationForTag(view.getId(), "sharedElementTransition")) {
+      makeSnapshot(view);
+    }
     for (int i = 0; i < viewGroup.getChildCount(); i++) {
       View child = viewGroup.getChildAt(i);
       visitNativeTreeAndMakeSnapshot(child);
