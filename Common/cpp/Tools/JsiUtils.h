@@ -115,12 +115,7 @@ inline jsi::Value apply(
 // returns a function with JSI calling convention
 // from a native function `function`
 template <typename Fun>
-std::function<jsi::Value(
-    jsi::Runtime &,
-    const jsi::Value &,
-    const jsi::Value *,
-    const size_t)>
-createJsiFunction(Fun function) {
+jsi::HostFunctionType createHostFunction(Fun function) {
   return [function](
              jsi::Runtime &rt,
              const jsi::Value &thisValue,
@@ -152,7 +147,7 @@ void installJsiFunction(
     jsi::Runtime &rt,
     std::string_view name,
     std::function<Ret(Args...)> function) {
-  auto clb = createJsiFunction(function);
+  auto clb = createHostFunction(function);
   auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
   jsi::Value jsiFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
