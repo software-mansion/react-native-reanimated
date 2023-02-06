@@ -42,7 +42,7 @@ inline jsi::Value const &get<jsi::Value const &>(
   return *value;
 }
 
-// `pushArgTypes` functions take a variadic template parameter of target (C++)
+// `convertArgs` functions take a variadic template parameter of target (C++)
 // argument types `Targs` and a `jsi::Value` array `args`, and converts `args`
 // to a tuple of typed C++ arguments to be passed to the native implementation.
 // This is accomplished by dispatching (at compile time) to the correct
@@ -50,11 +50,11 @@ inline jsi::Value const &get<jsi::Value const &>(
 // correct specialization, and concatenating with the result of recursion on the
 // rest of `Targs`
 
-// BEGIN implementations for `pushArgTypes` specializations.
+// BEGIN implementations for `convertArgs` specializations.
 // specialization for empty `Targs` - returns an empty tuple
 template <typename... Args>
 std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>>
-pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
+convertArgs(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   assert(count == 0);
   return std::make_tuple();
 }
@@ -64,12 +64,12 @@ pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
 // and returns the concatenation of results
 template <typename T, typename... Rest>
 inline std::tuple<T, Rest...>
-pushArgTypes(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
+convertArgs(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
   auto arg = std::tuple<T>(get<T>(rt, args));
-  auto rest = pushArgTypes<Rest...>(rt, std::next(args), count - 1);
+  auto rest = convertArgs<Rest...>(rt, std::next(args), count - 1);
   return std::tuple_cat(std::move(arg), std::move(rest));
 }
-// END implementations for `pushArgTypes` specializations.
+// END implementations for `convertArgs` specializations.
 
 // returns a tuple with the result of casting `args` to appropriate
 // native C++ types needed to call `function`
@@ -79,7 +79,7 @@ std::tuple<Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  return pushArgTypes<Args...>(rt, args, count);
+  return convertArgs<Args...>(rt, args, count);
 }
 
 // returns a tuple with the result of casting `args` to appropriate
@@ -91,7 +91,7 @@ std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  return std::tuple_cat(std::tie(rt), pushArgTypes<Args...>(rt, args, count));
+  return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args, count));
 }
 
 // calls `function` with `args`
