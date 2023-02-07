@@ -75,8 +75,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)configureAsyncSharedTransitionForViews:(NSArray<UIView *> *)views
 {
-  NSArray *sharedViews = [self sortViewsByTags:views];
-  _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
+  if ([views count] > 0) {
+    NSArray *sharedViews = [self sortViewsByTags:views];
+    _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
+  }
 }
 
 - (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views
