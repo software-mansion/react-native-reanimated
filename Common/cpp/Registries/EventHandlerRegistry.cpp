@@ -49,8 +49,14 @@ void EventHandlerRegistry::processEvent(
     return;
   }
 
-  auto eventObject = jsi::Value::createFromJsonUtf8(
-      rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+  jsi::Value eventObject;
+  try {
+    eventObject = jsi::Value::createFromJsonUtf8(
+        rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+  } catch (std::exception &) {
+    // Ignore events with malformed JSON payload.
+    return;
+  }
 
   eventObject.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
