@@ -134,7 +134,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: any;
+  sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
 
 type Options<P> = {
