@@ -178,7 +178,7 @@ declare module 'react-native-reanimated' {
         | EntryExitAnimationFunction
         | Keyframe;
       sharedTransitionTag?: string;
-      sharedTransitionStyle?: any; //TODO: first we need to decide about API for this prop
+      sharedTransitionStyle?: ILayoutAnimationBuilder;
     };
 
     export interface PhysicsAnimationState extends AnimationState {
