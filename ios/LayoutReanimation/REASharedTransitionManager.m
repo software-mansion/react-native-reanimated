@@ -383,8 +383,8 @@
                            }
                            return false;
                          }];
-  BOOL startedAnimation = [self setupSyncSharedTransitionForViews:removedViews];
-  if (startedAnimation) {
+  BOOL animationStarted = [self setupSyncSharedTransitionForViews:removedViews];
+  if (animationStarted) {
     for (UIView *view in removedViews) {
       [_animationManager clearAnimationConfigForTag:view.reactTag];
     }
