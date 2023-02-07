@@ -223,8 +223,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
   }
 
-  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
+  NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
 }
 

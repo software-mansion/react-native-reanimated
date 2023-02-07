@@ -24,7 +24,7 @@
 
 /*
   `_sharedTransitionManager` provides access to current REASharedTransitionManager
-  instance from swizzled methods in react-native-screens. Swizzled methos has
+  instance from swizzled methods in react-native-screens. Swizzled method has
   different context of execution (self != REASharedTransitionManager)
 */
 static REASharedTransitionManager *_sharedTransitionManager;
@@ -287,7 +287,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if (shouldRunTransition) {
       [self runSharedTransitionForSharedViewsOnScreen:screen];
     } else {
-      [self doSnapshotForScreenViews:screen];
+      [self makeSnapshotForScreenViews:screen];
     }
   } else {
     // removed stack
@@ -295,7 +295,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)doSnapshotForScreenViews:(UIView *)screen
+- (void)makeSnapshotForScreenViews:(UIView *)screen
 {
   REANodeFind(screen, ^int(id<RCTComponent> view) {
     NSNumber *viewTag = view.reactTag;
