@@ -3,9 +3,7 @@ package com.swmansion.reanimated.sensor;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.nativeProxy.SensorSetter;
-
 import java.lang.ref.WeakReference;
 
 public class ReanimatedSensor {

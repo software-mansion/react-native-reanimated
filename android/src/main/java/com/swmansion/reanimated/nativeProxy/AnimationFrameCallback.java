@@ -7,13 +7,13 @@ import com.swmansion.reanimated.NodesManager;
 @DoNotStrip
 public class AnimationFrameCallback implements NodesManager.OnAnimationFrame {
 
-    @DoNotStrip private final HybridData mHybridData;
+  @DoNotStrip private final HybridData mHybridData;
 
-    @DoNotStrip
-    private AnimationFrameCallback(HybridData hybridData) {
-        mHybridData = hybridData;
-    }
+  @DoNotStrip
+  private AnimationFrameCallback(HybridData hybridData) {
+    mHybridData = hybridData;
+  }
 
-    @Override
-    public native void onAnimationFrame(double timestampMs);
+  @Override
+  public native void onAnimationFrame(double timestampMs);
 }
