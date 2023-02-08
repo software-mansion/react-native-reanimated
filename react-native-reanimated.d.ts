@@ -1,8 +1,6 @@
 // Project: https://github.com/software-mansion/react-native-reanimated
 // TypeScript Version: 2.8
 
-import { InterfaceOrientation } from 'src';
-
 declare module 'react-native-reanimated' {
   import {
     ComponentClass,
