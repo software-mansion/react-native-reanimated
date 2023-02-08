@@ -360,8 +360,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
-  BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews];
-  if (startedAnimation) {
+  BOOL animationStarted = [self configureAndStartSharedTransitionForViews:removedViews];
+  if (animationStarted) {
     for (UIView *view in removedViews) {
       [_animationManager clearAnimationConfigForTag:view.reactTag];
     }
