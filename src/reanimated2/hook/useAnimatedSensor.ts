@@ -118,7 +118,7 @@ export function useAnimatedSensor(
     config: {
       interval: 0,
       adjustToInterfaceOrientation: true,
-      iosReferenceFrame: IOSReferenceFrame.XArbitraryCorrectedZVertical,
+      iosReferenceFrame: IOSReferenceFrame.Auto,
     },
   });
 
@@ -126,7 +126,7 @@ export function useAnimatedSensor(
     ref.current.config = {
       interval: 'auto',
       adjustToInterfaceOrientation: true,
-      iosReferenceFrame: IOSReferenceFrame.XArbitraryCorrectedZVertical,
+      iosReferenceFrame: IOSReferenceFrame.Auto,
       ...userConfig,
     };
     const sensorData = ref.current.sensor!;

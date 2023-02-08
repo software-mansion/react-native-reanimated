@@ -142,6 +142,15 @@
   [_motionManager setDeviceMotionUpdateInterval:_interval];
 
   [_motionManager setShowsDeviceMovementDisplay:YES];
+
+  // _referenceFrame = Auto, on devices without magnetometer fall back to `XArbitraryZVertical`,
+  // `XArbitraryCorrectedZVertical` otherwise
+  if (_referenceFrame == 4 && ![_motionManager isMagnetometerAvailable]) {
+    _referenceFrame = 0;
+  } else {
+    _referenceFrame = 1;
+  }
+
   // the binary shift works here because of the definition of CMAttitudeReferenceFrame
   [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:(1 << _referenceFrame)
                                                       toQueue:[NSOperationQueue mainQueue]

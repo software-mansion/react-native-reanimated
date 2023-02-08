@@ -156,6 +156,7 @@ export enum IOSReferenceFrame {
   XArbitraryCorrectedZVertical,
   XMagneticNorthZVertical,
   XTrueNorthZVertical,
+  Auto,
 }
 
 export interface NumericAnimation {

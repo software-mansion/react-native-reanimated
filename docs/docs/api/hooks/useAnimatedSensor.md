@@ -51,15 +51,16 @@ Values:
 #### `UserConfig: [object]`
 Properties:
 * `interval: [number | auto]` - interval in milliseconds between shared value updates. Pass `'auto'` to select interval based on device frame rate. Default: `'auto'`.
-* `iosReferenceFrame: [[IOSReferenceFrame](#iosreferenceframe-enum)]` - reference frame to use on iOS
+* `iosReferenceFrame: [[IOSReferenceFrame](#iosreferenceframe-enum)]` - reference frame to use on iOS. Default: `Auto`.
 * `adjustToInterfaceOrientation: [boolean]` - whether to adjust measurements to the current interface orientation. For example, in the landscape orientation axes x and y may need to be reversed when drawn on the screen. It's `true` by default.
 
 #### `IOSReferenceFrame: [enum]`
-`IOSReferenceFrame` is an enum describing reference frame to use on iOS. It follows Apple's [documentation](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe). Default: `XArbitraryCorrectedZVertical`. Possible values:
+`IOSReferenceFrame` is an enum describing reference frame to use on iOS. It follows Apple's [documentation](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe). Possible values:
 * `XArbitraryZVertical`
 * `XArbitraryCorrectedZVertical`
 * `XMagneticNorthZVertical`
 * `XTrueNorthZVertical`
+* `Auto` - on devices without magnetometer (for example iPods) `XArbitraryZVertical`, on devices with magnetometer `XArbitraryCorrectedZVertical`
 
 #### `3DVector: [object]`
 Properties:

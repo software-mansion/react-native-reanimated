@@ -503,6 +503,7 @@ declare module 'react-native-reanimated' {
     XArbitraryCorrectedZVertical = 1,
     XMagneticNorthZVertical = 2,
     XTrueNorthZVertical = 3,
+    Auto = 4,
   }
 
   export type SensorConfig = Partial<{
