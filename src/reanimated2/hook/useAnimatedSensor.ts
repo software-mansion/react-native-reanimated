@@ -46,14 +46,15 @@ function initSensorData(
 }
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
+// https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
 function eulerToQuaternion(pitch: number, roll: number, yaw: number) {
   'worklet';
-  const c1 = Math.cos(pitch * 0.5);
-  const s1 = Math.sin(pitch * 0.5);
-  const c2 = Math.cos(roll * 0.5);
-  const s2 = Math.sin(roll * 0.5);
-  const c3 = Math.cos(yaw * 0.5);
-  const s3 = Math.sin(yaw * 0.5);
+  const c1 = Math.cos(pitch / 2);
+  const s1 = Math.sin(pitch / 2);
+  const c2 = Math.cos(roll / 2);
+  const s2 = Math.sin(roll / 2);
+  const c3 = Math.cos(yaw / 2);
+  const s3 = Math.sin(yaw / 2);
 
   return [
     s1 * c2 * c3 - c1 * s2 * s3,
@@ -124,7 +125,7 @@ export function useAnimatedSensor(
     isAvailable: false,
     config: {
       interval: 0,
-      adjustToInterfaceOrientation: false,
+      adjustToInterfaceOrientation: true,
       iosReferenceFrame: IOSReferenceFrame.XArbitraryCorrectedZVertical,
     },
     interfaceOrientation: makeMutable<InterfaceOrientation>(0),
@@ -133,7 +134,7 @@ export function useAnimatedSensor(
   useEffect(() => {
     ref.current.config = {
       interval: 'auto',
-      adjustToInterfaceOrientation: false,
+      adjustToInterfaceOrientation: true,
       iosReferenceFrame: IOSReferenceFrame.XArbitraryCorrectedZVertical,
       ...userConfig,
     };

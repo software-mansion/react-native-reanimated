@@ -7,14 +7,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet, Text } from 'react-native';
 
+// euler angles are in order ZXY, z = yaw, x = pitch, y = roll
+// https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix (ZXY Tait–Bryan angles)
 function eulerToMatrix(pitch: number, roll: number, yaw: number) {
   'worklet';
+  const s1 = Math.sin(yaw);
+  const c1 = Math.cos(yaw);
   const s2 = Math.sin(pitch);
   const c2 = Math.cos(pitch);
   const s3 = Math.sin(roll);
   const c3 = Math.cos(roll);
-  const s1 = Math.sin(yaw);
-  const c1 = Math.cos(yaw);
 
   return [
     c1 * c3 - s1 * s2 * s3,
@@ -39,6 +41,7 @@ function eulerToMatrix(pitch: number, roll: number, yaw: number) {
   ];
 }
 
+// copied from https://github.com/facebook/react-native/blob/main/Libraries/Utilities/MatrixMath.js
 function createIdentityMatrix() {
   'worklet';
   return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
@@ -58,27 +61,26 @@ function reuseTranslate3dCommand(
 
 function multiplyInto(out: number[], a: number[], b: number[]) {
   'worklet';
-  const a00 = a[0];
-  const a01 = a[1];
-  const a02 = a[2];
-  const a03 = a[3];
-  const a10 = a[4];
-  const a11 = a[5];
-  const a12 = a[6];
-  const a13 = a[7];
-  const a20 = a[8];
-  const a21 = a[9];
-  const a22 = a[10];
-  const a23 = a[11];
-  const a30 = a[12];
-  const a31 = a[13];
-  const a32 = a[14];
-  const a33 = a[15];
+  const [
+    a00,
+    a01,
+    a02,
+    a03,
+    a10,
+    a11,
+    a12,
+    a13,
+    a20,
+    a21,
+    a22,
+    a23,
+    a30,
+    a31,
+    a32,
+    a33,
+  ] = a;
 
-  let b0 = b[0];
-  let b1 = b[1];
-  let b2 = b[2];
-  let b3 = b[3];
+  let [b0, b1, b2, b3] = b;
   out[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
   out[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
   out[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
@@ -128,6 +130,7 @@ function transformOrigin(
   multiplyInto(matrix, matrix, untranslate);
 }
 
+// http://www.songho.ca/opengl/gl_quaternion.html
 function quaternionToMatrix(q: number[]) {
   'worklet';
   const [x, y, z, s] = q;
@@ -151,14 +154,16 @@ function quaternionToMatrix(q: number[]) {
   ];
 }
 
+// euler angles are in order ZXY, z = yaw, x = pitch, y = roll
+// https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
 function eulerToQuaternion(pitch: number, roll: number, yaw: number) {
   'worklet';
-  const c1 = Math.cos(pitch * 0.5);
-  const s1 = Math.sin(pitch * 0.5);
-  const c2 = Math.cos(roll * 0.5);
-  const s2 = Math.sin(roll * 0.5);
-  const c3 = Math.cos(yaw * 0.5);
-  const s3 = Math.sin(yaw * 0.5);
+  const c1 = Math.cos(pitch / 2);
+  const s1 = Math.sin(pitch / 2);
+  const c2 = Math.cos(roll / 2);
+  const s2 = Math.sin(roll / 2);
+  const c3 = Math.cos(yaw / 2);
+  const s3 = Math.sin(yaw / 2);
 
   return [
     s1 * c2 * c3 - c1 * s2 * s3,
@@ -246,12 +251,8 @@ function CubeWithQuaternions() {
 
       const q0 = eulerToQuaternion(-rotation[0], -rotation[1], rotation[2]);
 
-      const q1 = [
-        -animatedSensor.sensor.value.qx,
-        animatedSensor.sensor.value.qy,
-        -animatedSensor.sensor.value.qz,
-        animatedSensor.sensor.value.qw,
-      ];
+      const { qx, qy, qz, qw } = animatedSensor.sensor.value;
+      const q1 = [-qx, qy, -qz, qw];
 
       const q = multiplyQuaternions(q0, q1);
 
@@ -285,7 +286,7 @@ export default function CubesExample() {
     const yaw = animatedSensor.sensor.value.yaw;
 
     return {
-      transform: [{ rotate: yaw + 'rad' }],
+      transform: [{ rotate: `${yaw}rad` }],
     };
   });
 

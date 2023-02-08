@@ -9,8 +9,7 @@ import { View, Button, StyleSheet } from 'react-native';
 export default function AnimatedStyleUpdateExample() {
   const animatedSensor = useAnimatedSensor(SensorType.GRAVITY);
   const style = useAnimatedStyle(() => {
-    const x = animatedSensor.sensor.value.x;
-    const y = animatedSensor.sensor.value.y;
+    const { x, y } = animatedSensor.sensor.value;
     return {
       transform: [{ translateX: x * 5 }, { translateY: y * 5 }],
     };

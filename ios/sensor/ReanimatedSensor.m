@@ -142,6 +142,7 @@
   [_motionManager setDeviceMotionUpdateInterval:_interval];
 
   [_motionManager setShowsDeviceMovementDisplay:YES];
+  // the binary shift works here because of the definition of CMAttitudeReferenceFrame
   [_motionManager startDeviceMotionUpdatesUsingReferenceFrame:(1 << _referenceFrame)
                                                       toQueue:[NSOperationQueue mainQueue]
                                                   withHandler:^(CMDeviceMotion *sensorData, NSError *error) {

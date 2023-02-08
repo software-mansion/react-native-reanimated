@@ -61,7 +61,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
             quaternion[2], // qy
             quaternion[3], // qz
             quaternion[0], // qw
-            // make android consistent with iOS - iOS is better documented here:
+            // make Android consistent with iOS, which is better documented here:
             // https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data/understanding_reference_frames_and_device_attitude
             -orientation[0], // yaw
             -orientation[1], // pitch

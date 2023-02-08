@@ -53,7 +53,7 @@ Values:
 Properties:
 * `interval: [number | auto]` - interval in milliseconds between shared value updates. Pass `'auto'` to select interval based on device frame rate. Default: `'auto'`.
 * `iosReferenceFrame: [[IOSReferenceFrame](#iosreferenceframe-enum)]` - reference frame to use on iOS
-* `adjustToInterfaceOrientation: [boolean]` - whether to adjust measurements to the current interface orientation. For example, in the landscape orientation axes x and y may need to be reversed when drawn on the screen. It depends on the use case, so it's `false` by default.
+* `adjustToInterfaceOrientation: [boolean]` - whether to adjust measurements to the current interface orientation. For example, in the landscape orientation axes x and y may need to be reversed when drawn on the screen. It's `true` by default.
 
 #### `IOSReferenceFrame: [enum]`
 `IOSReferenceFrame` is an enum describing reference frame to use on iOS. It follows Apple's [documentation](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe). Default: `XArbitraryCorrectedZVertical`. Possible values:
