@@ -33,7 +33,6 @@ Properties:
   the flag contains information on the availability of sensors in a device
 * `config`: [[UserConfig](#userconfig-object)]  
   the configuration provided by a user
-* `interfaceOrientation`: [[SharedValue](../../api/hooks/useSharedValue)] contains [[InterfaceOrientation](#interfaceorientation-enum)] contains current interface orientation
 
 #### `SensorType: [enum]`
 `SensorType` is an enum that contains possibly supported sensors.
@@ -67,6 +66,7 @@ Properties:
 * `x: number`
 * `y: number`
 * `z: number`
+* `interfaceOrientation: [[InterfaceOrientation](#interfaceorientation-enum)]`
 
 #### `RotationVector: [object]`
 Properties:
@@ -77,6 +77,7 @@ Properties:
 * `yaw: number`
 * `pitch: number`
 * `roll: number`
+* `interfaceOrientation: [[InterfaceOrientation](#interfaceorientation-enum)]`
 
 #### `InterfaceOrientation: [enum]`
 Values:

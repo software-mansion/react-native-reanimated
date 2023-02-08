@@ -173,6 +173,7 @@ export type Value3D = {
   x: number;
   y: number;
   z: number;
+  interfaceOrientation: InterfaceOrientation;
 };
 
 export type ValueRotation = {
@@ -183,6 +184,7 @@ export type ValueRotation = {
   yaw: number;
   pitch: number;
   roll: number;
+  interfaceOrientation: InterfaceOrientation;
 };
 
 export enum InterfaceOrientation {

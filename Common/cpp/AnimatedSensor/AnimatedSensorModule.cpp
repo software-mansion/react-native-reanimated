@@ -53,13 +53,15 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(rt, "yaw", newValues[4]);
           value.setProperty(rt, "pitch", newValues[5]);
           value.setProperty(rt, "roll", newValues[6]);
-          handler.call(rt, value, orientationDegrees);
+          value.setProperty(rt, "interfaceOrientation", orientationDegrees);
+          handler.call(rt, value);
         } else {
           jsi::Object value(rt);
           value.setProperty(rt, "x", newValues[0]);
           value.setProperty(rt, "y", newValues[1]);
           value.setProperty(rt, "z", newValues[2]);
-          handler.call(rt, value, orientationDegrees);
+          value.setProperty(rt, "interfaceOrientation", orientationDegrees);
+          handler.call(rt, value);
         }
       });
   if (sensorId != -1) {

@@ -1,6 +1,8 @@
 // Project: https://github.com/software-mansion/react-native-reanimated
 // TypeScript Version: 2.8
 
+import { InterfaceOrientation } from 'src';
+
 declare module 'react-native-reanimated' {
   import {
     ComponentClass,
@@ -515,6 +517,7 @@ declare module 'react-native-reanimated' {
     x: number;
     y: number;
     z: number;
+    interfaceOrientation: InterfaceOrientation;
   };
 
   export type SensorValue3D = SharedValue<Value3D>;
@@ -527,6 +530,7 @@ declare module 'react-native-reanimated' {
     yaw: number;
     pitch: number;
     roll: number;
+    interfaceOrientation: InterfaceOrientation;
   };
 
   export type SensorValueRotation = SharedValue<ValueRotation>;

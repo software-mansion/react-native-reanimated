@@ -1,10 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import { SensorType, useAnimatedSensor, Value3D, ValueRotation } from '../src/';
 
-let eventHandler: (
-  data: Value3D | ValueRotation,
-  orientationDegrees: number
-) => void;
+let eventHandler: (data: Value3D | ValueRotation) => void;
 
 jest.mock('../src/reanimated2/core', () => {
   const originalModule = jest.requireActual('../src/reanimated2/core');
@@ -16,10 +13,7 @@ jest.mock('../src/reanimated2/core', () => {
       sensorType: number,
       interval: number,
       iosReferenceFrame: number,
-      _eventHandler: (
-        data: Value3D | ValueRotation,
-        orientationDegrees: number
-      ) => void
+      _eventHandler: (data: Value3D | ValueRotation) => void
     ) => {
       eventHandler = _eventHandler;
     },
@@ -63,7 +57,11 @@ expect.extend({
 
 describe('Sensors', () => {
   it('returns rotation sensors', () => {
-    const { result } = renderHook(() => useAnimatedSensor(SensorType.ROTATION));
+    const { result } = renderHook(() =>
+      useAnimatedSensor(SensorType.ROTATION, {
+        adjustToInterfaceOrientation: false,
+      })
+    );
 
     const data = {
       qw: 0,
@@ -73,29 +71,31 @@ describe('Sensors', () => {
       yaw: 4,
       pitch: 5,
       roll: 6,
+      interfaceOrientation: 90,
     };
 
-    eventHandler(data, 90);
+    act(() => eventHandler({ ...data }));
 
-    expect(result.current.sensor.value).toBe(data);
-    expect(result.current.interfaceOrientation.value).toBe(90);
+    expect(result.current.sensor.value).toStrictEqual(data);
   });
 
   it('returns 3d sensor', () => {
     const { result } = renderHook(() =>
-      useAnimatedSensor(SensorType.ACCELEROMETER)
+      useAnimatedSensor(SensorType.ACCELEROMETER, {
+        adjustToInterfaceOrientation: false,
+      })
     );
 
     const data = {
       x: 1,
       y: 2,
       z: 3,
+      interfaceOrientation: 180,
     };
 
-    eventHandler(data, 180);
+    act(() => eventHandler({ ...data }));
 
-    expect(result.current.sensor.value).toBe(data);
-    expect(result.current.interfaceOrientation.value).toBe(180);
+    expect(result.current.sensor.value).toStrictEqual(data);
   });
 
   // a handy calculator: https://www.andre-gaschler.com/rotationconverter/
@@ -115,10 +115,11 @@ describe('Sensors', () => {
       yaw: 1.0471976,
       pitch: 0.5235988,
       roll: 0.7853982,
+      interfaceOrientation: 0,
     };
 
     // portrait orientation
-    act(() => eventHandler({ ...data }, 0));
+    act(() => eventHandler({ ...data }));
 
     const data0 = {
       qx: 0.02226,
@@ -128,13 +129,14 @@ describe('Sensors', () => {
       yaw: 1.0471976,
       pitch: 0.5235988,
       roll: 0.7853982,
+      interfaceOrientation: 0,
     };
 
     expect(result.current.sensor.value).toBeEqualRounded(data0);
-    expect(result.current.interfaceOrientation.value).toBe(0);
 
     // landscape left orientation
-    act(() => eventHandler({ ...data }, 90));
+    data.interfaceOrientation = 90;
+    act(() => eventHandler({ ...data }));
 
     const data90 = {
       qx: 0.2951603,
@@ -144,14 +146,14 @@ describe('Sensors', () => {
       yaw: -0.523,
       pitch: 0.785,
       roll: -0.523,
+      interfaceOrientation: 90,
     };
 
     expect(result.current.sensor.value).toBeEqualRounded(data90);
-    expect(result.current.interfaceOrientation.value).toBe(90);
 
     // upside down
-    act(() => eventHandler({ ...data }, 180));
-
+    data.interfaceOrientation = 180;
+    act(() => eventHandler({ ...data }));
     const data180 = {
       qx: -0.3919038,
       qy: -0.2005621,
@@ -160,13 +162,14 @@ describe('Sensors', () => {
       yaw: -1.0471976,
       pitch: -0.5235988,
       roll: -0.7853982,
+      interfaceOrientation: 180,
     };
 
     expect(result.current.sensor.value).toBeEqualRounded(data180);
-    expect(result.current.interfaceOrientation.value).toBe(180);
 
     // landscape right orientation
-    eventHandler(data, 270);
+    data.interfaceOrientation = 270;
+    act(() => eventHandler({ ...data }));
 
     const data270 = {
       qx: -0.3266407,
@@ -176,10 +179,10 @@ describe('Sensors', () => {
       yaw: 2.6179939,
       pitch: -0.7853981,
       roll: 0.5235988,
+      interfaceOrientation: 270,
     };
 
     expect(result.current.sensor.value).toBeEqualRounded(data270);
-    expect(result.current.interfaceOrientation.value).toBe(270);
   });
 
   it('adjusts orientation of the 3d sensor', () => {
@@ -193,54 +196,58 @@ describe('Sensors', () => {
       x: 1,
       y: 2,
       z: 3,
+      interfaceOrientation: 0,
     };
 
     // portrait orientation
-    act(() => eventHandler({ ...data }, 0));
+    act(() => eventHandler({ ...data }));
 
     const data0 = {
       x: 1,
       y: 2,
       z: 3,
+      interfaceOrientation: 0,
     };
 
     expect(result.current.sensor.value).toStrictEqual(data0);
-    expect(result.current.interfaceOrientation.value).toBe(0);
 
     // landscape orientation
-    act(() => eventHandler({ ...data }, 90));
+    data.interfaceOrientation = 90;
+    act(() => eventHandler({ ...data }));
 
     const data90 = {
       x: -2,
       y: 1,
       z: 3,
+      interfaceOrientation: 90,
     };
 
     expect(result.current.sensor.value).toStrictEqual(data90);
-    expect(result.current.interfaceOrientation.value).toBe(90);
 
     // upside down
-    act(() => eventHandler({ ...data }, 180));
+    data.interfaceOrientation = 180;
+    act(() => eventHandler({ ...data }));
 
     const data180 = {
       x: -1,
       y: -2,
       z: 3,
+      interfaceOrientation: 180,
     };
 
     expect(result.current.sensor.value).toStrictEqual(data180);
-    expect(result.current.interfaceOrientation.value).toBe(180);
 
     // landscape orientation
-    eventHandler(data, 270);
+    data.interfaceOrientation = 270;
+    act(() => eventHandler({ ...data }));
 
     const data270 = {
       x: 2,
       y: -1,
       z: 3,
+      interfaceOrientation: 270,
     };
 
     expect(result.current.sensor.value).toStrictEqual(data270);
-    expect(result.current.interfaceOrientation.value).toBe(270);
   });
 });
