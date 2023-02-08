@@ -4,6 +4,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.swmansion.reanimated.NativeProxy;
+import com.swmansion.reanimated.nativeProxy.SensorSetter;
+
 import java.lang.ref.WeakReference;
 
 public class ReanimatedSensor {
@@ -18,7 +20,7 @@ public class ReanimatedSensor {
       WeakReference<ReactApplicationContext> reactContext,
       ReanimatedSensorType sensorType,
       int interval,
-      NativeProxy.SensorSetter setter) {
+      SensorSetter setter) {
     listener = new ReanimatedSensorListener(setter, interval);
     sensorManager =
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);

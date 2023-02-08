@@ -4,11 +4,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import com.swmansion.reanimated.NativeProxy;
+import com.swmansion.reanimated.nativeProxy.SensorSetter;
 
 public class ReanimatedSensorListener implements SensorEventListener {
 
-  private NativeProxy.SensorSetter setter;
+  private SensorSetter setter;
   private double lastRead = (double) System.currentTimeMillis();
   private final double interval;
 
@@ -16,7 +16,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
   private float[] orientation = new float[3];
   private float[] quaternion = new float[4];
 
-  ReanimatedSensorListener(NativeProxy.SensorSetter setter, double interval) {
+  ReanimatedSensorListener(SensorSetter setter, double interval) {
     this.setter = setter;
     this.interval = interval;
   }
