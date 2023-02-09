@@ -53,6 +53,12 @@ export function withTiming(
       const runtime = now - startTime;
 
       if (runtime >= config.duration) {
+        // console.log(
+        //   Math.round(now), 
+        //   Math.round(startTime), 
+        //   Math.round(runtime), 
+        //   performance.now()
+        // )
         // reset startTime to avoid reusing finished animation config in `start` method
         animation.startTime = 0;
         animation.current = toValue;

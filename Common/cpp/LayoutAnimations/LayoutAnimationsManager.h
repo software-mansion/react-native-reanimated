@@ -40,6 +40,7 @@ class LayoutAnimationsManager {
       sharedTransitionAnimations_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
+  jsi::Runtime *runtime_;
   mutable std::mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
                         // `layoutAnimations_` and `viewSharedValues_`.

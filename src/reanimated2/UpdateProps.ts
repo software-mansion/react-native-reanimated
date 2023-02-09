@@ -74,6 +74,8 @@ if (shouldBeUseWeb()) {
           updates[key] = processColor(updates[key]);
         }
       }
+
+      // console.log(updates)
       viewDescriptors.value.forEach((viewDescriptor) => {
         _updatePropsPaper(
           viewDescriptor.tag,

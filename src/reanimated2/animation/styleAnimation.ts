@@ -114,6 +114,7 @@ export function withStyleAnimation(
           );
           if (finished) {
             currentStyleAnimation.finished = true;
+            // console.log(currentStyleAnimation)
             if (currentStyleAnimation.callback) {
               currentStyleAnimation.callback(true);
             }

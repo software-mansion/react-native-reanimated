@@ -163,6 +163,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
                                   forTag:(NSNumber *)tag
                       isSharedTransition:(BOOL)isSharedTransition
 {
+  NSLog(@"tag: %@", tag);
   [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] convertFromAbsolute:isSharedTransition];
 }
 

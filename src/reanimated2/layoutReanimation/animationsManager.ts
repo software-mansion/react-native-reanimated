@@ -64,10 +64,14 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        if (!sharedTransitionForTag.get(tag)) {
-          stopObservingProgress(tag, value, false, false);
-        }
+        // if (sharedTransitionForTag.get(tag)) {
+        //   stopObservingProgress(tag, value, false, false);
+        // }
         value._value = style.initialValues;
+      }
+
+      if (sharedTransitionForTag.get(tag)) {
+        stopObservingProgress(tag, value, true, false);
       }
 
       if (type === 'sharedElementTransition') {
@@ -78,20 +82,27 @@ function createLayoutAnimationManager() {
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
+        // console.warn(tag, finished)
         if (finished) {
           enteringAnimationForTag.delete(tag);
           sharedTransitionForTag.delete(tag);
           mutableValuesForTag.delete(tag);
           const shouldRemoveView = type === 'exiting';
+          // console.log(new Error().stack)
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
-        style.callback &&
-          style.callback(finished === undefined ? false : finished);
+        // style.callback &&
+        //   style.callback(finished === undefined ? false : finished);
       };
 
       startObservingProgress(tag, value, type);
       value.value = animation;
     },
+    stop(tag: number) {
+      console.log("canceled", tag)
+      let value = mutableValuesForTag.get(tag);
+      stopObservingProgress(tag, value, true, true);
+    }
   };
 }
 
