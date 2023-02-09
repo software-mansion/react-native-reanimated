@@ -66,6 +66,7 @@ public class NativeProxy extends NativeProxyCommon {
         mHybridData.resetNative();
     }
 
+    // TODO: move to NativeProxyCommon.java when layout animations are fixed on Fabric 
     public void prepareLayoutAnimations(LayoutAnimations LayoutAnimations) {
         if (Utils.isChromeDebugger) {
             Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
