@@ -59,6 +59,20 @@ import SwipeableListExample from './SwipeableListExample';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
+import {
+  CardExample,
+  CustomTransitionExample,
+  GalleryExample,
+  HeadersExample,
+  ImageExample,
+  ImageStackExample,
+  LayoutAnimationExample,
+  ManyTagsExample,
+  MixedPropsExample,
+  ParentMarginExample,
+  RestoreStateExample,
+  TransitionWithLayoutExample,
+} from './SharedElementTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -71,6 +85,54 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  Card: {
+    screen: CardExample,
+    title: 'SET Card example',
+  },
+  CustomTransition: {
+    screen: CustomTransitionExample,
+    title: 'SET Custom transition example',
+  },
+  Gallery: {
+    screen: GalleryExample,
+    title: 'SET Gallery example',
+  },
+  Headers: {
+    screen: HeadersExample,
+    title: 'SET Headers example',
+  },
+  Image: {
+    screen: ImageExample,
+    title: 'SET Image example',
+  },
+  LayoutAnimation: {
+    screen: LayoutAnimationExample,
+    title: 'SET Layout animation example',
+  },
+  ManyTags: {
+    screen: ManyTagsExample,
+    title: 'SET Many tags example',
+  },
+  MixedProps: {
+    screen: MixedPropsExample,
+    title: 'SET Mixed props example',
+  },
+  ParentMargin: {
+    screen: ParentMarginExample,
+    title: 'SET Parent Margin example',
+  },
+  RestoreState: {
+    screen: RestoreStateExample,
+    title: 'SET Restore State example',
+  },
+  ImageStack: {
+    screen: ImageStackExample,
+    title: 'SET Image stack example',
+  },
+  TransitionWithLayout: {
+    screen: TransitionWithLayoutExample,
+    title: 'SET Transition With Layout animation example',
+  },
   ColorInterpolation: {
     screen: ColorInterpolationExample,
     title: 'Color interpolation',
