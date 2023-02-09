@@ -171,8 +171,8 @@ export function CardExample() {
         // stackAnimation: 'fade_from_bottom',
         // stackAnimation: 'slide_from_right',
         // stackAnimation: 'fade',
-        stackAnimation: 'none',
-        stackPresentation: 'transparentModal',
+        animation: 'none',
+        presentation: 'transparentModal',
       }}>
       <Stack.Screen
         name="Screen1"

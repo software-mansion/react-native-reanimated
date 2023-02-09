@@ -89,7 +89,7 @@ export function ManyTagsExample() {
     // <NavigationContainer>
     <Stack.Navigator
       screenOptions={{
-        stackAnimation: 'fade',
+        animation: 'fade',
       }}>
       <Stack.Screen
         name="Screen1"

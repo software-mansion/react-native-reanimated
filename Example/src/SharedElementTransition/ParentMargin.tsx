@@ -51,7 +51,7 @@ export function ParentMarginExample() {
     // <NavigationContainer>
     <Stack.Navigator
       screenOptions={{
-        stackAnimation: 'fade',
+        animation: 'fade',
       }}>
       <Stack.Screen
         name="Screen1"

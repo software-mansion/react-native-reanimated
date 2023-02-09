@@ -43,7 +43,7 @@ export function HeadersExample() {
     // <NavigationContainer>
     <Stack.Navigator
       screenOptions={{
-        stackAnimation: 'slide_from_right',
+        animation: 'slide_from_right',
       }}>
       <Stack.Screen
         name="Screen1"

@@ -66,7 +66,7 @@ export function CustomTransitionExample() {
     // <NavigationContainer>C
     <Stack.Navigator
       screenOptions={{
-        stackAnimation: 'none',
+        animation: 'none',
       }}>
       <Stack.Screen
         name="Screen1"

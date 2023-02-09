@@ -53,7 +53,7 @@ export function MixedPropsExample() {
     // <NavigationContainer>
     <Stack.Navigator
       screenOptions={{
-        stackAnimation: 'none',
+        animation: 'none',
       }}>
       <Stack.Screen
         name="Screen1"
