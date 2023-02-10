@@ -56,6 +56,15 @@ public class SharedTransitionManager {
   protected void onViewsRemoval(int[] tagsToDelete) {
     if (tagsToDelete != null) {
       visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
+      if (mCurrentSharedTransitionViews.size() > 0) {
+        for (View view : mCurrentSharedTransitionViews.values()) {
+          for (int tagToDelete : tagsToDelete) {
+            if (isViewChildParent(view, tagToDelete)) {
+              Log.v("a", "a");
+            }
+          }
+        }
+      }
 
       startSharedTransitionForViews(mRemovedSharedViews, false);
       ConfigCleanerTreeVisitor configCleanerTreeVisitor = new ConfigCleanerTreeVisitor();
@@ -66,6 +75,20 @@ public class SharedTransitionManager {
 
       visitTreeForTags(tagsToDelete, configCleanerTreeVisitor);
     }
+  }
+
+  private boolean isViewChildParent(View view, int screenTag) {
+    View parent = mSharedTransitionParent.get(view.getId());
+    while (parent != null) {
+      if (parent.getId() == screenTag) {
+        return true;
+      }
+      if (parent.getClass().getSimpleName().equals("Screen")) {
+        return false;
+      }
+      parent = (View) parent.getParent();
+    }
+    return false;
   }
 
   protected void doSnapshotForTopScreenViews(ViewGroup stack) {
@@ -111,6 +134,7 @@ public class SharedTransitionManager {
 
   private List<SharedElement> getSharedElementsForCurrentTransition(
       List<View> sharedViews, boolean addedNewScreen) {
+    boolean tmp;
     Set<Integer> viewTags = new HashSet<>();
     if (!addedNewScreen) {
       for (View view : sharedViews) {
@@ -140,6 +164,11 @@ public class SharedTransitionManager {
         clearAllSharedConfigsForView(viewSource);
         clearAllSharedConfigsForView(viewTarget);
         continue;
+      }
+
+      if (mCurrentSharedTransitionViews.containsKey(viewSource.getId())
+          || mCurrentSharedTransitionViews.containsKey(viewTarget.getId())) {
+        tmp = true;
       }
 
       View viewSourceScreen = findScreen(viewSource);
@@ -373,6 +402,10 @@ public class SharedTransitionManager {
     if (tag == -1) {
       return;
     }
+    boolean tagIsOK = tag == 639;
+    if (tagIsOK) {
+      Log.v("hmm", "eeeee");
+    }
     ViewGroup viewGroup;
     ViewGroupManager<ViewGroup> viewGroupManager;
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
@@ -414,5 +447,10 @@ public class SharedTransitionManager {
     int viewTag = view.getId();
     mSnapshotRegistry.remove(viewTag);
     mNativeMethodsHolder.clearAnimationConfig(viewTag);
+  }
+
+  private void cancelAnimation(View view) {
+    int viewTag = view.getId();
+    mNativeMethodsHolder.clearAnimationConfig(viewTag - 1000000);
   }
 }
