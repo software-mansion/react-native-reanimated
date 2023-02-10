@@ -308,7 +308,7 @@
 
       // Reanimated changes /start
       if (isNew || snapshotBefore != nil) {
-        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore];
+        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
       }
       // Reanimated changes /end
     }

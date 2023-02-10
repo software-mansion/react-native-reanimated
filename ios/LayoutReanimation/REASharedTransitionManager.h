@@ -4,6 +4,7 @@
 @interface REASharedTransitionManager : NSObject
 
 - (void)notifyAboutNewView:(UIView *)view;
+- (void)notifyAboutViewLayout:(UIView *)view withViewFrame:(CGRect)frame;
 - (void)viewsDidLayout;
 - (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views;
 - (void)finishSharedAnimation:(UIView *)view;

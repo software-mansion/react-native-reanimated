@@ -506,7 +506,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   });
 }
 
-- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before withNewFrame:(CGRect)frame
 {
   NSString *type = before == nil ? @"entering" : @"layout";
   NSNumber *viewTag = view.reactTag;
@@ -525,6 +525,10 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"entering"]) {
     [_sharedTransitionManager notifyAboutNewView:view];
   }
+  
+  if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"layout"]) {
+    [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
+  }
 }
 
 - (void)viewsDidLayout
@@ -540,6 +544,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type
 {
+  if (_hasAnimationForTag == nil) {
+    return NO;
+  }
   return _hasAnimationForTag(tag, type);
 }
 
