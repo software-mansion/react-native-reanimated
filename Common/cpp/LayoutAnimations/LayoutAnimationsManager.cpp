@@ -60,8 +60,6 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
         true,
         true
       );
-    } else {
-      int a = 0;
     }
     return;
   }
