@@ -303,10 +303,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     }
 
     // we don't want layout animations in native-stack since it is currently buggy there
-    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
+    AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
       if (tagsToDelete == null) {
-        animationsManager.doSnapshotForTopScreenViews(viewGroup);
+        animationsManager.makeSnapshotOfTopScreenViews(viewGroup);
       } else {
         animationsManager.notifyAboutViewsRemoval(tagsToDelete);
       }

@@ -5,7 +5,7 @@
 
 - (void)notifyAboutNewView:(UIView *)view;
 - (void)viewsDidLayout;
-- (BOOL)setupSyncSharedTransitionForViews:(NSArray<UIView *> *)views;
+- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views;
 - (void)finishSharedAnimation:(UIView *)view;
 - (void)setFindPrecedingViewTagForTransitionBlock:
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
