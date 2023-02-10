@@ -462,7 +462,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
     BOOL isScreenDetached = [self getScreenForView:view].superview == nil;
     NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
     if (isScreenDetached) {
-      viewSourcePreviousSnapshot.values[@"originY"] = viewSourcePreviousSnapshot.values[@"originYByParent"];
+      float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
+      float headerHeight = [viewSourcePreviousSnapshot.values[@"headerHeight"] floatValue];
+      viewSourcePreviousSnapshot.values[@"originY"] = @(originYByParent + headerHeight);
     }
     [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
                                                  forTag:view.reactTag
