@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASnapshot.h>
 #import <React/RCTUIManager.h>
 
@@ -19,6 +20,10 @@ typedef void (^REAAnimationStartingBlock)(
     NSDictionary *_Nonnull yogaValues,
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
+typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
+typedef int (^REATreeVisitor)(id<RCTComponent>);
+
+BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 
 @interface REAAnimationsManager : NSObject
 
@@ -26,8 +31,13 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;
 - (void)setAnimationRemovingBlock:(REAAnimationRemovingBlock)clearAnimation;
-- (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle forTag:(NSNumber *_Nonnull)tag;
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle
+                                  forTag:(NSNumber *_Nonnull)tag
+                      isSharedTransition:(BOOL)isSharedTransition;
+- (void)setFindPrecedingViewTagForTransitionBlock:
+    (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
+- (void)endAnimationsRecursive:(UIView *)view;
 - (void)invalidate;
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view;
@@ -38,6 +48,16 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
                        atIndices:(NSArray<NSNumber *> *)indices;
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
+- (void)viewsDidLayout;
+- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
+                                          targetValues:(NSMutableDictionary *)targetValues;
+- (UIView *)viewForTag:(NSNumber *)tag;
+- (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type;
+- (void)clearAnimationConfigForTag:(NSNumber *)tag;
+- (void)startAnimationForTag:(NSNumber *)tag
+                        type:(NSString *)type
+                  yogaValues:(NSDictionary *)yogaValues
+                       depth:(NSNumber *)depth;
 
 @end
 

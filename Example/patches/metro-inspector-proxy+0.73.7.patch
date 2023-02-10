@@ -1,5 +1,5 @@
 diff --git a/node_modules/metro-inspector-proxy/src/Device.js b/node_modules/metro-inspector-proxy/src/Device.js
-index 9e3fe08..051e097 100644
+index 1c26b01..854adff 100644
 --- a/node_modules/metro-inspector-proxy/src/Device.js
 +++ b/node_modules/metro-inspector-proxy/src/Device.js
 @@ -67,7 +67,7 @@ const EMULATOR_LOCALHOST_ADDRESSES = ["10.0.2.2", "10.0.3.2"];
@@ -202,7 +202,7 @@ index 9e3fe08..051e097 100644
      }
      if (
        payload.method === "Runtime.executionContextCreated" &&
-@@ -554,10 +571,10 @@ class Device {
+@@ -555,10 +572,10 @@ class Device {
    }
    _mapToDevicePageId(pageId) {
      if (
@@ -217,7 +217,7 @@ index 9e3fe08..051e097 100644
        return pageId;
      }
 diff --git a/node_modules/metro-inspector-proxy/src/Device.js.flow b/node_modules/metro-inspector-proxy/src/Device.js.flow
-index d867e80..7832649 100644
+index 027d872..9e36bcf 100644
 --- a/node_modules/metro-inspector-proxy/src/Device.js.flow
 +++ b/node_modules/metro-inspector-proxy/src/Device.js.flow
 @@ -46,7 +46,13 @@ type DebuggerInfo = {
@@ -411,7 +411,7 @@ index d867e80..7832649 100644
      }
  
      if (
-@@ -544,10 +576,10 @@ class Device {
+@@ -545,10 +577,10 @@ class Device {
  
    _mapToDevicePageId(pageId: string): string {
      if (

@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.app.Activity;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class AnimationsManager implements ViewHierarchyObserver {
   private WeakReference<Scheduler> mScheduler;
@@ -40,6 +42,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private HashMap<Integer, Runnable> mCallbacks = new HashMap<>();
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
   private boolean isCatalystInstanceDestroyed;
+  private SharedTransitionManager mSharedTransitionManager;
 
   public void setReanimatedNativeHierarchyManager(
       ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
@@ -58,6 +61,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mContext = context;
     mUIManager = uiManagerModule;
     isCatalystInstanceDestroyed = false;
+    mSharedTransitionManager = new SharedTransitionManager(this);
   }
 
   public void onCatalystInstanceDestroy() {
@@ -89,6 +93,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (isCatalystInstanceDestroyed) {
       return;
     }
+    maybeRegisterSharedView(view);
 
     if (!hasAnimationForTag(view.getId(), "entering")) {
       return;
@@ -166,7 +171,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimation(tag, "layout", preparedValues);
   }
 
-  public void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
+  public void maybeRegisterSharedView(View view) {
+    if (hasAnimationForTag(view.getId(), "sharedElementTransition")) {
+      mSharedTransitionManager.notifyAboutNewView(view);
+    }
+  }
+
+  public void progressLayoutAnimation(
+      int tag, Map<String, Object> newStyle, boolean isSharedTransition) {
     View view = resolveView(tag);
 
     if (view == null) {
@@ -182,7 +194,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     ViewManager viewManager = resolveViewManager(tag);
     ViewManager parentViewManager = resolveViewManager(parent.getId());
 
-    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId());
+    if (viewManager == null) {
+      return;
+    }
+
+    setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
   }
 
   public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
@@ -208,10 +224,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       maybeDropAncestors(view);
 
       ViewGroup parent = (ViewGroup) view.getParent();
-      if (parent != null) {
-        removeView(view, parent);
-      }
+      removeView(view, parent);
     }
+    mSharedTransitionManager.finishSharedAnimation(tag);
   }
 
   public void printSubTree(View view, int level) {
@@ -268,6 +283,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void setNativeMethods(NativeMethodsHolder nativeMethods) {
     mNativeMethodsHolder = nativeMethods;
+    mSharedTransitionManager.setNativeMethods(nativeMethods);
   }
 
   public void setNewProps(
@@ -275,7 +291,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       View view,
       ViewManager viewManager,
       ViewManager parentViewManager,
-      Integer parentTag) {
+      Integer parentTag,
+      boolean isPositionAbsolute) {
     float x =
         (props.get(Snapshot.ORIGIN_X) != null)
             ? ((Double) props.get(Snapshot.ORIGIN_X)).floatValue()
@@ -292,9 +309,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
         (props.get(Snapshot.HEIGHT) != null)
             ? ((Double) props.get(Snapshot.HEIGHT)).floatValue()
             : PixelUtil.toDIPFromPixel(view.getHeight());
-    updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
+    updateLayout(
+        view, parentViewManager, parentTag, view.getId(), x, y, width, height, isPositionAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
+    props.remove(Snapshot.GLOBAL_ORIGIN_X);
+    props.remove(Snapshot.GLOBAL_ORIGIN_Y);
     props.remove(Snapshot.WIDTH);
     props.remove(Snapshot.HEIGHT);
 
@@ -340,7 +360,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       float xf,
       float yf,
       float widthf,
-      float heightf) {
+      float heightf,
+      boolean isPositionAbsolute) {
 
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
@@ -381,7 +402,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     // Check if the parent of the view has to layout the view, or the child has to lay itself out.
-    if (parentTag % 10 == 1) { // ParentIsARoot
+    if (parentTag % 10 == 1 && parentViewManager != null) { // parentTag % 10 == 1 - ParentIsARoot
       IViewManagerWithChildren parentViewManagerWithChildren;
       if (parentViewManager instanceof IViewManagerWithChildren) {
         parentViewManagerWithChildren = (IViewManagerWithChildren) parentViewManager;
@@ -395,6 +416,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
         viewToUpdate.layout(x, y, x + width, y + height);
       }
     } else {
+      if (isPositionAbsolute) {
+        Point newPoint = new Point(x, y);
+        View viewToUpdateParent = (View) viewToUpdate.getParent();
+        Point convertedPoint = convertScreenLocationToViewCoordinates(newPoint, viewToUpdateParent);
+        x = convertedPoint.x;
+        y = convertedPoint.y;
+      }
       viewToUpdate.layout(x, y, x + width, y + height);
     }
   }
@@ -409,9 +437,21 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private boolean removeOrAnimateExitRecursive(View view, ViewGroup parent, boolean shouldRemove) {
     int tag = view.getId();
+    ViewManager viewManager = resolveViewManager(tag);
+
+    if (viewManager != null && viewManager.getName().equals("RNSScreenStack")) {
+      cancelAnimationsRecursive(view);
+      return false;
+    }
+
     boolean hasExitAnimation = hasAnimationForTag(tag, "exiting") || mExitingViews.containsKey(tag);
     boolean hasAnimatedChildren = false;
     shouldRemove = shouldRemove && !hasExitAnimation;
+
+    if (hasAnimationForTag(tag, "sharedElementTransition")) {
+      mSharedTransitionManager.notifyAboutRemovedView(view);
+      mSharedTransitionManager.makeSnapshot(view);
+    }
 
     ArrayList<View> toBeRemoved = new ArrayList<>();
 
@@ -460,6 +500,28 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return true;
   }
 
+  public void clearAnimationConfigForTag(int tag) {
+    View view = resolveView(tag);
+    if (view != null) {
+      clearAnimationConfigRecursive(view);
+    }
+  }
+
+  public void clearAnimationConfigRecursive(View view) {
+    mNativeMethodsHolder.clearAnimationConfig(view.getId());
+    if (view instanceof ViewGroup) {
+      ViewGroup viewGroup = (ViewGroup) view;
+      for (int i = 0; i < viewGroup.getChildCount(); i++) {
+        clearAnimationConfigRecursive(viewGroup.getChildAt(i));
+      }
+    }
+  }
+
+  public void cancelAnimationsInSubviews(View view) {
+    cancelAnimationsRecursive(view);
+    clearAnimationConfigRecursive(view);
+  }
+
   private void registerExitingAncestors(View view) {
     View parent = (View) view.getParent();
     while (parent != null && !(parent instanceof RootView)) {
@@ -494,7 +556,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private void removeView(View view, ViewGroup parent) {
+  private void removeView(View view, @Nullable ViewGroup parent) {
     int tag = view.getId();
     if (mCallbacks.containsKey(tag)) {
       Runnable callback = mCallbacks.get(tag);
@@ -506,16 +568,30 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mReanimatedNativeHierarchyManager.publicDropView(view);
     }
 
-    parent.removeView(view);
+    if (parent != null) {
+      parent.removeView(view);
+    }
+  }
+
+  public void cancelAnimationsRecursive(View view) {
+    if (mExitingViews.containsKey(view.getId())) {
+      endLayoutAnimation(view.getId(), true, true);
+    } else if (view instanceof ViewGroup && mExitingSubviewCountMap.containsKey(view.getId())) {
+      cancelAnimationsInSubviews((ViewGroup) view);
+    }
   }
 
   private void cancelAnimationsInSubviews(ViewGroup view) {
     for (int i = view.getChildCount() - 1; i >= 0; i--) {
       View child = view.getChildAt(i);
 
+      if (child == null) {
+        continue;
+      }
+
       if (mExitingViews.containsKey(child.getId())) {
         endLayoutAnimation(child.getId(), true, true);
-      } else if (child instanceof ViewGroup && mAncestorsToRemove.contains(child.getId())) {
+      } else if (child instanceof ViewGroup && mExitingSubviewCountMap.containsKey(child.getId())) {
         cancelAnimationsInSubviews((ViewGroup) child);
       }
     }
@@ -524,12 +600,17 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private View resolveView(int tag) {
     if (mExitingViews.containsKey(tag)) {
       return mExitingViews.get(tag);
+    } else {
+      View view = mSharedTransitionManager.getTransitioningView(tag);
+      if (view != null) {
+        return view;
+      }
     }
+
     try {
       return mUIManager.resolveView(tag);
     } catch (IllegalViewOperationException e) {
       // view has been removed already
-      e.printStackTrace();
       return null;
     }
   }
@@ -538,8 +619,31 @@ public class AnimationsManager implements ViewHierarchyObserver {
     try {
       return mReanimatedNativeHierarchyManager.resolveViewManager(tag);
     } catch (Exception e) {
-      e.printStackTrace();
       return null;
     }
+  }
+
+  private static Point convertScreenLocationToViewCoordinates(Point fromPoint, View parentView) {
+    int[] toPoint = {0, 0};
+    if (parentView != null) {
+      parentView.getLocationOnScreen(toPoint);
+    }
+    return new Point(fromPoint.x - toPoint[0], fromPoint.y - toPoint[1]);
+  }
+
+  public void viewsDidLayout() {
+    mSharedTransitionManager.viewsDidLayout();
+  }
+
+  public void notifyAboutViewsRemoval(int[] tagsToDelete) {
+    mSharedTransitionManager.onViewsRemoval(tagsToDelete);
+  }
+
+  public void makeSnapshotOfTopScreenViews(ViewGroup stack) {
+    mSharedTransitionManager.doSnapshotForTopScreenViews(stack);
+  }
+
+  protected ReactContext getContext() {
+    return mContext;
   }
 }

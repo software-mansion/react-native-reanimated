@@ -41,9 +41,26 @@ public class Snapshot {
   public int originY;
   public int globalOriginX;
   public int globalOriginY;
+  public int topInsetFromParent;
 
-  public static ArrayList<String> targetKeysToTransform;
-  public static ArrayList<String> currentKeysToTransform;
+  public static ArrayList<String> targetKeysToTransform =
+      new ArrayList<>(
+          Arrays.asList(
+              Snapshot.TARGET_WIDTH,
+              Snapshot.TARGET_HEIGHT,
+              Snapshot.TARGET_ORIGIN_X,
+              Snapshot.TARGET_ORIGIN_Y,
+              Snapshot.TARGET_GLOBAL_ORIGIN_X,
+              Snapshot.TARGET_GLOBAL_ORIGIN_Y));
+  public static ArrayList<String> currentKeysToTransform =
+      new ArrayList<>(
+          Arrays.asList(
+              Snapshot.CURRENT_WIDTH,
+              Snapshot.CURRENT_HEIGHT,
+              Snapshot.CURRENT_ORIGIN_X,
+              Snapshot.CURRENT_ORIGIN_Y,
+              Snapshot.CURRENT_GLOBAL_ORIGIN_X,
+              Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
 
   Snapshot(View view, NativeViewHierarchyManager viewHierarchyManager) {
     parent = (ViewGroup) view.getParent();
@@ -62,25 +79,16 @@ public class Snapshot {
     view.getLocationOnScreen(location);
     globalOriginX = location[0];
     globalOriginY = location[1];
+  }
 
-    targetKeysToTransform =
-        new ArrayList<>(
-            Arrays.asList(
-                Snapshot.TARGET_WIDTH,
-                Snapshot.TARGET_HEIGHT,
-                Snapshot.TARGET_ORIGIN_X,
-                Snapshot.TARGET_ORIGIN_Y,
-                Snapshot.TARGET_GLOBAL_ORIGIN_X,
-                Snapshot.TARGET_GLOBAL_ORIGIN_Y));
-    currentKeysToTransform =
-        new ArrayList<>(
-            Arrays.asList(
-                Snapshot.CURRENT_WIDTH,
-                Snapshot.CURRENT_HEIGHT,
-                Snapshot.CURRENT_ORIGIN_X,
-                Snapshot.CURRENT_ORIGIN_Y,
-                Snapshot.CURRENT_GLOBAL_ORIGIN_X,
-                Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
+  public Snapshot(View view) {
+    int[] location = new int[2];
+    view.getLocationOnScreen(location);
+    originX = location[0];
+    originY = location[1];
+    width = view.getWidth();
+    height = view.getHeight();
+    topInsetFromParent = view.getTop();
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
@@ -101,6 +109,15 @@ public class Snapshot {
     data.put(Snapshot.CURRENT_WIDTH, width);
   }
 
+  private void addBasicConfig(HashMap<String, Object> data) {
+    data.put(Snapshot.ORIGIN_Y, originY);
+    data.put(Snapshot.ORIGIN_X, originX);
+    data.put(Snapshot.GLOBAL_ORIGIN_Y, globalOriginY);
+    data.put(Snapshot.GLOBAL_ORIGIN_X, globalOriginX);
+    data.put(Snapshot.HEIGHT, height);
+    data.put(Snapshot.WIDTH, width);
+  }
+
   public HashMap<String, Object> toTargetMap() {
     HashMap<String, Object> data = new HashMap<>();
     addTargetConfig(data);
@@ -113,9 +130,9 @@ public class Snapshot {
     return data;
   }
 
-  public HashMap<String, Object> toLayoutMap(Snapshot target) {
-    HashMap<String, Object> data = target.toTargetMap();
-    addCurrentConfig(data);
+  public HashMap<String, Object> toBasicMap() {
+    HashMap<String, Object> data = new HashMap<>();
+    addBasicConfig(data);
     return data;
   }
 }

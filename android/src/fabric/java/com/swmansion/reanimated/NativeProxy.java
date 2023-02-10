@@ -317,6 +317,11 @@ public class NativeProxy {
               }
 
               @Override
+              public int findPrecedingViewTagForTransition(int tag) {
+                return -1;
+              }
+
+              @Override
               public boolean hasAnimation(int tag, String type) {
                 return false;
               }

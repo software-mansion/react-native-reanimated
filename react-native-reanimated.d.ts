@@ -177,6 +177,8 @@ declare module 'react-native-reanimated' {
         | typeof BaseAnimationBuilder
         | EntryExitAnimationFunction
         | Keyframe;
+      sharedTransitionTag?: string;
+      sharedTransitionStyle?: ILayoutAnimationBuilder;
     };
 
     export interface PhysicsAnimationState extends AnimationState {
@@ -1254,4 +1256,15 @@ declare module 'react-native-reanimated' {
   export const useValue: typeof Animated.useValue;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export function enableLayoutAnimations(flag: boolean): void;
+
+  type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
+
+  export class SharedTransition implements ILayoutAnimationBuilder {
+    animationFactory: AnimationFactoryType | null = null;
+    static createInstance(): SharedTransition;
+    static custom(animationFactory: AnimationFactoryType): SharedTransition;
+    custom(animationFactory: AnimationFactoryType): SharedTransition;
+    static build(): LayoutAnimationFunction;
+    build(): LayoutAnimationFunction;
+  }
 }

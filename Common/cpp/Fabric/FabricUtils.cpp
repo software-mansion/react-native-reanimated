@@ -1,10 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#if REACT_NATIVE_MINOR_VERSION < 69
-#error \
-    "Reanimated 3 does not support React Native 0.68.x when Fabric is enabled. Please upgrade to React Native 0.69.0 or newer if you want to use Reanimated with the new architecture."
-#endif
-
 #include "FabricUtils.h"
 
 #include <react/renderer/debug/SystraceSection.h>

@@ -5,13 +5,14 @@ reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json"
 config = find_config()
 assert_no_multiple_instances(config)
 assert_no_reanimated2_with_new_architecture(reanimated_package_json)
+assert_latest_react_native_with_new_architecture(config, reanimated_package_json)
 
 fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
 folly_prefix = config[:react_native_minor_version] >= 64 ? 'RCT-' : ''
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=' + config[:react_native_minor_version].to_s
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 boost_compiler_flags = '-Wno-documentation'
-fabric_flags = fabric_enabled ? '-DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED' : ''
+fabric_flags = fabric_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 
 Pod::Spec.new do |s|

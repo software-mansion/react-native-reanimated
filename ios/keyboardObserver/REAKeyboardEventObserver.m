@@ -149,44 +149,48 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   NSNumber *listenerId = [_nextListenerId copy];
   _nextListenerId = [NSNumber numberWithInt:[_nextListenerId intValue] + 1];
-  if ([_listeners count] == 0) {
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+  RCTExecuteOnMainQueue(^() {
+    if ([self->_listeners count] == 0) {
+      NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
-    [notificationCenter addObserver:self
-                           selector:@selector(keyboardWillHide:)
-                               name:UIKeyboardWillHideNotification
-                             object:nil];
+      [notificationCenter addObserver:self
+                             selector:@selector(keyboardWillHide:)
+                                 name:UIKeyboardWillHideNotification
+                               object:nil];
 
-    [notificationCenter addObserver:self
-                           selector:@selector(keyboardWillShow:)
-                               name:UIKeyboardWillShowNotification
-                             object:nil];
+      [notificationCenter addObserver:self
+                             selector:@selector(keyboardWillShow:)
+                                 name:UIKeyboardWillShowNotification
+                               object:nil];
 
-    [notificationCenter addObserver:self
-                           selector:@selector(keyboardDidHide:)
-                               name:UIKeyboardDidHideNotification
-                             object:nil];
+      [notificationCenter addObserver:self
+                             selector:@selector(keyboardDidHide:)
+                                 name:UIKeyboardDidHideNotification
+                               object:nil];
 
-    [notificationCenter addObserver:self
-                           selector:@selector(keyboardDidShow:)
-                               name:UIKeyboardDidShowNotification
-                             object:nil];
-  }
+      [notificationCenter addObserver:self
+                             selector:@selector(keyboardDidShow:)
+                                 name:UIKeyboardDidShowNotification
+                               object:nil];
+    }
 
-  [_listeners setObject:listener forKey:listenerId];
-  if (_state == UNKNOWN) {
-    [self recognizeInitialKeyboardState];
-  }
+    [self->_listeners setObject:listener forKey:listenerId];
+    if (self->_state == UNKNOWN) {
+      [self recognizeInitialKeyboardState];
+    }
+  });
   return [listenerId intValue];
 }
 
 - (void)unsubscribeFromKeyboardEvents:(int)listenerId
 {
-  NSNumber *_listenerId = [NSNumber numberWithInt:listenerId];
-  [_listeners removeObjectForKey:_listenerId];
-  if ([_listeners count] == 0) {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-  }
+  RCTExecuteOnMainQueue(^() {
+    NSNumber *_listenerId = [NSNumber numberWithInt:listenerId];
+    [self->_listeners removeObjectForKey:_listenerId];
+    if ([self->_listeners count] == 0) {
+      [[NSNotificationCenter defaultCenter] removeObserver:self];
+    }
+  });
 }
 
 - (void)recognizeInitialKeyboardState

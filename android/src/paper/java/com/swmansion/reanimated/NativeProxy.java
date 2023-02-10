@@ -334,6 +334,15 @@ public class NativeProxy {
                 layoutAnimations.clearAnimationConfigForTag(tag);
               }
           }
+
+          @Override
+          public int findPrecedingViewTagForTransition(int tag) {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              return layoutAnimations.findPrecedingViewTagForTransition(tag);
+            }
+            return -1;
+          }
         });
   }
 }

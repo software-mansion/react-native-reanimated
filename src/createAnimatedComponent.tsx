@@ -19,6 +19,7 @@ import {
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
+  DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -33,7 +34,6 @@ import {
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
-import { makeShareableShadowNodeWrapper } from './reanimated2/shareables';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -133,6 +133,8 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
     | Keyframe;
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
 
 type Options<P> = {
@@ -189,15 +191,17 @@ export default function createAnimatedComponent(
       this._attachAnimatedStyles();
     }
 
+    _getEventViewRef() {
+      // Make sure to get the scrollable node for components that implement
+      // `ScrollResponder.Mixin`.
+      return this._component?.getScrollableNode
+        ? this._component.getScrollableNode()
+        : this._component;
+    }
+
     _attachNativeEvents() {
-      let viewTag = findNodeHandle(this);
-
-      const componentName = Component.displayName || Component.name;
-
-      if (componentName?.endsWith('FlashList') && this._component) {
-        // @ts-ignore it's FlashList specific: https://github.com/Shopify/flash-list/blob/218f314e63806b4fe926741ef73f8b9cd6ebc7eb/src/FlashList.tsx#L815
-        viewTag = findNodeHandle(this._component.getScrollableNode());
-      }
+      const node = this._getEventViewRef();
+      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -237,10 +241,10 @@ export default function createAnimatedComponent(
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (global._IS_FABRIC) {
-          const shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+          const viewTag = this._viewTag;
           runOnUI(() => {
             'worklet';
-            _removeShadowNodeFromRegistry(shadowNodeWrapper);
+            _removeShadowNodeFromRegistry(viewTag);
           })();
         }
       }
@@ -337,9 +341,7 @@ export default function createAnimatedComponent(
         }
 
         if (global._IS_FABRIC) {
-          shadowNodeWrapper = makeShareableShadowNodeWrapper(
-            getShadowNodeWrapperFromRef(this)
-          );
+          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
       this._viewTag = viewTag as number;
@@ -422,8 +424,11 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
         const tag = findNodeHandle(ref);
-        const { layout, entering, exiting } = this.props;
-        if ((layout || entering || exiting) && tag != null) {
+        const { layout, entering, exiting, sharedTransitionTag } = this.props;
+        if (
+          (layout || entering || exiting || sharedTransitionTag) &&
+          tag != null
+        ) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
           }
@@ -435,6 +440,16 @@ export default function createAnimatedComponent(
           }
           if (exiting) {
             configureLayoutAnimations(tag, 'exiting', maybeBuild(exiting));
+          }
+          if (sharedTransitionTag) {
+            const sharedElementTransition =
+              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
+            configureLayoutAnimations(
+              tag,
+              'sharedElementTransition',
+              maybeBuild(sharedElementTransition),
+              sharedTransitionTag
+            );
           }
         }
 
