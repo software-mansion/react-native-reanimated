@@ -53,9 +53,8 @@ inline jsi::Value const &get<jsi::Value const &>(
 // BEGIN implementations for `convertArgs` specializations.
 // specialization for empty `Targs` - returns an empty tuple
 template <typename... Args>
-std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>>
-convertArgs(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  assert(count == 0);
+inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>>
+convertArgs(jsi::Runtime &rt, const jsi::Value *args) {
   return std::make_tuple();
 }
 
@@ -64,9 +63,9 @@ convertArgs(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
 // and returns the concatenation of results
 template <typename T, typename... Rest>
 inline std::tuple<T, Rest...>
-convertArgs(jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
+convertArgs(jsi::Runtime &rt, const jsi::Value *args) {
   auto arg = std::tuple<T>(get<T>(rt, args));
-  auto rest = convertArgs<Rest...>(rt, std::next(args), count - 1);
+  auto rest = convertArgs<Rest...>(rt, std::next(args));
   return std::tuple_cat(std::move(arg), std::move(rest));
 }
 // END implementations for `convertArgs` specializations.
@@ -79,7 +78,8 @@ std::tuple<Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  return convertArgs<Args...>(rt, args, count);
+      assert(sizeof...(Args) == count);
+  return convertArgs<Args...>(rt, args);
 }
 
 // returns a tuple with the result of casting `args` to appropriate
@@ -91,7 +91,8 @@ std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args, count));
+      assert(sizeof...(Args) == count);
+  return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args));
 }
 
 // calls `function` with `args`
