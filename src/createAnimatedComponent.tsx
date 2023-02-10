@@ -34,7 +34,6 @@ import {
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
-import { makeShareableShadowNodeWrapper } from './reanimated2/shareables';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -135,7 +134,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: any;
+  sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
 
 type Options<P> = {
@@ -242,10 +241,10 @@ export default function createAnimatedComponent(
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (global._IS_FABRIC) {
-          const shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
+          const viewTag = this._viewTag;
           runOnUI(() => {
             'worklet';
-            _removeShadowNodeFromRegistry(shadowNodeWrapper);
+            _removeShadowNodeFromRegistry(viewTag);
           })();
         }
       }
@@ -342,9 +341,7 @@ export default function createAnimatedComponent(
         }
 
         if (global._IS_FABRIC) {
-          shadowNodeWrapper = makeShareableShadowNodeWrapper(
-            getShadowNodeWrapperFromRef(this)
-          );
+          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
       this._viewTag = viewTag as number;

@@ -8,14 +8,28 @@ import {
   GestureDetector,
   enableExperimentalWebImplementation,
 } from 'react-native-gesture-handler';
-import { StyleSheet, View, Text } from 'react-native';
-import { WithoutBabelTest } from './WithoutBabel';
+import { StyleSheet, Text } from 'react-native';
+import { useEffect, useState } from 'react';
 
 enableExperimentalWebImplementation(true);
 
-export default function App() {
+export function WithoutBabelTest() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
+
+  const [stateObject, rerender] = useState({});
+
+  const stateNumber = Math.random();
+  const stateBoolean = stateNumber >= 0.5;
+
+  console.log('[without-babel][render]');
+
+  useEffect(function updateState() {
+    const interval = setInterval(() => {
+      rerender({});
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -24,10 +38,10 @@ export default function App() {
         { translateY: offset.value.y },
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
-      backgroundColor: isPressed.value ? 'blue' : 'navy',
+      backgroundColor: isPressed.value ? 'cyan' : 'hotpink',
       cursor: isPressed.value ? 'grabbing' : 'grab',
     };
-  });
+  }, [isPressed, offset, stateObject, stateBoolean, stateNumber]);
 
   const gesture = Gesture.Pan()
     .manualActivation(true)
@@ -51,35 +65,26 @@ export default function App() {
     });
 
   return (
-    <View style={styles.container}>
-      <GestureDetector gesture={gesture}>
-        <Animated.View style={[styles.ball, animatedStyle]}>
-          <Text style={styles.text}>I need Babel plugin</Text>
-        </Animated.View>
-      </GestureDetector>
-      <WithoutBabelTest />
-    </View>
+    <GestureDetector gesture={gesture}>
+      <Animated.View style={[styles.ball, animatedStyle]}>
+        <Text style={styles.text}>I work without Babel</Text>
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   ball: {
     width: 100,
     height: 100,
     borderRadius: 100,
-    backgroundColor: 'blue',
+    backgroundColor: 'hotpink',
     alignSelf: 'center',
+    padding: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   text: {
-    color: 'white',
     textAlign: 'center',
   },
 });

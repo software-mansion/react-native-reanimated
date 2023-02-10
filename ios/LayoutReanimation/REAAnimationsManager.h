@@ -23,6 +23,8 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
 
+BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
+
 @interface REAAnimationsManager : NSObject
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
@@ -56,7 +58,6 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
                         type:(NSString *)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
-- (void)visitTree:(UIView *)view block:(REATreeVisitor)block;
 
 @end
 

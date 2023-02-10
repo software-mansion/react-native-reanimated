@@ -254,11 +254,27 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (container != null
           && viewManagerName.equals("RNSScreen")
           && mReaLayoutAnimator != null) {
-        ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
+        boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
+        if (!hasHeader || !container.isLayoutRequested()) {
+          mReaLayoutAnimator.getAnimationsManager().viewsDidLayout();
+        }
       }
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
+    }
+  }
+
+  private boolean checkIfTopScreenHasHeader(ViewGroup screenStack) {
+    try {
+      ViewGroup fragment = (ViewGroup)screenStack.getChildAt(0);
+      ViewGroup screen = (ViewGroup)fragment.getChildAt(0);
+      View headerConfig = screen.getChildAt(0);
+      Field field = headerConfig.getClass().getDeclaredField("mIsHidden");
+      field.setAccessible(true);
+      return !field.getBoolean(headerConfig);
+    } catch (NullPointerException | NoSuchFieldException | IllegalAccessException e) {
+      return false;
     }
   }
 
@@ -285,10 +301,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     }
 
     // we don't want layout animations in native-stack since it is currently buggy there
-    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
+    AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
       if (tagsToDelete == null) {
-        animationsManager.doSnapshotForTopScreenViews(viewGroup);
+        animationsManager.makeSnapshotOfTopScreenViews(viewGroup);
       } else {
         animationsManager.notifyAboutViewsRemoval(tagsToDelete);
       }
