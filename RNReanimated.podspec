@@ -71,6 +71,7 @@ Pod::Spec.new do |s|
   s.dependency 'React-Core/DevSupport'
   if !config[:is_tvos_target]
     s.dependency 'React-RCTActionSheet'
+    s.dependency "React-hermes"
   end
   s.dependency 'React-RCTNetwork'
   s.dependency 'React-RCTAnimation'
@@ -84,7 +85,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsi'
   s.dependency 'React-jsiexecutor'
   s.dependency 'React-jsinspector'
-  s.dependency "React-hermes"
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
