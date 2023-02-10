@@ -84,6 +84,7 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsi'
   s.dependency 'React-jsiexecutor'
   s.dependency 'React-jsinspector'
+  s.dependency "React-hermes"
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
