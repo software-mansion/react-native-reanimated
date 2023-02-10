@@ -219,11 +219,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // sensors
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
-  auto registerSensorFunction = [=](int sensorType, int interval, std::function<void(double[])> setter) -> int {
+  auto registerSensorFunction =
+      [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
     return [reanimatedSensorContainer registerSensor:(ReanimatedSensorType)sensorType
                                             interval:interval
-                                              setter:^(double *data) {
-                                                setter(data);
+                                   iosReferenceFrame:iosReferenceFrame
+                                              setter:^(double *data, int orientationDegrees) {
+                                                setter(data, orientationDegrees);
                                               }];
   };
 

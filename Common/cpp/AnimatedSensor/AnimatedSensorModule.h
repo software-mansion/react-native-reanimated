@@ -35,6 +35,7 @@ class AnimatedSensorModule {
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
+      const jsi::Value &iosReferenceFrame,
       const jsi::Value &sensorDataContainer);
   void unregisterSensor(const jsi::Value &sensorId);
   void unregisterAllSensors();

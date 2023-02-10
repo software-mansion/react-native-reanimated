@@ -89,14 +89,14 @@ class SensorSetter : public HybridClass<SensorSetter> {
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy$SensorSetter;";
 
-  void sensorSetter(jni::alias_ref<JArrayFloat> value) {
+  void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
     size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
     for (int i = 0; i < size; i++) {
       array[i] = elements[i];
     }
-    callback_(array);
+    callback_(array, orientationDegrees);
   }
 
   static void registerNatives() {
@@ -108,10 +108,10 @@ class SensorSetter : public HybridClass<SensorSetter> {
  private:
   friend HybridBase;
 
-  explicit SensorSetter(std::function<void(double[])> callback)
+  explicit SensorSetter(std::function<void(double[], int)> callback)
       : callback_(std::move(callback)) {}
 
-  std::function<void(double[])> callback_;
+  std::function<void(double[], int)> callback_;
 };
 
 class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
@@ -198,7 +198,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   int registerSensor(
       int sensorType,
       int interval,
-      std::function<void(double[])> setter);
+      std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   void configureProps(
       jsi::Runtime &rt,

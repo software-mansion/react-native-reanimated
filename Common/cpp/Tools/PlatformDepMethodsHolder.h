@@ -58,7 +58,7 @@ using ProgressLayoutAnimationFunction =
 using EndLayoutAnimationFunction = std::function<void(int, bool, bool)>;
 
 using RegisterSensorFunction =
-    std::function<int(int, int, std::function<void(double[])>)>;
+    std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 using ConfigurePropsFunction = std::function<void(
