@@ -13,5 +13,5 @@ public class SensorSetter {
     mHybridData = hybridData;
   }
 
-  public native void sensorSetter(float[] value);
+  public native void sensorSetter(float[] value, int orientationDegrees);
 }

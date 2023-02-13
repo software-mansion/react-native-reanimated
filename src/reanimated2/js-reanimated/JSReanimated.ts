@@ -64,6 +64,7 @@ export default class JSReanimated extends NativeReanimated {
   registerSensor(
     sensorType: SensorType,
     interval: number,
+    iosReferenceFrame: number,
     eventHandler: (data: Value3D | ValueRotation) => void
   ): number {
     if (!(this.getSensorName(sensorType) in window)) {
@@ -86,12 +87,21 @@ export default class JSReanimated extends NativeReanimated {
           2.0 * (qx * qy + qw * qz),
           qw * qw + qx * qx - qy * qy - qz * qz
         );
-        eventHandler({ qw, qx, qy, qz, yaw, pitch, roll });
+        eventHandler({
+          qw,
+          qx,
+          qy,
+          qz,
+          yaw,
+          pitch,
+          roll,
+          interfaceOrientation: 0,
+        });
       };
     } else {
       callback = () => {
         const { x, y, z } = sensor;
-        eventHandler({ x, y, z });
+        eventHandler({ x, y, z, interfaceOrientation: 0 });
       };
     }
     sensor.addEventListener('reading', callback);

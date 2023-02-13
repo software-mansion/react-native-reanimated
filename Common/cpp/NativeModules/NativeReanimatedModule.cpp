@@ -154,8 +154,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       makeShareableClone,
       updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
-      platformDepMethodsHolder.registerSensor,
-      platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation);
@@ -437,9 +435,15 @@ jsi::Value NativeReanimatedModule::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
     const jsi::Value &interval,
+    const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule.registerSensor(
-      rt, runtimeHelper, sensorType, interval, sensorDataHandler);
+      rt,
+      runtimeHelper,
+      sensorType,
+      interval,
+      iosReferenceFrame,
+      sensorDataHandler);
 }
 
 void NativeReanimatedModule::unregisterSensor(

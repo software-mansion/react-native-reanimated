@@ -143,6 +143,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
+      const jsi::Value &iosReferenceFrame,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
 

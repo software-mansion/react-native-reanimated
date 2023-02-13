@@ -282,10 +282,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
   UIView *stack = [self getStackForView:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
   if (stack != nil && !isRemovedInParentStack) {
-    bool shouldRunTransition =
-        [self isScreen:screen
-            outsideStack:stack] // screen is removed from React tree (navigation.navigate(<screenName>))
-        || [self isScreen:screen onTopOfStack:stack]; // click on button goBack on native header
+    bool isInteractive =
+        [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
+    // screen is removed from React tree (navigation.navigate(<screenName>))
+    bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
+    // click on button goBack on native header
+    bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
+    bool shouldRunTransition = !isInteractive && (isScreenRemovedFromReactTree || isTriggeredByGoBackButton);
     if (shouldRunTransition) {
       [self runSharedTransitionForSharedViewsOnScreen:screen];
     } else {
@@ -462,7 +465,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
     BOOL isScreenDetached = [self getScreenForView:view].superview == nil;
     NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
     if (isScreenDetached) {
-      viewSourcePreviousSnapshot.values[@"originY"] = viewSourcePreviousSnapshot.values[@"originYByParent"];
+      float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
+      float headerHeight = [viewSourcePreviousSnapshot.values[@"headerHeight"] floatValue];
+      viewSourcePreviousSnapshot.values[@"originY"] = @(originYByParent + headerHeight);
     }
     [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
                                                  forTag:view.reactTag
