@@ -2,7 +2,6 @@ package com.swmansion.reanimated.nativeProxy;
 
 import android.os.SystemClock;
 import android.util.Log;
-
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
@@ -188,11 +187,11 @@ public class NativeProxyCommon {
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
 
     AnimationsManager animationsManager =
-            mContext
-                    .get()
-                    .getNativeModule(ReanimatedModule.class)
-                    .getNodesManager()
-                    .getAnimationsManager();
+        mContext
+            .get()
+            .getNativeModule(ReanimatedModule.class)
+            .getNodesManager()
+            .getAnimationsManager();
 
     animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
   }

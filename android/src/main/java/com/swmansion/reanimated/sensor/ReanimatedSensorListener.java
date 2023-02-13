@@ -4,9 +4,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import com.swmansion.reanimated.nativeProxy.SensorSetter;
 import android.view.Display;
 import android.view.Surface;
+import com.swmansion.reanimated.nativeProxy.SensorSetter;
 
 public class ReanimatedSensorListener implements SensorEventListener {
 
