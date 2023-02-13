@@ -2,6 +2,7 @@ package com.swmansion.reanimated.nativeProxy;
 
 import android.os.SystemClock;
 import android.util.Log;
+import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
@@ -27,7 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class NativeProxyCommon {
+public abstract class NativeProxyCommon {
   static {
     SoLoader.loadLibrary("reanimated");
   }
@@ -177,6 +178,13 @@ public class NativeProxyCommon {
   @DoNotStrip
   private void unsubscribeFromKeyboardEvents(int listenerId) {
     reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
+  protected abstract HybridData getHybridData();
+
+  public void onCatalystInstanceDestroy() {
+    mScheduler.deactivate();
+    getHybridData().resetNative();
   }
 
   public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {

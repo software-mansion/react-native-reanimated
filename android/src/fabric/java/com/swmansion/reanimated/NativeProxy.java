@@ -61,9 +61,9 @@ public class NativeProxy extends NativeProxyCommon {
 
     public native void performOperations();
 
-    public void onCatalystInstanceDestroy() {
-        mScheduler.deactivate();
-        mHybridData.resetNative();
+    @Override
+    protected HybridData getHybridData() {
+        return mHybridData;
     }
 
     public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
