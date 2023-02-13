@@ -24,6 +24,10 @@
 #include "NativeReanimatedModule.h"
 #include "Scheduler.h"
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#include "ReanimatedCommitHook.h"
+#endif
+
 namespace reanimated {
 
 using namespace facebook;
@@ -171,6 +175,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<Scheduler> scheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
 
 // removed temporary, new event listener mechanism need fix on the RN side
 // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;

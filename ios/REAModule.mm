@@ -14,6 +14,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
+#import <RNReanimated/ReanimatedCommitHook.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 #endif
 
@@ -43,6 +44,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
 #else
@@ -109,6 +111,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>();
+  uiManager->registerCommitHook(*commitHook_);
   newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
   [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
   [self setUpNativeReanimatedModule:uiManager];

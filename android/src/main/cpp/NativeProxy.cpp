@@ -20,6 +20,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
+#include "ReanimatedCommitHook.h"
 #include "ReanimatedUIManagerBinding.h"
 #endif
 
@@ -55,6 +56,8 @@ NativeProxy::NativeProxy(
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>();
+  uiManager->registerCommitHook(*commitHook_);
   ReanimatedUIManagerBinding::createAndInstallIfNeeded(
       *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
 #endif
