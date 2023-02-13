@@ -113,9 +113,9 @@ void LayoutAnimationsManager::startLayoutAnimation(
       jsi::String::createFromAscii(rt, type),
       values,
       config->getJSValue(rt));
-  if (runtime_ == nullptr) {
+//  if (runtime_ == nullptr) {
     runtime_ = &rt;
-  }
+//  }
 }
 
 /*

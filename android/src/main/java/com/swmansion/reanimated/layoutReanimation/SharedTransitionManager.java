@@ -30,6 +30,9 @@ public class SharedTransitionManager {
   private final Map<Integer, View> mCurrentSharedTransitionViews = new HashMap<>();
   private View mTransitionContainer;
   private final List<View> mRemovedSharedViews = new ArrayList<>();
+  private final List<Integer> mDisableCleaningForView = new ArrayList<>();
+  private List<SharedElement> mSharedElements = new ArrayList<>();
+  private final List<View> mViewsWithCanceledAnimation = new ArrayList<>();
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
@@ -54,26 +57,32 @@ public class SharedTransitionManager {
   }
 
   protected void onViewsRemoval(int[] tagsToDelete) {
-    if (tagsToDelete != null) {
-      visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
-      if (mCurrentSharedTransitionViews.size() > 0) {
-        for (View view : mCurrentSharedTransitionViews.values()) {
-          for (int tagToDelete : tagsToDelete) {
-            if (isViewChildParent(view, tagToDelete)) {
-              Log.v("a", "a");
-            }
-          }
-        }
-      }
-
+    if (tagsToDelete == null) {
+      return;
+    }
+    visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
+    if (mRemovedSharedViews.size() > 0) {
       startSharedTransitionForViews(mRemovedSharedViews, false);
       ConfigCleanerTreeVisitor configCleanerTreeVisitor = new ConfigCleanerTreeVisitor();
       for (View removedSharedView : mRemovedSharedViews) {
         visitTree(removedSharedView, configCleanerTreeVisitor);
       }
       mRemovedSharedViews.clear();
-
       visitTreeForTags(tagsToDelete, configCleanerTreeVisitor);
+    } else {
+      visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
+      List<View> viewsWithNewTransition = new ArrayList<>();
+      if (mCurrentSharedTransitionViews.size() > 0) {
+        for (View view : mCurrentSharedTransitionViews.values()) {
+          for (int tagToDelete : tagsToDelete) {
+            if (isViewChildParent(view, tagToDelete)) {
+              viewsWithNewTransition.add(view);
+//              cancelAnimation(view);
+            }
+          }
+        }
+        startSharedTransitionForViews(viewsWithNewTransition, false);
+      }
     }
   }
 
@@ -86,7 +95,11 @@ public class SharedTransitionManager {
       if (parent.getClass().getSimpleName().equals("Screen")) {
         return false;
       }
-      parent = (View) parent.getParent();
+      if (parent instanceof View) {
+        parent = (View) parent.getParent();
+      } else {
+        return false;
+      }
     }
     return false;
   }
@@ -135,6 +148,7 @@ public class SharedTransitionManager {
   private List<SharedElement> getSharedElementsForCurrentTransition(
       List<View> sharedViews, boolean addedNewScreen) {
     boolean tmp;
+    List<View> newTransitionViews = new ArrayList<>();
     Set<Integer> viewTags = new HashSet<>();
     if (!addedNewScreen) {
       for (View view : sharedViews) {
@@ -166,63 +180,92 @@ public class SharedTransitionManager {
         continue;
       }
 
-      if (mCurrentSharedTransitionViews.containsKey(viewSource.getId())
-          || mCurrentSharedTransitionViews.containsKey(viewTarget.getId())) {
+      boolean isSourceViewInTransition = mCurrentSharedTransitionViews.containsKey(viewSource.getId());
+      boolean isTargetViewInTransition = mCurrentSharedTransitionViews.containsKey(viewTarget.getId());
+
+      if (isSourceViewInTransition || isTargetViewInTransition) {
         tmp = true;
-      }
-
-      View viewSourceScreen = findScreen(viewSource);
-      View viewTargetScreen = findScreen(viewTarget);
-      if (viewSourceScreen == null || viewTargetScreen == null) {
-        continue;
-      }
-
-      ViewGroup stack = (ViewGroup) findStack(viewSourceScreen);
-      if (stack == null) {
-        continue;
-      }
-
-      ViewGroupManager stackViewGroupManager =
-          (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
-      int screensCount = stackViewGroupManager.getChildCount(stack);
-
-      if (screensCount < 2) {
-        continue;
-      }
-
-      View topScreen = stackViewGroupManager.getChildAt(stack, screensCount - 1);
-      View secondScreen = stackViewGroupManager.getChildAt(stack, screensCount - 2);
-      boolean isValidConfiguration;
-      if (addedNewScreen) {
-        isValidConfiguration =
-            secondScreen.getId() == viewSourceScreen.getId()
-                && topScreen.getId() == viewTargetScreen.getId();
       } else {
-        isValidConfiguration =
-            topScreen.getId() == viewSourceScreen.getId()
-                && secondScreen.getId() == viewTargetScreen.getId();
-      }
-      if (!isValidConfiguration) {
-        continue;
+        View viewSourceScreen = findScreen(viewSource);
+        View viewTargetScreen = findScreen(viewTarget);
+        if (viewSourceScreen == null || viewTargetScreen == null) {
+          continue;
+        }
+
+        ViewGroup stack = (ViewGroup) findStack(viewSourceScreen);
+        if (stack == null && !isSourceViewInTransition) {
+          continue;
+        }
+
+        ViewGroupManager stackViewGroupManager =
+                (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
+        int screensCount = stackViewGroupManager.getChildCount(stack);
+
+        if (screensCount < 2) {
+          continue;
+        }
+
+        View topScreen = stackViewGroupManager.getChildAt(stack, screensCount - 1);
+        View secondScreen = stackViewGroupManager.getChildAt(stack, screensCount - 2);
+        boolean isValidConfiguration;
+        if (addedNewScreen) {
+          isValidConfiguration =
+                  secondScreen.getId() == viewSourceScreen.getId()
+                          && topScreen.getId() == viewTargetScreen.getId();
+        } else {
+          isValidConfiguration =
+                  topScreen.getId() == viewSourceScreen.getId()
+                          && secondScreen.getId() == viewTargetScreen.getId();
+        }
+        if (!isValidConfiguration) {
+          continue;
+        }
       }
 
+//      Snapshot s = makeSnapshotWithoutRegistry(viewSource)
       if (addedNewScreen) {
-        makeSnapshot(viewSource);
+        if (!isSourceViewInTransition) {
+          makeSnapshot(viewSource);
+        }
         makeSnapshot(viewTarget);
+      } else if (isSourceViewInTransition) {
+        makeSnapshot(viewSource);
       }
+
       Snapshot sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
 
-      if (!mCurrentSharedTransitionViews.containsKey(viewSource.getId())) {
-        mCurrentSharedTransitionViews.put(viewSource.getId(), viewSource);
-      }
-      if (!mCurrentSharedTransitionViews.containsKey(viewTarget.getId())) {
-        mCurrentSharedTransitionViews.put(viewTarget.getId(), viewTarget);
-      }
+      newTransitionViews.add(viewSource);
+      newTransitionViews.add(viewTarget);
+
+//      if (!mCurrentSharedTransitionViews.containsKey(viewSource.getId())) {
+//        mCurrentSharedTransitionViews.put(viewSource.getId(), viewSource);
+//      }
+//      if (!mCurrentSharedTransitionViews.containsKey(viewTarget.getId())) {
+//        mCurrentSharedTransitionViews.put(viewTarget.getId(), viewTarget);
+//      }
       SharedElement sharedElement =
           new SharedElement(viewSource, sourceViewSnapshot, viewTarget, targetViewSnapshot);
       sharedElements.add(sharedElement);
     }
+
+    for (View view : mCurrentSharedTransitionViews.values()) {
+      if (newTransitionViews.contains(view)) {
+        mDisableCleaningForView.add(view.getId());
+      } else {
+        mViewsWithCanceledAnimation.add(view);
+      }
+    }
+    mCurrentSharedTransitionViews.clear();
+    for (View view : newTransitionViews) {
+      mCurrentSharedTransitionViews.put(view.getId(), view);
+    }
+    for (View view : mViewsWithCanceledAnimation) {
+      cancelAnimation(view);
+      finishSharedAnimation(view.getId());
+    }
+
+    mSharedElements = sharedElements;
     return sharedElements;
   }
 
@@ -294,7 +337,20 @@ public class SharedTransitionManager {
   }
 
   protected void finishSharedAnimation(int tag) {
+    if (mDisableCleaningForView.contains(tag)) {
+      mDisableCleaningForView.remove(Integer.valueOf(tag));
+      return;
+    }
     View view = mCurrentSharedTransitionViews.get(tag);
+    if (view == null) {
+      for (View viewWithCanceledAnimation : mViewsWithCanceledAnimation) {
+        if (viewWithCanceledAnimation.getId() == tag) {
+          view = viewWithCanceledAnimation;
+          mViewsWithCanceledAnimation.remove(view);
+          break;
+        }
+      }
+    }
     if (view != null) {
       ((ViewGroup) mTransitionContainer).removeView(view);
       View parentView = mSharedTransitionParent.get(view.getId());
@@ -329,6 +385,7 @@ public class SharedTransitionManager {
           ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
         }
       }
+      mSharedElements.clear();
       mIsSharedTransitionActive = false;
     }
   }
@@ -362,8 +419,18 @@ public class SharedTransitionManager {
     View screen = findScreen(view);
     if (screen != null) {
       snapshot.originY -= screen.getTop();
+      snapshot.screenTop = screen.getTop();
     }
     mSnapshotRegistry.put(view.getId(), snapshot);
+  }
+
+  private Snapshot makeSnapshotWithoutRegistry(View view) {
+    Snapshot lastSnapshot = mSnapshotRegistry.get(view.getId());
+    Snapshot currentSnapshot = new Snapshot(view);
+    if (lastSnapshot != null) {
+      currentSnapshot.originY -= lastSnapshot.screenTop;
+    }
+    return currentSnapshot;
   }
 
   interface TreeVisitor {

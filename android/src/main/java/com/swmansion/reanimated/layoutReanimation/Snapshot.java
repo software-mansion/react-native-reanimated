@@ -42,6 +42,7 @@ public class Snapshot {
   public int globalOriginX;
   public int globalOriginY;
   public int topInsetFromParent;
+  public int screenTop;
 
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
