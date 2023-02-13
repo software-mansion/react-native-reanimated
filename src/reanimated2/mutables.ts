@@ -1,4 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
+import { scrollTo } from './NativeMethods';
 import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
@@ -11,7 +12,8 @@ export { stopMapper } from './mappers';
 
 export function makeUIMutable<T>(
   initial: T,
-  syncDataHolder?: ShareableSyncDataHolderRef<T>
+  syncDataHolder?: ShareableSyncDataHolderRef<T>,
+  animatedRef?: any
 ) {
   'worklet';
 
@@ -19,7 +21,11 @@ export function makeUIMutable<T>(
   let value = initial;
 
   const self = {
+    animatedRef: animatedRef,
     set value(newValue) {
+      if (animatedRef) {
+        scrollTo(animatedRef, Number(newValue), 0, true);
+      }
       valueSetter(self, newValue);
     },
     get value() {
@@ -59,7 +65,8 @@ export function makeUIMutable<T>(
 
 export function makeMutable<T>(
   initial: T,
-  oneWayReadsOnly = false
+  oneWayReadsOnly = false,
+  animatedRef?: any
 ): SharedValue<T> {
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
@@ -73,13 +80,17 @@ export function makeMutable<T>(
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      return makeUIMutable(initial, syncDataHolder);
+      return makeUIMutable(initial, syncDataHolder, animatedRef);
     },
   });
   // listeners can only work on JS thread on Web and jest environments
   const listeners = NativeReanimatedModule.native ? undefined : new Map();
   const mutable = {
+    animatedRef: animatedRef,
     set value(newValue) {
+      if (animatedRef) {
+        scrollTo(animatedRef, 0, Number(newValue), true);
+      }
       if (NativeReanimatedModule.native) {
         runOnUI(() => {
           'worklet';
