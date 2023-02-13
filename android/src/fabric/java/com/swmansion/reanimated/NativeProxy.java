@@ -66,44 +66,28 @@ public class NativeProxy extends NativeProxyCommon {
         mHybridData.resetNative();
     }
 
-    // TODO: move to NativeProxyCommon.java when layout animations are fixed on Fabric 
-    public void prepareLayoutAnimations(LayoutAnimations LayoutAnimations) {
-        if (Utils.isChromeDebugger) {
-            Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
-            return;
-        }
-        mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
+    public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
+        return new NativeMethodsHolder() {
+            @Override
+            public void startAnimation(int tag, String type, HashMap<String, Float> values) {}
 
-        AnimationsManager animationsManager =
-                mContext
-                        .get()
-                        .getNativeModule(ReanimatedModule.class)
-                        .getNodesManager()
-                        .getAnimationsManager();
+            @Override
+            public boolean isLayoutAnimationEnabled() {
+                return false;
+            }
 
-        WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
-        animationsManager.setNativeMethods(
-                new NativeMethodsHolder() {
-                    @Override
-                    public void startAnimation(int tag, String type, HashMap<String, Float> values) {}
+            @Override
+            public int findPrecedingViewTagForTransition(int tag) {
+                return -1;
+            }
 
-                    @Override
-                    public boolean isLayoutAnimationEnabled() {
-                        return false;
-                    }
+            @Override
+            public boolean hasAnimation(int tag, String type) {
+                return false;
+            }
 
-                    @Override
-                    public int findPrecedingViewTagForTransition(int tag) {
-                        return -1;
-                    }
-
-                    @Override
-                    public boolean hasAnimation(int tag, String type) {
-                        return false;
-                    }
-
-                    @Override
-                    public void clearAnimationConfig(int tag) {}
-                });
+            @Override
+            public void clearAnimationConfig(int tag) {}
+        };
     }
 }

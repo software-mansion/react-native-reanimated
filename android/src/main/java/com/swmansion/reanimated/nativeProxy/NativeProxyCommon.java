@@ -1,6 +1,8 @@
 package com.swmansion.reanimated.nativeProxy;
 
 import android.os.SystemClock;
+import android.util.Log;
+
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
@@ -10,9 +12,14 @@ import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
+import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.ReanimatedModule;
 import com.swmansion.reanimated.Scheduler;
+import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
+import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
+import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import java.lang.ref.WeakReference;
@@ -171,5 +178,22 @@ public class NativeProxyCommon {
   @DoNotStrip
   private void unsubscribeFromKeyboardEvents(int listenerId) {
     reanimatedKeyboardEventListener.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
+  public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
+    if (Utils.isChromeDebugger) {
+      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
+      return;
+    }
+    mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
+
+    AnimationsManager animationsManager =
+            mContext
+                    .get()
+                    .getNativeModule(ReanimatedModule.class)
+                    .getNodesManager()
+                    .getAnimationsManager();
+
+    animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
   }
 }
