@@ -23,9 +23,6 @@ export function makeUIMutable<T>(
   const self = {
     animatedRef: animatedRef,
     set value(newValue) {
-      if (animatedRef) {
-        scrollTo(animatedRef, Number(newValue), 0, true);
-      }
       valueSetter(self, newValue);
     },
     get value() {
@@ -38,6 +35,9 @@ export function makeUIMutable<T>(
      * the mutable by assigning to value prop directly.
      */
     set _value(newValue: T) {
+      if (animatedRef) {
+        scrollTo(animatedRef, 0, Number(newValue), false);
+      }
       value = newValue;
       if (syncDataHolder) {
         _updateDataSynchronously(
@@ -88,9 +88,6 @@ export function makeMutable<T>(
   const mutable = {
     animatedRef: animatedRef,
     set value(newValue) {
-      if (animatedRef) {
-        scrollTo(animatedRef, 0, Number(newValue), true);
-      }
       if (NativeReanimatedModule.native) {
         runOnUI(() => {
           'worklet';
@@ -111,6 +108,9 @@ export function makeMutable<T>(
         throw new Error(
           'Setting `_value` directly is only possible on the UI runtime'
         );
+      }
+      if (animatedRef) {
+        scrollTo(animatedRef, 0, Number(newValue), false);
       }
       value = newValue;
       listeners!.forEach((listener) => {
