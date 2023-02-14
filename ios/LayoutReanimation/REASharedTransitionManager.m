@@ -194,7 +194,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (NSMutableArray<REASharedElement *> *)getSharedElementForCurrentTransition:(NSArray *)sharedViews
                                                              withNewElements:(BOOL)addedNewScreen
 {
-  bool tmp = false;
   NSMutableArray<UIView *> *newTransitionViews = [NSMutableArray new];
   NSMutableArray<REASharedElement *> *sharedElements = [NSMutableArray new];
   for (UIView *sharedView in sharedViews) {

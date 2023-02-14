@@ -86,6 +86,8 @@ function createLayoutAnimationManager() {
           const shouldRemoveView = type === 'exiting';
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
+        style.callback &&
+          style.callback(finished === undefined ? false : finished);
       };
 
       startObservingProgress(tag, value, type);
