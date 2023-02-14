@@ -19,7 +19,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "NewestShadowNodesRegistry.h"
 #include "ReanimatedCommitHook.h"
 #endif
 
@@ -44,12 +43,7 @@ NativeProxy::NativeProxy(
       runtime_(rt),
       jsCallInvoker_(jsCallInvoker),
       layoutAnimations(std::move(_layoutAnimations)),
-      scheduler_(scheduler)
-#ifdef RCT_NEW_ARCH_ENABLED
-      ,
-      newestShadowNodesRegistry_(std::make_shared<NewestShadowNodesRegistry>())
-#endif
-{
+      scheduler_(scheduler) {
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
@@ -335,8 +329,6 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
-  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
-  newestShadowNodesRegistry_ = nullptr;
 #endif
   //  removed temporary, new event listener mechanism need fix on the RN side
   //  eventListener_ = std::make_shared<EventListener>(

@@ -1,7 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/NewestShadowNodesRegistry.h>
-#endif
-
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTEventEmitter.h>

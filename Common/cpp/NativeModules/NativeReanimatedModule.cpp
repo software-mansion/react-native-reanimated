@@ -12,7 +12,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "NewestShadowNodesRegistry.h"
 #include "ShadowTreeCloner.h"
 #endif
 
@@ -545,21 +544,15 @@ void NativeReanimatedModule::performOperations() {
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
-  auto copiedTagsToRemove = std::move(tagsToRemove_);
-  tagsToRemove_ = std::vector<Tag>();
-
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    auto lock = newestShadowNodesRegistry_->createLock();
-
     shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
       auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-      ShadowTreeCloner shadowTreeCloner{
-          newestShadowNodesRegistry_, uiManager_, surfaceId_};
+      ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
 
       for (const auto &pair : copiedOperationsQueue) {
         const ShadowNodeFamily &family = pair.first->getFamily();
@@ -577,11 +570,6 @@ void NativeReanimatedModule::performOperations() {
         rootNode = newRootNode;
       }
 
-      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-      for (auto tag : copiedTagsToRemove) {
-        newestShadowNodesRegistry_->remove(tag);
-      }
-
       shadowTreeCloner.updateYogaChildren();
 
       return std::static_pointer_cast<RootShadowNode>(rootNode);
@@ -592,7 +580,7 @@ void NativeReanimatedModule::performOperations() {
 void NativeReanimatedModule::removeShadowNodeFromRegistry(
     jsi::Runtime &rt,
     const jsi::Value &tag) {
-  tagsToRemove_.push_back(tag.asNumber());
+  // do nothing
 }
 
 void NativeReanimatedModule::dispatchCommand(
@@ -653,11 +641,6 @@ jsi::Value NativeReanimatedModule::measure(
 void NativeReanimatedModule::setUIManager(
     std::shared_ptr<UIManager> uiManager) {
   uiManager_ = uiManager;
-}
-
-void NativeReanimatedModule::setNewestShadowNodesRegistry(
-    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
-  newestShadowNodesRegistry_ = newestShadowNodesRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

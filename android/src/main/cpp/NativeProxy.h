@@ -174,7 +174,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations;
   std::shared_ptr<Scheduler> scheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
 
 // removed temporary, new event listener mechanism need fix on the RN side

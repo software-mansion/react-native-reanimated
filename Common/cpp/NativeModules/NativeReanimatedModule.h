@@ -2,7 +2,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
-#include "NewestShadowNodesRegistry.h"
 #endif
 
 #include <memory>
@@ -134,9 +133,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
   void setUIManager(std::shared_ptr<UIManager> uiManager);
-
-  void setNewestShadowNodesRegistry(
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
 #endif
 
   jsi::Value registerSensor(
@@ -187,10 +183,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
-
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
-
-  std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
