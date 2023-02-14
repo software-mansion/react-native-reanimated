@@ -75,7 +75,6 @@ if (shouldBeUseWeb()) {
         }
       }
 
-      // console.log(updates)
       viewDescriptors.value.forEach((viewDescriptor) => {
         _updatePropsPaper(
           viewDescriptor.tag,

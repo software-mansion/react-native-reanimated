@@ -52,9 +52,7 @@ export class SharedTransition implements ILayoutAnimationBuilder {
         for (const propName of supportedProps) {
           const keyToTargetValue =
             'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
-          animations[propName] = withTiming(values[keyToTargetValue], {
-            duration: 3000,
-          });
+          animations[propName] = withTiming(values[keyToTargetValue]);
         }
       }
 

@@ -64,9 +64,6 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        // if (sharedTransitionForTag.get(tag)) {
-        //   stopObservingProgress(tag, value, false, false);
-        // }
         value._value = style.initialValues;
       }
 
@@ -82,17 +79,13 @@ function createLayoutAnimationManager() {
       const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
-        // console.warn(tag, finished)
         if (finished) {
           enteringAnimationForTag.delete(tag);
           sharedTransitionForTag.delete(tag);
           mutableValuesForTag.delete(tag);
           const shouldRemoveView = type === 'exiting';
-          // console.log(new Error().stack)
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
-        // style.callback &&
-        //   style.callback(finished === undefined ? false : finished);
       };
 
       startObservingProgress(tag, value, type);

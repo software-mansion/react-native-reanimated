@@ -90,7 +90,6 @@ const globals = new Set([
   'LayoutAnimationRepository',
   '_notifyAboutProgress',
   '_notifyAboutEnd',
-  'cancelLayoutAnimation'
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
