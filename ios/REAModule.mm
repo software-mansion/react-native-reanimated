@@ -42,6 +42,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
 #else
@@ -91,6 +92,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     reanimatedModule->setUIManager(uiManager);
+    reanimatedModule->setPropsRegistry(propsRegistry_);
   }
 }
 
@@ -98,7 +100,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  commitHook_ = std::make_shared<ReanimatedCommitHook>();
+  propsRegistry_ = std::make_shared<PropsRegistry>();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_);
   uiManager->registerCommitHook(*commitHook_);
   [self setUpNativeReanimatedModule:uiManager];
 }

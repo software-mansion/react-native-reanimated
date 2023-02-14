@@ -12,6 +12,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
+#include "PropsRegistry.h"
 #include "ShadowTreeCloner.h"
 #endif
 
@@ -566,7 +567,12 @@ void NativeReanimatedModule::performOperations() {
 
       shadowTreeCloner.updateYogaChildren();
 
-      return std::static_pointer_cast<RootShadowNode>(rootNode);
+      auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
+
+      // skip ReanimatedCommitHook for this ShadowTree
+      propsRegistry_->setLastReanimatedRoot(newRoot);
+
+      return newRoot;
     });
   });
 }
@@ -629,6 +635,11 @@ jsi::Value NativeReanimatedModule::measure(
 void NativeReanimatedModule::setUIManager(
     std::shared_ptr<UIManager> uiManager) {
   uiManager_ = uiManager;
+}
+
+void NativeReanimatedModule::setPropsRegistry(
+    std::shared_ptr<PropsRegistry> propsRegistry) {
+  propsRegistry_ = propsRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

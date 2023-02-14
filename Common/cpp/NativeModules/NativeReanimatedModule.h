@@ -20,6 +20,10 @@
 #include "Scheduler.h"
 #include "SingleInstanceChecker.h"
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#include "PropsRegistry.h"
+#endif
+
 namespace reanimated {
 
 using FrameCallback = std::function<void(double)>;
@@ -129,6 +133,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
   void setUIManager(std::shared_ptr<UIManager> uiManager);
+
+  void setPropsRegistry(std::shared_ptr<PropsRegistry> propsRegistry);
 #endif
 
   jsi::Value registerSensor(
@@ -179,6 +185,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
+
+  std::shared_ptr<PropsRegistry> propsRegistry_;
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps

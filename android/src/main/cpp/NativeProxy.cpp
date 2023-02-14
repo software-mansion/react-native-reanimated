@@ -43,13 +43,18 @@ NativeProxy::NativeProxy(
       runtime_(rt),
       jsCallInvoker_(jsCallInvoker),
       layoutAnimations(std::move(_layoutAnimations)),
-      scheduler_(scheduler) {
+      scheduler_(scheduler)
+#ifdef RCT_NEW_ARCH_ENABLED
+      ,
+      propsRegistry_(std::make_shared<PropsRegistry>())
+#endif
+{
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
-  commitHook_ = std::make_shared<ReanimatedCommitHook>();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_);
   uiManager->registerCommitHook(*commitHook_);
 #endif
 }
@@ -329,6 +334,8 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
+  module->setPropsRegistry(propsRegistry_);
+  propsRegistry_ = nullptr;
 #endif
   //  removed temporary, new event listener mechanism need fix on the RN side
   //  eventListener_ = std::make_shared<EventListener>(

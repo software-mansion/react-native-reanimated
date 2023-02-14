@@ -2,13 +2,18 @@
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
+#include <memory>
+
+#include "PropsRegistry.h"
+
 using namespace facebook::react;
 
 namespace reanimated {
 
 class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
-  ReanimatedCommitHook() {}
+  explicit ReanimatedCommitHook(std::shared_ptr<PropsRegistry> propsRegistry)
+      : propsRegistry_(propsRegistry) {}
 
   void commitHookWasRegistered(
       UIManager const &uiManager) const noexcept override {}
@@ -23,6 +28,9 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const noexcept override;
 
   virtual ~ReanimatedCommitHook() noexcept = default;
+
+ private:
+  std::shared_ptr<PropsRegistry> propsRegistry_;
 };
 
 } // namespace reanimated
