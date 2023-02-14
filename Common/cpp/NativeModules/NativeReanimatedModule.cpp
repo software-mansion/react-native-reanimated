@@ -117,11 +117,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, shadowNodeValue, props);
   };
 
-  auto removeShadowNodeFromRegistry =
-      [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
-        this->removeShadowNodeFromRegistry(rt, shadowNodeValue);
-      };
-
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
   };
@@ -140,7 +135,6 @@ NativeReanimatedModule::NativeReanimatedModule(
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
       measure,
-      removeShadowNodeFromRegistry,
       dispatchCommand,
 #else
       platformDepMethodsHolder.updatePropsFunction,
@@ -575,12 +569,6 @@ void NativeReanimatedModule::performOperations() {
       return std::static_pointer_cast<RootShadowNode>(rootNode);
     });
   });
-}
-
-void NativeReanimatedModule::removeShadowNodeFromRegistry(
-    jsi::Runtime &rt,
-    const jsi::Value &tag) {
-  // do nothing
 }
 
 void NativeReanimatedModule::dispatchCommand(

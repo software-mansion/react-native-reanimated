@@ -100,7 +100,6 @@ void RuntimeDecorator::decorateUIRuntime(
     const UpdatePropsFunction updateProps,
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
-    const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
     const DispatchCommandFunction dispatchCommand,
 #else
     const ScrollToFunction scrollTo,
@@ -118,8 +117,6 @@ void RuntimeDecorator::decorateUIRuntime(
 
 #ifdef RCT_NEW_ARCH_ENABLED
   jsi_utils::installJsiFunction(rt, "_updatePropsFabric", updateProps);
-  jsi_utils::installJsiFunction(
-      rt, "_removeShadowNodeFromRegistry", removeShadowNodeFromRegistry);
   jsi_utils::installJsiFunction(rt, "_dispatchCommand", dispatchCommand);
   jsi_utils::installJsiFunction(rt, "_measure", measure);
 #else

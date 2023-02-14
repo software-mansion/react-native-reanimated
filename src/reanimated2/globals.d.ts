@@ -53,9 +53,6 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
   ) => void;
-  const _removeShadowNodeFromRegistry: (
-    shadowNodeWrapper: ShadowNodeWrapper
-  ) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _scrollTo: (
     viewTag: number,
@@ -112,9 +109,6 @@ declare global {
       _updatePropsFabric: (
         shadowNodeWrapper: ShadowNodeWrapper,
         props: StyleProps | AnimatedStyle
-      ) => void;
-      _removeShadowNodeFromRegistry: (
-        shadowNodeWrapper: ShadowNodeWrapper
       ) => void;
       _measure: (viewTag: number) => MeasuredDimensions;
       _scrollTo: (

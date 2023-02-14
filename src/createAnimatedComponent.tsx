@@ -9,7 +9,6 @@ import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
-  runOnUI,
 } from './reanimated2/core';
 import {
   isJest,
@@ -239,13 +238,6 @@ export default function createAnimatedComponent(
         }
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
-        }
-        if (global._IS_FABRIC) {
-          const viewTag = this._viewTag;
-          runOnUI(() => {
-            'worklet';
-            _removeShadowNodeFromRegistry(viewTag);
-          })();
         }
       }
     }

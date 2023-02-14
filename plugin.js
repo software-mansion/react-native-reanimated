@@ -74,7 +74,6 @@ const globals = new Set([
   'eval',
   '_updatePropsPaper',
   '_updatePropsFabric',
-  '_removeShadowNodeFromRegistry',
   'RegExp',
   'Error',
   'ErrorUtils',
