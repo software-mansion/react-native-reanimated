@@ -81,7 +81,6 @@ public class SharedTransitionManager {
           for (int tagToDelete : tagsToDelete) {
             if (isViewChildParent(view, tagToDelete)) {
               viewsWithNewTransition.add(view);
-              //              cancelAnimation(view);
             }
           }
         }
@@ -130,15 +129,6 @@ public class SharedTransitionManager {
 
   private void maybeRestartAnimationWithNewLayout(View view) {
     View sharedView = mCurrentSharedTransitionViews.get(view.getId());
-//    if (sharedView == null && mCurrentSharedTransitionViews.size() > 0) {
-//      for (View sharedViewInTransition : mCurrentSharedTransitionViews.values()) {
-//        View originalSharedViewParent = mSharedTransitionParent.get(sharedViewInTransition.getId());
-//        if (isViewChildParent(originalSharedViewParent, view)) {
-//          sharedView = sharedViewInTransition;
-//          break;
-//        }
-//      }
-//    }
     if (sharedView == null) {
       return;
     }
@@ -153,10 +143,12 @@ public class SharedTransitionManager {
         Snapshot currentTargetViewSnapshot = mSnapshotRegistry.get(targetView.getId());
         Snapshot newTargetViewSnapshot = new Snapshot(targetView);
 
-        int newOriginX = currentTargetViewSnapshot.originX
+        int newOriginX =
+            currentTargetViewSnapshot.originX
                 - currentTargetViewSnapshot.originXByParent
                 + newTargetViewSnapshot.originX;
-        int newOriginY = currentTargetViewSnapshot.originY
+        int newOriginY =
+            currentTargetViewSnapshot.originY
                 - currentTargetViewSnapshot.originYByParent
                 + newTargetViewSnapshot.originY;
 
@@ -176,24 +168,6 @@ public class SharedTransitionManager {
       }
     }
     startSharedTransition(sharedElementsToRestart);
-  }
-
-  private boolean isViewChildParent(View currentChild, View parent) {
-    while (currentChild != null) {
-      if (parent.getId() == currentChild.getId()) {
-        return true;
-      }
-      if (currentChild.getClass().getSimpleName().equals("Screen")) {
-        return false;
-      }
-      if (currentChild.getParent() instanceof View) {
-        currentChild = (View) currentChild.getParent();
-      } else {
-        return false;
-      }
-
-    }
-    return false;
   }
 
   private void startSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
@@ -222,7 +196,6 @@ public class SharedTransitionManager {
 
   private List<SharedElement> getSharedElementsForCurrentTransition(
       List<View> sharedViews, boolean addedNewScreen) {
-    boolean tmp = false;
     List<View> newTransitionViews = new ArrayList<>();
     Set<Integer> viewTags = new HashSet<>();
     if (!addedNewScreen) {
@@ -260,9 +233,7 @@ public class SharedTransitionManager {
       boolean isTargetViewInTransition =
           mCurrentSharedTransitionViews.containsKey(viewTarget.getId());
 
-      if (isSourceViewInTransition || isTargetViewInTransition) {
-        tmp = true;
-      } else {
+      if (!(isSourceViewInTransition || isTargetViewInTransition)) {
         View viewSourceScreen = findScreen(viewSource);
         View viewTargetScreen = findScreen(viewTarget);
         if (viewSourceScreen == null || viewTargetScreen == null) {
@@ -322,10 +293,6 @@ public class SharedTransitionManager {
       SharedElement sharedElement =
           new SharedElement(viewSource, sourceViewSnapshot, viewTarget, targetViewSnapshot);
       sharedElements.add(sharedElement);
-    }
-
-    if (tmp) {
-      Log.v("e", "e");
     }
 
     for (View view : mCurrentSharedTransitionViews.values()) {
@@ -549,10 +516,6 @@ public class SharedTransitionManager {
     int tag = view.getId();
     if (tag == -1) {
       return;
-    }
-    boolean tagIsOK = tag == 639;
-    if (tagIsOK) {
-      Log.v("hmm", "eeeee");
     }
     ViewGroup viewGroup;
     ViewGroupManager<ViewGroup> viewGroupManager;
