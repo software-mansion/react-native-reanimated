@@ -92,10 +92,9 @@ function createLayoutAnimationManager() {
       value.value = animation;
     },
     stop(tag: number) {
-      console.log("canceled", tag)
-      let value = mutableValuesForTag.get(tag);
+      const value = mutableValuesForTag.get(tag);
       stopObservingProgress(tag, value, true, true);
-    }
+    },
   };
 }
 
