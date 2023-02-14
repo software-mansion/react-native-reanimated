@@ -42,27 +42,6 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
-  if (tag < 0) { // just test
-    jsi::Runtime &rt = *runtime_;
-    jsi::Value layoutAnimationRepositoryAsValue =
-        rt.global()
-            .getPropertyAsObject(rt, "global")
-            .getProperty(rt, "LayoutAnimationsManager");
-    jsi::Function cancelLayoutAnimation =
-        layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "stop");
-    int newTag = tag + 1000000;
-    auto config = sharedTransitionAnimations_[newTag];
-    if (config != nullptr) {
-      cancelLayoutAnimation.call(
-        rt,
-        jsi::Value(newTag),
-        config->getJSValue(rt),
-        true,
-        true
-      );
-    }
-    return;
-  }
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
@@ -113,9 +92,27 @@ void LayoutAnimationsManager::startLayoutAnimation(
       jsi::String::createFromAscii(rt, type),
       values,
       config->getJSValue(rt));
-//  if (runtime_ == nullptr) {
-    runtime_ = &rt;
-//  }
+}
+
+void LayoutAnimationsManager::cancelLayoutAnimation(
+    jsi::Runtime &rt,
+    int tag,
+    const std::string &type,
+    bool cancelled = true,
+    bool removeView = true) {
+  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  jsi::Value layoutAnimationRepositoryAsValue =
+      rt.global()
+          .getPropertyAsObject(rt, "global")
+          .getProperty(rt, "LayoutAnimationsManager");
+  jsi::Function cancelLayoutAnimation =
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
+          rt, "stop");
+  auto config = sharedTransitionAnimations_[tag];
+  if (config != nullptr) {
+    cancelLayoutAnimation.call(
+        rt, jsi::Value(tag), config->getJSValue(rt), cancelled, removeView);
+  }
 }
 
 /*

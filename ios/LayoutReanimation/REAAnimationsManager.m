@@ -163,7 +163,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
                                   forTag:(NSNumber *)tag
                       isSharedTransition:(BOOL)isSharedTransition
 {
-  NSLog(@"tag: %@", tag);
   [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] convertFromAbsolute:isSharedTransition];
 }
 
@@ -525,7 +524,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"entering"]) {
     [_sharedTransitionManager notifyAboutNewView:view];
   }
-  
+
   if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"layout"]) {
     [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
   }
@@ -540,6 +539,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition
 {
   [_sharedTransitionManager setFindPrecedingViewTagForTransitionBlock:findPrecedingViewTagForTransition];
+}
+
+- (void)setAnimationCancellingBlock:(REAAnimationCancellingBlock)animationCancellingBlock
+{
+  [_sharedTransitionManager setAnimationCancellingBlock:animationCancellingBlock];
 }
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type

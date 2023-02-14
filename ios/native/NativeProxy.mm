@@ -324,6 +324,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
+  [animationsManager
+      setAnimationCancellingBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView) {
+        if (auto reaModule = weakModule.lock()) {
+          jsi::Runtime &rt = *wrt.lock();
+          weakModule.lock()->layoutAnimationsManager().cancelLayoutAnimation(
+              rt, [tag intValue], std::string([type UTF8String]), cancelled == YES, removeView == YES);
+        }
+      }];
+
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
     if (auto reaModule = weakModule.lock()) {
       int resultTag = reaModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);

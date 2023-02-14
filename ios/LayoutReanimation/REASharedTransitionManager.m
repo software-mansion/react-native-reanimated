@@ -35,6 +35,7 @@
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
   NSMutableDictionary<NSNumber *, UIView *> *_currentSharedTransitionViews;
   REAFindPrecedingViewTagForTransitionBlock _findPrecedingViewTagForTransition;
+  REAAnimationCancellingBlock _cancelLayoutAnimation;
   UIView *_transitionContainer;
   NSMutableArray<UIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
@@ -613,6 +614,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
   _findPrecedingViewTagForTransition = findPrecedingViewTagForTransition;
 }
 
+- (void)setAnimationCancellingBlock:(REAAnimationCancellingBlock)animationCancellingBlock
+{
+  _cancelLayoutAnimation = animationCancellingBlock;
+}
+
 - (void)clearAllSharedConfigsForViewTag:(NSNumber *)viewTag
 {
   if (viewTag != nil) {
@@ -623,7 +629,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)cancelAnimation:(NSNumber *)viewTag
 {
-  [_animationManager clearAnimationConfigForTag:@([viewTag intValue] - 1000000)];
+  _cancelLayoutAnimation(viewTag, @"sharedTransition", YES, YES);
 }
 
 @end
