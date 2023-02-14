@@ -14,7 +14,6 @@
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
 #import <React-Fabric/react/renderer/core/ShadowNode.h>
 #import <React-Fabric/react/renderer/uimanager/primitives.h>
 #import <React/RCTBridge+Private.h>

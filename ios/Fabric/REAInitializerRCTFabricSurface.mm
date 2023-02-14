@@ -36,7 +36,7 @@
 - (void)start
 {
   // this is only needed method, the rest of them is just for prevent null pointer exceptions
-  [_reaModule installReanimatedUIManagerBindingAfterReload];
+  [_reaModule installReanimatedAfterReload];
 }
 
 - (facebook::react::SurfaceHandler const &)surfaceHandler

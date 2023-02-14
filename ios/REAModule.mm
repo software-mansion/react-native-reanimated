@@ -15,7 +15,6 @@
 #import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
 #import <RNReanimated/ReanimatedCommitHook.h>
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
 #endif
 
 #import <RNReanimated/REAModule.h>
@@ -90,15 +89,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)injectReanimatedUIManagerBinding:(jsi::Runtime &)runtime uiManager:(std::shared_ptr<UIManager>)uiManager
-{
-  RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
-    callback(runtime);
-  };
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry);
-}
-
 - (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
@@ -114,13 +104,12 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   commitHook_ = std::make_shared<ReanimatedCommitHook>();
   uiManager->registerCommitHook(*commitHook_);
   newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
-  [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
   [self setUpNativeReanimatedModule:uiManager];
 }
 
 #pragma mark-- Initialize
 
-- (void)installReanimatedUIManagerBindingAfterReload
+- (void)installReanimatedAfterReload
 {
   // called from REAInitializerRCTFabricSurface::start
   __weak __typeof__(self) weakSelf = self;
@@ -188,7 +177,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 #endif
 
   if (_surfacePresenter == nil) {
-    // _surfacePresenter will be set in installReanimatedUIManagerBindingAfterReload
+    // _surfacePresenter will be set in installReanimatedAfterReload
     _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:nil];
     return;
   }
@@ -230,7 +219,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         jsi::Object::createFromHostObject(runtime, reanimatedModule));
     reanimatedModule_ = reanimatedModule;
     if (_surfacePresenter != nil) {
-      // reload, uiManager is null right now, we need to wait for `installReanimatedUIManagerBindingAfterReload`
+      // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
       [self injectDependencies:runtime];
     }
   }

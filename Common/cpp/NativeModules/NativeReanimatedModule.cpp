@@ -13,7 +13,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
-#include "ReanimatedUIManagerBinding.h"
 #include "ShadowTreeCloner.h"
 #endif
 

@@ -21,7 +21,6 @@
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedCommitHook.h"
-#include "ReanimatedUIManagerBinding.h"
 #endif
 
 namespace reanimated {
@@ -58,8 +57,6 @@ NativeProxy::NativeProxy(
       binding->getScheduler()->getUIManager();
   commitHook_ = std::make_shared<ReanimatedCommitHook>();
   uiManager->registerCommitHook(*commitHook_);
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
 #endif
 }
 
