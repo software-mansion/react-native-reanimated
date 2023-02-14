@@ -1,7 +1,11 @@
 package com.swmansion.reanimated.sensor;
 
+import static android.content.Context.WINDOW_SERVICE;
+
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.view.Display;
+import android.view.WindowManager;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.swmansion.reanimated.NativeProxy;
 import java.lang.ref.WeakReference;
@@ -19,7 +23,9 @@ public class ReanimatedSensor {
       ReanimatedSensorType sensorType,
       int interval,
       NativeProxy.SensorSetter setter) {
-    listener = new ReanimatedSensorListener(setter, interval);
+    WindowManager wm = (WindowManager) reactContext.get().getSystemService(WINDOW_SERVICE);
+    Display display = wm.getDefaultDisplay();
+    listener = new ReanimatedSensorListener(setter, interval, display);
     sensorManager =
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
     this.sensorType = sensorType;

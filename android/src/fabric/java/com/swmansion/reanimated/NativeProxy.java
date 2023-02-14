@@ -91,7 +91,7 @@ public class NativeProxy {
       mHybridData = hybridData;
     }
 
-    public native void sensorSetter(float[] value);
+    public native void sensorSetter(float[] value, int orientationDegrees);
   }
 
   @DoNotStrip

@@ -59,6 +59,7 @@ import SwipeableListExample from './SwipeableListExample';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
+import CubesExample from './CubesExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -114,6 +115,10 @@ const SCREENS: Screens = {
   AnimatedSensor: {
     screen: AnimatedSensorExample,
     title: '🆕 Use Animated Sensor',
+  },
+  Cubes: {
+    screen: CubesExample,
+    title: '🆕 Cubes with useAnimatedSensor',
   },
   FrameCallbackExample: {
     screen: FrameCallbackExample,
@@ -326,6 +331,7 @@ export const styles = StyleSheet.create({
   },
   buttonText: {
     backgroundColor: 'transparent',
+    color: 'black',
   },
   button: {
     flex: 1,

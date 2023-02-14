@@ -50,8 +50,6 @@ class RuntimeDecorator {
       const MakeShareableCloneFunction makeShareableClone,
       const UpdateDataSynchronouslyFunction updateDataSynchronously,
       const TimeProviderFunction getCurrentTime,
-      const RegisterSensorFunction registerSensor,
-      const UnregisterSensorFunction unregisterSensor,
       const SetGestureStateFunction setGestureState,
       const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
       const EndLayoutAnimationFunction endLayoutAnimationFunction);

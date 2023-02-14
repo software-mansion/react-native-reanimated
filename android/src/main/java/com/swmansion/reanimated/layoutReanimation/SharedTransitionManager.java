@@ -52,7 +52,7 @@ public class SharedTransitionManager {
   }
 
   protected void viewsDidLayout() {
-    startSharedTransitionForViews(mAddedSharedViews, true);
+    tryStartSharedTransitionForViews(mAddedSharedViews, true);
     mAddedSharedViews.clear();
   }
 
@@ -66,7 +66,10 @@ public class SharedTransitionManager {
     }
     visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
     if (mRemovedSharedViews.size() > 0) {
-      startSharedTransitionForViews(mRemovedSharedViews, false);
+      boolean animationStarted = tryStartSharedTransitionForViews(mRemovedSharedViews, false);
+      if (!animationStarted) {
+        return;
+      }
       ConfigCleanerTreeVisitor configCleanerTreeVisitor = new ConfigCleanerTreeVisitor();
       for (View removedSharedView : mRemovedSharedViews) {
         visitTree(removedSharedView, configCleanerTreeVisitor);
@@ -84,7 +87,7 @@ public class SharedTransitionManager {
             }
           }
         }
-        startSharedTransitionForViews(viewsWithNewTransition, false);
+        tryStartSharedTransitionForViews(viewsWithNewTransition, false);
         for (View view : viewsWithNewTransition) {
           clearAllSharedConfigsForView(view);
         }
@@ -170,19 +173,21 @@ public class SharedTransitionManager {
     startSharedTransition(sharedElementsToRestart);
   }
 
-  private void startSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
+  private boolean tryStartSharedTransitionForViews(
+      List<View> sharedViews, boolean withNewElements) {
     if (sharedViews.isEmpty()) {
-      return;
+      return false;
     }
     sortViewsByTags(sharedViews);
     List<SharedElement> sharedElements =
         getSharedElementsForCurrentTransition(sharedViews, withNewElements);
     if (sharedElements.isEmpty()) {
-      return;
+      return false;
     }
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
     startSharedTransition(sharedElements);
+    return true;
   }
 
   private void sortViewsByTags(List<View> views) {
@@ -464,11 +469,6 @@ public class SharedTransitionManager {
 
   protected void makeSnapshot(View view) {
     Snapshot snapshot = new Snapshot(view);
-    View screen = findScreen(view);
-    if (screen != null) {
-      snapshot.originY -= screen.getTop();
-      snapshot.screenTop = screen.getTop();
-    }
     mSnapshotRegistry.put(view.getId(), snapshot);
   }
 
@@ -547,7 +547,9 @@ public class SharedTransitionManager {
       return;
     }
     ViewGroup viewGroup = (ViewGroup) view;
-    makeSnapshot(view);
+    if (mAnimationsManager.hasAnimationForTag(view.getId(), "sharedElementTransition")) {
+      makeSnapshot(view);
+    }
     for (int i = 0; i < viewGroup.getChildCount(); i++) {
       View child = viewGroup.getChildAt(i);
       visitNativeTreeAndMakeSnapshot(child);
