@@ -6,10 +6,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/uimanager/primitives.h>
-#endif
-
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
