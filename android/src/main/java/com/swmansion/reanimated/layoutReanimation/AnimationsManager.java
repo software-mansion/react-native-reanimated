@@ -641,6 +641,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.viewsDidLayout();
   }
 
+  public void viewDidLayout(View view) {
+    mSharedTransitionManager.viewDidLayout(view);
+  }
+
   public void notifyAboutViewsRemoval(int[] tagsToDelete) {
     mSharedTransitionManager.onViewsRemoval(tagsToDelete);
   }

@@ -56,6 +56,10 @@ public class SharedTransitionManager {
     mAddedSharedViews.clear();
   }
 
+  protected void viewDidLayout(View view) {
+    maybeRestartAnimationWithNewLayout(view);
+  }
+
   protected void onViewsRemoval(int[] tagsToDelete) {
     if (tagsToDelete == null) {
       return;
@@ -122,6 +126,74 @@ public class SharedTransitionManager {
 
   protected void setNativeMethods(NativeMethodsHolder nativeMethods) {
     mNativeMethodsHolder = nativeMethods;
+  }
+
+  private void maybeRestartAnimationWithNewLayout(View view) {
+    View sharedView = mCurrentSharedTransitionViews.get(view.getId());
+//    if (sharedView == null && mCurrentSharedTransitionViews.size() > 0) {
+//      for (View sharedViewInTransition : mCurrentSharedTransitionViews.values()) {
+//        View originalSharedViewParent = mSharedTransitionParent.get(sharedViewInTransition.getId());
+//        if (isViewChildParent(originalSharedViewParent, view)) {
+//          sharedView = sharedViewInTransition;
+//          break;
+//        }
+//      }
+//    }
+    if (sharedView == null) {
+      return;
+    }
+    List<SharedElement> sharedElementsToRestart = new ArrayList<>();
+    for (SharedElement sharedElement : mSharedElements) {
+      if (sharedElement.targetView == sharedView) {
+        sharedElementsToRestart.add(sharedElement);
+        View sourceView = sharedElement.sourceView;
+        View targetView = sharedElement.targetView;
+
+        Snapshot newSourceViewSnapshot = new Snapshot(sourceView);
+        Snapshot currentTargetViewSnapshot = mSnapshotRegistry.get(targetView.getId());
+        Snapshot newTargetViewSnapshot = new Snapshot(targetView);
+
+        int newOriginX = currentTargetViewSnapshot.originX
+                - currentTargetViewSnapshot.originXByParent
+                + newTargetViewSnapshot.originX;
+        int newOriginY = currentTargetViewSnapshot.originY
+                - currentTargetViewSnapshot.originYByParent
+                + newTargetViewSnapshot.originY;
+
+        currentTargetViewSnapshot.originX = newOriginX;
+        currentTargetViewSnapshot.originY = newOriginY;
+        currentTargetViewSnapshot.globalOriginX = newOriginX;
+        currentTargetViewSnapshot.globalOriginY = newOriginY;
+        currentTargetViewSnapshot.originXByParent = newTargetViewSnapshot.originXByParent;
+        currentTargetViewSnapshot.originYByParent = newTargetViewSnapshot.originYByParent;
+        currentTargetViewSnapshot.height = newTargetViewSnapshot.height;
+        currentTargetViewSnapshot.width = newTargetViewSnapshot.width;
+        sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
+        sharedElement.targetViewSnapshot = currentTargetViewSnapshot;
+
+        mDisableCleaningForView.add(sourceView.getId());
+        mDisableCleaningForView.add(targetView.getId());
+      }
+    }
+    startSharedTransition(sharedElementsToRestart);
+  }
+
+  private boolean isViewChildParent(View currentChild, View parent) {
+    while (currentChild != null) {
+      if (parent.getId() == currentChild.getId()) {
+        return true;
+      }
+      if (currentChild.getClass().getSimpleName().equals("Screen")) {
+        return false;
+      }
+      if (currentChild.getParent() instanceof View) {
+        currentChild = (View) currentChild.getParent();
+      } else {
+        return false;
+      }
+
+    }
+    return false;
   }
 
   private void startSharedTransitionForViews(List<View> sharedViews, boolean withNewElements) {
@@ -372,7 +444,7 @@ public class SharedTransitionManager {
       if (viewSourcePreviousSnapshot != null) {
         int originY = viewSourcePreviousSnapshot.originY;
         if (findStack(view) == null) {
-          viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.topInsetFromParent;
+          viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.originYByParent;
         }
         Map<String, Object> snapshotMap = viewSourcePreviousSnapshot.toBasicMap();
         Map<String, Object> preparedValues = new HashMap<>();

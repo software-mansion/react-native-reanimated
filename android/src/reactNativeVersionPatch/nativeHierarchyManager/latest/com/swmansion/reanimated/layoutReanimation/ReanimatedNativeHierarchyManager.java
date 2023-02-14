@@ -63,6 +63,11 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     return (viewToAnimate.getParent() != null);
   }
 
+//  @Override
+//  public void reset() {
+//    super.reset();
+//  }
+
   /**
    * Update layout of given view, via immediate update or animation depending on the current batch
    * layout animation configuration supplied during initialization. Handles create and update
@@ -255,6 +260,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
           && viewManagerName.equals("RNSScreen")
           && mReaLayoutAnimator != null) {
         ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
+      }
+      View view = resolveView(tag);
+      if (view != null && mReaLayoutAnimator != null) {
+        mReaLayoutAnimator.getAnimationsManager().viewDidLayout(view);
       }
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
