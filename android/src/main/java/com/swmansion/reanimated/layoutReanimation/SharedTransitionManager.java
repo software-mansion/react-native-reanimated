@@ -564,6 +564,6 @@ public class SharedTransitionManager {
 
   private void cancelAnimation(View view) {
     int viewTag = view.getId();
-    mNativeMethodsHolder.clearAnimationConfig(viewTag - 1000000);
+    mNativeMethodsHolder.cancelAnimation(viewTag, "sharedTransition", true, true);
   }
 }

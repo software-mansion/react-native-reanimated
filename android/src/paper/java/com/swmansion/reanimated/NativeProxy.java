@@ -336,6 +336,14 @@ public class NativeProxy {
           }
 
           @Override
+          public void cancelAnimation(int tag, String type, boolean cancelled, boolean removeView) {
+            LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+            if (layoutAnimations != null) {
+              layoutAnimations.cancelAnimationForTag(tag, type, cancelled, removeView);
+            }
+          }
+
+          @Override
           public int findPrecedingViewTagForTransition(int tag) {
             LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
             if (layoutAnimations != null) {

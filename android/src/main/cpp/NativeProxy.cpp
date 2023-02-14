@@ -385,6 +385,19 @@ void NativeProxy::installJSIBindings(
             tag);
       });
 
+  layoutAnimations->cthis()->setCancelAnimationForTag(
+      [wrt, weakModule](
+          int tag,
+          alias_ref<JString> type,
+          jboolean cancelled,
+          jboolean removeView) {
+        if (auto reaModule = weakModule.lock()) {
+          auto &rt = *wrt.lock();
+          reaModule->layoutAnimationsManager().cancelLayoutAnimation(
+              rt, tag, type->toStdString(), cancelled, removeView);
+        }
+      });
+
   layoutAnimations->cthis()->setFindPrecedingViewTagForTransition(
       [weakModule](int tag) {
         if (auto module = weakModule.lock()) {
