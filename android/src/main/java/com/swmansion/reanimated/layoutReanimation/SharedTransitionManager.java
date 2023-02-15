@@ -278,7 +278,7 @@ public class SharedTransitionManager {
       Snapshot sourceViewSnapshot = null, targetViewSnapshot;
       if (addedNewScreen) {
         if (isSourceViewInTransition) {
-          sourceViewSnapshot = makeSnapshotWithoutRegistry(viewSource);
+          sourceViewSnapshot = new Snapshot(viewSource);
         } else {
           makeSnapshot(viewSource);
         }
@@ -470,15 +470,6 @@ public class SharedTransitionManager {
   protected void makeSnapshot(View view) {
     Snapshot snapshot = new Snapshot(view);
     mSnapshotRegistry.put(view.getId(), snapshot);
-  }
-
-  private Snapshot makeSnapshotWithoutRegistry(View view) {
-    Snapshot lastSnapshot = mSnapshotRegistry.get(view.getId());
-    Snapshot currentSnapshot = new Snapshot(view);
-    if (lastSnapshot != null) {
-      currentSnapshot.originY -= lastSnapshot.screenTop;
-    }
-    return currentSnapshot;
   }
 
   interface TreeVisitor {
