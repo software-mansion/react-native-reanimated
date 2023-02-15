@@ -1,5 +1,4 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { scrollTo } from './NativeMethods';
 import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
@@ -12,8 +11,7 @@ export { stopMapper } from './mappers';
 
 export function makeUIMutable<T>(
   initial: T,
-  syncDataHolder?: ShareableSyncDataHolderRef<T>,
-  animatedRef?: any
+  syncDataHolder?: ShareableSyncDataHolderRef<T>
 ) {
   'worklet';
 
@@ -21,7 +19,6 @@ export function makeUIMutable<T>(
   let value = initial;
 
   const self = {
-    animatedRef: animatedRef,
     set value(newValue) {
       valueSetter(self, newValue);
     },
@@ -35,9 +32,6 @@ export function makeUIMutable<T>(
      * the mutable by assigning to value prop directly.
      */
     set _value(newValue: T) {
-      if (animatedRef) {
-        scrollTo(animatedRef, 0, Number(newValue), false);
-      }
       value = newValue;
       if (syncDataHolder) {
         _updateDataSynchronously(
@@ -65,8 +59,7 @@ export function makeUIMutable<T>(
 
 export function makeMutable<T>(
   initial: T,
-  oneWayReadsOnly = false,
-  animatedRef?: any
+  oneWayReadsOnly = false
 ): SharedValue<T> {
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
@@ -80,13 +73,12 @@ export function makeMutable<T>(
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      return makeUIMutable(initial, syncDataHolder, animatedRef);
+      return makeUIMutable(initial, syncDataHolder);
     },
   });
   // listeners can only work on JS thread on Web and jest environments
   const listeners = NativeReanimatedModule.native ? undefined : new Map();
   const mutable = {
-    animatedRef: animatedRef,
     set value(newValue) {
       if (NativeReanimatedModule.native) {
         runOnUI(() => {
@@ -108,9 +100,6 @@ export function makeMutable<T>(
         throw new Error(
           'Setting `_value` directly is only possible on the UI runtime'
         );
-      }
-      if (animatedRef) {
-        scrollTo(animatedRef, 0, Number(newValue), false);
       }
       value = newValue;
       listeners!.forEach((listener) => {

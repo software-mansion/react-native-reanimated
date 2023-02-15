@@ -1,21 +1,16 @@
-import { RefObject, useEffect, useRef } from 'react';
-
-import type Animated from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
 import { cancelAnimation } from '../animation';
 import { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
 
 export function useSharedValue<T>(
   init: T,
-  oneWayReadsOnly = false,
-  animatedRef?: RefObject<Animated.ScrollView>
+  oneWayReadsOnly = false
 ): SharedValue<T> {
-  const ref = useRef<SharedValue<T>>(
-    makeMutable(init, oneWayReadsOnly, animatedRef)
-  );
+  const ref = useRef<SharedValue<T>>(makeMutable(init, oneWayReadsOnly));
 
   if (ref.current === null) {
-    ref.current = makeMutable(init, oneWayReadsOnly, animatedRef);
+    ref.current = makeMutable(init, oneWayReadsOnly);
   }
 
   useEffect(() => {

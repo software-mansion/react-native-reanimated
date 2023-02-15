@@ -1,11 +1,13 @@
-import { RefObject, useEffect, useRef } from 'react';
+import { MutableRefObject, RefObject, useEffect, useRef } from 'react';
 
 import type Animated from 'react-native-reanimated';
+import { scrollTo } from '../NativeMethods';
 import { ScrollEvent } from './useAnimatedScrollHandler';
 import { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
 import { useEvent } from './utils';
 import { useSharedValue } from './useSharedValue';
+import { runOnUI } from '../threads';
 
 const scrollEventNames = [
   'onScroll',
@@ -15,10 +17,25 @@ const scrollEventNames = [
   'onMomentumScrollEnd',
 ];
 
+const addListenerToScroll = (
+  offsetRef: MutableRefObject<SharedValue<number>>,
+  animatedRef: any
+) => {
+  runOnUI(() => {
+    'worklet';
+    const offsetRefCurrent = offsetRef.current;
+    offsetRefCurrent.addListener(animatedRef(), (newValue: any) => {
+      scrollTo(animatedRef, 0, Number(newValue), false);
+    });
+  })();
+};
+
 export function useScrollViewOffset(
   aref: RefObject<Animated.ScrollView>
 ): SharedValue<number> {
-  const offsetRef = useRef(useSharedValue(0, false, aref));
+  const offsetRef = useRef(useSharedValue(0));
+
+  addListenerToScroll(offsetRef, aref);
 
   const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
