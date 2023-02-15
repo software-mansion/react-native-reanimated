@@ -63,11 +63,6 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     return (viewToAnimate.getParent() != null);
   }
 
-//  @Override
-//  public void reset() {
-//    super.reset();
-//  }
-
   /**
    * Update layout of given view, via immediate update or animation depending on the current batch
    * layout animation configuration supplied during initialization. Handles create and update
