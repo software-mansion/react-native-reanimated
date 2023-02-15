@@ -539,11 +539,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
     View parent = (View) exitingView.getParent();
-    while (parent != null && !(parent instanceof RootView) && parent instanceof View) {
+    while (parent != null && !(parent instanceof RootView)) {
       View view = parent;
-      if (!(view.getParent() instanceof View)) {
-        return;
-      }
       parent = (View) view.getParent();
       int tag = view.getId();
       Integer ancestorOfCount = mExitingSubviewCountMap.get(tag);
