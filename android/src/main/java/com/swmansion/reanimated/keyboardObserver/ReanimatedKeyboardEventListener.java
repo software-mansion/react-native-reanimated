@@ -12,7 +12,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.PixelUtil;
 import com.swmansion.reanimated.BuildConfig;
-import com.swmansion.reanimated.NativeProxy.KeyboardEventDataUpdater;
+import com.swmansion.reanimated.nativeProxy.KeyboardEventDataUpdater;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;

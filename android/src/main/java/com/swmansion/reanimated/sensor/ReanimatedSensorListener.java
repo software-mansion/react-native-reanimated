@@ -6,11 +6,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.view.Display;
 import android.view.Surface;
-import com.swmansion.reanimated.NativeProxy;
+import com.swmansion.reanimated.nativeProxy.SensorSetter;
 
 public class ReanimatedSensorListener implements SensorEventListener {
 
-  private NativeProxy.SensorSetter setter;
+  private SensorSetter setter;
   private double lastRead = (double) System.currentTimeMillis();
   private final double interval;
 
@@ -20,7 +20,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
 
   private final Display display;
 
-  ReanimatedSensorListener(NativeProxy.SensorSetter setter, double interval, Display display) {
+  ReanimatedSensorListener(SensorSetter setter, double interval, Display display) {
     this.setter = setter;
     this.interval = interval;
     this.display = display;
