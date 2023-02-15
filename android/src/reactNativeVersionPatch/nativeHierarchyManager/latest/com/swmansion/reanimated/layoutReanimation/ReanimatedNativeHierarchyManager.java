@@ -256,7 +256,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
           && mReaLayoutAnimator != null) {
         boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
         if (!hasHeader || !container.isLayoutRequested()) {
-          mReaLayoutAnimator.getAnimationsManager().viewsDidLayout();
+          mReaLayoutAnimator.getAnimationsManager().screenDidLayout();
         }
       }
       View view = resolveView(tag);
