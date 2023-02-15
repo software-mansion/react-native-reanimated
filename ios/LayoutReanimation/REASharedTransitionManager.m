@@ -23,7 +23,7 @@
   NSMutableArray<REASharedElement *> *_sharedElements;
   REAAnimationsManager *_animationManager;
   NSMutableArray<UIView *> *_removedViews;
-  NSMutableArray<UIView *> *_viewsWithCanceledAnimation;
+  NSMutableSet<UIView *> *_viewsWithCanceledAnimation;
   NSMutableArray<UIView *> *_disableCleaningForView;
   NSMutableArray<UIView *> *_layoutedSharedViews;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
@@ -48,7 +48,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _sharedElements = [NSMutableArray new];
     _animationManager = animationManager;
     _sharedTransitionManager = self;
-    _viewsWithCanceledAnimation = [NSMutableArray new];
+    _viewsWithCanceledAnimation = [NSMutableSet new];
     _disableCleaningForView = [NSMutableArray new];
     _layoutedSharedViews = [NSMutableArray new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
@@ -107,43 +107,47 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)maybeRestartAnimationWithNewLayout
 {
-  if ([_layoutedSharedViews count] > 0 && [_currentSharedTransitionViews count] > 0) {
-    NSMutableArray<REASharedElement *> *sharedElementToRestart = [NSMutableArray new];
-    for (UIView *view in _layoutedSharedViews) {
-      if (_currentSharedTransitionViews[view.reactTag]) {
-        for (REASharedElement *sharedElement in _sharedElements) {
-          if (sharedElement.targetView == view) {
-            UIView *sourceView = sharedElement.sourceView;
-            UIView *targetView = sharedElement.targetView;
-
-            REASnapshot *newSourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:sourceView];
-            REASnapshot *currentTargetViewSnapshot = _snapshotRegistry[targetView.reactTag];
-            REAFrame *frameData = _layoutedSharedViewsFrame[targetView.reactTag];
-            float currentOriginX = [currentTargetViewSnapshot.values[@"originX"] floatValue];
-            float currentOriginY = [currentTargetViewSnapshot.values[@"originY"] floatValue];
-            float currentOriginXByParent = [currentTargetViewSnapshot.values[@"originXByParent"] floatValue];
-            float currentOriginYByParent = [currentTargetViewSnapshot.values[@"originYByParent"] floatValue];
-            NSNumber *newOriginX = @(currentOriginX - currentOriginXByParent + frameData.x);
-            NSNumber *newOriginY = @(currentOriginY - currentOriginYByParent + frameData.y);
-            currentTargetViewSnapshot.values[@"width"] = @(frameData.width);
-            currentTargetViewSnapshot.values[@"height"] = @(frameData.height);
-            currentTargetViewSnapshot.values[@"originX"] = newOriginX;
-            currentTargetViewSnapshot.values[@"originY"] = newOriginY;
-            currentTargetViewSnapshot.values[@"globalOriginX"] = newOriginX;
-            currentTargetViewSnapshot.values[@"globalOriginY"] = newOriginY;
-            currentTargetViewSnapshot.values[@"originXByParent"] = @(frameData.x);
-            currentTargetViewSnapshot.values[@"originYByParent"] = @(frameData.y);
-            sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
-
-            [_disableCleaningForView addObject:sourceView];
-            [_disableCleaningForView addObject:targetView];
-            [sharedElementToRestart addObject:sharedElement];
-          }
-        }
-        [self startSharedTransition:sharedElementToRestart];
+  if (!([_layoutedSharedViews count] > 0 && [_currentSharedTransitionViews count] > 0)) {
+    return;
+  }
+  NSMutableArray<REASharedElement *> *sharedElementToRestart = [NSMutableArray new];
+  for (UIView *view in _layoutedSharedViews) {
+    if (!_currentSharedTransitionViews[view.reactTag]) {
+      continue;
+    }
+    for (REASharedElement *sharedElement in _sharedElements) {
+      if (sharedElement.targetView != view) {
+        continue;
       }
+      UIView *sourceView = sharedElement.sourceView;
+      UIView *targetView = sharedElement.targetView;
+
+      REASnapshot *newSourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:sourceView];
+      REASnapshot *currentTargetViewSnapshot = _snapshotRegistry[targetView.reactTag];
+      REAFrame *frameData = _layoutedSharedViewsFrame[targetView.reactTag];
+      float currentOriginX = [currentTargetViewSnapshot.values[@"originX"] floatValue];
+      float currentOriginY = [currentTargetViewSnapshot.values[@"originY"] floatValue];
+      float currentOriginXByParent = [currentTargetViewSnapshot.values[@"originXByParent"] floatValue];
+      float currentOriginYByParent = [currentTargetViewSnapshot.values[@"originYByParent"] floatValue];
+      NSNumber *newOriginX = @(currentOriginX - currentOriginXByParent + frameData.x);
+      NSNumber *newOriginY = @(currentOriginY - currentOriginYByParent + frameData.y);
+      currentTargetViewSnapshot.values[@"width"] = @(frameData.width);
+      currentTargetViewSnapshot.values[@"height"] = @(frameData.height);
+      currentTargetViewSnapshot.values[@"originX"] = newOriginX;
+      currentTargetViewSnapshot.values[@"originY"] = newOriginY;
+      currentTargetViewSnapshot.values[@"globalOriginX"] = newOriginX;
+      currentTargetViewSnapshot.values[@"globalOriginY"] = newOriginY;
+      currentTargetViewSnapshot.values[@"originXByParent"] = @(frameData.x);
+      currentTargetViewSnapshot.values[@"originYByParent"] = @(frameData.y);
+      sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
+
+      [_disableCleaningForView addObject:sourceView];
+      [_disableCleaningForView addObject:targetView];
+      [sharedElementToRestart addObject:sharedElement];
+      [sharedElementToRestart addObject:sharedElement];
     }
   }
+  [self startSharedTransition:sharedElementToRestart];
 }
 
 - (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views
@@ -263,23 +267,23 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                                                 targetViewSnapshot:targetViewSnapshot];
     [sharedElements addObject:sharedElement];
   }
-
-  for (NSNumber *viewTag in _currentSharedTransitionViews) {
-    UIView *view = _currentSharedTransitionViews[viewTag];
-    if ([newTransitionViews containsObject:view]) {
-      [_disableCleaningForView addObject:view];
-    } else {
-      [_viewsWithCanceledAnimation addObject:view];
+  if ([newTransitionViews count] > 0) {
+    for (NSNumber *viewTag in _currentSharedTransitionViews) {
+      UIView *view = _currentSharedTransitionViews[viewTag];
+      if ([newTransitionViews containsObject:view]) {
+        [_disableCleaningForView addObject:view];
+      } else {
+        [_viewsWithCanceledAnimation addObject:view];
+      }
     }
-  }
-  [_currentSharedTransitionViews removeAllObjects];
-  for (UIView *view in newTransitionViews) {
-    _currentSharedTransitionViews[view.reactTag] = view;
-  }
-
-  for (UIView *view in _viewsWithCanceledAnimation) {
-    [self cancelAnimation:view.reactTag];
-    [self finishSharedAnimation:view];
+    [_currentSharedTransitionViews removeAllObjects];
+    for (UIView *view in newTransitionViews) {
+      _currentSharedTransitionViews[view.reactTag] = view;
+    }
+    for (UIView *view in [_viewsWithCanceledAnimation copy]) {
+      [self cancelAnimation:view.reactTag];
+      [self finishSharedAnimation:view];
+    }
   }
 
   _sharedElements = sharedElements;

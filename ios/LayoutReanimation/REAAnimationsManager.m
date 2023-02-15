@@ -522,11 +522,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 
   if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"entering"]) {
-    [_sharedTransitionManager notifyAboutNewView:view];
-  }
-
-  if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"layout"]) {
-    [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
+    if ([type isEqual:@"entering"]) {
+      [_sharedTransitionManager notifyAboutNewView:view];
+    } else if ([type isEqual:@"layout"]) {
+      [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
+    }
   }
 }
 
@@ -548,9 +548,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type
 {
-  if (_hasAnimationForTag == nil) {
-    return NO;
-  }
   return _hasAnimationForTag(tag, type);
 }
 
