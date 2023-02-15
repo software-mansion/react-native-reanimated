@@ -30,9 +30,9 @@ public class SharedTransitionManager {
   private final Map<Integer, View> mCurrentSharedTransitionViews = new HashMap<>();
   private View mTransitionContainer;
   private final List<View> mRemovedSharedViews = new ArrayList<>();
-  private final List<Integer> mDisableCleaningForView = new ArrayList<>();
+  private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
-  private final List<View> mViewsWithCanceledAnimation = new ArrayList<>();
+  private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
@@ -166,8 +166,8 @@ public class SharedTransitionManager {
         sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
         sharedElement.targetViewSnapshot = currentTargetViewSnapshot;
 
-        mDisableCleaningForView.add(sourceView.getId());
-        mDisableCleaningForView.add(targetView.getId());
+        disableCleaningForViewTag(sourceView.getId());
+        disableCleaningForViewTag(targetView.getId());
       }
     }
     startSharedTransition(sharedElementsToRestart);
@@ -275,7 +275,7 @@ public class SharedTransitionManager {
         }
       }
 
-      Snapshot sourceViewSnapshot = null, targetViewSnapshot;
+      Snapshot sourceViewSnapshot = null;
       if (addedNewScreen) {
         if (isSourceViewInTransition) {
           sourceViewSnapshot = new Snapshot(viewSource);
@@ -286,11 +286,10 @@ public class SharedTransitionManager {
       } else if (isSourceViewInTransition) {
         makeSnapshot(viewSource);
       }
-
       if (sourceViewSnapshot == null) {
         sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
       }
-      targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
+      Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
 
       newTransitionViews.add(viewSource);
       newTransitionViews.add(viewTarget);
@@ -303,16 +302,16 @@ public class SharedTransitionManager {
     if (!newTransitionViews.isEmpty()) {
       for (View view : mCurrentSharedTransitionViews.values()) {
         if (newTransitionViews.contains(view)) {
-          mDisableCleaningForView.add(view.getId());
+          disableCleaningForViewTag(view.getId());
         } else {
-          mViewsWithCanceledAnimation.add(view);
+          mViewsWithCanceledAnimation.put(view.getId(), view);
         }
       }
       mCurrentSharedTransitionViews.clear();
       for (View view : newTransitionViews) {
         mCurrentSharedTransitionViews.put(view.getId(), view);
       }
-      List<View> viewsWithCanceledAnimation = new ArrayList<>(mViewsWithCanceledAnimation);
+      List<View> viewsWithCanceledAnimation = new ArrayList<>(mViewsWithCanceledAnimation.values());
       for (View view : viewsWithCanceledAnimation) {
         cancelAnimation(view);
         finishSharedAnimation(view.getId());
@@ -391,24 +390,22 @@ public class SharedTransitionManager {
   }
 
   protected void finishSharedAnimation(int tag) {
-    if (mDisableCleaningForView.contains(tag)) {
-      mDisableCleaningForView.remove(Integer.valueOf(tag));
+    if (mDisableCleaningForViewTag.containsKey(tag)) {
+      enableCleaningForViewTag(tag);
       return;
     }
     View view = mCurrentSharedTransitionViews.get(tag);
     if (view == null) {
-      for (View viewWithCanceledAnimation : mViewsWithCanceledAnimation) {
-        if (viewWithCanceledAnimation.getId() == tag) {
-          view = viewWithCanceledAnimation;
-          break;
-        }
+      view = mViewsWithCanceledAnimation.get(tag);
+      if (view != null) {
+        mViewsWithCanceledAnimation.remove(view.getId());
       }
-      mViewsWithCanceledAnimation.remove(view);
     }
     if (view != null) {
+      int viewTag = view.getId();
       ((ViewGroup) mTransitionContainer).removeView(view);
-      View parentView = mSharedTransitionParent.get(view.getId());
-      int childIndex = mSharedTransitionInParentIndex.get(view.getId());
+      View parentView = mSharedTransitionParent.get(viewTag);
+      int childIndex = mSharedTransitionInParentIndex.get(viewTag);
       ViewGroup parentViewGroup = ((ViewGroup) parentView);
       if (childIndex <= parentViewGroup.getChildCount()) {
         parentViewGroup.addView(view, childIndex);
@@ -559,5 +556,26 @@ public class SharedTransitionManager {
   private void cancelAnimation(View view) {
     int viewTag = view.getId();
     mNativeMethodsHolder.cancelAnimation(viewTag, "sharedTransition", true, true);
+  }
+
+  private void disableCleaningForViewTag(int viewTag) {
+    Integer counter = mDisableCleaningForViewTag.get(viewTag);
+    if (counter != null) {
+      mDisableCleaningForViewTag.put(viewTag, counter + 1);
+    } else {
+      mDisableCleaningForViewTag.put(viewTag, 1);
+    }
+  }
+
+  private void enableCleaningForViewTag(int viewTag) {
+    Integer counter = mDisableCleaningForViewTag.get(viewTag);
+    if (counter == null) {
+      return;
+    }
+    if (counter - 1 > 0) {
+      mDisableCleaningForViewTag.put(viewTag, counter - 1);
+    } else {
+      mDisableCleaningForViewTag.remove(viewTag);
+    }
   }
 }
