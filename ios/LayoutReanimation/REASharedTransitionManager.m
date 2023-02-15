@@ -1,3 +1,4 @@
+#import <RNReanimated/REAFrame.h>
 #import <RNReanimated/REASharedElement.h>
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
@@ -8,26 +9,6 @@
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSScreenStack.h>
 #endif
-
-@interface FrameObject : NSObject
-@property float x;
-@property float y;
-@property float width;
-@property float height;
-- (instancetype)initWithX:(float)x y:(float)y width:(float)width height:(float)height;
-@end
-
-@implementation FrameObject
-- (instancetype)initWithX:(float)x y:(float)y width:(float)width height:(float)height
-{
-  self = [super init];
-  _x = x;
-  _y = y;
-  _width = width;
-  _height = height;
-  return self;
-}
-@end
 
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
@@ -45,7 +26,7 @@
   NSMutableArray<UIView *> *_viewsWithCanceledAnimation;
   NSMutableArray<UIView *> *_disableCleaningForView;
   NSMutableArray<UIView *> *_layoutedSharedViews;
-  NSMutableDictionary<NSNumber *, FrameObject *> *_layoutedSharedViewsFrame;
+  NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
 }
 
 /*
@@ -104,7 +85,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   float y = frame.origin.y;
   float width = frame.size.width;
   float height = frame.size.height;
-  _layoutedSharedViewsFrame[view.reactTag] = [[FrameObject alloc] initWithX:x y:y width:width height:height];
+  _layoutedSharedViewsFrame[view.reactTag] = [[REAFrame alloc] initWithX:x y:y width:width height:height];
 }
 
 - (void)viewsDidLayout
@@ -137,7 +118,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
             REASnapshot *newSourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:sourceView];
             REASnapshot *currentTargetViewSnapshot = _snapshotRegistry[targetView.reactTag];
-            FrameObject *frameData = _layoutedSharedViewsFrame[targetView.reactTag];
+            REAFrame *frameData = _layoutedSharedViewsFrame[targetView.reactTag];
             float currentOriginX = [currentTargetViewSnapshot.values[@"originX"] floatValue];
             float currentOriginY = [currentTargetViewSnapshot.values[@"originY"] floatValue];
             float currentOriginXByParent = [currentTargetViewSnapshot.values[@"originXByParent"] floatValue];
