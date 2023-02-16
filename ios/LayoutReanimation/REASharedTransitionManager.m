@@ -498,7 +498,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                                  forTag:view.reactTag
                                      isSharedTransition:YES];
     viewSourcePreviousSnapshot.values[@"originY"] = originY;
-    if ([_shouldBeHidden containsObject:viewTag]) {
+    if ([_shouldBeHidden containsObject:view.reactTag]) {
       view.hidden = YES;
     }
     [_currentSharedTransitionViews removeObjectForKey:view.reactTag];

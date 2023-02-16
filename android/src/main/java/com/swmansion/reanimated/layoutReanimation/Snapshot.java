@@ -16,24 +16,24 @@ public class Snapshot {
   public static final String ORIGIN_X = "originX";
   public static final String ORIGIN_Y = "originY";
   public static final String TRANSFORM_MATRIX = "transformMatrix";
-  public static final String ABSOLUTE_ORIGIN_X = "globalOriginX";
-  public static final String ABSOLUTE_ORIGIN_Y = "globalOriginY";
+  public static final String GLOBAL_ORIGIN_X = "globalOriginX";
+  public static final String GLOBAL_ORIGIN_Y = "globalOriginY";
 
   public static final String CURRENT_WIDTH = "currentWidth";
   public static final String CURRENT_HEIGHT = "currentHeight";
   public static final String CURRENT_ORIGIN_X = "currentOriginX";
   public static final String CURRENT_ORIGIN_Y = "currentOriginY";
   public static final String CURRENT_TRANSFORM_MATRIX = "currentTransformMatrix";
-  public static final String CURRENT_ABSOLUTE_ORIGIN_X = "currentGlobalOriginX";
-  public static final String CURRENT_ABSOLUTE_ORIGIN_Y = "currentGlobalOriginY";
+  public static final String CURRENT_GLOBAL_ORIGIN_X = "currentGlobalOriginX";
+  public static final String CURRENT_GLOBAL_ORIGIN_Y = "currentGlobalOriginY";
 
   public static final String TARGET_WIDTH = "targetWidth";
   public static final String TARGET_HEIGHT = "targetHeight";
   public static final String TARGET_ORIGIN_X = "targetOriginX";
   public static final String TARGET_ORIGIN_Y = "targetOriginY";
   public static final String TARGET_TRANSFORM_MATRIX = "targetTransformMatrix";
-  public static final String TARGET_ABSOLUTE_ORIGIN_X = "targetGlobalOriginX";
-  public static final String TARGET_ABSOLUTE_ORIGIN_Y = "targetGlobalOriginY";
+  public static final String TARGET_GLOBAL_ORIGIN_X = "targetGlobalOriginX";
+  public static final String TARGET_GLOBAL_ORIGIN_Y = "targetGlobalOriginY";
 
   public View view;
   public ViewGroup parent;
@@ -140,8 +140,8 @@ public class Snapshot {
   private void addTargetConfig(HashMap<String, Object> data) {
     data.put(Snapshot.TARGET_ORIGIN_Y, originY);
     data.put(Snapshot.TARGET_ORIGIN_X, originX);
-    data.put(Snapshot.TARGET_ABSOLUTE_ORIGIN_Y, globalOriginY);
-    data.put(Snapshot.TARGET_ABSOLUTE_ORIGIN_X, globalOriginX);
+    data.put(Snapshot.TARGET_GLOBAL_ORIGIN_Y, globalOriginY);
+    data.put(Snapshot.TARGET_GLOBAL_ORIGIN_X, globalOriginX);
     data.put(Snapshot.TARGET_HEIGHT, height);
     data.put(Snapshot.TARGET_WIDTH, width);
     data.put(Snapshot.TARGET_TRANSFORM_MATRIX, transformMatrix);
@@ -150,21 +150,11 @@ public class Snapshot {
   private void addCurrentConfig(HashMap<String, Object> data) {
     data.put(Snapshot.CURRENT_ORIGIN_Y, originY);
     data.put(Snapshot.CURRENT_ORIGIN_X, originX);
-    data.put(Snapshot.CURRENT_ABSOLUTE_ORIGIN_Y, globalOriginY);
-    data.put(Snapshot.CURRENT_ABSOLUTE_ORIGIN_X, globalOriginX);
+    data.put(Snapshot.CURRENT_GLOBAL_ORIGIN_Y, globalOriginY);
+    data.put(Snapshot.CURRENT_GLOBAL_ORIGIN_X, globalOriginX);
     data.put(Snapshot.CURRENT_HEIGHT, height);
     data.put(Snapshot.CURRENT_WIDTH, width);
     data.put(Snapshot.CURRENT_TRANSFORM_MATRIX, transformMatrix);
-  }
-
-  private void addBasicConfig(HashMap<String, Object> data) {
-    data.put(Snapshot.ORIGIN_Y, originY);
-    data.put(Snapshot.ORIGIN_X, originX);
-    data.put(Snapshot.ABSOLUTE_ORIGIN_Y, globalOriginY);
-    data.put(Snapshot.ABSOLUTE_ORIGIN_X, globalOriginX);
-    data.put(Snapshot.HEIGHT, height);
-    data.put(Snapshot.WIDTH, width);
-    data.put(Snapshot.TRANSFORM_MATRIX, transformMatrix);
   }
 
   private void addBasicConfig(HashMap<String, Object> data) {
@@ -174,6 +164,7 @@ public class Snapshot {
     data.put(Snapshot.GLOBAL_ORIGIN_X, globalOriginX);
     data.put(Snapshot.HEIGHT, height);
     data.put(Snapshot.WIDTH, width);
+    data.put(Snapshot.TRANSFORM_MATRIX, transformMatrix);
   }
 
   public HashMap<String, Object> toTargetMap() {

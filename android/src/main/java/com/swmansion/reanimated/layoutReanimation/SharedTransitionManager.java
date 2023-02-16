@@ -75,7 +75,7 @@ public class SharedTransitionManager {
 
   private void restoreVisibility() {
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
-            mAnimationsManager.getReanimatedNativeHierarchyManager();
+        mAnimationsManager.getReanimatedNativeHierarchyManager();
     for (int viewTag : mShouldBeHidden) {
       View view = reanimatedNativeHierarchyManager.resolveView(viewTag);
       if (view != null) {
@@ -271,7 +271,7 @@ public class SharedTransitionManager {
     }
   }
 
-  private void onViewTransition(View view, Snapshot before, Snapshot after) {
+  private void startSharedAnimationForView(View view, Snapshot before, Snapshot after) {
     HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
 
