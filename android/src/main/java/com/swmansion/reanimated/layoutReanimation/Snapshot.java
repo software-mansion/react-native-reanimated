@@ -89,8 +89,8 @@ public class Snapshot {
     originY = location[1];
     width = view.getWidth();
     height = view.getHeight();
-    originYByParent = view.getTop();
     originXByParent = view.getLeft();
+    originYByParent = view.getTop();
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {

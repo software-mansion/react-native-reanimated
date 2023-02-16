@@ -392,9 +392,11 @@ void NativeProxy::installJSIBindings(
           jboolean cancelled,
           jboolean removeView) {
         if (auto reaModule = weakModule.lock()) {
-          auto &rt = *wrt.lock();
-          reaModule->layoutAnimationsManager().cancelLayoutAnimation(
-              rt, tag, type->toStdString(), cancelled, removeView);
+          if (auto runtime = wrt.lock()) {
+            jsi::Runtime &rt = *runtime;
+            reaModule->layoutAnimationsManager().cancelLayoutAnimation(
+                rt, tag, type->toStdString(), cancelled, removeView);
+          }
         }
       });
 

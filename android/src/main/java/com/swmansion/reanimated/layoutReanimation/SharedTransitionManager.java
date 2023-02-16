@@ -412,7 +412,7 @@ public class SharedTransitionManager {
       } else {
         parentViewGroup.addView(view);
       }
-      Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(view.getId());
+      Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(viewTag);
       if (viewSourcePreviousSnapshot != null) {
         int originY = viewSourcePreviousSnapshot.originY;
         if (findStack(view) == null) {
@@ -424,12 +424,12 @@ public class SharedTransitionManager {
           Object value = snapshotMap.get(key);
           preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
         }
-        mAnimationsManager.progressLayoutAnimation(view.getId(), preparedValues, true);
+        mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
         viewSourcePreviousSnapshot.originY = originY;
       }
-      mCurrentSharedTransitionViews.remove(view.getId());
-      mSharedTransitionParent.remove(view.getId());
-      mSharedTransitionInParentIndex.remove(view.getId());
+      mCurrentSharedTransitionViews.remove(viewTag);
+      mSharedTransitionParent.remove(viewTag);
+      mSharedTransitionInParentIndex.remove(viewTag);
     }
     if (mCurrentSharedTransitionViews.isEmpty()) {
       if (mTransitionContainer != null) {
@@ -572,10 +572,10 @@ public class SharedTransitionManager {
     if (counter == null) {
       return;
     }
-    if (counter - 1 > 0) {
-      mDisableCleaningForViewTag.put(viewTag, counter - 1);
-    } else {
+    if (counter == 1) {
       mDisableCleaningForViewTag.remove(viewTag);
+    } else {
+      mDisableCleaningForViewTag.put(viewTag, counter - 1);
     }
   }
 }
