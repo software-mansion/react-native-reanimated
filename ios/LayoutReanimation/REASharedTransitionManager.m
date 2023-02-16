@@ -27,6 +27,7 @@
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
+  BOOL _isAsyncSharedTransitionConfigured;
 }
 
 /*
@@ -52,6 +53,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _disableCleaningForView = [NSMutableDictionary new];
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
+    _isAsyncSharedTransitionConfigured = NO;
     [self swizzleScreensMethods];
   }
   return self;
@@ -102,6 +104,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([views count] > 0) {
     NSArray *sharedViews = [self sortViewsByTags:views];
     _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
+    _isAsyncSharedTransitionConfigured = YES;
   }
 }
 
@@ -471,7 +474,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)runAsyncSharedTransition
 {
-  if ([_sharedElements count] == 0) {
+  if ([_sharedElements count] == 0 || !_isAsyncSharedTransitionConfigured) {
     return;
   }
   for (REASharedElement *sharedElement in _sharedElements) {
@@ -485,6 +488,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self reparentSharedViewsForCurrentTransition:_sharedElements];
   [self startSharedTransition:_sharedElements];
   [_addedSharedViews removeAllObjects];
+  _isAsyncSharedTransitionConfigured = NO;
 }
 
 - (void)configureTransitionContainer
@@ -557,19 +561,23 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [view removeFromSuperview];
     UIView *parent = _sharedTransitionParent[viewTag];
     int childIndex = [_sharedTransitionInParentIndex[viewTag] intValue];
-    [parent insertSubview:view atIndex:childIndex];
-    REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[viewTag];
-    BOOL isScreenDetached = [self getScreenForView:view].superview == nil;
-    NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
-    if (isScreenDetached) {
-      float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
-      float headerHeight = [viewSourcePreviousSnapshot.values[@"headerHeight"] floatValue];
-      viewSourcePreviousSnapshot.values[@"originY"] = @(originYByParent + headerHeight);
+    UIView *screen = [self getScreenForView:parent];
+    bool isScreenInNativeTree = screen.superview != nil;
+    bool isScreenInReactTree = screen.reactSuperview != nil;
+    if (isScreenInReactTree) {
+      [parent insertSubview:view atIndex:childIndex];
+      REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[viewTag];
+      NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
+      if (!isScreenInNativeTree) {
+        float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
+        float headerHeight = [viewSourcePreviousSnapshot.values[@"headerHeight"] floatValue];
+        viewSourcePreviousSnapshot.values[@"originY"] = @(originYByParent + headerHeight);
+      }
+      [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
+                                                   forTag:viewTag
+                                       isSharedTransition:YES];
+      viewSourcePreviousSnapshot.values[@"originY"] = originY;
     }
-    [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
-                                                 forTag:viewTag
-                                     isSharedTransition:YES];
-    viewSourcePreviousSnapshot.values[@"originY"] = originY;
     [_currentSharedTransitionViews removeObjectForKey:viewTag];
     [_sharedTransitionParent removeObjectForKey:viewTag];
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];

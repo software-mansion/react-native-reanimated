@@ -548,6 +548,10 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type
 {
+  if (!_hasAnimationForTag) {
+    // It can happen during reload.
+    return NO;
+  }
   return _hasAnimationForTag(tag, type);
 }
 
