@@ -152,6 +152,23 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  it('transforms nested functions correctly', () => {
+    const input = `
+      const x = 5;
+
+      function f() {
+        'worklet';
+        function inner() {
+          return x;
+        }
+        return inner();
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
   it("doesn't capture globals", () => {
     const input = `
       function f() {

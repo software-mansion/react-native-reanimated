@@ -261,6 +261,34 @@ function Box() {
 }"
 `;
 
+exports[`babel plugin transforms nested functions correctly 1`] = `
+"var x = 5;
+var _worklet_1646817029123_init_data = {
+  code: \\"function f(){const{x}=this._closure;function inner(){return x;}return inner();}\\",
+  location: \\"${ process.cwd() }/jest tests fixture\\"
+};
+
+var f = function () {
+  var _e = [new Error(), -2, -20];
+
+  var _f = function _f() {
+    function inner() {
+      return x;
+    }
+
+    return inner();
+  };
+
+  _f._closure = {
+    x: x
+  };
+  _f.__initData = _worklet_1646817029123_init_data;
+  _f.__workletHash = 1646817029123;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
 exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `
 "var _worklet_3161057533258_init_data = {
   code: \\"function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}\\",
