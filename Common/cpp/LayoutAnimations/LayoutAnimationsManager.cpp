@@ -100,7 +100,6 @@ void LayoutAnimationsManager::cancelLayoutAnimation(
     const std::string &type,
     bool cancelled = true,
     bool removeView = true) {
-  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
@@ -108,7 +107,11 @@ void LayoutAnimationsManager::cancelLayoutAnimation(
   jsi::Function cancelLayoutAnimation =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
           rt, "stop");
-  auto config = sharedTransitionAnimations_[tag];
+  std::shared_ptr<Shareable> config;
+  {
+    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+    config = sharedTransitionAnimations_[tag];
+  }
   if (config != nullptr) {
     cancelLayoutAnimation.call(
         rt, jsi::Value(tag), config->getJSValue(rt), cancelled, removeView);
