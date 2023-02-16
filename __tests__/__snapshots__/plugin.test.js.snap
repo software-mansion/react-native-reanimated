@@ -53,6 +53,14 @@ var f = function () {
 }();"
 `;
 
+exports[`babel plugin doesn't show a warning if user writes something like style={styles.value} 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: styles.value
+  });
+}"
+`;
+
 exports[`babel plugin doesn't transform standard callback functions 1`] = `
 "var foo = Something.Tap().onEnd(function (_event, _success) {
   console.log('onEnd');
@@ -79,6 +87,47 @@ var foo = function () {
   _f.__stackDetails = _e;
   return _f;
 }();"
+`;
+
+exports[`babel plugin shows a warning if user uses .value inside inline style 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: {
+      width: function () {
+        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by \`.value\`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
+        return sharedValue.value;
+      }()
+    }
+  });
+}"
+`;
+
+exports[`babel plugin shows a warning if user uses .value inside inline style, style array 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: [style, {
+      width: function () {
+        console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by \`.value\`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
+        return sharedValue.value;
+      }()
+    }]
+  });
+}"
+`;
+
+exports[`babel plugin shows a warning if user uses .value inside inline style, transforms 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: {
+      transform: [{
+        translateX: function () {
+          console.warn(\\"It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by \`.value\`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animations#animations-in-inline-styles\\");
+          return sharedValue.value;
+        }()
+      }]
+    }
+  });
+}"
 `;
 
 exports[`babel plugin supports SequenceExpression 1`] = `
