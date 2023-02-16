@@ -154,8 +154,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       makeShareableClone,
       updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
-      platformDepMethodsHolder.registerSensor,
-      platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation);
@@ -265,11 +263,9 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       } else {
         shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
       }
-#ifdef RCT_NEW_ARCH_ENABLED
-    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
-      shareable = std::make_shared<ShareableShadowNodeWrapper>(
-          runtimeHelper, rt, object);
-#endif
+    } else if (object.isHostObject(rt)) {
+      shareable = std::make_shared<ShareableHostObject>(
+          runtimeHelper, rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
@@ -390,19 +386,10 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 }
 
 void NativeReanimatedModule::onEvent(
-    std::string eventName,
-#ifdef RCT_NEW_ARCH_ENABLED
-    jsi::Value &&payload
-#else
-    std::string eventAsString
-#endif
-    /**/) {
+    const std::string &eventName,
+    const jsi::Value &payload) {
   try {
-#ifdef RCT_NEW_ARCH_ENABLED
     eventHandlerRegistry->processEvent(*runtime, eventName, payload);
-#else
-    eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
-#endif
   } catch (std::exception &e) {
     std::string str = e.what();
     this->errorHandler->setError(str);
@@ -448,15 +435,25 @@ jsi::Value NativeReanimatedModule::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
     const jsi::Value &interval,
+    const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule.registerSensor(
-      rt, runtimeHelper, sensorType, interval, sensorDataHandler);
+      rt,
+      runtimeHelper,
+      sensorType,
+      interval,
+      iosReferenceFrame,
+      sensorDataHandler);
 }
 
 void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
+}
+
+void NativeReanimatedModule::cleanupSensors() {
+  animatedSensorModule.unregisterAllSensors();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -475,17 +472,18 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   }
   return false;
 }
+#endif // RCT_NEW_ARCH_ENABLED
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
-    jsi::Value &&payload,
+    const jsi::Value &payload,
     double currentTime) {
   jsi::Runtime &rt = *runtime.get();
   jsi::Object global = rt.global();
   jsi::String eventTimestampName =
       jsi::String::createFromAscii(rt, "_eventTimestamp");
   global.setProperty(rt, eventTimestampName, currentTime);
-  onEvent(eventName, std::move(payload));
+  onEvent(eventName, payload);
   global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
 
   // TODO: return true if Reanimated successfully handled the event
@@ -493,6 +491,7 @@ bool NativeReanimatedModule::handleEvent(
   return false;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
@@ -593,9 +592,8 @@ void NativeReanimatedModule::performOperations() {
 
 void NativeReanimatedModule::removeShadowNodeFromRegistry(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  tagsToRemove_.push_back(shadowNode->getTag());
+    const jsi::Value &tag) {
+  tagsToRemove_.push_back(tag.asNumber());
 }
 
 void NativeReanimatedModule::dispatchCommand(

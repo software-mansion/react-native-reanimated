@@ -59,8 +59,8 @@ public class Snapshot {
               Snapshot.TARGET_HEIGHT,
               Snapshot.TARGET_ORIGIN_X,
               Snapshot.TARGET_ORIGIN_Y,
-              Snapshot.TARGET_ABSOLUTE_ORIGIN_X,
-              Snapshot.TARGET_ABSOLUTE_ORIGIN_Y));
+              Snapshot.TARGET_GLOBAL_ORIGIN_X,
+              Snapshot.TARGET_GLOBAL_ORIGIN_Y));
   public static ArrayList<String> currentKeysToTransform =
       new ArrayList<>(
           Arrays.asList(
@@ -68,8 +68,8 @@ public class Snapshot {
               Snapshot.CURRENT_HEIGHT,
               Snapshot.CURRENT_ORIGIN_X,
               Snapshot.CURRENT_ORIGIN_Y,
-              Snapshot.CURRENT_ABSOLUTE_ORIGIN_X,
-              Snapshot.CURRENT_ABSOLUTE_ORIGIN_Y));
+              Snapshot.CURRENT_GLOBAL_ORIGIN_X,
+              Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
 
   Snapshot(View view, NativeViewHierarchyManager viewHierarchyManager) {
     parent = (ViewGroup) view.getParent();
@@ -165,6 +165,15 @@ public class Snapshot {
     data.put(Snapshot.HEIGHT, height);
     data.put(Snapshot.WIDTH, width);
     data.put(Snapshot.TRANSFORM_MATRIX, transformMatrix);
+  }
+
+  private void addBasicConfig(HashMap<String, Object> data) {
+    data.put(Snapshot.ORIGIN_Y, originY);
+    data.put(Snapshot.ORIGIN_X, originX);
+    data.put(Snapshot.GLOBAL_ORIGIN_Y, globalOriginY);
+    data.put(Snapshot.GLOBAL_ORIGIN_X, globalOriginX);
+    data.put(Snapshot.HEIGHT, height);
+    data.put(Snapshot.WIDTH, width);
   }
 
   public HashMap<String, Object> toTargetMap() {

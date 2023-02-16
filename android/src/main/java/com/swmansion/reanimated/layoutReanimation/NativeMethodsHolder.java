@@ -11,5 +11,5 @@ public interface NativeMethodsHolder {
 
   boolean isLayoutAnimationEnabled();
 
-  int findSiblingForSharedView(int tag);
+  int findPrecedingViewTagForTransition(int tag);
 }

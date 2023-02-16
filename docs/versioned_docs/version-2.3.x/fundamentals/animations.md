@@ -124,7 +124,7 @@ Below we discuss some of the most common configuration options of the animation 
 Both animation helper methods share a similar structure.
 They take target value as the first parameter, configuration object as the second, and finally a callback method as the last parameter.
 Starting from the end, the callback is a method that runs when the animation is finished, or when the animation is interrupted/cancelled.
-Thr callback is run with a single argument – a boolean indicating whether the animation has finished executing without cancellation:
+The callback is run with a single argument – a boolean indicating whether the animation has finished executing without cancellation:
 
 ```js
 <Button

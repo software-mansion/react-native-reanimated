@@ -255,11 +255,27 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (container != null
           && viewManagerName.equals("RNSScreen")
           && mReaLayoutAnimator != null) {
-        mReaLayoutAnimator.getAnimationsManager().viewsDidLayout();
+        boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
+        if (!hasHeader || !container.isLayoutRequested()) {
+          mReaLayoutAnimator.getAnimationsManager().viewsDidLayout();
+        }
       }
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
+    }
+  }
+
+  private boolean checkIfTopScreenHasHeader(ViewGroup screenStack) {
+    try {
+      ViewGroup fragment = (ViewGroup)screenStack.getChildAt(0);
+      ViewGroup screen = (ViewGroup)fragment.getChildAt(0);
+      View headerConfig = screen.getChildAt(0);
+      Field field = headerConfig.getClass().getDeclaredField("mIsHidden");
+      field.setAccessible(true);
+      return !field.getBoolean(headerConfig);
+    } catch (NullPointerException | NoSuchFieldException | IllegalAccessException e) {
+      return false;
     }
   }
 
@@ -286,12 +302,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     }
 
     // we don't want layout animations in native-stack since it is currently buggy there
-    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
+    AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
       if (tagsToDelete == null) {
-        animationsManager.doSnapshotForTopScreenViews(viewGroup);
+        animationsManager.makeSnapshotOfTopScreenViews(viewGroup);
       } else {
-        animationsManager.notifyAboutViewsRemoving(tagsToDelete);
+        animationsManager.notifyAboutViewsRemoval(tagsToDelete);
       }
       if (indicesToRemove != null && mReaLayoutAnimator instanceof ReaLayoutAnimator) {
         for (int index : indicesToRemove) {
@@ -351,7 +367,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         pendingTags.clear();
       }
     }
-    animationsManager.notifyAboutViewsRemoving(tagsToDelete);
+    animationsManager.notifyAboutViewsRemoval(tagsToDelete);
     super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);

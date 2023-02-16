@@ -20,8 +20,8 @@ void LayoutAnimationsManager::configureAnimation(
     layoutAnimations_[tag] = config;
   } else if (type == "sharedElementTransition") {
     sharedTransitionAnimations_[tag] = config;
-    sharedTransitionGroups_.try_emplace(sharedTransitionTag);
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
+    viewTagToSharedTag_[tag] = sharedTransitionTag;
   }
 }
 
@@ -48,12 +48,16 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   layoutAnimations_.erase(tag);
 
   sharedTransitionAnimations_.erase(tag);
-  for (auto &[key, group] : sharedTransitionGroups_) {
-    auto position = std::find(group.begin(), group.end(), tag);
-    if (position != group.end()) {
-      group.erase(position);
-    }
+  auto const &groupName = viewTagToSharedTag_[tag];
+  auto &group = sharedTransitionGroups_[groupName];
+  auto position = std::find(group.begin(), group.end(), tag);
+  if (position != group.end()) {
+    group.erase(position);
   }
+  if (group.size() == 0) {
+    sharedTransitionGroups_.erase(groupName);
+  }
+  viewTagToSharedTag_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
@@ -90,16 +94,19 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-int LayoutAnimationsManager::findSiblingForSharedView(int tag) {
-  /*
-    The top screen on the stack triggers the animation, so we need to find
-    the sibling view registered in the past. That's why we look backward.
-   */
-  for (auto const &[_, group] : sharedTransitionGroups_) {
-    auto position = std::find(group.begin(), group.end(), tag);
-    if (position != group.end() && position != group.begin()) {
-      return *std::prev(position);
-    }
+/*
+  The top screen on the stack triggers the animation, so we need to find
+  the sibling view registered in the past. This method finds view
+  registered in the same transition group (with the same transition tag)
+  which has been added to that group directly before the one that we
+  provide as an argument.
+*/
+int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
+  auto const &groupName = viewTagToSharedTag_[tag];
+  auto const &group = sharedTransitionGroups_[groupName];
+  auto position = std::find(group.begin(), group.end(), tag);
+  if (position != group.end() && position != group.begin()) {
+    return *std::prev(position);
   }
   return -1;
 }

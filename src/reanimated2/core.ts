@@ -142,11 +142,16 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 export function registerSensor(
   sensorType: number,
   interval: number,
-  eventHandler: (data: Value3D | ValueRotation) => void
+  iosReferenceFrame: number,
+  eventHandler: (
+    data: Value3D | ValueRotation,
+    orientationDegrees: number
+  ) => void
 ): number {
   return NativeReanimatedModule.registerSensor(
     sensorType,
     interval,
+    iosReferenceFrame,
     makeShareableCloneRecursive(eventHandler)
   );
 }

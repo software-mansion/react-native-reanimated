@@ -64,6 +64,11 @@ NativeProxy::NativeProxy(
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
+
+  // cleanup all animated sensors here, since NativeProxy
+  // has already been destroyed when AnimatedSensorModule's
+  // destructor is ran
+  _nativeReanimatedModule->cleanupSensors();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -181,8 +186,11 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto registerSensorFunction =
-      [this](int sensorType, int interval, std::function<void(double[])> setter)
-      -> int {
+      [this](
+          int sensorType,
+          int interval,
+          int iosReferenceFrame,
+          std::function<void(double[], int)> setter) -> int {
     return this->registerSensor(sensorType, interval, std::move(setter));
   };
   auto unregisterSensorFunction = [this](int sensorId) {
@@ -285,40 +293,43 @@ void NativeProxy::installJSIBindings(
   _nativeReanimatedModule = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
 
-#ifdef RCT_NEW_ARCH_ENABLED
   this->registerEventHandler([weakModule, getCurrentTime](
-                                 std::string eventName,
-                                 std::string eventAsString) {
+                                 jni::alias_ref<JString> eventKey,
+                                 jni::alias_ref<react::WritableMap> event) {
+    // handles RCTEvents from RNGestureHandler
     if (auto module = weakModule.lock()) {
-      // handles RCTEvents from RNGestureHandler
+      auto eventName = eventKey->toString();
 
+      // TODO: convert event directly to jsi::Value without JSON serialization
+      std::string eventAsString;
+      try {
+        eventAsString = event->toString();
+      } catch (std::exception &) {
+        // Events from other libraries may contain NaN or INF values which
+        // cannot be represented in JSON. See
+        // https://github.com/software-mansion/react-native-reanimated/issues/1776
+        // for details.
+        return;
+      }
       std::string eventJSON = eventAsString.substr(
           13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
-      jsi::Runtime &rt = *module->runtime;
-      jsi::Value payload =
-          jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
-      // TODO: support NaN and INF values
-      // TODO: convert event directly to jsi::Value without JSON serialization
+      if (eventJSON == "null") {
+        return;
+      }
 
-      module->handleEvent(eventName, std::move(payload), getCurrentTime());
+      jsi::Runtime &rt = *module->runtime;
+      jsi::Value payload;
+      try {
+        payload = jsi::Value::createFromJsonUtf8(
+            rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+      } catch (std::exception &) {
+        // Ignore events with malformed JSON payload.
+        return;
+      }
+
+      module->handleEvent(eventName, payload, getCurrentTime());
     }
   });
-#else
-  this->registerEventHandler(
-      [weakModule, getCurrentTime](
-          std::string eventName, std::string eventAsString) {
-        if (auto module = weakModule.lock()) {
-          jsi::Object global = module->runtime->global();
-          jsi::String eventTimestampName =
-              jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-          global.setProperty(
-              *module->runtime, eventTimestampName, getCurrentTime());
-          module->onEvent(eventName, eventAsString);
-          global.setProperty(
-              *module->runtime, eventTimestampName, jsi::Value::undefined());
-        }
-      });
-#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
@@ -391,13 +402,15 @@ void NativeProxy::installJSIBindings(
             tag);
       });
 
-  layoutAnimations->cthis()->setFindSiblingForSharedView([weakModule](int tag) {
-    if (auto module = weakModule.lock()) {
-      return module->layoutAnimationsManager().findSiblingForSharedView(tag);
-    } else {
-      return -1;
-    }
-  });
+  layoutAnimations->cthis()->setFindPrecedingViewTagForTransition(
+      [weakModule](int tag) {
+        if (auto module = weakModule.lock()) {
+          return module->layoutAnimationsManager()
+              .findPrecedingViewTagForTransition(tag);
+        } else {
+          return -1;
+        }
+      });
 
   rt.global().setProperty(
       rt,
@@ -436,7 +449,9 @@ void NativeProxy::requestRender(std::function<void(double)> onRender) {
 }
 
 void NativeProxy::registerEventHandler(
-    std::function<void(std::string, std::string)> handler) {
+    std::function<
+        void(jni::alias_ref<JString>, jni::alias_ref<react::WritableMap>)>
+        handler) {
   static auto method =
       javaPart_->getClass()->getMethod<void(EventHandler::javaobject)>(
           "registerEventHandler");
@@ -510,7 +525,7 @@ void NativeProxy::synchronouslyUpdateUIProps(
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
-    std::function<void(double[])> setter) {
+    std::function<void(double[], int)> setter) {
   static auto method =
       javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
           "registerSensor");

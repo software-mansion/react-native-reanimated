@@ -201,6 +201,7 @@ function HomeScreen() {
       style={styles.list}
       data={EXAMPLES}
       ItemSeparatorComponent={ItemSeparator}
+      initialNumToRender={EXAMPLES.length}
       renderItem={({ item }) => (
         <Item
           title={item.icon + '  ' + item.title}

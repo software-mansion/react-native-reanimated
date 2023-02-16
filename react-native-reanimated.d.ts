@@ -178,7 +178,7 @@ declare module 'react-native-reanimated' {
         | EntryExitAnimationFunction
         | Keyframe;
       sharedTransitionTag?: string;
-      sharedTransitionStyle?: any; //TODO: first we need to decide about API for this prop
+      sharedTransitionStyle?: ILayoutAnimationBuilder;
     };
 
     export interface PhysicsAnimationState extends AnimationState {
@@ -498,14 +498,25 @@ declare module 'react-native-reanimated' {
     ROTATION = 5,
   }
 
-  export type SensorConfig = {
+  export enum IOSReferenceFrame {
+    XArbitraryZVertical = 0,
+    XArbitraryCorrectedZVertical = 1,
+    XMagneticNorthZVertical = 2,
+    XTrueNorthZVertical = 3,
+    Auto = 4,
+  }
+
+  export type SensorConfig = Partial<{
     interval: number | 'auto';
-  };
+    adjustToInterfaceOrientation: boolean;
+    iosReferenceFrame: IOSReferenceFrame;
+  }>;
 
   export type Value3D = {
     x: number;
     y: number;
     z: number;
+    interfaceOrientation: InterfaceOrientation;
   };
 
   export type SensorValue3D = SharedValue<Value3D>;
@@ -518,6 +529,7 @@ declare module 'react-native-reanimated' {
     yaw: number;
     pitch: number;
     roll: number;
+    interfaceOrientation: InterfaceOrientation;
   };
 
   export type SensorValueRotation = SharedValue<ValueRotation>;

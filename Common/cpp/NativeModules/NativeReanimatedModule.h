@@ -98,11 +98,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &config) override;
 
   void onRender(double timestampMs);
-#ifdef RCT_NEW_ARCH_ENABLED
-  void onEvent(std::string eventName, jsi::Value &&eventAsString);
-#else
-  void onEvent(std::string eventName, std::string eventAsString);
-#endif
+
+  void onEvent(const std::string &eventName, const jsi::Value &payload);
+
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
@@ -110,7 +108,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   bool handleEvent(
       const std::string &eventName,
-      jsi::Value &&payload,
+      const jsi::Value &payload,
       double currentTime);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -145,8 +143,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
+      const jsi::Value &iosReferenceFrame,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+
+  void cleanupSensors();
+
   jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer,

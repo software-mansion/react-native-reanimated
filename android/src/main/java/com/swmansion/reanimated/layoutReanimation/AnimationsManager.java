@@ -353,8 +353,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
         view, parentViewManager, parentTag, view.getId(), x, y, width, height, isPositionAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
-    props.remove(Snapshot.ABSOLUTE_ORIGIN_X);
-    props.remove(Snapshot.ABSOLUTE_ORIGIN_Y);
+    props.remove(Snapshot.GLOBAL_ORIGIN_X);
+    props.remove(Snapshot.GLOBAL_ORIGIN_Y);
     props.remove(Snapshot.WIDTH);
     props.remove(Snapshot.HEIGHT);
 
@@ -442,7 +442,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     // Check if the parent of the view has to layout the view, or the child has to lay itself out.
-    if (parentTag % 10 == 1) { // ParentIsARoot
+    if (parentTag % 10 == 1 && parentViewManager != null) { // parentTag % 10 == 1 - ParentIsARoot
       IViewManagerWithChildren parentViewManagerWithChildren;
       if (parentViewManager instanceof IViewManagerWithChildren) {
         parentViewManagerWithChildren = (IViewManagerWithChildren) parentViewManager;
@@ -459,7 +459,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       if (isPositionAbsolute) {
         Point newPoint = new Point(x, y);
         View viewToUpdateParent = (View) viewToUpdate.getParent();
-        Point convertedPoint = convertAbsoluteToParentRelative(newPoint, viewToUpdateParent);
+        Point convertedPoint = convertScreenLocationToViewCoordinates(newPoint, viewToUpdateParent);
         x = convertedPoint.x;
         y = convertedPoint.y;
       }
@@ -625,6 +625,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     for (int i = view.getChildCount() - 1; i >= 0; i--) {
       View child = view.getChildAt(i);
 
+      if (child == null) {
+        continue;
+      }
+
       if (mExitingViews.containsKey(child.getId())) {
         endLayoutAnimation(child.getId(), true, true);
       } else if (child instanceof ViewGroup && mExitingSubviewCountMap.containsKey(child.getId())) {
@@ -659,7 +663,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private Point convertAbsoluteToParentRelative(Point fromPoint, View parentView) {
+  private static Point convertScreenLocationToViewCoordinates(Point fromPoint, View parentView) {
     int[] toPoint = {0, 0};
     if (parentView != null) {
       parentView.getLocationOnScreen(toPoint);
@@ -671,16 +675,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.viewsDidLayout();
   }
 
-  public void notifyAboutViewsRemoving(int[] tagsToDelete) {
-    mSharedTransitionManager.onViewsRemoving(tagsToDelete);
+  public void notifyAboutViewsRemoval(int[] tagsToDelete) {
+    mSharedTransitionManager.onViewsRemoval(tagsToDelete);
   }
 
-  public void doSnapshotForTopScreenViews(ViewGroup stack) {
+  public void makeSnapshotOfTopScreenViews(ViewGroup stack) {
     mSharedTransitionManager.doSnapshotForTopScreenViews(stack);
-  }
-
-  protected NativeMethodsHolder getNativeMethodsHolder() {
-    return mNativeMethodsHolder;
   }
 
   protected ReactContext getContext() {
