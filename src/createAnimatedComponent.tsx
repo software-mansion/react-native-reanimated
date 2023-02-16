@@ -10,6 +10,8 @@ import {
   configureLayoutAnimations,
   enableLayoutAnimations,
   runOnUI,
+  startMapper,
+  stopMapper,
 } from './reanimated2/core';
 import {
   isJest,
@@ -30,10 +32,13 @@ import {
   ShadowNodeWrapper,
 } from './reanimated2/commonTypes';
 import {
+  makeViewDescriptorsSet,
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
+import updateProps from './reanimated2/UpdateProps';
+import NativeReanimatedModule from './reanimated2/NativeReanimated';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -108,6 +113,38 @@ const has = <K extends string>(
   return false;
 };
 
+function hasInlineStyles(style: StyleProps) {
+  return Object.keys(style).some((key) => style[key].value !== undefined);
+}
+
+function getInlineStylesFromProps(
+  props: AnimatedComponentProps<InitialComponentProps>
+): StyleProps {
+  const styles = flattenArray<StyleProps>(props.style ?? []);
+  const inlineStyles: StyleProps = {};
+
+  styles.forEach((style) => {
+    for (const [key, styleValue] of Object.entries(style)) {
+      if (styleValue.value !== undefined) {
+        inlineStyles[key] = styleValue;
+      }
+    }
+  });
+  return inlineStyles;
+}
+
+function inlineStylesHasChanged(styles1: StyleProps, styles2: StyleProps) {
+  if (Object.keys(styles1).length !== Object.keys(styles2).length) {
+    return true;
+  }
+
+  for (const key of Object.keys(styles1)) {
+    if (styles1[key] !== styles2[key]) return true;
+  }
+
+  return false;
+}
+
 interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   viewsRef?: ViewRefSet<unknown>;
@@ -172,6 +209,9 @@ export default function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
     _component: ComponentRef | null = null;
+    _inlineStylesViewDescriptors = makeViewDescriptorsSet();
+    _inlineStylesMapperId: number | null = null;
+    _inlineStyles: StyleProps = {};
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -184,11 +224,13 @@ export default function createAnimatedComponent(
     componentWillUnmount() {
       this._detachNativeEvents();
       this._detachStyles();
+      this._detachInlineStyles();
     }
 
     componentDidMount() {
       this._attachNativeEvents();
       this._attachAnimatedStyles();
+      this._attachInlineStyles();
     }
 
     _getEventViewRef() {
@@ -367,6 +409,15 @@ export default function createAnimatedComponent(
         }
       }
 
+      this._inlineStylesViewDescriptors.add({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        tag: viewTag!,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        name: viewName!,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        shadowNodeWrapper: shadowNodeWrapper!,
+      });
+
       styles.forEach((style) => {
         style.viewDescriptors.add({
           tag: viewTag,
@@ -409,11 +460,56 @@ export default function createAnimatedComponent(
       }
     }
 
+    _attachInlineStyles() {
+      const newInlineStyles: StyleProps = getInlineStylesFromProps(this.props);
+
+      const hasChanged = inlineStylesHasChanged(
+        newInlineStyles,
+        this._inlineStyles
+      );
+
+      if (hasChanged) {
+        const sharableViewDescriptors =
+          this._inlineStylesViewDescriptors.sharableViewDescriptors;
+
+        const maybeViewRef = NativeReanimatedModule.native
+          ? undefined
+          : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
+
+        const updaterFunction = () => {
+          'worklet';
+          const update: StyleProps = {};
+          for (const [key, styleValue] of Object.entries(newInlineStyles)) {
+            update[key] = styleValue.value;
+          }
+          updateProps(sharableViewDescriptors, update, maybeViewRef);
+        };
+        this._inlineStyles = newInlineStyles;
+        if (this._inlineStylesMapperId) {
+          stopMapper(this._inlineStylesMapperId);
+        }
+        this._inlineStylesMapperId = null;
+        if (Object.keys(newInlineStyles).length) {
+          this._inlineStylesMapperId = startMapper(
+            updaterFunction,
+            Object.values(newInlineStyles)
+          );
+        }
+      }
+    }
+
+    _detachInlineStyles() {
+      if (this._inlineStylesMapperId) {
+        stopMapper(this._inlineStylesMapperId);
+      }
+    }
+
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
+      this._attachInlineStyles();
     }
 
     _setComponentRef = setAndForwardRef<Component>({
@@ -479,6 +575,14 @@ export default function createAnimatedComponent(
                 };
               }
               return this.initialStyle;
+            } else if (hasInlineStyles(style)) {
+              const newStyle: StyleProps = {};
+              for (const [key, styleValue] of Object.entries(style)) {
+                if (styleValue.value === undefined) {
+                  newStyle[key] = styleValue;
+                }
+              }
+              return newStyle;
             } else {
               return style;
             }
