@@ -21,7 +21,7 @@ typedef void (^REAAnimationStartingBlock)(
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 typedef void (
-    ^REAAnimationCancellingBlock)(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView);
+    ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView);
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
 
@@ -38,7 +38,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
                       isSharedTransition:(BOOL)isSharedTransition;
 - (void)setFindPrecedingViewTagForTransitionBlock:
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
-- (void)setAnimationCancellingBlock:(REAAnimationCancellingBlock)animationCancellingBlock;
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)endAnimationsRecursive:(UIView *)view;
 - (void)invalidate;

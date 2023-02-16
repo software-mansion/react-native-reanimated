@@ -10,7 +10,7 @@
 - (void)finishSharedAnimation:(UIView *)view;
 - (void)setFindPrecedingViewTagForTransitionBlock:
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
-- (void)setAnimationCancellingBlock:(REAAnimationCancellingBlock)animationCancellingBlock;
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock;
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
 - (UIView *)getTransitioningView:(NSNumber *)tag;
 

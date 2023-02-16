@@ -524,7 +524,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"entering"]) {
     if ([type isEqual:@"entering"]) {
       [_sharedTransitionManager notifyAboutNewView:view];
-    } else if ([type isEqual:@"layout"]) {
+    } else {
       [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
     }
   }
@@ -541,9 +541,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [_sharedTransitionManager setFindPrecedingViewTagForTransitionBlock:findPrecedingViewTagForTransition];
 }
 
-- (void)setAnimationCancellingBlock:(REAAnimationCancellingBlock)animationCancellingBlock
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock
 {
-  [_sharedTransitionManager setAnimationCancellingBlock:animationCancellingBlock];
+  [_sharedTransitionManager setCancelAnimationBlock:animationCancellingBlock];
 }
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type

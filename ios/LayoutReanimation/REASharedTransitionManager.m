@@ -16,7 +16,7 @@
   NSMutableDictionary<NSNumber *, REASnapshot *> *_snapshotRegistry;
   NSMutableDictionary<NSNumber *, UIView *> *_currentSharedTransitionViews;
   REAFindPrecedingViewTagForTransitionBlock _findPrecedingViewTagForTransition;
-  REAAnimationCancellingBlock _cancelLayoutAnimation;
+  REACancelAnimationBlock _cancelLayoutAnimation;
   UIView *_transitionContainer;
   NSMutableArray<UIView *> *_addedSharedViews;
   BOOL _isSharedTransitionActive;
@@ -271,7 +271,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     for (NSNumber *viewTag in _currentSharedTransitionViews) {
       UIView *view = _currentSharedTransitionViews[viewTag];
       if ([newTransitionViews containsObject:view]) {
-        [self disableCleaningForViewTag:view.reactTag];
+        [self disableCleaningForViewTag:viewTag];
       } else {
         [_viewsWithCanceledAnimation addObject:view];
       }
@@ -404,7 +404,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   REANodeFind(screen, ^int(id<RCTComponent> view) {
     NSNumber *viewTag = view.reactTag;
-    if (self->_currentSharedTransitionViews[view.reactTag]) {
+    if (self->_currentSharedTransitionViews[viewTag]) {
       return false;
     }
     if ([self->_animationManager hasAnimationForTag:viewTag type:@"sharedElementTransition"]) {
@@ -600,9 +600,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
   _findPrecedingViewTagForTransition = findPrecedingViewTagForTransition;
 }
 
-- (void)setAnimationCancellingBlock:(REAAnimationCancellingBlock)animationCancellingBlock
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock
 {
-  _cancelLayoutAnimation = animationCancellingBlock;
+  _cancelLayoutAnimation = cancelAnimationBlock;
 }
 
 - (void)clearAllSharedConfigsForViewTag:(NSNumber *)viewTag
@@ -634,11 +634,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if (counter == nil) {
     return;
   }
-  int cointerInt = [counter intValue];
-  if (cointerInt - 1 > 0) {
-    _disableCleaningForView[viewTag] = @(cointerInt - 1);
-  } else {
+  int counterInt = [counter intValue];
+  if (counterInt == 1) {
     [_disableCleaningForView removeObjectForKey:viewTag];
+  } else {
+    _disableCleaningForView[viewTag] = @(counterInt - 1);
   }
 }
 

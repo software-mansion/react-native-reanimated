@@ -325,11 +325,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 
   [animationsManager
-      setAnimationCancellingBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView) {
+      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView) {
         if (auto reaModule = weakModule.lock()) {
-          jsi::Runtime &rt = *wrt.lock();
-          weakModule.lock()->layoutAnimationsManager().cancelLayoutAnimation(
-              rt, [tag intValue], std::string([type UTF8String]), cancelled == YES, removeView == YES);
+          if (auto runtime = wrt.lock()) {
+            jsi::Runtime &rt = *runtime;
+            reaModule->layoutAnimationsManager().cancelLayoutAnimation(
+                rt, [tag intValue], std::string([type UTF8String]), cancelled == YES, removeView == YES);
+          }
         }
       }];
 
