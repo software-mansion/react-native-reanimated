@@ -263,27 +263,44 @@ function Box() {
 
 exports[`babel plugin transforms nested functions correctly 1`] = `
 "var x = 5;
-var _worklet_1646817029123_init_data = {
-  code: \\"function f(){const{x}=this._closure;function inner(){return x;}return inner();}\\",
+var _worklet_8019770278350_init_data = {
+  code: \\"function inner(){const{x}=this._closure;return x;}\\",
+  location: \\"${ process.cwd() }/jest tests fixture\\"
+};
+var _worklet_8471062811730_init_data = {
+  code: \\"function f(){const{x,_worklet_8019770278350_init_data}=this._closure;var inner=function(){var _e=[new Error(),-2,-20];var _f=function _f(){return x;};_f._closure={x:x};_f.__initData=_worklet_8019770278350_init_data;_f.__workletHash=8019770278350;_f.__stackDetails=_e;return _f;}();return inner();}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var f = function () {
-  var _e = [new Error(), -2, -20];
+  var _e = [new Error(), -3, -20];
 
   var _f = function _f() {
-    function inner() {
-      return x;
-    }
+    var inner = function () {
+      var _e = [new Error(), -2, -20];
+
+      var _f = function _f() {
+        return x;
+      };
+
+      _f._closure = {
+        x: x
+      };
+      _f.__initData = _worklet_8019770278350_init_data;
+      _f.__workletHash = 8019770278350;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
 
     return inner();
   };
 
   _f._closure = {
-    x: x
+    x: x,
+    _worklet_8019770278350_init_data: _worklet_8019770278350_init_data
   };
-  _f.__initData = _worklet_1646817029123_init_data;
-  _f.__workletHash = 1646817029123;
+  _f.__initData = _worklet_8471062811730_init_data;
+  _f.__workletHash = 8471062811730;
   _f.__stackDetails = _e;
   return _f;
 }();"

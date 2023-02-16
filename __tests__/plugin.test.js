@@ -159,6 +159,7 @@ describe('babel plugin', () => {
       function f() {
         'worklet';
         function inner() {
+          'worklet';
           return x;
         }
         return inner();
