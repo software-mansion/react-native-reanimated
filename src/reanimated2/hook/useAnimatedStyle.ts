@@ -8,9 +8,8 @@ import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
-  getStyleWithoutAnimations,
   isAnimated,
-  styleDiff,
+  shallowEqual,
   validateAnimatedStyles,
 } from './utils';
 import { DependencyList, Descriptor } from './commonTypes';
@@ -30,6 +29,7 @@ import {
   BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
+  StyleProps,
 } from '../commonTypes';
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
@@ -183,8 +183,10 @@ function styleUpdater(
   const animations = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
+  const nonAnimatedNewValues: StyleProps = {};
 
   let hasAnimations = false;
+  let hasNonAnimatedValues = false;
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
@@ -192,6 +194,8 @@ function styleUpdater(
       animations[key] = value;
       hasAnimations = true;
     } else {
+      hasNonAnimatedValues = true;
+      nonAnimatedNewValues[key] = value;
       delete animations[key];
     }
   }
@@ -244,21 +248,19 @@ function styleUpdater(
         requestAnimationFrame(frame);
       }
     }
-    state.last = Object.assign({}, oldValues, newValues);
-    const style = getStyleWithoutAnimations(state.last);
-    if (style) {
-      updateProps(viewDescriptors, style, maybeViewRef);
+
+    if (hasNonAnimatedValues) {
+      updateProps(viewDescriptors, nonAnimatedNewValues, maybeViewRef);
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    const diff = styleDiff(oldValues, newValues);
-    state.last = Object.assign({}, oldValues, newValues);
-    if (diff) {
+    if (!shallowEqual(oldValues, newValues)) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
   }
+  state.last = newValues;
 }
 
 function jestStyleUpdater(
@@ -352,13 +354,12 @@ function jestStyleUpdater(
   }
 
   // calculate diff
-  const diff = styleDiff(oldValues, newValues);
-  state.last = Object.assign({}, oldValues, newValues);
+  state.last = newValues;
 
-  if (Object.keys(diff).length !== 0) {
+  if (!shallowEqual(oldValues, newValues)) {
     updatePropsJestWrapper(
       viewDescriptors,
-      diff,
+      newValues,
       maybeViewRef,
       animatedStyle,
       adapters
