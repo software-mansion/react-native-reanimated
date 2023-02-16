@@ -113,8 +113,18 @@ const has = <K extends string>(
   return false;
 };
 
-function hasInlineStyles(style: StyleProps) {
-  return Object.keys(style).some((key) => style[key].value !== undefined);
+function isInlineStyleTransform(transform: any): boolean {
+  return transform.some((t: { [key: string]: any }) => hasInlineStyles(t));
+}
+
+function hasInlineStyles(style: StyleProps): boolean {
+  return Object.keys(style).some((key) => {
+    const styleValue = style[key];
+    return (
+      styleValue.value !== undefined ||
+      (key === 'transform' && isInlineStyleTransform(styleValue))
+    );
+  });
 }
 
 function getInlineStylesFromProps(
@@ -126,6 +136,8 @@ function getInlineStylesFromProps(
   styles.forEach((style) => {
     for (const [key, styleValue] of Object.entries(style)) {
       if (styleValue.value !== undefined) {
+        inlineStyles[key] = styleValue;
+      } else if (key === 'transform' && isInlineStyleTransform(styleValue)) {
         inlineStyles[key] = styleValue;
       }
     }
@@ -462,7 +474,6 @@ export default function createAnimatedComponent(
 
     _attachInlineStyles() {
       const newInlineStyles: StyleProps = getInlineStylesFromProps(this.props);
-
       const hasChanged = inlineStylesHasChanged(
         newInlineStyles,
         this._inlineStyles
@@ -480,7 +491,16 @@ export default function createAnimatedComponent(
           'worklet';
           const update: StyleProps = {};
           for (const [key, styleValue] of Object.entries(newInlineStyles)) {
-            update[key] = styleValue.value;
+            if (key === 'transform') {
+              update[key] = styleValue.map((t: { [key: string]: any }) =>
+                Object.keys(t).reduce(
+                  (acc, curr) => ({ ...acc, [curr]: t[curr].value }),
+                  {}
+                )
+              );
+            } else {
+              update[key] = styleValue.value;
+            }
           }
           updateProps(sharableViewDescriptors, update, maybeViewRef);
         };
@@ -578,7 +598,10 @@ export default function createAnimatedComponent(
             } else if (hasInlineStyles(style)) {
               const newStyle: StyleProps = {};
               for (const [key, styleValue] of Object.entries(style)) {
-                if (styleValue.value === undefined) {
+                if (
+                  styleValue.value === undefined &&
+                  !(key === 'transform' && isInlineStyleTransform(styleValue))
+                ) {
                   newStyle[key] = styleValue;
                 }
               }
