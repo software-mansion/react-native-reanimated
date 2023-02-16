@@ -60,8 +60,8 @@ exports[`babel plugin doesn't transform standard callback functions 1`] = `
 `;
 
 exports[`babel plugin doesn't transform string literals 1`] = `
-"var _worklet_9810417751380_init_data = {
-  code: \\"function foo(x){const bar='worklet';const baz=\\\\\\"worklet\\\\\\";}\\",
+"var _worklet_7442778059540_init_data = {
+  code: \\"function foo(x){var bar='worklet';var baz=\\\\\\"worklet\\\\\\";}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
@@ -74,8 +74,8 @@ var foo = function () {
   };
 
   _f._closure = {};
-  _f.__initData = _worklet_9810417751380_init_data;
-  _f.__workletHash = 9810417751380;
+  _f.__initData = _worklet_7442778059540_init_data;
+  _f.__workletHash = 7442778059540;
   _f.__stackDetails = _e;
   return _f;
 }();"
@@ -121,9 +121,9 @@ exports[`babel plugin supports SequenceExpression, with objectHook 1`] = `
 function App() {
   (0, useAnimatedGestureHandler)({
     onStart: function () {
-      var _e = [new Error(), 1, -20];
+      const _e = [new Error(), 1, -20];
 
-      var _f = function _f() {};
+      const _f = function () {};
 
       _f._closure = {};
       _f.__initData = _worklet_4434179069699_init_data;
@@ -159,8 +159,8 @@ function App() {
 `;
 
 exports[`babel plugin supports SequenceExpression, with worklet closure 1`] = `
-"var _worklet_16676723780973_init_data = {
-  code: \\"function onStart(){const{obj}=this._closure;const a=obj.a;}\\",
+"var _worklet_5237526540557_init_data = {
+  code: \\"function onStart(){const{obj}=this._closure;var a=obj.a;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
@@ -182,8 +182,8 @@ function App() {
           a: obj.a
         }
       };
-      _f.__initData = _worklet_16676723780973_init_data;
-      _f.__workletHash = 16676723780973;
+      _f.__initData = _worklet_5237526540557_init_data;
+      _f.__workletHash = 5237526540557;
       _f.__stackDetails = _e;
       return _f;
     }()
@@ -232,9 +232,9 @@ var _worklet_16669311443114_init_data = {
 function Box() {
   var offset = (0, _reactNativeReanimated.useSharedValue)(0);
   var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
-    var _e = [new Error(), -2, -20];
+    const _e = [new Error(), -2, -20];
 
-    var _f = function _f() {
+    const _f = function () {
       return {
         transform: [{
           translateX: offset.value * 255
@@ -243,7 +243,7 @@ function Box() {
     };
 
     _f._closure = {
-      offset: offset
+      offset
     };
     _f.__initData = _worklet_16669311443114_init_data;
     _f.__workletHash = 16669311443114;
@@ -290,8 +290,8 @@ var f = function () {
 `;
 
 exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `
-"var _worklet_3161057533258_init_data = {
-  code: \\"function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}\\",
+"var _worklet_8509370056349_init_data = {
+  code: \\"function foo(){var bar=[4,5];var baz=[1].concat([2,3],bar);}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
@@ -304,16 +304,16 @@ var foo = function () {
   };
 
   _f._closure = {};
-  _f.__initData = _worklet_3161057533258_init_data;
-  _f.__workletHash = 3161057533258;
+  _f.__initData = _worklet_8509370056349_init_data;
+  _f.__workletHash = 8509370056349;
   _f.__stackDetails = _e;
   return _f;
 }();"
 `;
 
 exports[`babel plugin transforms spread operator in worklets for function arguments 1`] = `
-"var _worklet_9866931756941_init_data = {
-  code: \\"function foo(...args){console.log(args);}\\",
+"var _worklet_14198358014380_init_data = {
+  code: \\"function foo(){for(var _len=arguments.length,args=new Array(_len),_key=0;_key<_len;_key++){args[_key]=arguments[_key];}console.log(args);}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
@@ -329,8 +329,8 @@ var foo = function () {
   };
 
   _f._closure = {};
-  _f.__initData = _worklet_9866931756941_init_data;
-  _f.__workletHash = 9866931756941;
+  _f.__initData = _worklet_14198358014380_init_data;
+  _f.__workletHash = 14198358014380;
   _f.__stackDetails = _e;
   return _f;
 }();"
@@ -341,13 +341,13 @@ exports[`babel plugin transforms spread operator in worklets for function calls 
 
 var _toConsumableArray2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/toConsumableArray\\"));
 
-var _worklet_2015887751437_init_data = {
-  code: \\"function foo(arg){console.log(...arg);}\\",
+var _worklet_4972199179357_init_data = {
+  code: \\"function foo(arg){const{_toConsumableArray}=this._closure;var _console;(_console=console).log.apply(_console,_toConsumableArray(arg));}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
 var foo = function () {
-  var _e = [new Error(), 1, -20];
+  var _e = [new Error(), -2, -20];
 
   var _f = function _f(arg) {
     var _console;
@@ -355,17 +355,19 @@ var foo = function () {
     (_console = console).log.apply(_console, (0, _toConsumableArray2.default)(arg));
   };
 
-  _f._closure = {};
-  _f.__initData = _worklet_2015887751437_init_data;
-  _f.__workletHash = 2015887751437;
+  _f._closure = {
+    _toConsumableArray: _toConsumableArray2.default
+  };
+  _f.__initData = _worklet_4972199179357_init_data;
+  _f.__workletHash = 4972199179357;
   _f.__stackDetails = _e;
   return _f;
 }();"
 `;
 
 exports[`babel plugin transforms spread operator in worklets for objects 1`] = `
-"var _worklet_792186851025_init_data = {
-  code: \\"function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}\\",
+"var _worklet_8867400821792_init_data = {
+  code: \\"function foo(){var bar={d:4,e:5};var baz=Object.assign({a:1},{b:2,c:3},{},bar);}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 
@@ -386,8 +388,8 @@ var foo = function () {
   };
 
   _f._closure = {};
-  _f.__initData = _worklet_792186851025_init_data;
-  _f.__workletHash = 792186851025;
+  _f.__initData = _worklet_8867400821792_init_data;
+  _f.__workletHash = 8867400821792;
   _f.__stackDetails = _e;
   return _f;
 }();"
@@ -480,9 +482,9 @@ exports[`babel plugin workletizes hook wrapped ArrowFunctionExpression automatic
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var animatedStyle = useAnimatedStyle(function () {
-  var _e = [new Error(), 1, -20];
+  const _e = [new Error(), 1, -20];
 
-  var _f = function _f() {
+  const _f = function () {
     return {
       width: 50
     };
@@ -502,9 +504,9 @@ exports[`babel plugin workletizes hook wrapped named FunctionExpression automati
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var animatedStyle = useAnimatedStyle(function () {
-  var _e = [new Error(), 1, -20];
+  const _e = [new Error(), 1, -20];
 
-  var _f = function _f() {
+  const _f = function () {
     return {
       width: 50
     };
@@ -524,9 +526,9 @@ exports[`babel plugin workletizes hook wrapped unnamed FunctionExpression automa
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var animatedStyle = useAnimatedStyle(function () {
-  var _e = [new Error(), 1, -20];
+  const _e = [new Error(), 1, -20];
 
-  var _f = function _f() {
+  const _f = function () {
     return {
       width: 50
     };
@@ -599,21 +601,21 @@ var foo = function () {
 `;
 
 exports[`babel plugin workletizes object hook wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_1022605193782_init_data = {
-  code: \\"function anonymous(event){console.log(event);}\\",
+"var _worklet_338158776260_init_data = {
+  code: \\"function onStart(event){console.log(event);}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 useAnimatedGestureHandler({
   onStart: function () {
-    var _e = [new Error(), 1, -20];
+    const _e = [new Error(), 1, -20];
 
-    var _f = function _f(event) {
+    const _f = function (event) {
       console.log(event);
     };
 
     _f._closure = {};
-    _f.__initData = _worklet_1022605193782_init_data;
-    _f.__workletHash = 1022605193782;
+    _f.__initData = _worklet_338158776260_init_data;
+    _f.__workletHash = 338158776260;
     _f.__stackDetails = _e;
     return _f;
   }()
@@ -627,9 +629,9 @@ exports[`babel plugin workletizes object hook wrapped ObjectMethod automatically
 };
 useAnimatedGestureHandler({
   onStart: function () {
-    var _e = [new Error(), 1, -20];
+    const _e = [new Error(), 1, -20];
 
-    var _f = function _f(event) {
+    const _f = function (event) {
       console.log(event);
     };
 
@@ -649,9 +651,9 @@ exports[`babel plugin workletizes object hook wrapped named FunctionExpression a
 };
 useAnimatedGestureHandler({
   onStart: function () {
-    var _e = [new Error(), 1, -20];
+    const _e = [new Error(), 1, -20];
 
-    var _f = function _f(event) {
+    const _f = function (event) {
       console.log(event);
     };
 
@@ -665,21 +667,21 @@ useAnimatedGestureHandler({
 `;
 
 exports[`babel plugin workletizes object hook wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_1022605193782_init_data = {
-  code: \\"function anonymous(event){console.log(event);}\\",
+"var _worklet_338158776260_init_data = {
+  code: \\"function onStart(event){console.log(event);}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 useAnimatedGestureHandler({
   onStart: function () {
-    var _e = [new Error(), 1, -20];
+    const _e = [new Error(), 1, -20];
 
-    var _f = function _f(event) {
+    const _f = function (event) {
       console.log(event);
     };
 
     _f._closure = {};
-    _f.__initData = _worklet_1022605193782_init_data;
-    _f.__workletHash = 1022605193782;
+    _f.__initData = _worklet_338158776260_init_data;
+    _f.__workletHash = 338158776260;
     _f.__stackDetails = _e;
     return _f;
   }()
