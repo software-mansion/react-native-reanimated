@@ -25,7 +25,7 @@
   NSMutableArray<UIView *> *_removedViews;
   NSMutableSet<UIView *> *_viewsWithCanceledAnimation;
   NSMutableArray<UIView *> *_disableCleaningForView;
-  NSMutableArray<UIView *> *_layoutedSharedViews;
+  NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
 }
 
@@ -50,7 +50,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _sharedTransitionManager = self;
     _viewsWithCanceledAnimation = [NSMutableSet new];
     _disableCleaningForView = [NSMutableArray new];
-    _layoutedSharedViews = [NSMutableArray new];
+    _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     [self swizzleScreensMethods];
   }
@@ -80,7 +80,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)notifyAboutViewLayout:(UIView *)view withViewFrame:(CGRect)frame
 {
-  [_layoutedSharedViews addObject:view];
+  [_layoutedSharedViewsTags addObject:view.reactTag];
   float x = frame.origin.x;
   float y = frame.origin.y;
   float width = frame.size.width;
@@ -93,7 +93,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self configureAsyncSharedTransitionForViews:_addedSharedViews];
   [_addedSharedViews removeAllObjects];
   [self maybeRestartAnimationWithNewLayout];
-  [_layoutedSharedViews removeAllObjects];
+  [_layoutedSharedViewsTags removeAllObjects];
   [_layoutedSharedViewsFrame removeAllObjects];
 }
 
@@ -107,45 +107,42 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)maybeRestartAnimationWithNewLayout
 {
-  if (!([_layoutedSharedViews count] > 0 && [_currentSharedTransitionViews count] > 0)) {
+  if ([_layoutedSharedViewsTags count] == 0 || [_currentSharedTransitionViews count] == 0) {
     return;
   }
   NSMutableArray<REASharedElement *> *sharedElementToRestart = [NSMutableArray new];
-  for (UIView *view in _layoutedSharedViews) {
-    if (!_currentSharedTransitionViews[view.reactTag]) {
-      continue;
-    }
-    for (REASharedElement *sharedElement in _sharedElements) {
-      if (sharedElement.targetView != view) {
-        continue;
-      }
-      UIView *sourceView = sharedElement.sourceView;
-      UIView *targetView = sharedElement.targetView;
-
-      REASnapshot *newSourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:sourceView];
-      REASnapshot *currentTargetViewSnapshot = _snapshotRegistry[targetView.reactTag];
-      REAFrame *frameData = _layoutedSharedViewsFrame[targetView.reactTag];
-      float currentOriginX = [currentTargetViewSnapshot.values[@"originX"] floatValue];
-      float currentOriginY = [currentTargetViewSnapshot.values[@"originY"] floatValue];
-      float currentOriginXByParent = [currentTargetViewSnapshot.values[@"originXByParent"] floatValue];
-      float currentOriginYByParent = [currentTargetViewSnapshot.values[@"originYByParent"] floatValue];
-      NSNumber *newOriginX = @(currentOriginX - currentOriginXByParent + frameData.x);
-      NSNumber *newOriginY = @(currentOriginY - currentOriginYByParent + frameData.y);
-      currentTargetViewSnapshot.values[@"width"] = @(frameData.width);
-      currentTargetViewSnapshot.values[@"height"] = @(frameData.height);
-      currentTargetViewSnapshot.values[@"originX"] = newOriginX;
-      currentTargetViewSnapshot.values[@"originY"] = newOriginY;
-      currentTargetViewSnapshot.values[@"globalOriginX"] = newOriginX;
-      currentTargetViewSnapshot.values[@"globalOriginY"] = newOriginY;
-      currentTargetViewSnapshot.values[@"originXByParent"] = @(frameData.x);
-      currentTargetViewSnapshot.values[@"originYByParent"] = @(frameData.y);
-      sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
-
-      [_disableCleaningForView addObject:sourceView];
-      [_disableCleaningForView addObject:targetView];
-      [sharedElementToRestart addObject:sharedElement];
+  for (REASharedElement *sharedElement in _sharedElements) {
+    NSNumber *viewTag = sharedElement.targetView.reactTag;
+    if ([_layoutedSharedViewsTags containsObject:viewTag] && _currentSharedTransitionViews[viewTag]) {
       [sharedElementToRestart addObject:sharedElement];
     }
+  }
+
+  for (REASharedElement *sharedElement in sharedElementToRestart) {
+    UIView *sourceView = sharedElement.sourceView;
+    UIView *targetView = sharedElement.targetView;
+
+    REASnapshot *newSourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:sourceView];
+    REASnapshot *currentTargetViewSnapshot = _snapshotRegistry[targetView.reactTag];
+    REAFrame *frameData = _layoutedSharedViewsFrame[targetView.reactTag];
+    float currentOriginX = [currentTargetViewSnapshot.values[@"originX"] floatValue];
+    float currentOriginY = [currentTargetViewSnapshot.values[@"originY"] floatValue];
+    float currentOriginXByParent = [currentTargetViewSnapshot.values[@"originXByParent"] floatValue];
+    float currentOriginYByParent = [currentTargetViewSnapshot.values[@"originYByParent"] floatValue];
+    NSNumber *newOriginX = @(currentOriginX - currentOriginXByParent + frameData.x);
+    NSNumber *newOriginY = @(currentOriginY - currentOriginYByParent + frameData.y);
+    currentTargetViewSnapshot.values[@"width"] = @(frameData.width);
+    currentTargetViewSnapshot.values[@"height"] = @(frameData.height);
+    currentTargetViewSnapshot.values[@"originX"] = newOriginX;
+    currentTargetViewSnapshot.values[@"originY"] = newOriginY;
+    currentTargetViewSnapshot.values[@"globalOriginX"] = newOriginX;
+    currentTargetViewSnapshot.values[@"globalOriginY"] = newOriginY;
+    currentTargetViewSnapshot.values[@"originXByParent"] = @(frameData.x);
+    currentTargetViewSnapshot.values[@"originYByParent"] = @(frameData.y);
+    sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
+
+    [_disableCleaningForView addObject:sourceView];
+    [_disableCleaningForView addObject:targetView];
   }
   [self startSharedTransition:sharedElementToRestart];
 }
@@ -216,7 +213,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if (_currentSharedTransitionViews[viewSource.reactTag] || _currentSharedTransitionViews[viewTarget.reactTag]) {
       isInCurrentTransition = true;
       if (addedNewScreen) {
-        siblingViewTag = _findPrecedingViewTagForTransition(siblingView.reactTag);
+        siblingViewTag =
+            _findPrecedingViewTagForTransition(siblingView.reactTag); // MLEKO: ten fragment to trzeba przemyśleć!!!!
         siblingView = [_animationManager viewForTag:siblingViewTag];
 
         viewSource = siblingView;
@@ -477,7 +475,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([_sharedElements count] == 0) {
     return;
   }
-  NSMutableArray<REASharedElement *> *currentSharedElements = [NSMutableArray new];
+  NSMutableArray<REASharedElement *> *currentSharedElements = [NSMutableArray new]; // MLEKO: to się wydaje niepotrzebne
   for (REASharedElement *sharedElement in _sharedElements) {
     UIView *viewTarget = sharedElement.targetView;
     REASnapshot *targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
@@ -587,6 +585,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
   if ([_currentSharedTransitionViews count] == 0) {
     [_transitionContainer removeFromSuperview];
+    [_removedViews removeAllObjects];
     [_sharedElements removeAllObjects];
     _isSharedTransitionActive = NO;
   }
@@ -615,5 +614,28 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   _cancelLayoutAnimation(viewTag, @"sharedTransition", YES, YES);
 }
+
+// MLEKO: przerobić
+
+// private void disableCleaningForViewTag(int viewTag) {
+//   Integer counter = mDisableCleaningForViewTag.get(viewTag);
+//   if (counter != null) {
+//     mDisableCleaningForViewTag.put(viewTag, counter + 1);
+//   } else {
+//     mDisableCleaningForViewTag.put(viewTag, 1);
+//   }
+// }
+//
+// private void enableCleaningForViewTag(int viewTag) {
+//   Integer counter = mDisableCleaningForViewTag.get(viewTag);
+//   if (counter == null) {
+//     return;
+//   }
+//   if (counter - 1 > 0) {
+//     mDisableCleaningForViewTag.put(viewTag, counter - 1);
+//   } else {
+//     mDisableCleaningForViewTag.remove(viewTag);
+//   }
+// }
 
 @end
