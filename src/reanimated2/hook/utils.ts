@@ -179,20 +179,17 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
 
 export function shallowEqual(a: any, b: any) {
   'worklet';
-  let aKeys = 0;
-  for (const key in a) {
-    aKeys += 1;
-    if (b[key] === a[key]) {
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+  for (let i = 0; i < aKeys.length; i++) {
+    if (a[aKeys[i]] !== b[aKeys[i]]) {
       return false;
     }
   }
-  // we use for loop here, as we want to avoid calling Object.keys that allocates new array
-  let bKeys = 0;
-  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  for (const key in b) {
-    bKeys += 1;
-  }
-  return aKeys === bKeys;
+  return true;
 }
 
 export const validateAnimatedStyles = (styles: AnimatedStyle): void => {
