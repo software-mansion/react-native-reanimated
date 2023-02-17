@@ -108,7 +108,7 @@ public class SharedTransitionManager {
     }
     mShouldBeHidden.clear();
   }
-  
+
   private boolean isViewChildParentWithTag(View view, int parentTag) {
     View parent = mSharedTransitionParent.get(view.getId());
     while (parent != null) {
@@ -437,23 +437,15 @@ public class SharedTransitionManager {
         Map<String, Object> preparedValues = new HashMap<>();
         for (String key : snapshotMap.keySet()) {
           Object value = snapshotMap.get(key);
-          preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+          if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
+            preparedValues.put(key, value);
+          } else {
+            preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+          }
         }
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
         viewSourcePreviousSnapshot.originY = originY;
       }
-      Map<String, Object> snapshotMap = viewSourcePreviousSnapshot.toBasicMap();
-      Map<String, Object> preparedValues = new HashMap<>();
-      for (String key : snapshotMap.keySet()) {
-        Object value = snapshotMap.get(key);
-        if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
-          preparedValues.put(key, value);
-        } else {
-          preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
-        }
-      }
-      mAnimationsManager.progressLayoutAnimation(view.getId(), preparedValues, true);
-      viewSourcePreviousSnapshot.originY = originY;
       if (mShouldBeHidden.contains(tag)) {
         view.setVisibility(View.INVISIBLE);
       }
