@@ -427,7 +427,7 @@ class ShareableSynchronizedDataHolder
 
 class ShareableString : public Shareable {
  public:
-  ShareableString(const std::string &string)
+  explicit ShareableString(const std::string &string)
       : Shareable(StringType), data_(string) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     return jsi::String::createFromUtf8(rt, data_);

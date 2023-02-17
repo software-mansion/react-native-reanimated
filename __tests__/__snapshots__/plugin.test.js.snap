@@ -21,9 +21,7 @@ var f = function () {
 
   _f._closure = {
     x: x,
-    objX: {
-      x: objX.x
-    }
+    objX: objX
   };
   _f.__initData = _worklet_5359970077727_init_data;
   _f.__workletHash = 5359970077727;
@@ -178,9 +176,7 @@ function App() {
       };
 
       _f._closure = {
-        obj: {
-          a: obj.a
-        }
+        obj: obj
       };
       _f.__initData = _worklet_16676723780973_init_data;
       _f.__workletHash = 16676723780973;
