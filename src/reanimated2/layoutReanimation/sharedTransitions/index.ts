@@ -6,7 +6,7 @@ import {
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
 
-const supportedProps = ['width', 'height', 'originX', 'originY'];
+const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
 type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
 
@@ -50,19 +50,31 @@ export class SharedTransition implements ILayoutAnimationBuilder {
         }
       } else {
         for (const propName of supportedProps) {
-          const keyToTargetValue =
-            'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
-          animations[propName] = withTiming(values[keyToTargetValue], {
-            // native screen transition takes around 500ms
-            duration: 500,
-          });
+          if (propName === 'transform') {
+            const matrix = values.targetTransformMatrix;
+            animations.transformMatrix = withTiming(matrix, {
+              // native screen transition takes around 500ms
+              duration: 500,
+            });
+          } else {
+            const keyToTargetValue =
+              'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
+            animations[propName] = withTiming(values[keyToTargetValue], {
+              // native screen transition takes around 500ms
+              duration: 500,
+            });
+          }
         }
       }
 
       for (const propName in animations) {
-        const keyToCurrentValue =
-          'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
-        initialValues[propName] = values[keyToCurrentValue];
+        if (propName === 'transform') {
+          initialValues.transformMatrix = values.currentTransformMatrix;
+        } else {
+          const keyToCurrentValue =
+            'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
+          initialValues[propName] = values[keyToCurrentValue];
+        }
       }
 
       return { initialValues, animations };
