@@ -910,7 +910,8 @@ function processStyleObjectForInlineStylesWarning(t, path) {
   }
 }
 
-function processInlineStylesWarning(t, path) {
+function processInlineStylesWarning(t, path, state) {
+  if (state.opts.disableInlineStylesWarning) return;
   if (path.get('name').node.name !== 'style') return;
   if (!t.isJSXExpressionContainer(path.get('value'))) return;
 

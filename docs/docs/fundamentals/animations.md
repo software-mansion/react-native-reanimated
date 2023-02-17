@@ -139,6 +139,20 @@ is equivalent to:
 
 Passing a shared value without `.value` getter causes Reanimated to watch for shared value changes.
 
+To help you avoid a mistake when using inline styles, Reanimated shows a warning when using `.value` getter in inline styles. If you want to disable this warning, set `disableInlineStylesWarning` to `true` in babel plugin options in `babel.config.js` like this:
+
+```
+module.exports = {
+  presets: [
+    ...
+  ],
+  plugins: [
+    ...
+    ['react-native-reanimated/plugin', { disableInlineStylesWarning: true }]
+  ],
+};
+```
+
 ## Interrupting Animated Updates
 
 Animated UI updates, by definition, take time to perform.
