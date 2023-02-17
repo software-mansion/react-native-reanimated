@@ -29,5 +29,5 @@ export function getRelativeCoords(
 
 export function isSharedValue(obj: any) {
   'worklet';
-  return obj.value !== undefined;
+  return typeof obj === 'object' && obj.value !== undefined;
 }
