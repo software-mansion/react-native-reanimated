@@ -8,7 +8,7 @@ sidebar_label: About
 
 This is a documentation website of Reanimated 2 stable release.
 
-If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated/docs/1.x.x/).
+If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated/docs/1.x/).
 
 :::
 
