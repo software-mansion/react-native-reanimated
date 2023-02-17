@@ -1,14 +1,8 @@
 #import <RNReanimated/REAFrame.h>
+#import <RNReanimated/REAScreensHelper.h>
 #import <RNReanimated/REASharedElement.h>
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
-
-#define LOAD_SCREENS_HEADERS ((!RCT_NEW_ARCH_ENABLED && __has_include(<RNScreens/RNSScreen.h>)) || (RCT_NEW_ARCH_ENABLED && __has_include(<RNScreens/RNSScreen.h>) && __cplusplus))
-
-#if LOAD_SCREENS_HEADERS
-#import <RNScreens/RNSScreen.h>
-#import <RNScreens/RNSScreenStack.h>
-#endif
 
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
@@ -22,6 +16,7 @@
   BOOL _isSharedTransitionActive;
   NSMutableArray<REASharedElement *> *_sharedElements;
   REAAnimationsManager *_animationManager;
+  NSMutableSet<NSNumber *> *_viewShouldBeHidden;
   NSMutableArray<UIView *> *_removedViews;
   NSMutableSet<UIView *> *_viewsWithCanceledAnimation;
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
@@ -48,6 +43,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _isSharedTransitionActive = NO;
     _sharedElements = [NSMutableArray new];
     _animationManager = animationManager;
+    _viewShouldBeHidden = [NSMutableSet new];
     _sharedTransitionManager = self;
     _viewsWithCanceledAnimation = [NSMutableSet new];
     _disableCleaningForView = [NSMutableDictionary new];
@@ -224,9 +220,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
       }
     }
 
+    bool isModal = [self isScreenModal:sharedViewScreen];
     // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
-    if (addedNewScreen) {
+    if (addedNewScreen && !isModal) {
       // is under top
       if (screensCount < 2) {
         continue;
@@ -236,13 +233,17 @@ static REASharedTransitionManager *_sharedTransitionManager;
       if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
         continue;
       }
-    } else {
+    } else if (!addedNewScreen) {
       // is on top
       UIView *viewTargetParentScreen = [self getScreenForView:viewTarget];
       UIView *stackTarget = viewTargetParentScreen.reactViewController.navigationController.topViewController.view;
       if (stackTarget != viewTargetParentScreen) {
         continue;
       }
+    }
+
+    if (isModal) {
+      [_viewShouldBeHidden addObject:viewSource.reactTag];
     }
 
     REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewSource];
@@ -380,8 +381,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)screenRemovedFromStack:(UIView *)screen
 {
   UIView *stack = [self getStackForView:screen];
+  bool isModal = [self isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
-  if (stack != nil && !isRemovedInParentStack) {
+  if ((stack != nil || isModal) && !isRemovedInParentStack) {
     bool isInteractive =
         [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
     // screen is removed from React tree (navigation.navigate(<screenName>))
@@ -394,6 +396,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     } else {
       [self makeSnapshotForScreenViews:screen];
     }
+    [self restoreViewsVisibility];
   } else {
     // removed stack
     [self clearConfigForStack:stack];
@@ -413,6 +416,15 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
+}
+
+- (void)restoreViewsVisibility
+{
+  for (NSNumber *viewTag in _viewShouldBeHidden) {
+    UIView *view = [_animationManager viewForTag:viewTag];
+    view.hidden = NO;
+  }
+  [_viewShouldBeHidden removeAllObjects];
 }
 
 - (void)clearConfigForStack:(UIView *)stack
@@ -578,6 +590,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                        isSharedTransition:YES];
       viewSourcePreviousSnapshot.values[@"originY"] = originY;
     }
+    if ([_viewShouldBeHidden containsObject:view.reactTag]) {
+      view.hidden = YES;
+    }
     [_currentSharedTransitionViews removeObjectForKey:viewTag];
     [_sharedTransitionParent removeObjectForKey:viewTag];
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];
@@ -640,6 +655,17 @@ static REASharedTransitionManager *_sharedTransitionManager;
   } else {
     _disableCleaningForView[viewTag] = @(counterInt - 1);
   }
+}
+
+- (bool)isScreenModal:(UIView *)screen
+{
+#if LOAD_SCREENS_HEADERS
+  if ([screen isKindOfClass:[RNSScreenView class]]) {
+    NSNumber *presentationMode = [screen valueForKey:@"stackPresentation"];
+    return ![presentationMode isEqual:@(0)];
+  }
+#endif
+  return false;
 }
 
 @end

@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/REAScreensHelper.h>
 #import <RNReanimated/REASnapshot.h>
 #import <React/UIView+React.h>
 
@@ -44,10 +45,52 @@ NS_ASSUME_NONNULL_BEGIN
     } else {
       _values[@"headerHeight"] = @(0);
     }
+
+    UIView *transformedView = [self findTransformedView:view];
+    if (transformedView != nil) {
+      // iOS affine matrix: https://developer.apple.com/documentation/corefoundation/cgaffinetransform?language=objc
+      CGAffineTransform transform = transformedView.transform;
+      NSNumber *a = @(transform.a);
+      NSNumber *b = @(transform.b);
+      NSNumber *c = @(transform.c);
+      NSNumber *d = @(transform.d);
+      NSNumber *tx = @(transform.tx);
+      NSNumber *ty = @(transform.tx);
+      _values[@"transformMatrix"] = @[ a, b, @(0), c, d, @(0), tx, ty, @(1) ];
+      _values[@"originX"] = @([_values[@"originX"] doubleValue] - [tx doubleValue]);
+      _values[@"originY"] = @([_values[@"originY"] doubleValue] - [ty doubleValue]);
+    } else {
+      // Identity matrix is an default value
+      _values[@"transformMatrix"] = @[ @(1), @(0), @(0), @(0), @(1), @(0), @(0), @(0), @(1) ];
+    }
   } else {
     _values[@"originX"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width / 2.0];
     _values[@"originY"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height / 2.0];
   }
+}
+
+- (UIView *)findTransformedView:(UIView *)view
+{
+  UIView *transformedView;
+  bool isTransformed = false;
+  do {
+    if (transformedView == nil) {
+      transformedView = view;
+    } else {
+      transformedView = transformedView.superview;
+    }
+    CGAffineTransform transform = transformedView.transform;
+    isTransformed = transform.a != 1 || transform.b != 0 || transform.c != 0 || transform.d != 1 || transform.tx != 0 ||
+        transform.ty != 0;
+  } while (!isTransformed &&
+           transformedView != nil
+           // Ignore views above screen
+           && ![transformedView isKindOfClass:[RNSScreen class]]);
+
+  if (isTransformed && transformedView != nil) {
+    return transformedView;
+  }
+  return nil;
 }
 
 @end
