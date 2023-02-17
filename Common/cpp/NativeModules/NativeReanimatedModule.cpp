@@ -275,7 +275,7 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       }
     }
   } else if (value.isString()) {
-    shareable = std::make_shared<ShareableString>(rt, value.asString(rt));
+    shareable = std::make_shared<ShareableString>(value.asString(rt).utf8(rt));
   } else if (value.isUndefined()) {
     shareable = std::make_shared<ShareableScalar>();
   } else if (value.isNull()) {
@@ -284,6 +284,13 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     shareable = std::make_shared<ShareableScalar>(value.getBool());
   } else if (value.isNumber()) {
     shareable = std::make_shared<ShareableScalar>(value.getNumber());
+  } else if (value.isSymbol()) {
+    // TODO: this is only a placeholder implementation, here we replace symbols
+    // with strings in order to make certain objects to be captured. There isn't
+    // yet any usecase for using symbols on the UI runtime so it is fine to keep
+    // it like this for now.
+    shareable =
+        std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
   } else {
     throw std::runtime_error("attempted to convert an unsupported value type");
   }
