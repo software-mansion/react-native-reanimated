@@ -114,7 +114,7 @@ const has = <K extends string>(
 };
 
 function isInlineStyleTransform(transform: any): boolean {
-  return transform.some((t: { [key: string]: any }) => hasInlineStyles(t));
+  return transform.some((t: Record<string, any>) => hasInlineStyles(t));
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
@@ -492,7 +492,7 @@ export default function createAnimatedComponent(
           const update: StyleProps = {};
           for (const [key, styleValue] of Object.entries(newInlineStyles)) {
             if (key === 'transform') {
-              update[key] = styleValue.map((t: { [key: string]: any }) =>
+              update[key] = styleValue.map((t: Record<string, any>) =>
                 Object.keys(t).reduce(
                   (acc, curr) => ({ ...acc, [curr]: t[curr].value }),
                   {}
