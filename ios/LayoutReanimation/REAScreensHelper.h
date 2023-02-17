@@ -6,3 +6,11 @@
 #import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSScreenStack.h>
 #endif
+
+@interface REAScreensHelper : NSObject
+
++ (UIView *)getScreenForView:(UIView *)view;
++ (UIView *)getStackForView:(UIView *)view;
++ (bool)isScreenModal:(UIView *)screen;
+
+@end

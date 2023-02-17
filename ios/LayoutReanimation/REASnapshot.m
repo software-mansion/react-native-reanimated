@@ -41,7 +41,13 @@ NS_ASSUME_NONNULL_BEGIN
     UIView *navigationContainer = view.reactViewController.navigationController.view;
     UIView *header = [navigationContainer.subviews count] > 1 ? navigationContainer.subviews[1] : nil;
     if (header != nil) {
-      _values[@"headerHeight"] = @(header.frame.size.height);
+      CGFloat headerHeight = header.frame.size.height;
+      CGFloat headerOriginY = header.frame.origin.y;
+      UIView *screen = [REAScreensHelper getScreenForView:view];
+      if ([REAScreensHelper isScreenModal:screen] && screen.superview == nil) {
+        _values[@"originY"] = @([_values[@"originY"] doubleValue] + headerHeight + headerOriginY);
+      }
+      _values[@"headerHeight"] = @(headerHeight);
     } else {
       _values[@"headerHeight"] = @(0);
     }

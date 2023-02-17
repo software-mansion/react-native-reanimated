@@ -179,8 +179,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
   NSMutableArray<REASharedElement *> *sharedElements = [NSMutableArray new];
   for (UIView *sharedView in sharedViews) {
     // add observers
-    UIView *sharedViewScreen = [self getScreenForView:sharedView];
-    UIView *stack = [self getStackForView:sharedViewScreen];
+    UIView *sharedViewScreen = [REAScreensHelper getScreenForView:sharedView];
+    UIView *stack = [REAScreensHelper getStackForView:sharedViewScreen];
 
     // find sibling for shared view
     NSNumber *siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
@@ -220,7 +220,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
       }
     }
 
-    bool isModal = [self isScreenModal:sharedViewScreen];
+    bool isModal = [REAScreensHelper isScreenModal:sharedViewScreen];
     // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
     if (addedNewScreen && !isModal) {
@@ -228,14 +228,14 @@ static REASharedTransitionManager *_sharedTransitionManager;
       if (screensCount < 2) {
         continue;
       }
-      UIView *viewSourceParentScreen = [self getScreenForView:viewSource];
+      UIView *viewSourceParentScreen = [REAScreensHelper getScreenForView:viewSource];
       UIView *screenUnderStackTop = stack.reactSubviews[screensCount - 2];
       if (![screenUnderStackTop.reactTag isEqual:viewSourceParentScreen.reactTag] && !isInCurrentTransition) {
         continue;
       }
     } else if (!addedNewScreen) {
       // is on top
-      UIView *viewTargetParentScreen = [self getScreenForView:viewTarget];
+      UIView *viewTargetParentScreen = [REAScreensHelper getScreenForView:viewTarget];
       UIView *stackTarget = viewTargetParentScreen.reactViewController.navigationController.topViewController.view;
       if (stackTarget != viewTargetParentScreen) {
         continue;
@@ -289,40 +289,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
   _sharedElements = sharedElements;
   return sharedElements;
-}
-
-- (UIView *)getScreenForView:(UIView *)view
-{
-#if LOAD_SCREENS_HEADERS
-  UIView *screen = view;
-  while (![screen isKindOfClass:[RNSScreenView class]] && screen.superview != nil) {
-    screen = screen.superview;
-  }
-  if ([screen isKindOfClass:[RNSScreenView class]]) {
-    return screen;
-  }
-#endif
-  return nil;
-}
-
-- (UIView *)getStackForView:(UIView *)view
-{
-#if LOAD_SCREENS_HEADERS
-  if ([view isKindOfClass:[RNSScreenView class]]) {
-    if (view.reactSuperview != nil) {
-      if ([view.reactSuperview isKindOfClass:[RNSScreenStackView class]]) {
-        return view.reactSuperview;
-      }
-    }
-  }
-  while (view != nil && ![view isKindOfClass:[RNSScreenStackView class]] && view.superview != nil) {
-    view = view.superview;
-  }
-  if ([view isKindOfClass:[RNSScreenStackView class]]) {
-    return view;
-  }
-#endif
-  return nil;
 }
 
 /*
@@ -380,8 +346,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)screenRemovedFromStack:(UIView *)screen
 {
-  UIView *stack = [self getStackForView:screen];
-  bool isModal = [self isScreenModal:screen];
+  UIView *stack = [REAScreensHelper getStackForView:screen];
+  bool isModal = [REAScreensHelper isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
     bool isInteractive =
@@ -573,7 +539,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [view removeFromSuperview];
     UIView *parent = _sharedTransitionParent[viewTag];
     int childIndex = [_sharedTransitionInParentIndex[viewTag] intValue];
-    UIView *screen = [self getScreenForView:parent];
+    UIView *screen = [REAScreensHelper getScreenForView:parent];
     bool isScreenInNativeTree = screen.superview != nil;
     bool isScreenInReactTree = screen.reactSuperview != nil;
     if (isScreenInReactTree) {
@@ -655,17 +621,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   } else {
     _disableCleaningForView[viewTag] = @(counterInt - 1);
   }
-}
-
-- (bool)isScreenModal:(UIView *)screen
-{
-#if LOAD_SCREENS_HEADERS
-  if ([screen isKindOfClass:[RNSScreenView class]]) {
-    NSNumber *presentationMode = [screen valueForKey:@"stackPresentation"];
-    return ![presentationMode isEqual:@(0)];
-  }
-#endif
-  return false;
 }
 
 @end
