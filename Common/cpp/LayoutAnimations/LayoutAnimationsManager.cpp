@@ -94,6 +94,30 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
+void LayoutAnimationsManager::cancelLayoutAnimation(
+    jsi::Runtime &rt,
+    int tag,
+    const std::string &type,
+    bool cancelled = true,
+    bool removeView = true) {
+  jsi::Value layoutAnimationRepositoryAsValue =
+      rt.global()
+          .getPropertyAsObject(rt, "global")
+          .getProperty(rt, "LayoutAnimationsManager");
+  jsi::Function cancelLayoutAnimation =
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
+          rt, "stop");
+  std::shared_ptr<Shareable> config;
+  {
+    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+    config = sharedTransitionAnimations_[tag];
+  }
+  if (config != nullptr) {
+    cancelLayoutAnimation.call(
+        rt, jsi::Value(tag), config->getJSValue(rt), cancelled, removeView);
+  }
+}
+
 /*
   The top screen on the stack triggers the animation, so we need to find
   the sibling view registered in the past. This method finds view

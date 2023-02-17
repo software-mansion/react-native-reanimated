@@ -64,6 +64,19 @@ void LayoutAnimations::clearAnimationConfigForTag(int tag) {
   clearAnimationConfigBlock_(tag);
 }
 
+void LayoutAnimations::setCancelAnimationForTag(
+    CancelAnimationConfigBlock cancelAnimationBlock) {
+  this->cancelAnimationBlock_ = cancelAnimationBlock;
+}
+
+void LayoutAnimations::cancelAnimationForTag(
+    int tag,
+    alias_ref<JString> type,
+    jboolean cancelled,
+    jboolean removeView) {
+  this->cancelAnimationBlock_(tag, type, cancelled, removeView);
+}
+
 bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
@@ -89,6 +102,8 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "clearAnimationConfigForTag",
           LayoutAnimations::clearAnimationConfigForTag),
+      makeNativeMethod(
+          "cancelAnimationForTag", LayoutAnimations::cancelAnimationForTag),
       makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),

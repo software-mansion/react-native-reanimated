@@ -30,6 +30,12 @@ class LayoutAnimationsManager {
       const std::string &type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(int tag);
+  void cancelLayoutAnimation(
+      jsi::Runtime &rt,
+      int tag,
+      const std::string &type,
+      bool cancelled /* = true */,
+      bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
 
  private:

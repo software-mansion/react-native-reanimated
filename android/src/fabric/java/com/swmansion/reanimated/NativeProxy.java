@@ -88,6 +88,9 @@ public class NativeProxy extends NativeProxyCommon {
 
             @Override
             public void clearAnimationConfig(int tag) {}
+
+            @Override
+            public void cancelAnimation(int tag, String type, boolean cancelled, boolean removeView) {}
         };
     }
 }
