@@ -553,6 +553,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type
 {
+  if (!_hasAnimationForTag) {
+    return NO;
+  }
   return _hasAnimationForTag(tag, type);
 }
 
