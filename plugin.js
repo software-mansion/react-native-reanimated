@@ -742,10 +742,12 @@ function processStyleObjectForInlineStylesWarning(t, path) {
   const properties = path.get('properties');
   for (const property of properties) {
     const value = property.get('value');
-    if (property.get('key').node.name === 'transform') {
-      processTransformPropertyForInlineStylesWarning(t, value);
-    } else {
-      processPropertyValueForInlineStylesWarning(t, value);
+    if (t.isProperty(property)) {
+      if (property.get('key').node.name === 'transform') {
+        processTransformPropertyForInlineStylesWarning(t, value);
+      } else {
+        processPropertyValueForInlineStylesWarning(t, value);
+      }
     }
   }
 }

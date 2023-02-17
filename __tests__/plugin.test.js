@@ -607,4 +607,17 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
+
+  it("doesn't break if there is a spread syntax", () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={[style, { ...styles.container, width: sharedValue.value }]} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
 });
