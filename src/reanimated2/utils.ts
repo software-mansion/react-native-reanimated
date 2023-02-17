@@ -26,3 +26,8 @@ export function getRelativeCoords(
     y: absoluteY - parentCoords.y,
   };
 }
+
+export function isSharedValue(obj: any) {
+  'worklet';
+  return obj.value !== undefined;
+}

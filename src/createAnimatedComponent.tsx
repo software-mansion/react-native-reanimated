@@ -39,6 +39,7 @@ import {
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
+import { isSharedValue } from './reanimated2';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -121,7 +122,7 @@ function hasInlineStyles(style: StyleProps): boolean {
   return Object.keys(style).some((key) => {
     const styleValue = style[key];
     return (
-      styleValue.value !== undefined ||
+      isSharedValue(styleValue) ||
       (key === 'transform' && isInlineStyleTransform(styleValue))
     );
   });
@@ -135,7 +136,7 @@ function getInlineStylesFromProps(
 
   styles.forEach((style) => {
     for (const [key, styleValue] of Object.entries(style)) {
-      if (styleValue.value !== undefined) {
+      if (isSharedValue(styleValue)) {
         inlineStyles[key] = styleValue;
       } else if (key === 'transform' && isInlineStyleTransform(styleValue)) {
         inlineStyles[key] = styleValue;
@@ -155,6 +156,28 @@ function inlineStylesHasChanged(styles1: StyleProps, styles2: StyleProps) {
   }
 
   return false;
+}
+
+function unpackInlineStyle(inlineStyle: StyleProps) {
+  'worklet';
+  const update: StyleProps = {};
+  for (const [key, styleValue] of Object.entries(inlineStyle)) {
+    if (key === 'transform') {
+      update[key] = styleValue.map((transform: Record<string, any>) => {
+        const unpackedTransform: Record<string, any> = {};
+        for (const transformKey of Object.keys(transform)) {
+          const transformValue = transform[transformKey];
+          unpackedTransform[transformKey] = isSharedValue(transformValue)
+            ? transformValue.value
+            : transformValue;
+        }
+        return unpackedTransform;
+      });
+    } else {
+      update[key] = styleValue.value;
+    }
+  }
+  return update;
 }
 
 interface AnimatedProps extends Record<string, unknown> {
@@ -221,7 +244,7 @@ export default function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
     _component: ComponentRef | null = null;
-    _inlineStylesViewDescriptors = makeViewDescriptorsSet();
+    _inlineStylesViewDescriptors: ViewDescriptorsSet | null = null;
     _inlineStylesMapperId: number | null = null;
     _inlineStyles: StyleProps = {};
     static displayName: string;
@@ -355,23 +378,16 @@ export default function createAnimatedComponent(
       }
     }
 
-    _attachAnimatedStyles() {
-      const styles = this.props.style
-        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
-        : [];
-      const prevStyles = this._styles;
-      this._styles = styles;
-
-      const prevAnimatedProps = this._animatedProps;
-      this._animatedProps = this.props.animatedProps;
-
+    _getViewInfo() {
       let viewTag: number | null;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
+      let viewConfig;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
         shadowNodeWrapper = null;
+        viewConfig = null;
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
@@ -387,17 +403,36 @@ export default function createAnimatedComponent(
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
-        // update UI props whitelist for this view
-        const hasReanimated2Props =
-          this.props.animatedProps?.viewDescriptors || styles.length;
-        if (hasReanimated2Props && hostInstance?.viewConfig) {
-          adaptViewConfig(hostInstance.viewConfig);
-        }
+
+        viewConfig = hostInstance?.viewConfig;
 
         if (global._IS_FABRIC) {
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
+      return { viewTag, viewName, shadowNodeWrapper, viewConfig };
+    }
+
+    _attachAnimatedStyles() {
+      const styles = this.props.style
+        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
+        : [];
+      const prevStyles = this._styles;
+      this._styles = styles;
+
+      const prevAnimatedProps = this._animatedProps;
+      this._animatedProps = this.props.animatedProps;
+
+      const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
+        this._getViewInfo();
+
+      // update UI props whitelist for this view
+      const hasReanimated2Props =
+        this.props.animatedProps?.viewDescriptors || styles.length;
+      if (hasReanimated2Props && viewConfig) {
+        adaptViewConfig(viewConfig);
+      }
+
       this._viewTag = viewTag as number;
 
       // remove old styles
@@ -420,15 +455,6 @@ export default function createAnimatedComponent(
           }
         }
       }
-
-      this._inlineStylesViewDescriptors.add({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        tag: viewTag!,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        name: viewName!,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        shadowNodeWrapper: shadowNodeWrapper!,
-      });
 
       styles.forEach((style) => {
         style.viewDescriptors.add({
@@ -480,6 +506,20 @@ export default function createAnimatedComponent(
       );
 
       if (hasChanged) {
+        if (!this._inlineStylesViewDescriptors) {
+          this._inlineStylesViewDescriptors = makeViewDescriptorsSet();
+
+          const { viewTag, viewName, shadowNodeWrapper } = this._getViewInfo();
+
+          this._inlineStylesViewDescriptors.add({
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            tag: viewTag!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            name: viewName!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            shadowNodeWrapper: shadowNodeWrapper!,
+          });
+        }
         const sharableViewDescriptors =
           this._inlineStylesViewDescriptors.sharableViewDescriptors;
 
@@ -489,19 +529,7 @@ export default function createAnimatedComponent(
 
         const updaterFunction = () => {
           'worklet';
-          const update: StyleProps = {};
-          for (const [key, styleValue] of Object.entries(newInlineStyles)) {
-            if (key === 'transform') {
-              update[key] = styleValue.map((t: Record<string, any>) =>
-                Object.keys(t).reduce(
-                  (acc, curr) => ({ ...acc, [curr]: t[curr].value }),
-                  {}
-                )
-              );
-            } else {
-              update[key] = styleValue.value;
-            }
-          }
+          const update = unpackInlineStyle(newInlineStyles);
           updateProps(sharableViewDescriptors, update, maybeViewRef);
         };
         this._inlineStyles = newInlineStyles;
@@ -599,7 +627,7 @@ export default function createAnimatedComponent(
               const newStyle: StyleProps = {};
               for (const [key, styleValue] of Object.entries(style)) {
                 if (
-                  styleValue.value === undefined &&
+                  !isSharedValue(styleValue) &&
                   !(key === 'transform' && isInlineStyleTransform(styleValue))
                 ) {
                   newStyle[key] = styleValue;
