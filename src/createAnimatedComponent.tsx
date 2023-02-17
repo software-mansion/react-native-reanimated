@@ -158,23 +158,18 @@ function inlineStylesHasChanged(styles1: StyleProps, styles2: StyleProps) {
   return false;
 }
 
-function unpackInlineStyle(inlineStyle: StyleProps) {
+function getInlineStyleUpdate(inlineStyle: StyleProps) {
   'worklet';
   const update: StyleProps = {};
   for (const [key, styleValue] of Object.entries(inlineStyle)) {
     if (key === 'transform') {
       update[key] = styleValue.map((transform: Record<string, any>) => {
-        const unpackedTransform: Record<string, any> = {};
-        for (const transformKey of Object.keys(transform)) {
-          const transformValue = transform[transformKey];
-          unpackedTransform[transformKey] = isSharedValue(transformValue)
-            ? transformValue.value
-            : transformValue;
-        }
-        return unpackedTransform;
+        return getInlineStyleUpdate(transform);
       });
-    } else {
+    } else if (isSharedValue(styleValue)) {
       update[key] = styleValue.value;
+    } else {
+      update[key] = styleValue;
     }
   }
   return update;
@@ -529,7 +524,7 @@ export default function createAnimatedComponent(
 
         const updaterFunction = () => {
           'worklet';
-          const update = unpackInlineStyle(newInlineStyles);
+          const update = getInlineStyleUpdate(newInlineStyles);
           updateProps(sharableViewDescriptors, update, maybeViewRef);
         };
         this._inlineStyles = newInlineStyles;
@@ -624,6 +619,9 @@ export default function createAnimatedComponent(
               }
               return this.initialStyle;
             } else if (hasInlineStyles(style)) {
+              if (this._isFirstRender) {
+                return getInlineStyleUpdate(style);
+              }
               const newStyle: StyleProps = {};
               for (const [key, styleValue] of Object.entries(style)) {
                 if (
