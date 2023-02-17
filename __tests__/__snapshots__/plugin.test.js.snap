@@ -9,16 +9,13 @@ var _worklet_5359970077727_init_data = {
   code: \\"function f(){const{x,objX}=this._closure;return{res:x+objX.x};}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var f = function () {
   var _e = [new Error(), -3, -20];
-
   var _f = function _f() {
     return {
       res: x + objX.x
     };
   };
-
   _f._closure = {
     x: x,
     objX: {
@@ -37,14 +34,11 @@ exports[`babel plugin doesn't capture globals 1`] = `
   code: \\"function f(){console.log('test');}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var f = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     console.log('test');
   };
-
   _f._closure = {};
   _f.__initData = _worklet_13298016111221_init_data;
   _f.__workletHash = 13298016111221;
@@ -64,15 +58,12 @@ exports[`babel plugin doesn't transform string literals 1`] = `
   code: \\"function foo(x){const bar='worklet';const baz=\\\\\\"worklet\\\\\\";}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(x) {
     var bar = 'worklet';
     var baz = \\"worklet\\";
   };
-
   _f._closure = {};
   _f.__initData = _worklet_9810417751380_init_data;
   _f.__workletHash = 9810417751380;
@@ -94,14 +85,11 @@ exports[`babel plugin supports SequenceExpression, many arguments 1`] = `
   code: \\"function onStart(){}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 function App() {
   (0, 3, fun)({
     onStart: function () {
       var _e = [new Error(), 1, -20];
-
       var _f = function _f() {};
-
       _f._closure = {};
       _f.__initData = _worklet_4434179069699_init_data;
       _f.__workletHash = 4434179069699;
@@ -117,14 +105,11 @@ exports[`babel plugin supports SequenceExpression, with objectHook 1`] = `
   code: \\"function onStart(){}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 function App() {
   (0, useAnimatedGestureHandler)({
     onStart: function () {
       var _e = [new Error(), 1, -20];
-
       var _f = function _f() {};
-
       _f._closure = {};
       _f.__initData = _worklet_4434179069699_init_data;
       _f.__workletHash = 4434179069699;
@@ -140,14 +125,11 @@ exports[`babel plugin supports SequenceExpression, with worklet 1`] = `
   code: \\"function onStart(){}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 function App() {
   (0, fun)({
     onStart: function () {
       var _e = [new Error(), 1, -20];
-
       var _f = function _f() {};
-
       _f._closure = {};
       _f.__initData = _worklet_4434179069699_init_data;
       _f.__workletHash = 4434179069699;
@@ -163,7 +145,6 @@ exports[`babel plugin supports SequenceExpression, with worklet closure 1`] = `
   code: \\"function onStart(){const{obj}=this._closure;const a=obj.a;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 function App() {
   var obj = {
     a: 1,
@@ -172,11 +153,9 @@ function App() {
   (0, fun)({
     onStart: function () {
       var _e = [new Error(), -2, -20];
-
       var _f = function _f() {
         var a = obj.a;
       };
-
       _f._closure = {
         obj: {
           a: obj.a
@@ -197,16 +176,13 @@ var _worklet_2022702330805_init_data = {
   code: \\"function foo(t){const foo=this._recur;const{a}=this._closure;if(t>0){return a+foo(t-1);}}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), -2, -20];
-
   var _f = function _f(t) {
     if (t > 0) {
       return a + foo(t - 1);
     }
   };
-
   _f._closure = {
     a: a
   };
@@ -219,21 +195,16 @@ var foo = function () {
 
 exports[`babel plugin transforms 1`] = `
 "var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
-
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== \\"function\\") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== \\"object\\" && typeof obj !== \\"function\\") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== \\"default\\" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
 var _worklet_16669311443114_init_data = {
   code: \\"function anonymous(){const{offset}=this._closure;return{transform:[{translateX:offset.value*255}]};}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 function Box() {
   var offset = (0, _reactNativeReanimated.useSharedValue)(0);
   var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
     var _e = [new Error(), -2, -20];
-
     var _f = function _f() {
       return {
         transform: [{
@@ -241,7 +212,6 @@ function Box() {
         }]
       };
     };
-
     _f._closure = {
       offset: offset
     };
@@ -266,15 +236,12 @@ exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `
   code: \\"function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     var bar = [4, 5];
     var baz = [1].concat([2, 3], bar);
   };
-
   _f._closure = {};
   _f.__initData = _worklet_3161057533258_init_data;
   _f.__workletHash = 3161057533258;
@@ -288,18 +255,14 @@ exports[`babel plugin transforms spread operator in worklets for function argume
   code: \\"function foo(...args){console.log(args);}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
-
     console.log(args);
   };
-
   _f._closure = {};
   _f.__initData = _worklet_9866931756941_init_data;
   _f.__workletHash = 9866931756941;
@@ -310,23 +273,17 @@ var foo = function () {
 
 exports[`babel plugin transforms spread operator in worklets for function calls 1`] = `
 "var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-
 var _toConsumableArray2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/toConsumableArray\\"));
-
 var _worklet_2015887751437_init_data = {
   code: \\"function foo(arg){console.log(...arg);}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(arg) {
     var _console;
-
     (_console = console).log.apply(_console, (0, _toConsumableArray2.default)(arg));
   };
-
   _f._closure = {};
   _f.__initData = _worklet_2015887751437_init_data;
   _f.__workletHash = 2015887751437;
@@ -340,10 +297,8 @@ exports[`babel plugin transforms spread operator in worklets for objects 1`] = `
   code: \\"function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     var bar = {
       d: 4,
@@ -356,7 +311,6 @@ var foo = function () {
       c: 3
     }, {}, bar);
   };
-
   _f._closure = {};
   _f.__initData = _worklet_792186851025_init_data;
   _f.__workletHash = 792186851025;
@@ -370,14 +324,11 @@ exports[`babel plugin workletizes ArrowFunctionExpression 1`] = `
   code: \\"function anonymous(x){return x+2;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(x) {
     return x + 2;
   };
-
   _f._closure = {};
   _f.__initData = _worklet_16347365292089_init_data;
   _f.__workletHash = 16347365292089;
@@ -391,14 +342,11 @@ exports[`babel plugin workletizes FunctionDeclaration 1`] = `
   code: \\"function foo(x){return x+2;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(x) {
     return x + 2;
   };
-
   _f._closure = {};
   _f.__initData = _worklet_4679479961836_init_data;
   _f.__workletHash = 4679479961836;
@@ -409,30 +357,23 @@ var foo = function () {
 
 exports[`babel plugin workletizes getter 1`] = `
 "var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-
 var _classCallCheck2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/classCallCheck\\"));
-
 var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/createClass\\"));
-
 var _worklet_10436985806815_init_data = {
   code: \\"function get(){const{x}=this._closure;return x+2;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var Foo = function () {
   function Foo() {
     (0, _classCallCheck2.default)(this, Foo);
   }
-
   (0, _createClass2.default)(Foo, [{
     key: \\"bar\\",
     get: function () {
       var _e = [new Error(), -2, -20];
-
       var _f = function _f() {
         return x + 2;
       };
-
       _f._closure = {
         x: x
       };
@@ -453,13 +394,11 @@ exports[`babel plugin workletizes hook wrapped ArrowFunctionExpression automatic
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     return {
       width: 50
     };
   };
-
   _f._closure = {};
   _f.__initData = _worklet_9645206935615_init_data;
   _f.__workletHash = 9645206935615;
@@ -475,13 +414,11 @@ exports[`babel plugin workletizes hook wrapped named FunctionExpression automati
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     return {
       width: 50
     };
   };
-
   _f._closure = {};
   _f.__initData = _worklet_6275510763626_init_data;
   _f.__workletHash = 6275510763626;
@@ -497,13 +434,11 @@ exports[`babel plugin workletizes hook wrapped unnamed FunctionExpression automa
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     return {
       width: 50
     };
   };
-
   _f._closure = {};
   _f.__initData = _worklet_9645206935615_init_data;
   _f.__workletHash = 9645206935615;
@@ -514,30 +449,23 @@ var animatedStyle = useAnimatedStyle(function () {
 
 exports[`babel plugin workletizes instance method 1`] = `
 "var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-
 var _classCallCheck2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/classCallCheck\\"));
-
 var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/createClass\\"));
-
 var _worklet_16974800582491_init_data = {
   code: \\"function bar(x){return x+2;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var Foo = function () {
   function Foo() {
     (0, _classCallCheck2.default)(this, Foo);
   }
-
   (0, _createClass2.default)(Foo, [{
     key: \\"bar\\",
     value: function () {
       var _e = [new Error(), 1, -20];
-
       var _f = function _f(x) {
         return x + 2;
       };
-
       _f._closure = {};
       _f.__initData = _worklet_16974800582491_init_data;
       _f.__workletHash = 16974800582491;
@@ -554,14 +482,11 @@ exports[`babel plugin workletizes named FunctionExpression 1`] = `
   code: \\"function foo(x){return x+2;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(x) {
     return x + 2;
   };
-
   _f._closure = {};
   _f.__initData = _worklet_4679479961836_init_data;
   _f.__workletHash = 4679479961836;
@@ -578,11 +503,9 @@ exports[`babel plugin workletizes object hook wrapped ArrowFunctionExpression au
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new Error(), 1, -20];
-
     var _f = function _f(event) {
       console.log(event);
     };
-
     _f._closure = {};
     _f.__initData = _worklet_1022605193782_init_data;
     _f.__workletHash = 1022605193782;
@@ -600,11 +523,9 @@ exports[`babel plugin workletizes object hook wrapped ObjectMethod automatically
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new Error(), 1, -20];
-
     var _f = function _f(event) {
       console.log(event);
     };
-
     _f._closure = {};
     _f.__initData = _worklet_338158776260_init_data;
     _f.__workletHash = 338158776260;
@@ -622,11 +543,9 @@ exports[`babel plugin workletizes object hook wrapped named FunctionExpression a
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new Error(), 1, -20];
-
     var _f = function _f(event) {
       console.log(event);
     };
-
     _f._closure = {};
     _f.__initData = _worklet_338158776260_init_data;
     _f.__workletHash = 338158776260;
@@ -644,11 +563,9 @@ exports[`babel plugin workletizes object hook wrapped unnamed FunctionExpression
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new Error(), 1, -20];
-
     var _f = function _f(event) {
       console.log(event);
     };
-
     _f._closure = {};
     _f.__initData = _worklet_1022605193782_init_data;
     _f.__workletHash = 1022605193782;
@@ -660,7 +577,6 @@ useAnimatedGestureHandler({
 
 exports[`babel plugin workletizes possibly chained gesture object callback functions automatically 1`] = `
 "var _reactNativeGestureHandler = require(\\"react-native-gesture-handler\\");
-
 var _worklet_15393478329680_init_data = {
   code: \\"function anonymous(){console.log('onBegin');}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
@@ -673,14 +589,11 @@ var _worklet_232586479291_init_data = {
   code: \\"function anonymous(_event,_success){console.log('onEnd');}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f() {
     console.log('onBegin');
   };
-
   _f._closure = {};
   _f.__initData = _worklet_15393478329680_init_data;
   _f.__workletHash = 15393478329680;
@@ -688,11 +601,9 @@ var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(funct
   return _f;
 }()).onStart(function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(_event) {
     console.log('onStart');
   };
-
   _f._closure = {};
   _f.__initData = _worklet_12748187344900_init_data;
   _f.__workletHash = 12748187344900;
@@ -700,11 +611,9 @@ var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(funct
   return _f;
 }()).onEnd(function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(_event, _success) {
     console.log('onEnd');
   };
-
   _f._closure = {};
   _f.__initData = _worklet_232586479291_init_data;
   _f.__workletHash = 232586479291;
@@ -715,30 +624,23 @@ var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(funct
 
 exports[`babel plugin workletizes static method 1`] = `
 "var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-
 var _classCallCheck2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/classCallCheck\\"));
-
 var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/createClass\\"));
-
 var _worklet_16974800582491_init_data = {
   code: \\"function bar(x){return x+2;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var Foo = function () {
   function Foo() {
     (0, _classCallCheck2.default)(this, Foo);
   }
-
   (0, _createClass2.default)(Foo, null, [{
     key: \\"bar\\",
     value: function () {
       var _e = [new Error(), 1, -20];
-
       var _f = function _f(x) {
         return x + 2;
       };
-
       _f._closure = {};
       _f.__initData = _worklet_16974800582491_init_data;
       _f.__workletHash = 16974800582491;
@@ -755,14 +657,11 @@ exports[`babel plugin workletizes unnamed FunctionExpression 1`] = `
   code: \\"function anonymous(x){return x+2;}\\",
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
-
 var foo = function () {
   var _e = [new Error(), 1, -20];
-
   var _f = function _f(x) {
     return x + 2;
   };
-
   _f._closure = {};
   _f.__initData = _worklet_16347365292089_init_data;
   _f.__workletHash = 16347365292089;
