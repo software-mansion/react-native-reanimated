@@ -146,12 +146,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
     UIView *maybeParentScreen = stack.superview;
     bool isModal = false;
-#if __has_include(<RNScreens/RNSScreen.h>)
-    if ([maybeParentScreen isKindOfClass:[RNSScreenView class]]) {
-      NSNumber *presentationMode = [maybeParentScreen valueForKey:@"stackPresentation"];
+    //#if __has_include(<RNScreens/RNSScreen.h>)
+    if ([sharedViewScreen isKindOfClass:[RNSScreenView class]]) {
+      NSNumber *presentationMode = [sharedViewScreen valueForKey:@"stackPresentation"];
       isModal = ![presentationMode isEqual:@(0)];
     }
-#endif
+    //#endif
 
     // check valid target screen configuration
     int screensCount = [stack.reactSubviews count];
@@ -295,8 +295,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)screenRemovedFromStack:(UIView *)screen
 {
   UIView *stack = [self getStackForView:screen];
+  bool isModal = false;
+  if ([screen isKindOfClass:[RNSScreenView class]]) {
+    NSNumber *presentationMode = [screen valueForKey:@"stackPresentation"];
+    isModal = ![presentationMode isEqual:@(0)];
+  }
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
-  if (stack != nil && !isRemovedInParentStack) {
+  if ((stack != nil || isModal) && !isRemovedInParentStack) {
     bool isInteractive =
         [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
     // screen is removed from React tree (navigation.navigate(<screenName>))
