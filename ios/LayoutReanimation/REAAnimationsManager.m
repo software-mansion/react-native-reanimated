@@ -519,7 +519,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   });
 }
 
-- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before withNewFrame:(CGRect)frame
 {
   NSString *type = before == nil ? @"entering" : @"layout";
   NSNumber *viewTag = view.reactTag;
@@ -535,8 +535,12 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self setNewProps:before.values forView:view];
   }
 
-  if (_hasAnimationForTag(viewTag, @"sharedElementTransition") && [type isEqual:@"entering"]) {
-    [_sharedTransitionManager notifyAboutNewView:view];
+  if (_hasAnimationForTag(viewTag, @"sharedElementTransition")) {
+    if ([type isEqual:@"entering"]) {
+      [_sharedTransitionManager notifyAboutNewView:view];
+    } else {
+      [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
+    }
   }
 }
 
@@ -551,9 +555,15 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [_sharedTransitionManager setFindPrecedingViewTagForTransitionBlock:findPrecedingViewTagForTransition];
 }
 
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock
+{
+  [_sharedTransitionManager setCancelAnimationBlock:animationCancellingBlock];
+}
+
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type
 {
   if (!_hasAnimationForTag) {
+    // It can happen during reload.
     return NO;
   }
   return _hasAnimationForTag(tag, type);

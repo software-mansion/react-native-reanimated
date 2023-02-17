@@ -53,13 +53,15 @@ export class SharedTransition implements ILayoutAnimationBuilder {
           if (propName === 'transform') {
             const matrix = values.targetTransformMatrix;
             animations.transformMatrix = withTiming(matrix, {
-              duration: 1000,
+              // native screen transition takes around 500ms
+              duration: 500,
             });
           } else {
             const keyToTargetValue =
               'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
             animations[propName] = withTiming(values[keyToTargetValue], {
-              duration: 1000,
+              // native screen transition takes around 500ms
+              duration: 500,
             });
           }
         }

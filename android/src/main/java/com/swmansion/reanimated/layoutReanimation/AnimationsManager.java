@@ -575,6 +575,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void maybeDropAncestors(View exitingView) {
+    if (!(exitingView.getParent() instanceof View)) {
+      return;
+    }
     View parent = (View) exitingView.getParent();
     while (parent != null && !(parent instanceof RootView)) {
       View view = parent;
@@ -671,8 +674,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return new Point(fromPoint.x - toPoint[0], fromPoint.y - toPoint[1]);
   }
 
-  public void viewsDidLayout() {
-    mSharedTransitionManager.viewsDidLayout();
+  public void screenDidLayout() {
+    mSharedTransitionManager.screenDidLayout();
+  }
+
+  public void viewDidLayout(View view) {
+    mSharedTransitionManager.viewDidLayout(view);
   }
 
   public void notifyAboutViewsRemoval(int[] tagsToDelete) {
