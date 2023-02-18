@@ -381,3 +381,24 @@ For this purpose Reanimated exposes a separate hook called `useAnimatedProps`.
 It works in a very similar way to `useAnimatedStyle` but instead of expecting a method that returns the animated styles, we expect the returned object to contain properties that we want to animate.
 Then, in order to hook animated props to a view, we provide the resulting object as `animatedProps` property to the "Animated" version of the view type we want to render (e.g. `Animated.View`).
 Please check the documentation of the [`useAnimatedProps`](../api/hooks/useAnimatedProps) hook for usage examples.
+
+## Shared Values in Properties
+You can also pass a shared value as a property like this:
+```js
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+Animated.addWhitelistedNativeProps({ r: true });
+
+export default function SvgExample() {
+  const sv = useSharedValue('50%');
+
+  return (
+    <Svg height="200" width="200">
+      <AnimatedCircle cx="50%" cy="50%" fill="lime" r={sv} />
+    </Svg>
+  );
+}
+```
+
+The radius of the circle will change according to shared value `sv`.
+As with inline styles, remember to pass a shared value, not shared value's `.value`.

@@ -167,4 +167,8 @@ export function adaptViewConfig(viewConfig: ViewConfig): void {
   }
 }
 
+export function isPropWhitelisted(prop: string) {
+  return NATIVE_THREAD_PROPS_WHITELIST[prop] || UI_THREAD_PROPS_WHITELIST[prop];
+}
+
 configureProps();
