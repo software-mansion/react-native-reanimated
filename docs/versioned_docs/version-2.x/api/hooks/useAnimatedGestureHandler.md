@@ -15,7 +15,7 @@ Before you can use the hook, make sure that you have `react-native-gesture-handl
 The first argument to this hook is an object that can carry one or more worklet handlers.
 The handlers can be set under the following keys: `onStart`, `onActive`, `onEnd`, `onFail`, `onCancel`, `onFinish`.
 
-Read more about gesture handling states in the [Gesture Handler library documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/state).
+Read more about gesture handling states in the [Gesture Handler library documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/basics/state/).
 Each of the specified handlers will be triggered depending on the current state of the attached Gesture Handler.
 The handler worklet will receive the following arguments:
 
@@ -63,7 +63,7 @@ The handler should be passed under `onGestureEvent` parameter regardless of what
 
 ## Example
 
-In the below example we use [`PanGestureHandler`](https://docs.swmansion.com/react-native-gesture-handler/docs/api/gesture-handlers/pan-gh) to register for pan gesture events performed on the rendered View.
+In the below example we use [`PanGestureHandler`](https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/api/pan-gh/) to register for pan gesture events performed on the rendered View.
 We attach three handler worklets that are going to be triggered when the gesture starts, when it is active and the user is panning, and when the gesture is over.
 We create a shared value `x` that will correspond to the x-translation of the box.
 In `onStart` handler worklet we use `context` to save the current value of `x` and therefore remember the place at which the gesture started.
