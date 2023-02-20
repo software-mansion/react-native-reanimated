@@ -134,10 +134,10 @@ module.exports = {
           path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: undefined, // hide edit button
-          lastVersion: 'current',
+          // lastVersion: 'current', // <- this will make 3.x docs as default, uncomment when deploying Reanimated 3
           versions: {
             current: {
-              label: '2.x',
+              label: '3.x',
             },
           },
         },
