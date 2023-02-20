@@ -550,7 +550,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     UIView *parent = _sharedTransitionParent[viewTag];
     int childIndex = [_sharedTransitionInParentIndex[viewTag] intValue];
     UIView *screen = [REAScreensHelper getScreenForView:parent];
-    bool isScreenInNativeTree = screen.superview != nil;
     bool isScreenInReactTree = screen.reactSuperview != nil;
     if (isScreenInReactTree) {
       [parent insertSubview:view atIndex:childIndex];
