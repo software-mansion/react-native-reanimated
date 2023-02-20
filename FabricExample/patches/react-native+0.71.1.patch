@@ -2,15 +2,27 @@ diff --git a/node_modules/react-native/.DS_Store b/node_modules/react-native/.DS
 new file mode 100644
 index 0000000..e69de29
 diff --git a/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp b/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp
-index 908b9bc..fdcbf8e 100644
+index 908b9bc..666f230 100644
 --- a/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp
 +++ b/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp
-@@ -399,7 +399,7 @@ CommitStatus ShadowTree::tryCommit(
-     currentRevision_ = newRevision;
+@@ -351,6 +351,10 @@ CommitStatus ShadowTree::tryCommit(
+     }
    }
+   
++  // Run commit hooks.
++  newRootShadowNode = delegate_.shadowTreeWillCommit(
++      *this, oldRootShadowNode, newRootShadowNode);
++
+   // Layout nodes.
+   std::vector<LayoutableShadowNode const *> affectedLayoutableNodes{};
+   affectedLayoutableNodes.reserve(1024);
+@@ -374,9 +378,6 @@ CommitStatus ShadowTree::tryCommit(
  
--  emitLayoutEvents(affectedLayoutableNodes);
-+  // emitLayoutEvents(affectedLayoutableNodes);
+     auto newRevisionNumber = oldRevision.number + 1;
  
-   if (commitMode == CommitMode::Normal) {
-     mount(newRevision);
+-    newRootShadowNode = delegate_.shadowTreeWillCommit(
+-        *this, oldRootShadowNode, newRootShadowNode);
+-
+     if (!newRootShadowNode ||
+         (commitOptions.shouldYield && commitOptions.shouldYield())) {
+       return CommitStatus::Cancelled;

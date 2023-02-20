@@ -48,16 +48,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     shadowTreeCloner.updateYogaChildren();
   }
 
-  auto finalRootShadowNode = std::static_pointer_cast<RootShadowNode>(rootNode);
-
-  // trigger layout calculation here because commit hooks are executed after
-  // React Native calls layoutIfNeeded
-  finalRootShadowNode->layoutIfNeeded();
-
-  // resolves "Incorrect set of mutations detected."
-  finalRootShadowNode->sealRecursive();
-
-  return finalRootShadowNode;
+  return std::static_pointer_cast<RootShadowNode>(rootNode);
 }
 
 } // namespace reanimated
