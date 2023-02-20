@@ -4,6 +4,12 @@ title: useFrameCallback
 sidebar_label: useFrameCallback
 ---
 
+:::tip
+
+useFrameCallback is available since v2.10.0
+
+:::
+
 This hook allows you to run a piece of code on every frame update.
 
 ```js

@@ -4,6 +4,12 @@ title: useAnimatedKeyboard
 sidebar_label: useAnimatedKeyboard
 ---
 
+:::tip
+
+useAnimatedKeyboard is available since v2.10.0
+
+:::
+
 :::caution
 
 Android implementation of `useAnimatedKeyboard` is an experimental feature.

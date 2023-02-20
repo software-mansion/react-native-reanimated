@@ -4,6 +4,12 @@ title: useScrollViewOffset
 sidebar_label: useScrollViewOffset
 ---
 
+:::tip
+
+useScrollViewOffset is available since v2.11.0
+
+:::
+
 This hook allows you to create animations based on the offset of a `ScrollView`.
 The hook automatically detects if the `ScrollView` is horizontal or vertical.
 

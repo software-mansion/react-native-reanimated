@@ -4,6 +4,12 @@ title: Keyframe Animations
 sidebar_label: Keyframe Animations
 ---
 
+:::tip
+
+Layout Animations are available since v2.3.0
+
+:::
+
 The document explains how you can define complex animation using simple and popular animation definitions schema - Keyframes.
 
 ## How to define Keyframe animation?

@@ -4,6 +4,12 @@ title: Exiting Animations
 sidebar_label: Exiting Animations
 ---
 
+:::tip
+
+Layout Animations are available since v2.3.0
+
+:::
+
 In React Native during unmounting of components from the hierarchy of views, it just disappears in the next frame. However you can beautify this process using `Exiting Animations`. Reanimated make a pretty animation of disappearing of component for you.
 #### How it is possible? 
 Reanimated listen on changes in tree of views and if detect that some of component should disappear in next frame, It replaces this process with exiting animation. It is easy and fast. You can use predefined animations - examples below or you can define your own custom animation. If you want to create more complex animation you can use [Keyframes](keyframeAnimations).

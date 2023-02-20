@@ -4,6 +4,12 @@ title: Custom Animations
 sidebar_label: Custom Animations
 ---
 
+:::tip
+
+Layout Animations are available since v2.3.0
+
+:::
+
 If our set of predefined animations is not enough for you then this tab is what you are looking for.
 
 ## Custom Exiting Animation
