@@ -120,8 +120,8 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
 
   auto removeShadowNodeFromRegistry =
-      [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
-        this->removeShadowNodeFromRegistry(rt, shadowNodeValue);
+      [this](jsi::Runtime &rt, const jsi::Value &tag) {
+        this->removeShadowNodeFromRegistry(rt, tag);
       };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
