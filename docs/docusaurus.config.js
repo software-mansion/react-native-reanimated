@@ -151,4 +151,23 @@ module.exports = {
       },
     ],
   ],
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        // to save internet links from breaking redirect legacy docs to new urls
+        // note: this only works in production
+        redirects: [
+          {
+            to: '/docs/1.x',
+            from: '/docs/1.x.x',
+          },
+          {
+            to: '/docs',
+            from: ['/docs/2.0.x', '/docs/2.1.x', '/docs/2.2.x', '/docs/2.3.x'],
+          },
+        ],
+      },
+    ],
+  ],
 };
