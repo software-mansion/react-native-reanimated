@@ -57,12 +57,25 @@ public class NativeProxy extends NativeProxyCommon {
         WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(layoutAnimations);
         return new NativeMethodsHolder() {
             @Override
-            public void startAnimation(int tag, String type, HashMap<String, Float> values) {
+            public void startAnimation(int tag, String type, HashMap<String, Object> values) {
                 LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
                 if (layoutAnimations != null) {
                     HashMap<String, String> preparedValues = new HashMap<>();
                     for (String key : values.keySet()) {
-                        preparedValues.put(key, values.get(key).toString());
+                      String stringValue = values.get(key).toString();
+                      if (key.endsWith("TransformMatrix")) {
+                        // transforms string: '[1, 2, 3]' -> '1, 2, 3'
+                        // to make usage of std::istringstream in C++ easier
+                        preparedValues.put(
+                          key,
+                          stringValue
+                            .replace(",", "")
+                            .replace("[", "")
+                            .replace("]", "")
+                        );
+                      } else {
+                        preparedValues.put(key, stringValue);
+                      }
                     }
                     layoutAnimations.startAnimationForTag(tag, type, preparedValues);
                 }

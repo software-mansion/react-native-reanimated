@@ -7,6 +7,7 @@
 #include <react/jni/ReadableNativeMap.h>
 
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include "AndroidErrorHandler.h"
@@ -357,10 +358,26 @@ void NativeProxy::installJSIBindings(
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
           try {
-            auto key =
-                jsi::String::createFromAscii(rt, entry.first->toStdString());
-            auto value = stod(entry.second->toStdString());
-            yogaValues.setProperty(rt, key, value);
+            std::string keyString = entry.first->toStdString();
+            std::string valueString = entry.second->toStdString();
+            auto key = jsi::String::createFromAscii(rt, keyString);
+            if (keyString == "currentTransformMatrix" ||
+                keyString == "targetTransformMatrix") {
+              std::vector<float> transformMatrixList;
+              std::istringstream stringStream(valueString);
+              std::copy(
+                  std::istream_iterator<float>(stringStream),
+                  std::istream_iterator<float>(),
+                  std::back_inserter(transformMatrixList));
+              jsi::Array matrix(rt, 9);
+              for (int i = 0; i < 9; i++) {
+                matrix.setValueAtIndex(rt, i, transformMatrixList[i]);
+              }
+              yogaValues.setProperty(rt, key, matrix);
+            } else {
+              auto value = stod(valueString);
+              yogaValues.setProperty(rt, key, value);
+            }
           } catch (std::invalid_argument e) {
             if (auto errorHandler = weakErrorHandler.lock()) {
               errorHandler->setError("Failed to convert value to number");
