@@ -14,5 +14,6 @@
 + (bool)isScreenModal:(UIView *)screen;
 + (UIView *)getScreenWrapper:(UIView *)view;
 + (int)getScreenType:(UIView *)screen;
++ (bool)isRNSScreenType:(UIView *)screen;
 
 @end

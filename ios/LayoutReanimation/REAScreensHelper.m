@@ -64,6 +64,11 @@
   return [[screen valueForKey:@"stackPresentation"] intValue];
 }
 
++ (bool)isRNSScreenType:(UIView *)view
+{
+  return [view isKindOfClass:[RNSScreen class]] == YES;
+}
+
 #else
 
 + (UIView *)getScreenForView:(UIView *)view
@@ -89,6 +94,11 @@
 + (int)getScreenType:(UIView *)screen;
 {
   return 0;
+}
+
++ (bool)isRNSScreenType:(UIView *)screen
+{
+  return false;
 }
 
 #endif // LOAD_SCREENS_HEADERS

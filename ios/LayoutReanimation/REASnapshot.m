@@ -51,8 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
         if (screenType == 1) { // RNSScreenStackPresentationModal
           additionalModalOffset = 69; // Default iOS modal is shifted from screen top edge by 69px
         }
-        _values[@"originY"] =
-            @([_values[@"originY"] doubleValue] + headerHeight + headerOriginY + additionalModalOffset);
+        float originY = [_values[@"originY"] doubleValue] + headerHeight + headerOriginY + additionalModalOffset;
+        _values[@"originY"] = @(originY);
       }
       _values[@"headerHeight"] = @(headerHeight);
     } else {
@@ -98,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
   } while (!isTransformed &&
            transformedView != nil
            // Ignore views above screen
-           && ![transformedView isKindOfClass:[RNSScreen class]]);
+           && ![REAScreensHelper isRNSScreenType:transformedView]);
 
   if (isTransformed && transformedView != nil) {
     return transformedView;
