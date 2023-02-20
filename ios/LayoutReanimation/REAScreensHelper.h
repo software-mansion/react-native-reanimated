@@ -12,5 +12,7 @@
 + (UIView *)getScreenForView:(UIView *)view;
 + (UIView *)getStackForView:(UIView *)view;
 + (bool)isScreenModal:(UIView *)screen;
++ (UIView *)getScreenWrapper:(UIView *)view;
++ (int)getScreenType:(UIView *)screen;
 
 @end

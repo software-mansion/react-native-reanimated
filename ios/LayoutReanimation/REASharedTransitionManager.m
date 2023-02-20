@@ -177,6 +177,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   NSMutableArray<UIView *> *newTransitionViews = [NSMutableArray new];
   NSMutableArray<REASharedElement *> *sharedElements = [NSMutableArray new];
+  NSMutableSet<NSNumber *> *currentSharedViewsTags = [NSMutableSet new];
+  for (UIView *sharedView in sharedViews) {
+    [currentSharedViewsTags addObject:sharedView.reactTag];
+  }
   for (UIView *sharedView in sharedViews) {
     // add observers
     UIView *sharedViewScreen = [REAScreensHelper getScreenForView:sharedView];
@@ -218,6 +222,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
         viewSource = siblingView;
         viewTarget = sharedView;
       }
+    }
+
+    if ([currentSharedViewsTags containsObject:viewSource.reactTag] &&
+        [currentSharedViewsTags containsObject:viewTarget.reactTag]) {
+      continue;
     }
 
     bool isModal = [REAScreensHelper isScreenModal:sharedViewScreen];
@@ -286,8 +295,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
       [self finishSharedAnimation:view];
     }
   }
-
-  _sharedElements = sharedElements;
+  if ([sharedElements count] != 0) {
+    _sharedElements = sharedElements;
+  }
   return sharedElements;
 }
 
@@ -545,18 +555,14 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if (isScreenInReactTree) {
       [parent insertSubview:view atIndex:childIndex];
       REASnapshot *viewSourcePreviousSnapshot = _snapshotRegistry[viewTag];
-      NSNumber *originY = viewSourcePreviousSnapshot.values[@"originY"];
-      if (!isScreenInNativeTree) {
-        float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
-        float headerHeight = [viewSourcePreviousSnapshot.values[@"headerHeight"] floatValue];
-        viewSourcePreviousSnapshot.values[@"originY"] = @(originYByParent + headerHeight);
-      }
       [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
                                                    forTag:viewTag
                                        isSharedTransition:YES];
-      viewSourcePreviousSnapshot.values[@"originY"] = originY;
+      float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
+      CGRect frame = CGRectMake(view.frame.origin.x, originYByParent, view.frame.size.width, view.frame.size.height);
+      [view setFrame:frame];
     }
-    if ([_viewShouldBeHidden containsObject:view.reactTag]) {
+    if ([_viewShouldBeHidden containsObject:viewTag]) {
       view.hidden = YES;
     }
     [_currentSharedTransitionViews removeObjectForKey:viewTag];

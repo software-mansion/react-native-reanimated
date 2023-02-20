@@ -51,6 +51,19 @@
   return false;
 }
 
++ (UIView *)getScreenWrapper:(UIView *)view
+{
+  UIView *screen = [REAScreensHelper getScreenForView:view];
+  UIView *stack = [REAScreensHelper getStackForView:screen];
+  UIView *screenWrapper = [REAScreensHelper getScreenForView:stack];
+  return screenWrapper;
+}
+
++ (int)getScreenType:(UIView *)screen;
+{
+  return [[screen valueForKey:@"stackPresentation"] intValue];
+}
+
 #else
 
 + (UIView *)getScreenForView:(UIView *)view
@@ -66,6 +79,16 @@
 + (bool)isScreenModal:(UIView *)screen
 {
   return false;
+}
+
++ (UIView *)getScreenWrapper:(UIView *)view
+{
+  return nil;
+}
+
++ (int)getScreenType:(UIView *)screen;
+{
+  return 0;
 }
 
 #endif // LOAD_SCREENS_HEADERS

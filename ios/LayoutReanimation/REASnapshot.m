@@ -45,7 +45,14 @@ NS_ASSUME_NONNULL_BEGIN
       CGFloat headerOriginY = header.frame.origin.y;
       UIView *screen = [REAScreensHelper getScreenForView:view];
       if ([REAScreensHelper isScreenModal:screen] && screen.superview == nil) {
-        _values[@"originY"] = @([_values[@"originY"] doubleValue] + headerHeight + headerOriginY);
+        int additionalModalOffset = 0;
+        UIView *screenWrapper = [REAScreensHelper getScreenWrapper:view];
+        int screenType = [REAScreensHelper getScreenType:screenWrapper];
+        if (screenType == 1) { // RNSScreenStackPresentationModal
+          additionalModalOffset = 69; // Default iOS modal is shifted from screen top edge by 69px
+        }
+        _values[@"originY"] =
+            @([_values[@"originY"] doubleValue] + headerHeight + headerOriginY + additionalModalOffset);
       }
       _values[@"headerHeight"] = @(headerHeight);
     } else {
