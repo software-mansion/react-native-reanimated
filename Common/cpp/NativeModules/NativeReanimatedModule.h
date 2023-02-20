@@ -122,6 +122,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &shadowNodeValue,
       const jsi::Value &props);
 
+  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &tag);
+
   void performOperations();
 
   void dispatchCommand(
@@ -187,6 +189,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::shared_ptr<PropsRegistry> propsRegistry_;
+
+  std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps

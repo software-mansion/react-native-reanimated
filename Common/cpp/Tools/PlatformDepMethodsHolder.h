@@ -26,6 +26,8 @@ using UpdatePropsFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &props)>;
+using RemoveFromPropsRegistryFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &tag)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,

@@ -118,6 +118,11 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, shadowNodeValue, props);
   };
 
+  auto removeFromPropsRegistry = [this](
+                                     jsi::Runtime &rt, const jsi::Value &tag) {
+    this->removeFromPropsRegistry(rt, tag);
+  };
+
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
   };
@@ -135,6 +140,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       *runtime,
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
+      removeFromPropsRegistry,
       measure,
       dispatchCommand,
 #else
@@ -539,6 +545,12 @@ void NativeReanimatedModule::performOperations() {
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
+  // remove ShadowNodes from PropsRegistry
+  for (auto tag : tagsToRemove_) {
+    propsRegistry_->remove(tag);
+  }
+  tagsToRemove_.clear();
+
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
   jsi::Runtime &rt = *runtime.get();
@@ -579,6 +591,12 @@ void NativeReanimatedModule::performOperations() {
       return newRoot;
     });
   });
+}
+
+void NativeReanimatedModule::removeFromPropsRegistry(
+    jsi::Runtime &rt,
+    const jsi::Value &tag) {
+  tagsToRemove_.push_back(tag.asNumber());
 }
 
 void NativeReanimatedModule::dispatchCommand(
