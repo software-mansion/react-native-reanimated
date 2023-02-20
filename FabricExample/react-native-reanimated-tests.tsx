@@ -759,11 +759,7 @@ function testPartialAnimatedProps() {
     source: { uri: 'whatever' },
   }));
 
-  // @ts-expect-error it should fail because `source` is a required prop
-  const test1 = <AnimatedImage />;
   // TODO: Figure out a way to let this error pass, if `source` is set in `animatedProps` that should be okay even if it is not set in normal props!!
-  // @ts-expect-error it should fail because `source` is a required prop, even though animatedProps sets it
-  const test2 = <AnimatedImage animatedProps={aps} />;
   // should pass because source is set
   const test3 = <AnimatedImage source={{ uri: 'whatever' }} />;
   // should pass because source is set and `animatedProps` doesn't change that

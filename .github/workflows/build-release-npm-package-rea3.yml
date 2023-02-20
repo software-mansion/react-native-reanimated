@@ -5,6 +5,6 @@ on:
 
 jobs:
   call-build-workflow-rea-v3:
-    uses: ./.github/workflows/build-npm-package.yml
+    uses: ./.github/workflows/build-npm-package-action.yml
     with:
       version: release

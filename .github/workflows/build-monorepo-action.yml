@@ -1,0 +1,79 @@
+name: Test build in monorepo
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+      concurrency_group:
+        required: true
+        type: string
+      is_hoisted:
+        required: true
+        type: boolean
+      react_native_version:
+        required: false
+        type: string
+
+env:
+  REACT_NATIVE_TEMPLATE: ${{ inputs.react_native_version && '--version' || '' }} ${{ inputs.react_native_version }}
+
+jobs:
+  build:
+    runs-on: ${{ inputs.platform == 'iOS' && 'macos-12' || 'ubuntu-latest' }}
+    concurrency:
+      group: ${{ inputs.concurrency_group }}
+      cancel-in-progress: true
+    steps:
+      - name: Create monorepo
+        run: |
+          mkdir monorepo
+          cd monorepo
+          echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
+          yarn
+          mkdir packages
+      - name: Create RootApp
+        working-directory: monorepo
+        run: npx react-native@next init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
+      - name: Create PackageApp
+        working-directory: monorepo/packages
+        run: npx react-native@next init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }}
+      
+      - name: Install dependencies for RootApp
+        working-directory: monorepo/RootApp
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      - name: Install dependencies for PackageApp
+        working-directory: monorepo/packages/PackageApp
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
+      
+      - name: Setup hoisted Reanimated
+        if: ${{ inputs.is_hoisted }}
+        working-directory: monorepo
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }} -W
+
+      - name: Install Pods for RootApp
+        if: ${{ inputs.platform == 'iOS' }}
+        working-directory: monorepo/RootApp/ios
+        run: pod install
+      - name: Install Pods for PackageApp
+        if: ${{ inputs.platform == 'iOS' }}
+        working-directory: monorepo/packages/PackageApp/ios
+        run: pod install
+
+      - name: Build iOS app RootApp
+        if: ${{ inputs.platform == 'iOS' }}
+        working-directory: monorepo/RootApp
+        run: yarn react-native run-ios
+      - name: Build iOS app PackageApp
+        if: ${{ inputs.platform == 'iOS' }}
+        working-directory: monorepo/packages/PackageApp
+        run: yarn react-native run-ios
+
+      - name: Build Android RootApp
+        if: ${{ inputs.platform == 'Android' }}
+        working-directory: monorepo/RootApp/android
+        run: ./gradlew assembleDebug --console=plain
+      - name: Build Android PackageApp
+        if: ${{ inputs.platform == 'Android' }}
+        working-directory: monorepo/packages/PackageApp/android
+        run: ./gradlew assembleDebug --console=plain

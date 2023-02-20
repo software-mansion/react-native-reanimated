@@ -1,0 +1,45 @@
+name: Test monorepo build
+on:
+  pull_request:
+    paths:
+      - .github/workflows/build-monorepo.yml
+      - .github/workflows/build-monorepo-action.yml
+      - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
+      - android/build.gradle
+  push:
+    branches:
+      - main
+
+jobs:
+  build_android_reanimated_non_hoisted:
+    name: Android (non-hoisted Reanimated)
+    uses: ./.github/workflows/build-monorepo-action.yml
+    with:
+      platform: Android
+      concurrency_group: build_monorepo_android_in_app_reanimated-${{ github.ref }}
+      is_hoisted: false
+
+  build_ios_reanimated_non_hoisted:
+    name: iOS (non-hoisted Reanimated)
+    uses: ./.github/workflows/build-monorepo-action.yml
+    with:
+      platform: iOS
+      concurrency_group: build_monorepo_ios_in_app_reanimated-${{ github.ref }}
+      is_hoisted: false
+
+  build_android_reanimated_hoisted:
+    name: Android (hoisted Reanimated)
+    uses: ./.github/workflows/build-monorepo-action.yml
+    with:
+      platform: Android
+      concurrency_group: build_monorepo_android_reanimated_hoisted-${{ github.ref }}
+      is_hoisted: true
+
+  build_ios_reanimated_hoisted:
+    name: iOS (hoisted Reanimated)
+    uses: ./.github/workflows/build-monorepo-action.yml
+    with:
+      platform: iOS
+      concurrency_group: build_monorepo_ios_reanimated_hoisted-${{ github.ref }}
+      is_hoisted: true

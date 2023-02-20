@@ -1,85 +1,25 @@
 require "json"
+require_relative './scripts/reanimated_utils'
 
-package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-
-reactNativeVersion = '0.0.0'
-reactTargetTvOS = false
-isUserApp = false
-
-begin
-  # user app
-  # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
-  # /appName/node_modules/react-native/package.json
-  reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))
-  reactNativeVersion = reactNativePackageJson["version"]
-  reactTargetTvOS = reactNativePackageJson["name"] == "react-native-tvos"
-  isUserApp = true
-rescue
-  begin
-    # monorepo
-    # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
-    # /monorepo/node_modules/react-native/package.json
-    reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))
-    reactNativeVersion = reactNativePackageJson["version"]
-    reactTargetTvOS = reactNativePackageJson["name"] == "react-native-tvos"
-  rescue
-    begin
-      # Example app in reanimated repo
-      # /react-native-reanimated/RNReanimated.podspec
-      # /react-native-reanimated/{Example,FabricExample,TVOSExample}/node_modules/react-native/package.json
-      if ENV["ReanimatedTVOSExample"] == "1" then
-        appName = "TVOSExample"
-      elsif ENV["RCT_NEW_ARCH_ENABLED"] == "1" then
-        appName = "FabricExample"
-      else
-        appName = "Example"
-      end
-      reactNativePackageJson = JSON.parse(File.read(File.join(__dir__, appName, "node_modules", "react-native", "package.json")))
-      reactNativeVersion = reactNativePackageJson["version"]
-      reactTargetTvOS = ENV["ReanimatedTVOSExample"] == "1"
-    rescue
-      # should never happen
-      reactNativeVersion = '0.68.0'
-      puts "[RNReanimated] Unable to recognize your `react-native` version! Default `react-native` version: " + reactNativeVersion
-    end
-  end
-end
-
-if isUserApp
-  libInstances = %x[find ../../ -name "package.json" | grep "/react-native-reanimated/package.json" | grep -v "/.yarn/"]
-  libInstancesArray = libInstances.split("\n")
-  if libInstancesArray.length() > 1
-    parsedLocation = ''
-    for location in libInstancesArray
-      location['../../'] = '- '
-      location['/package.json'] = ''
-      parsedLocation += location + "\n"
-    end
-    raise "[Reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsedLocation
-  end
-end
-
-reactNativeMinorVersion = reactNativeVersion.split('.')[1].to_i
+reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
+config = find_config()
+assert_no_multiple_instances(config)
+assert_no_reanimated2_with_new_architecture(reanimated_package_json)
+assert_latest_react_native_with_new_architecture(config, reanimated_package_json)
 
 fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-
-folly_prefix = ""
-if reactNativeMinorVersion >= 64
-  folly_prefix = "RCT-"
-end
-
-folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=' + reactNativeMinorVersion.to_s
+folly_prefix = config[:react_native_minor_version] >= 64 ? 'RCT-' : ''
+folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=' + config[:react_native_minor_version].to_s
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 boost_compiler_flags = '-Wno-documentation'
-fabric_flags = ''
-if fabric_enabled
-  fabric_flags = '-DRN_FABRIC_ENABLED -DRCT_NEW_ARCH_ENABLED'
-end
+fabric_flags = fabric_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
+version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 
 Pod::Spec.new do |s|
+  
   s.name         = "RNReanimated"
-  s.version      = package["version"]
-  s.summary      = package["description"]
+  s.version      = reanimated_package_json["version"]
+  s.summary      = reanimated_package_json["description"]
   s.description  = <<-DESC
                   RNReanimated
                    DESC
@@ -99,15 +39,17 @@ Pod::Spec.new do |s|
     "Common/cpp/hidden_headers/**"
   ]
 
-  s.pod_target_xcconfig    = {
+  s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\"",
+    "FRAMEWORK_SEARCH_PATHS" => "\"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes\"",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
   }
-  s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
-  s.xcconfig               = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
-                               "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags }
+  s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
+  s.xcconfig = {
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
+    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags + " " + version_flag
+  }
 
   s.requires_arc = true
 
@@ -127,7 +69,7 @@ Pod::Spec.new do |s|
   s.dependency 'React-Core'
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
-  if !reactTargetTvOS
+  if !config[:is_tvos_target]
     s.dependency 'React-RCTActionSheet'
   end
   s.dependency 'React-RCTNetwork'
@@ -146,7 +88,7 @@ Pod::Spec.new do |s|
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
 
-  if reactNativeMinorVersion == 62
+  if config[:react_native_minor_version] == 62
     s.dependency 'ReactCommon/callinvoker'
   else
     s.dependency 'React-callinvoker'

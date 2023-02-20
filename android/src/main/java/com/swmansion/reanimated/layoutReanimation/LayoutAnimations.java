@@ -29,29 +29,37 @@ public class LayoutAnimations {
   // LayoutReanimation
   public native void startAnimationForTag(int tag, String type, Map<String, String> values);
 
-  public native void removeConfigForTag(int tag);
+  public native boolean hasAnimationForTag(int tag, String type);
+
+  public native void clearAnimationConfigForTag(int tag);
+
+  public native void cancelAnimationForTag(
+      int tag, String type, boolean cancelled, boolean removeView);
 
   public native boolean isLayoutAnimationEnabled();
 
-  private void notifyAboutEnd(int tag, int cancelledInt) {
+  public native int findPrecedingViewTagForTransition(int tag);
+
+  private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {
       context
           .getNativeModule(ReanimatedModule.class)
           .getNodesManager()
           .getAnimationsManager()
-          .notifyAboutEnd(tag, (cancelledInt == 0) ? false : true);
+          .endLayoutAnimation(tag, cancelled, removeView);
     }
   }
 
-  private void notifyAboutProgress(Map<String, Object> newStyle, int tag) {
+  private void progressLayoutAnimation(
+      int tag, Map<String, Object> newStyle, boolean isSharedTransition) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {
       context
           .getNativeModule(ReanimatedModule.class)
           .getNodesManager()
           .getAnimationsManager()
-          .notifyAboutProgress(newStyle, tag);
+          .progressLayoutAnimation(tag, newStyle, isSharedTransition);
     }
   }
 }

@@ -12,6 +12,7 @@ export type {
   IExitAnimationBuilder,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
+  LayoutAnimationStartFunction,
   ILayoutAnimationBuilder,
   BaseLayoutAnimationConfig,
   BaseBuilderAnimationConfig,

@@ -1,11 +1,12 @@
 import { NativeModules } from 'react-native';
 import {
-  SharedValue,
-  SensorValue3D,
-  SensorValueRotation,
-  AnimatedKeyboardInfo,
+  ShareableRef,
+  ShareableSyncDataHolderRef,
+  Value3D,
+  ValueRotation,
 } from '../commonTypes';
-import { Descriptor } from '../hook/commonTypes';
+import { LayoutAnimationFunction } from '../layoutReanimation';
+import { checkVersion } from '../platform-specific/checkVersion';
 
 export class NativeReanimated {
   native: boolean;
@@ -18,33 +19,70 @@ export class NativeReanimated {
     }
     this.InnerNativeModule = global.__reanimatedModuleProxy;
     this.native = native;
+    if (native) {
+      checkVersion();
+    }
   }
 
-  installCoreFunctions(valueSetter: <T>(value: T) => void): void {
-    return this.InnerNativeModule.installCoreFunctions(valueSetter);
+  getTimestamp(): number {
+    throw new Error('stub implementation, used on the web only');
   }
 
-  makeShareable<T>(value: T): T {
-    return this.InnerNativeModule.makeShareable(value);
+  installCoreFunctions(
+    callGuard: <T extends Array<any>, U>(
+      fn: (...args: T) => U,
+      ...args: T
+    ) => void,
+    valueUnpacker: <T>(value: T) => T
+  ): void {
+    return this.InnerNativeModule.installCoreFunctions(
+      callGuard,
+      valueUnpacker
+    );
   }
 
-  makeMutable<T>(value: T): SharedValue<T> {
-    return this.InnerNativeModule.makeMutable(value);
+  makeShareableClone<T>(
+    value: T,
+    shouldPersistRemote: boolean
+  ): ShareableRef<T> {
+    return this.InnerNativeModule.makeShareableClone(
+      value,
+      shouldPersistRemote
+    );
   }
 
-  makeRemote<T>(object = {}): T {
-    return this.InnerNativeModule.makeRemote(object);
+  makeSynchronizedDataHolder<T>(
+    valueRef: ShareableRef<T>
+  ): ShareableSyncDataHolderRef<T> {
+    return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
   }
 
-  registerSensor(
+  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T {
+    return this.InnerNativeModule.getDataSynchronously(ref);
+  }
+
+  updateDataSynchronously<T>(
+    ref: ShareableSyncDataHolderRef<T>,
+    value: T
+  ): void {
+    this.InnerNativeModule.updateDataSynchronously(ref, value);
+  }
+
+  scheduleOnUI<T>(shareable: ShareableRef<T>) {
+    return this.InnerNativeModule.scheduleOnUI(shareable);
+  }
+
+  registerSensor<T>(
     sensorType: number,
     interval: number,
-    sensorData: SensorValue3D | SensorValueRotation
+    iosReferenceFrame: number,
+    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
     return this.InnerNativeModule.registerSensor(
       sensorType,
       interval,
-      sensorData
+      iosReferenceFrame,
+      handler
     );
   }
 
@@ -52,29 +90,9 @@ export class NativeReanimated {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  startMapper(
-    mapper: () => void,
-    inputs: any[] = [],
-    outputs: any[] = [],
-    updater: () => void,
-    viewDescriptors: Descriptor[] | SharedValue<Descriptor[]>
-  ): number {
-    return this.InnerNativeModule.startMapper(
-      mapper,
-      inputs,
-      outputs,
-      updater,
-      viewDescriptors
-    );
-  }
-
-  stopMapper(mapperId: number): void {
-    return this.InnerNativeModule.stopMapper(mapperId);
-  }
-
   registerEventHandler<T>(
     eventHash: string,
-    eventHandler: (event: T) => void
+    eventHandler: ShareableRef<T>
   ): string {
     return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
   }
@@ -91,6 +109,20 @@ export class NativeReanimated {
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
+  configureLayoutAnimation(
+    viewTag: number,
+    type: string,
+    sharedTransitionTag: string,
+    config: ShareableRef<Keyframe | LayoutAnimationFunction>
+  ) {
+    this.InnerNativeModule.configureLayoutAnimation(
+      viewTag,
+      type,
+      sharedTransitionTag,
+      config
+    );
+  }
+
   enableLayoutAnimations(flag: boolean): void {
     this.InnerNativeModule.enableLayoutAnimations(flag);
   }
@@ -99,8 +131,14 @@ export class NativeReanimated {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
-  subscribeForKeyboardEvents(keyboardEventData: AnimatedKeyboardInfo): number {
-    return this.InnerNativeModule.subscribeForKeyboardEvents(keyboardEventData);
+  subscribeForKeyboardEvents(
+    handler: ShareableRef<number>,
+    isStatusBarTranslucent: boolean
+  ): number {
+    return this.InnerNativeModule.subscribeForKeyboardEvents(
+      handler,
+      isStatusBarTranslucent
+    );
   }
 
   unsubscribeFromKeyboardEvents(listenerId: number): void {

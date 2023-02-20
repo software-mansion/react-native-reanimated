@@ -42,7 +42,7 @@ using UpdatePropsFunction = std::function<void(
     jsi::Runtime &rt,
     int viewTag,
     const jsi::Value &viewName,
-    const jsi::Object &object)>;
+    jsi::Object object)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
@@ -53,8 +53,12 @@ using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using TimeProviderFunction = std::function<double(void)>;
 
+using ProgressLayoutAnimationFunction =
+    std::function<void(int, jsi::Object newProps, bool isSharedTransition)>;
+using EndLayoutAnimationFunction = std::function<void(int, bool, bool)>;
+
 using RegisterSensorFunction =
-    std::function<int(int, int, std::function<void(double[])>)>;
+    std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 using ConfigurePropsFunction = std::function<void(
@@ -62,7 +66,7 @@ using ConfigurePropsFunction = std::function<void(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps)>;
 using KeyboardEventSubscribeFunction =
-    std::function<int(std::function<void(int, int)>)>;
+    std::function<int(std::function<void(int, int)>, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 
 struct PlatformDepMethodsHolder {
@@ -76,6 +80,8 @@ struct PlatformDepMethodsHolder {
   ConfigurePropsFunction configurePropsFunction;
 #endif
   TimeProviderFunction getCurrentTime;
+  ProgressLayoutAnimationFunction progressLayoutAnimation;
+  EndLayoutAnimationFunction endLayoutAnimation;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;

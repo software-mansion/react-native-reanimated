@@ -64,6 +64,7 @@ module.exports = {
             'api/miscellaneous/interpolate',
             'api/miscellaneous/runOnJS',
             'api/miscellaneous/runOnUI',
+            'api/miscellaneous/interpolateColors',
           ],
         },
       ],
@@ -71,7 +72,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guide/testing'],
+      items: ['guide/testing', 'guide/debugging'],
     },
     {
       type: 'category',

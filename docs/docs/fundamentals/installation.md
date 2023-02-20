@@ -71,15 +71,6 @@ or other.
 
 No additional steps are necessary.
 
-### Proguard
-
-If you're using Proguard, make sure to add rules preventing it from optimizing Turbomodule classes:
-
-```
--keep class com.swmansion.reanimated.** { *; }
--keep class com.facebook.react.turbomodule.** { *; }
-```
-
 ## iOS
 
 As reanimated is setup to configure and install automatically, the only thing you have to do is to run `pod install` in the `ios/` directory. Note that the auto-installation setup works for the standard React Native apps, if you have problems setting it up with a custom setup (e.g. brownfield) please start a new issue where we can find a way to guide you through that process.

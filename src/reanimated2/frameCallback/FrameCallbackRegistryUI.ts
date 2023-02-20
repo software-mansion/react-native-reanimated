@@ -11,7 +11,7 @@ export type FrameInfo = {
   timeSinceFirstFrame: number;
 };
 
-interface FrameCallbackRegistryUI {
+export interface FrameCallbackRegistryUI {
   frameCallbackRegistry: Map<number, CallbackDetails>;
   activeFrameCallbacks: Set<number>;
   previousFrameTimestamp: number | null;
