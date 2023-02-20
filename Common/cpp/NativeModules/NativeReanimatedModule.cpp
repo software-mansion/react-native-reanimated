@@ -549,12 +549,14 @@ void NativeReanimatedModule::performOperations() {
 
       ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
 
-      for (const auto &pair : copiedOperationsQueue) {
-        const ShadowNodeFamily &family = pair.first->getFamily();
+      auto lock = propsRegistry_->createLock();
+
+      for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+        const ShadowNodeFamily &family = shadowNode->getFamily();
         react_native_assert(family.getSurfaceId() == surfaceId_);
 
         auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-            rootNode, family, RawProps(rt, *pair.second));
+            rootNode, family, RawProps(rt, *props));
 
         if (newRootNode == nullptr) {
           // this happens when React removed the component but Reanimated
@@ -563,6 +565,8 @@ void NativeReanimatedModule::performOperations() {
           continue;
         }
         rootNode = newRootNode;
+
+        propsRegistry_->update(shadowNode, dynamicFromValue(rt, *props));
       }
 
       shadowTreeCloner.updateYogaChildren();

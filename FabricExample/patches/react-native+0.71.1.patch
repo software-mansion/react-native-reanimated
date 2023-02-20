@@ -1,0 +1,16 @@
+diff --git a/node_modules/react-native/.DS_Store b/node_modules/react-native/.DS_Store
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp b/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp
+index 908b9bc..fdcbf8e 100644
+--- a/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp
++++ b/node_modules/react-native/ReactCommon/react/renderer/mounting/ShadowTree.cpp
+@@ -399,7 +399,7 @@ CommitStatus ShadowTree::tryCommit(
+     currentRevision_ = newRevision;
+   }
+ 
+-  emitLayoutEvents(affectedLayoutableNodes);
++  // emitLayoutEvents(affectedLayoutableNodes);
+ 
+   if (commitMode == CommitMode::Normal) {
+     mount(newRevision);

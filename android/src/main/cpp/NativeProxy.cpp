@@ -54,7 +54,8 @@ NativeProxy::NativeProxy(
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_);
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
   uiManager->registerCommitHook(*commitHook_);
 #endif
 }
