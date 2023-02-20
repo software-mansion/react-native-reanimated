@@ -45,11 +45,8 @@ public class Snapshot {
   public int originY;
   public int globalOriginX;
   public int globalOriginY;
-  public List<Float> transformMatrix = new ArrayList<>(Arrays.asList(
-          1f, 0f, 0f,
-          0f, 1f, 0f,
-          0f, 0f, 1f
-  ));
+  public List<Float> transformMatrix =
+      new ArrayList<>(Arrays.asList(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f));
   public int originXByParent;
   public int originYByParent;
 
@@ -184,14 +181,19 @@ public class Snapshot {
       }
       float[] transformArray = new float[9];
       transformedView.getMatrix().getValues(transformArray);
-      isTransformed = transformArray[0] != 1  || transformArray[1] != 0 || transformArray[2] != 0
-              || transformArray[3] != 0  || transformArray[4] != 1 || transformArray[5] != 0
-              || transformArray[6] != 0  || transformArray[7] != 0 || transformArray[8] != 1;
-    } while (
-      !isTransformed
-      && transformedView != null
-      && !transformedView.getClass().getSimpleName().equals("Screen")
-    );
+      isTransformed =
+          transformArray[0] != 1
+              || transformArray[1] != 0
+              || transformArray[2] != 0
+              || transformArray[3] != 0
+              || transformArray[4] != 1
+              || transformArray[5] != 0
+              || transformArray[6] != 0
+              || transformArray[7] != 0
+              || transformArray[8] != 1;
+    } while (!isTransformed
+        && transformedView != null
+        && !transformedView.getClass().getSimpleName().equals("Screen"));
     return (isTransformed && transformedView != null) ? transformedView : null;
   }
 }
