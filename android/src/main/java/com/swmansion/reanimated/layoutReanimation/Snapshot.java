@@ -41,7 +41,8 @@ public class Snapshot {
   public int originY;
   public int globalOriginX;
   public int globalOriginY;
-  public int topInsetFromParent;
+  public int originXByParent;
+  public int originYByParent;
 
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
@@ -88,7 +89,8 @@ public class Snapshot {
     originY = location[1];
     width = view.getWidth();
     height = view.getHeight();
-    topInsetFromParent = view.getTop();
+    originXByParent = view.getLeft();
+    originYByParent = view.getTop();
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {

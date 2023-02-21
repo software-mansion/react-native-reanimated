@@ -37,7 +37,7 @@ using namespace facebook::jni;
 class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$AnimationFrameCallback;";
+      "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
 
   void onAnimationFrame(double timestampMs) {
     callback_(timestampMs);
@@ -62,7 +62,7 @@ class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
 class EventHandler : public HybridClass<EventHandler> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$EventHandler;";
+      "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
 
   void receiveEvent(
       jni::alias_ref<JString> eventKey,
@@ -92,7 +92,7 @@ class EventHandler : public HybridClass<EventHandler> {
 class SensorSetter : public HybridClass<SensorSetter> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$SensorSetter;";
+      "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
 
   void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
     size_t size = value->size();
@@ -122,7 +122,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
 class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$KeyboardEventDataUpdater;";
+      "Lcom/swmansion/reanimated/nativeProxy/KeyboardEventDataUpdater;";
 
   void keyboardEventDataUpdater(int keyboardState, int height) {
     callback_(keyboardState, height);
