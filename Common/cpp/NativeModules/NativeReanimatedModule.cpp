@@ -301,9 +301,9 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
     jsi::Runtime &rt,
     const jsi::Value &eventHash,
     const jsi::Value &worklet) {
-  static unsigned long EVENT_HANDLER_ID = 1;
+  static uint64_t EVENT_HANDLER_ID = 1;
 
-  unsigned long newRegistrationId = EVENT_HANDLER_ID++;
+  uint64_t newRegistrationId = EVENT_HANDLER_ID++;
   auto eventName = eventHash.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
@@ -324,7 +324,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 void NativeReanimatedModule::unregisterEventHandler(
     jsi::Runtime &rt,
     const jsi::Value &registrationId) {
-  unsigned long id = registrationId.asNumber();
+  uint64_t id = registrationId.asNumber();
   scheduler->scheduleOnUI(
       [=] { eventHandlerRegistry->unregisterEventHandler(id); });
 }

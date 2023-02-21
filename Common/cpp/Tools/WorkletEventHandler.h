@@ -18,14 +18,14 @@ class WorkletEventHandler {
 
  private:
   std::shared_ptr<JSRuntimeHelper> _runtimeHelper;
-  unsigned long id;
+  uint64_t id;
   std::string eventName;
   jsi::Value _handlerFunction;
 
  public:
   WorkletEventHandler(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      unsigned long id,
+      uint64_t id,
       std::string eventName,
       jsi::Value &&handlerFunction)
       : _runtimeHelper(runtimeHelper),
