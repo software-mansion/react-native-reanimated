@@ -13,19 +13,21 @@ export interface PluginOptions {
     path: BabelCore.NodePath;
   };
 }
+
 import generate from '@babel/generator';
 //@ts-expect-error
-import hash from 'string-hash-64';
+import * as hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
-// import fs from 'fs';
-import convertSourceMap from 'convert-source-map';
+// import fs from 'fs'; // --- bugs
+// import convertSourceMap from 'convert-source-map'; ---bugs
+
 // const generate = require('@babel/generator').default;
 // const hash = require('string-hash-64');
 // const traverse = require('@babel/traverse').default;
 // const { transformSync } = require('@babel/core');
 const fs = require('fs');
-// const convertSourceMap = require('convert-source-map');
+const convertSourceMap = require('convert-source-map');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
