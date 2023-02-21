@@ -316,6 +316,7 @@
       RCTFrameData frameData = frameDataArray[index++];
       UIView *view = viewRegistry[reactTag];
       BOOL isNew = frameData.isNew;
+      CGRect frame = frameData.frame;
 
       REASnapshot *snapshotBefore = snapshotsBefore[reactTag];
 
