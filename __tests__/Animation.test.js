@@ -49,18 +49,18 @@ const getDefaultStyle = () => ({
   margin: 30,
 });
 
-const origAdvanceTimersByTime = jest.advanceTimersByTime;
+const originalAdvanceTimersByTime = jest.advanceTimersByTime;
 
 jest.advanceTimersByTime = (timeMs) => {
-  // This is a workaround for an issue with using setImmediate that's implemented
-  // as a 0-second timeout. Because of that when we use setImmediate to schedule
-  // animation we actually got a lot of things delayed by three frames because
-  // of setImmediate calls that we do. To compensate for that we need to advance
-  // timers by two before performing
+  // This is a workaround for an issue with using setImmediate that's in the jest
+  // environment implemented as a 0-second timeout. Because of the fact we use
+  // setImmediate for scheduling runOnUI tasks as well as executing matters,
+  // starting new animaitons gets delayed be three frames. To compensate for that
+  // we execute pending timers three times before advancing the timers.
   jest.runOnlyPendingTimers();
   jest.runOnlyPendingTimers();
   jest.runOnlyPendingTimers();
-  origAdvanceTimersByTime(timeMs);
+  originalAdvanceTimersByTime(timeMs);
 };
 
 describe('Tests of animations', () => {
