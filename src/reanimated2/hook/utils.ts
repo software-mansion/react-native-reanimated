@@ -5,7 +5,6 @@ import {
   Context,
   NativeEvent,
   NestedObjectValues,
-  StyleProps,
   WorkletFunction,
   AnimationObject,
 } from '../commonTypes';
@@ -178,44 +177,19 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   return false;
 }
 
-export function styleDiff<T extends AnimatedStyle>(
-  oldStyle: AnimatedStyle,
-  newStyle: AnimatedStyle
-): Partial<T> {
+export function shallowEqual(a: any, b: any) {
   'worklet';
-  const diff: any = {};
-  for (const key in oldStyle) {
-    if (newStyle[key] === undefined) {
-      diff[key] = null;
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+  for (let i = 0; i < aKeys.length; i++) {
+    if (a[aKeys[i]] !== b[aKeys[i]]) {
+      return false;
     }
   }
-  for (const key in newStyle) {
-    const value = newStyle[key];
-    const oldValue = oldStyle[key];
-
-    if (isAnimated(value)) {
-      // do nothing
-      continue;
-    }
-    if (oldValue !== value) {
-      diff[key] = value;
-    }
-  }
-  return diff;
-}
-
-export function getStyleWithoutAnimations(newStyle: AnimatedStyle): StyleProps {
-  'worklet';
-  const diff: StyleProps = {};
-
-  for (const key in newStyle) {
-    const value = newStyle[key];
-    if (isAnimated(value)) {
-      continue;
-    }
-    diff[key] = value;
-  }
-  return diff;
+  return true;
 }
 
 export const validateAnimatedStyles = (styles: AnimatedStyle): void => {

@@ -6,10 +6,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/uimanager/primitives.h>
-#endif
-
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
@@ -431,16 +427,14 @@ class ShareableSynchronizedDataHolder
 
 class ShareableString : public Shareable {
  public:
-  ShareableString(jsi::Runtime &rt, const jsi::String &string)
-      : Shareable(StringType) {
-    data = string.utf8(rt);
-  }
+  explicit ShareableString(const std::string &string)
+      : Shareable(StringType), data_(string) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return jsi::String::createFromUtf8(rt, data);
+    return jsi::String::createFromUtf8(rt, data_);
   }
 
  protected:
-  std::string data;
+  std::string data_;
 };
 
 class ShareableScalar : public Shareable {

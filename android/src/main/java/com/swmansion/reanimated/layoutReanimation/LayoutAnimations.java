@@ -33,6 +33,9 @@ public class LayoutAnimations {
 
   public native void clearAnimationConfigForTag(int tag);
 
+  public native void cancelAnimationForTag(
+      int tag, String type, boolean cancelled, boolean removeView);
+
   public native boolean isLayoutAnimationEnabled();
 
   public native int findPrecedingViewTagForTransition(int tag);

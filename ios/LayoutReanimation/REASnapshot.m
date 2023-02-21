@@ -34,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
   if (useAbsolutePositionOnly) {
     _values[@"originX"] = _values[@"globalOriginX"];
     _values[@"originY"] = _values[@"globalOriginY"];
+    _values[@"originXByParent"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width / 2.0];
     _values[@"originYByParent"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height / 2.0];
 
     UIView *navigationContainer = view.reactViewController.navigationController.view;

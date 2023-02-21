@@ -320,7 +320,7 @@
       REASnapshot *snapshotBefore = snapshotsBefore[reactTag];
 
       if (isNew || snapshotBefore != nil) {
-        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore];
+        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
       }
     }
 
