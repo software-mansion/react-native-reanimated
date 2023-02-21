@@ -320,7 +320,7 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
-  module->setNewestShadowNodesRegistry(newezstShadowNodesRegistry_);
+  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
   newestShadowNodesRegistry_ = nullptr;
 #endif
   //  removed temporary, new event listener mechanism need fix on the RN side
