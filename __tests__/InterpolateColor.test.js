@@ -8,6 +8,20 @@ import Animated, {
   withTiming,
 } from '../src';
 
+const origAdvanceTimersByTime = jest.advanceTimersByTime;
+
+jest.advanceTimersByTime = (timeMs) => {
+  // This is a workaround for an issue with using setImmediate that's implemented
+  // as a 0-second timeout. Because of that when we use setImmediate to schedule
+  // animation we actually got a lot of things delayed by three frames because
+  // of setImmediate calls that we do. To compensate for that we need to advance
+  // timers by two before performing
+  jest.runOnlyPendingTimers();
+  jest.runOnlyPendingTimers();
+  jest.runOnlyPendingTimers();
+  origAdvanceTimersByTime(timeMs);
+};
+
 describe('colors interpolation', () => {
   it('interpolates rgb without gamma correction', () => {
     const colors = ['#105060', '#609020'];
@@ -157,7 +171,6 @@ describe('colors interpolation', () => {
 
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
 
     expect(view).toHaveAnimatedStyle(
       { backgroundColor: 'rgba(71, 117, 73, 1)' },
@@ -165,7 +178,6 @@ describe('colors interpolation', () => {
     );
 
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
 
     expect(view).toHaveAnimatedStyle(
       { backgroundColor: 'rgba(96, 144, 32, 1)' },
