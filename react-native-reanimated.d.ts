@@ -282,8 +282,12 @@ declare module 'react-native-reanimated' {
     export interface ScrollView extends ReactNativeScrollView {}
 
     export class Code extends Component<CodeProps> {}
-    export class FlatList<T> extends Component<AnimateProps<FlatListProps<T>>> {
-      itemLayoutAnimation: ILayoutAnimationBuilder;
+    export interface FlatListPropsWithLayout<T> extends FlatListProps<T> {
+      itemLayoutAnimation?: ILayoutAnimationBuilder;
+    }
+    export class FlatList<T> extends Component<
+      AnimateProps<FlatListPropsWithLayout<T>>
+    > {
       getNode(): ReactNativeFlatList;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
