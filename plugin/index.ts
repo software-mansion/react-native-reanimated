@@ -3,6 +3,7 @@
 
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
+import * as BabelTraverse from '@babel/traverse';
 
 export interface PluginOptions {
   opts?: {
@@ -14,11 +15,13 @@ export interface PluginOptions {
   };
 }
 import generate from '@babel/generator';
+//@ts-expect-error
 import hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
 import fs from 'fs';
 import convertSourceMap from 'convert-source-map';
+import { jSXIdentifier } from 'babel-types';
 // const generate = require('@babel/generator').default;
 // const hash = require('string-hash-64');
 // const traverse = require('@babel/traverse').default;
@@ -336,42 +339,43 @@ function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  traverse(transformed.ast, {
-    ReferencedIdentifier(path) {
-      const name = path.node.name;
-      if (globals.has(name) || (fun.node.id && fun.node.id.name === name)) {
-        return;
-      }
-
-      const parentNode = path.parent;
-
-      if (
-        parentNode.type === 'MemberExpression' &&
-        parentNode.property === path.node &&
-        !parentNode.computed
-      ) {
-        return;
-      }
-
-      if (
-        parentNode.type === 'ObjectProperty' &&
-        path.parentPath.parent.type === 'ObjectExpression' &&
-        path.node !== parentNode.value
-      ) {
-        return;
-      }
-
-      let currentScope = path.scope;
-
-      while (currentScope != null) {
-        if (currentScope.bindings[name] != null) {
+  if (transformed)
+    traverse(transformed.ast, {
+      Identifier(path) {
+        const name = path.node.name;
+        if (globals.has(name) || (fun.node.id && fun.node.id.name === name)) {
           return;
         }
-        currentScope = currentScope.parent;
-      }
-      closure.set(name, path.node);
-    },
-  });
+
+        const parentNode = path.parent;
+
+        if (
+          parentNode.type === 'MemberExpression' &&
+          parentNode.property === path.node &&
+          !parentNode.computed
+        ) {
+          return;
+        }
+
+        if (
+          parentNode.type === 'ObjectProperty' &&
+          path.parentPath.parent.type === 'ObjectExpression' &&
+          path.node !== parentNode.value
+        ) {
+          return;
+        }
+
+        let currentScope = path.scope;
+
+        while (currentScope != null) {
+          if (currentScope.bindings[name] != null) {
+            return;
+          }
+          currentScope = currentScope.parent;
+        }
+        closure.set(name, path.node);
+      },
+    });
 
   const variables = Array.from(closure.values());
 
