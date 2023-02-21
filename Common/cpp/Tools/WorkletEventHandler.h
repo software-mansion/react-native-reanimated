@@ -14,13 +14,13 @@ class WorkletEventHandler {
   friend EventHandlerRegistry;
 
  private:
-  unsigned long id;
+  uint64_t id;
   std::string eventName;
   jsi::Function handler;
 
  public:
   WorkletEventHandler(
-      unsigned long id,
+      uint64_t id,
       std::string eventName,
       jsi::Function &&handler)
       : id(id), eventName(eventName), handler(std::move(handler)) {}
