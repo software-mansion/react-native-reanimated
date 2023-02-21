@@ -1,9 +1,9 @@
 // 'use strict';
-// @ts-nocheck
+//// @ts-nocheck
 
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
-//import { isExpression, Node } from 'babel-types';
+
 export interface PluginOptions {
   opts?: {
     target?: string;
@@ -13,13 +13,18 @@ export interface PluginOptions {
     path: BabelCore.NodePath;
   };
 }
-
-const generate = require('@babel/generator').default;
-const hash = require('string-hash-64');
-const traverse = require('@babel/traverse').default;
-const { transformSync } = require('@babel/core');
-const fs = require('fs');
-const convertSourceMap = require('convert-source-map');
+import generate from '@babel/generator';
+import hash from 'string-hash-64';
+import traverse from '@babel/traverse';
+import { transformSync } from '@babel/core';
+import fs from 'fs';
+import convertSourceMap from 'convert-source-map';
+// const generate = require('@babel/generator').default;
+// const hash = require('string-hash-64');
+// const traverse = require('@babel/traverse').default;
+// const { transformSync } = require('@babel/core');
+// const fs = require('fs');
+// const convertSourceMap = require('convert-source-map');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
