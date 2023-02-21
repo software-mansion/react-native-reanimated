@@ -544,6 +544,14 @@ void NativeReanimatedModule::updateProps(
 }
 
 void NativeReanimatedModule::performOperations() {
+  // remove ShadowNodes from PropsRegistry
+  if (!tagsToRemove_.empty()) {
+    for (auto tag : tagsToRemove_) {
+      propsRegistry_->remove(tag);
+    }
+    tagsToRemove_.clear();
+  }
+
   if (operationsInBatch_.empty()) {
     return;
   }
@@ -551,12 +559,6 @@ void NativeReanimatedModule::performOperations() {
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
-
-  // remove ShadowNodes from PropsRegistry
-  for (auto tag : tagsToRemove_) {
-    propsRegistry_->remove(tag);
-  }
-  tagsToRemove_.clear();
 
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
