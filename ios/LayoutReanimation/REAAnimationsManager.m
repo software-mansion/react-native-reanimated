@@ -1,4 +1,6 @@
 #import <RNReanimated/REAAnimationsManager.h>
+#import <RNReanimated/REASharedElement.h>
+#import <RNReanimated/REASharedTransitionManager.h>
 #import <RNReanimated/REAUIManager.h>
 #import <React/RCTComponentData.h>
 #import <React/RCTTextView.h>
@@ -7,7 +9,7 @@
 
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
-static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
+BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   if (!view.reactTag) {
     return NO;
@@ -33,12 +35,14 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary<NSNumber *, REASnapshot *> *_enteringViewTargetValues;
   NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
   NSMutableDictionary<NSNumber *, NSNumber *> *_exitingSubviewsCountMap;
+  NSMutableDictionary<NSNumber *, NSNumber *> *_exitingParentTags;
   NSMutableSet<NSNumber *> *_ancestorsToRemove;
   NSMutableArray<NSString *> *_targetKeys;
   NSMutableArray<NSString *> *_currentKeys;
   REAAnimationStartingBlock _startAnimationForTag;
   REAHasAnimationBlock _hasAnimationForTag;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
+  REASharedTransitionManager *_sharedTransitionManager;
 }
 
 + (NSArray *)layoutKeys
@@ -59,6 +63,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _exitingViews = [NSMutableDictionary new];
     _exitingSubviewsCountMap = [NSMutableDictionary new];
     _ancestorsToRemove = [NSMutableSet new];
+    _exitingParentTags = [NSMutableDictionary new];
     _enteringViews = [NSMutableSet new];
     _enteringViewTargetValues = [NSMutableDictionary new];
 
@@ -68,6 +73,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       [_targetKeys addObject:[NSString stringWithFormat:@"target%@", [key capitalizedString]]];
       [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
     }
+    _sharedTransitionManager = [[REASharedTransitionManager alloc] initWithAnimationsManager:self];
   }
   return self;
 }
@@ -102,10 +108,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (UIView *)viewForTag:(NSNumber *)tag
 {
-  UIView *view = [_reaUiManager viewForReactTag:tag];
-  if (view == nil) {
-    return [_exitingViews objectForKey:tag];
-  }
+  UIView *view;
+  (view = [_reaUiManager viewForReactTag:tag]) || (view = [_exitingViews objectForKey:tag]) ||
+      (view = [_sharedTransitionManager getTransitioningView:tag]);
   return view;
 }
 
@@ -129,6 +134,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self endAnimationsRecursive:view];
     [view removeFromSuperview];
   }
+  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag]];
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
@@ -153,9 +159,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle forTag:(NSNumber *)tag
+- (void)progressLayoutAnimationWithStyle:(NSDictionary *)newStyle
+                                  forTag:(NSNumber *)tag
+                      isSharedTransition:(BOOL)isSharedTransition
 {
-  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag]];
+  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] convertFromAbsolute:isSharedTransition];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -169,14 +177,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view
 {
-  NSMutableDictionary *dataComponenetsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponenetsByName[@"RCTView"];
-  [self setNewProps:newProps forView:view withComponentData:componentData];
+  [self setNewProps:newProps forView:view convertFromAbsolute:NO];
 }
 
-- (void)setNewProps:(NSMutableDictionary *)newProps
-              forView:(UIView *)view
-    withComponentData:(RCTComponentData *)componentData
+- (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view convertFromAbsolute:(BOOL)convertFromAbsolute
 {
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
@@ -192,22 +196,40 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     view.center = CGPointMake(view.center.x + view.bounds.size.width / 2.0 - oldWidth / 2.0, view.center.y);
     [newProps removeObjectForKey:@"width"];
   }
+
+  bool needsViewPositionUpdate = false;
+  double centerX = view.center.x;
+  double centerY = view.center.y;
   if (newProps[@"originX"]) {
+    needsViewPositionUpdate = true;
     double originX = [self getDoubleOrZero:newProps[@"originX"]];
-    view.center = CGPointMake(originX + view.bounds.size.width / 2.0, view.center.y);
     [newProps removeObjectForKey:@"originX"];
+    centerX = originX + view.bounds.size.width / 2.0;
   }
   if (newProps[@"originY"]) {
+    needsViewPositionUpdate = true;
     double originY = [self getDoubleOrZero:newProps[@"originY"]];
-    view.center = CGPointMake(view.center.x, originY + view.bounds.size.height / 2.0);
     [newProps removeObjectForKey:@"originY"];
+    centerY = originY + view.bounds.size.height / 2.0;
   }
+  if (needsViewPositionUpdate) {
+    CGPoint newCenter = CGPointMake(centerX, centerY);
+    if (convertFromAbsolute) {
+      UIView *window = UIApplication.sharedApplication.keyWindow;
+      CGPoint convertedCenter = [window convertPoint:newCenter toView:view.superview];
+      view.center = convertedCenter;
+    } else {
+      view.center = newCenter;
+    }
+  }
+
+  NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
 }
 
 - (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values frameConfig:(FrameConfigType)frameConfig
 {
-  UIView *windowView = UIApplication.sharedApplication.keyWindow;
   if (frameConfig == EnteringFrame) {
     NSDictionary *preparedData = @{
       @"targetWidth" : values[@"width"],
@@ -216,8 +238,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       @"targetOriginY" : values[@"originY"],
       @"targetGlobalOriginX" : values[@"globalOriginX"],
       @"targetGlobalOriginY" : values[@"globalOriginY"],
-      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+      @"windowWidth" : values[@"windowWidth"],
+      @"windowHeight" : values[@"windowHeight"]
     };
     return preparedData;
   } else {
@@ -228,8 +250,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       @"currentOriginY" : values[@"originY"],
       @"currentGlobalOriginX" : values[@"globalOriginX"],
       @"currentGlobalOriginY" : values[@"globalOriginY"],
-      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+      @"windowWidth" : values[@"windowWidth"],
+      @"windowHeight" : values[@"windowHeight"]
     };
     return preparedData;
   }
@@ -238,7 +260,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues
 {
-  UIView *windowView = UIApplication.sharedApplication.keyWindow;
   NSDictionary *preparedData = @{
     @"currentWidth" : currentValues[@"width"],
     @"currentHeight" : currentValues[@"height"],
@@ -252,8 +273,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     @"targetOriginY" : targetValues[@"originY"],
     @"targetGlobalOriginX" : targetValues[@"globalOriginX"],
     @"targetGlobalOriginY" : targetValues[@"globalOriginY"],
-    @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-    @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+    @"windowWidth" : currentValues[@"windowWidth"],
+    @"windowHeight" : currentValues[@"windowHeight"]
   };
   return preparedData;
 }
@@ -273,11 +294,22 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)registerExitingAncestors:(UIView *)child exitingSubviewsCount:(int)exitingSubviewsCount
 {
+  NSNumber *childTag = child.reactTag;
   UIView *parent = child.superview;
-  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
-    if (parent.reactTag != nil) {
+
+  UIViewController *childController = child.reactViewController;
+
+  // only register ancestors whose `reactViewController` is the same as `child`'s.
+  // The idea is that, if a whole ViewController is unmounted, we won't want to run
+  // the exiting animation since all the views will disappear immediately anyway
+  while (parent != nil && parent.reactViewController == childController &&
+         ![parent isKindOfClass:[RCTRootView class]]) {
+    NSNumber *parentTag = parent.reactTag;
+    if (parentTag != nil) {
       _exitingSubviewsCountMap[parent.reactTag] =
           @([_exitingSubviewsCountMap[parent.reactTag] intValue] + exitingSubviewsCount);
+      _exitingParentTags[childTag] = parentTag;
+      childTag = parentTag;
     }
     parent = parent.superview;
   }
@@ -286,12 +318,37 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)maybeDropAncestors:(UIView *)child
 {
   UIView *parent = child.superview;
-  while (parent != nil && ![parent isKindOfClass:[RCTRootView class]]) {
+  NSNumber *parentTag = _exitingParentTags[child.reactTag];
+  [_exitingParentTags removeObjectForKey:child.reactTag];
+
+  while ((parent != nil || parentTag != nil) && ![parent isKindOfClass:[RCTRootView class]]) {
     UIView *view = parent;
+    NSNumber *viewTag = parentTag;
+    parentTag = _exitingParentTags[viewTag];
+    UIView *viewByTag = [self viewForTag:viewTag];
     parent = view.superview;
+
+    if (view == nil) {
+      if (viewByTag == nil) {
+        // the view was already removed from both native and RN hierarchies
+        // we can safely forget that it had any animated children
+        [_ancestorsToRemove removeObject:viewTag];
+        [_exitingSubviewsCountMap removeObjectForKey:viewTag];
+        [_exitingParentTags removeObjectForKey:viewTag];
+        continue;
+      }
+      // the child was dettached from view, but view is still
+      // in the native and RN hierarchy
+      view = viewByTag;
+    }
+
     if (view.reactTag == nil) {
+      // we skip over views with no tag when registering parent tags,
+      // so we shouldn't go to the parent of viewTag yet
+      parentTag = viewTag;
       continue;
     }
+
     int trackingCount = [_exitingSubviewsCountMap[view.reactTag] intValue] - 1;
     if (trackingCount <= 0) {
       if ([_ancestorsToRemove containsObject:view.reactTag]) {
@@ -301,6 +358,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
         }
       }
       [_exitingSubviewsCountMap removeObjectForKey:view.reactTag];
+      [_exitingParentTags removeObjectForKey:view.reactTag];
     } else {
       _exitingSubviewsCountMap[view.reactTag] = @(trackingCount);
     }
@@ -313,6 +371,19 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (!view.reactTag) {
     return NO;
   }
+
+  UIViewController *viewController = view.reactViewController;
+
+  // `startAnimationsRecursive:shouldRemoveSubviewsWithoutAnimations:`
+  // is called on a detached view tree, so the `viewController` should be `nil`.
+  // If it's not, we're descending into another `UIViewController`.
+  // We don't want to run animations inside it (since it causes issues with RNScreens),
+  // so instead clean up the subtree and return `NO`.
+  if (viewController != nil) {
+    [self removeAnimationsFromSubtree:view];
+    return NO;
+  }
+
   BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, @"exiting") || [_exitingViews objectForKey:view.reactTag];
   BOOL hasAnimatedChildren = NO;
   shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
@@ -424,10 +495,21 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return [[REASnapshot alloc] init:view];
 }
 
-- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before
+- (void)removeAnimationsFromSubtree:(UIView *)view
+{
+  REANodeFind(view, ^int(id<RCTComponent> view) {
+    if (!self->_hasAnimationForTag(view.reactTag, @"sharedElementTransition")) {
+      self->_clearAnimationConfigForTag(view.reactTag);
+    }
+    return false;
+  });
+}
+
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before withNewFrame:(CGRect)frame
 {
   NSString *type = before == nil ? @"entering" : @"layout";
-  if (_hasAnimationForTag(view.reactTag, type)) {
+  NSNumber *viewTag = view.reactTag;
+  if (_hasAnimationForTag(viewTag, type)) {
     REASnapshot *after = [[REASnapshot alloc] init:view];
     if (before == nil) {
       [self onViewCreate:view after:after];
@@ -438,14 +520,52 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     _enteringViewTargetValues[[view reactTag]] = [[REASnapshot alloc] init:view];
     [self setNewProps:before.values forView:view];
   }
+
+  if (_hasAnimationForTag(viewTag, @"sharedElementTransition")) {
+    if ([type isEqual:@"entering"]) {
+      [_sharedTransitionManager notifyAboutNewView:view];
+    } else {
+      [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
+    }
+  }
 }
 
-- (void)removeAnimationsFromSubtree:(UIView *)view
+- (void)viewsDidLayout
 {
-  REANodeFind(view, ^int(id<RCTComponent> view) {
-    self->_clearAnimationConfigForTag(view.reactTag);
-    return false;
-  });
+  [_sharedTransitionManager viewsDidLayout];
+}
+
+- (void)setFindPrecedingViewTagForTransitionBlock:
+    (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition
+{
+  [_sharedTransitionManager setFindPrecedingViewTagForTransitionBlock:findPrecedingViewTagForTransition];
+}
+
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock
+{
+  [_sharedTransitionManager setCancelAnimationBlock:animationCancellingBlock];
+}
+
+- (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type
+{
+  if (!_hasAnimationForTag) {
+    // It can happen during reload.
+    return NO;
+  }
+  return _hasAnimationForTag(tag, type);
+}
+
+- (void)clearAnimationConfigForTag:(NSNumber *)tag
+{
+  _clearAnimationConfigForTag(tag);
+}
+
+- (void)startAnimationForTag:(NSNumber *)tag
+                        type:(NSString *)type
+                  yogaValues:(NSDictionary *)yogaValues
+                       depth:(NSNumber *)depth;
+{
+  _startAnimationForTag(tag, type, yogaValues, depth);
 }
 
 @end

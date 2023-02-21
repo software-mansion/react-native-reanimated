@@ -76,9 +76,28 @@
   bool isLayoutAnimationEnabled = reanimated::FeaturesConfig::isLayoutAnimationEnabled();
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
+  BOOL containerIsRootOfViewController = NO;
   if (isLayoutAnimationEnabled) {
     container = registry[containerTag];
     permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+
+    if ([container isKindOfClass:[UIView class]]) {
+      UIViewController *controller = ((UIView *)container).reactViewController;
+      UIViewController *parentController = ((UIView *)container).superview.reactViewController;
+      containerIsRootOfViewController = controller != parentController;
+    }
+
+    // we check if the container we`re removing from is a root view
+    // of some view controller. In that case, we skip running exiting animations
+    // in its children, to prevent issues with RN Screens.
+    if (containerIsRootOfViewController) {
+      NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
+                                                                                         atIndices:removeAtIndices];
+      for (UIView *view in permanentlyRemovedChildren) {
+        [_animationsManager endAnimationsRecursive:view];
+      }
+      [_animationsManager removeAnimationsFromSubtree:(UIView *)container];
+    }
   }
 
   [super _manageChildren:containerTag
@@ -89,21 +108,27 @@
          removeAtIndices:removeAtIndices
                 registry:registry];
 
-  if (isLayoutAnimationEnabled) {
-    // we sort the (index, view) pairs to make sure we insert views back in order
-    NSMutableArray<NSArray<id> *> *removedViewsWithIndices = [NSMutableArray new];
-    for (int i = 0; i < removeAtIndices.count; i++) {
-      removedViewsWithIndices[i] = @[ removeAtIndices[i], permanentlyRemovedChildren[i] ];
-    }
-    [removedViewsWithIndices
-        sortUsingComparator:^NSComparisonResult(NSArray<id> *_Nonnull obj1, NSArray<id> *_Nonnull obj2) {
-          return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
-        }];
-
-    [_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
-                                     toContainer:container
-                                       atIndices:removeAtIndices];
+  if (!isLayoutAnimationEnabled) {
+    return;
   }
+
+  if (containerIsRootOfViewController) {
+    return;
+  }
+
+  // we sort the (index, view) pairs to make sure we insert views back in order
+  NSMutableArray<NSArray<id> *> *removedViewsWithIndices = [NSMutableArray new];
+  for (int i = 0; i < removeAtIndices.count; i++) {
+    removedViewsWithIndices[i] = @[ removeAtIndices[i], permanentlyRemovedChildren[i] ];
+  }
+  [removedViewsWithIndices
+      sortUsingComparator:^NSComparisonResult(NSArray<id> *_Nonnull obj1, NSArray<id> *_Nonnull obj2) {
+        return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
+      }];
+
+  [_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
+                                   toContainer:container
+                                     atIndices:removeAtIndices];
 }
 
 - (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag
@@ -283,7 +308,7 @@
 
       // Reanimated changes /start
       if (isNew || snapshotBefore != nil) {
-        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore];
+        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
       }
       // Reanimated changes /end
     }
@@ -291,6 +316,8 @@
     // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the
     // private field
     [uiManager setNextLayoutAnimationGroup:nil];
+
+    [self->_animationsManager viewsDidLayout];
   };
 }
 

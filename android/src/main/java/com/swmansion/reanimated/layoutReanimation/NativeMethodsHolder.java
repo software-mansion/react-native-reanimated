@@ -9,5 +9,9 @@ public interface NativeMethodsHolder {
 
   void clearAnimationConfig(int tag);
 
+  void cancelAnimation(int tag, String type, boolean cancelled, boolean removeView);
+
   boolean isLayoutAnimationEnabled();
+
+  int findPrecedingViewTagForTransition(int tag);
 }

@@ -120,8 +120,8 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
 
   auto removeShadowNodeFromRegistry =
-      [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
-        this->removeShadowNodeFromRegistry(rt, shadowNodeValue);
+      [this](jsi::Runtime &rt, const jsi::Value &tag) {
+        this->removeShadowNodeFromRegistry(rt, tag);
       };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
@@ -154,8 +154,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       makeShareableClone,
       updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
-      platformDepMethodsHolder.registerSensor,
-      platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
       platformDepMethodsHolder.endLayoutAnimation);
@@ -265,11 +263,9 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       } else {
         shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
       }
-#ifdef RCT_NEW_ARCH_ENABLED
-    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
-      shareable = std::make_shared<ShareableShadowNodeWrapper>(
-          runtimeHelper, rt, object);
-#endif
+    } else if (object.isHostObject(rt)) {
+      shareable = std::make_shared<ShareableHostObject>(
+          runtimeHelper, rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
@@ -279,7 +275,7 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       }
     }
   } else if (value.isString()) {
-    shareable = std::make_shared<ShareableString>(rt, value.asString(rt));
+    shareable = std::make_shared<ShareableString>(value.asString(rt).utf8(rt));
   } else if (value.isUndefined()) {
     shareable = std::make_shared<ShareableScalar>();
   } else if (value.isNull()) {
@@ -288,6 +284,13 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     shareable = std::make_shared<ShareableScalar>(value.getBool());
   } else if (value.isNumber()) {
     shareable = std::make_shared<ShareableScalar>(value.getNumber());
+  } else if (value.isSymbol()) {
+    // TODO: this is only a placeholder implementation, here we replace symbols
+    // with strings in order to make certain objects to be captured. There isn't
+    // yet any usecase for using symbols on the UI runtime so it is fine to keep
+    // it like this for now.
+    shareable =
+        std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
   } else {
     throw std::runtime_error("attempted to convert an unsupported value type");
   }
@@ -381,30 +384,31 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &type,
+    const jsi::Value &sharedTransitionTag,
     const jsi::Value &config) {
   layoutAnimationsManager_.configureAnimation(
       viewTag.asNumber(),
       type.asString(rt).utf8(rt),
+      sharedTransitionTag.asString(rt).utf8(rt),
       extractShareableOrThrow(rt, config));
   return jsi::Value::undefined();
 }
 
 void NativeReanimatedModule::onEvent(
     double eventTimestamp,
-    std::string eventName,
-#ifdef RCT_NEW_ARCH_ENABLED
-    jsi::Value &&payload
-#else
-    std::string eventAsString
-#endif
-    /**/) {
-#ifdef RCT_NEW_ARCH_ENABLED
-  eventHandlerRegistry->processEvent(
-      *runtime, eventTimestamp, eventName, payload);
-#else
-  eventHandlerRegistry->processEvent(
-      *runtime, eventTimestamp, eventName, eventAsString);
-#endif
+    const std::string &eventName,
+    const jsi::Value &payload) {
+  try {
+    eventHandlerRegistry->processEvent(*runtime, eventTimestamp, eventName, payload);
+  } catch (std::exception &e) {
+    std::string str = e.what();
+    this->errorHandler->setError(str);
+    this->errorHandler->raise();
+  } catch (...) {
+    std::string str = "OnEvent error";
+    this->errorHandler->setError(str);
+    this->errorHandler->raise();
+  }
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -431,15 +435,25 @@ jsi::Value NativeReanimatedModule::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
     const jsi::Value &interval,
+    const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule.registerSensor(
-      rt, runtimeHelper, sensorType, interval, sensorDataHandler);
+      rt,
+      runtimeHelper,
+      sensorType,
+      interval,
+      iosReferenceFrame,
+      sensorDataHandler);
 }
 
 void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
+}
+
+void NativeReanimatedModule::cleanupSensors() {
+  animatedSensorModule.unregisterAllSensors();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -458,19 +472,20 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   }
   return false;
 }
+#endif // RCT_NEW_ARCH_ENABLED
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
-    jsi::Value &&payload,
+    const jsi::Value &payload,
     double currentTime) {
-  jsi::Runtime &rt = *runtime.get();
-  onEvent(currentTime, eventName, std::move(payload));
+  onEvent(currentTime, eventName, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
   return false;
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
@@ -571,9 +586,8 @@ void NativeReanimatedModule::performOperations() {
 
 void NativeReanimatedModule::removeShadowNodeFromRegistry(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  tagsToRemove_.push_back(shadowNode->getTag());
+    const jsi::Value &tag) {
+  tagsToRemove_.push_back(tag.asNumber());
 }
 
 void NativeReanimatedModule::dispatchCommand(

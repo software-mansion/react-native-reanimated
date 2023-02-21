@@ -7,9 +7,8 @@ import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
-  getStyleWithoutAnimations,
   isAnimated,
-  styleDiff,
+  shallowEqual,
   validateAnimatedStyles,
 } from './utils';
 import { DependencyList, Descriptor } from './commonTypes';
@@ -19,7 +18,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../ViewDescriptorsSet';
-import { isJest } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import {
   AnimationObject,
   Timestamp,
@@ -29,6 +28,7 @@ import {
   BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
+  StyleProps,
 } from '../commonTypes';
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
@@ -185,9 +185,11 @@ function styleUpdater(
   const animations = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
+  const nonAnimatedNewValues: StyleProps = {};
 
   let hasAnimations = false;
   let frameTimestamp: number | undefined;
+  let hasNonAnimatedValues = false;
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
@@ -196,6 +198,8 @@ function styleUpdater(
       animations[key] = value;
       hasAnimations = true;
     } else {
+      hasNonAnimatedValues = true;
+      nonAnimatedNewValues[key] = value;
       delete animations[key];
     }
   }
@@ -243,21 +247,19 @@ function styleUpdater(
       state.isAnimationRunning = true;
       frame(frameTimestamp!);
     }
-    state.last = Object.assign(oldValues, newValues);
-    const style = getStyleWithoutAnimations(state.last);
-    if (style) {
-      updateProps(viewDescriptors, style, maybeViewRef);
+
+    if (hasNonAnimatedValues) {
+      updateProps(viewDescriptors, nonAnimatedNewValues, maybeViewRef);
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    const diff = styleDiff(oldValues, newValues);
-    state.last = Object.assign(oldValues, diff);
-    if (diff) {
+    if (!shallowEqual(oldValues, newValues)) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
   }
+  state.last = newValues;
 }
 
 function jestStyleUpdater(
@@ -348,13 +350,12 @@ function jestStyleUpdater(
   }
 
   // calculate diff
-  const diff = styleDiff(oldValues, newValues);
-  state.last = Object.assign(oldValues, diff);
+  state.last = newValues;
 
-  if (Object.keys(diff).length !== 0) {
+  if (!shallowEqual(oldValues, newValues)) {
     updatePropsJestWrapper(
       viewDescriptors,
-      diff,
+      newValues,
       maybeViewRef,
       animatedStyle,
       adapters
@@ -396,7 +397,20 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
-  const inputs = Object.values(updater._closure ?? {});
+  let inputs = Object.values(updater._closure ?? {});
+  if (shouldBeUseWeb()) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
+    if (__DEV__ && !inputs.length && !dependencies && !updater.__workletHash) {
+      throw new Error(
+        `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
+
+For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin`
+      );
+    }
+  }
   const adaptersArray: AdapterWorkletFunction[] = adapters
     ? Array.isArray(adapters)
       ? adapters

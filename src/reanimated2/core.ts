@@ -148,11 +148,16 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 export function registerSensor(
   sensorType: number,
   interval: number,
-  eventHandler: (data: Value3D | ValueRotation) => void
+  iosReferenceFrame: number,
+  eventHandler: (
+    data: Value3D | ValueRotation,
+    orientationDegrees: number
+  ) => void
 ): number {
   return NativeReanimatedModule.registerSensor(
     sensorType,
     interval,
+    iosReferenceFrame,
     makeShareableCloneRecursive(eventHandler)
   );
 }
@@ -198,11 +203,13 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: string,
-  config: LayoutAnimationFunction | Keyframe
+  config: LayoutAnimationFunction | Keyframe,
+  sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
     viewTag,
     type,
+    sharedTransitionTag,
     makeShareableCloneRecursive(config)
   );
 }

@@ -33,7 +33,12 @@ public class LayoutAnimations {
 
   public native void clearAnimationConfigForTag(int tag);
 
+  public native void cancelAnimationForTag(
+      int tag, String type, boolean cancelled, boolean removeView);
+
   public native boolean isLayoutAnimationEnabled();
+
+  public native int findPrecedingViewTagForTransition(int tag);
 
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     ReactApplicationContext context = mContext.get();
@@ -46,14 +51,15 @@ public class LayoutAnimations {
     }
   }
 
-  private void progressLayoutAnimation(int tag, Map<String, Object> newStyle) {
+  private void progressLayoutAnimation(
+      int tag, Map<String, Object> newStyle, boolean isSharedTransition) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {
       context
           .getNativeModule(ReanimatedModule.class)
           .getNodesManager()
           .getAnimationsManager()
-          .progressLayoutAnimation(tag, newStyle);
+          .progressLayoutAnimation(tag, newStyle, isSharedTransition);
     }
   }
 }

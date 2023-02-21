@@ -27,21 +27,13 @@ class EventHandlerRegistry {
   void registerEventHandler(std::shared_ptr<WorkletEventHandler> eventHandler);
   void unregisterEventHandler(unsigned long id);
 
-#ifdef RCT_NEW_ARCH_ENABLED
   void processEvent(
       jsi::Runtime &rt,
       double eventTimestamp,
-      std::string eventName,
-      jsi::Value &eventPayload);
-#else
-  void processEvent(
-      jsi::Runtime &rt,
-      double eventTimestamp,
-      std::string eventName,
-      std::string eventPayload);
-#endif
+      const std::string &eventName,
+      const jsi::Value &eventPayload);
 
-  bool isAnyHandlerWaitingForEvent(std::string eventName);
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName);
 };
 
 } // namespace reanimated

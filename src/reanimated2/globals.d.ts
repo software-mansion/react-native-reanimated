@@ -25,7 +25,11 @@ declare global {
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
   const _getTimestamp: () => number;
-  const _notifyAboutProgress: (tag: number, value: number) => void;
+  const _notifyAboutProgress: (
+    tag: number,
+    value: number,
+    isSharedTransition: boolean
+  ) => void;
   const _notifyAboutEnd: (
     tag: number,
     finished: boolean,
@@ -47,9 +51,7 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
   ) => void;
-  const _removeShadowNodeFromRegistry: (
-    shadowNodeWrapper: ShadowNodeWrapper
-  ) => void;
+  const _removeShadowNodeFromRegistry: (viewTag: number) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _scrollTo: (
     viewTag: number,
@@ -106,9 +108,7 @@ declare global {
         shadowNodeWrapper: ShadowNodeWrapper,
         props: StyleProps | AnimatedStyle
       ) => void;
-      _removeShadowNodeFromRegistry: (
-        shadowNodeWrapper: ShadowNodeWrapper
-      ) => void;
+      _removeShadowNodeFromRegistry: (viewTag: number) => void;
       _measure: (viewTag: number) => MeasuredDimensions;
       _scrollTo: (
         viewTag: number,

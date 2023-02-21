@@ -1,3 +1,18 @@
+import React from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  LogBox,
+  Platform,
+  UIManager,
+  ScrollView,
+  Pressable,
+} from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer } from '@react-navigation/native';
 import {
   BasicLayoutAnimation,
   BasicNestedAnimation,
@@ -12,23 +27,10 @@ import {
   MountingUnmounting,
   NativeModals,
   NestedTest,
+  NestedNativeStacksWithLayout,
   SpringLayoutAnimation,
   SwipeableList,
 } from './LayoutReanimation';
-import {
-  FlatList,
-  LogBox,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  UIManager,
-  View,
-} from 'react-native';
-import {
-  StackNavigationProp,
-  createStackNavigator,
-} from '@react-navigation/stack';
 
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
@@ -45,12 +47,9 @@ import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
-import { NavigationContainer } from '@react-navigation/native';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
 import { PagerExample } from './CustomHandler';
-import React from 'react';
 import { ReactionsCounterExample } from './ReactionsCounterExample';
-import { RectButton } from 'react-native-gesture-handler';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
@@ -60,6 +59,7 @@ import SwipeableListExample from './SwipeableListExample';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
+import CubesExample from './CubesExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -79,6 +79,10 @@ const SCREENS: Screens = {
   DeleteAncestorOfExiting: {
     screen: DeleteAncestorOfExiting,
     title: '🆕 Deleting view with an exiting animation',
+  },
+  NestedNativeStacksWithLayout: {
+    screen: NestedNativeStacksWithLayout,
+    title: '🆕 Nested NativeStacks with layout',
   },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
@@ -111,6 +115,10 @@ const SCREENS: Screens = {
   AnimatedSensor: {
     screen: AnimatedSensorExample,
     title: '🆕 Use Animated Sensor',
+  },
+  Cubes: {
+    screen: CubesExample,
+    title: '🆕 Cubes with useAnimatedSensor',
   },
   FrameCallbackExample: {
     screen: FrameCallbackExample,
@@ -283,16 +291,16 @@ export function MainScreenItem({
 }: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
-    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+    <Pressable style={styles.button} onPress={() => onPressItem(item)}>
       <Text style={styles.buttonText}>{screens[key].title || key}</Text>
-    </RectButton>
+    </Pressable>
   );
 }
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const Reanimated2 = () => (
-  <Stack.Navigator detachInactiveScreens={false}>
+  <Stack.Navigator>
     <Stack.Screen
       name="Home"
       options={{ title: '🎬 Reanimated 2.x Examples' }}
@@ -323,6 +331,7 @@ export const styles = StyleSheet.create({
   },
   buttonText: {
     backgroundColor: 'transparent',
+    color: 'black',
   },
   button: {
     flex: 1,

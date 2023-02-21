@@ -14,11 +14,7 @@ AnimatedSensorModule::AnimatedSensorModule(
           platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
-  // It is called during app reload because app reload doesn't call hooks
-  // unmounting
-  for (auto sensorId : sensorsIds_) {
-    platformUnregisterSensorFunction_(sensorId);
-  }
+  assert(sensorsIds_.empty());
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
@@ -26,14 +22,26 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
     const jsi::Value &sensorTypeValue,
     const jsi::Value &interval,
+    const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
 
   int sensorId = platformRegisterSensorFunction_(
-      sensorType, interval.asNumber(), [=](double newValues[]) {
-        jsi::Runtime &rt = *runtimeHelper->uiRuntime();
+      sensorType,
+      interval.asNumber(),
+      iosReferenceFrame.asNumber(),
+      [sensorType,
+       shareableHandler,
+       weakRuntimeHelper = std::weak_ptr<JSRuntimeHelper>(runtimeHelper)](
+          double newValues[], int orientationDegrees) {
+        auto runtimeHelper = weakRuntimeHelper.lock();
+        if (runtimeHelper == nullptr || runtimeHelper->uiRuntimeDestroyed) {
+          return;
+        }
+
+        auto &rt = *runtimeHelper->uiRuntime();
         auto handler = shareableHandler->getJSValue(rt);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           jsi::Object value(rt);
@@ -47,12 +55,14 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(rt, "yaw", newValues[4]);
           value.setProperty(rt, "pitch", newValues[5]);
           value.setProperty(rt, "roll", newValues[6]);
+          value.setProperty(rt, "interfaceOrientation", orientationDegrees);
           runtimeHelper->runOnUIGuarded(handler, value);
         } else {
           jsi::Object value(rt);
           value.setProperty(rt, "x", newValues[0]);
           value.setProperty(rt, "y", newValues[1]);
           value.setProperty(rt, "z", newValues[2]);
+          value.setProperty(rt, "interfaceOrientation", orientationDegrees);
           runtimeHelper->runOnUIGuarded(handler, value);
         }
       });
@@ -66,6 +76,13 @@ void AnimatedSensorModule::unregisterSensor(const jsi::Value &sensorId) {
   // It is called during sensor hook unmounting
   sensorsIds_.erase(sensorId.getNumber());
   platformUnregisterSensorFunction_(sensorId.asNumber());
+}
+
+void AnimatedSensorModule::unregisterAllSensors() {
+  for (auto sensorId : sensorsIds_) {
+    platformUnregisterSensorFunction_(sensorId);
+  }
+  sensorsIds_.clear();
 }
 
 } // namespace reanimated

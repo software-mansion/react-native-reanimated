@@ -16,6 +16,18 @@ class BaseAnimationMock {
     return this;
   }
 
+  springify(_: number) {
+    return this;
+  }
+
+  damping(_: number) {
+    return this;
+  }
+
+  stiffness(_: number) {
+    return this;
+  }
+
   withCallback(_: (finsihed: boolean) => void) {
     return this;
   }
@@ -26,6 +38,10 @@ class BaseAnimationMock {
 
   withInitialValues() {
     return this;
+  }
+
+  build() {
+    return () => ({ initialValues: {}, animations: {} });
   }
 }
 
@@ -102,7 +118,7 @@ const ReanimatedV2 = {
   'FadeInRight',
   'FadeInLeft',
   'FadeInUp',
-  'FadFadeInDown',
+  'FadeInDown',
   'FadeOut',
   'FadeOutRight',
   'FadeOutLeft',
@@ -174,6 +190,13 @@ const ReanimatedV2 = {
   'RollInRight',
   'RollOutLeft',
   'RollOutRight',
+
+  'Layout',
+  'CurvedTransition',
+  'JumpingTransition',
+  'SequencedTransition',
+  'FadingTransition',
+  'EntryExitTransition',
 ].forEach((k) =>
   Object.assign(ReanimatedV2, {
     [k]: new BaseAnimationMock(),
