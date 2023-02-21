@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import { measure } from './NativeMethods';
 import { RefObjectFunction } from './hook/commonTypes';
+import { SharedValue } from './commonTypes';
 
 export interface ComponentCoords {
   x: number;
@@ -27,7 +28,7 @@ export function getRelativeCoords(
   };
 }
 
-export function isSharedValue(obj: any) {
+export function isSharedValue<T>(value: any): value is SharedValue<T> {
   'worklet';
-  return typeof obj === 'object' && obj.value !== undefined;
+  return typeof value === 'object' && value._isReanimatedSharedValue === true;
 }
