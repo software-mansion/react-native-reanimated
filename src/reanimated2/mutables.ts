@@ -6,12 +6,13 @@ import {
   registerShareableMapping,
 } from './shareables';
 import { runOnUI } from './threads';
-import { valueSetter } from './valueSetter';
+import { valueSetter as defaultSetter } from './valueSetter';
 export { stopMapper } from './mappers';
 
 export function makeUIMutable<T>(
   initial: T,
-  syncDataHolder?: ShareableSyncDataHolderRef<T>
+  syncDataHolder?: ShareableSyncDataHolderRef<T>,
+  valueSetter = defaultSetter
 ) {
   'worklet';
 
@@ -59,7 +60,8 @@ export function makeUIMutable<T>(
 
 export function makeMutable<T>(
   initial: T,
-  oneWayReadsOnly = false
+  oneWayReadsOnly = false,
+  valueSetter = defaultSetter
 ): SharedValue<T> {
   let value: T = initial;
   let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
@@ -73,7 +75,7 @@ export function makeMutable<T>(
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      return makeUIMutable(initial, syncDataHolder);
+      return makeUIMutable(initial, syncDataHolder, valueSetter);
     },
   });
   // listeners can only work on JS thread on Web and jest environments

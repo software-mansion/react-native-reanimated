@@ -44,7 +44,6 @@ export function scrollValueSetter(sv: any, value: any, animatedRef: any): void {
       animation.finished = true;
       animation.timestamp = timestamp;
       scrollTo(animatedRef, 0, Number(animation.current), false);
-      sv._value = animation.current;
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {

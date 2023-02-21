@@ -5,8 +5,8 @@ import { ScrollEvent } from './useAnimatedScrollHandler';
 import { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
 import { useEvent } from './utils';
+import { makeMutable } from '../core';
 import { cancelAnimation } from '../animation';
-import { makeCustomSetterMutable } from '../customSetterMutables';
 import { scrollValueSetter } from '../scrollValueSetter';
 
 const scrollEventNames = [
@@ -20,7 +20,7 @@ const scrollEventNames = [
 export function useScrollViewOffset(
   aref: RefObject<Animated.ScrollView>
 ): SharedValue<number> {
-  const offsetRef = useRef(useCustomSharedValue(0, false, aref));
+  const offsetRef = useRef(useScrollToSharedValue(0, false, aref));
 
   const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
@@ -39,7 +39,7 @@ export function useScrollViewOffset(
   return offsetRef.current;
 }
 
-function useCustomSharedValue<T>(
+function useScrollToSharedValue<T>(
   init: T,
   oneWayReadsOnly = false,
   aref: any
@@ -49,11 +49,11 @@ function useCustomSharedValue<T>(
     scrollValueSetter(sv, newValue, aref);
   };
   const ref = useRef<SharedValue<T>>(
-    makeCustomSetterMutable(init, oneWayReadsOnly, scrollSetter)
+    makeMutable(init, oneWayReadsOnly, scrollSetter)
   );
 
   if (ref.current === null) {
-    ref.current = makeCustomSetterMutable(init, oneWayReadsOnly, scrollSetter);
+    ref.current = makeMutable(init, oneWayReadsOnly, scrollSetter);
   }
 
   useEffect(() => {
