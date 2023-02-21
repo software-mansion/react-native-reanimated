@@ -1,11 +1,10 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import { ComplexWorkletFunction } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
 
 const IS_JEST = isJest();
 let _lastSetImmediateFunction: Function | null = null;
