@@ -398,17 +398,8 @@ void NativeReanimatedModule::onEvent(
     double eventTimestamp,
     const std::string &eventName,
     const jsi::Value &payload) {
-  try {
-    eventHandlerRegistry->processEvent(*runtime, eventTimestamp, eventName, payload);
-  } catch (std::exception &e) {
-    std::string str = e.what();
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  } catch (...) {
-    std::string str = "OnEvent error";
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  }
+  eventHandlerRegistry->processEvent(
+      *runtime, eventTimestamp, eventName, payload);
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
