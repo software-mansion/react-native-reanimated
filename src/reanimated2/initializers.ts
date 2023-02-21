@@ -2,7 +2,6 @@ import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest } from './PlatformChecker';
 import {
-  runOnUI,
   runOnJS,
   setupSetImmediate,
   flushImmediates,
@@ -141,7 +140,8 @@ export function initializeUIRuntime() {
     // the method directly using setTimeout, therefore the callback doesn't get the
     // expected timestamp as the only argument: https://github.com/facebook/react-native/blob/main/jest/setup.js#L28
     // We override this setup here to make sure that callbacks get the proper timestamps
-    // when executed. FOr non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
+    // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
+    // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
     global.requestAnimationFrame = (callback: (timestamp: number) => void) => {
       return setTimeout(() => callback(performance.now()), 0);
     };

@@ -7,7 +7,7 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
-let _lastSetImmediateFunction: Function | null = null;
+let _lastSetImmediateFunction: ((callback: () => void) => void) | null = null;
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
@@ -37,7 +37,9 @@ function flushImmediatesOnUIThread() {
 }
 
 export const flushImmediates = shouldBeUseWeb()
-  ? () => {} // on web flushing is a noop as it is handled by the browser
+  ? () => {
+      // on web flushing is a noop as immediates are handled by the browser
+    }
   : flushImmediatesOnUIThread;
 
 /**

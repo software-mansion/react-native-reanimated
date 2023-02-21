@@ -1,4 +1,3 @@
-import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
