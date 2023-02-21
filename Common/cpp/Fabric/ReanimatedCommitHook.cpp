@@ -15,12 +15,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
   if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
     // ShadowTree commited by Reanimated, no need to apply updates from
-    // PropsRegistry or recalculate layout
+    // PropsRegistry
     return newRootShadowNode;
   }
 
-  // ShadowTree not commited by Reanimated, apply updates from PropsRegistry and
-  // recalculate layout
+  // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
   auto surfaceId = newRootShadowNode->getSurfaceId();
 
