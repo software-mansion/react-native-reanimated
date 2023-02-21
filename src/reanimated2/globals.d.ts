@@ -24,7 +24,6 @@ declare global {
   const evalWithSourceUrl: (js: string, sourceURL: string) => any;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
-  const _getTimestamp: () => number;
   const _notifyAboutProgress: (
     tag: number,
     value: number,
@@ -91,7 +90,6 @@ declare global {
       evalWithSourceUrl: (js: string, sourceURL: string) => any;
       _log: (s: string) => void;
       _getCurrentTime: () => number;
-      _getTimestamp: () => number;
       _setGestureState: (handlerTag: number, newState: number) => void;
       _makeShareableClone: (value: any) => any;
       _updateDataSynchronously: (
