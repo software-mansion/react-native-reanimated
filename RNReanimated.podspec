@@ -88,7 +88,7 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  if use_hermes
+  if config[:react_native_minor_version] >= 65 && use_hermes
     s.dependency "React-hermes"
   end
 
