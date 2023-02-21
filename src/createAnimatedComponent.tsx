@@ -4,7 +4,7 @@ import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
-import { adaptViewConfig, isPropWhitelisted } from './ConfigHelper';
+import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
@@ -149,7 +149,7 @@ function getInlinePropsFromProps(
           }
         }
       });
-    } else if (isSharedValue(value) && isPropWhitelisted(key)) {
+    } else if (isSharedValue(value)) {
       inlineProps[key] = value;
     }
   }
@@ -517,7 +517,12 @@ export default function createAnimatedComponent(
         if (!this._inlinePropsViewDescriptors) {
           this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
 
-          const { viewTag, viewName, shadowNodeWrapper } = this._getViewInfo();
+          const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
+            this._getViewInfo();
+
+          if (Object.keys(newInlineProps).length && viewConfig) {
+            adaptViewConfig(viewConfig);
+          }
 
           this._inlinePropsViewDescriptors.add({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -675,7 +680,7 @@ export default function createAnimatedComponent(
           } else {
             props[key] = dummyListener;
           }
-        } else if (isSharedValue(value) && isPropWhitelisted(key)) {
+        } else if (isSharedValue(value)) {
           if (this._isFirstRender) {
             props[key] = (value as SharedValue<any>).value;
           }
