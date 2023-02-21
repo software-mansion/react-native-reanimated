@@ -1,21 +1,21 @@
-// 'use strict';
-// @ts-nocheck
+'use strict';
 
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
 
-export interface PluginOptions {
-  opts?: {
-    target?: string;
-    runtime?: string;
-  };
-  file: {
-    path: BabelCore.NodePath;
-  };
-}
+// export interface PluginOptions {
+//   opts?: {
+//     target?: string;
+//     runtime?: string;
+//   };
+//   file: {
+//     path: BabelCore.NodePath;
+//   };
+// }
+// not sure what to do about it
 
 import generate from '@babel/generator';
-//@ts-expect-error
+// @ts-expect-error
 import * as hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
@@ -162,6 +162,7 @@ function shouldGenerateSourceMap() {
   return true;
 }
 
+// TO DO
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
@@ -285,11 +286,11 @@ function makeWorklet(
   fun: BabelCore.NodePath<
     | BabelTypes.FunctionDeclaration
     | BabelTypes.FunctionExpression
-    | BabelTypes.ObjectMethod
+    // | BabelTypes.ObjectMethod -- it didn't appear upstream
     | BabelTypes.ArrowFunctionExpression
   >,
   state: BabelCore.PluginOptions
-) {
+): BabelTypes.FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -323,7 +324,7 @@ function makeWorklet(
     '(' + (t.isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = transformSync(code, {
-    // @ts-ignore
+    // @ts-expect-error
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
@@ -339,13 +340,20 @@ function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  //if (transformed)
+  if (!transformed) throw new Error('null tree weird exception\n'); //this is temporary
+
   traverse(transformed.ast, {
-    ReferencedIdentifier(path) {
-      //Identifier(path) {
-      //if(!path.isReferencedIdentifier()) return;
+    //ReferencedIdentifier(path) {
+    Identifier(path) {
+      if (!path.isReferencedIdentifier()) return; // not sure if this is necessary
       const name = path.node.name;
-      if (globals.has(name) || (fun.node.id && fun.node.id.name === name)) {
+      if (
+        globals.has(name) ||
+        (!BabelTypes.isArrowFunctionExpression(fun.node) && // necessary?
+          // !BabelTypes.isObjectMethod(fun.node) && --necessary?
+          fun.node.id &&
+          fun.node.id.name === name)
+      ) {
         return;
       }
 
@@ -399,9 +407,10 @@ function makeWorklet(
   );
   const workletHash = hash(funString);
 
-  let location = state.file.opts.filename;
+  // @ts-expect-error
+  let location = state.file.opts.filename; // @ts-expect-error
   if (state.opts && state.opts.relativeSourceLocation) {
-    const path = require('path');
+    const path = require('path'); // @ts-expect-error
     location = path.relative(state.cwd, location);
   }
 
