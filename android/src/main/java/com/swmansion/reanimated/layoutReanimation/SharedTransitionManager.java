@@ -30,7 +30,7 @@ public class SharedTransitionManager {
   private final Map<Integer, View> mCurrentSharedTransitionViews = new HashMap<>();
   private View mTransitionContainer;
   private final List<View> mRemovedSharedViews = new ArrayList<>();
-  private final Set<Integer> mShouldBeHidden = new HashSet<>();
+  private final Set<Integer> mViewTagsToHide = new HashSet<>();
   private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
@@ -100,13 +100,13 @@ public class SharedTransitionManager {
   private void restoreVisibility() {
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
         mAnimationsManager.getReanimatedNativeHierarchyManager();
-    for (int viewTag : mShouldBeHidden) {
+    for (int viewTag : mViewTagsToHide) {
       View view = reanimatedNativeHierarchyManager.resolveView(viewTag);
       if (view != null) {
         view.setVisibility(View.VISIBLE);
       }
     }
-    mShouldBeHidden.clear();
+    mViewTagsToHide.clear();
   }
 
   private boolean isViewChildParentWithTag(View view, int parentTag) {
@@ -291,7 +291,7 @@ public class SharedTransitionManager {
 
       Snapshot sourceViewSnapshot = null;
       if (addedNewScreen) {
-        mShouldBeHidden.add(viewSource.getId());
+        mViewTagsToHide.add(viewSource.getId());
         if (isSourceViewInTransition) {
           sourceViewSnapshot = new Snapshot(viewSource);
         } else {
@@ -446,7 +446,7 @@ public class SharedTransitionManager {
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
         viewSourcePreviousSnapshot.originY = originY;
       }
-      if (mShouldBeHidden.contains(tag)) {
+      if (mViewTagsToHide.contains(tag)) {
         view.setVisibility(View.INVISIBLE);
       }
       mCurrentSharedTransitionViews.remove(viewTag);

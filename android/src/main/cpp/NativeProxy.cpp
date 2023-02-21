@@ -349,8 +349,23 @@ void NativeProxy::installJSIBindings(
 
   std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
 
+  auto convertToArray = [](jsi::Runtime &rt, const std::string &value) {
+    std::vector<float> transformMatrixList;
+    std::istringstream stringStream(value);
+    std::copy(
+        std::istream_iterator<float>(stringStream),
+        std::istream_iterator<float>(),
+        std::back_inserter(transformMatrixList));
+    assert(transformMatrixList.size() == 9);
+    jsi::Array matrix(rt, 9);
+    for (int i = 0; i < 9; i++) {
+      matrix.setValueAtIndex(rt, i, transformMatrixList[i]);
+    }
+    return matrix;
+  };
+
   layoutAnimations->cthis()->setAnimationStartingBlock(
-      [wrt, weakModule, weakErrorHandler](
+      [wrt, weakModule, weakErrorHandler, convertToArray](
           int tag,
           alias_ref<JString> type,
           alias_ref<JMap<jstring, jstring>> values) {
@@ -363,16 +378,7 @@ void NativeProxy::installJSIBindings(
             auto key = jsi::String::createFromAscii(rt, keyString);
             if (keyString == "currentTransformMatrix" ||
                 keyString == "targetTransformMatrix") {
-              std::vector<float> transformMatrixList;
-              std::istringstream stringStream(valueString);
-              std::copy(
-                  std::istream_iterator<float>(stringStream),
-                  std::istream_iterator<float>(),
-                  std::back_inserter(transformMatrixList));
-              jsi::Array matrix(rt, 9);
-              for (int i = 0; i < 9; i++) {
-                matrix.setValueAtIndex(rt, i, transformMatrixList[i]);
-              }
+              jsi::Array matrix = convertToArray(rt, valueString);
               yogaValues.setProperty(rt, key, matrix);
             } else {
               auto value = stod(valueString);

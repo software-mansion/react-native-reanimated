@@ -16,7 +16,7 @@
   BOOL _isSharedTransitionActive;
   NSMutableArray<REASharedElement *> *_sharedElements;
   REAAnimationsManager *_animationManager;
-  NSMutableSet<NSNumber *> *_viewShouldBeHidden;
+  NSMutableSet<NSNumber *> *_viewsToHide;
   NSMutableArray<UIView *> *_removedViews;
   NSMutableSet<UIView *> *_viewsWithCanceledAnimation;
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
@@ -43,7 +43,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _isSharedTransitionActive = NO;
     _sharedElements = [NSMutableArray new];
     _animationManager = animationManager;
-    _viewShouldBeHidden = [NSMutableSet new];
+    _viewsToHide = [NSMutableSet new];
     _sharedTransitionManager = self;
     _viewsWithCanceledAnimation = [NSMutableSet new];
     _disableCleaningForView = [NSMutableDictionary new];
@@ -252,7 +252,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
 
     if (isModal) {
-      [_viewShouldBeHidden addObject:viewSource.reactTag];
+      [_viewsToHide addObject:viewSource.reactTag];
     }
 
     REASnapshot *sourceViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewSource];
@@ -396,11 +396,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)restoreViewsVisibility
 {
-  for (NSNumber *viewTag in _viewShouldBeHidden) {
+  for (NSNumber *viewTag in _viewsToHide) {
     UIView *view = [_animationManager viewForTag:viewTag];
     view.hidden = NO;
   }
-  [_viewShouldBeHidden removeAllObjects];
+  [_viewsToHide removeAllObjects];
 }
 
 - (void)clearConfigForStack:(UIView *)stack
@@ -561,7 +561,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
       CGRect frame = CGRectMake(view.frame.origin.x, originYByParent, view.frame.size.width, view.frame.size.height);
       [view setFrame:frame];
     }
-    if ([_viewShouldBeHidden containsObject:viewTag]) {
+    if ([_viewsToHide containsObject:viewTag]) {
       view.hidden = YES;
     }
     [_currentSharedTransitionViews removeObjectForKey:viewTag];

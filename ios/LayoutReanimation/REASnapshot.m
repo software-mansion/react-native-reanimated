@@ -7,6 +7,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation REASnapshot
 
+const int ScreenStackPresentationModal = 1; // RNSScreenStackPresentationModal
+const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from screen top edge by 69px
+
 - (instancetype)init:(UIView *)view
 {
   self = [super init];
@@ -48,8 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
         int additionalModalOffset = 0;
         UIView *screenWrapper = [REAScreensHelper getScreenWrapper:view];
         int screenType = [REAScreensHelper getScreenType:screenWrapper];
-        if (screenType == 1) { // RNSScreenStackPresentationModal
-          additionalModalOffset = 69; // Default iOS modal is shifted from screen top edge by 69px
+        if (screenType == ScreenStackPresentationModal) {
+          additionalModalOffset = DEFAULT_MODAL_TOP_OFFSET;
         }
         float originY = [_values[@"originY"] doubleValue] + headerHeight + headerOriginY + additionalModalOffset;
         _values[@"originY"] = @(originY);
