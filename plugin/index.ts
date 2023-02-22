@@ -19,6 +19,7 @@ import generate from '@babel/generator';
 import * as hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
+import { Expression } from 'babel-types';
 // import fs from 'fs'; // --- bugs [TO DO]
 // import convertSourceMap from 'convert-source-map'; ---bugs [TO DO]
 
@@ -266,10 +267,16 @@ function buildWorkletString(
     };
   }
 
+  // ???? [TO DO ASAP]
   const expression =
-    fun.program.body.find(({ type }) => type === 'FunctionDeclaration') ||
-    fun.program.body.find(({ type }) => type === 'ExpressionStatement')
-      .expression;
+    (fun.program.body.find(
+      ({ type }) => type === 'FunctionDeclaration'
+    ) as BabelTypes.FunctionDeclaration) || // [TO DO]
+    (
+      fun.program.body.find(
+        ({ type }) => type === 'ExpressionStatement'
+      ) as BabelTypes.ExpressionStatement
+    ).expression; // [TO DO]
 
   const workletFunction = t.functionExpression(
     t.identifier(name),
@@ -278,6 +285,8 @@ function buildWorkletString(
   );
 
   const code = generate(workletFunction).code;
+
+  if (!inputMap) throw new Error('temporary Error'); // temporary [TO DO]
 
   if (shouldGenerateSourceMap()) {
     // Clear contents array (should be empty anyways)
@@ -302,7 +311,7 @@ function buildWorkletString(
     babelrc: false,
     configFile: false,
     comments: false,
-  });
+  }) as BabelCore.BabelFileResult; // [TO DO] temporary
 
   let sourceMap;
   if (includeSourceMap) {
@@ -314,7 +323,7 @@ function buildWorkletString(
     delete sourceMap.sourcesContent;
   }
 
-  return [transformed.code, JSON.stringify(sourceMap)];
+  return [transformed.code as string, JSON.stringify(sourceMap)]; // [TO DO] temporary
 }
 
 function makeWorkletName(
@@ -822,14 +831,16 @@ function processWorklets(t, path, state) {
   }
 }
 
-module.exports = function ({ types: t }: typeof BabelCore) {
+module.exports = function ({
+  types: t,
+}: typeof BabelCore): BabelCore.PluginItem {
+  // also guessed PluginItem here [TO DO]
   return {
     pre() {
       // allows adding custom globals such as host-functions
-      // @ts-ignore [TO DO]
       if (this.opts != null && Array.isArray(this.opts.globals)) {
-        // @ts-ignore [TO DO]
-        this.opts.globals.forEach((name) => {
+        this.opts.globals.forEach((name: string) => {
+          // guessed string here [TO DO]
           globals.add(name);
         });
       }
