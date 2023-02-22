@@ -523,7 +523,12 @@ function makeWorklet(
 
   if (BabelTypes.isFunctionDeclaration(funExpression))
     throw new Error('temporary funExpression error'); // [TO DO] temporary
-  const statements = [
+  const statements: Array<
+    | BabelTypes.VariableDeclaration
+    | BabelTypes.ExpressionStatement
+    | BabelTypes.ReturnStatement
+  > = [
+    // [TO DO] return statement necessary?
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),
     ]),
@@ -592,7 +597,11 @@ function makeWorklet(
 
   statements.push(t.returnStatement(privateFunctionId));
 
-  const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
+  const newFun = t.functionExpression(
+    !BabelTypes.isArrowFunctionExpression(fun.node) ? fun.node.id : undefined,
+    [],
+    t.blockStatement(statements)
+  ); // [TO DO] weirdish in here
 
   return newFun;
 }
