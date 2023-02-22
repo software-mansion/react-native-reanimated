@@ -49,6 +49,7 @@ public class Snapshot {
       new ArrayList<>(Arrays.asList(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f));
   public int originXByParent;
   public int originYByParent;
+  private float[] identityMatrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
@@ -181,16 +182,7 @@ public class Snapshot {
       }
       float[] transformArray = new float[9];
       transformedView.getMatrix().getValues(transformArray);
-      isTransformed =
-          transformArray[0] != 1
-              || transformArray[1] != 0
-              || transformArray[2] != 0
-              || transformArray[3] != 0
-              || transformArray[4] != 1
-              || transformArray[5] != 0
-              || transformArray[6] != 0
-              || transformArray[7] != 0
-              || transformArray[8] != 1;
+      isTransformed = !Arrays.equals(transformArray, identityMatrix);
     } while (!isTransformed
         && transformedView != null
         && !transformedView.getClass().getSimpleName().equals("Screen"));

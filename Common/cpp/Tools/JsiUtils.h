@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -162,6 +163,11 @@ template <typename Fun>
 void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
   installJsiFunction(rt, name, std::function(std::forward<Fun>(function)));
 }
+
+jsi::Array convertStringToArray(
+    jsi::Runtime &rt,
+    const std::string &value,
+    const unsigned int expectedSize);
 
 } // namespace jsi_utils
 } // namespace reanimated

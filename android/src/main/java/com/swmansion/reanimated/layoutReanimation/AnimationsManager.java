@@ -326,7 +326,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (props.containsKey(Snapshot.TRANSFORM_MATRIX)) {
       float[] matrixValues = new float[9];
       if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray) {
-        // this array comes from Java Script
+        // this array comes from JavaScript
         ReadableNativeArray matrixArray =
             (ReadableNativeArray) props.get(Snapshot.TRANSFORM_MATRIX);
         for (int i = 0; i < 9; i++) {

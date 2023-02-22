@@ -1,5 +1,7 @@
 package com.swmansion.reanimated;
 
+import static com.swmansion.reanimated.Utils.simplifyStringNumbersList;
+
 import android.util.Log;
 
 import com.facebook.jni.HybridData;
@@ -64,15 +66,7 @@ public class NativeProxy extends NativeProxyCommon {
                     for (String key : values.keySet()) {
                       String stringValue = values.get(key).toString();
                       if (key.endsWith("TransformMatrix")) {
-                        // transforms string: '[1, 2, 3]' -> '1 2 3'
-                        // to make usage of std::istringstream in C++ easier
-                        preparedValues.put(
-                          key,
-                          stringValue
-                            .replace(",", "")
-                            .replace("[", "")
-                            .replace("]", "")
-                        );
+                        preparedValues.put(key, simplifyStringNumbersList(stringValue));
                       } else {
                         preparedValues.put(key, stringValue);
                       }
