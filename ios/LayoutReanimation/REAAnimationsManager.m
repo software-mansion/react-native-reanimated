@@ -80,9 +80,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)invalidate
 {
-  for (NSNumber *tag in [[_exitingViews allKeys] copy]) {
-    [self endLayoutAnimationForTag:tag cancelled:true removeView:true];
-  }
   _startAnimationForTag = nil;
   _hasAnimationForTag = nil;
   _uiManager = nil;
