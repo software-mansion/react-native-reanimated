@@ -71,28 +71,6 @@ void RuntimeDecorator::decorateRuntime(
 #endif // DEBUG
 
   jsi_utils::installJsiFunction(rt, "_log", logValue);
-
-  auto chronoNow = [](jsi::Runtime &rt,
-                      const jsi::Value &thisValue,
-                      const jsi::Value *args,
-                      size_t count) -> jsi::Value {
-    double now = std::chrono::system_clock::now().time_since_epoch() /
-        std::chrono::milliseconds(1);
-    return jsi::Value(now);
-  };
-
-  rt.global().setProperty(
-      rt,
-      "_chronoNow",
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "_chronoNow"), 0, chronoNow));
-  jsi::Object performance(rt);
-  performance.setProperty(
-      rt,
-      "now",
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "now"), 0, chronoNow));
-  rt.global().setProperty(rt, "performance", performance);
 }
 
 void RuntimeDecorator::decorateUIRuntime(
@@ -144,9 +122,20 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(
       rt, "_updateDataSynchronously", updateDataSynchronously);
 
-  jsi_utils::installJsiFunction(rt, "_getCurrentTime", getCurrentTime);
-  rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
-  rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
+  auto performanceNow = [getCurrentTime](
+                            jsi::Runtime &rt,
+                            const jsi::Value &thisValue,
+                            const jsi::Value *args,
+                            size_t count) -> jsi::Value {
+    return jsi::Value(getCurrentTime());
+  };
+  jsi::Object performance(rt);
+  performance.setProperty(
+      rt,
+      "now",
+      jsi::Function::createFromHostFunction(
+          rt, jsi::PropNameID::forAscii(rt, "now"), 0, performanceNow));
+  rt.global().setProperty(rt, "performance", performance);
 
   // layout animation
   jsi_utils::installJsiFunction(

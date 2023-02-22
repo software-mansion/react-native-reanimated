@@ -5,7 +5,6 @@ import {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { isJest } from '../PlatformChecker';
 import { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
@@ -14,14 +13,6 @@ export default class JSReanimated extends NativeReanimated {
 
   constructor() {
     super(false);
-    if (isJest()) {
-      // on node < 16 jest have problems mocking performance.now method which
-      // results in the tests failing, since date precision isn't that important
-      // for tests, we use Date.now instead
-      this.getTimestamp = () => Date.now();
-    } else {
-      this.getTimestamp = () => window.performance.now();
-    }
   }
 
   makeShareableClone<T>(value: T): ShareableRef<T> {

@@ -3,7 +3,6 @@
 import { shouldBeUseWeb } from '../PlatformChecker';
 const initializeGlobalsForWeb = () => {
   if (shouldBeUseWeb()) {
-    global._frameTimestamp = null;
     global._measure = () => {
       console.warn(
         "[Reanimated] You can't use `measure` with Chrome Debugger or with web version"

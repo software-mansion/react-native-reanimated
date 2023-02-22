@@ -1,7 +1,12 @@
 import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest } from './PlatformChecker';
-import { runOnUI, runOnJS } from './threads';
+import {
+  runOnJS,
+  setupSetImmediate,
+  flushImmediates,
+  runOnUIImmediately,
+} from './threads';
 
 // callGuard is only used with debug builds
 function callGuardDEV<T extends Array<any>, U>(
@@ -87,13 +92,63 @@ Possible solutions are:
   }
 }
 
+function setupRequestAnimationFrame() {
+  'worklet';
+
+  // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
+  // so we avoid doing requestAnimationFrame batching in Jest environment.
+  const nativeRequestAnimationFrame = global.requestAnimationFrame;
+
+  let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
+
+  global.__flushAnimationFrame = (frameTimestamp: number) => {
+    const currentCallbacks = animationFrameCallbacks;
+    animationFrameCallbacks = [];
+    currentCallbacks.forEach((f) => f(frameTimestamp));
+    flushImmediates();
+  };
+
+  global.requestAnimationFrame = (
+    callback: (timestamp: number) => void
+  ): number => {
+    animationFrameCallbacks.push(callback);
+    if (animationFrameCallbacks.length === 1) {
+      // We schedule native requestAnimationFrame only when the first callback
+      // is added and then use it to execute all the enqueued callbacks. Once
+      // the callbacks are run, we clear the array.
+      nativeRequestAnimationFrame((timestamp) => {
+        global.__frameTimestamp = timestamp;
+        global.__flushAnimationFrame(timestamp);
+        global.__frameTimestamp = undefined;
+      });
+    }
+    // Reanimated currently does not support cancelling calbacks requested with
+    // requestAnimationFrame. We return -1 as identifier which isn't in line
+    // with the spec but it should give users better clue in case they actually
+    // attempt to store the value returned from rAF and use it for cancelling.
+    return -1;
+  };
+}
+
 export function initializeUIRuntime() {
   NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);
 
   const IS_JEST = isJest();
 
+  if (IS_JEST) {
+    // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
+    // the method directly using setTimeout, therefore the callback doesn't get the
+    // expected timestamp as the only argument: https://github.com/facebook/react-native/blob/main/jest/setup.js#L28
+    // We override this setup here to make sure that callbacks get the proper timestamps
+    // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
+    // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
+    global.requestAnimationFrame = (callback: (timestamp: number) => void) => {
+      return setTimeout(() => callback(performance.now()), 0);
+    };
+  }
+
   const capturableConsole = console;
-  runOnUI(() => {
+  runOnUIImmediately(() => {
     'worklet';
     // setup error handler
     global.ErrorUtils = {
@@ -116,30 +171,8 @@ export function initializeUIRuntime() {
     };
 
     if (!IS_JEST) {
-      // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
-      // so we avoid doing requestAnimationFrame batching in Jest environment.
-      const nativeRequestAnimationFrame = global.requestAnimationFrame;
-      let callbacks: Array<(time: number) => void> = [];
-      global.requestAnimationFrame = (
-        callback: (timestamp: number) => void
-      ): number => {
-        callbacks.push(callback);
-        if (callbacks.length === 1) {
-          // We schedule native requestAnimationFrame only when the first callback
-          // is added and then use it to execute all the enqueued callbacks. Once
-          // the callbacks are run, we clear the array.
-          nativeRequestAnimationFrame((timestamp) => {
-            const currentCallbacks = callbacks;
-            callbacks = [];
-            currentCallbacks.forEach((f) => f(timestamp));
-          });
-        }
-        // Reanimated currently does not support cancelling calbacks requested with
-        // requestAnimationFrame. We return -1 as identifier which isn't in line
-        // with the spec but it should give users better clue in case they actually
-        // attempt to store the value returned from rAF and use it for cancelling.
-        return -1;
-      };
+      setupSetImmediate();
+      setupRequestAnimationFrame();
     }
   })();
 }

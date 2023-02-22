@@ -1,6 +1,5 @@
 import { AnimationObject, AnimatableValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
-import { getTimestamp } from './time';
 export { stopMapper } from './mappers';
 
 export function valueSetter(sv: any, value: any): void {
@@ -32,7 +31,7 @@ export function valueSetter(sv: any, value: any): void {
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
-    const currentTimestamp = getTimestamp();
+    const currentTimestamp = global.__frameTimestamp || performance.now();
     initializeAnimation(currentTimestamp);
     const step = (timestamp: number) => {
       if (animation.cancelled) {

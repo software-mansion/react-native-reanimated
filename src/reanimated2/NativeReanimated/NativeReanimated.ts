@@ -24,10 +24,6 @@ export class NativeReanimated {
     }
   }
 
-  getTimestamp(): number {
-    throw new Error('stub implementation, used on the web only');
-  }
-
   installCoreFunctions(
     callGuard: <T extends Array<any>, U>(
       fn: (...args: T) => U,

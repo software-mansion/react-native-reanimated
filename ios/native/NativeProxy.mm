@@ -153,11 +153,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
-      jsi::Object global = rt.global();
-      jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
-      global.setProperty(rt, frameTimestampName, frameTimestamp);
       onRender(frameTimestamp);
-      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
     }];
   };
 

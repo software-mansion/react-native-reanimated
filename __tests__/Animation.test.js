@@ -49,6 +49,20 @@ const getDefaultStyle = () => ({
   margin: 30,
 });
 
+const originalAdvanceTimersByTime = jest.advanceTimersByTime;
+
+jest.advanceTimersByTime = (timeMs) => {
+  // This is a workaround for an issue with using setImmediate that's in the jest
+  // environment implemented as a 0-second timeout. Because of the fact we use
+  // setImmediate for scheduling runOnUI tasks as well as executing matters,
+  // starting new animaitons gets delayed be three frames. To compensate for that
+  // we execute pending timers three times before advancing the timers.
+  jest.runOnlyPendingTimers();
+  jest.runOnlyPendingTimers();
+  jest.runOnlyPendingTimers();
+  originalAdvanceTimersByTime(timeMs);
+};
+
 describe('Tests of animations', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -95,7 +109,7 @@ describe('Tests of animations', () => {
 
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers(); // timers scheduled for the exact 250ms won't run without this additional call
+
     style.width = 50; // value of component width after 150ms of animation
     expect(view).toHaveAnimatedStyle(style);
   });
@@ -109,7 +123,6 @@ describe('Tests of animations', () => {
 
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
     style.width = 50; // value of component width after 250ms of animation
     expect(view).toHaveAnimatedStyle(style, true);
   });

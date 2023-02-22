@@ -29,6 +29,7 @@ class EventHandlerRegistry {
 
   void processEvent(
       jsi::Runtime &rt,
+      double eventTimestamp,
       const std::string &eventName,
       const jsi::Value &eventPayload);
 

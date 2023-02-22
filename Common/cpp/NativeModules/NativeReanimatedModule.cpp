@@ -309,11 +309,13 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 
   scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
-    auto handlerFunction =
-        handlerShareable->getJSValue(rt).asObject(rt).asFunction(rt);
+    auto handlerFunction = handlerShareable->getJSValue(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
-        newRegistrationId, eventName, std::move(handlerFunction));
-    eventHandlerRegistry->registerEventHandler(handler);
+        runtimeHelper,
+        newRegistrationId,
+        eventName,
+        std::move(handlerFunction));
+    eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
@@ -393,19 +395,11 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 }
 
 void NativeReanimatedModule::onEvent(
+    double eventTimestamp,
     const std::string &eventName,
     const jsi::Value &payload) {
-  try {
-    eventHandlerRegistry->processEvent(*runtime, eventName, payload);
-  } catch (std::exception &e) {
-    std::string str = e.what();
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  } catch (...) {
-    std::string str = "OnEvent error";
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  }
+  eventHandlerRegistry->processEvent(
+      *runtime, eventTimestamp, eventName, payload);
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -421,20 +415,10 @@ void NativeReanimatedModule::maybeRequestRender() {
 }
 
 void NativeReanimatedModule::onRender(double timestampMs) {
-  try {
-    std::vector<FrameCallback> callbacks = frameCallbacks;
-    frameCallbacks.clear();
-    for (auto &callback : callbacks) {
-      callback(timestampMs);
-    }
-  } catch (std::exception &e) {
-    std::string str = e.what();
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
-  } catch (...) {
-    std::string str = "OnRender error";
-    this->errorHandler->setError(str);
-    this->errorHandler->raise();
+  std::vector<FrameCallback> callbacks = frameCallbacks;
+  frameCallbacks.clear();
+  for (auto &callback : callbacks) {
+    callback(timestampMs);
   }
 }
 
@@ -485,13 +469,7 @@ bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
     const jsi::Value &payload,
     double currentTime) {
-  jsi::Runtime &rt = *runtime.get();
-  jsi::Object global = rt.global();
-  jsi::String eventTimestampName =
-      jsi::String::createFromAscii(rt, "_eventTimestamp");
-  global.setProperty(rt, eventTimestampName, currentTime);
-  onEvent(eventName, payload);
-  global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+  onEvent(currentTime, eventName, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -674,13 +652,12 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
-  auto uiRuntime = runtimeHelper->uiRuntime();
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
-        jsi::Runtime &rt = *uiRuntime;
+        jsi::Runtime &rt = *runtimeHelper->uiRuntime();
         auto handler = shareableHandler->getJSValue(rt);
-        handler.asObject(rt).asFunction(rt).call(
-            rt, jsi::Value(keyboardState), jsi::Value(height));
+        runtimeHelper->runOnUIGuarded(
+            handler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool());
 }
