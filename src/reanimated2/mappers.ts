@@ -97,7 +97,7 @@ export function createMapperRegistry() {
       // to know how many times mappers need to run. As we don't want tests to
       // make any assumptions on that number it is easier to execute mappers
       // immediately for testing purposes and only expect test to advance timers
-      // if they want to make any assertions on the efffects of animations being run.
+      // if they want to make any assertions on the effects of animations being run.
       mapperRun();
     } else if (!runRequested) {
       setImmediate(mapperRun);
