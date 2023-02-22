@@ -7,7 +7,6 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
-let _lastSetImmediateFunction: ((callback: () => void) => void) | null = null;
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
@@ -57,14 +56,22 @@ export function runOnUI<A extends any[], R>(
   }
   return (...args) => {
     if (IS_JEST) {
-      // Jest mocks setImmediate method for each individual tests, because of that
-      // we may end up not scheduling setImmediate call if the next test starts after
-      // somce callbacks have been added to a batch from the previous test. To fix this
-      // we reset the batch queue when setImmediate function changes.
-      if (_lastSetImmediateFunction !== setImmediate) {
-        _lastSetImmediateFunction = setImmediate;
-        _runOnUIQueue = [];
-      }
+      // Mocking time in Jest is tricky as both requestAnimationFrame and setImmediate
+      // callbacks run on the same queue and can be interleaved. There is no way
+      // to flush particular queue in Jest and the only control over mocked timers
+      // is by using jest.advanceTimersByTime() method which advances all types
+      // of timers including immediate and animation callbacks. Ideally we'd like
+      // to have some way here to schedule work along with React updates, but
+      // that's not possible, and hence in Jest environment instead of using scheduling
+      // mechanism we just schedule the work ommiting the queue. This is ok for the
+      // uses that we currently have but may not be ok for future tests that we write.
+      NativeReanimatedModule.scheduleOnUI(
+        makeShareableCloneRecursive(() => {
+          'worklet';
+          worklet(...args);
+        })
+      );
+      return;
     }
     _runOnUIQueue.push([worklet, args]);
     if (_runOnUIQueue.length === 1) {
