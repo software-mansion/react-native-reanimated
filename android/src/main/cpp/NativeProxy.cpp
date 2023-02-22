@@ -11,6 +11,7 @@
 
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
+#include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
@@ -342,10 +343,18 @@ void NativeProxy::installJSIBindings(
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
           try {
-            auto key =
-                jsi::String::createFromAscii(rt, entry.first->toStdString());
-            auto value = stod(entry.second->toStdString());
-            yogaValues.setProperty(rt, key, value);
+            std::string keyString = entry.first->toStdString();
+            std::string valueString = entry.second->toStdString();
+            auto key = jsi::String::createFromAscii(rt, keyString);
+            if (keyString == "currentTransformMatrix" ||
+                keyString == "targetTransformMatrix") {
+              jsi::Array matrix =
+                  jsi_utils::convertStringToArray(rt, valueString, 9);
+              yogaValues.setProperty(rt, key, matrix);
+            } else {
+              auto value = stod(valueString);
+              yogaValues.setProperty(rt, key, value);
+            }
           } catch (std::invalid_argument e) {
             if (auto errorHandler = weakErrorHandler.lock()) {
               errorHandler->setError("Failed to convert value to number");

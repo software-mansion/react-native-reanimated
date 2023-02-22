@@ -302,8 +302,17 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     jsi::Runtime &rt = *wrt.lock();
     jsi::Object yogaValues(rt);
     for (NSString *key in values.allKeys) {
-      NSNumber *value = values[key];
-      yogaValues.setProperty(rt, [key UTF8String], [value doubleValue]);
+      NSObject *value = values[key];
+      if ([values[key] isKindOfClass:[NSArray class]]) {
+        NSArray *transformArray = (NSArray *)value;
+        jsi::Array matrix(rt, 9);
+        for (int i = 0; i < 9; i++) {
+          matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+        }
+        yogaValues.setProperty(rt, [key UTF8String], matrix);
+      } else {
+        yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
+      }
     }
 
     weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
