@@ -559,4 +559,65 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
+
+  it('shows a warning if user uses .value inside inline style', () => {
+    const input = `
+    function App() {
+      return <Animated.View style={{ width: sharedValue.value }} />;
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style, style array', () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={[style, { width: sharedValue.value }]} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style, transforms', () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={{ transform: [{ translateX: sharedValue.value }] }} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't show a warning if user writes something like style={styles.value}", () => {
+    const input = `
+    function App() {
+      return <Animated.View style={styles.value} />;
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't break if there is a spread syntax", () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={[style, { ...styles.container, width: sharedValue.value }]} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
 });

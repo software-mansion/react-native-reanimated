@@ -119,9 +119,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &shadowNodeValue,
       const jsi::Value &props);
 
-  void removeShadowNodeFromRegistry(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeValue);
+  void removeShadowNodeFromRegistry(jsi::Runtime &rt, const jsi::Value &tag);
 
   void performOperations();
 
