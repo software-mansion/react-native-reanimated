@@ -54,7 +54,7 @@
     "scripts/reanimated_utils.rb",
     "README.md",
     "mock.js",
-    "plugin.js",
+    "plugin/",
     "!__snapshots__",
     "!*.test.js",
     "!*.test.js.map"
