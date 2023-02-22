@@ -20,6 +20,7 @@ import FrameCallbackExample from './src/FrameCallbackExample';
 import GestureHandlerExample from './src/GestureHandlerExample';
 import MeasureExample from './src/MeasureExample';
 import NewestShadowNodesRegistryRemoveExample from './src/NewestShadowNodesRegistryRemoveExample';
+import NonLayoutPropAndRenderExample from './src/NonLayoutPropAndRenderExample';
 import OverlappingBoxesExample from './src/OverlappingBoxesExample';
 import React from 'react';
 import RefExample from './src/RefExample';
@@ -160,6 +161,12 @@ const EXAMPLES = [
     icon: '🌲',
     title: 'Layout props',
     component: WidthExample,
+  },
+  {
+    name: 'NonLayoutPropAndRenderExample',
+    icon: '🦎',
+    title: 'Non-layout prop and render',
+    component: NonLayoutPropAndRenderExample,
   },
   {
     name: 'RefExample',

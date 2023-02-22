@@ -533,6 +533,13 @@ void NativeReanimatedModule::updateProps(
   // TODO: support multiple surfaces
   surfaceId_ = shadowNode->getSurfaceId();
 
+  // Even if only non-layout props are changed, we need to store the update in
+  // PropsRegistry anyway so that React doesn't overwrite it in the next render.
+  // Currently, only opacity and transform are treated in a special way
+  // but backgroundColor, shadowOpacity etc. would get overwritten
+  // (see `_propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN`).
+  propsRegistry_->update(shadowNode, dynamicFromValue(rt, props));
+
   if (isThereAnyLayoutProp(rt, props)) {
     operationsInBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, props));
@@ -587,8 +594,6 @@ void NativeReanimatedModule::performOperations() {
             continue;
           }
           rootNode = newRootNode;
-
-          propsRegistry_->update(shadowNode, dynamicFromValue(rt, *props));
         }
       }
 
