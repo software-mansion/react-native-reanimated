@@ -149,7 +149,7 @@ const afterTest = () => {
 
 export const withReanimatedTimer = (animationTest) => {
   console.warn(
-    'This method is deprecated, you shoulddefine your own before and after test hooks to enable jest.useFakeTimers(). Check out the documentation for details on testing'
+    'This method is deprecated, you should define your own before and after test hooks to enable jest.useFakeTimers(). Check out the documentation for details on testing'
   );
   beforeTest();
   animationTest();
