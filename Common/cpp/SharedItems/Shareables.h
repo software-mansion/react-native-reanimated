@@ -6,10 +6,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/uimanager/primitives.h>
-#endif
-
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
@@ -57,7 +53,7 @@ class JSRuntimeHelper {
       const std::shared_ptr<Scheduler> &scheduler)
       : rnRuntime_(rnRuntime), uiRuntime_(uiRuntime), scheduler_(scheduler) {}
 
-  volatile bool uiRuntimeDestroyed;
+  volatile bool uiRuntimeDestroyed = false;
   std::unique_ptr<CoreFunction> callGuard;
   std::unique_ptr<CoreFunction> valueUnpacker;
 
@@ -121,9 +117,7 @@ class Shareable {
     RemoteFunctionType,
     HandleType,
     SynchronizedDataHolder,
-#ifdef RCT_NEW_ARCH_ENABLED
-    ShadowNode,
-#endif
+    HostObjectType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -266,26 +260,20 @@ class ShareableObject : public Shareable {
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
 };
 
-#ifdef RCT_NEW_ARCH_ENABLED
-class ShareableShadowNodeWrapper : public Shareable {
- private:
-  react::ShadowNode::Shared shadowNode_;
-
+class ShareableHostObject : public Shareable {
  public:
-  ShareableShadowNodeWrapper(
+  ShareableHostObject(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       jsi::Runtime &rt,
-      const jsi::Object &wrapperObject)
-      : Shareable(ShadowNode) {
-    shadowNode_ =
-        wrapperObject.getHostObject<ShadowNodeWrapper>(rt)->shadowNode;
-  }
+      const std::shared_ptr<jsi::HostObject> &hostObject)
+      : Shareable(HostObjectType), hostObject_(hostObject) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return jsi::Object::createFromHostObject(
-        rt, std::make_shared<ShadowNodeWrapper>(shadowNode_));
+    return jsi::Object::createFromHostObject(rt, hostObject_);
   }
+
+ protected:
+  std::shared_ptr<jsi::HostObject> hostObject_;
 };
-#endif
 
 class ShareableWorklet : public ShareableObject {
  private:
@@ -439,16 +427,14 @@ class ShareableSynchronizedDataHolder
 
 class ShareableString : public Shareable {
  public:
-  ShareableString(jsi::Runtime &rt, const jsi::String &string)
-      : Shareable(StringType) {
-    data = string.utf8(rt);
-  }
+  explicit ShareableString(const std::string &string)
+      : Shareable(StringType), data_(string) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return jsi::String::createFromUtf8(rt, data);
+    return jsi::String::createFromUtf8(rt, data_);
   }
 
  protected:
-  std::string data;
+  std::string data_;
 };
 
 class ShareableScalar : public Shareable {

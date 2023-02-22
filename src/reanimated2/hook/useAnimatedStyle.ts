@@ -1,16 +1,14 @@
-/* global _frameTimestamp */
 import { MutableRefObject, useEffect, useRef } from 'react';
 
-import { startMapper, stopMapper, makeRemote, getTimestamp } from '../core';
+import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
 import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
-  getStyleWithoutAnimations,
   isAnimated,
-  styleDiff,
+  shallowEqual,
   validateAnimatedStyles,
 } from './utils';
 import { DependencyList, Descriptor } from './commonTypes';
@@ -20,7 +18,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../ViewDescriptorsSet';
-import { isJest } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import {
   AnimationObject,
   Timestamp,
@@ -30,6 +28,7 @@ import {
   BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
+  StyleProps,
 } from '../commonTypes';
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
@@ -55,6 +54,7 @@ interface AnimationRef {
 }
 
 function prepareAnimation(
+  frameTimestamp: number,
   animatedProp: AnimatedStyle,
   lastAnimation: AnimatedStyle,
   lastValue: AnimatedStyle
@@ -63,6 +63,7 @@ function prepareAnimation(
   if (Array.isArray(animatedProp)) {
     animatedProp.forEach((prop, index) => {
       prepareAnimation(
+        frameTimestamp,
         prop,
         lastAnimation && lastAnimation[index],
         lastValue && lastValue[index]
@@ -97,12 +98,13 @@ function prepareAnimation(
     animation.callStart = (timestamp: Timestamp) => {
       animation.onStart(animation, value, timestamp, lastAnimation);
     };
-    animation.callStart(getTimestamp());
+    animation.callStart(frameTimestamp);
     animation.callStart = null;
   } else if (typeof animatedProp === 'object') {
     // it is an object
     Object.keys(animatedProp).forEach((key) =>
       prepareAnimation(
+        frameTimestamp,
         animatedProp[key],
         lastAnimation && lastAnimation[key],
         lastValue && lastValue[key]
@@ -183,23 +185,28 @@ function styleUpdater(
   const animations = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
+  const nonAnimatedNewValues: StyleProps = {};
 
   let hasAnimations = false;
+  let frameTimestamp: number | undefined;
+  let hasNonAnimatedValues = false;
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
-      prepareAnimation(value, animations[key], oldValues[key]);
+      frameTimestamp = global.__frameTimestamp || performance.now();
+      prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
     } else {
+      hasNonAnimatedValues = true;
+      nonAnimatedNewValues[key] = value;
       delete animations[key];
     }
   }
 
   if (hasAnimations) {
-    const frame = (_timestamp?: Timestamp) => {
+    const frame = (timestamp: Timestamp) => {
       const { animations, last, isAnimationCancelled } = state;
-      const timestamp = _timestamp ?? getTimestamp();
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
         return;
@@ -238,27 +245,21 @@ function styleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      if (_frameTimestamp) {
-        frame(_frameTimestamp);
-      } else {
-        requestAnimationFrame(frame);
-      }
+      frame(frameTimestamp!);
     }
-    state.last = Object.assign({}, oldValues, newValues);
-    const style = getStyleWithoutAnimations(state.last);
-    if (style) {
-      updateProps(viewDescriptors, style, maybeViewRef);
+
+    if (hasNonAnimatedValues) {
+      updateProps(viewDescriptors, nonAnimatedNewValues, maybeViewRef);
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    const diff = styleDiff(oldValues, newValues);
-    state.last = Object.assign({}, oldValues, newValues);
-    if (diff) {
+    if (!shallowEqual(oldValues, newValues)) {
       updateProps(viewDescriptors, newValues, maybeViewRef);
     }
   }
+  state.last = newValues;
 }
 
 function jestStyleUpdater(
@@ -277,6 +278,7 @@ function jestStyleUpdater(
 
   // extract animated props
   let hasAnimations = false;
+  let frameTimestamp: number | undefined;
   Object.keys(animations).forEach((key) => {
     const value = newValues[key];
     if (!isAnimated(value)) {
@@ -286,15 +288,15 @@ function jestStyleUpdater(
   Object.keys(newValues).forEach((key) => {
     const value = newValues[key];
     if (isAnimated(value)) {
-      prepareAnimation(value, animations[key], oldValues[key]);
+      frameTimestamp = global.__frameTimestamp || performance.now();
+      prepareAnimation(frameTimestamp, value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
     }
   });
 
-  function frame(_timestamp?: Timestamp) {
+  function frame(timestamp: Timestamp) {
     const { animations, last, isAnimationCancelled } = state;
-    const timestamp = _timestamp ?? getTimestamp();
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;
@@ -340,11 +342,7 @@ function jestStyleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      if (_frameTimestamp) {
-        frame(_frameTimestamp);
-      } else {
-        requestAnimationFrame(frame);
-      }
+      frame(frameTimestamp!);
     }
   } else {
     state.isAnimationCancelled = true;
@@ -352,13 +350,12 @@ function jestStyleUpdater(
   }
 
   // calculate diff
-  const diff = styleDiff(oldValues, newValues);
-  state.last = Object.assign({}, oldValues, newValues);
+  state.last = newValues;
 
-  if (Object.keys(diff).length !== 0) {
+  if (!shallowEqual(oldValues, newValues)) {
     updatePropsJestWrapper(
       viewDescriptors,
-      diff,
+      newValues,
       maybeViewRef,
       animatedStyle,
       adapters
@@ -400,7 +397,20 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
-  const inputs = Object.values(updater._closure ?? {});
+  let inputs = Object.values(updater._closure ?? {});
+  if (shouldBeUseWeb()) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
+    if (__DEV__ && !inputs.length && !dependencies && !updater.__workletHash) {
+      throw new Error(
+        `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin.
+
+For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin`
+      );
+    }
+  }
   const adaptersArray: AdapterWorkletFunction[] = adapters
     ? Array.isArray(adapters)
       ? adapters
@@ -493,8 +503,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   useEffect(() => {
     animationsActive.value = true;
     return () => {
-      // initRef.current = null;
-      // viewsRef = null;
       animationsActive.value = false;
     };
   }, []);

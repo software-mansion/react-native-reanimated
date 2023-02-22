@@ -285,10 +285,10 @@ def detectAAR(Integer rnMinorVersion, String engine) { // Reanimated2 only
             println "\n\n\n"
             println "****************************************************************************************"
             println "\n\n\n"
-            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $minor found."
+            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $rnMinorVersion found."
             println "Falling back to AAR for react-native version $rnMinorVersionCopy."
             println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
-            println "Please post a pull request to implement support for react-native version $minor to the reanimated repo."
+            println "Please post a pull request to implement support for react-native version $rnMinorVersion to the reanimated repo."
             println "Thanks!"
             println "\n\n\n"
             println "****************************************************************************************"
@@ -463,6 +463,8 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
+        
+        consumerProguardFiles 'proguard-rules.pro'
     }
     externalNativeBuild {
         cmake {

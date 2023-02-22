@@ -1,4 +1,3 @@
-import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
@@ -6,16 +5,19 @@ import {
   LayoutAnimationFunction,
   LayoutAnimationsValues,
 } from './animationBuilder';
+import { runOnUIImmediately } from '../threads';
 
 const TAG_OFFSET = 1e9;
 
 function startObservingProgress(
   tag: number,
-  sharedValue: SharedValue<number>
+  sharedValue: SharedValue<number>,
+  animationType: string
 ): void {
   'worklet';
+  const isSharedTransition = animationType === 'sharedElementTransition';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    _notifyAboutProgress(tag, sharedValue.value);
+    _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
 }
 
@@ -33,6 +35,7 @@ function stopObservingProgress(
 function createLayoutAnimationManager() {
   'worklet';
   const enteringAnimationForTag = new Map();
+  const sharedTransitionForTag = new Map();
   const mutableValuesForTag = new Map();
 
   return {
@@ -61,8 +64,15 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value, false, false);
         value._value = style.initialValues;
+      }
+
+      if (sharedTransitionForTag.get(tag)) {
+        stopObservingProgress(tag, value, true, false);
+      }
+
+      if (type === 'sharedElementTransition') {
+        sharedTransitionForTag.set(tag, currentAnimation);
       }
 
       // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
@@ -71,6 +81,7 @@ function createLayoutAnimationManager() {
       animation.callback = (finished?: boolean) => {
         if (finished) {
           enteringAnimationForTag.delete(tag);
+          sharedTransitionForTag.delete(tag);
           mutableValuesForTag.delete(tag);
           const shouldRemoveView = type === 'exiting';
           stopObservingProgress(tag, value, finished, shouldRemoveView);
@@ -79,13 +90,17 @@ function createLayoutAnimationManager() {
           style.callback(finished === undefined ? false : finished);
       };
 
-      startObservingProgress(tag, value);
+      startObservingProgress(tag, value, type);
       value.value = animation;
+    },
+    stop(tag: number) {
+      const value = mutableValuesForTag.get(tag);
+      stopObservingProgress(tag, value, true, true);
     },
   };
 }
 
-runOnUI(() => {
+runOnUIImmediately(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
 })();

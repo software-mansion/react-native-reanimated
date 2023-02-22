@@ -65,6 +65,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
+      const jsi::Value &iosReferenceFrame,
       const jsi::Value &sensorDataContainer) = 0;
   virtual void unregisterSensor(
       jsi::Runtime &rt,
@@ -93,6 +94,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &type,
+      const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) = 0;
 };
 

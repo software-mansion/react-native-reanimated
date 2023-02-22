@@ -114,8 +114,12 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
           sourceMap = std::make_shared<const jsi::StringBuffer>(
               args[2].asString(rt).utf8(rt));
         }
+#if REACT_NATIVE_MINOR_VERSION >= 65
         return wrappedRuntime->evaluateJavaScriptWithSourceMap(
             code, sourceMap, sourceURL);
+#else
+        return wrappedRuntime->evaluateJavaScript(code, sourceURL);
+#endif
       });
   runtime_->global().setProperty(
       *runtime_, "evalWithSourceMap", evalWithSourceMap);

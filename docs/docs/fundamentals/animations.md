@@ -96,6 +96,63 @@ This approach is more convenient in many cases, especially when view properties 
 Also, keeping all the aspects of view styles and transitions colocated often makes it easier to keep control over your components' code.
 It forces you to have everything defined in one place vs scattered around the codebase allowing for animated transitions being triggered from anywhere.
 
+## Animations in inline styles
+
+For simple animations in `useAnimatedStyle` hook without any calculations like this:
+
+```js
+function SomeComponent() {
+  const width = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: width.value,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+```
+
+you can omit `useAnimatedStyle` and use inline styles like this to save some typing:
+
+```js
+function SomeComponent() {
+  const width = useSharedValue(0);
+  return <Animated.View style={{ width }} />;
+}
+```
+
+The width of the view will change when `width` value changes.
+
+Note that we're not using `.value` getter in inline styles. If you use `width.value`, Reanimated uses just current value of shared value. Let's look at an example:
+
+```js
+width.value = 5;
+//...
+<Animated.View style={{ width: width.value }} />
+```
+
+is equivalent to:
+
+```js
+<Animated.View style={{ width: 5 }} />
+```
+
+Passing a shared value without `.value` getter causes Reanimated to watch for shared value changes.
+
+To help you avoid a mistake when using inline styles, Reanimated shows a warning when using `.value` getter in inline styles. If you want to disable this warning, set `disableInlineStylesWarning` to `true` in babel plugin options in `babel.config.js` like this:
+
+```
+module.exports = {
+  presets: [
+    ...
+  ],
+  plugins: [
+    ...
+    ['react-native-reanimated/plugin', { disableInlineStylesWarning: true }]
+  ],
+};
+```
+
 ## Interrupting Animated Updates
 
 Animated UI updates, by definition, take time to perform.
@@ -124,7 +181,7 @@ Below we discuss some of the most common configuration options of the animation 
 Both animation helper methods share a similar structure.
 They take target value as the first parameter, configuration object as the second, and finally a callback method as the last parameter.
 Starting from the end, the callback is a method that runs when the animation is finished, or when the animation is interrupted/cancelled.
-Thr callback is run with a single argument – a boolean indicating whether the animation has finished executing without cancellation:
+The callback is run with a single argument – a boolean indicating whether the animation has finished executing without cancellation:
 
 ```js
 <Button
@@ -324,3 +381,22 @@ For this purpose Reanimated exposes a separate hook called `useAnimatedProps`.
 It works in a very similar way to `useAnimatedStyle` but instead of expecting a method that returns the animated styles, we expect the returned object to contain properties that we want to animate.
 Then, in order to hook animated props to a view, we provide the resulting object as `animatedProps` property to the "Animated" version of the view type we want to render (e.g. `Animated.View`).
 Please check the documentation of the [`useAnimatedProps`](../api/hooks/useAnimatedProps) hook for usage examples.
+
+## Shared Values in Properties
+You can also pass a shared value as a property like this:
+```js
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+export default function SvgExample() {
+  const sv = useSharedValue('50%');
+
+  return (
+    <Svg height="200" width="200">
+      <AnimatedCircle cx="50%" cy="50%" fill="lime" r={sv} />
+    </Svg>
+  );
+}
+```
+
+The radius of the circle will change according to shared value `sv`.
+As with inline styles, remember to pass a shared value, not shared value's `.value`.

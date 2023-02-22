@@ -27,12 +27,13 @@ void LayoutAnimations::startAnimationForTag(
 
 void LayoutAnimations::progressLayoutAnimation(
     int tag,
-    const jni::local_ref<JNIHelper::PropsMap> &updates) {
+    const jni::local_ref<JNIHelper::PropsMap> &updates,
+    bool isSharedTransition) {
   static const auto method =
       javaPart_->getClass()
-          ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+          ->getMethod<void(int, JMap<JString, JObject>::javaobject, bool)>(
               "progressLayoutAnimation");
-  method(javaPart_.get(), tag, updates.get());
+  method(javaPart_.get(), tag, updates.get(), isSharedTransition);
 }
 
 void LayoutAnimations::endLayoutAnimation(
@@ -63,8 +64,32 @@ void LayoutAnimations::clearAnimationConfigForTag(int tag) {
   clearAnimationConfigBlock_(tag);
 }
 
+void LayoutAnimations::setCancelAnimationForTag(
+    CancelAnimationConfigBlock cancelAnimationBlock) {
+  this->cancelAnimationBlock_ = cancelAnimationBlock;
+}
+
+void LayoutAnimations::cancelAnimationForTag(
+    int tag,
+    alias_ref<JString> type,
+    jboolean cancelled,
+    jboolean removeView) {
+  this->cancelAnimationBlock_(tag, type, cancelled, removeView);
+}
+
 bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
+}
+
+void LayoutAnimations::setFindPrecedingViewTagForTransition(
+    FindPrecedingViewTagForTransitionBlock
+        findPrecedingViewTagForTransitionBlock) {
+  findPrecedingViewTagForTransitionBlock_ =
+      findPrecedingViewTagForTransitionBlock;
+}
+
+int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
+  return findPrecedingViewTagForTransitionBlock_(tag);
 }
 
 void LayoutAnimations::registerNatives() {
@@ -78,8 +103,13 @@ void LayoutAnimations::registerNatives() {
           "clearAnimationConfigForTag",
           LayoutAnimations::clearAnimationConfigForTag),
       makeNativeMethod(
+          "cancelAnimationForTag", LayoutAnimations::cancelAnimationForTag),
+      makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),
+      makeNativeMethod(
+          "findPrecedingViewTagForTransition",
+          LayoutAnimations::findPrecedingViewTagForTransition),
   });
 }
 }; // namespace reanimated

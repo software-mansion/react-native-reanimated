@@ -33,7 +33,6 @@ const globals = new Set([
   'this',
   'console',
   'performance',
-  '_chronoNow',
   'Date',
   'Array',
   'ArrayBuffer',
@@ -58,6 +57,7 @@ const globals = new Set([
   'null',
   'UIManager',
   'requestAnimationFrame',
+  'setImmediate',
   '_WORKLET',
   'arguments',
   'Boolean',
@@ -84,68 +84,10 @@ const globals = new Set([
   '_dispatchCommand',
   '_setGestureState',
   '_getCurrentTime',
-  '_eventTimestamp',
-  '_frameTimestamp',
   'isNaN',
   'LayoutAnimationRepository',
   '_notifyAboutProgress',
   '_notifyAboutEnd',
-]);
-
-// leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
-const blacklistedFunctions = new Set([
-  'stopCapturing',
-  'toString',
-  'map',
-  'filter',
-  'findIndex',
-  'forEach',
-  'valueOf',
-  'toPrecision',
-  'toExponential',
-  'constructor',
-  'toFixed',
-  'toLocaleString',
-  'toSource',
-  'charAt',
-  'charCodeAt',
-  'concat',
-  'indexOf',
-  'lastIndexOf',
-  'localeCompare',
-  'length',
-  'match',
-  'replace',
-  'search',
-  'slice',
-  'split',
-  'substr',
-  'substring',
-  'toLocaleLowerCase',
-  'toLocaleUpperCase',
-  'toLowerCase',
-  'toUpperCase',
-  'every',
-  'join',
-  'pop',
-  'push',
-  'reduce',
-  'reduceRight',
-  'reverse',
-  'shift',
-  'slice',
-  'some',
-  'sort',
-  'splice',
-  'unshift',
-  'hasOwnProperty',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'bind',
-  'apply',
-  'call',
-  '__callAsync',
-  'includes',
 ]);
 
 const gestureHandlerGestureObjects = new Set([
@@ -176,112 +118,6 @@ const gestureHandlerBuilderMethods = new Set([
   'onTouchesUp',
   'onTouchesCancelled',
 ]);
-
-class ClosureGenerator {
-  constructor() {
-    this.trie = [{}, false];
-  }
-
-  mergeAns(oldAns, newAns) {
-    const [purePath, node] = oldAns;
-    const [purePathUp, nodeUp] = newAns;
-    if (purePathUp.length !== 0) {
-      return [purePath.concat(purePathUp), nodeUp];
-    } else {
-      return [purePath, node];
-    }
-  }
-
-  findPrefixRec(path) {
-    const notFound = [[], null];
-    if (!path || path.node.type !== 'MemberExpression') {
-      return notFound;
-    }
-    const memberExpressionNode = path.node;
-    if (memberExpressionNode.property.type !== 'Identifier') {
-      return notFound;
-    }
-    if (
-      memberExpressionNode.computed ||
-      memberExpressionNode.property.name === 'value' ||
-      blacklistedFunctions.has(memberExpressionNode.property.name)
-    ) {
-      // a.b[w] -> a.b.w in babel nodes
-      // a.v.value
-      // sth.map(() => )
-      return notFound;
-    }
-    if (
-      path.parent &&
-      path.parent.type === 'AssignmentExpression' &&
-      path.parent.left === path.node
-    ) {
-      /// captured.newProp = 5;
-      return notFound;
-    }
-    const purePath = [memberExpressionNode.property.name];
-    const node = memberExpressionNode;
-    const upAns = this.findPrefixRec(path.parentPath);
-    return this.mergeAns([purePath, node], upAns);
-  }
-
-  findPrefix(base, babelPath) {
-    const purePath = [base];
-    const node = babelPath.node;
-    const upAns = this.findPrefixRec(babelPath.parentPath);
-    return this.mergeAns([purePath, node], upAns);
-  }
-
-  addPath(base, babelPath) {
-    const [purePath, node] = this.findPrefix(base, babelPath);
-    let parent = this.trie;
-    let index = -1;
-    for (const current of purePath) {
-      index++;
-      if (parent[1]) {
-        continue;
-      }
-      if (!parent[0][current]) {
-        parent[0][current] = [{}, false];
-      }
-      if (index === purePath.length - 1) {
-        parent[0][current] = [node, true];
-      }
-      parent = parent[0][current];
-    }
-  }
-
-  generateNodeForBase(t, current, parent) {
-    const currentNode = parent[0][current];
-    if (currentNode[1]) {
-      return currentNode[0];
-    }
-    return t.objectExpression(
-      Object.keys(currentNode[0]).map((propertyName) =>
-        t.objectProperty(
-          t.identifier(propertyName),
-          this.generateNodeForBase(t, propertyName, currentNode),
-          false,
-          true
-        )
-      )
-    );
-  }
-
-  generate(t, variables, names) {
-    const arrayOfKeys = [...names];
-    return t.objectExpression(
-      variables.map((variable, index) =>
-        t.objectProperty(
-          t.identifier(variable.name),
-          this.generateNodeForBase(t, arrayOfKeys[index], this.trie),
-          false,
-          true
-        )
-      )
-    );
-  }
-}
 
 function isRelease() {
   return ['production', 'release'].includes(process.env.BABEL_ENV);
@@ -426,7 +262,6 @@ function makeWorklet(t, fun, state) {
   const functionName = makeWorkletName(t, fun);
 
   const closure = new Map();
-  const closureGenerator = new ClosureGenerator();
 
   // remove 'worklet'; directive before generating string
   fun.traverse({
@@ -502,7 +337,6 @@ function makeWorklet(t, fun, state) {
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
-      closureGenerator.addPath(name, path);
     },
   });
 
@@ -559,7 +393,7 @@ function makeWorklet(t, fun, state) {
   if (sourceMapString) {
     initDataObjectExpression.properties.push(
       t.objectProperty(
-        t.identifier('__sourceMap'),
+        t.identifier('sourceMap'),
         t.stringLiteral(sourceMapString)
       )
     );
@@ -579,7 +413,11 @@ function makeWorklet(t, fun, state) {
       t.assignmentExpression(
         '=',
         t.memberExpression(privateFunctionId, t.identifier('_closure'), false),
-        closureGenerator.generate(t, variables, closure.keys())
+        t.objectExpression(
+          variables.map((variable) =>
+            t.objectProperty(t.identifier(variable.name), variable, false, true)
+          )
+        )
       )
     ),
     t.expressionStatement(
@@ -852,6 +690,91 @@ function processWorklets(t, path, state) {
   }
 }
 
+function generateInlineStylesWarning(t, memberExpression) {
+  // replaces `sharedvalue.value` with `(()=>{console.warn(require('react-native-reanimated').getUseOfValueInStyleWarning());return sharedvalue.value;})()`
+  return t.callExpression(
+    t.arrowFunctionExpression(
+      [],
+      t.blockStatement([
+        t.expressionStatement(
+          t.callExpression(
+            t.memberExpression(t.identifier('console'), t.identifier('warn')),
+            [
+              t.callExpression(
+                t.memberExpression(
+                  t.callExpression(t.identifier('require'), [
+                    t.stringLiteral('react-native-reanimated'),
+                  ]),
+                  t.identifier('getUseOfValueInStyleWarning')
+                ),
+                []
+              ),
+            ]
+          )
+        ),
+        t.returnStatement(memberExpression.node),
+      ])
+    ),
+    []
+  );
+}
+
+function processPropertyValueForInlineStylesWarning(t, path) {
+  // if it's something like object.value then raise a warning
+  if (t.isMemberExpression(path)) {
+    if (path.get('property').node.name === 'value') {
+      path.replaceWith(generateInlineStylesWarning(t, path));
+    }
+  }
+}
+
+function processTransformPropertyForInlineStylesWarning(t, path) {
+  if (t.isArrayExpression(path)) {
+    const elements = path.get('elements');
+    for (const element of elements) {
+      if (t.isObjectExpression(element)) {
+        processStyleObjectForInlineStylesWarning(t, element);
+      }
+    }
+  }
+}
+
+function processStyleObjectForInlineStylesWarning(t, path) {
+  const properties = path.get('properties');
+  for (const property of properties) {
+    const value = property.get('value');
+    if (t.isProperty(property)) {
+      if (property.get('key').node.name === 'transform') {
+        processTransformPropertyForInlineStylesWarning(t, value);
+      } else {
+        processPropertyValueForInlineStylesWarning(t, value);
+      }
+    }
+  }
+}
+
+function processInlineStylesWarning(t, path, state) {
+  if (isRelease()) return;
+  if (state.opts.disableInlineStylesWarning) return;
+  if (path.get('name').node.name !== 'style') return;
+  if (!t.isJSXExpressionContainer(path.get('value'))) return;
+
+  const expression = path.get('value').get('expression');
+  // style={[{...}, {...}]}
+  if (t.isArrayExpression(expression)) {
+    const elements = expression.get('elements');
+    for (const element of elements) {
+      if (t.isObjectExpression(element)) {
+        processStyleObjectForInlineStylesWarning(t, element);
+      }
+    }
+  }
+  // style={{...}}
+  else if (t.isObjectExpression(expression)) {
+    processStyleObjectForInlineStylesWarning(t, expression);
+  }
+}
+
 module.exports = function ({ types: t }) {
   return {
     pre() {
@@ -872,6 +795,11 @@ module.exports = function ({ types: t }) {
         enter(path, state) {
           processIfWorkletNode(t, path, state);
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
+        },
+      },
+      JSXAttribute: {
+        enter(path, state) {
+          processInlineStylesWarning(t, path, state);
         },
       },
     },

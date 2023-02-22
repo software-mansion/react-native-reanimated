@@ -54,6 +54,7 @@ export function makeUIMutable<T>(
       listeners.delete(id);
     },
     _animation: null,
+    _isReanimatedSharedValue: true,
   };
   return self;
 }
@@ -136,6 +137,7 @@ export function makeMutable<T>(
       }
       listeners!.delete(id);
     },
+    _isReanimatedSharedValue: true,
   };
   registerShareableMapping(mutable, handle);
   return mutable;

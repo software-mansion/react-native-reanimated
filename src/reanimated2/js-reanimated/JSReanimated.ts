@@ -5,7 +5,6 @@ import {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { isJest } from '../PlatformChecker';
 import { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
@@ -14,14 +13,6 @@ export default class JSReanimated extends NativeReanimated {
 
   constructor() {
     super(false);
-    if (isJest()) {
-      // on node < 16 jest have problems mocking performance.now method which
-      // results in the tests failing, since date precision isn't that important
-      // for tests, we use Date.now instead
-      this.getTimestamp = () => Date.now();
-    } else {
-      this.getTimestamp = () => window.performance.now();
-    }
   }
 
   makeShareableClone<T>(value: T): ShareableRef<T> {
@@ -64,6 +55,7 @@ export default class JSReanimated extends NativeReanimated {
   registerSensor(
     sensorType: SensorType,
     interval: number,
+    iosReferenceFrame: number,
     eventHandler: (data: Value3D | ValueRotation) => void
   ): number {
     if (!(this.getSensorName(sensorType) in window)) {
@@ -86,12 +78,21 @@ export default class JSReanimated extends NativeReanimated {
           2.0 * (qx * qy + qw * qz),
           qw * qw + qx * qx - qy * qy - qz * qz
         );
-        eventHandler({ qw, qx, qy, qz, yaw, pitch, roll });
+        eventHandler({
+          qw,
+          qx,
+          qy,
+          qz,
+          yaw,
+          pitch,
+          roll,
+          interfaceOrientation: 0,
+        });
       };
     } else {
       callback = () => {
         const { x, y, z } = sensor;
-        eventHandler({ x, y, z });
+        eventHandler({ x, y, z, interfaceOrientation: 0 });
       };
     }
     sensor.addEventListener('reading', callback);
