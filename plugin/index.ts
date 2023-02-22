@@ -462,12 +462,9 @@ function makeWorklet(
 
   const privateFunctionId = t.identifier('_f');
   const clone = t.cloneNode(fun.node);
-  let funExpression;
-  if (clone.body.type === 'BlockStatement') {
-    funExpression = t.functionExpression(null, clone.params, clone.body);
-  } else {
-    funExpression = clone;
-  }
+  const funExpression = BabelTypes.isBlockStatement(clone.body)
+    ? t.functionExpression(null, clone.params, clone.body)
+    : clone;
 
   const [funString, sourceMapString] = buildWorkletString(
     t,
@@ -524,6 +521,8 @@ function makeWorklet(
     ])
   );
 
+  if (BabelTypes.isFunctionDeclaration(funExpression))
+    throw new Error('temporary funExpression error'); // [TO DO] temporary
   const statements = [
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),

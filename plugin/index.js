@@ -162,11 +162,17 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
             if (closureVariables.length === 0 || path.parent.type !== 'Program') {
                 return;
             }
-            path.node.body.body.unshift(closureDeclaration);
+            if (!BabelTypes.isExpression(path.node.body))
+                // not sure if necessary [TO DO]
+                path.node.body.body.unshift(closureDeclaration);
         }
-        function prepandRecursiveDeclaration(path) {
+        function prependRecursiveDeclaration(path) {
             var _a;
-            if (path.parent.type === 'Program' && path.node.id && path.scope.parent) {
+            if (path.parent.type === 'Program' &&
+                !BabelTypes.isArrowFunctionExpression(path.node) && // such a long if here [TO DO]
+                !BabelTypes.isObjectMethod(path.node) && // such a long if here [TO DO]
+                path.node.id &&
+                path.scope.parent) {
                 var hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
                 if (hasRecursiveCalls) {
                     path.node.body.body.unshift(t.variableDeclaration('const', [
@@ -177,24 +183,27 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         }
         return {
             visitor: {
+                // object method does not appear upstream [TO DO]
                 'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod': function (path) {
                     prependClosure(path);
-                    prepandRecursiveDeclaration(path);
+                    prependRecursiveDeclaration(path);
                 }
             }
         };
     }
+    // ???? [TO DO ASAP]
     var expression = fun.program.body.find(function (_a) {
         var type = _a.type;
         return type === 'FunctionDeclaration';
-    }) ||
+    }) || // [TO DO]
         fun.program.body.find(function (_a) {
             var type = _a.type;
             return type === 'ExpressionStatement';
-        })
-            .expression;
+        }).expression; // [TO DO]
     var workletFunction = t.functionExpression(t.identifier(name), expression.params, expression.body);
     var code = (0, generator_1["default"])(workletFunction).code;
+    if (!inputMap)
+        throw new Error('temporary Error'); // temporary [TO DO]
     if (shouldGenerateSourceMap()) {
         // Clear contents array (should be empty anyways)
         inputMap.sourcesContent = [];
@@ -215,7 +224,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         babelrc: false,
         configFile: false,
         comments: false
-    });
+    }); // [TO DO] temporary
     var sourceMap;
     if (includeSourceMap) {
         sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
@@ -225,7 +234,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         // in files that contain multiple worklets. Along with sourcesContent.
         delete sourceMap.sourcesContent;
     }
-    return [transformed.code, JSON.stringify(sourceMap)];
+    return [transformed.code, JSON.stringify(sourceMap)]; // [TO DO] temporary
 }
 function makeWorkletName(t, fun) {
     if (BabelTypes.isObjectMethod(fun.node)) {
@@ -282,7 +291,7 @@ function makeWorklet(t, fun, state) {
         configFile: false,
         inputSourceMap: codeObject.map
     }); // this is temporary [TO DO]
-    if (!transformed.ast && !transformed)
+    if (!transformed || !transformed.ast)
         throw new Error('null ast weird exception\n'); //this is temporary [TO DO]
     (0, traverse_1["default"])(transformed.ast, {
         //ReferencedIdentifier(path) { -- was like this before, appears as solution online but causes ts error [TO DO]
@@ -321,13 +330,9 @@ function makeWorklet(t, fun, state) {
     var variables = Array.from(closure.values());
     var privateFunctionId = t.identifier('_f');
     var clone = t.cloneNode(fun.node);
-    var funExpression;
-    if (clone.body.type === 'BlockStatement') {
-        funExpression = t.functionExpression(null, clone.params, clone.body);
-    }
-    else {
-        funExpression = clone;
-    }
+    var funExpression = BabelTypes.isBlockStatement(clone.body)
+        ? t.functionExpression(null, clone.params, clone.body)
+        : clone;
     var _a = buildWorkletString(t, transformed.ast, variables, functionName, transformed.map), funString = _a[0], sourceMapString = _a[1];
     var workletHash = hash(funString);
     // @ts-ignore [TO DO]
@@ -359,6 +364,8 @@ function makeWorklet(t, fun, state) {
     pathForStringDefinitions.insertBefore(t.variableDeclaration('const', [
         t.variableDeclarator(initDataId, initDataObjectExpression),
     ]));
+    if (BabelTypes.isFunctionDeclaration(funExpression))
+        throw new Error('temporary funExpression error'); // [TO DO] temporary
     var statements = [
         t.variableDeclaration('const', [
             t.variableDeclarator(privateFunctionId, funExpression),
@@ -558,13 +565,13 @@ function processWorklets(t, path, state) {
 }
 module.exports = function (_a) {
     var t = _a.types;
+    // also guessed PluginItem here [TO DO]
     return {
         pre: function () {
             // allows adding custom globals such as host-functions
-            // @ts-ignore [TO DO]
             if (this.opts != null && Array.isArray(this.opts.globals)) {
-                // @ts-ignore [TO DO]
                 this.opts.globals.forEach(function (name) {
+                    // guessed string here [TO DO]
                     globals.add(name);
                 });
             }
