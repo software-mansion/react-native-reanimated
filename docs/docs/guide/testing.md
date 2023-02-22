@@ -56,7 +56,8 @@ If you have custom babel configuration for testing, make sure that Reanimated's 
 
 #### Timers
 
-You can use jest timers to control animation
+You can use Jest's fake timers to control animation progress.
+Check [the full guide about mocking timers on Jest documentation website](https://jestjs.io/docs/timer-mocks).
 
 ```js
 jest.useFakeTimers();
@@ -75,9 +76,12 @@ jest.advanceTimersByTime(250);
 
 ## Example
 
-Timer:
+The below code shows an example of test that runs a 250ms of animation and verifies the component style after that point in time.
 
 ```js
+// Setup fake timers – this can be done before the tests are run
+jest.useFakeTimers();
+
 test('stop in the middle of animation', () => {
   const style = { width: 0 };
 
@@ -89,7 +93,7 @@ test('stop in the middle of animation', () => {
   expect(view).toHaveAnimatedStyle(style);
 
   fireEvent.press(button);
-  advanceAnimationByTime(250); // if whole animation duration is a 500ms
+  jest.advanceAnimationByTime(250); // if whole animation duration is a 500ms
   style.width = 50; // value of component width after 250ms of animation
   expect(view).toHaveAnimatedStyle(style);
 });
