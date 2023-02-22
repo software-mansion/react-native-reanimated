@@ -46,19 +46,19 @@ const legacyVersions = [
   },
   {
     from: '/docs/2.0.x',
-    to: '/docs',
+    to: '/docs/2.x',
   },
   {
     from: '/docs/2.1.x',
-    to: '/docs',
+    to: '/docs/2.x',
   },
   {
     from: '/docs/2.2.x',
-    to: '/docs',
+    to: '/docs/2.x',
   },
   {
     from: '/docs/2.3.x',
-    to: '/docs',
+    to: '/docs/2.x',
   },
 ];
 
@@ -96,6 +96,7 @@ function handleSiteMap(pathname: string): string {
   return `${url}${id ? `#${id}` : ''}`;
 }
 
+// Returns null if pathname is not legacy and doesn't need to be redirected
 export function handleLegacyUrl(pathname: string): string | null {
   const resolvedVersionPathname = handleLegacyVersions(pathname);
 
