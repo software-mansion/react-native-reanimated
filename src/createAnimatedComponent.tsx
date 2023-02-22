@@ -128,7 +128,7 @@ function hasInlineStyles(style: StyleProps): boolean {
   });
 }
 
-function getInlinePropsFromProps(
+function extractSharedValuesMapFromProps(
   props: AnimatedComponentProps<InitialComponentProps>
 ): Record<string, any> {
   const inlineProps: Record<string, any> = {};
@@ -505,9 +505,8 @@ export default function createAnimatedComponent(
     }
 
     _attachInlineProps() {
-      const newInlineProps: Record<string, any> = getInlinePropsFromProps(
-        this.props
-      );
+      const newInlineProps: Record<string, any> =
+        extractSharedValuesMapFromProps(this.props);
       const hasChanged = inlinePropsHasChanged(
         newInlineProps,
         this._inlineProps

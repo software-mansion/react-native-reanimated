@@ -387,8 +387,6 @@ You can also pass a shared value as a property like this:
 ```js
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-Animated.addWhitelistedNativeProps({ r: true });
-
 export default function SvgExample() {
   const sv = useSharedValue('50%');
 
