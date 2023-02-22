@@ -145,7 +145,10 @@ const gestureHandlerBuilderMethods = new Set([
 ]);
 
 function isRelease() {
-  return ['production', 'release'].includes(process.env.BABEL_ENV);
+  return (
+    process.env.BABEL_ENV && // [TO DO] overkill?
+    ['production', 'release'].includes(process.env.BABEL_ENV)
+  );
 }
 
 function shouldGenerateSourceMap() {
@@ -163,7 +166,13 @@ function shouldGenerateSourceMap() {
 }
 
 // [TO DO]
-function buildWorkletString(t, fun, closureVariables, name, inputMap) {
+function buildWorkletString(
+  t: typeof BabelCore.types,
+  fun: BabelCore.types.File,
+  closureVariables: Array<BabelTypes.Identifier>,
+  name,
+  inputMap
+) {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
       t.variableDeclarator(
@@ -268,14 +277,26 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   return [transformed.code, JSON.stringify(sourceMap)];
 }
 
-function makeWorkletName(t, fun) {
-  if (t.isObjectMethod(fun)) {
+function makeWorkletName(
+  t: typeof BabelCore.types,
+  fun: BabelCore.NodePath<
+    | BabelTypes.FunctionDeclaration
+    | BabelTypes.FunctionExpression
+    | BabelTypes.ObjectMethod // -- it didn't appear upstream [TO DO]
+    | BabelTypes.ArrowFunctionExpression
+  >
+) {
+  if (BabelTypes.isObjectMethod(fun.node)) {
+    // @ts-ignore weird narrowing here [TO DO]
     return fun.node.key.name;
-  }
-  if (t.isFunctionDeclaration(fun)) {
+  } // -- does not appear upstream [TO DO]
+  if (BabelTypes.isFunctionDeclaration(fun.node) && fun.node.id) {
     return fun.node.id.name;
   }
-  if (t.isFunctionExpression(fun) && t.isIdentifier(fun.node.id)) {
+  if (
+    BabelTypes.isFunctionExpression(fun.node) &&
+    BabelTypes.isIdentifier(fun.node.id)
+  ) {
     return fun.node.id.name;
   }
   return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
@@ -296,7 +317,7 @@ function makeWorklet(
 
   const functionName = makeWorkletName(t, fun);
 
-  const closure = new Map();
+  const closure = new Map<string, BabelTypes.Identifier>();
 
   // remove 'worklet'; directive before generating string
   fun.traverse({
@@ -338,9 +359,10 @@ function makeWorklet(
     babelrc: false,
     configFile: false,
     inputSourceMap: codeObject.map,
-  });
+  }) as BabelCore.BabelFileResult; // this is temporary [TO DO]
 
-  if (!transformed) throw new Error('null tree weird exception\n'); //this is temporary [TO DO]
+  if (!transformed.ast && !transformed)
+    throw new Error('null ast weird exception\n'); //this is temporary [TO DO]
 
   traverse(transformed.ast, {
     //ReferencedIdentifier(path) { -- was like this before, appears as solution online but causes ts error [TO DO]
