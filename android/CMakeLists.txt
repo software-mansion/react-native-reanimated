@@ -56,7 +56,7 @@ else()
             set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
         endif()
     else()
-        set (RN_SO_DIR ${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni)
+        set (RN_SO_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/react/jni")
         set (FBJNI_HEADERS_DIR "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/first-party/fbjni/headers")
     endif()
     file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
@@ -253,6 +253,19 @@ if(${JS_RUNTIME} STREQUAL "hermes")
                 PATHS ${LIBRN_DIR}
                 NO_DEFAULT_PATH
                 NO_CMAKE_FIND_ROOT_PATH
+            )
+        endif()
+        if(${REACT_NATIVE_MINOR_VERSION} LESS_EQUAL 67)
+            find_library(
+                    HERMES_INSPECTOR_LIB
+                    hermes-inspector
+                    PATHS ${LIBRN_DIR}
+                    NO_DEFAULT_PATH
+                    NO_CMAKE_FIND_ROOT_PATH
+            )
+            target_link_libraries(
+                    ${PACKAGE_NAME}
+                    ${HERMES_INSPECTOR_LIB}
             )
         endif()
         target_link_libraries(

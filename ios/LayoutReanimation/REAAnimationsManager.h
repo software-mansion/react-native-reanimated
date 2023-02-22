@@ -20,8 +20,12 @@ typedef void (^REAAnimationStartingBlock)(
     NSDictionary *_Nonnull yogaValues,
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
-typedef NSNumber *_Nullable (^REAFindSiblingForSharedViewBlock)(NSNumber *_Nonnull tag);
+typedef void (
+    ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView);
+typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
+
+BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 
 @interface REAAnimationsManager : NSObject
 
@@ -32,11 +36,13 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
 - (void)progressLayoutAnimationWithStyle:(NSDictionary *_Nonnull)newStyle
                                   forTag:(NSNumber *_Nonnull)tag
                       isSharedTransition:(BOOL)isSharedTransition;
-- (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView;
+- (void)setFindPrecedingViewTagForTransitionBlock:
+    (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock;
 - (void)endLayoutAnimationForTag:(NSNumber *_Nonnull)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView;
 - (void)endAnimationsRecursive:(UIView *)view;
 - (void)invalidate;
-- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot;
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(REASnapshot *)snapshot withNewFrame:(CGRect)frame;
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view;
 - (BOOL)wantsHandleRemovalOfView:(UIView *)view;
 - (void)removeAnimationsFromSubtree:(UIView *)view;
@@ -55,7 +61,6 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
                         type:(NSString *)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
-- (void)visitTree:(UIView *)view block:(REATreeVisitor)block;
 
 @end
 

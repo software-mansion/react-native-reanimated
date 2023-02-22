@@ -33,6 +33,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   private volatile boolean mInitialized = false;
   private final ReactApplicationContext mContext;
   private final WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManager;
+  private final ArrayList<View> viewsToSnapshot = new ArrayList<>();
 
   ReaLayoutAnimator(
       ReactApplicationContext context, NativeViewHierarchyManager nativeViewHierarchyManager) {
@@ -64,6 +65,22 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     return (viewToAnimate.getParent() != null);
   }
 
+  @Override
+  public void reset() {
+    super.reset();
+    // we have to make snapshots of the views after all of them have updated layouts
+    // to have correct global coordinates in the snapshots
+    // we do it here because React calls reset() method after all views have updated layouts
+    // and there is no semantically valid place to do it
+    for(View view : viewsToSnapshot) {
+              mAnimationsManager.onViewCreate(
+            view,
+            (ViewGroup) view.getParent(),
+            new Snapshot(view, mWeakNativeViewHierarchyManager.get()));
+    }
+    viewsToSnapshot.clear();
+  }
+
   /**
    * Update layout of given view, via immediate update or animation depending on the current batch
    * layout animation configuration supplied during initialization. Handles create and update
@@ -93,10 +110,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       }
       view.layout(x, y, x + width, y + height);
       if (view.getId() != -1) {
-        mAnimationsManager.onViewCreate(
-            view,
-            (ViewGroup) view.getParent(),
-            new Snapshot(view, mWeakNativeViewHierarchyManager.get()));
+        viewsToSnapshot.add(view);
       }
       return;
     }
@@ -255,11 +269,31 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       if (container != null
           && viewManagerName.equals("RNSScreen")
           && mReaLayoutAnimator != null) {
-        ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager().viewsDidLayout();
+        boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
+        if (!hasHeader || !container.isLayoutRequested()) {
+          mReaLayoutAnimator.getAnimationsManager().screenDidLayout();
+        }
+      }
+      View view = resolveView(tag);
+      if (view != null && mReaLayoutAnimator != null) {
+        mReaLayoutAnimator.getAnimationsManager().viewDidLayout(view);
       }
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
+    }
+  }
+
+  private boolean checkIfTopScreenHasHeader(ViewGroup screenStack) {
+    try {
+      ViewGroup fragment = (ViewGroup)screenStack.getChildAt(0);
+      ViewGroup screen = (ViewGroup)fragment.getChildAt(0);
+      View headerConfig = screen.getChildAt(0);
+      Field field = headerConfig.getClass().getDeclaredField("mIsHidden");
+      field.setAccessible(true);
+      return !field.getBoolean(headerConfig);
+    } catch (NullPointerException | NoSuchFieldException | IllegalAccessException e) {
+      return false;
     }
   }
 
@@ -286,12 +320,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     }
 
     // we don't want layout animations in native-stack since it is currently buggy there
-    AnimationsManager animationsManager = ((ReaLayoutAnimator) mReaLayoutAnimator).getAnimationsManager();
+    AnimationsManager animationsManager = mReaLayoutAnimator.getAnimationsManager();
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
       if (tagsToDelete == null) {
-        animationsManager.doSnapshotForTopScreenViews(viewGroup);
+        animationsManager.makeSnapshotOfTopScreenViews(viewGroup);
       } else {
-        animationsManager.notifyAboutViewsRemoving(tagsToDelete);
+        animationsManager.notifyAboutViewsRemoval(tagsToDelete);
       }
       if (indicesToRemove != null && mReaLayoutAnimator instanceof ReaLayoutAnimator) {
         for (int index : indicesToRemove) {
@@ -351,7 +385,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         pendingTags.clear();
       }
     }
-    animationsManager.notifyAboutViewsRemoving(tagsToDelete);
+    animationsManager.notifyAboutViewsRemoval(tagsToDelete);
     super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);

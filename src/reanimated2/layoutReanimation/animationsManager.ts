@@ -1,4 +1,3 @@
-import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
@@ -6,6 +5,7 @@ import {
   LayoutAnimationFunction,
   LayoutAnimationsValues,
 } from './animationBuilder';
+import { runOnUIImmediately } from '../threads';
 
 const TAG_OFFSET = 1e9;
 
@@ -64,10 +64,11 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        if (!sharedTransitionForTag.get(tag)) {
-          stopObservingProgress(tag, value, false, false);
-        }
         value._value = style.initialValues;
+      }
+
+      if (sharedTransitionForTag.get(tag)) {
+        stopObservingProgress(tag, value, true, false);
       }
 
       if (type === 'sharedElementTransition') {
@@ -92,10 +93,14 @@ function createLayoutAnimationManager() {
       startObservingProgress(tag, value, type);
       value.value = animation;
     },
+    stop(tag: number) {
+      const value = mutableValuesForTag.get(tag);
+      stopObservingProgress(tag, value, true, true);
+    },
   };
 }
 
-runOnUI(() => {
+runOnUIImmediately(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
 })();

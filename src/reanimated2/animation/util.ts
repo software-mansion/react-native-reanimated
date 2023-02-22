@@ -258,6 +258,8 @@ type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
     ? NextAnimation<SequenceAnimation>
     : AnimatableValue | T;
 
+const IS_NATIVE = NativeReanimatedModule.native;
+
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation
 >(starting: AnimationToDecoration<T>, factory: () => T): T {
@@ -272,7 +274,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !NativeReanimatedModule.native) {
+  if (_WORKLET || !IS_NATIVE) {
     return create();
   }
   // @ts-ignore: eslint-disable-line

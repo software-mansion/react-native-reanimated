@@ -33,9 +33,12 @@ public class LayoutAnimations {
 
   public native void clearAnimationConfigForTag(int tag);
 
+  public native void cancelAnimationForTag(
+      int tag, String type, boolean cancelled, boolean removeView);
+
   public native boolean isLayoutAnimationEnabled();
 
-  public native int findSiblingForSharedView(int tag);
+  public native int findPrecedingViewTagForTransition(int tag);
 
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     ReactApplicationContext context = mContext.get();

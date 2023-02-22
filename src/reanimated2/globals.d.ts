@@ -15,8 +15,6 @@ declare global {
   const _WORKLET: boolean;
   const _IS_FABRIC: boolean;
   const _REANIMATED_VERSION_CPP: string;
-  const _frameTimestamp: number | null;
-  const _eventTimestamp: number;
   const __reanimatedModuleProxy: NativeReanimated;
   const evalWithSourceMap: (
     js: string,
@@ -26,7 +24,6 @@ declare global {
   const evalWithSourceUrl: (js: string, sourceURL: string) => any;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
-  const _getTimestamp: () => number;
   const _notifyAboutProgress: (
     tag: number,
     value: number,
@@ -53,9 +50,7 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
   ) => void;
-  const _removeShadowNodeFromRegistry: (
-    shadowNodeWrapper: ShadowNodeWrapper
-  ) => void;
+  const _removeShadowNodeFromRegistry: (viewTag: number) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _scrollTo: (
     viewTag: number,
@@ -68,7 +63,6 @@ declare global {
     commandName: string,
     args: Array<unknown>
   ) => void;
-  const _chronoNow: () => number;
   const performance: { now: () => number };
   const ReanimatedDataMock: {
     now: () => number;
@@ -78,6 +72,7 @@ declare global {
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
   const requestAnimationFrame: (callback: (time: number) => void) => number;
+  const setImmediate: (callback: (time: number) => void) => number;
   const console: Console;
 
   namespace NodeJS {
@@ -85,9 +80,8 @@ declare global {
       _WORKLET: boolean;
       _IS_FABRIC: boolean;
       _REANIMATED_VERSION_CPP: string;
-      _frameTimestamp: number | null;
-      _eventTimestamp: number;
       __reanimatedModuleProxy: NativeReanimated;
+      __frameTimestamp?: number;
       evalWithSourceMap: (
         js: string,
         sourceURL: string,
@@ -96,7 +90,6 @@ declare global {
       evalWithSourceUrl: (js: string, sourceURL: string) => any;
       _log: (s: string) => void;
       _getCurrentTime: () => number;
-      _getTimestamp: () => number;
       _setGestureState: (handlerTag: number, newState: number) => void;
       _makeShareableClone: (value: any) => any;
       _updateDataSynchronously: (
@@ -113,9 +106,7 @@ declare global {
         shadowNodeWrapper: ShadowNodeWrapper,
         props: StyleProps | AnimatedStyle
       ) => void;
-      _removeShadowNodeFromRegistry: (
-        shadowNodeWrapper: ShadowNodeWrapper
-      ) => void;
+      _removeShadowNodeFromRegistry: (viewTag: number) => void;
       _measure: (viewTag: number) => MeasuredDimensions;
       _scrollTo: (
         viewTag: number,
@@ -128,7 +119,6 @@ declare global {
         commandName: string,
         args: Array<unknown>
       ) => void;
-      _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationsManager: {
         start: LayoutAnimationStartFunction;
@@ -143,7 +133,10 @@ declare global {
       __workletsCache?: Map<string, (...args: any[]) => any>;
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
+      __flushImmediates: () => void;
+      __flushAnimationFrame: (frameTimestamp: number) => void;
       requestAnimationFrame: (callback: (time: number) => void) => number;
+      setImmediate: (callback: (time: number) => void) => number;
       console: Console;
     }
   }

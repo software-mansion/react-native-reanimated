@@ -11,7 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   BasicLayoutAnimation,
@@ -71,6 +71,7 @@ import {
   ParentMarginExample,
   RestoreStateExample,
 } from './SharedElementTransition';
+import CubesExample from './CubesExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -166,6 +167,10 @@ const SCREENS: Screens = {
   AnimatedSensor: {
     screen: AnimatedSensorExample,
     title: '🆕 Use Animated Sensor',
+  },
+  Cubes: {
+    screen: CubesExample,
+    title: '🆕 Cubes with useAnimatedSensor',
   },
   FrameCallbackExample: {
     screen: FrameCallbackExample,
@@ -378,6 +383,7 @@ export const styles = StyleSheet.create({
   },
   buttonText: {
     backgroundColor: 'transparent',
+    color: 'black',
   },
   button: {
     flex: 1,

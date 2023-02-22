@@ -64,17 +64,32 @@ void LayoutAnimations::clearAnimationConfigForTag(int tag) {
   clearAnimationConfigBlock_(tag);
 }
 
+void LayoutAnimations::setCancelAnimationForTag(
+    CancelAnimationConfigBlock cancelAnimationBlock) {
+  this->cancelAnimationBlock_ = cancelAnimationBlock;
+}
+
+void LayoutAnimations::cancelAnimationForTag(
+    int tag,
+    alias_ref<JString> type,
+    jboolean cancelled,
+    jboolean removeView) {
+  this->cancelAnimationBlock_(tag, type, cancelled, removeView);
+}
+
 bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
 }
 
-void LayoutAnimations::setFindSiblingForSharedView(
-    FindSiblingForSharedViewBlock findSiblingForSharedViewBlock) {
-  findSiblingForSharedViewBlock_ = findSiblingForSharedViewBlock;
+void LayoutAnimations::setFindPrecedingViewTagForTransition(
+    FindPrecedingViewTagForTransitionBlock
+        findPrecedingViewTagForTransitionBlock) {
+  findPrecedingViewTagForTransitionBlock_ =
+      findPrecedingViewTagForTransitionBlock;
 }
 
-int LayoutAnimations::findSiblingForSharedView(int tag) {
-  return findSiblingForSharedViewBlock_(tag);
+int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
+  return findPrecedingViewTagForTransitionBlock_(tag);
 }
 
 void LayoutAnimations::registerNatives() {
@@ -88,11 +103,13 @@ void LayoutAnimations::registerNatives() {
           "clearAnimationConfigForTag",
           LayoutAnimations::clearAnimationConfigForTag),
       makeNativeMethod(
+          "cancelAnimationForTag", LayoutAnimations::cancelAnimationForTag),
+      makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),
       makeNativeMethod(
-          "findSiblingForSharedView",
-          LayoutAnimations::findSiblingForSharedView),
+          "findPrecedingViewTagForTransition",
+          LayoutAnimations::findPrecedingViewTagForTransition),
   });
 }
 }; // namespace reanimated

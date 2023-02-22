@@ -9,7 +9,7 @@
 
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
-static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
+BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   if (!view.reactTag) {
     return NO;
@@ -108,13 +108,9 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (UIView *)viewForTag:(NSNumber *)tag
 {
-  UIView *view = [_reaUiManager viewForReactTag:tag];
-  if (view == nil) {
-    view = [_exitingViews objectForKey:tag];
-  }
-  if (view == nil) {
-    view = [_sharedTransitionManager getTransitioningView:tag];
-  }
+  UIView *view;
+  (view = [_reaUiManager viewForReactTag:tag]) || (view = [_exitingViews objectForKey:tag]) ||
+      (view = [_sharedTransitionManager getTransitioningView:tag]);
   return view;
 }
 
@@ -167,12 +163,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
                                   forTag:(NSNumber *)tag
                       isSharedTransition:(BOOL)isSharedTransition
 {
-  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
-  [self setNewProps:[newStyle mutableCopy]
-                  forView:[self viewForTag:tag]
-        withComponentData:componentData
-      convertFromAbsolute:isSharedTransition];
+  [self setNewProps:[newStyle mutableCopy] forView:[self viewForTag:tag] convertFromAbsolute:isSharedTransition];
 }
 
 - (double)getDoubleOrZero:(NSNumber *)number
@@ -186,15 +177,10 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view
 {
-  NSMutableDictionary *dataComponentsByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = dataComponentsByName[@"RCTView"];
-  [self setNewProps:newProps forView:view withComponentData:componentData convertFromAbsolute:NO];
+  [self setNewProps:newProps forView:view convertFromAbsolute:NO];
 }
 
-- (void)setNewProps:(NSMutableDictionary *)newProps
-                forView:(UIView *)view
-      withComponentData:(RCTComponentData *)componentData
-    convertFromAbsolute:(BOOL)convertFromAbsolute
+- (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view convertFromAbsolute:(BOOL)convertFromAbsolute
 {
   if (newProps[@"height"]) {
     double height = [self getDoubleOrZero:newProps[@"height"]];
@@ -211,22 +197,22 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [newProps removeObjectForKey:@"width"];
   }
 
-  bool updateViewPosition = false;
+  bool needsViewPositionUpdate = false;
   double centerX = view.center.x;
   double centerY = view.center.y;
   if (newProps[@"originX"]) {
-    updateViewPosition = true;
+    needsViewPositionUpdate = true;
     double originX = [self getDoubleOrZero:newProps[@"originX"]];
     [newProps removeObjectForKey:@"originX"];
     centerX = originX + view.bounds.size.width / 2.0;
   }
   if (newProps[@"originY"]) {
-    updateViewPosition = true;
+    needsViewPositionUpdate = true;
     double originY = [self getDoubleOrZero:newProps[@"originY"]];
     [newProps removeObjectForKey:@"originY"];
     centerY = originY + view.bounds.size.height / 2.0;
   }
-  if (updateViewPosition) {
+  if (needsViewPositionUpdate) {
     CGPoint newCenter = CGPointMake(centerX, centerY);
     if (convertFromAbsolute) {
       UIView *window = UIApplication.sharedApplication.keyWindow;
@@ -237,12 +223,25 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
   }
 
+  if (newProps[@"transformMatrix"]) {
+    NSArray *matrix = newProps[@"transformMatrix"];
+    CGFloat a = [matrix[0] floatValue];
+    CGFloat b = [matrix[1] floatValue];
+    CGFloat c = [matrix[3] floatValue];
+    CGFloat d = [matrix[4] floatValue];
+    CGFloat tx = [matrix[6] floatValue];
+    CGFloat ty = [matrix[7] floatValue];
+    view.transform = CGAffineTransformMake(a, b, c, d, tx, ty);
+    [newProps removeObjectForKey:@"transformMatrix"];
+  }
+
+  NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
+  RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
 }
 
 - (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values frameConfig:(FrameConfigType)frameConfig
 {
-  UIView *windowView = UIApplication.sharedApplication.keyWindow;
   if (frameConfig == EnteringFrame) {
     NSDictionary *preparedData = @{
       @"targetWidth" : values[@"width"],
@@ -251,8 +250,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       @"targetOriginY" : values[@"originY"],
       @"targetGlobalOriginX" : values[@"globalOriginX"],
       @"targetGlobalOriginY" : values[@"globalOriginY"],
-      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+      @"windowWidth" : values[@"windowWidth"],
+      @"windowHeight" : values[@"windowHeight"]
     };
     return preparedData;
   } else {
@@ -263,8 +262,8 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       @"currentOriginY" : values[@"originY"],
       @"currentGlobalOriginX" : values[@"globalOriginX"],
       @"currentGlobalOriginY" : values[@"globalOriginY"],
-      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+      @"windowWidth" : values[@"windowWidth"],
+      @"windowHeight" : values[@"windowHeight"]
     };
     return preparedData;
   }
@@ -273,7 +272,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues
 {
-  UIView *windowView = UIApplication.sharedApplication.keyWindow;
   NSDictionary *preparedData = @{
     @"currentWidth" : currentValues[@"width"],
     @"currentHeight" : currentValues[@"height"],
@@ -281,14 +279,16 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     @"currentOriginY" : currentValues[@"originY"],
     @"currentGlobalOriginX" : currentValues[@"globalOriginX"],
     @"currentGlobalOriginY" : currentValues[@"globalOriginY"],
+    @"currentTransformMatrix" : currentValues[@"transformMatrix"],
     @"targetWidth" : targetValues[@"width"],
     @"targetHeight" : targetValues[@"height"],
     @"targetOriginX" : targetValues[@"originX"],
     @"targetOriginY" : targetValues[@"originY"],
     @"targetGlobalOriginX" : targetValues[@"globalOriginX"],
     @"targetGlobalOriginY" : targetValues[@"globalOriginY"],
-    @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
-    @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+    @"targetTransformMatrix" : targetValues[@"transformMatrix"],
+    @"windowWidth" : currentValues[@"windowWidth"],
+    @"windowHeight" : currentValues[@"windowHeight"]
   };
   return preparedData;
 }
@@ -519,7 +519,7 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   });
 }
 
-- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before
+- (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before withNewFrame:(CGRect)frame
 {
   NSString *type = before == nil ? @"entering" : @"layout";
   NSNumber *viewTag = view.reactTag;
@@ -536,7 +536,11 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 
   if (_hasAnimationForTag(viewTag, @"sharedElementTransition")) {
-    [_sharedTransitionManager notifyAboutNewView:view];
+    if ([type isEqual:@"entering"]) {
+      [_sharedTransitionManager notifyAboutNewView:view];
+    } else {
+      [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
+    }
   }
 }
 
@@ -545,13 +549,23 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   [_sharedTransitionManager viewsDidLayout];
 }
 
-- (void)setFindSiblingForSharedViewBlock:(REAFindSiblingForSharedViewBlock)findSiblingForSharedView
+- (void)setFindPrecedingViewTagForTransitionBlock:
+    (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition
 {
-  [_sharedTransitionManager setFindSiblingForSharedViewBlock:findSiblingForSharedView];
+  [_sharedTransitionManager setFindPrecedingViewTagForTransitionBlock:findPrecedingViewTagForTransition];
+}
+
+- (void)setCancelAnimationBlock:(REACancelAnimationBlock)animationCancellingBlock
+{
+  [_sharedTransitionManager setCancelAnimationBlock:animationCancellingBlock];
 }
 
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type
 {
+  if (!_hasAnimationForTag) {
+    // It can happen during reload.
+    return NO;
+  }
   return _hasAnimationForTag(tag, type);
 }
 
@@ -566,11 +580,6 @@ static BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
                        depth:(NSNumber *)depth;
 {
   _startAnimationForTag(tag, type, yogaValues, depth);
-}
-
-- (void)visitTree:(UIView *)view block:(REATreeVisitor)block
-{
-  REANodeFind(view, block);
 }
 
 @end

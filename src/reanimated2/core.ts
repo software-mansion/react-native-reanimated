@@ -20,7 +20,6 @@ import { initializeUIRuntime } from './initializers';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { getTimestamp } from './time';
 
 export type ReanimatedConsole = Pick<
   Console,
@@ -115,9 +114,16 @@ export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
 ): string {
+  function handleAndFlushImmediates(eventTimestamp: number, event: T) {
+    'worklet';
+    global.__frameTimestamp = eventTimestamp;
+    eventHandler(event);
+    global.__flushAnimationFrame(eventTimestamp);
+    global.__frameTimestamp = undefined;
+  }
   return NativeReanimatedModule.registerEventHandler(
     eventHash,
-    makeShareableCloneRecursive(eventHandler)
+    makeShareableCloneRecursive(handleAndFlushImmediates)
   );
 }
 
@@ -142,11 +148,16 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 export function registerSensor(
   sensorType: number,
   interval: number,
-  eventHandler: (data: Value3D | ValueRotation) => void
+  iosReferenceFrame: number,
+  eventHandler: (
+    data: Value3D | ValueRotation,
+    orientationDegrees: number
+  ) => void
 ): number {
   return NativeReanimatedModule.registerSensor(
     sensorType,
     interval,
+    iosReferenceFrame,
     makeShareableCloneRecursive(eventHandler)
   );
 }

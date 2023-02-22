@@ -30,7 +30,13 @@ class LayoutAnimationsManager {
       const std::string &type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(int tag);
-  int findSiblingForSharedView(int tag);
+  void cancelLayoutAnimation(
+      jsi::Runtime &rt,
+      int tag,
+      const std::string &type,
+      bool cancelled /* = true */,
+      bool removeView /* = true */);
+  int findPrecedingViewTagForTransition(int tag);
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
@@ -39,6 +45,7 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>>
       sharedTransitionAnimations_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
+  std::unordered_map<int, std::string> viewTagToSharedTag_;
   mutable std::mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
                         // `layoutAnimations_` and `viewSharedValues_`.
