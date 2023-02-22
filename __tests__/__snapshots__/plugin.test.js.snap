@@ -27,6 +27,19 @@ var f = function () {
 }();"
 `;
 
+exports[`babel plugin doesn't break if there is a spread syntax 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: [style, Object.assign({}, styles.container, {
+      width: function () {
+        console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+        return sharedValue.value;
+      }()
+    })]
+  });
+}"
+`;
+
 exports[`babel plugin doesn't capture globals 1`] = `
 "var _worklet_13298016111221_init_data = {
   code: \\"function f(){console.log('test');}\\",
@@ -43,6 +56,14 @@ var f = function () {
   _f.__stackDetails = _e;
   return _f;
 }();"
+`;
+
+exports[`babel plugin doesn't show a warning if user writes something like style={styles.value} 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: styles.value
+  });
+}"
 `;
 
 exports[`babel plugin doesn't transform standard callback functions 1`] = `
@@ -68,6 +89,47 @@ var foo = function () {
   _f.__stackDetails = _e;
   return _f;
 }();"
+`;
+
+exports[`babel plugin shows a warning if user uses .value inside inline style 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: {
+      width: function () {
+        console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+        return sharedValue.value;
+      }()
+    }
+  });
+}"
+`;
+
+exports[`babel plugin shows a warning if user uses .value inside inline style, style array 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: [style, {
+      width: function () {
+        console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+        return sharedValue.value;
+      }()
+    }]
+  });
+}"
+`;
+
+exports[`babel plugin shows a warning if user uses .value inside inline style, transforms 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: {
+      transform: [{
+        translateX: function () {
+          console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+          return sharedValue.value;
+        }()
+      }]
+    }
+  });
+}"
 `;
 
 exports[`babel plugin supports SequenceExpression 1`] = `

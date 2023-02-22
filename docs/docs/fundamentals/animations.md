@@ -96,6 +96,63 @@ This approach is more convenient in many cases, especially when view properties 
 Also, keeping all the aspects of view styles and transitions colocated often makes it easier to keep control over your components' code.
 It forces you to have everything defined in one place vs scattered around the codebase allowing for animated transitions being triggered from anywhere.
 
+## Animations in inline styles
+
+For simple animations in `useAnimatedStyle` hook without any calculations like this:
+
+```js
+function SomeComponent() {
+  const width = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: width.value,
+    };
+  });
+  return <Animated.View style={animatedStyle} />;
+}
+```
+
+you can omit `useAnimatedStyle` and use inline styles like this to save some typing:
+
+```js
+function SomeComponent() {
+  const width = useSharedValue(0);
+  return <Animated.View style={{ width }} />;
+}
+```
+
+The width of the view will change when `width` value changes.
+
+Note that we're not using `.value` getter in inline styles. If you use `width.value`, Reanimated uses just current value of shared value. Let's look at an example:
+
+```js
+width.value = 5;
+//...
+<Animated.View style={{ width: width.value }} />
+```
+
+is equivalent to:
+
+```js
+<Animated.View style={{ width: 5 }} />
+```
+
+Passing a shared value without `.value` getter causes Reanimated to watch for shared value changes.
+
+To help you avoid a mistake when using inline styles, Reanimated shows a warning when using `.value` getter in inline styles. If you want to disable this warning, set `disableInlineStylesWarning` to `true` in babel plugin options in `babel.config.js` like this:
+
+```
+module.exports = {
+  presets: [
+    ...
+  ],
+  plugins: [
+    ...
+    ['react-native-reanimated/plugin', { disableInlineStylesWarning: true }]
+  ],
+};
+```
+
 ## Interrupting Animated Updates
 
 Animated UI updates, by definition, take time to perform.
