@@ -12,15 +12,15 @@ import * as BabelTypes from '@babel/types';
 //     path: BabelCore.NodePath;
 //   };
 // }
-// not sure what to do about it
+// [TO DO] not sure what to do about it
 
 import generate from '@babel/generator';
-// @ts-expect-error
+// @ts-ignore [TO DO]
 import * as hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
-// import fs from 'fs'; // --- bugs
-// import convertSourceMap from 'convert-source-map'; ---bugs
+// import fs from 'fs'; // --- bugs [TO DO]
+// import convertSourceMap from 'convert-source-map'; ---bugs [TO DO]
 
 // const generate = require('@babel/generator').default;
 // const hash = require('string-hash-64');
@@ -162,7 +162,7 @@ function shouldGenerateSourceMap() {
   return true;
 }
 
-// TO DO
+// [TO DO]
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
@@ -286,7 +286,7 @@ function makeWorklet(
   fun: BabelCore.NodePath<
     | BabelTypes.FunctionDeclaration
     | BabelTypes.FunctionExpression
-    // | BabelTypes.ObjectMethod -- it didn't appear upstream
+    // | BabelTypes.ObjectMethod -- it didn't appear upstream [TO DO]
     | BabelTypes.ArrowFunctionExpression
   >,
   state: BabelCore.PluginOptions
@@ -312,7 +312,7 @@ function makeWorklet(
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
-    // @ts-ignore
+    // @ts-ignore [TO DO]
     sourceFileName: state.file.opts.filename,
   });
 
@@ -324,7 +324,7 @@ function makeWorklet(
     '(' + (t.isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = transformSync(code, {
-    // @ts-expect-error
+    // @ts-ignore [TO DO]
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
@@ -340,17 +340,17 @@ function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  if (!transformed) throw new Error('null tree weird exception\n'); //this is temporary
+  if (!transformed) throw new Error('null tree weird exception\n'); //this is temporary [TO DO]
 
   traverse(transformed.ast, {
-    //ReferencedIdentifier(path) {
+    //ReferencedIdentifier(path) { -- was like this before, appears as solution online but causes ts error [TO DO]
     Identifier(path) {
-      if (!path.isReferencedIdentifier()) return; // not sure if this is necessary
+      if (!path.isReferencedIdentifier()) return; // not sure if this is necessary [TO DO]
       const name = path.node.name;
       if (
         globals.has(name) ||
-        (!BabelTypes.isArrowFunctionExpression(fun.node) && // necessary?
-          // !BabelTypes.isObjectMethod(fun.node) && --necessary?
+        (!BabelTypes.isArrowFunctionExpression(fun.node) && // necessary? [TO DO]
+          // !BabelTypes.isObjectMethod(fun.node) && --necessary? [TO DO]
           fun.node.id &&
           fun.node.id.name === name)
       ) {
@@ -407,10 +407,10 @@ function makeWorklet(
   );
   const workletHash = hash(funString);
 
-  // @ts-expect-error
-  let location = state.file.opts.filename; // @ts-expect-error
+  // @ts-ignore [TO DO]
+  let location = state.file.opts.filename; // @ts-ignore [TO DO]
   if (state.opts && state.opts.relativeSourceLocation) {
-    const path = require('path'); // @ts-expect-error
+    const path = require('path'); // @ts-ignore [TO DO]
     location = path.relative(state.cwd, location);
   }
 
@@ -764,9 +764,9 @@ module.exports = function ({ types: t }: typeof BabelCore) {
   return {
     pre() {
       // allows adding custom globals such as host-functions
-      // @ts-ignore
+      // @ts-ignore [TO DO]
       if (this.opts != null && Array.isArray(this.opts.globals)) {
-        // @ts-ignore
+        // @ts-ignore [TO DO]
         this.opts.globals.forEach((name) => {
           globals.add(name);
         });
