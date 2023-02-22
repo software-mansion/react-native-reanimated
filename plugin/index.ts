@@ -165,13 +165,23 @@ function shouldGenerateSourceMap() {
   return true;
 }
 
+interface BabelMapType {
+  version: number;
+  sources: string[];
+  names: string[];
+  sourceRoot?: string | undefined;
+  sourcesContent?: string[] | undefined;
+  mappings: string;
+  file: string;
+}
+
 // [TO DO]
 function buildWorkletString(
   t: typeof BabelCore.types,
   fun: BabelCore.types.File,
   closureVariables: Array<BabelTypes.Identifier>,
-  name,
-  inputMap
+  name: string,
+  inputMap: BabelMapType | null | undefined
 ) {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
@@ -190,16 +200,38 @@ function buildWorkletString(
       ),
     ]);
 
-    function prependClosure(path) {
+    function prependClosure(
+      path: BabelCore.NodePath<
+        | BabelTypes.FunctionDeclaration
+        | BabelTypes.FunctionExpression
+        | BabelTypes.ArrowFunctionExpression
+        | BabelTypes.ObjectMethod
+      >
+    ) {
       if (closureVariables.length === 0 || path.parent.type !== 'Program') {
         return;
       }
 
-      path.node.body.body.unshift(closureDeclaration);
+      if (!BabelTypes.isExpression(path.node.body))
+        // not sure if necessary [TO DO]
+        path.node.body.body.unshift(closureDeclaration);
     }
 
-    function prepandRecursiveDeclaration(path) {
-      if (path.parent.type === 'Program' && path.node.id && path.scope.parent) {
+    function prependRecursiveDeclaration(
+      path: BabelCore.NodePath<
+        | BabelTypes.FunctionDeclaration
+        | BabelTypes.FunctionExpression
+        | BabelTypes.ArrowFunctionExpression
+        | BabelTypes.ObjectMethod
+      >
+    ) {
+      if (
+        path.parent.type === 'Program' &&
+        !BabelTypes.isArrowFunctionExpression(path.node) && // such a long if here [TO DO]
+        !BabelTypes.isObjectMethod(path.node) && // such a long if here [TO DO]
+        path.node.id &&
+        path.scope.parent
+      ) {
         const hasRecursiveCalls =
           path.scope.parent.bindings[path.node.id.name]?.references > 0;
         if (hasRecursiveCalls) {
@@ -217,10 +249,18 @@ function buildWorkletString(
 
     return {
       visitor: {
+        // object method does not appear upstream [TO DO]
         'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
-          (path) => {
+          (
+            path: BabelCore.NodePath<
+              | BabelTypes.FunctionDeclaration
+              | BabelTypes.FunctionExpression
+              | BabelTypes.ArrowFunctionExpression
+              | BabelTypes.ObjectMethod
+            >
+          ) => {
             prependClosure(path);
-            prepandRecursiveDeclaration(path);
+            prependRecursiveDeclaration(path);
           },
       },
     };
@@ -285,7 +325,7 @@ function makeWorkletName(
     | BabelTypes.ObjectMethod // -- it didn't appear upstream [TO DO]
     | BabelTypes.ArrowFunctionExpression
   >
-) {
+): string {
   if (BabelTypes.isObjectMethod(fun.node)) {
     // @ts-ignore weird narrowing here [TO DO]
     return fun.node.key.name;
@@ -361,7 +401,7 @@ function makeWorklet(
     inputSourceMap: codeObject.map,
   }) as BabelCore.BabelFileResult; // this is temporary [TO DO]
 
-  if (!transformed.ast && !transformed)
+  if (!transformed || !transformed.ast)
     throw new Error('null ast weird exception\n'); //this is temporary [TO DO]
 
   traverse(transformed.ast, {
