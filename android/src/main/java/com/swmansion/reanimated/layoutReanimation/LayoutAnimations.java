@@ -17,7 +17,8 @@ public class LayoutAnimations {
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
-  private WeakReference<ReactApplicationContext> mContext;
+  private final WeakReference<ReactApplicationContext> mContext;
+  private WeakReference<AnimationsManager> mWeakAnimationsManager = new WeakReference<>(null);
 
   public LayoutAnimations(ReactApplicationContext context) {
     mContext = new WeakReference<>(context);
@@ -41,25 +42,37 @@ public class LayoutAnimations {
   public native int findPrecedingViewTagForTransition(int tag);
 
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
-    ReactApplicationContext context = mContext.get();
-    if (context != null) {
-      context
-          .getNativeModule(ReanimatedModule.class)
-          .getNodesManager()
-          .getAnimationsManager()
-          .endLayoutAnimation(tag, cancelled, removeView);
+    AnimationsManager animationsManager = getAnimationsManager();
+    if (animationsManager == null) {
+      return;
     }
+    animationsManager.endLayoutAnimation(tag, cancelled, removeView);
   }
 
   private void progressLayoutAnimation(
       int tag, Map<String, Object> newStyle, boolean isSharedTransition) {
-    ReactApplicationContext context = mContext.get();
-    if (context != null) {
-      context
-          .getNativeModule(ReanimatedModule.class)
-          .getNodesManager()
-          .getAnimationsManager()
-          .progressLayoutAnimation(tag, newStyle, isSharedTransition);
+    AnimationsManager animationsManager = getAnimationsManager();
+    if (animationsManager == null) {
+      return;
     }
+    animationsManager.progressLayoutAnimation(tag, newStyle, isSharedTransition);
+  }
+
+  private AnimationsManager getAnimationsManager() {
+    AnimationsManager animationsManager = mWeakAnimationsManager.get();
+    if (animationsManager != null) {
+      return mWeakAnimationsManager.get();
+    }
+
+    ReactApplicationContext context = mContext.get();
+    if (context == null) {
+      return null;
+    }
+
+    animationsManager =
+        context.getNativeModule(ReanimatedModule.class).getNodesManager().getAnimationsManager();
+
+    mWeakAnimationsManager = new WeakReference<>(animationsManager);
+    return animationsManager;
   }
 }
