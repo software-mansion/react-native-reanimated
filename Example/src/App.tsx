@@ -60,6 +60,12 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
 import CubesExample from './CubesExample';
+import {
+  CardExample,
+  CustomTransitionExample,
+  GalleryExample,
+  RestoreStateExample,
+} from './SharedElementTransition';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -72,104 +78,120 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  CardExample: {
+    screen: CardExample,
+    title: '[SET] Card',
+  },
+  CustomTransitionExample: {
+    screen: CustomTransitionExample,
+    title: '[SET] Custom transition',
+  },
+  GalleryExample: {
+    screen: GalleryExample,
+    title: '[SET] Gallery',
+  },
+  RestoreStateExample: {
+    screen: RestoreStateExample,
+    title: '[SET] Restore State',
+  },
   ColorInterpolation: {
     screen: ColorInterpolationExample,
     title: 'Color interpolation',
   },
   DeleteAncestorOfExiting: {
     screen: DeleteAncestorOfExiting,
-    title: '🆕 Deleting view with an exiting animation',
+    title: 'Deleting view with an exiting animation',
   },
   NestedNativeStacksWithLayout: {
     screen: NestedNativeStacksWithLayout,
-    title: '🆕 Nested NativeStacks with layout',
+    title: 'Nested NativeStacks with layout',
   },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
-    title: '🆕 Basic layout animation',
+    title: 'Basic layout animation',
   },
   BasicNestedAnimation: {
     screen: BasicNestedAnimation,
-    title: '🆕 Basic nested animation',
+    title: 'Basic nested animation',
   },
   BasicNestedLayoutAnimation: {
     screen: BasicNestedLayoutAnimation,
-    title: '🆕 Basic nested layout animation',
+    title: 'Basic nested layout animation',
   },
   NestedLayoutAnimations: {
     screen: NestedTest,
-    title: '🆕 Nested layout animations',
+    title: 'Nested layout animations',
   },
   CombinedLayoutAnimations: {
     screen: CombinedTest,
-    title: '🆕 Entering and Exiting with Layout',
+    title: 'Entering and Exiting with Layout',
   },
   DefaultAnimations: {
     screen: DefaultAnimations,
-    title: '🆕 Default layout animations',
+    title: 'Default layout animations',
   },
   AnimatedKeyboard: {
     screen: AnimatedKeyboardExample,
-    title: '🆕 Use Animated Keyboard',
+    title: 'Use Animated Keyboard',
   },
   AnimatedSensor: {
     screen: AnimatedSensorExample,
-    title: '🆕 Use Animated Sensor',
+    title: 'Use Animated Sensor',
   },
   Cubes: {
     screen: CubesExample,
-    title: '🆕 Cubes with useAnimatedSensor',
+    title: 'Cubes with useAnimatedSensor',
   },
   FrameCallbackExample: {
     screen: FrameCallbackExample,
-    title: '🆕 Frame callback example',
+    title: 'Frame callback example',
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,
-    title: '🆕 Default layout transitions',
+    title: 'Default layout transitions',
   },
   KeyframeAnimation: {
     screen: KeyframeAnimation,
-    title: '🆕 Keyframe animation',
+    title: 'Keyframe animation',
   },
   ParticipantList: {
     screen: AnimatedListExample,
-    title: '🆕 Participant List',
+    title: 'Participant List',
   },
   OlympicAnimation: {
     screen: OlympicAnimation,
-    title: '🆕 Olympic animation',
+    title: 'Olympic animation',
   },
   CustomLayoutAnimation: {
     screen: CustomLayoutAnimationScreen,
-    title: '🆕 Custom layout animation',
+    title: 'Custom layout animation',
   },
   ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
+    title: 'ModalNewAPI',
     screen: ModalNewAPI,
   },
   SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
+    title: 'Spring Layout Animation',
     screen: SpringLayoutAnimation,
   },
   MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
+    title: 'Mounting Unmounting',
     screen: MountingUnmounting,
   },
   ReactionsCounterExample: {
     screen: ReactionsCounterExample,
-    title: '🆕 Reactions counter',
+    title: 'Reactions counter',
   },
   SwipeableList: {
-    title: '🆕 Swipeable list',
+    title: 'Swipeable list',
     screen: SwipeableList,
   },
   Modal: {
-    title: '🆕 Modal',
+    title: 'Modal',
     screen: Modal,
   },
   NativeModals: {
-    title: '🆕 Native modals (RN and Screens)',
+    title: 'Native modals (RN and Screens)',
     screen: NativeModals,
   },
   Carousel: {
