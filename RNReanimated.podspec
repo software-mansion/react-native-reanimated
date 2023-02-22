@@ -14,7 +14,6 @@ folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = fabric_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
-use_hermes = ENV['USE_HERMES'] == '1'
 
 Pod::Spec.new do |s|
   
@@ -88,9 +87,6 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  if config[:react_native_minor_version] >= 65 && use_hermes
-    s.dependency "React-hermes"
-  end
 
   if config[:react_native_minor_version] == 62
     s.dependency 'ReactCommon/callinvoker'
