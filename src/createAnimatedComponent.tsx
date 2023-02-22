@@ -128,25 +128,36 @@ function hasInlineStyles(style: StyleProps): boolean {
   });
 }
 
-function getInlineStylesFromProps(
+function extractSharedValuesMapFromProps(
   props: AnimatedComponentProps<InitialComponentProps>
-): StyleProps {
-  const styles = flattenArray<StyleProps>(props.style ?? []);
-  const inlineStyles: StyleProps = {};
+): Record<string, any> {
+  const inlineProps: Record<string, any> = {};
 
-  styles.forEach((style) => {
-    for (const [key, styleValue] of Object.entries(style)) {
-      if (isSharedValue(styleValue)) {
-        inlineStyles[key] = styleValue;
-      } else if (key === 'transform' && isInlineStyleTransform(styleValue)) {
-        inlineStyles[key] = styleValue;
-      }
+  for (const key in props) {
+    const value = props[key];
+    if (key === 'style') {
+      const styles = flattenArray<StyleProps>(props.style ?? []);
+      styles.forEach((style) => {
+        for (const [key, styleValue] of Object.entries(style)) {
+          if (isSharedValue(styleValue)) {
+            inlineProps[key] = styleValue;
+          } else if (
+            key === 'transform' &&
+            isInlineStyleTransform(styleValue)
+          ) {
+            inlineProps[key] = styleValue;
+          }
+        }
+      });
+    } else if (isSharedValue(value)) {
+      inlineProps[key] = value;
     }
-  });
-  return inlineStyles;
+  }
+
+  return inlineProps;
 }
 
-function inlineStylesHasChanged(styles1: StyleProps, styles2: StyleProps) {
+function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
   if (Object.keys(styles1).length !== Object.keys(styles2).length) {
     return true;
   }
@@ -158,13 +169,13 @@ function inlineStylesHasChanged(styles1: StyleProps, styles2: StyleProps) {
   return false;
 }
 
-function getInlineStyleUpdate(inlineStyle: StyleProps) {
+function getInlinePropsUpdate(inlineProps: Record<string, any>) {
   'worklet';
-  const update: StyleProps = {};
-  for (const [key, styleValue] of Object.entries(inlineStyle)) {
+  const update: Record<string, any> = {};
+  for (const [key, styleValue] of Object.entries(inlineProps)) {
     if (key === 'transform') {
       update[key] = styleValue.map((transform: Record<string, any>) => {
-        return getInlineStyleUpdate(transform);
+        return getInlinePropsUpdate(transform);
       });
     } else if (isSharedValue(styleValue)) {
       update[key] = styleValue.value;
@@ -239,9 +250,9 @@ export default function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
     _component: ComponentRef | null = null;
-    _inlineStylesViewDescriptors: ViewDescriptorsSet | null = null;
-    _inlineStylesMapperId: number | null = null;
-    _inlineStyles: StyleProps = {};
+    _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
+    _inlinePropsMapperId: number | null = null;
+    _inlineProps: StyleProps = {};
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -254,13 +265,13 @@ export default function createAnimatedComponent(
     componentWillUnmount() {
       this._detachNativeEvents();
       this._detachStyles();
-      this._detachInlineStyles();
+      this._detachInlineProps();
     }
 
     componentDidMount() {
       this._attachNativeEvents();
       this._attachAnimatedStyles();
-      this._attachInlineStyles();
+      this._attachInlineProps();
     }
 
     _getEventViewRef() {
@@ -493,20 +504,26 @@ export default function createAnimatedComponent(
       }
     }
 
-    _attachInlineStyles() {
-      const newInlineStyles: StyleProps = getInlineStylesFromProps(this.props);
-      const hasChanged = inlineStylesHasChanged(
-        newInlineStyles,
-        this._inlineStyles
+    _attachInlineProps() {
+      const newInlineProps: Record<string, any> =
+        extractSharedValuesMapFromProps(this.props);
+      const hasChanged = inlinePropsHasChanged(
+        newInlineProps,
+        this._inlineProps
       );
 
       if (hasChanged) {
-        if (!this._inlineStylesViewDescriptors) {
-          this._inlineStylesViewDescriptors = makeViewDescriptorsSet();
+        if (!this._inlinePropsViewDescriptors) {
+          this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
 
-          const { viewTag, viewName, shadowNodeWrapper } = this._getViewInfo();
+          const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
+            this._getViewInfo();
 
-          this._inlineStylesViewDescriptors.add({
+          if (Object.keys(newInlineProps).length && viewConfig) {
+            adaptViewConfig(viewConfig);
+          }
+
+          this._inlinePropsViewDescriptors.add({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             tag: viewTag!,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -516,7 +533,7 @@ export default function createAnimatedComponent(
           });
         }
         const sharableViewDescriptors =
-          this._inlineStylesViewDescriptors.sharableViewDescriptors;
+          this._inlinePropsViewDescriptors.sharableViewDescriptors;
 
         const maybeViewRef = NativeReanimatedModule.native
           ? undefined
@@ -524,26 +541,26 @@ export default function createAnimatedComponent(
 
         const updaterFunction = () => {
           'worklet';
-          const update = getInlineStyleUpdate(newInlineStyles);
+          const update = getInlinePropsUpdate(newInlineProps);
           updateProps(sharableViewDescriptors, update, maybeViewRef);
         };
-        this._inlineStyles = newInlineStyles;
-        if (this._inlineStylesMapperId) {
-          stopMapper(this._inlineStylesMapperId);
+        this._inlineProps = newInlineProps;
+        if (this._inlinePropsMapperId) {
+          stopMapper(this._inlinePropsMapperId);
         }
-        this._inlineStylesMapperId = null;
-        if (Object.keys(newInlineStyles).length) {
-          this._inlineStylesMapperId = startMapper(
+        this._inlinePropsMapperId = null;
+        if (Object.keys(newInlineProps).length) {
+          this._inlinePropsMapperId = startMapper(
             updaterFunction,
-            Object.values(newInlineStyles)
+            Object.values(newInlineProps)
           );
         }
       }
     }
 
-    _detachInlineStyles() {
-      if (this._inlineStylesMapperId) {
-        stopMapper(this._inlineStylesMapperId);
+    _detachInlineProps() {
+      if (this._inlinePropsMapperId) {
+        stopMapper(this._inlinePropsMapperId);
       }
     }
 
@@ -552,7 +569,7 @@ export default function createAnimatedComponent(
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
-      this._attachInlineStyles();
+      this._attachInlineProps();
     }
 
     _setComponentRef = setAndForwardRef<Component>({
@@ -620,7 +637,7 @@ export default function createAnimatedComponent(
               return this.initialStyle;
             } else if (hasInlineStyles(style)) {
               if (this._isFirstRender) {
-                return getInlineStyleUpdate(style);
+                return getInlinePropsUpdate(style);
               }
               const newStyle: StyleProps = {};
               for (const [key, styleValue] of Object.entries(style)) {
@@ -661,6 +678,10 @@ export default function createAnimatedComponent(
             });
           } else {
             props[key] = dummyListener;
+          }
+        } else if (isSharedValue(value)) {
+          if (this._isFirstRender) {
+            props[key] = (value as SharedValue<any>).value;
           }
         } else if (
           key !== 'onGestureHandlerStateChange' ||
