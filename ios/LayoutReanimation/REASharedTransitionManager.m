@@ -558,7 +558,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
                                                    forTag:viewTag
                                        isSharedTransition:YES];
       float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
-      CGRect frame = CGRectMake(view.frame.origin.x, originYByParent, view.frame.size.width, view.frame.size.height);
+      float originXByParent = [viewSourcePreviousSnapshot.values[@"originXByParent"] floatValue];
+      CGRect frame = CGRectMake(originXByParent, originYByParent, view.frame.size.width, view.frame.size.height);
       [view setFrame:frame];
     }
     if ([_viewsToHide containsObject:viewTag]) {
