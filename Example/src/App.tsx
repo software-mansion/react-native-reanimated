@@ -54,6 +54,7 @@ import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import ScrollViewOffsetCallScrollToExample from './ScrollViewOffsetCallScrollToExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
@@ -207,6 +208,10 @@ const SCREENS: Screens = {
   ScrollViewOffsetExample: {
     screen: ScrollViewOffsetExample,
     title: 'ScrollView offset',
+  },
+  ScrollViewOffsetCallScrollToExample: {
+    screen: ScrollViewOffsetCallScrollToExample,
+    title: 'ScrollView offset call scrollTo',
   },
   ChatHeadsExample: {
     screen: ChatHeadsExample,

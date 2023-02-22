@@ -1,5 +1,4 @@
 import { AnimationObject } from './commonTypes';
-import { getTimestamp } from './time';
 import { scrollTo } from './NativeMethods';
 export { stopMapper } from './mappers';
 
@@ -33,7 +32,7 @@ export function scrollValueSetter(sv: any, value: any, animatedRef: any): void {
     const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, sv.value, timestamp, previousAnimation);
     };
-    const currentTimestamp = getTimestamp();
+    const currentTimestamp = global.__frameTimestamp || performance.now();
     initializeAnimation(currentTimestamp);
     const step = (timestamp: number) => {
       if (animation.cancelled) {
