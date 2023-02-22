@@ -1,5 +1,8 @@
 import { SharedValue } from './commonTypes';
+import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
+
+const IS_JEST = isJest();
 
 export type Mapper = {
   id: number;
@@ -88,7 +91,15 @@ export function createMapperRegistry() {
   }
 
   function maybeRequestUpdates() {
-    if (!runRequested) {
+    if (IS_JEST) {
+      // On Jest environment we avoid using setImmediate as that'd require test
+      // to advance the clock manually. This on other hand would require tests
+      // to know how many times mappers need to run. As we don't want tests to
+      // make any assumptions on that number it is easier to execute mappers
+      // immediately for testing purposes and only expect test to advance timers
+      // if they want to make any assertions on the efffects of animations being run.
+      mapperRun();
+    } else if (!runRequested) {
       setImmediate(mapperRun);
       runRequested = true;
     }

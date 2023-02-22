@@ -8,20 +8,6 @@ import Animated, {
   withTiming,
 } from '../src';
 
-const originalAdvanceTimersByTime = jest.advanceTimersByTime;
-
-jest.advanceTimersByTime = (timeMs) => {
-  // This is a workaround for an issue with using setImmediate that's in the jest
-  // environment implemented as a 0-second timeout. Because of the fact we use
-  // setImmediate for scheduling runOnUI tasks as well as executing matters,
-  // starting new animaitons gets delayed be three frames. To compensate for that
-  // we execute pending timers three times before advancing the timers.
-  jest.runOnlyPendingTimers();
-  jest.runOnlyPendingTimers();
-  jest.runOnlyPendingTimers();
-  originalAdvanceTimersByTime(timeMs);
-};
-
 describe('colors interpolation', () => {
   it('interpolates rgb without gamma correction', () => {
     const colors = ['#105060', '#609020'];
