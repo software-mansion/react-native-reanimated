@@ -2,33 +2,26 @@
 
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
-
-// export interface PluginOptions {
-//   opts?: {
-//     target?: string;
-//     runtime?: string;
-//   };
-//   file: {
-//     path: BabelCore.NodePath;
-//   };
-// }
-// [TO DO] not sure what to do about it
-
 import generate from '@babel/generator';
-// @ts-ignore [TO DO]
-import * as hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
-import { AssignmentExpression, CallExpression, Expression } from 'babel-types';
-// import fs from 'fs'; // --- bugs [TO DO]
-// import convertSourceMap from 'convert-source-map'; ---bugs [TO DO]
+import * as fs from 'fs';
+import * as convertSourceMap from 'convert-source-map';
 
-// const generate = require('@babel/generator').default;
-// const hash = require('string-hash-64');
-// const traverse = require('@babel/traverse').default;
-// const { transformSync } = require('@babel/core');
-const fs = require('fs');
-const convertSourceMap = require('convert-source-map');
+function hash(str: string): number {
+  let i = str.length;
+  let hash1 = 5381;
+  let hash2 = 52711;
+
+  while (i--) {
+    const char = str.charCodeAt(i);
+    hash1 = (hash1 * 33) ^ char;
+    hash2 = (hash2 * 33) ^ char;
+  }
+
+  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+}
+
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -147,7 +140,7 @@ const gestureHandlerBuilderMethods = new Set([
 
 function isRelease() {
   return (
-    process.env.BABEL_ENV && // [TO DO] overkill?
+    process.env.BABEL_ENV &&
     ['production', 'release'].includes(process.env.BABEL_ENV)
   );
 }
@@ -176,14 +169,13 @@ interface BabelMapType {
   file: string;
 }
 
-// [TO DO]
 function buildWorkletString(
   t: typeof BabelCore.types,
   fun: BabelCore.types.File,
   closureVariables: Array<BabelTypes.Identifier>,
   name: string,
   inputMap: BabelMapType | null | undefined
-) {
+): Array<string | null | undefined> {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [
       t.variableDeclarator(
@@ -214,7 +206,6 @@ function buildWorkletString(
       }
 
       if (!BabelTypes.isExpression(path.node.body))
-        // not sure if necessary [TO DO]
         path.node.body.body.unshift(closureDeclaration);
     }
 
@@ -228,8 +219,8 @@ function buildWorkletString(
     ) {
       if (
         path.parent.type === 'Program' &&
-        !BabelTypes.isArrowFunctionExpression(path.node) && // such a long if here [TO DO]
-        !BabelTypes.isObjectMethod(path.node) && // such a long if here [TO DO]
+        !BabelTypes.isArrowFunctionExpression(path.node) &&
+        !BabelTypes.isObjectMethod(path.node) &&
         path.node.id &&
         path.scope.parent
       ) {
@@ -250,7 +241,6 @@ function buildWorkletString(
 
     return {
       visitor: {
-        // object method does not appear upstream [TO DO]
         'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
           (
             path: BabelCore.NodePath<
@@ -322,7 +312,9 @@ function buildWorkletString(
     babelrc: false,
     configFile: false,
     comments: false,
-  }) as BabelCore.BabelFileResult; // [TO DO] temporary
+  });
+
+  if (!transformed) throw new Error('transformed is null!\n');
 
   let sourceMap;
   if (includeSourceMap) {
@@ -334,7 +326,7 @@ function buildWorkletString(
     delete sourceMap.sourcesContent;
   }
 
-  return [transformed.code as string, JSON.stringify(sourceMap)]; // [TO DO] temporary
+  return [transformed.code, JSON.stringify(sourceMap)];
 }
 
 function makeWorkletName(
@@ -342,14 +334,14 @@ function makeWorkletName(
   fun: BabelCore.NodePath<
     | BabelTypes.FunctionDeclaration
     | BabelTypes.FunctionExpression
-    | BabelTypes.ObjectMethod // -- it didn't appear upstream [TO DO]
+    | BabelTypes.ObjectMethod
     | BabelTypes.ArrowFunctionExpression
   >
 ): string {
   if (BabelTypes.isObjectMethod(fun.node)) {
-    // @ts-ignore weird narrowing here [TO DO]
+    // @ts-expect-error [TO DO] how to fix it cheap?
     return fun.node.key.name;
-  } // -- does not appear upstream [TO DO]
+  }
   if (BabelTypes.isFunctionDeclaration(fun.node) && fun.node.id) {
     return fun.node.id.name;
   }
@@ -370,7 +362,7 @@ function makeWorklet(
     | BabelTypes.ObjectMethod
     | BabelTypes.ArrowFunctionExpression
   >,
-  state: BabelCore.PluginOptions
+  state: BabelCore.PluginPass
 ): BabelTypes.FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
@@ -393,8 +385,8 @@ function makeWorklet(
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
-    // @ts-ignore [TO DO]
-    sourceFileName: state.file.opts.filename,
+    // //@ts-ignore [TO DO] how to type it?
+    sourceFileName: state.file.opts.filename as string | undefined,
   });
 
   // We need to add a newline at the end, because there could potentially be a
@@ -419,21 +411,19 @@ function makeWorklet(
     babelrc: false,
     configFile: false,
     inputSourceMap: codeObject.map,
-  }) as BabelCore.BabelFileResult; // this is temporary [TO DO]
+  });
 
   if (!transformed || !transformed.ast)
-    throw new Error('null ast weird exception\n'); //this is temporary [TO DO]
+    throw new Error('null ast weird exception\n'); // this is temporary [TO DO]
 
   traverse(transformed.ast, {
-    //ReferencedIdentifier(path) { -- was like this before, appears as solution online but causes ts error [TO DO]
     Identifier(path) {
-      if (!path.isReferencedIdentifier()) return; // not sure if this is necessary [TO DO]
+      if (!path.isReferencedIdentifier()) return;
       const name = path.node.name;
       if (
         globals.has(name) ||
         (!BabelTypes.isArrowFunctionExpression(fun.node) &&
-          !BabelTypes.isObjectMethod(fun.node) && // necessary? [TO DO]
-          // !BabelTypes.isObjectMethod(fun.node) && --necessary? [TO DO]
+          !BabelTypes.isObjectMethod(fun.node) &&
           fun.node.id &&
           fun.node.id.name === name)
       ) {
@@ -485,12 +475,12 @@ function makeWorklet(
     functionName,
     transformed.map
   );
+  if (!funString) throw new Error('funString is undefined/null\n'); // this is temporary [TO DO]
   const workletHash = hash(funString);
 
-  // @ts-ignore [TO DO]
-  let location = state.file.opts.filename; // @ts-ignore [TO DO]
+  let location = state.file.opts.filename; // @ts-expect-error [TO DO]
   if (state.opts && state.opts.relativeSourceLocation) {
-    const path = require('path'); // @ts-ignore [TO DO]
+    const path = require('path');
     location = path.relative(state.cwd, location);
   }
 
@@ -514,8 +504,14 @@ function makeWorklet(
     );
 
   const initDataObjectExpression = t.objectExpression([
-    t.objectProperty(t.identifier('code'), t.stringLiteral(funString)),
-    t.objectProperty(t.identifier('location'), t.stringLiteral(location)),
+    t.objectProperty(
+      t.identifier('code'),
+      t.stringLiteral(funString as string)
+    ), // [TO DO] this is temporary
+    t.objectProperty(
+      t.identifier('location'),
+      t.stringLiteral(location as string)
+    ),
   ]);
 
   if (sourceMapString) {
@@ -533,16 +529,18 @@ function makeWorklet(
     ])
   );
 
-  // if (BabelTypes.isFunctionDeclaration(funExpression) && BabelTypes.isObjectMethod(funExpression))
-  //  throw new Error('temporary funExpression error'); // [TO DO] temporary
+  if (
+    BabelTypes.isFunctionDeclaration(funExpression) ||
+    BabelTypes.isObjectMethod(funExpression)
+  )
+    throw new Error('fun expression bug\n'); // [TO DO] temporary
+
   const statements: Array<
     | BabelTypes.VariableDeclaration
     | BabelTypes.ExpressionStatement
     | BabelTypes.ReturnStatement
   > = [
-    // [TO DO] return statement necessary?
     BabelTypes.variableDeclaration('const', [
-      // @ts-expect-error [TO DO]
       BabelTypes.variableDeclarator(privateFunctionId, funExpression),
     ]),
     BabelTypes.expressionStatement(
@@ -620,11 +618,11 @@ function makeWorklet(
   statements.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(
-    //!BabelTypes.isArrowFunctionExpression(fun.node) ? fun.node.id : undefined,
+    // !BabelTypes.isArrowFunctionExpression(fun.node) ? fun.node.id : undefined, // [TO DO] --- this never worked
     undefined,
     [],
     t.blockStatement(statements)
-  ); // [TO DO] weirdish in here
+  );
 
   return newFun;
 }
@@ -636,7 +634,7 @@ function processWorkletFunction(
     | BabelTypes.FunctionExpression
     | BabelTypes.ArrowFunctionExpression
   >,
-  state: BabelCore.PluginOptions
+  state: BabelCore.PluginPass
 ) {
   // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
   // with a workletized version of itself.
@@ -670,7 +668,7 @@ function processWorkletFunction(
 function processWorkletObjectMethod(
   t: typeof BabelCore.types,
   path: BabelCore.NodePath<BabelTypes.ObjectMethod>,
-  state: BabelCore.PluginOptions
+  state: BabelCore.PluginPass
 ) {
   // Replaces ObjectMethod with a workletized version of itself.
 
@@ -680,7 +678,7 @@ function processWorkletObjectMethod(
 
   const replacement = BabelTypes.objectProperty(
     BabelTypes.identifier(
-      BabelTypes.isIdentifier(path.node.key) ? path.node.key.name : '' // [TO DO] this is temporary
+      BabelTypes.isIdentifier(path.node.key) ? path.node.key.name : ''
     ),
     t.callExpression(newFun, [])
   );
@@ -695,7 +693,7 @@ function processIfWorkletNode(
     | BabelTypes.FunctionExpression
     | BabelTypes.ArrowFunctionExpression
   >,
-  state: BabelCore.PluginOptions
+  state: BabelCore.PluginPass
 ) {
   fun.traverse({
     DirectiveLiteral(path) {
@@ -732,7 +730,7 @@ function processIfGestureHandlerEventCallbackFunctionNode(
     | BabelTypes.FunctionExpression
     | BabelTypes.ArrowFunctionExpression
   >,
-  state: BabelCore.PluginOptions
+  state: BabelCore.PluginPass
 ) {
   // Auto-workletizes React Native Gesture Handler callback functions.
   // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
@@ -857,7 +855,7 @@ function isGestureObject(
 function processWorklets(
   t: typeof BabelCore.types,
   path: BabelCore.NodePath<BabelTypes.CallExpression>,
-  state: BabelCore.PluginOptions
+  state: BabelCore.PluginPass
 ) {
   // const callee =
   //   path.node.callee.type === 'SequenceExpression'
@@ -880,10 +878,7 @@ function processWorklets(
     )
   ) {
     const properties = path.get('arguments.0.properties') as Array<
-      BabelCore.NodePath<
-        BabelTypes.ObjectMethod | BabelTypes.ObjectProperty
-        //| BabelTypes.SpreadElement // not necessary? [TO DO]
-      >
+      BabelCore.NodePath<BabelTypes.ObjectMethod | BabelTypes.ObjectProperty>
     >;
     for (const property of properties) {
       if (BabelTypes.isObjectMethod(property.node)) {
@@ -904,7 +899,7 @@ function processWorklets(
             | BabelTypes.ArrowFunctionExpression
           >,
           state
-        ); // temporary [TO DO]
+        ); // temporarily given 3 types [TO DO]
       }
     }
   } else {
@@ -919,7 +914,7 @@ function processWorklets(
             | BabelTypes.ArrowFunctionExpression
           >,
           state
-        );
+        ); // temporarily given 3 types [TO DO]
       });
     }
   }
@@ -941,7 +936,7 @@ module.exports = function ({
       CallExpression: {
         enter(
           path: BabelCore.NodePath<BabelTypes.CallExpression>,
-          state: BabelCore.PluginOptions
+          state: BabelCore.PluginPass
         ) {
           processWorklets(t, path, state);
         },
@@ -953,7 +948,7 @@ module.exports = function ({
             | BabelTypes.FunctionExpression
             | BabelTypes.ArrowFunctionExpression
           >,
-          state: BabelCore.PluginOptions
+          state: BabelCore.PluginPass
         ) {
           processIfWorkletNode(t, path, state);
           processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
