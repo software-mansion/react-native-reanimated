@@ -19,7 +19,7 @@ import generate from '@babel/generator';
 import * as hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
-import { Expression } from 'babel-types';
+import { CallExpression, Expression } from 'babel-types';
 // import fs from 'fs'; // --- bugs [TO DO]
 // import convertSourceMap from 'convert-source-map'; ---bugs [TO DO]
 
@@ -663,12 +663,14 @@ function processWorkletObjectMethod(
 ) {
   // Replaces ObjectMethod with a workletized version of itself.
 
-  if (BabelTypes.isFunctionParent(path)) return;
+  if (!BabelTypes.isFunctionParent(path)) return;
 
   const newFun = makeWorklet(t, path, state);
 
-  const replacement = t.objectProperty(
-    t.identifier(path.node.key.name),
+  const replacement = BabelTypes.objectProperty(
+    BabelTypes.identifier(
+      BabelTypes.isIdentifier(path.node.key) ? path.node.key.name : '' // [TO DO] this is temporary
+    ),
     t.callExpression(newFun, [])
   );
 
@@ -712,7 +714,15 @@ function processIfWorkletNode(
   });
 }
 
-function processIfGestureHandlerEventCallbackFunctionNode(t, fun, state) {
+function processIfGestureHandlerEventCallbackFunctionNode(
+  t: typeof BabelCore.types,
+  fun: BabelCore.NodePath<
+    | BabelTypes.FunctionDeclaration
+    | BabelTypes.FunctionExpression
+    | BabelTypes.ArrowFunctionExpression
+  >,
+  state: BabelCore.PluginOptions
+) {
   // Auto-workletizes React Native Gesture Handler callback functions.
   // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
   // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
@@ -763,13 +773,19 @@ function processIfGestureHandlerEventCallbackFunctionNode(t, fun, state) {
 
   if (
     t.isCallExpression(fun.parent) &&
-    isGestureObjectEventCallbackMethod(t, fun.parent.callee)
+    isGestureObjectEventCallbackMethod(
+      t,
+      fun.parent.callee as BabelTypes.Expression
+    ) // [TO DO] this is temporary
   ) {
     processWorkletFunction(t, fun, state);
   }
 }
 
-function isGestureObjectEventCallbackMethod(t, node) {
+function isGestureObjectEventCallbackMethod(
+  t: typeof BabelCore.types,
+  node: BabelTypes.Expression
+) {
   // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
   // where `[*]` represents any number of method calls.
   return (
@@ -780,7 +796,10 @@ function isGestureObjectEventCallbackMethod(t, node) {
   );
 }
 
-function containsGestureObject(t, node) {
+function containsGestureObject(
+  t: typeof BabelCore.types,
+  node: BabelTypes.Expression
+) {
   // Checks if node matches the pattern `Gesture.Foo()[*]`
   // where `[*]` represents any number of chained method calls, like `.something(42)`.
 
@@ -801,7 +820,10 @@ function containsGestureObject(t, node) {
   return false;
 }
 
-function isGestureObject(t, node) {
+function isGestureObject(
+  t: typeof BabelCore.types,
+  node: BabelTypes.Expression
+) {
   // Checks if node matches `Gesture.Tap()` or similar.
   /*
   node: CallExpression(
@@ -821,14 +843,23 @@ function isGestureObject(t, node) {
   );
 }
 
-function processWorklets(t, path, state) {
-  const callee =
-    path.node.callee.type === 'SequenceExpression'
-      ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
-      : path.node.callee;
+function processWorklets(
+  t: typeof BabelCore.types,
+  path: BabelCore.NodePath<BabelTypes.CallExpression>,
+  state: BabelCore.PluginOptions
+) {
+  // const callee =
+  //   path.node.callee.type === 'SequenceExpression'
+  //     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
+  //     : path.node.callee;
 
-  const name =
-    callee.type === 'MemberExpression' ? callee.property.name : callee.name;
+  const callee = BabelTypes.isSequenceExpression(path.node.callee)
+    ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
+    : path.node.callee;
+
+  const name = BabelTypes.isMemberExpression(callee) // @ts-expect-error [TO DO]
+    ? callee.property.name // @ts-expect-error [TO DO]
+    : callee.name;
 
   if (
     objectHooks.has(name) &&
