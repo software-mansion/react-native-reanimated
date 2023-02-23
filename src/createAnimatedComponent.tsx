@@ -7,7 +7,6 @@ import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
-  LayoutAnimationType,
   configureLayoutAnimations,
   enableLayoutAnimations,
   runOnUI,
@@ -26,6 +25,7 @@ import {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
+  LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import {
   SharedValue,

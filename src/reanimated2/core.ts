@@ -15,7 +15,10 @@ import {
   makeMutable as makeMutableUnwrapped,
   makeRemote as makeRemoteUnwrapped,
 } from './mutables';
-import { LayoutAnimationFunction } from './layoutReanimation';
+import {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+} from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
 
 export { stopMapper } from './mappers';
@@ -192,13 +195,6 @@ export function enableLayoutAnimations(
     featuresConfig.enableLayoutAnimations = flag;
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
-}
-
-export enum LayoutAnimationType {
-  ENTERING = 0,
-  EXITING = 1,
-  LAYOUT = 2,
-  SHARED_ELEMENT_TRANSITION = 3,
 }
 
 export function configureLayoutAnimations(

@@ -5,9 +5,11 @@ import {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { LayoutAnimationFunction } from '../layoutReanimation';
+import {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+} from '../layoutReanimation';
 import { checkVersion } from '../platform-specific/checkVersion';
-import { LayoutAnimationType } from '../core';
 
 export class NativeReanimated {
   native: boolean;
