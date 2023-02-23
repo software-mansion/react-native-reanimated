@@ -68,7 +68,7 @@ def assert_no_multiple_instances(react_native_info)
       location['/package.json'] = ''
       parsed_location += "- " + location + "\n"
     end
-    raise "[react-native-reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/next/fundamentals/troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsed_location
+    raise "[react-native-reanimated] Multiple versions of Reanimated were detected. Only one instance of react-native-reanimated can be installed in a project. You need to resolve the conflict manually. Check out the documentation: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/troubleshooting/#multiple-versions-of-reanimated-were-detected \n\nConflict between: \n" + parsed_location
   end
 end
 
