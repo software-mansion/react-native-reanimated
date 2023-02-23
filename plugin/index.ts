@@ -19,7 +19,7 @@ import generate from '@babel/generator';
 import * as hash from 'string-hash-64';
 import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
-import { CallExpression, Expression } from 'babel-types';
+import { AssignmentExpression, CallExpression, Expression } from 'babel-types';
 // import fs from 'fs'; // --- bugs [TO DO]
 // import convertSourceMap from 'convert-source-map'; ---bugs [TO DO]
 
@@ -267,19 +267,30 @@ function buildWorkletString(
     };
   }
 
-  // ???? [TO DO ASAP]
-  const expression =
-    (fun.program.body.find(
-      ({ type }) => type === 'FunctionDeclaration'
-    ) as BabelTypes.FunctionDeclaration) || // [TO DO]
-    (
-      fun.program.body.find(
-        ({ type }) => type === 'ExpressionStatement'
-      ) as BabelTypes.ExpressionStatement
-    ).expression; // [TO DO]
+  const draftExpression = (fun.program.body.find((obj) =>
+    BabelTypes.isFunctionDeclaration(obj)
+  ) ||
+    fun.program.body.find((obj) => BabelTypes.isExpressionStatement(obj)) ||
+    undefined) as
+    | BabelTypes.FunctionDeclaration
+    | BabelTypes.ExpressionStatement
+    | undefined;
 
-  const workletFunction = t.functionExpression(
-    t.identifier(name),
+  if (!draftExpression) throw new Error('weird draft expression bug'); // [TO DO] temporary
+
+  const expression = BabelTypes.isFunctionDeclaration(draftExpression)
+    ? draftExpression
+    : draftExpression.expression;
+
+  if (
+    !BabelTypes.isFunctionDeclaration(expression) &&
+    !BabelTypes.isFunctionExpression(expression) &&
+    !BabelTypes.isObjectMethod(expression)
+  )
+    throw new Error('weird type bug'); // [TO DO] temporary
+
+  const workletFunction = BabelTypes.functionExpression(
+    BabelTypes.identifier(name),
     expression.params,
     expression.body
   );
@@ -917,13 +928,11 @@ function processWorklets(
 module.exports = function ({
   types: t,
 }: typeof BabelCore): BabelCore.PluginItem {
-  // also guessed PluginItem here [TO DO]
   return {
     pre() {
       // allows adding custom globals such as host-functions
       if (this.opts != null && Array.isArray(this.opts.globals)) {
         this.opts.globals.forEach((name: string) => {
-          // guessed string here [TO DO]
           globals.add(name);
         });
       }
