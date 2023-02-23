@@ -6,7 +6,7 @@ import {
   isBlockStatement,
   isDirectiveLiteral,
 } from '@babel/types';
-import { processWorkletFunction } from './processWorklets';
+import { processWorkletFunction } from './processWorkletFunction';
 
 export function processIfWorkletNode(
   fun: NodePath<

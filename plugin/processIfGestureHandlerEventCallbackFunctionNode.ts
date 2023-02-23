@@ -12,7 +12,7 @@ import {
   gestureHandlerBuilderMethods,
   gestureHandlerGestureObjects,
 } from './commonObjects';
-import { processWorkletFunction } from './processWorklets';
+import { processWorkletFunction } from './processWorkletFunction';
 
 function isGestureObject(node: Expression) {
   // Checks if node matches `Gesture.Tap()` or similar.

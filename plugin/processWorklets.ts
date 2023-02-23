@@ -11,70 +11,10 @@ import {
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
-  identifier,
-  isIdentifier,
-  isFunctionParent,
-  objectProperty,
-  callExpression,
-  isScopable,
-  isExportNamedDeclaration,
-  isArrowFunctionExpression,
-  variableDeclaration,
-  variableDeclarator,
 } from '@babel/types';
 import { functionArgsToWorkletize, objectHooks } from './commonObjects';
-import { makeWorklet } from './makeWorklet';
-
-export function processWorkletFunction(
-  fun: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >,
-  state: PluginPass
-) {
-  // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
-  // with a workletized version of itself.
-
-  if (!isFunctionParent(fun)) {
-    return;
-  }
-
-  const newFun = makeWorklet(fun, state);
-
-  const replacement = callExpression(newFun, []);
-
-  // we check if function needs to be assigned to variable declaration.
-  // This is needed if function definition directly in a scope. Some other ways
-  // where function definition can be used is for example with variable declaration:
-  // const ggg = function foo() { }
-  // ^ in such a case we don't need to define variable for the function
-  const needDeclaration =
-    isScopable(fun.parent) || isExportNamedDeclaration(fun.parent);
-  fun.replaceWith(
-    !isArrowFunctionExpression(fun.node) && fun.node.id && needDeclaration
-      ? variableDeclaration('const', [
-          variableDeclarator(fun.node.id, replacement),
-        ])
-      : replacement
-  );
-}
-
-function processWorkletObjectMethod(
-  path: NodePath<ObjectMethod>,
-  state: PluginPass
-) {
-  // Replaces ObjectMethod with a workletized version of itself.
-
-  if (!isFunctionParent(path)) return;
-
-  const newFun = makeWorklet(path, state);
-
-  const replacement = objectProperty(
-    identifier(isIdentifier(path.node.key) ? path.node.key.name : ''),
-    callExpression(newFun, [])
-  );
-
-  path.replaceWith(replacement);
-}
+import { processWorkletFunction } from './processWorkletFunction';
+import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 
 export function processWorklets(
   path: NodePath<CallExpression>,

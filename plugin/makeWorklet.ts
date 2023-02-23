@@ -250,7 +250,6 @@ export function makeWorklet(
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
-    // //@ts-ignore [TO DO] how to type it?
     sourceFileName: state.file.opts.filename as string | undefined,
   });
 
@@ -262,7 +261,6 @@ export function makeWorklet(
     '(' + (isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = transformSync(code, {
-    // @ts-ignore [TO DO]
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
@@ -278,8 +276,7 @@ export function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  if (!transformed || !transformed.ast)
-    throw new Error('null ast weird exception\n'); // this is temporary [TO DO]
+  if (!transformed || !transformed.ast) throw new Error('null ast Error\n'); // this is temporary [TO DO]
 
   traverse(transformed.ast, {
     Identifier(path) {
