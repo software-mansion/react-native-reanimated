@@ -9,6 +9,13 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 
 public class LayoutAnimations {
+  public static class Types {
+    static final int ENTERING = 0;
+    static final int EXITING = 1;
+    static final int LAYOUT = 2;
+    static final int SHARED_ELEMENT_TRANSITION = 3;
+  }
+
   static {
     SoLoader.loadLibrary("reanimated");
   }
@@ -28,14 +35,14 @@ public class LayoutAnimations {
   private native HybridData initHybrid();
 
   // LayoutReanimation
-  public native void startAnimationForTag(int tag, String type, Map<String, String> values);
+  public native void startAnimationForTag(int tag, int type, Map<String, String> values);
 
-  public native boolean hasAnimationForTag(int tag, String type);
+  public native boolean hasAnimationForTag(int tag, int type);
 
   public native void clearAnimationConfigForTag(int tag);
 
   public native void cancelAnimationForTag(
-      int tag, String type, boolean cancelled, boolean removeView);
+      int tag, int type, boolean cancelled, boolean removeView);
 
   public native boolean isLayoutAnimationEnabled();
 

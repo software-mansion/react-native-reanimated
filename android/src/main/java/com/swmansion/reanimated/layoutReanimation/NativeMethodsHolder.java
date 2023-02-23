@@ -3,13 +3,13 @@ package com.swmansion.reanimated.layoutReanimation;
 import java.util.HashMap;
 
 public interface NativeMethodsHolder {
-  void startAnimation(int tag, String type, HashMap<String, Float> values);
+  void startAnimation(int tag, int type, HashMap<String, Float> values);
 
-  boolean hasAnimation(int tag, String type);
+  boolean hasAnimation(int tag, int type);
 
   void clearAnimationConfig(int tag);
 
-  void cancelAnimation(int tag, String type, boolean cancelled, boolean removeView);
+  void cancelAnimation(int tag, int type, boolean cancelled, boolean removeView);
 
   boolean isLayoutAnimationEnabled();
 
