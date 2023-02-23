@@ -1,29 +1,22 @@
 'use strict';
 exports.__esModule = true;
 var BabelTypes = require("@babel/types");
-// export interface PluginOptions {
-//   opts?: {
-//     target?: string;
-//     runtime?: string;
-//   };
-//   file: {
-//     path: BabelCore.NodePath;
-//   };
-// }
-// [TO DO] not sure what to do about it
 var generator_1 = require("@babel/generator");
-// @ts-ignore [TO DO]
-var hash = require("string-hash-64");
 var traverse_1 = require("@babel/traverse");
 var core_1 = require("@babel/core");
-// import fs from 'fs'; // --- bugs [TO DO]
-// import convertSourceMap from 'convert-source-map'; ---bugs [TO DO]
-// const generate = require('@babel/generator').default;
-// const hash = require('string-hash-64');
-// const traverse = require('@babel/traverse').default;
-// const { transformSync } = require('@babel/core');
-var fs = require('fs');
-var convertSourceMap = require('convert-source-map');
+var fs = require("fs");
+var convertSourceMap = require("convert-source-map");
+function hash(str) {
+    var i = str.length;
+    var hash1 = 5381;
+    var hash2 = 52711;
+    while (i--) {
+        var char = str.charCodeAt(i);
+        hash1 = (hash1 * 33) ^ char;
+        hash2 = (hash2 * 33) ^ char;
+    }
+    return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+}
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -136,7 +129,7 @@ var gestureHandlerBuilderMethods = new Set([
     'onTouchesCancelled',
 ]);
 function isRelease() {
-    return (process.env.BABEL_ENV && // [TO DO] overkill?
+    return (process.env.BABEL_ENV &&
         ['production', 'release'].includes(process.env.BABEL_ENV));
 }
 function shouldGenerateSourceMap() {
@@ -150,7 +143,6 @@ function shouldGenerateSourceMap() {
     }
     return true;
 }
-// [TO DO]
 function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     function prependClosureVariablesIfNecessary() {
         var closureDeclaration = t.variableDeclaration('const', [
@@ -163,14 +155,13 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
                 return;
             }
             if (!BabelTypes.isExpression(path.node.body))
-                // not sure if necessary [TO DO]
                 path.node.body.body.unshift(closureDeclaration);
         }
         function prependRecursiveDeclaration(path) {
             var _a;
             if (path.parent.type === 'Program' &&
-                !BabelTypes.isArrowFunctionExpression(path.node) && // such a long if here [TO DO]
-                !BabelTypes.isObjectMethod(path.node) && // such a long if here [TO DO]
+                !BabelTypes.isArrowFunctionExpression(path.node) &&
+                !BabelTypes.isObjectMethod(path.node) &&
                 path.node.id &&
                 path.scope.parent) {
                 var hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
@@ -183,7 +174,6 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         }
         return {
             visitor: {
-                // object method does not appear upstream [TO DO]
                 'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod': function (path) {
                     prependClosure(path);
                     prependRecursiveDeclaration(path);
@@ -191,16 +181,21 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
             }
         };
     }
-    // ???? [TO DO ASAP]
-    var expression = fun.program.body.find(function (_a) {
-        var type = _a.type;
-        return type === 'FunctionDeclaration';
-    }) || // [TO DO]
-        fun.program.body.find(function (_a) {
-            var type = _a.type;
-            return type === 'ExpressionStatement';
-        }).expression; // [TO DO]
-    var workletFunction = t.functionExpression(t.identifier(name), expression.params, expression.body);
+    var draftExpression = (fun.program.body.find(function (obj) {
+        return BabelTypes.isFunctionDeclaration(obj);
+    }) ||
+        fun.program.body.find(function (obj) { return BabelTypes.isExpressionStatement(obj); }) ||
+        undefined);
+    if (!draftExpression)
+        throw new Error('weird draft expression bug'); // [TO DO] temporary
+    var expression = BabelTypes.isFunctionDeclaration(draftExpression)
+        ? draftExpression
+        : draftExpression.expression;
+    if (!BabelTypes.isFunctionDeclaration(expression) &&
+        !BabelTypes.isFunctionExpression(expression) &&
+        !BabelTypes.isObjectMethod(expression))
+        throw new Error('weird type bug'); // [TO DO] temporary
+    var workletFunction = BabelTypes.functionExpression(BabelTypes.identifier(name), expression.params, expression.body);
     var code = (0, generator_1["default"])(workletFunction).code;
     if (!inputMap)
         throw new Error('temporary Error'); // temporary [TO DO]
@@ -224,7 +219,9 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         babelrc: false,
         configFile: false,
         comments: false
-    }); // [TO DO] temporary
+    });
+    if (!transformed)
+        throw new Error('transformed is null!\n');
     var sourceMap;
     if (includeSourceMap) {
         sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
@@ -234,13 +231,13 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         // in files that contain multiple worklets. Along with sourcesContent.
         delete sourceMap.sourcesContent;
     }
-    return [transformed.code, JSON.stringify(sourceMap)]; // [TO DO] temporary
+    return [transformed.code, JSON.stringify(sourceMap)];
 }
 function makeWorkletName(t, fun) {
     if (BabelTypes.isObjectMethod(fun.node)) {
-        // @ts-ignore weird narrowing here [TO DO]
+        // @ts-expect-error [TO DO] how to fix it cheap?
         return fun.node.key.name;
-    } // -- does not appear upstream [TO DO]
+    }
     if (BabelTypes.isFunctionDeclaration(fun.node) && fun.node.id) {
         return fun.node.id.name;
     }
@@ -267,7 +264,7 @@ function makeWorklet(t, fun, state) {
     // some even break them
     var codeObject = (0, generator_1["default"])(fun.node, {
         sourceMaps: true,
-        // @ts-ignore [TO DO]
+        // //@ts-ignore [TO DO] how to type it?
         sourceFileName: state.file.opts.filename
     });
     // We need to add a newline at the end, because there could potentially be a
@@ -290,18 +287,17 @@ function makeWorklet(t, fun, state) {
         babelrc: false,
         configFile: false,
         inputSourceMap: codeObject.map
-    }); // this is temporary [TO DO]
+    });
     if (!transformed || !transformed.ast)
-        throw new Error('null ast weird exception\n'); //this is temporary [TO DO]
+        throw new Error('null ast weird exception\n'); // this is temporary [TO DO]
     (0, traverse_1["default"])(transformed.ast, {
-        //ReferencedIdentifier(path) { -- was like this before, appears as solution online but causes ts error [TO DO]
         Identifier: function (path) {
             if (!path.isReferencedIdentifier())
-                return; // not sure if this is necessary [TO DO]
+                return;
             var name = path.node.name;
             if (globals.has(name) ||
-                (!BabelTypes.isArrowFunctionExpression(fun.node) && // necessary? [TO DO]
-                    // !BabelTypes.isObjectMethod(fun.node) && --necessary? [TO DO]
+                (!BabelTypes.isArrowFunctionExpression(fun.node) &&
+                    !BabelTypes.isObjectMethod(fun.node) &&
                     fun.node.id &&
                     fun.node.id.name === name)) {
                 return;
@@ -331,14 +327,15 @@ function makeWorklet(t, fun, state) {
     var privateFunctionId = t.identifier('_f');
     var clone = t.cloneNode(fun.node);
     var funExpression = BabelTypes.isBlockStatement(clone.body)
-        ? t.functionExpression(null, clone.params, clone.body)
+        ? BabelTypes.functionExpression(null, clone.params, clone.body)
         : clone;
     var _a = buildWorkletString(t, transformed.ast, variables, functionName, transformed.map), funString = _a[0], sourceMapString = _a[1];
+    if (!funString)
+        throw new Error('funString is undefined/null\n'); // this is temporary [TO DO]
     var workletHash = hash(funString);
-    // @ts-ignore [TO DO]
-    var location = state.file.opts.filename; // @ts-ignore [TO DO]
+    var location = state.file.opts.filename; // @ts-expect-error [TO DO]
     if (state.opts && state.opts.relativeSourceLocation) {
-        var path = require('path'); // @ts-ignore [TO DO]
+        var path = require('path');
         location = path.relative(state.cwd, location);
     }
     var lineOffset = 1;
@@ -364,17 +361,18 @@ function makeWorklet(t, fun, state) {
     pathForStringDefinitions.insertBefore(t.variableDeclaration('const', [
         t.variableDeclarator(initDataId, initDataObjectExpression),
     ]));
-    if (BabelTypes.isFunctionDeclaration(funExpression))
-        throw new Error('temporary funExpression error'); // [TO DO] temporary
+    if (BabelTypes.isFunctionDeclaration(funExpression) ||
+        BabelTypes.isObjectMethod(funExpression))
+        throw new Error('fun expression bug\n'); // [TO DO] temporary
     var statements = [
-        t.variableDeclaration('const', [
-            t.variableDeclarator(privateFunctionId, funExpression),
+        BabelTypes.variableDeclaration('const', [
+            BabelTypes.variableDeclarator(privateFunctionId, funExpression),
         ]),
-        t.expressionStatement(t.assignmentExpression('=', t.memberExpression(privateFunctionId, t.identifier('_closure'), false), t.objectExpression(variables.map(function (variable) {
-            return t.objectProperty(t.identifier(variable.name), variable, false, true);
+        BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(privateFunctionId, t.identifier('_closure'), false), BabelTypes.objectExpression(variables.map(function (variable) {
+            return BabelTypes.objectProperty(t.identifier(variable.name), variable, false, true);
         })))),
-        t.expressionStatement(t.assignmentExpression('=', t.memberExpression(privateFunctionId, t.identifier('__initData'), false), initDataId)),
-        t.expressionStatement(t.assignmentExpression('=', t.memberExpression(privateFunctionId, t.identifier('__workletHash'), false), t.numericLiteral(workletHash))),
+        BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(privateFunctionId, t.identifier('__initData'), false), initDataId)),
+        BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(privateFunctionId, t.identifier('__workletHash'), false), BabelTypes.numericLiteral(workletHash))),
     ];
     if (!isRelease()) {
         statements.unshift(t.variableDeclaration('const', [
@@ -387,7 +385,9 @@ function makeWorklet(t, fun, state) {
         statements.push(t.expressionStatement(t.assignmentExpression('=', t.memberExpression(privateFunctionId, t.identifier('__stackDetails'), false), t.identifier('_e'))));
     }
     statements.push(t.returnStatement(privateFunctionId));
-    var newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
+    var newFun = t.functionExpression(
+    // !BabelTypes.isArrowFunctionExpression(fun.node) ? fun.node.id : undefined, // [TO DO] --- this never worked
+    undefined, [], t.blockStatement(statements));
     return newFun;
 }
 function processWorkletFunction(t, fun, state) {
@@ -414,11 +414,10 @@ function processWorkletFunction(t, fun, state) {
 }
 function processWorkletObjectMethod(t, path, state) {
     // Replaces ObjectMethod with a workletized version of itself.
-    if (!t.isFunctionParent(path)) {
+    if (!BabelTypes.isFunctionParent(path))
         return;
-    }
     var newFun = makeWorklet(t, path, state);
-    var replacement = t.objectProperty(t.identifier(path.node.key.name), t.callExpression(newFun, []));
+    var replacement = BabelTypes.objectProperty(BabelTypes.identifier(BabelTypes.isIdentifier(path.node.key) ? path.node.key.name : ''), t.callExpression(newFun, []));
     path.replaceWith(replacement);
 }
 function processIfWorkletNode(t, fun, state) {
@@ -491,7 +490,8 @@ function processIfGestureHandlerEventCallbackFunctionNode(t, fun, state) {
     )
     */
     if (t.isCallExpression(fun.parent) &&
-        isGestureObjectEventCallbackMethod(t, fun.parent.callee)) {
+        isGestureObjectEventCallbackMethod(t, fun.parent.callee) // [TO DO] this is temporary
+    ) {
         processWorkletFunction(t, fun, state);
     }
 }
@@ -536,21 +536,28 @@ function isGestureObject(t, node) {
         gestureHandlerGestureObjects.has(node.callee.property.name));
 }
 function processWorklets(t, path, state) {
-    var callee = path.node.callee.type === 'SequenceExpression'
+    // const callee =
+    //   path.node.callee.type === 'SequenceExpression'
+    //     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
+    //     : path.node.callee;
+    var callee = BabelTypes.isSequenceExpression(path.node.callee)
         ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
         : path.node.callee;
-    var name = callee.type === 'MemberExpression' ? callee.property.name : callee.name;
+    var name = BabelTypes.isMemberExpression(callee) // @ts-expect-error [TO DO]
+        ? callee.property.name // @ts-expect-error [TO DO]
+        : callee.name;
     if (objectHooks.has(name) &&
-        path.get('arguments.0').type === 'ObjectExpression') {
+        BabelTypes.isObjectExpression(path.get('arguments.0')
+            .node)) {
         var properties = path.get('arguments.0.properties');
         for (var _i = 0, properties_1 = properties; _i < properties_1.length; _i++) {
             var property = properties_1[_i];
-            if (t.isObjectMethod(property)) {
+            if (BabelTypes.isObjectMethod(property.node)) {
                 processWorkletObjectMethod(t, property, state);
             }
             else {
                 var value = property.get('value');
-                processWorkletFunction(t, value, state);
+                processWorkletFunction(t, value, state); // temporarily given 3 types [TO DO]
             }
         }
     }
@@ -558,20 +565,18 @@ function processWorklets(t, path, state) {
         var indexes = functionArgsToWorkletize.get(name);
         if (Array.isArray(indexes)) {
             indexes.forEach(function (index) {
-                processWorkletFunction(t, path.get("arguments.".concat(index)), state);
+                processWorkletFunction(t, path.get("arguments.".concat(index)), state); // temporarily given 3 types [TO DO]
             });
         }
     }
 }
 module.exports = function (_a) {
     var t = _a.types;
-    // also guessed PluginItem here [TO DO]
     return {
         pre: function () {
             // allows adding custom globals such as host-functions
             if (this.opts != null && Array.isArray(this.opts.globals)) {
                 this.opts.globals.forEach(function (name) {
-                    // guessed string here [TO DO]
                     globals.add(name);
                 });
             }
