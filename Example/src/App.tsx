@@ -60,6 +60,7 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
 import CubesExample from './CubesExample';
+import { gestureHandlerRootHOC } from 'react-native-gesture-handler';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -343,4 +344,4 @@ export const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default gestureHandlerRootHOC(App);
