@@ -49,7 +49,7 @@ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bo
     x = isHorizontal ? scrollValue : 0;
     y = isHorizontal ? 0 : scrollValue;
   }
-  
+
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
 }
 
