@@ -7,157 +7,16 @@ import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
+import isReale
 
-function hash(str: string): number {
-  let i = str.length;
-  let hash1 = 5381;
-  let hash2 = 52711;
+import { functionArgsToWorkletize,
+  objectHooks,
+  globals,
+  gestureHandlerGestureObjects,
+  gestureHandlerBuilderMethods
+} from './commonObjects';
 
-  while (i--) {
-    const char = str.charCodeAt(i);
-    hash1 = (hash1 * 33) ^ char;
-    hash2 = (hash2 * 33) ^ char;
-  }
-
-  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
-}
-
-/**
- * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
- */
-const functionArgsToWorkletize = new Map([
-  ['useFrameCallback', [0]],
-  ['useAnimatedStyle', [0]],
-  ['useAnimatedProps', [0]],
-  ['createAnimatedPropAdapter', [0]],
-  ['useDerivedValue', [0]],
-  ['useAnimatedScrollHandler', [0]],
-  ['useAnimatedReaction', [0, 1]],
-  ['useWorkletCallback', [0]],
-  // animations' callbacks
-  ['withTiming', [2]],
-  ['withSpring', [2]],
-  ['withDecay', [1]],
-  ['withRepeat', [3]],
-]);
-
-const objectHooks = new Set([
-  'useAnimatedGestureHandler',
-  'useAnimatedScrollHandler',
-]);
-
-const globals = new Set([
-  'this',
-  'console',
-  'performance',
-  '_chronoNow',
-  'Date',
-  'Array',
-  'ArrayBuffer',
-  'Int8Array',
-  'Int16Array',
-  'Int32Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'Uint16Array',
-  'Uint32Array',
-  'Float32Array',
-  'Float64Array',
-  'Date',
-  'HermesInternal',
-  'JSON',
-  'Math',
-  'Number',
-  'Object',
-  'String',
-  'Symbol',
-  'undefined',
-  'null',
-  'UIManager',
-  'requestAnimationFrame',
-  '_WORKLET',
-  'arguments',
-  'Boolean',
-  'parseInt',
-  'parseFloat',
-  'Map',
-  'WeakMap',
-  'WeakRef',
-  'Set',
-  '_log',
-  '_scheduleOnJS',
-  '_makeShareableClone',
-  '_updateDataSynchronously',
-  'eval',
-  '_updatePropsPaper',
-  '_updatePropsFabric',
-  '_removeShadowNodeFromRegistry',
-  'RegExp',
-  'Error',
-  'ErrorUtils',
-  'global',
-  '_measure',
-  '_scrollTo',
-  '_dispatchCommand',
-  '_setGestureState',
-  '_getCurrentTime',
-  '_eventTimestamp',
-  '_frameTimestamp',
-  'isNaN',
-  'LayoutAnimationRepository',
-  '_notifyAboutProgress',
-  '_notifyAboutEnd',
-]);
-
-const gestureHandlerGestureObjects = new Set([
-  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
-  'Tap',
-  'Pan',
-  'Pinch',
-  'Rotation',
-  'Fling',
-  'LongPress',
-  'ForceTouch',
-  'Native',
-  'Manual',
-  'Race',
-  'Simultaneous',
-  'Exclusive',
-]);
-
-const gestureHandlerBuilderMethods = new Set([
-  'onBegin',
-  'onStart',
-  'onEnd',
-  'onFinalize',
-  'onUpdate',
-  'onChange',
-  'onTouchesDown',
-  'onTouchesMove',
-  'onTouchesUp',
-  'onTouchesCancelled',
-]);
-
-function isRelease() {
-  return (
-    process.env.BABEL_ENV &&
-    ['production', 'release'].includes(process.env.BABEL_ENV)
-  );
-}
-
-function shouldGenerateSourceMap() {
-  if (isRelease()) {
-    return false;
-  }
-
-  if (process.env.REANIMATED_PLUGIN_TESTS === 'jest') {
-    // We want to detect this, so we can disable source maps (because they break
-    // snapshot tests with jest).
-    return false;
-  }
-
-  return true;
-}
+import { isRelease, shouldGenerateSourceMap, hash } from './commonFunctions';
 
 interface BabelMapType {
   version: number;
