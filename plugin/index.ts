@@ -356,7 +356,7 @@ function makeWorklet(
   fun: BabelCore.NodePath<
     | BabelTypes.FunctionDeclaration
     | BabelTypes.FunctionExpression
-    // | BabelTypes.ObjectMethod -- it didn't appear upstream [TO DO]
+    | BabelTypes.ObjectMethod
     | BabelTypes.ArrowFunctionExpression
   >,
   state: BabelCore.PluginOptions
@@ -420,7 +420,8 @@ function makeWorklet(
       const name = path.node.name;
       if (
         globals.has(name) ||
-        (!BabelTypes.isArrowFunctionExpression(fun.node) && // necessary? [TO DO]
+        (!BabelTypes.isArrowFunctionExpression(fun.node) &&
+          !BabelTypes.isObjectMethod(fun.node) && // necessary? [TO DO]
           // !BabelTypes.isObjectMethod(fun.node) && --necessary? [TO DO]
           fun.node.id &&
           fun.node.id.name === name)
@@ -463,7 +464,7 @@ function makeWorklet(
   const privateFunctionId = t.identifier('_f');
   const clone = t.cloneNode(fun.node);
   const funExpression = BabelTypes.isBlockStatement(clone.body)
-    ? t.functionExpression(null, clone.params, clone.body)
+    ? BabelTypes.functionExpression(null, clone.params, clone.body)
     : clone;
 
   const [funString, sourceMapString] = buildWorkletString(
@@ -521,32 +522,42 @@ function makeWorklet(
     ])
   );
 
-  if (BabelTypes.isFunctionDeclaration(funExpression))
-    throw new Error('temporary funExpression error'); // [TO DO] temporary
+  // if (BabelTypes.isFunctionDeclaration(funExpression) && BabelTypes.isObjectMethod(funExpression))
+  //  throw new Error('temporary funExpression error'); // [TO DO] temporary
   const statements: Array<
     | BabelTypes.VariableDeclaration
     | BabelTypes.ExpressionStatement
     | BabelTypes.ReturnStatement
   > = [
     // [TO DO] return statement necessary?
-    t.variableDeclaration('const', [
-      t.variableDeclarator(privateFunctionId, funExpression),
+    BabelTypes.variableDeclaration('const', [
+      // @ts-expect-error [TO DO]
+      BabelTypes.variableDeclarator(privateFunctionId, funExpression),
     ]),
-    t.expressionStatement(
-      t.assignmentExpression(
+    BabelTypes.expressionStatement(
+      BabelTypes.assignmentExpression(
         '=',
-        t.memberExpression(privateFunctionId, t.identifier('_closure'), false),
-        t.objectExpression(
+        BabelTypes.memberExpression(
+          privateFunctionId,
+          t.identifier('_closure'),
+          false
+        ),
+        BabelTypes.objectExpression(
           variables.map((variable) =>
-            t.objectProperty(t.identifier(variable.name), variable, false, true)
+            BabelTypes.objectProperty(
+              t.identifier(variable.name),
+              variable,
+              false,
+              true
+            )
           )
         )
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
+    BabelTypes.expressionStatement(
+      BabelTypes.assignmentExpression(
         '=',
-        t.memberExpression(
+        BabelTypes.memberExpression(
           privateFunctionId,
           t.identifier('__initData'),
           false
@@ -554,15 +565,15 @@ function makeWorklet(
         initDataId
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
+    BabelTypes.expressionStatement(
+      BabelTypes.assignmentExpression(
         '=',
-        t.memberExpression(
+        BabelTypes.memberExpression(
           privateFunctionId,
           t.identifier('__workletHash'),
           false
         ),
-        t.numericLiteral(workletHash)
+        BabelTypes.numericLiteral(workletHash)
       )
     ),
   ];
@@ -598,7 +609,8 @@ function makeWorklet(
   statements.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(
-    !BabelTypes.isArrowFunctionExpression(fun.node) ? fun.node.id : undefined,
+    //!BabelTypes.isArrowFunctionExpression(fun.node) ? fun.node.id : undefined,
+    undefined,
     [],
     t.blockStatement(statements)
   ); // [TO DO] weirdish in here
@@ -644,12 +656,14 @@ function processWorkletFunction(
   );
 }
 
-function processWorkletObjectMethod(t, path, state) {
+function processWorkletObjectMethod(
+  t: typeof BabelCore.types,
+  path: BabelCore.NodePath<BabelTypes.ObjectMethod>,
+  state: BabelCore.PluginOptions
+) {
   // Replaces ObjectMethod with a workletized version of itself.
 
-  if (!t.isFunctionParent(path)) {
-    return;
-  }
+  if (BabelTypes.isFunctionParent(path)) return;
 
   const newFun = makeWorklet(t, path, state);
 
