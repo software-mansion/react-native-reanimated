@@ -100,13 +100,28 @@ function setupRequestAnimationFrame() {
   const nativeRequestAnimationFrame = global.requestAnimationFrame;
 
   let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
+  let lastFlushWasNative = true;
 
-  global.__flushAnimationFrame = (frameTimestamp: number) => {
+  function flushAnimationFrame(frameTimestamp: number, nativeFlush = false) {
+    if (!lastFlushWasNative && nativeFlush) {
+      // if there is a "native" flush (that is coming from executing frame
+      // callback from native side) that immediately follows a flush flush that
+      // wasn't initiated from native side, we ignore such flush. The scenario
+      // when this happens is when flush is performed as a part of event handling
+      // in which case we want to execute animation frames such that they follow
+      // the updates caused by the event immediately. In consequence, we don't
+      // want to perform another flush within the same frame as that'd be wasteful.
+      lastFlushWasNative = nativeFlush;
+      return;
+    }
+    lastFlushWasNative = nativeFlush;
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
     currentCallbacks.forEach((f) => f(frameTimestamp));
     flushImmediates();
-  };
+  }
+
+  global.__flushAnimationFrame = flushAnimationFrame;
 
   global.requestAnimationFrame = (
     callback: (timestamp: number) => void
@@ -118,7 +133,7 @@ function setupRequestAnimationFrame() {
       // the callbacks are run, we clear the array.
       nativeRequestAnimationFrame((timestamp) => {
         global.__frameTimestamp = timestamp;
-        global.__flushAnimationFrame(timestamp);
+        flushAnimationFrame(timestamp, true);
         global.__frameTimestamp = undefined;
       });
     }
