@@ -1,5 +1,7 @@
 package com.swmansion.reanimated;
 
+import static com.swmansion.reanimated.Utils.simplifyStringNumbersList;
+
 import android.util.Log;
 
 import com.facebook.jni.HybridData;
@@ -57,12 +59,17 @@ public class NativeProxy extends NativeProxyCommon {
         WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(layoutAnimations);
         return new NativeMethodsHolder() {
             @Override
-            public void startAnimation(int tag, int type, HashMap<String, Float> values) {
+            public void startAnimation(int tag, int type, HashMap<String, Object> values) {
                 LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
                 if (layoutAnimations != null) {
                     HashMap<String, String> preparedValues = new HashMap<>();
                     for (String key : values.keySet()) {
-                        preparedValues.put(key, values.get(key).toString());
+                      String stringValue = values.get(key).toString();
+                      if (key.endsWith("TransformMatrix")) {
+                        preparedValues.put(key, simplifyStringNumbersList(stringValue));
+                      } else {
+                        preparedValues.put(key, stringValue);
+                      }
                     }
                     layoutAnimations.startAnimationForTag(tag, type, preparedValues);
                 }

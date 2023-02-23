@@ -1,4 +1,3 @@
-import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
@@ -7,6 +6,7 @@ import {
   LayoutAnimationType,
   LayoutAnimationsValues,
 } from './animationBuilder';
+import { runOnUIImmediately } from '../threads';
 
 const TAG_OFFSET = 1e9;
 
@@ -102,7 +102,7 @@ function createLayoutAnimationManager() {
   };
 }
 
-runOnUI(() => {
+runOnUIImmediately(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
 })();

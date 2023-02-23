@@ -154,11 +154,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
-      jsi::Object global = rt.global();
-      jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
-      global.setProperty(rt, frameTimestampName, frameTimestamp);
       onRender(frameTimestamp);
-      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
     }];
   };
 
@@ -302,15 +298,23 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 #else
   // Layout Animation callbacks setup
-  [animationsManager
-      setAnimationStartingBlock:^(
-          NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
-        jsi::Runtime &rt = *wrt.lock();
-        jsi::Object yogaValues(rt);
-        for (NSString *key in values.allKeys) {
-          NSNumber *value = values[key];
-          yogaValues.setProperty(rt, [key UTF8String], [value doubleValue]);
+  [animationsManager setAnimationStartingBlock:^(
+                         NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
+    jsi::Runtime &rt = *wrt.lock();
+    jsi::Object yogaValues(rt);
+    for (NSString *key in values.allKeys) {
+      NSObject *value = values[key];
+      if ([values[key] isKindOfClass:[NSArray class]]) {
+        NSArray *transformArray = (NSArray *)value;
+        jsi::Array matrix(rt, 9);
+        for (int i = 0; i < 9; i++) {
+          matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
         }
+        yogaValues.setProperty(rt, [key UTF8String], matrix);
+      } else {
+        yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
+      }
+    }
 
         weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
       }];

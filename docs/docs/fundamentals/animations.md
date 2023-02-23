@@ -368,7 +368,7 @@ Such a change will cause each of the items to reposition and also change their d
 The change of the dimensions for each of the views may trigger further layout recalculations of the nested views down to the leaf nodes.
 As you can see, a single property change can trigger a lot of recomputation.
 It may perform just fine when we need to fire it once, but if we decided to run such computation during animation for every frame, the outcome may not be satisfactory especially on low-end devices.
-As we work to improve performance of complex layout updates in Reanimated 2, when you experience  issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/react-native-reanimated/docs/1.x.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
+As we work to improve performance of complex layout updates in Reanimated 2, when you experience  issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/react-native-reanimated/docs/1.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
 
 ## Animating Non-Style Properties
 

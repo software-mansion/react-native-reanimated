@@ -220,6 +220,18 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
   }
 
+  if (newProps[@"transformMatrix"]) {
+    NSArray *matrix = newProps[@"transformMatrix"];
+    CGFloat a = [matrix[0] floatValue];
+    CGFloat b = [matrix[1] floatValue];
+    CGFloat c = [matrix[3] floatValue];
+    CGFloat d = [matrix[4] floatValue];
+    CGFloat tx = [matrix[6] floatValue];
+    CGFloat ty = [matrix[7] floatValue];
+    view.transform = CGAffineTransformMake(a, b, c, d, tx, ty);
+    [newProps removeObjectForKey:@"transformMatrix"];
+  }
+
   NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
@@ -264,12 +276,14 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     @"currentOriginY" : currentValues[@"originY"],
     @"currentGlobalOriginX" : currentValues[@"globalOriginX"],
     @"currentGlobalOriginY" : currentValues[@"globalOriginY"],
+    @"currentTransformMatrix" : currentValues[@"transformMatrix"],
     @"targetWidth" : targetValues[@"width"],
     @"targetHeight" : targetValues[@"height"],
     @"targetOriginX" : targetValues[@"originX"],
     @"targetOriginY" : targetValues[@"originY"],
     @"targetGlobalOriginX" : targetValues[@"globalOriginX"],
     @"targetGlobalOriginY" : targetValues[@"globalOriginY"],
+    @"targetTransformMatrix" : targetValues[@"transformMatrix"],
     @"windowWidth" : currentValues[@"windowWidth"],
     @"windowHeight" : currentValues[@"windowHeight"]
   };

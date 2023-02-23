@@ -30,6 +30,7 @@ public class SharedTransitionManager {
   private final Map<Integer, View> mCurrentSharedTransitionViews = new HashMap<>();
   private View mTransitionContainer;
   private final List<View> mRemovedSharedViews = new ArrayList<>();
+  private final Set<Integer> mViewTagsToHide = new HashSet<>();
   private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
@@ -64,6 +65,7 @@ public class SharedTransitionManager {
     if (tagsToDelete == null) {
       return;
     }
+    restoreVisibility();
     visitTreeForTags(tagsToDelete, new SnapshotTreeVisitor());
     if (mRemovedSharedViews.size() > 0) {
       // this happens when navigation goes back
@@ -93,6 +95,18 @@ public class SharedTransitionManager {
         clearAllSharedConfigsForView(view);
       }
     }
+  }
+
+  private void restoreVisibility() {
+    ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
+        mAnimationsManager.getReanimatedNativeHierarchyManager();
+    for (int viewTag : mViewTagsToHide) {
+      View view = reanimatedNativeHierarchyManager.resolveView(viewTag);
+      if (view != null) {
+        view.setVisibility(View.VISIBLE);
+      }
+    }
+    mViewTagsToHide.clear();
   }
 
   private boolean isViewChildParentWithTag(View view, int parentTag) {
@@ -277,6 +291,7 @@ public class SharedTransitionManager {
 
       Snapshot sourceViewSnapshot = null;
       if (addedNewScreen) {
+        mViewTagsToHide.add(viewSource.getId());
         if (isSourceViewInTransition) {
           sourceViewSnapshot = new Snapshot(viewSource);
         } else {
@@ -379,11 +394,11 @@ public class SharedTransitionManager {
     HashMap<String, Object> targetValues = after.toTargetMap();
     HashMap<String, Object> startValues = before.toCurrentMap();
 
-    HashMap<String, Float> preparedStartValues =
-        mAnimationsManager.prepareDataForAnimationWorklet(startValues, false);
-    HashMap<String, Float> preparedTargetValues =
-        mAnimationsManager.prepareDataForAnimationWorklet(targetValues, true);
-    HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
+    HashMap<String, Object> preparedStartValues =
+        mAnimationsManager.prepareDataForAnimationWorklet(startValues, false, true);
+    HashMap<String, Object> preparedTargetValues =
+        mAnimationsManager.prepareDataForAnimationWorklet(targetValues, true, true);
+    HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
     mNativeMethodsHolder.startAnimation(view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION, preparedValues);
@@ -422,10 +437,17 @@ public class SharedTransitionManager {
         Map<String, Object> preparedValues = new HashMap<>();
         for (String key : snapshotMap.keySet()) {
           Object value = snapshotMap.get(key);
-          preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+          if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
+            preparedValues.put(key, value);
+          } else {
+            preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+          }
         }
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
         viewSourcePreviousSnapshot.originY = originY;
+      }
+      if (mViewTagsToHide.contains(tag)) {
+        view.setVisibility(View.INVISIBLE);
       }
       mCurrentSharedTransitionViews.remove(viewTag);
       mSharedTransitionParent.remove(viewTag);

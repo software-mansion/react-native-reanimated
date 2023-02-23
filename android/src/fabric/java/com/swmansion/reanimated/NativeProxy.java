@@ -69,7 +69,7 @@ public class NativeProxy extends NativeProxyCommon {
     public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
         return new NativeMethodsHolder() {
             @Override
-            public void startAnimation(int tag, String type, HashMap<String, Float> values) {}
+            public void startAnimation(int tag, String type, HashMap<String, Object> values) {}
 
             @Override
             public boolean isLayoutAnimationEnabled() {
