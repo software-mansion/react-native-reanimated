@@ -298,23 +298,24 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 #else
   // Layout Animation callbacks setup
-  [animationsManager setAnimationStartingBlock:^(
-                         NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
-    jsi::Runtime &rt = *wrt.lock();
-    jsi::Object yogaValues(rt);
-    for (NSString *key in values.allKeys) {
-      NSObject *value = values[key];
-      if ([values[key] isKindOfClass:[NSArray class]]) {
-        NSArray *transformArray = (NSArray *)value;
-        jsi::Array matrix(rt, 9);
-        for (int i = 0; i < 9; i++) {
-          matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+  [animationsManager
+      setAnimationStartingBlock:^(
+          NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
+        jsi::Runtime &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (NSString *key in values.allKeys) {
+          NSObject *value = values[key];
+          if ([values[key] isKindOfClass:[NSArray class]]) {
+            NSArray *transformArray = (NSArray *)value;
+            jsi::Array matrix(rt, 9);
+            for (int i = 0; i < 9; i++) {
+              matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+            }
+            yogaValues.setProperty(rt, [key UTF8String], matrix);
+          } else {
+            yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
+          }
         }
-        yogaValues.setProperty(rt, [key UTF8String], matrix);
-      } else {
-        yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
-      }
-    }
 
         weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
       }];
