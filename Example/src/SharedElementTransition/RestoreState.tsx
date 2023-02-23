@@ -19,7 +19,7 @@ function Screen1({ navigation }: any) {
             marginTop: 50,
             marginLeft: 50,
           }}
-          sharedTransitionTag="mleko"
+          sharedTransitionTag="sharedElement"
         />
         <Button
           onPress={() => navigation.navigate('Screen2')}
@@ -40,17 +40,13 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
           backgroundColor: 'green',
           marginTop: 200,
         }}
-        sharedTransitionTag="mleko"
+        sharedTransitionTag="sharedElement"
       />
       <Button
         title="go to screen3"
         onPress={() => navigation.navigate('Screen3')}
       />
-      <Button
-        title="go back"
-        // onPress={() => navigation.navigate('Screen1')}
-        onPress={() => navigation.goBack()}
-      />
+      <Button title="go back" onPress={() => navigation.goBack()} />
     </View>
   );
 }

@@ -31,7 +31,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
           marginTop: 50,
           backgroundColor: 'green',
         }}
-        sharedTransitionTag="mleko"
+        sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
       />
       <Button
@@ -53,7 +53,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
           marginTop: 100,
           backgroundColor: 'green',
         }}
-        sharedTransitionTag="mleko"
+        sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
       />
       <Button title="go back" onPress={() => navigation.navigate('Screen1')} />

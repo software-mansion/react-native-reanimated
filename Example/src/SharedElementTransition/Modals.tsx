@@ -1,9 +1,19 @@
 import * as React from 'react';
-import { View, Image, TouchableNativeFeedback } from 'react-native';
+import { Image, TouchableNativeFeedback } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Animated, {
+  runOnJS,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { StackScreenProps } from '@react-navigation/stack';
-import Animated from 'react-native-reanimated';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
@@ -66,7 +76,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
           key={i}
           navigation={navigation}
           title={'Title' + i}
-          transitionTag={'tag' + i}
+          transitionTag={'sharedTag' + i}
           nextScreen="Screen2"
         />
       ))}
@@ -77,37 +87,83 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
 function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
   const { title, sharedTransitionTag } = route.params as any;
 
+  const goNext = () => {
+    navigation.navigate('Screen1', {
+      title,
+      sharedTransitionTag,
+    });
+  };
+
+  const translation = {
+    x: useSharedValue(0),
+    y: useSharedValue(0),
+  };
+  type AnimatedGHContext = {
+    startX: number;
+    startY: number;
+  };
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_, ctx) => {
+      ctx.startX = translation.x.value;
+      ctx.startY = translation.y.value;
+    },
+    onActive: (event, ctx) => {
+      translation.x.value = ctx.startX + event.translationX;
+      translation.y.value = ctx.startY + event.translationY;
+    },
+    onEnd: (_) => {
+      console.log(translation.x.value, translation.y.value);
+      if (Math.abs(translation.x.value) + Math.abs(translation.y.value) > 150) {
+        runOnJS(goNext)();
+      }
+      translation.x.value = withSpring(0);
+      translation.y.value = withSpring(0);
+    },
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translation.x.value },
+        { translateY: translation.y.value },
+        {
+          scale:
+            1 -
+            (Math.abs(translation.x.value) + Math.abs(translation.y.value)) /
+              500,
+        },
+      ],
+    };
+  });
+
   return (
-    <View style={{ flex: 1 }}>
-      <Card
-        navigation={navigation}
-        title={title}
-        transitionTag={sharedTransitionTag}
-        isOpen={true}
-        nextScreen="Screen1"
-      />
-    </View>
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+        <Card
+          navigation={navigation}
+          title={title}
+          transitionTag={sharedTransitionTag}
+          isOpen={true}
+          nextScreen="Screen1"
+        />
+      </Animated.View>
+    </PanGestureHandler>
   );
 }
 
-export function CardExample() {
+export function ModalsExample() {
   return (
     <Stack.Navigator
-      screenOptions={
-        {
-          // animation: 'none',
-        }
-      }>
-      <Stack.Screen
-        name="Screen1"
-        component={Screen1}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Screen2"
-        component={Screen2}
-        options={{ headerShown: true }}
-      />
+      screenOptions={{
+        animation: 'none',
+        presentation: 'transparentModal',
+        headerShown: false,
+      }}>
+      <Stack.Screen name="Screen1" component={Screen1} />
+      <Stack.Screen name="Screen2" component={Screen2} />
     </Stack.Navigator>
   );
 }

@@ -157,7 +157,6 @@ function DetailsScreen({
 
 export function GalleryExample() {
   return (
-    // <NavigationContainer>
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
@@ -165,7 +164,6 @@ export function GalleryExample() {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Details" component={DetailsScreen} />
     </Stack.Navigator>
-    // </NavigationContainer>
   );
 }
 
@@ -205,7 +203,7 @@ const styles = StyleSheet.create({
   },
   detailsImage: {
     width: '100%',
-    height: 500,
+    height: 400,
   },
   callToActionWrapper: {
     flex: 1,

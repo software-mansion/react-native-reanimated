@@ -64,6 +64,12 @@ import {
   CardExample,
   CustomTransitionExample,
   GalleryExample,
+  LayoutAnimationExample,
+  ManyScreensExample,
+  ManyTagsExample,
+  NestedStacksExample,
+  ModalsExample,
+  FlatListExample,
   RestoreStateExample,
 } from './SharedElementTransition';
 
@@ -89,6 +95,30 @@ const SCREENS: Screens = {
   GalleryExample: {
     screen: GalleryExample,
     title: '[SET] Gallery',
+  },
+  LayoutAnimationExample: {
+    screen: LayoutAnimationExample,
+    title: '[SET] Layout Animation',
+  },
+  ManyScreensExample: {
+    screen: ManyScreensExample,
+    title: '[SET] Many screens',
+  },
+  ManyTagsExample: {
+    screen: ManyTagsExample,
+    title: '[SET] Many tags',
+  },
+  NestedStacksExample: {
+    screen: NestedStacksExample,
+    title: '[SET] Nested stacks',
+  },
+  ModalsExample: {
+    screen: ModalsExample,
+    title: '[SET] Modals',
+  },
+  FlatListExample: {
+    screen: FlatListExample,
+    title: '[SET] FlatList',
   },
   RestoreStateExample: {
     screen: RestoreStateExample,
