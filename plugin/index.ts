@@ -863,22 +863,52 @@ function processWorklets(
 
   if (
     objectHooks.has(name) &&
-    path.get('arguments.0').type === 'ObjectExpression'
+    BabelTypes.isObjectExpression(
+      (path.get('arguments.0') as BabelCore.NodePath<BabelTypes.Expression>)
+        .node
+    )
   ) {
-    const properties = path.get('arguments.0.properties');
+    const properties = path.get('arguments.0.properties') as Array<
+      BabelCore.NodePath<
+        BabelTypes.ObjectMethod | BabelTypes.ObjectProperty
+        //| BabelTypes.SpreadElement // not necessary? [TO DO]
+      >
+    >;
     for (const property of properties) {
-      if (t.isObjectMethod(property)) {
-        processWorkletObjectMethod(t, property, state);
+      if (BabelTypes.isObjectMethod(property.node)) {
+        processWorkletObjectMethod(
+          t,
+          property as BabelCore.NodePath<BabelTypes.ObjectMethod>,
+          state
+        );
       } else {
-        const value = property.get('value');
-        processWorkletFunction(t, value, state);
+        const value = property.get(
+          'value'
+        ) as BabelCore.NodePath<BabelTypes.Expression>;
+        processWorkletFunction(
+          t,
+          value as BabelCore.NodePath<
+            | BabelTypes.FunctionDeclaration
+            | BabelTypes.FunctionExpression
+            | BabelTypes.ArrowFunctionExpression
+          >,
+          state
+        ); // temporary [TO DO]
       }
     }
   } else {
     const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processWorkletFunction(t, path.get(`arguments.${index}`), state);
+        processWorkletFunction(
+          t,
+          path.get(`arguments.${index}`) as BabelCore.NodePath<
+            | BabelTypes.FunctionDeclaration
+            | BabelTypes.FunctionExpression
+            | BabelTypes.ArrowFunctionExpression
+          >,
+          state
+        );
       });
     }
   }
