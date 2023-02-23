@@ -100,13 +100,25 @@ function setupRequestAnimationFrame() {
   const nativeRequestAnimationFrame = global.requestAnimationFrame;
 
   let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
+  let lastFlushWasNative = true;
 
-  global.__flushAnimationFrame = (frameTimestamp: number) => {
+  function flushAnimationFrame(frameTimestamp: number, nativeFlush = false) {
+    if (!lastFlushWasNative && nativeFlush) {
+      // we ignore the first naitve flush that happens after flush coming from
+      // different source. In particular if rAF queue is flushed from events
+      // we already performed the work for the given frame and hence we don't
+      // need to run another set of animation in the same frame.
+      lastFlushWasNative = nativeFlush;
+      return;
+    }
+    lastFlushWasNative = nativeFlush;
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
     currentCallbacks.forEach((f) => f(frameTimestamp));
     flushImmediates();
-  };
+  }
+
+  global.__flushAnimationFrame = flushAnimationFrame;
 
   global.requestAnimationFrame = (
     callback: (timestamp: number) => void
@@ -118,7 +130,7 @@ function setupRequestAnimationFrame() {
       // the callbacks are run, we clear the array.
       nativeRequestAnimationFrame((timestamp) => {
         global.__frameTimestamp = timestamp;
-        global.__flushAnimationFrame(timestamp);
+        flushAnimationFrame(timestamp, true);
         global.__frameTimestamp = undefined;
       });
     }
