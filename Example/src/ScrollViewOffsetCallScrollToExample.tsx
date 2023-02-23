@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import Animated, {
   useScrollViewOffset,
@@ -10,6 +10,7 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 export default function ScrollViewOffsetCallScrollToExample() {
   const aref = useAnimatedRef<Animated.ScrollView>();
   const scrollHandler = useScrollViewOffset(aref);
+  const [horizontal, setHorizontal] = useState(false);
 
   const onChangeScrollValue = () => {
     scrollHandler.value = Math.random() * 5000;
@@ -24,6 +25,10 @@ export default function ScrollViewOffsetCallScrollToExample() {
       <View style={styles.positionView}>
         <Text>Test</Text>
         <Button
+          title="Horizontal/Vertical"
+          onPress={() => setHorizontal(!horizontal)}
+        />
+        <Button
           title="Scroll without animation"
           onPress={onChangeScrollValue}
         />
@@ -36,7 +41,8 @@ export default function ScrollViewOffsetCallScrollToExample() {
       <Animated.ScrollView
         ref={aref}
         scrollEventThrottle={16}
-        style={styles.scrollView}>
+        style={styles.scrollView}
+        horizontal={horizontal}>
         {[...Array(100)].map((_, i) => (
           <Text key={i} style={styles.text}>
             {i}

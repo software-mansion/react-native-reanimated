@@ -55,6 +55,13 @@ public class NativeMethodsHelper {
       }
     }
 
+    // When we use useScrollValueOffset hook, we don't know the direction of scrolling
+    if (Double.isInfinite(argX)) {
+      int scrollValue = Math.min(x, y);
+      x = horizontal ? scrollValue : 0;
+      y = horizontal ? 0 : scrollValue;
+    }
+
     if (animated) {
       if (horizontal) {
         ((ReactHorizontalScrollView) view).smoothScrollTo((int) x, (int) y);

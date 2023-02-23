@@ -42,7 +42,7 @@ export function scrollValueSetter(sv: any, value: any, animatedRef: any): void {
       const finished = animation.onFrame(animation, timestamp);
       animation.finished = true;
       animation.timestamp = timestamp;
-      scrollTo(animatedRef, 0, Number(animation.current), false);
+      scrollTo(animatedRef, Infinity, Number(animation.current), false);
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -59,6 +59,6 @@ export function scrollValueSetter(sv: any, value: any, animatedRef: any): void {
     if (sv._value === value) {
       return;
     }
-    scrollTo(animatedRef, 0, Number(value), false);
+    scrollTo(animatedRef, Infinity, Number(value), false);
   }
 }
