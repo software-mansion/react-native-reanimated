@@ -8,18 +8,12 @@ namespace reanimated {
 
 void LayoutAnimationsManager::configureAnimation(
     int tag,
-    const std::string &type,
+    LayoutAnimationType type,
     const std::string &sharedTransitionTag,
     std::shared_ptr<Shareable> config) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  if (type == "entering") {
-    enteringAnimations_[tag] = config;
-  } else if (type == "exiting") {
-    exitingAnimations_[tag] = config;
-  } else if (type == "layout") {
-    layoutAnimations_[tag] = config;
-  } else if (type == "sharedElementTransition") {
-    sharedTransitionAnimations_[tag] = config;
+  configsForType(type)[tag] = config;
+  if (type == SHARED_ELEMENT_TRANSITION) {
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
   }
@@ -27,18 +21,9 @@ void LayoutAnimationsManager::configureAnimation(
 
 bool LayoutAnimationsManager::hasLayoutAnimation(
     int tag,
-    const std::string &type) {
+    LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  if (type == "entering") {
-    return collection::contains(enteringAnimations_, tag);
-  } else if (type == "exiting") {
-    return collection::contains(exitingAnimations_, tag);
-  } else if (type == "layout") {
-    return collection::contains(layoutAnimations_, tag);
-  } else if (type == "sharedElementTransition") {
-    return collection::contains(sharedTransitionAnimations_, tag);
-  }
-  return false;
+  return collection::contains(configsForType(type), tag);
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
@@ -63,20 +48,12 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
 void LayoutAnimationsManager::startLayoutAnimation(
     jsi::Runtime &rt,
     int tag,
-    const std::string &type,
+    LayoutAnimationType type,
     const jsi::Object &values) {
   std::shared_ptr<Shareable> config, viewShareable;
   {
     auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-    if (type == "entering") {
-      config = enteringAnimations_[tag];
-    } else if (type == "exiting") {
-      config = exitingAnimations_[tag];
-    } else if (type == "layout") {
-      config = layoutAnimations_[tag];
-    } else if (type == "sharedElementTransition") {
-      config = sharedTransitionAnimations_[tag];
-    }
+    config = configsForType(type)[tag];
   }
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
@@ -89,7 +66,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
   startAnimationForTag.call(
       rt,
       jsi::Value(tag),
-      jsi::String::createFromAscii(rt, type),
+      jsi::Value(static_cast<int>(type)),
       values,
       config->getJSValue(rt));
 }
@@ -97,7 +74,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
 void LayoutAnimationsManager::cancelLayoutAnimation(
     jsi::Runtime &rt,
     int tag,
-    const std::string &type,
+    LayoutAnimationType type,
     bool cancelled = true,
     bool removeView = true) {
   jsi::Value layoutAnimationRepositoryAsValue =
@@ -133,6 +110,22 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
     return *std::prev(position);
   }
   return -1;
+}
+
+std::unordered_map<int, std::shared_ptr<Shareable>>
+    &LayoutAnimationsManager::configsForType(LayoutAnimationType type) {
+  switch (type) {
+    case ENTERING:
+      return enteringAnimations_;
+    case EXITING:
+      return exitingAnimations_;
+    case LAYOUT:
+      return layoutAnimations_;
+    case SHARED_ELEMENT_TRANSITION:
+      return sharedTransitionAnimations_;
+    default:
+      assert(false);
+  }
 }
 
 } // namespace reanimated

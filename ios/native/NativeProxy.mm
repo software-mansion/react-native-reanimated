@@ -1,3 +1,4 @@
+#import <RNReanimated/LayoutAnimationsManager.h>
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
@@ -301,22 +302,21 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 #else
   // Layout Animation callbacks setup
-  [animationsManager setAnimationStartingBlock:^(
-                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
-    jsi::Runtime &rt = *wrt.lock();
-    jsi::Object yogaValues(rt);
-    for (NSString *key in values.allKeys) {
-      NSNumber *value = values[key];
-      yogaValues.setProperty(rt, [key UTF8String], [value doubleValue]);
-    }
+  [animationsManager
+      setAnimationStartingBlock:^(
+          NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
+        jsi::Runtime &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (NSString *key in values.allKeys) {
+          NSNumber *value = values[key];
+          yogaValues.setProperty(rt, [key UTF8String], [value doubleValue]);
+        }
 
-    weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
-        rt, [tag intValue], std::string([type UTF8String]), yogaValues);
-  }];
+        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
+      }];
 
-  [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
-    bool hasLayoutAnimation =
-        weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
+  [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
+    bool hasLayoutAnimation = weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
     return hasLayoutAnimation ? YES : NO;
   }];
 
@@ -325,12 +325,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 
   [animationsManager
-      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView) {
+      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
         if (auto reaModule = weakModule.lock()) {
           if (auto runtime = wrt.lock()) {
             jsi::Runtime &rt = *runtime;
             reaModule->layoutAnimationsManager().cancelLayoutAnimation(
-                rt, [tag intValue], std::string([type UTF8String]), cancelled == YES, removeView == YES);
+                rt, [tag intValue], type, cancelled == YES, removeView == YES);
           }
         }
       }];

@@ -407,7 +407,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if (self->_currentSharedTransitionViews[viewTag]) {
       return false;
     }
-    if ([self->_animationManager hasAnimationForTag:viewTag type:@"sharedElementTransition"]) {
+    if ([self->_animationManager hasAnimationForTag:viewTag type:SHARED_ELEMENT_TRANSITION]) {
       REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:(UIView *)view];
       self->_snapshotRegistry[viewTag] = snapshot;
     }
@@ -461,7 +461,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   NSMutableArray<UIView *> *removedViews = [NSMutableArray new];
   REANodeFind(screen, ^int(id<RCTComponent> view) {
-    if ([self->_animationManager hasAnimationForTag:view.reactTag type:@"sharedElementTransition"]) {
+    if ([self->_animationManager hasAnimationForTag:view.reactTag type:SHARED_ELEMENT_TRANSITION]) {
       [removedViews addObject:(UIView *)view];
     }
     return false;
@@ -545,7 +545,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   NSDictionary *preparedValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
                                                                             targetValues:targetValues];
   [_animationManager startAnimationForTag:view.reactTag
-                                     type:@"sharedElementTransition"
+                                     type:SHARED_ELEMENT_TRANSITION
                                yogaValues:preparedValues
                                     depth:@(0)];
 }
@@ -615,7 +615,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)cancelAnimation:(NSNumber *)viewTag
 {
-  _cancelLayoutAnimation(viewTag, @"sharedTransition", YES, YES);
+  _cancelLayoutAnimation(viewTag, SHARED_ELEMENT_TRANSITION, YES, YES);
 }
 
 - (void)disableCleaningForViewTag:(NSNumber *)viewTag

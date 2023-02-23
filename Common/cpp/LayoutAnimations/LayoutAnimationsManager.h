@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ErrorHandler.h"
+#include "LayoutAnimationType.h"
 #include "Shareables.h"
 
 #include <jsi/jsi.h>
@@ -20,25 +21,28 @@ class LayoutAnimationsManager {
  public:
   void configureAnimation(
       int tag,
-      const std::string &type,
+      LayoutAnimationType type,
       const std::string &sharedTransitionTag,
       std::shared_ptr<Shareable> config);
-  bool hasLayoutAnimation(int tag, const std::string &type);
+  bool hasLayoutAnimation(int tag, LayoutAnimationType type);
   void startLayoutAnimation(
       jsi::Runtime &rt,
       int tag,
-      const std::string &type,
+      LayoutAnimationType type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(int tag);
   void cancelLayoutAnimation(
       jsi::Runtime &rt,
       int tag,
-      const std::string &type,
+      LayoutAnimationType type,
       bool cancelled /* = true */,
       bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
 
  private:
+  std::unordered_map<int, std::shared_ptr<Shareable>> &configsForType(
+      LayoutAnimationType type);
+
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;

@@ -194,9 +194,16 @@ export function enableLayoutAnimations(
   }
 }
 
+export enum LayoutAnimationType {
+  ENTERING = 0,
+  EXITING = 1,
+  LAYOUT = 2,
+  SHARED_ELEMENT_TRANSITION = 3,
+}
+
 export function configureLayoutAnimations(
   viewTag: number,
-  type: string,
+  type: LayoutAnimationType,
   config: LayoutAnimationFunction | Keyframe,
   sharedTransitionTag = ''
 ): void {

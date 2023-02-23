@@ -7,6 +7,7 @@ import {
 } from '../commonTypes';
 import { LayoutAnimationFunction } from '../layoutReanimation';
 import { checkVersion } from '../platform-specific/checkVersion';
+import { LayoutAnimationType } from '../core';
 
 export class NativeReanimated {
   native: boolean;
@@ -111,7 +112,7 @@ export class NativeReanimated {
 
   configureLayoutAnimation(
     viewTag: number,
-    type: string,
+    type: LayoutAnimationType,
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ) {
