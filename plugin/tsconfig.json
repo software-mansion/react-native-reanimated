@@ -1,5 +1,8 @@
-{ "compilerOptions": {
-  "target": "ESNext",
-"module": "commonjs"},
-"files": ["index.ts"]
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "removeComments": true,
+    "module": "commonjs"
+  },
+  "files": ["index.ts"]
 }
