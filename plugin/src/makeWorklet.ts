@@ -42,6 +42,7 @@ import { BabelMapType } from './commonInterfaces';
 import { globals } from './commonObjects';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
+import { assertIsDefined } from './asserts';
 
 function makeWorkletName(
   fun: NodePath<
@@ -157,7 +158,7 @@ function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  if (!draftExpression) throw new Error('weird draft expression bug'); // [TO DO] temporary
+  assertIsDefined(draftExpression); // [TO DO] temporary
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
@@ -168,7 +169,9 @@ function buildWorkletString(
     !isFunctionExpression(expression) &&
     !isObjectMethod(expression)
   )
-    throw new Error('weird type bug'); // [TO DO] temporary
+    throw new Error(
+      "'expression' is not FunctionDeclaration or FunctionExpression or ObjectMethod"
+    ); // [TO DO] temporary
 
   const workletFunction = functionExpression(
     identifier(name),
@@ -178,7 +181,7 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  if (!inputMap) throw new Error('temporary Error'); // temporary [TO DO]
+  assertIsDefined(inputMap); // temporary [TO DO]
 
   if (shouldGenerateSourceMap()) {
     // Clear contents array (should be empty anyways)
@@ -205,7 +208,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  if (!transformed) throw new Error('transformed is null!\n');
+  assertIsDefined(transformed); // temporary [TO DO]
 
   let sourceMap;
   if (includeSourceMap) {
@@ -276,7 +279,8 @@ export function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  if (!transformed || !transformed.ast) throw new Error('null ast Error\n'); // this is temporary [TO DO]
+  assertIsDefined(transformed); // temporary [TO DO]
+  assertIsDefined(transformed.ast); // temporary [TO DO]
 
   traverse(transformed.ast, {
     Identifier(path) {
@@ -336,7 +340,9 @@ export function makeWorklet(
     functionName,
     transformed.map
   );
-  if (!funString) throw new Error('funString is undefined/null\n'); // this is temporary [TO DO]
+
+  assertIsDefined(funString); // temporary [TO DO]
+
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename; // @ts-expect-error [TO DO]
@@ -344,6 +350,8 @@ export function makeWorklet(
     const path = require('path');
     location = path.relative(state.cwd, location);
   }
+
+  assertIsDefined(location); // temporary [TO DO]
 
   let lineOffset = 1;
   if (closure.size > 0) {
@@ -365,8 +373,8 @@ export function makeWorklet(
     );
 
   const initDataObjectExpression = objectExpression([
-    objectProperty(identifier('code'), stringLiteral(funString as string)), // [TO DO] this is temporary
-    objectProperty(identifier('location'), stringLiteral(location as string)),
+    objectProperty(identifier('code'), stringLiteral(funString)),
+    objectProperty(identifier('location'), stringLiteral(location)),
   ]);
 
   if (sourceMapString) {
@@ -382,7 +390,9 @@ export function makeWorklet(
   );
 
   if (isFunctionDeclaration(funExpression) || isObjectMethod(funExpression))
-    throw new Error('fun expression bug\n'); // [TO DO] temporary
+    throw new Error(
+      "'funExpression' is not a FunctionDeclaraton or ObjectMethod\n"
+    ); // [TO DO] temporary
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
@@ -448,7 +458,7 @@ export function makeWorklet(
   statements.push(returnStatement(privateFunctionId));
 
   const newFun = functionExpression(
-    // !isArrowFunctionExpression(fun.node) ? fun.node.id : undefined, // [TO DO] --- this never worked
+    // !isArrowFunctionExpression(fun.node) ? fun.node.id : undefined, // this never worked [TO DO]
     undefined,
     [],
     blockStatement(statements)
