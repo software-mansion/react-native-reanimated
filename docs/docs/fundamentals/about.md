@@ -6,15 +6,15 @@ sidebar_label: About
 
 :::info
 
-This is a documentation website of Reanimated 2 stable release.
+This is a documentation website of Reanimated 3.x release.
 
-If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated/docs/1.x/).
+Looking for an older version? Check the [Reanimated 2.x](/docs/2.x/) or [Reanimated 1.x](/docs/1.x/).
 
 :::
 
 :::caution
 
-Reanimated v2 only supports `react-native` `0.62+`
+Reanimated 3.x aims to support [3 last stable React Native versions](https://github.com/reactwg/react-native-releases#which-versions-are-currently-supported).
 
 :::
 
@@ -33,40 +33,18 @@ Reanimated aims to provide ways of offloading animation and event handling logic
 This is achieved by defining Reanimated worklets – tiny chunks of JavaScript code that can be moved to a separate JavaScript VM and executed synchronously on the UI thread.
 This makes it possible to respond to touch events immediately and update the UI within the same frame when the event happens without worrying about the load that is put on the main JavaScript thread.
 
-### Library overview
+### Overview of Reanimated 3.x
 
-Version 1 of Reanimated has been designed to match React Native's Animated API while providing a more complete set of primitives for defining interactions.
-In version 2 we decided to change the approach in order to address some limitations of version 1 that come from the declarative API design.
-Below we present an overview of things that are new in Reanimated 2 and different from Reanimated 1.
-This is a tl;dr of the remaining parts of the documentation.
-We recommend that you check the full articles to learn the details about each of the listed aspects:
+The developments of Reanimated 3 were focused on improving the stability and performance. This version uses the Reanimated v2 API you know and love continuously embracing worklets and shared value architecture.
 
-1. interactions and animations are no longer written using an unintuitive declarative API, instead they can be written in pure JS, in the form of so-called "worklets".
-   Worklets are pieces of JS code that we extract from the main React Native code and run in a separate JS context on the main thread.
-   Because of that, worklets have some limitations as to what part of the JS context they can access (we don't want to load the entire JS bundle into the context which runs on the UI thread).
-2. It is still possible to define and pass around "Animated Values", however thanks to the new API, we expect that you'll create much fewer of those for a single animation.
-   Also, now, they are actually called "Shared Values" and can carry not only primitive types but also arrays, objects and functions.
-3. Shared Values are no longer directly connected to view props.
-   Instead, we expose a `useAnimatedStyle` hook that returns a style object which can be passed as a View's style param.
-   The `useAnimatedStyle` hook takes a worklet that, when executed, should return styles that will be applied to the connected View.
-   The style worklet will update whenever shared values used by that worklet change (we detect dependencies on shared values automatically).
-4. Animations can be started in two ways: by triggering animated change on a shared value, or by returning animated value from `useAnimatedStyle` hook.
-5. With reanimated, we can hook worklets to serve as event handlers.
-   Most common case for an event worklet is to modify some shared values.
-   As a result, changes made to those values will be reflected in the animated style worklet being triggered, which in turn will result in some view properties being updated.
-   For convenience, Reanimated provides an event hook that is tailored to work together with Gesture Handler library and allows you to define a separate worklet for handling different handler states (e.g., onStart, onActive, etc.)
+It comes with a full rewrite of the [Shared Value mechanism](shared-values.md) and [Layout Animations](/layout_animations.md) and the introduction of Shared Element Transitions of which we're really excited about.
+
+Alongside many improvements and features Reanimated 3.x also introduces support for the [New Architecture](https://reactnative.dev/docs/new-architecture-intro). In order to make that happen we had to drop the support for Reanimated v1 API. When your application (or a library that you're using) uses Reanimated v1 API it won't work with Reanimated 3.x anymore.
 
 ### Known problems and limitations
 
-Reanimated 2 is in an early version.
-As we wanted to share it with the community as soon as we could, the library still has some rough edges and limitations that we plan to address soon.
-Unfortunately some of the limitations come from the immaturity of React Native's TurboModule architecture that Reanimated 2 relies on.
-As a consequence we won't be able to support older versions of React Native and some issues that we yet plan to resolve may require full support of TurboModules which is not yet available to the public.
+Below we highlight some of the problems that we are aware of:
 
-Below we highlight some of the problems that we are aware of (in most cases we are actively working on improving these):
-
-- As the library uses JSI for synchronous native methods access, remote debugging is no longer possible.
-  You can use Flipper for debugging your JS code, however connecting the debugger to the JS context which runs on the UI thread is not currently supported.
 - Objects passed to worklets from React Native don't have the correct prototype set in JavaScript.
   As a result, such objects aren't enumerable, that is you can't use "for in" constructs, spread operator (three dots), or functions like Object.assign with them.
 - With Reanimated you can't animate virtual components of a layout. For example, you can’t animate nested `<Text>` components because React Native changes
@@ -86,7 +64,9 @@ Below we highlight some of the problems that we are aware of (in most cases we a
   and `RCTVirtualText` is a virtual component.
 
 ### Sponsors
+
 We really appreciate our sponsors! Thanks to them we can develop our library and make the React Native world a better place. Special thanks for:
+
 <div class="community-holder-container">
 
   <div class="community-holder-container-item">
