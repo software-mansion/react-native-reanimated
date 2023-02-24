@@ -12,7 +12,7 @@ void LayoutAnimationsManager::configureAnimation(
     const std::string &sharedTransitionTag,
     std::shared_ptr<Shareable> config) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  configsForType(type)[tag] = config;
+  getConfigsForType(type)[tag] = config;
   if (type == SHARED_ELEMENT_TRANSITION) {
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
@@ -23,7 +23,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     int tag,
     LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  return collection::contains(configsForType(type), tag);
+  return collection::contains(getConfigsForType(type), tag);
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
@@ -53,7 +53,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
   std::shared_ptr<Shareable> config, viewShareable;
   {
     auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-    config = configsForType(type)[tag];
+    config = getConfigsForType(type)[tag];
   }
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
@@ -113,7 +113,7 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
 }
 
 std::unordered_map<int, std::shared_ptr<Shareable>>
-    &LayoutAnimationsManager::configsForType(LayoutAnimationType type) {
+    &LayoutAnimationsManager::getConfigsForType(LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
       return enteringAnimations_;

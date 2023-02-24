@@ -40,7 +40,7 @@ class LayoutAnimationsManager {
   int findPrecedingViewTagForTransition(int tag);
 
  private:
-  std::unordered_map<int, std::shared_ptr<Shareable>> &configsForType(
+  std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       LayoutAnimationType type);
 
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;

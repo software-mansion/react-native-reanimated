@@ -361,20 +361,34 @@ void NativeProxy::installJSIBindings(
           }
         }
 
-        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
   layoutAnimations->cthis()->setHasAnimationBlock(
       [weakModule](int tag, int type) {
-        return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return false;
+        }
+
+        return reaModule->layoutAnimationsManager().hasLayoutAnimation(
             tag, static_cast<LayoutAnimationType>(type));
       });
 
   layoutAnimations->cthis()->setClearAnimationConfigBlock(
       [weakModule](int tag) {
-        weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig(
-            tag);
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
       });
 
   layoutAnimations->cthis()->setCancelAnimationForTag(

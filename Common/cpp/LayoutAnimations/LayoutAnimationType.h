@@ -1,8 +1,8 @@
 #pragma once
 
 typedef enum LayoutAnimationType {
-  ENTERING = 0,
-  EXITING = 1,
-  LAYOUT = 2,
-  SHARED_ELEMENT_TRANSITION = 3
+  ENTERING = 1,
+  EXITING = 2,
+  LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4
 } LayoutAnimationType;

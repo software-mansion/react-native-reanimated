@@ -10,10 +10,10 @@ import java.util.Map;
 
 public class LayoutAnimations {
   public static class Types {
-    static final int ENTERING = 0;
-    static final int EXITING = 1;
-    static final int LAYOUT = 2;
-    static final int SHARED_ELEMENT_TRANSITION = 3;
+    static final int ENTERING = 1;
+    static final int EXITING = 2;
+    static final int LAYOUT = 3;
+    static final int SHARED_ELEMENT_TRANSITION = 4;
   }
 
   static {

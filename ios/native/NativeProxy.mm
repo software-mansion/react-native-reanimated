@@ -301,6 +301,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager
       setAnimationStartingBlock:^(
           NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
         jsi::Runtime &rt = *wrt.lock();
         jsi::Object yogaValues(rt);
         for (NSString *key in values.allKeys) {
@@ -317,16 +322,24 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
           }
         }
 
-        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
+        reaModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    bool hasLayoutAnimation = weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
+    auto reaModule = weakModule.lock();
+    if (reaModule == nullptr) {
+      return NO;
+    }
+    bool hasLayoutAnimation = reaModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
     return hasLayoutAnimation ? YES : NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+    auto reaModule = weakModule.lock();
+    if (reaModule == nullptr) {
+      return;
+    }
+    reaModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
   [animationsManager
