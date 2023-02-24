@@ -8,55 +8,71 @@ import {
   Platform,
   UIManager,
   ScrollView,
+  Pressable,
 } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-import {
-  createStackNavigator,
-  StackNavigationProp,
-} from '@react-navigation/stack';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
+  BasicLayoutAnimation,
+  BasicNestedAnimation,
+  BasicNestedLayoutAnimation,
   Carousel,
+  CombinedTest,
   CustomLayoutAnimationScreen,
   DefaultAnimations,
+  DeleteAncestorOfExiting,
   Modal,
   ModalNewAPI,
   MountingUnmounting,
-  SpringLayoutAnimation,
-  SwipeableList,
   NativeModals,
   NestedTest,
-  CombinedTest,
-  BasicNestedLayoutAnimation,
-  BasicNestedAnimation,
-  BasicLayoutAnimation,
+  NestedNativeStacksWithLayout,
+  SpringLayoutAnimation,
+  SwipeableList,
 } from './LayoutReanimation';
 
+import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import ChatHeadsExample from './ChatHeadsExample';
-import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
-import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import FrameCallbackExample from './FrameCallbackExample';
+import InvertedFlatListExample from './InvertedFlatListExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import { PagerExample } from './CustomHandler';
 import { ReactionsCounterExample } from './ReactionsCounterExample';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
+import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
-import WobbleExample from './WobbleExample';
-import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
-import AnimatedSensorExample from './AnimatedSensorExample';
-import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
-import AnimatedKeyboardExample from './AnimatedKeyboardExample';
-import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import WobbleExample from './WobbleExample';
+import { ColorInterpolationExample } from './ColorInterpolationExample';
+import CubesExample from './CubesExample';
+import CardExample from './SharedElementTransition/Card';
+import CustomTransitionExample from './SharedElementTransition/CustomTransition';
+import GalleryExample from './SharedElementTransition/Gallery';
+import LayoutAnimationExample from './SharedElementTransition/LayoutAnimation';
+import ManyScreensExample from './SharedElementTransition/ManyScreens';
+import ManyTagsExample from './SharedElementTransition/ManyTags';
+import NestedStacksExample from './SharedElementTransition/NestedStacks';
+import ModalsExample from './SharedElementTransition/Modals';
+import FlatListExample from './SharedElementTransition/FlatList';
+import ImageStackExample from './SharedElementTransition/ImageStack';
+import RestoreStateExample from './SharedElementTransition/RestoreState';
+
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -69,92 +85,152 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  CardExample: {
+    screen: CardExample,
+    title: '[SET] Card',
+  },
+  CustomTransitionExample: {
+    screen: CustomTransitionExample,
+    title: '[SET] Custom transition',
+  },
+  GalleryExample: {
+    screen: GalleryExample,
+    title: '[SET] Gallery',
+  },
+  LayoutAnimationExample: {
+    screen: LayoutAnimationExample,
+    title: '[SET] Layout Animation',
+  },
+  ManyScreensExample: {
+    screen: ManyScreensExample,
+    title: '[SET] Many screens',
+  },
+  ManyTagsExample: {
+    screen: ManyTagsExample,
+    title: '[SET] Many tags',
+  },
+  NestedStacksExample: {
+    screen: NestedStacksExample,
+    title: '[SET] Nested stacks',
+  },
+  ModalsExample: {
+    screen: ModalsExample,
+    title: '[SET] Modals',
+  },
+  FlatListExample: {
+    screen: FlatListExample,
+    title: '[SET] FlatList',
+  },
+  ImageStackExample: {
+    screen: ImageStackExample,
+    title: '[SET] Image Stack',
+  },
+  RestoreStateExample: {
+    screen: RestoreStateExample,
+    title: '[SET] Restore State',
+  },
+  ColorInterpolation: {
+    screen: ColorInterpolationExample,
+    title: 'Color interpolation',
+  },
+  DeleteAncestorOfExiting: {
+    screen: DeleteAncestorOfExiting,
+    title: '[LA] Deleting view with an exiting animation',
+  },
+  NestedNativeStacksWithLayout: {
+    screen: NestedNativeStacksWithLayout,
+    title: '[LA] Nested NativeStacks with layout',
+  },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
-    title: '🆕 Basic layout animation',
+    title: '[LA] Basic layout animation',
   },
   BasicNestedAnimation: {
     screen: BasicNestedAnimation,
-    title: '🆕 Basic nested animation',
+    title: '[LA] Basic nested animation',
   },
   BasicNestedLayoutAnimation: {
     screen: BasicNestedLayoutAnimation,
-    title: '🆕 Basic nested layout animation',
+    title: '[LA] Basic nested layout animation',
   },
   NestedLayoutAnimations: {
     screen: NestedTest,
-    title: '🆕 Nested layout animations',
+    title: '[LA] Nested layout animations',
   },
   CombinedLayoutAnimations: {
     screen: CombinedTest,
-    title: '🆕 Entering and Exiting with Layout',
+    title: '[LA] Entering and Exiting with Layout',
   },
   DefaultAnimations: {
     screen: DefaultAnimations,
-    title: '🆕 Default layout animations',
+    title: '[LA] Default layout animations',
   },
   AnimatedKeyboard: {
     screen: AnimatedKeyboardExample,
-    title: '🆕 Use Animated Keyboard',
+    title: 'Use Animated Keyboard',
   },
   AnimatedSensor: {
     screen: AnimatedSensorExample,
-    title: '🆕 Use Animated Sensor',
+    title: 'Use Animated Sensor',
+  },
+  Cubes: {
+    screen: CubesExample,
+    title: 'Cubes with useAnimatedSensor',
   },
   FrameCallbackExample: {
     screen: FrameCallbackExample,
-    title: '🆕 Frame callback example',
+    title: 'Frame callback example',
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,
-    title: '🆕 Default layout transitions',
+    title: '[LA] Default layout transitions',
   },
   KeyframeAnimation: {
     screen: KeyframeAnimation,
-    title: '🆕 Keyframe animation',
+    title: '[LA] Keyframe animation',
   },
   ParticipantList: {
     screen: AnimatedListExample,
-    title: '🆕 Participant List',
+    title: '[LA] Participant List',
   },
   OlympicAnimation: {
     screen: OlympicAnimation,
-    title: '🆕 Olympic animation',
+    title: '[LA] Olympic animation',
   },
   CustomLayoutAnimation: {
     screen: CustomLayoutAnimationScreen,
-    title: '🆕 Custom layout animation',
+    title: '[LA] Custom layout animation',
   },
   ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
+    title: '[LA] ModalNewAPI',
     screen: ModalNewAPI,
   },
   SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
+    title: '[LA] Spring Layout Animation',
     screen: SpringLayoutAnimation,
   },
   MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
+    title: '[LA] Mounting Unmounting',
     screen: MountingUnmounting,
   },
   ReactionsCounterExample: {
     screen: ReactionsCounterExample,
-    title: '🆕 Reactions counter',
+    title: '[LA] Reactions counter',
   },
   SwipeableList: {
-    title: '🆕 Swipeable list',
+    title: '[LA] Swipeable list',
     screen: SwipeableList,
   },
   Modal: {
-    title: '🆕 Modal',
+    title: '[LA] Modal',
     screen: Modal,
   },
   NativeModals: {
-    title: '🆕 Native modals (RN and Screens)',
+    title: '[LA] Native modals (RN and Screens)',
     screen: NativeModals,
   },
   Carousel: {
-    title: 'Carousel',
+    title: '[LA] Carousel',
     screen: Carousel,
   },
   PagerExample: {
@@ -225,6 +301,10 @@ const SCREENS: Screens = {
     screen: ScrollExample,
     title: 'Scroll Example',
   },
+  InvertedFlatListExample: {
+    screen: InvertedFlatListExample,
+    title: 'Inverted FlatList Example',
+  },
 };
 
 type RootStackParams = { Home: undefined } & { [key: string]: undefined };
@@ -268,19 +348,19 @@ export function MainScreenItem({
 }: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
-    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+    <Pressable style={styles.button} onPress={() => onPressItem(item)}>
       <Text style={styles.buttonText}>{screens[key].title || key}</Text>
-    </RectButton>
+    </Pressable>
   );
 }
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const Reanimated2 = () => (
-  <Stack.Navigator detachInactiveScreens={false}>
+  <Stack.Navigator>
     <Stack.Screen
       name="Home"
-      options={{ title: '🎬 Reanimated 2.x Examples' }}
+      options={{ title: '🐎 Reanimated examples' }}
       children={(props) => <MainScreen {...props} />}
     />
     {Object.keys(SCREENS).map((name) => (
@@ -295,7 +375,11 @@ const Reanimated2 = () => (
 );
 
 function App(): React.ReactElement {
-  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>{Reanimated2()}</NavigationContainer>
+    </GestureHandlerRootView>
+  );
 }
 
 export const styles = StyleSheet.create({
@@ -308,6 +392,7 @@ export const styles = StyleSheet.create({
   },
   buttonText: {
     backgroundColor: 'transparent',
+    color: 'black',
   },
   button: {
     flex: 1,

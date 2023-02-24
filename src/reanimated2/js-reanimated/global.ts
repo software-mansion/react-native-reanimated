@@ -3,10 +3,6 @@
 import { shouldBeUseWeb } from '../PlatformChecker';
 const initializeGlobalsForWeb = () => {
   if (shouldBeUseWeb()) {
-    global._frameTimestamp = null;
-    global._setGlobalConsole = (_val) => {
-      // noop
-    };
     global._measure = () => {
       console.warn(
         "[Reanimated] You can't use `measure` with Chrome Debugger or with web version"
@@ -40,10 +36,10 @@ const initializeGlobalsForWeb = () => {
 };
 
 /*
-  If a file doesn't export anything, tree shaking doesn't pack 
-  it into the JS bundle. In effect, the code inside of this file 
-  will never execute. That is why we wrapped initialization code 
-  into a function, and we call this one during creating 
+  If a file doesn't export anything, tree shaking doesn't pack
+  it into the JS bundle. In effect, the code inside of this file
+  will never execute. That is why we wrapped initialization code
+  into a function, and we call this one during creating
   the module export object.
 */
 

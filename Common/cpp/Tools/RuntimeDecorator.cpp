@@ -1,12 +1,25 @@
 #include "RuntimeDecorator.h"
+#include <jsi/instrumentation.h>
 #include <chrono>
 #include <memory>
 #include <unordered_map>
-#include "LayoutAnimationsProxy.h"
-#include "MutableValue.h"
+#include <utility>
+#include "JsiUtils.h"
 #include "ReanimatedHiddenHeaders.h"
 
 namespace reanimated {
+
+static void logValue(jsi::Runtime &rt, jsi::Value const &value) {
+  if (value.isString()) {
+    Logger::log(value.getString(rt).utf8(rt).c_str());
+  } else if (value.isNumber()) {
+    Logger::log(value.getNumber());
+  } else if (value.isUndefined()) {
+    Logger::log("undefined");
+  } else {
+    Logger::log("unsupported value type");
+  }
+}
 
 std::unordered_map<RuntimePointer, RuntimeType>
     &RuntimeDecorator::runtimeRegistry() {
@@ -30,68 +43,34 @@ void RuntimeDecorator::decorateRuntime(
   rt.global().setProperty(
       rt, "_LABEL", jsi::String::createFromAscii(rt, label));
 
-  jsi::Object dummyGlobal(rt);
-  rt.global().setProperty(rt, "global", dummyGlobal);
+  rt.global().setProperty(rt, "global", rt.global());
 
-  rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
-
-  auto callback = [](jsi::Runtime &rt,
-                     const jsi::Value &thisValue,
-                     const jsi::Value *args,
-                     size_t count) -> jsi::Value {
-    const jsi::Value *value = &args[0];
-    if (value->isString()) {
-      Logger::log(value->getString(rt).utf8(rt).c_str());
-    } else if (value->isNumber()) {
-      Logger::log(value->getNumber());
-    } else if (value->isUndefined()) {
-      Logger::log("undefined");
-    } else {
-      Logger::log("unsupported value type");
+#ifdef DEBUG
+  auto evalWithSourceUrl = [](jsi::Runtime &rt,
+                              const jsi::Value &thisValue,
+                              const jsi::Value *args,
+                              size_t count) -> jsi::Value {
+    auto code = std::make_shared<const jsi::StringBuffer>(
+        args[0].asString(rt).utf8(rt));
+    std::string url;
+    if (count > 1 && args[1].isString()) {
+      url = args[1].asString(rt).utf8(rt);
     }
-    return jsi::Value::undefined();
-  };
-  jsi::Value log = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
-  rt.global().setProperty(rt, "_log", log);
 
-  auto setGlobalConsole = [](jsi::Runtime &rt,
-                             const jsi::Value &thisValue,
-                             const jsi::Value *args,
-                             size_t count) -> jsi::Value {
-    rt.global().setProperty(rt, "console", args[0]);
-    return jsi::Value::undefined();
+    return rt.evaluateJavaScript(code, url);
   };
+
   rt.global().setProperty(
       rt,
-      "_setGlobalConsole",
+      "evalWithSourceUrl",
       jsi::Function::createFromHostFunction(
           rt,
-          jsi::PropNameID::forAscii(rt, "_setGlobalConsole"),
+          jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
           1,
-          setGlobalConsole));
+          evalWithSourceUrl));
+#endif // DEBUG
 
-  auto chronoNow = [](jsi::Runtime &rt,
-                      const jsi::Value &thisValue,
-                      const jsi::Value *args,
-                      size_t count) -> jsi::Value {
-    double now = std::chrono::system_clock::now().time_since_epoch() /
-        std::chrono::milliseconds(1);
-    return jsi::Value(now);
-  };
-
-  rt.global().setProperty(
-      rt,
-      "_chronoNow",
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "_chronoNow"), 0, chronoNow));
-  jsi::Object performance(rt);
-  performance.setProperty(
-      rt,
-      "now",
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "now"), 0, chronoNow));
-  rt.global().setProperty(rt, "performance", performance);
+  jsi_utils::installJsiFunction(rt, "_log", logValue);
 }
 
 void RuntimeDecorator::decorateUIRuntime(
@@ -105,104 +84,27 @@ void RuntimeDecorator::decorateUIRuntime(
     const ScrollToFunction scrollTo,
 #endif
     const RequestFrameFunction requestFrame,
+    const ScheduleOnJSFunction scheduleOnJS,
+    const MakeShareableCloneFunction makeShareableClone,
+    const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
-    const RegisterSensorFunction registerSensor,
-    const UnregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
-    std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
+    const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
+    const EndLayoutAnimationFunction endLayoutAnimationFunction) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto clb = [updateProps](
-                 jsi::Runtime &rt,
-                 const jsi::Value &thisValue,
-                 const jsi::Value *args,
-                 const size_t count) -> jsi::Value {
-    updateProps(rt, args[0], args[1]);
-    return jsi::Value::undefined();
-  };
-  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_updatePropsFabric"), 2, clb);
-  rt.global().setProperty(rt, "_updatePropsFabric", updatePropsHostFunction);
-
-  auto _removeShadowNodeFromRegistry = [removeShadowNodeFromRegistry](
-                                           jsi::Runtime &rt,
-                                           const jsi::Value &thisValue,
-                                           const jsi::Value *args,
-                                           const size_t count) -> jsi::Value {
-    removeShadowNodeFromRegistry(rt, args[0]);
-    return jsi::Value::undefined();
-  };
-  jsi::Value removeShadowNodeFromRegistryHostFunction =
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "_removeShadowNodeFromRegistry"),
-          2,
-          _removeShadowNodeFromRegistry);
-  rt.global().setProperty(
-      rt,
-      "_removeShadowNodeFromRegistry",
-      removeShadowNodeFromRegistryHostFunction);
-
-  auto clb3 = [dispatchCommand](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    dispatchCommand(rt, args[0], args[1], args[2]);
-    return jsi::Value::undefined();
-  };
-  jsi::Value dispatchCommandHostFunction =
-      jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "_dispatchCommand"), 3, clb3);
-  rt.global().setProperty(rt, "_dispatchCommand", dispatchCommandHostFunction);
-
-  auto _measure = [measure](
-                      jsi::Runtime &rt,
-                      const jsi::Value &thisValue,
-                      const jsi::Value *args,
-                      const size_t count) -> jsi::Value {
-    return measure(rt, args[0]);
-  };
+  jsi_utils::installJsiFunction(rt, "_updatePropsFabric", updateProps);
+  jsi_utils::installJsiFunction(
+      rt, "_removeShadowNodeFromRegistry", removeShadowNodeFromRegistry);
+  jsi_utils::installJsiFunction(rt, "_dispatchCommand", dispatchCommand);
+  jsi_utils::installJsiFunction(rt, "_measure", measure);
 #else
-  auto clb = [updateProps](
-                 jsi::Runtime &rt,
-                 const jsi::Value &thisValue,
-                 const jsi::Value *args,
-                 const size_t count) -> jsi::Value {
-    const auto viewTag = args[0].asNumber();
-    const jsi::Value *viewName = &args[1];
-    const auto params = args[2].asObject(rt);
-    updateProps(rt, viewTag, *viewName, params);
-    return jsi::Value::undefined();
-  };
-  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_updatePropsPaper"), 3, clb);
-  rt.global().setProperty(rt, "_updatePropsPaper", updatePropsHostFunction);
+  jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
+  jsi_utils::installJsiFunction(rt, "_scrollTo", scrollTo);
 
-  auto _scrollTo = [scrollTo](
-                       jsi::Runtime &rt,
-                       const jsi::Value &thisValue,
-                       const jsi::Value *args,
-                       const size_t count) -> jsi::Value {
-    int viewTag = static_cast<int>(args[0].asNumber());
-    double x = args[1].asNumber();
-    double y = args[2].asNumber();
-    bool animated = args[3].getBool();
-    scrollTo(viewTag, x, y, animated);
-    return jsi::Value::undefined();
-  };
-  jsi::Value scrollToFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_scrollTo"), 4, _scrollTo);
-  rt.global().setProperty(rt, "_scrollTo", scrollToFunction);
-
-  auto _measure = [measure](
-                      jsi::Runtime &rt,
-                      const jsi::Value &thisValue,
-                      const jsi::Value *args,
-                      const size_t count) -> jsi::Value {
-    int viewTag = static_cast<int>(args[0].asNumber());
+  auto _measure = [measure](jsi::Runtime &rt, int viewTag) -> jsi::Value {
     auto result = measure(viewTag);
     jsi::Object resultObject(rt);
     for (auto &i : result) {
@@ -210,94 +112,38 @@ void RuntimeDecorator::decorateUIRuntime(
     }
     return resultObject;
   };
+
+  jsi_utils::installJsiFunction(rt, "_measure", _measure);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  jsi::Value measureFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, _measure);
-  rt.global().setProperty(rt, "_measure", measureFunction);
+  jsi_utils::installJsiFunction(rt, "requestAnimationFrame", requestFrame);
+  jsi_utils::installJsiFunction(rt, "_scheduleOnJS", scheduleOnJS);
+  jsi_utils::installJsiFunction(rt, "_makeShareableClone", makeShareableClone);
+  jsi_utils::installJsiFunction(
+      rt, "_updateDataSynchronously", updateDataSynchronously);
 
-  auto clb2 = [requestFrame](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    auto fun =
-        std::make_shared<jsi::Function>(args[0].asObject(rt).asFunction(rt));
-    requestFrame([&rt, fun](double timestampMs) {
-      fun->call(rt, jsi::Value(timestampMs));
-    });
-    return jsi::Value::undefined();
+  auto performanceNow = [getCurrentTime](
+                            jsi::Runtime &rt,
+                            const jsi::Value &thisValue,
+                            const jsi::Value *args,
+                            size_t count) -> jsi::Value {
+    return jsi::Value(getCurrentTime());
   };
-  jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
-  rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
-
-  auto clb6 = [getCurrentTime](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  const size_t count) -> jsi::Value {
-    return getCurrentTime();
-  };
-  jsi::Value timeFun = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
-  rt.global().setProperty(rt, "_getCurrentTime", timeFun);
-
-  rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
-  rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
+  jsi::Object performance(rt);
+  performance.setProperty(
+      rt,
+      "now",
+      jsi::Function::createFromHostFunction(
+          rt, jsi::PropNameID::forAscii(rt, "now"), 0, performanceNow));
+  rt.global().setProperty(rt, "performance", performance);
 
   // layout animation
-  std::weak_ptr<LayoutAnimationsProxy> layoutProxy = layoutAnimationsProxy;
-  auto clb7 = [layoutProxy](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  size_t count) -> jsi::Value {
-    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
-    if (layoutProxy.expired()) {
-      return jsi::Value::undefined();
-    }
-    proxy->startObserving(
-        args[0].asNumber(),
-        args[1].asObject(rt).getHostObject<MutableValue>(rt),
-        rt);
-    return jsi::Value::undefined();
-  };
-  jsi::Value _startObservingProgress = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_startObservingProgress"), 0, clb7);
-  rt.global().setProperty(
-      rt, "_startObservingProgress", _startObservingProgress);
+  jsi_utils::installJsiFunction(
+      rt, "_notifyAboutProgress", progressLayoutAnimationFunction);
+  jsi_utils::installJsiFunction(
+      rt, "_notifyAboutEnd", endLayoutAnimationFunction);
 
-  auto clb8 = [layoutProxy](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  size_t count) -> jsi::Value {
-    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
-    if (layoutProxy.expired()) {
-      return jsi::Value::undefined();
-    }
-    proxy->stopObserving(
-        args[0].asNumber(), args[1].getBool(), args[2].getBool());
-    return jsi::Value::undefined();
-  };
-  jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
-  rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
-
-  auto clb9 = [setGestureState](
-                  jsi::Runtime &rt,
-                  const jsi::Value &thisValue,
-                  const jsi::Value *args,
-                  size_t count) -> jsi::Value {
-    int handlerTag = static_cast<int>(args[0].asNumber());
-    int newState = static_cast<int>(args[1].asNumber());
-    setGestureState(handlerTag, newState);
-    return jsi::Value::undefined();
-  };
-  jsi::Value setGestureStateFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_setGestureState"), 2, clb9);
-  rt.global().setProperty(rt, "_setGestureState", setGestureStateFunction);
+  jsi_utils::installJsiFunction(rt, "_setGestureState", setGestureState);
 }
 
 } // namespace reanimated

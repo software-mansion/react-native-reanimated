@@ -114,7 +114,8 @@ declare module 'react-native-reanimated' {
     export type Adaptable<T> =
       | T
       | AnimatedNode<T>
-      | ReadonlyArray<T | AnimatedNode<T> | ReadonlyArray<T | AnimatedNode<T>>>;
+      | ReadonlyArray<T | AnimatedNode<T> | ReadonlyArray<T | AnimatedNode<T>>>
+      | SharedValue<T>;
     type BinaryOperator<T = number> = (
       left: Adaptable<number>,
       right: Adaptable<number>
@@ -150,7 +151,8 @@ declare module 'react-native-reanimated' {
             | AnimatedNode<
                 // allow `number` where `string` normally is to support colors
                 S[K] extends ColorValue | undefined ? S[K] | number : S[K]
-              >;
+              >
+            | SharedValue<AnimatableValue>;
     };
 
     export type StylesOrDefault<T> = 'style' extends keyof T
@@ -158,7 +160,7 @@ declare module 'react-native-reanimated' {
       : Record<string, unknown>;
 
     export type AnimateProps<P extends object> = {
-      [K in keyof Omit<P, 'style'>]: P[K] | AnimatedNode<P[K]>;
+      [K in keyof Omit<P, 'style'>]: P[K] | AnimatedNode<P[K]> | SharedValue<P[K]>;
     } & {
       style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
@@ -177,6 +179,8 @@ declare module 'react-native-reanimated' {
         | typeof BaseAnimationBuilder
         | EntryExitAnimationFunction
         | Keyframe;
+      sharedTransitionTag?: string;
+      sharedTransitionStyle?: ILayoutAnimationBuilder;
     };
 
     export interface PhysicsAnimationState extends AnimationState {
@@ -278,8 +282,12 @@ declare module 'react-native-reanimated' {
     export interface ScrollView extends ReactNativeScrollView {}
 
     export class Code extends Component<CodeProps> {}
-    export class FlatList<T> extends Component<AnimateProps<FlatListProps<T>>> {
-      itemLayoutAnimation: ILayoutAnimationBuilder;
+    export interface FlatListPropsWithLayout<T> extends FlatListProps<T> {
+      itemLayoutAnimation?: ILayoutAnimationBuilder;
+    }
+    export class FlatList<T> extends Component<
+      AnimateProps<FlatListPropsWithLayout<T>>
+    > {
       getNode(): ReactNativeFlatList;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -496,14 +504,25 @@ declare module 'react-native-reanimated' {
     ROTATION = 5,
   }
 
-  export type SensorConfig = {
+  export enum IOSReferenceFrame {
+    XArbitraryZVertical = 0,
+    XArbitraryCorrectedZVertical = 1,
+    XMagneticNorthZVertical = 2,
+    XTrueNorthZVertical = 3,
+    Auto = 4,
+  }
+
+  export type SensorConfig = Partial<{
     interval: number | 'auto';
-  };
+    adjustToInterfaceOrientation: boolean;
+    iosReferenceFrame: IOSReferenceFrame;
+  }>;
 
   export type Value3D = {
     x: number;
     y: number;
     z: number;
+    interfaceOrientation: InterfaceOrientation;
   };
 
   export type SensorValue3D = SharedValue<Value3D>;
@@ -516,6 +535,7 @@ declare module 'react-native-reanimated' {
     yaw: number;
     pitch: number;
     roll: number;
+    interfaceOrientation: InterfaceOrientation;
   };
 
   export type SensorValueRotation = SharedValue<ValueRotation>;
@@ -566,7 +586,14 @@ declare module 'react-native-reanimated' {
     height: SharedValue<number>;
     state: SharedValue<KeyboardState>;
   };
-  export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
+
+  export interface AnimatedKeyboardOptions {
+    isStatusBarTranslucentAndroid?: boolean;
+  }
+
+  export function useAnimatedKeyboard(
+    options?: AnimatedKeyboardOptions
+  ): AnimatedKeyboardInfo;
 
   export function useScrollViewOffset(
     aref: RefObject<Animated.ScrollView>
@@ -715,11 +742,19 @@ declare module 'react-native-reanimated' {
 
   export function processColor(color: number | string): number;
 
+  export type InterpolationOptions = {
+    gamma?: number;
+    useCorrectedHSVInterpolation?: boolean;
+  };
+
+  export function isColor(value: unknown): boolean;
+
   export function interpolateColor<T extends string | number>(
     value: number,
     inputRange: readonly number[],
     outputRange: readonly T[],
-    colorSpace?: 'RGB' | 'HSV'
+    colorSpace?: 'RGB' | 'HSV',
+    options?: InterpolationOptions
   ): T;
 
   export enum ColorSpace {
@@ -750,7 +785,8 @@ declare module 'react-native-reanimated' {
   export function useInterpolateConfig(
     inputRange: readonly number[],
     outputRange: readonly (string | number)[],
-    colorSpace?: ColorSpace
+    colorSpace?: ColorSpace,
+    options?: InterpolationOptions
   ): SharedValue<InterpolateConfig>;
 
   export function interpolateSharableColor(
@@ -1238,4 +1274,15 @@ declare module 'react-native-reanimated' {
   export const useValue: typeof Animated.useValue;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export function enableLayoutAnimations(flag: boolean): void;
+
+  type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
+
+  export class SharedTransition implements ILayoutAnimationBuilder {
+    animationFactory: AnimationFactoryType | null = null;
+    static createInstance(): SharedTransition;
+    static custom(animationFactory: AnimationFactoryType): SharedTransition;
+    custom(animationFactory: AnimationFactoryType): SharedTransition;
+    static build(): LayoutAnimationFunction;
+    build(): LayoutAnimationFunction;
+  }
 }
