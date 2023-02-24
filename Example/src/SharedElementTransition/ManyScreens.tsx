@@ -46,7 +46,7 @@ function Screen3({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function ManyScreensExample() {
+export default function ManyScreensExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen

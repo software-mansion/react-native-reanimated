@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, View, Image, Text } from 'react-native';
+import { Button, View, Text } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
@@ -8,7 +8,6 @@ import { StackScreenProps } from '@react-navigation/stack';
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
 const AnimatedButton = Animated.createAnimatedComponent(Button);
-const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
@@ -25,7 +24,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
               backgroundColor: 'green',
             }}
           />
-          <AnimatedImage
+          <Animated.Image
             sharedTransitionTag="mleko"
             source={photo}
             style={{ width: 150, height: 150, marginLeft: 50 }}
@@ -66,7 +65,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id
         egestas nunc.
       </Text>
-      <AnimatedImage
+      <Animated.Image
         sharedTransitionTag="mleko"
         source={photo}
         style={{ width: '100%', height: 300 }}
@@ -84,7 +83,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function ManyTagsExample() {
+export default function ManyTagsExample() {
   return (
     <Stack.Navigator
       screenOptions={{

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Image, TouchableNativeFeedback } from 'react-native';
+import { View, TouchableNativeFeedback } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -7,7 +7,6 @@ import Animated from 'react-native-reanimated';
 
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
-const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 function Card({
   navigation,
@@ -40,7 +39,7 @@ function Card({
           style={{ width: '100%', height: 20 }}>
           {title}
         </Animated.Text>
-        <AnimatedImage
+        <Animated.Image
           sharedTransitionTag={transitionTag + '3'}
           source={photo}
           style={{ width: '100%', height: isOpen ? 300 : 100 }}
@@ -90,7 +89,7 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function CardExample() {
+export default function CardExample() {
   return (
     <Stack.Navigator
       screenOptions={

@@ -60,18 +60,18 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
 import CubesExample from './CubesExample';
-import {
-  CardExample,
-  CustomTransitionExample,
-  GalleryExample,
-  LayoutAnimationExample,
-  ManyScreensExample,
-  ManyTagsExample,
-  NestedStacksExample,
-  ModalsExample,
-  FlatListExample,
-  RestoreStateExample,
-} from './SharedElementTransition';
+import CardExample from './SharedElementTransition/Card';
+import CustomTransitionExample from './SharedElementTransition/CustomTransition';
+import GalleryExample from './SharedElementTransition/Gallery';
+import LayoutAnimationExample from './SharedElementTransition/LayoutAnimation';
+import ManyScreensExample from './SharedElementTransition/ManyScreens';
+import ManyTagsExample from './SharedElementTransition/ManyTags';
+import NestedStacksExample from './SharedElementTransition/NestedStacks';
+import ModalsExample from './SharedElementTransition/Modals';
+import FlatListExample from './SharedElementTransition/FlatList';
+import ImageStackExample from './SharedElementTransition/ImageStack';
+import RestoreStateExample from './SharedElementTransition/RestoreState';
+
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
@@ -121,6 +121,10 @@ const SCREENS: Screens = {
     screen: FlatListExample,
     title: '[SET] FlatList',
   },
+  ImageStackExample: {
+    screen: ImageStackExample,
+    title: '[SET] Image Stack',
+  },
   RestoreStateExample: {
     screen: RestoreStateExample,
     title: '[SET] Restore State',
@@ -131,35 +135,35 @@ const SCREENS: Screens = {
   },
   DeleteAncestorOfExiting: {
     screen: DeleteAncestorOfExiting,
-    title: 'Deleting view with an exiting animation',
+    title: '[LA] Deleting view with an exiting animation',
   },
   NestedNativeStacksWithLayout: {
     screen: NestedNativeStacksWithLayout,
-    title: 'Nested NativeStacks with layout',
+    title: '[LA] Nested NativeStacks with layout',
   },
   BasicLayoutAnimation: {
     screen: BasicLayoutAnimation,
-    title: 'Basic layout animation',
+    title: '[LA] Basic layout animation',
   },
   BasicNestedAnimation: {
     screen: BasicNestedAnimation,
-    title: 'Basic nested animation',
+    title: '[LA] Basic nested animation',
   },
   BasicNestedLayoutAnimation: {
     screen: BasicNestedLayoutAnimation,
-    title: 'Basic nested layout animation',
+    title: '[LA] Basic nested layout animation',
   },
   NestedLayoutAnimations: {
     screen: NestedTest,
-    title: 'Nested layout animations',
+    title: '[LA] Nested layout animations',
   },
   CombinedLayoutAnimations: {
     screen: CombinedTest,
-    title: 'Entering and Exiting with Layout',
+    title: '[LA] Entering and Exiting with Layout',
   },
   DefaultAnimations: {
     screen: DefaultAnimations,
-    title: 'Default layout animations',
+    title: '[LA] Default layout animations',
   },
   AnimatedKeyboard: {
     screen: AnimatedKeyboardExample,
@@ -179,54 +183,54 @@ const SCREENS: Screens = {
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,
-    title: 'Default layout transitions',
+    title: '[LA] Default layout transitions',
   },
   KeyframeAnimation: {
     screen: KeyframeAnimation,
-    title: 'Keyframe animation',
+    title: '[LA] Keyframe animation',
   },
   ParticipantList: {
     screen: AnimatedListExample,
-    title: 'Participant List',
+    title: '[LA] Participant List',
   },
   OlympicAnimation: {
     screen: OlympicAnimation,
-    title: 'Olympic animation',
+    title: '[LA] Olympic animation',
   },
   CustomLayoutAnimation: {
     screen: CustomLayoutAnimationScreen,
-    title: 'Custom layout animation',
+    title: '[LA] Custom layout animation',
   },
   ModalNewAPI: {
-    title: 'ModalNewAPI',
+    title: '[LA] ModalNewAPI',
     screen: ModalNewAPI,
   },
   SpringLayoutAnimation: {
-    title: 'Spring Layout Animation',
+    title: '[LA] Spring Layout Animation',
     screen: SpringLayoutAnimation,
   },
   MountingUnmounting: {
-    title: 'Mounting Unmounting',
+    title: '[LA] Mounting Unmounting',
     screen: MountingUnmounting,
   },
   ReactionsCounterExample: {
     screen: ReactionsCounterExample,
-    title: 'Reactions counter',
+    title: '[LA] Reactions counter',
   },
   SwipeableList: {
     title: 'Swipeable list',
     screen: SwipeableList,
   },
   Modal: {
-    title: 'Modal',
+    title: '[LA] Modal',
     screen: Modal,
   },
   NativeModals: {
-    title: 'Native modals (RN and Screens)',
+    title: '[LA] Native modals (RN and Screens)',
     screen: NativeModals,
   },
   Carousel: {
-    title: 'Carousel',
+    title: '[LA] Carousel',
     screen: Carousel,
   },
   PagerExample: {
@@ -356,7 +360,7 @@ const Reanimated2 = () => (
   <Stack.Navigator>
     <Stack.Screen
       name="Home"
-      options={{ title: '🎬 Reanimated 2.x Examples' }}
+      options={{ title: '🐎 Reanimated examples' }}
       children={(props) => <MainScreen {...props} />}
     />
     {Object.keys(SCREENS).map((name) => (

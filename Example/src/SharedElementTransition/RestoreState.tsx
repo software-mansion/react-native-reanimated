@@ -66,7 +66,7 @@ function Screen3({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function RestoreStateExample() {
+export default function RestoreStateExample() {
   return (
     <Stack.Navigator
       screenOptions={{

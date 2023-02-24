@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, View, Image } from 'react-native';
+import { Button, View } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -8,7 +8,6 @@ import Animated, { SlideInLeft, SlideOutLeft } from 'react-native-reanimated';
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
 const AnimatedButton = Animated.createAnimatedComponent(Button);
-const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
@@ -20,7 +19,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <AnimatedImage
+        <Animated.Image
           sharedTransitionTag="sharedImage"
           source={photo}
           style={{ width: 150, height: 150, marginTop: 50 }}
@@ -43,7 +42,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
         exiting={SlideOutLeft}>
         Awesome header!
       </Animated.Text>
-      <AnimatedImage
+      <Animated.Image
         sharedTransitionTag="sharedImage"
         source={photo}
         style={{ width: '100%', height: 500 }}
@@ -68,7 +67,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function LayoutAnimationExample() {
+export default function LayoutAnimationExample() {
   return (
     <Stack.Navigator
       screenOptions={{

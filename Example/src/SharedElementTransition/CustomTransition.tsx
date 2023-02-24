@@ -10,11 +10,11 @@ import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 
-const transition = SharedTransition.custom((values: any) => {
+const transition = SharedTransition.custom((values) => {
   'worklet';
   return {
-    height: withSpring(values.targetHeight),
     width: withSpring(values.targetWidth),
+    height: withSpring(values.targetHeight),
     originX: withSpring(values.targetOriginX),
     originY: withSpring(values.targetOriginY),
   };
@@ -61,7 +61,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function CustomTransitionExample() {
+export default function CustomTransitionExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen

@@ -1,12 +1,5 @@
 import * as React from 'react';
-import {
-  View,
-  Image,
-  Text,
-  StyleSheet,
-  Pressable,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
 import {
   createNativeStackNavigator,
   NativeStackScreenProps,
@@ -23,8 +16,6 @@ type StackParamList = {
 };
 
 const Stack = createNativeStackNavigator<StackParamList>();
-const AnimatedImage = Animated.createAnimatedComponent(Image);
-const AnimatedText = Animated.createAnimatedComponent(Text);
 
 const gallery = {
   florence: {
@@ -62,7 +53,7 @@ function HomeScreen({
   return (
     <Animated.ScrollView style={styles.homeContainer}>
       <Pressable onPress={() => goToDetails('countryside')}>
-        <AnimatedImage
+        <Animated.Image
           sharedTransitionTag={'countryside'}
           source={gallery.countryside.image}
           style={{
@@ -75,7 +66,7 @@ function HomeScreen({
       </Pressable>
       <View style={styles.row}>
         <Pressable onPress={() => goToDetails('florence')}>
-          <AnimatedImage
+          <Animated.Image
             sharedTransitionTag={'florence'}
             source={gallery.florence.image}
             style={{
@@ -87,7 +78,7 @@ function HomeScreen({
           />
         </Pressable>
         <Pressable onPress={() => goToDetails('dawn')}>
-          <AnimatedImage
+          <Animated.Image
             sharedTransitionTag={'dawn'}
             source={gallery.dawn.image}
             style={{
@@ -125,22 +116,22 @@ function DetailsScreen({
 
   return (
     <View style={styles.detailContainer}>
-      <AnimatedImage
+      <Animated.Image
         sharedTransitionTag={tag}
         source={gallery[tag].image}
         style={styles.detailsImage}
       />
       <View style={styles.wrapper}>
-        <AnimatedText
+        <Animated.Text
           entering={FadeIn.delay(150).duration(1000)}
           style={{ ...styles.header, fontSize: 28 }}>
           {gallery[tag].title}
-        </AnimatedText>
-        <AnimatedText
+        </Animated.Text>
+        <Animated.Text
           entering={FadeIn.delay(300).duration(1000)}
           style={styles.text}>
           {gallery[tag].description}
-        </AnimatedText>
+        </Animated.Text>
         <Animated.View
           entering={FadeIn.delay(500).duration(1000)}
           style={styles.callToActionWrapper}>
@@ -155,7 +146,7 @@ function DetailsScreen({
   );
 }
 
-export function GalleryExample() {
+export default function GalleryExample() {
   return (
     <Stack.Navigator
       screenOptions={{

@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -26,7 +25,6 @@ const DATA = [
   { id: 'a8', title: 'a8' },
   { id: 'a9', title: 'a9' },
 ];
-const AnimatedImage = Animated.createAnimatedComponent(Image);
 const photo = require('./assets/image.jpg');
 
 const Item = ({ item, parentItem, onPress }: any) => (
@@ -35,7 +33,7 @@ const Item = ({ item, parentItem, onPress }: any) => (
     <Animated.View
       style={[styles.item]}
       sharedTransitionTag={item.id + '-' + parentItem.index}>
-      <AnimatedImage
+      <Animated.Image
         sharedTransitionTag={item.id + '-' + parentItem.index + 'image'}
         source={photo}
         style={{ width: '100%', maxHeight: 100 }}
@@ -83,7 +81,7 @@ function Screen2({ route, navigation }: any) {
   return (
     <View style={{ flex: 1 }}>
       <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
-      <AnimatedImage
+      <Animated.Image
         sharedTransitionTag={route.params.sharedTransitionTag + 'image'}
         source={photo}
         style={{ width: '100%', height: 200 }}
@@ -92,7 +90,7 @@ function Screen2({ route, navigation }: any) {
   );
 }
 
-export function FlatListExample() {
+export default function FlatListExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen

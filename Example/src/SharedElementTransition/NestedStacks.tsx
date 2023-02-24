@@ -78,7 +78,7 @@ function NestedStack() {
   );
 }
 
-export function NestedStacksExample() {
+export default function NestedStacksExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Image, TouchableNativeFeedback } from 'react-native';
+import { TouchableNativeFeedback } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
@@ -17,7 +17,6 @@ import {
 
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
-const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 function Card({
   navigation,
@@ -50,7 +49,7 @@ function Card({
           style={{ width: '100%', height: 20 }}>
           {title}
         </Animated.Text>
-        <AnimatedImage
+        <Animated.Image
           sharedTransitionTag={transitionTag + '3'}
           source={photo}
           style={{ width: '100%', height: isOpen ? 300 : 100 }}
@@ -115,7 +114,6 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
       translation.y.value = ctx.startY + event.translationY;
     },
     onEnd: (_) => {
-      console.log(translation.x.value, translation.y.value);
       if (Math.abs(translation.x.value) + Math.abs(translation.y.value) > 150) {
         runOnJS(goNext)();
       }
@@ -154,7 +152,7 @@ function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function ModalsExample() {
+export default function ModalsExample() {
   return (
     <Stack.Navigator
       screenOptions={{
