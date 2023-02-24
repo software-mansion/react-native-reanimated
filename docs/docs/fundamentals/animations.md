@@ -4,7 +4,7 @@ title: Animations
 sidebar_label: Animations
 ---
 
-Animations are first-class citizens in Reanimated 2.
+Animations are first-class citizens in Reanimated.
 The library comes bundled with a number of animation helper methods that make it very easy to go from immediate property updates into animated ones.
 
 In the previous article about [Shared Values](shared-values) we learned about the `useAnimatedStyle` hook, that allows for creating an association between Reanimated code and view properties.
@@ -15,7 +15,7 @@ In this article we explore the methods that can be used to perform animated view
 
 ## Shared Value Animated Transitions
 
-One of the easiest ways of starting an animation in Reanimated 2, is by making an animated transition of a Shared Value.
+One of the easiest ways of starting an animation in Reanimated, is by making an animated transition of a Shared Value.
 Animated Shared Value updates require just a tiny change compared to immediate updates.
 Let us recall the example from the previous article, where we'd update a Shared Value with some random number on every button tap:
 
@@ -46,7 +46,7 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 
 ![](/docs/shared-values/sv-immediate.gif)
 
-With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring).
+With Reanimated, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring).
 The only change that we can do now, is to wrap the random offset value with a `withSpring` call as shown below:
 
 ```js {3}
@@ -368,7 +368,6 @@ Such a change will cause each of the items to reposition and also change their d
 The change of the dimensions for each of the views may trigger further layout recalculations of the nested views down to the leaf nodes.
 As you can see, a single property change can trigger a lot of recomputation.
 It may perform just fine when we need to fire it once, but if we decided to run such computation during animation for every frame, the outcome may not be satisfactory especially on low-end devices.
-As we work to improve performance of complex layout updates in Reanimated 2, when you experience  issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/react-native-reanimated/docs/1.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
 
 ## Animating Non-Style Properties
 
