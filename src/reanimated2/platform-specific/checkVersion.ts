@@ -1,4 +1,4 @@
-import { version as jsVersion } from '../../../package.json';
+const jsVersion = '3.0.0-rc.10';
 
 /**
  * Checks that native and js versions of reanimated match.
