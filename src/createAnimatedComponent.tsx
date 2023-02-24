@@ -25,6 +25,7 @@ import {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
+  LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import {
   SharedValue,
@@ -589,20 +590,32 @@ export default function createAnimatedComponent(
             enableLayoutAnimations(true, false);
           }
           if (layout) {
-            configureLayoutAnimations(tag, 'layout', maybeBuild(layout));
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.LAYOUT,
+              maybeBuild(layout)
+            );
           }
           if (entering) {
-            configureLayoutAnimations(tag, 'entering', maybeBuild(entering));
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.ENTERING,
+              maybeBuild(entering)
+            );
           }
           if (exiting) {
-            configureLayoutAnimations(tag, 'exiting', maybeBuild(exiting));
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.EXITING,
+              maybeBuild(exiting)
+            );
           }
           if (sharedTransitionTag) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? DefaultSharedTransition;
             configureLayoutAnimations(
               tag,
-              'sharedElementTransition',
+              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
               maybeBuild(sharedElementTransition),
               sharedTransitionTag
             );

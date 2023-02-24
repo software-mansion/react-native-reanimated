@@ -42,6 +42,12 @@
   return NSStringFromClass([RCTUIManager class]);
 }
 
+- (void)invalidate
+{
+  [_animationsManager invalidate];
+  [super invalidate];
+}
+
 - (void)setBridge:(RCTBridge *)bridge
 {
   if (!_blockSetter) {

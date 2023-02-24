@@ -102,7 +102,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     // otherwise use update animation. This approach is easier than maintaining a list of tags
     // for recently created views.
     if (view.getWidth() == 0 || view.getHeight() == 0) {
-      if (!mAnimationsManager.hasAnimationForTag(view.getId(), "entering")) {
+      if (!mAnimationsManager.hasAnimationForTag(view.getId(), LayoutAnimations.Types.ENTERING)) {
         super.applyLayoutUpdate(view, x, y, width, height);
         mAnimationsManager.maybeRegisterSharedView(view);
         return;

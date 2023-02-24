@@ -388,7 +388,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     const jsi::Value &config) {
   layoutAnimationsManager_.configureAnimation(
       viewTag.asNumber(),
-      type.asString(rt).utf8(rt),
+      static_cast<LayoutAnimationType>(type.asNumber()),
       sharedTransitionTag.asString(rt).utf8(rt),
       extractShareableOrThrow(rt, config));
   return jsi::Value::undefined();

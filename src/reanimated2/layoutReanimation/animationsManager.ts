@@ -3,6 +3,7 @@ import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
 import {
   LayoutAnimationFunction,
+  LayoutAnimationType,
   LayoutAnimationsValues,
 } from './animationBuilder';
 import { runOnUIImmediately } from '../threads';
@@ -12,10 +13,11 @@ const TAG_OFFSET = 1e9;
 function startObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
-  animationType: string
+  animationType: LayoutAnimationType
 ): void {
   'worklet';
-  const isSharedTransition = animationType === 'sharedElementTransition';
+  const isSharedTransition =
+    animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
     _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
@@ -40,16 +42,16 @@ function createLayoutAnimationManager() {
   return {
     start(
       tag: number,
-      type: string,
+      type: LayoutAnimationType,
       yogaValues: LayoutAnimationsValues,
       config: LayoutAnimationFunction
     ) {
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 
-      if (type === 'entering') {
+      if (type === LayoutAnimationType.ENTERING) {
         enteringAnimationForTag.set(tag, currentAnimation);
-      } else if (type === 'layout') {
+      } else if (type === LayoutAnimationType.LAYOUT) {
         // When layout animation is requested, but entering is still running, we merge
         // new layout animation targets into the ongoing animation
         const enteringAnimation = enteringAnimationForTag.get(tag);
@@ -74,7 +76,7 @@ function createLayoutAnimationManager() {
         if (finished) {
           enteringAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
-          const shouldRemoveView = type === 'exiting';
+          const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
         style.callback &&

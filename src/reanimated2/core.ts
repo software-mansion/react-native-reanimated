@@ -15,7 +15,10 @@ import {
   makeMutable as makeMutableUnwrapped,
   makeRemote as makeRemoteUnwrapped,
 } from './mutables';
-import { LayoutAnimationFunction } from './layoutReanimation';
+import {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+} from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
 
 export { stopMapper } from './mappers';
@@ -202,7 +205,7 @@ export function enableLayoutAnimations(
 
 export function configureLayoutAnimations(
   viewTag: number,
-  type: string,
+  type: LayoutAnimationType,
   config: LayoutAnimationFunction | Keyframe,
   sharedTransitionTag = ''
 ): void {

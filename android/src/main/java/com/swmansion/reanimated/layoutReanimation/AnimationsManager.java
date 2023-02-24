@@ -96,7 +96,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     maybeRegisterSharedView(view);
 
-    if (!hasAnimationForTag(view.getId(), "entering")) {
+    if (!hasAnimationForTag(view.getId(), LayoutAnimations.Types.ENTERING)) {
       return;
     }
 
@@ -109,7 +109,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (targetValues != null) {
       HashMap<String, Object> preparedValues = prepareDataForAnimationWorklet(targetValues, true);
-      mNativeMethodsHolder.startAnimation(tag, "entering", preparedValues);
+      mNativeMethodsHolder.startAnimation(tag, LayoutAnimations.Types.ENTERING, preparedValues);
       mEnteringViews.add(tag);
     }
   }
@@ -121,7 +121,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     int tag = view.getId();
 
-    if (!hasAnimationForTag(tag, "layout")) {
+    if (!hasAnimationForTag(tag, LayoutAnimations.Types.LAYOUT)) {
       if (mEnteringViews.contains(tag)) {
         // store values to restore after `entering` finishes
         mEnteringViewTargetValues.put(
@@ -170,11 +170,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     for (String key : preparedStartValues.keySet()) {
       preparedValues.put(key, preparedStartValues.get(key));
     }
-    mNativeMethodsHolder.startAnimation(tag, "layout", preparedValues);
+    mNativeMethodsHolder.startAnimation(tag, LayoutAnimations.Types.LAYOUT, preparedValues);
   }
 
   public void maybeRegisterSharedView(View view) {
-    if (hasAnimationForTag(view.getId(), "sharedElementTransition")) {
+    if (hasAnimationForTag(view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       mSharedTransitionManager.notifyAboutNewView(view);
     }
   }
@@ -465,7 +465,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  public boolean hasAnimationForTag(int tag, String type) {
+  public boolean hasAnimationForTag(int tag, int type) {
     return mNativeMethodsHolder.hasAnimation(tag, type);
   }
 
@@ -482,11 +482,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return false;
     }
 
-    boolean hasExitAnimation = hasAnimationForTag(tag, "exiting") || mExitingViews.containsKey(tag);
+    boolean hasExitAnimation =
+        hasAnimationForTag(tag, LayoutAnimations.Types.EXITING) || mExitingViews.containsKey(tag);
     boolean hasAnimatedChildren = false;
     shouldRemove = shouldRemove && !hasExitAnimation;
 
-    if (hasAnimationForTag(tag, "sharedElementTransition")) {
+    if (hasAnimationForTag(tag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       mSharedTransitionManager.notifyAboutRemovedView(view);
       mSharedTransitionManager.makeSnapshot(view);
     }
@@ -517,7 +518,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       if (!mExitingViews.containsKey(tag)) {
         mExitingViews.put(tag, view);
         registerExitingAncestors(view);
-        mNativeMethodsHolder.startAnimation(tag, "exiting", preparedValues);
+        mNativeMethodsHolder.startAnimation(tag, LayoutAnimations.Types.EXITING, preparedValues);
       }
     }
 

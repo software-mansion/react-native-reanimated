@@ -5,7 +5,10 @@ import {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { LayoutAnimationFunction } from '../layoutReanimation';
+import {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+} from '../layoutReanimation';
 import { checkVersion } from '../platform-specific/checkVersion';
 
 export class NativeReanimated {
@@ -107,7 +110,7 @@ export class NativeReanimated {
 
   configureLayoutAnimation(
     viewTag: number,
-    type: string,
+    type: LayoutAnimationType,
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ) {

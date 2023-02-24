@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <RNReanimated/LayoutAnimationType.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASnapshot.h>
 #import <React/RCTUIManager.h>
@@ -13,15 +14,15 @@ typedef NS_ENUM(NSInteger, ViewState) {
   ToRemove,
 };
 
-typedef BOOL (^REAHasAnimationBlock)(NSNumber *_Nonnull tag, NSString *_Nonnull type);
+typedef BOOL (^REAHasAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type);
 typedef void (^REAAnimationStartingBlock)(
     NSNumber *_Nonnull tag,
-    NSString *_Nonnull type,
+    LayoutAnimationType type,
     NSDictionary *_Nonnull yogaValues,
     NSNumber *_Nonnull depth);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 typedef void (
-    ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView);
+    ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView);
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
 
@@ -55,10 +56,10 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues;
 - (UIView *)viewForTag:(NSNumber *)tag;
-- (BOOL)hasAnimationForTag:(NSNumber *)tag type:(NSString *)type;
+- (BOOL)hasAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type;
 - (void)clearAnimationConfigForTag:(NSNumber *)tag;
 - (void)startAnimationForTag:(NSNumber *)tag
-                        type:(NSString *)type
+                        type:(LayoutAnimationType)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
 

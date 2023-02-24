@@ -401,7 +401,8 @@ public class SharedTransitionManager {
     HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
 
-    mNativeMethodsHolder.startAnimation(view.getId(), "sharedElementTransition", preparedValues);
+    mNativeMethodsHolder.startAnimation(
+        view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION, preparedValues);
   }
 
   protected void finishSharedAnimation(int tag) {
@@ -500,7 +501,8 @@ public class SharedTransitionManager {
 
   class SnapshotTreeVisitor implements TreeVisitor {
     public void run(View view) {
-      if (mAnimationsManager.hasAnimationForTag(view.getId(), "sharedElementTransition")) {
+      if (mAnimationsManager.hasAnimationForTag(
+          view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
         mRemovedSharedViews.add(view);
         makeSnapshot(view);
       }
@@ -560,7 +562,8 @@ public class SharedTransitionManager {
       return;
     }
     ViewGroup viewGroup = (ViewGroup) view;
-    if (mAnimationsManager.hasAnimationForTag(view.getId(), "sharedElementTransition")) {
+    if (mAnimationsManager.hasAnimationForTag(
+        view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       makeSnapshot(view);
     }
     for (int i = 0; i < viewGroup.getChildCount(); i++) {
@@ -577,7 +580,8 @@ public class SharedTransitionManager {
 
   private void cancelAnimation(View view) {
     int viewTag = view.getId();
-    mNativeMethodsHolder.cancelAnimation(viewTag, "sharedTransition", true, true);
+    mNativeMethodsHolder.cancelAnimation(
+        viewTag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION, true, true);
   }
 
   private void disableCleaningForViewTag(int viewTag) {
