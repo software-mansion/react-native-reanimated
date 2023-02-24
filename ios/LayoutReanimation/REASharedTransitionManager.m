@@ -557,8 +557,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
       [_animationManager progressLayoutAnimationWithStyle:viewSourcePreviousSnapshot.values
                                                    forTag:viewTag
                                        isSharedTransition:YES];
+      float originXByParent = [viewSourcePreviousSnapshot.values[@"originXByParent"] floatValue];
       float originYByParent = [viewSourcePreviousSnapshot.values[@"originYByParent"] floatValue];
-      CGRect frame = CGRectMake(view.frame.origin.x, originYByParent, view.frame.size.width, view.frame.size.height);
+      CGRect frame = CGRectMake(originXByParent, originYByParent, view.frame.size.width, view.frame.size.height);
       [view setFrame:frame];
     }
     if ([_viewsToHide containsObject:viewTag]) {
