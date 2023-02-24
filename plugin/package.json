@@ -1,5 +1,7 @@
 {
   "name": "ReanimatedPlugin",
   "devDependencies": {"typescript": "^4.1.3"},
-  "scripts": {"build": "yarn tsc"}
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "scripts": {"build": "yarn tsc", "clear": "rm -f *.js && rm -f *.js.map && rm -f src/*.js && rm -f src/*js.map && rm -rf dec"}
 }

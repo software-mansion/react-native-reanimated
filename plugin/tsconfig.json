@@ -7,9 +7,8 @@
     "target": "es6",
     "sourceMap": true,
     "strict": true,
-    "outDir": "",
     "declaration": true,
-    "declarationDir": "dec/"
-  },
-  "exclude": ["src"]
+    "declarationDir": "dec/",
+    "outDir": "."
+  }, "exclude": ["dec", "node_modules"],
 }
