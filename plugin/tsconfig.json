@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "target": "es6",
+    "sourceMap": true,
+    "strict": true,
+    "outDir": "",
+    "declaration": true,
+    "declarationDir": "dec/"
+  },
+  "exclude": ["src"]
+}

@@ -1,14 +1,14 @@
 import { PluginItem, NodePath, PluginPass } from '@babel/core';
-import { globals } from './commonObjects';
+import { globals } from './src/commonObjects';
 import {
   CallExpression,
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
 } from '@babel/types';
-import { processWorklets } from './processWorklets';
-import { processIfWorkletNode } from './processIfWorkletNode';
-import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
+import { processWorklets } from './src/processWorklets';
+import { processIfWorkletNode } from './src/processIfWorkletNode';
+import { processIfGestureHandlerEventCallbackFunctionNode } from './src/processIfGestureHandlerEventCallbackFunctionNode';
 
 module.exports = function (): PluginItem {
   return {

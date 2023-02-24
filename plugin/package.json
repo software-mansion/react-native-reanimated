@@ -1,0 +1,4 @@
+{
+  "name": "ReanimatedPlugin",
+  "devDependencies": {"typescript": "^4.1.3"}
+}
