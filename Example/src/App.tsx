@@ -218,7 +218,7 @@ const SCREENS: Screens = {
     title: '[LA] Reactions counter',
   },
   SwipeableList: {
-    title: 'Swipeable list',
+    title: '[LA] Swipeable list',
     screen: SwipeableList,
   },
   Modal: {
