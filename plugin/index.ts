@@ -266,7 +266,7 @@ function buildWorkletString(
     | BabelTypes.ExpressionStatement
     | undefined;
 
-  if (!draftExpression) throw new Error('weird draft expression bug'); // [TO DO] temporary
+  if (!draftExpression) throw new Error("'draftExpression' is not defined\n"); // [TO DO] temporary
 
   const expression = BabelTypes.isFunctionDeclaration(draftExpression)
     ? draftExpression
@@ -277,7 +277,9 @@ function buildWorkletString(
     !BabelTypes.isFunctionExpression(expression) &&
     !BabelTypes.isObjectMethod(expression)
   )
-    throw new Error('weird type bug'); // [TO DO] temporary
+    throw new Error(
+      "'expression' is not FunctionDeclaration or FunctionExpression or ObjectMethod\n"
+    ); // [TO DO] temporary
 
   const workletFunction = BabelTypes.functionExpression(
     BabelTypes.identifier(name),
@@ -287,7 +289,7 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  if (!inputMap) throw new Error('temporary Error'); // temporary [TO DO]
+  if (!inputMap) throw new Error("'inputMap' is not defined"); // temporary [TO DO]
 
   if (shouldGenerateSourceMap()) {
     // Clear contents array (should be empty anyways)
@@ -414,7 +416,7 @@ function makeWorklet(
   });
 
   if (!transformed || !transformed.ast)
-    throw new Error('null ast weird exception\n'); // this is temporary [TO DO]
+    throw new Error("'transformed' or 'transformed.ast' is undefined\n"); // this is temporary [TO DO]
 
   traverse(transformed.ast, {
     Identifier(path) {
@@ -475,7 +477,7 @@ function makeWorklet(
     functionName,
     transformed.map
   );
-  if (!funString) throw new Error('funString is undefined/null\n'); // this is temporary [TO DO]
+  if (!funString) throw new Error("'funString' is not defined\n"); // this is temporary [TO DO]
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename; // @ts-expect-error [TO DO]
@@ -533,7 +535,7 @@ function makeWorklet(
     BabelTypes.isFunctionDeclaration(funExpression) ||
     BabelTypes.isObjectMethod(funExpression)
   )
-    throw new Error('fun expression bug\n'); // [TO DO] temporary
+    throw new Error("'funExpression' is not defined\n"); // [TO DO] temporary
 
   const statements: Array<
     | BabelTypes.VariableDeclaration
