@@ -530,8 +530,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
   [view.superview bringSubviewToFront:view];
-  NSDictionary *preparedValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
-                                                                            targetValues:targetValues];
+  NSDictionary *preparedValues = [self prepareDataForWorklet:currentValues targetValues:targetValues];
   [_animationManager startAnimationForTag:view.reactTag
                                      type:SHARED_ELEMENT_TRANSITION
                                yogaValues:preparedValues
@@ -627,6 +626,18 @@ static REASharedTransitionManager *_sharedTransitionManager;
   } else {
     _disableCleaningForView[viewTag] = @(counterInt - 1);
   }
+}
+
+- (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
+                           targetValues:(NSMutableDictionary *)targetValues
+{
+  NSMutableDictionary *workletValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
+                                                                                  targetValues:targetValues];
+  workletValues[@"currentTransformMatrix"] = currentValues[@"transformMatrix"];
+  workletValues[@"targetTransformMatrix"] = targetValues[@"transformMatrix"];
+  workletValues[@"currentBorderRadius"] = currentValues[@"borderRadius"];
+  workletValues[@"targetBorderRadius"] = targetValues[@"borderRadius"];
+  return workletValues;
 }
 
 @end

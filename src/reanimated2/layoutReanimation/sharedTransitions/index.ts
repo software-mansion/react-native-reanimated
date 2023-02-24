@@ -6,7 +6,14 @@ import {
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
 
-const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
+const supportedProps = [
+  'width',
+  'height',
+  'originX',
+  'originY',
+  'transform',
+  'borderRadius',
+];
 
 type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
 

@@ -232,6 +232,12 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [newProps removeObjectForKey:@"transformMatrix"];
   }
 
+  if (newProps[@"borderRadius"]) {
+    CGFloat borderRadius = [newProps[@"borderRadius"] floatValue];
+    view.layer.cornerRadius = borderRadius;
+    [newProps removeObjectForKey:@"borderRadius"];
+  }
+
   NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];
@@ -266,8 +272,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
-                                          targetValues:(NSMutableDictionary *)targetValues
+- (NSMutableDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
+                                                 targetValues:(NSMutableDictionary *)targetValues
 {
   NSMutableDictionary *preparedData = [NSMutableDictionary new];
   preparedData[@"currentWidth"] = currentValues[@"width"];
@@ -284,10 +290,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   preparedData[@"targetGlobalOriginY"] = targetValues[@"globalOriginY"];
   preparedData[@"windowWidth"] = currentValues[@"windowWidth"];
   preparedData[@"windowHeight"] = currentValues[@"windowHeight"];
-  if (currentValues[@"transformMatrix"] != nil && targetValues[@"transformMatrix"] != nil) {
-    preparedData[@"currentTransformMatrix"] = currentValues[@"transformMatrix"];
-    preparedData[@"targetTransformMatrix"] = targetValues[@"transformMatrix"];
-  }
   return preparedData;
 }
 
