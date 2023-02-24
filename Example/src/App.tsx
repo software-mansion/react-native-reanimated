@@ -60,6 +60,7 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
 import CubesExample from './CubesExample';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -318,7 +319,11 @@ const Reanimated2 = () => (
 );
 
 function App(): React.ReactElement {
-  return <NavigationContainer>{Reanimated2()}</NavigationContainer>;
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>{Reanimated2()}</NavigationContainer>
+    </GestureHandlerRootView>
+  );
 }
 
 export const styles = StyleSheet.create({

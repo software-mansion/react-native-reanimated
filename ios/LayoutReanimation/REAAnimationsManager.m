@@ -269,24 +269,25 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues
 {
-  NSDictionary *preparedData = @{
-    @"currentWidth" : currentValues[@"width"],
-    @"currentHeight" : currentValues[@"height"],
-    @"currentOriginX" : currentValues[@"originX"],
-    @"currentOriginY" : currentValues[@"originY"],
-    @"currentGlobalOriginX" : currentValues[@"globalOriginX"],
-    @"currentGlobalOriginY" : currentValues[@"globalOriginY"],
-    @"currentTransformMatrix" : currentValues[@"transformMatrix"],
-    @"targetWidth" : targetValues[@"width"],
-    @"targetHeight" : targetValues[@"height"],
-    @"targetOriginX" : targetValues[@"originX"],
-    @"targetOriginY" : targetValues[@"originY"],
-    @"targetGlobalOriginX" : targetValues[@"globalOriginX"],
-    @"targetGlobalOriginY" : targetValues[@"globalOriginY"],
-    @"targetTransformMatrix" : targetValues[@"transformMatrix"],
-    @"windowWidth" : currentValues[@"windowWidth"],
-    @"windowHeight" : currentValues[@"windowHeight"]
-  };
+  NSMutableDictionary *preparedData = [NSMutableDictionary new];
+  preparedData[@"currentWidth"] = currentValues[@"width"];
+  preparedData[@"currentHeight"] = currentValues[@"height"];
+  preparedData[@"currentOriginX"] = currentValues[@"originX"];
+  preparedData[@"currentOriginY"] = currentValues[@"originY"];
+  preparedData[@"currentGlobalOriginX"] = currentValues[@"globalOriginX"];
+  preparedData[@"currentGlobalOriginY"] = currentValues[@"globalOriginY"];
+  preparedData[@"targetWidth"] = targetValues[@"width"];
+  preparedData[@"targetHeight"] = targetValues[@"height"];
+  preparedData[@"targetOriginX"] = targetValues[@"originX"];
+  preparedData[@"targetOriginY"] = targetValues[@"originY"];
+  preparedData[@"targetGlobalOriginX"] = targetValues[@"globalOriginX"];
+  preparedData[@"targetGlobalOriginY"] = targetValues[@"globalOriginY"];
+  preparedData[@"windowWidth"] = currentValues[@"windowWidth"];
+  preparedData[@"windowHeight"] = currentValues[@"windowHeight"];
+  if (currentValues[@"transformMatrix"] != nil && targetValues[@"transformMatrix"] != nil) {
+    preparedData[@"currentTransformMatrix"] = currentValues[@"transformMatrix"];
+    preparedData[@"targetTransformMatrix"] = targetValues[@"transformMatrix"];
+  }
   return preparedData;
 }
 
