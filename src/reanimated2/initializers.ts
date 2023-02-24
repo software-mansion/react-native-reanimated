@@ -102,7 +102,7 @@ function setupRequestAnimationFrame() {
   let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
   let lastNativeAnimationFrameTimestamp = -1;
 
-  global.__flushAnimationFrame = function (frameTimestamp: number) {
+  global.__flushAnimationFrame = (frameTimestamp: number) => {
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
     currentCallbacks.forEach((f) => f(frameTimestamp));
