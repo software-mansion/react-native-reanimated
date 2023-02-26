@@ -336,9 +336,7 @@ void NativeProxy::installJSIBindings(
 
   layoutAnimations->cthis()->setAnimationStartingBlock(
       [wrt, weakModule, weakErrorHandler](
-          int tag,
-          alias_ref<JString> type,
-          alias_ref<JMap<jstring, jstring>> values) {
+          int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
         auto &rt = *wrt.lock();
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -363,33 +361,48 @@ void NativeProxy::installJSIBindings(
           }
         }
 
-        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
-            rt, tag, type->toStdString(), yogaValues);
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
   layoutAnimations->cthis()->setHasAnimationBlock(
-      [weakModule](int tag, const std::string &type) {
-        return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
-            tag, type);
+      [weakModule](int tag, int type) {
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return false;
+        }
+
+        return reaModule->layoutAnimationsManager().hasLayoutAnimation(
+            tag, static_cast<LayoutAnimationType>(type));
       });
 
   layoutAnimations->cthis()->setClearAnimationConfigBlock(
       [weakModule](int tag) {
-        weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig(
-            tag);
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
       });
 
   layoutAnimations->cthis()->setCancelAnimationForTag(
       [wrt, weakModule](
-          int tag,
-          alias_ref<JString> type,
-          jboolean cancelled,
-          jboolean removeView) {
+          int tag, int type, jboolean cancelled, jboolean removeView) {
         if (auto reaModule = weakModule.lock()) {
           if (auto runtime = wrt.lock()) {
             jsi::Runtime &rt = *runtime;
             reaModule->layoutAnimationsManager().cancelLayoutAnimation(
-                rt, tag, type->toStdString(), cancelled, removeView);
+                rt,
+                tag,
+                static_cast<LayoutAnimationType>(type),
+                cancelled,
+                removeView);
           }
         }
       });

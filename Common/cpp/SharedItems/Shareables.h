@@ -10,8 +10,6 @@
 #include "RuntimeManager.h"
 #include "Scheduler.h"
 
-#define HAS_JS_WEAK_OBJECTS (JS_RUNTIME_HERMES || JS_RUNTIME_V8)
-
 using namespace facebook;
 
 namespace reanimated {
