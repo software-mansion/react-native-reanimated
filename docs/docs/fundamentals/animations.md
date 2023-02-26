@@ -93,7 +93,7 @@ With this change added, we no longer need to animate the `offset` Shared Value u
 As a result we will get the exact same behavior as when animating the `offset` value update.
 However, in this case we move the control over how value updates need to be performed from the place where we make Shared Value amends to the place where we define the View styles.
 This approach is more convenient in many cases, especially when view properties are derived from Shared Value as opposed to the Shared Value being directly mapped to given styles.
-Also, keeping all the aspects of view styles and transitions colocated often makes it easier to keep control over your components' code.
+Also, keeping all the aspects of view styles and transitions collocated often makes it easier to keep control over your components' code.
 It forces you to have everything defined in one place vs scattered around the codebase allowing for animated transitions being triggered from anywhere.
 
 ## Animations in inline styles
@@ -164,7 +164,7 @@ In the former case, when you make an update to a Shared Value that is being anim
 Interruptions also work correctly for animations defined in `useAnimatedStyle` hook.
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.
 
-We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the usecases, and hence we made it the default.
+We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the use cases, and hence we made it the default.
 In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](../api/animations/cancelAnimation) method in the latter case.
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
@@ -373,7 +373,7 @@ As we work to improve performance of complex layout updates in Reanimated 2, whe
 ## Animating Non-Style Properties
 
 View styles are definitely the most frequently animated properties out there.
-However, in some usecases it is important to also animate properties that do not belong to styles.
+However, in some use cases it is important to also animate properties that do not belong to styles.
 This is especially important if we have native components that expose native properties that we want to animate.
 In such a case we want to avoid roundtrips to the main JavaScript thread in order to update such properties while animating.
 Thankfully, Reanimated allows for that, but as the properties do not belong to styles we can't just use the `useAnimatedStyle` hook.
