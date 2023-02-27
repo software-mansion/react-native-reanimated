@@ -338,11 +338,11 @@ function makeWorkletName(
     | BabelTypes.ArrowFunctionExpression
   >
 ): string {
-  if (BabelTypes.isObjectMethod(fun.node)) {
+  if (t.isObjectMethod(fun.node)) {
     // @ts-expect-error [TO DO] how to fix it cheap?
     return fun.node.key.name;
   }
-  if (BabelTypes.isFunctionDeclaration(fun.node) && fun.node.id) {
+  if (t.isFunctionDeclaration(fun.node) && fun.node.id) {
     return fun.node.id.name;
   }
   if (
@@ -540,33 +540,24 @@ function makeWorklet(
     | BabelTypes.ExpressionStatement
     | BabelTypes.ReturnStatement
   > = [
-    BabelTypes.variableDeclaration('const', [
-      BabelTypes.variableDeclarator(privateFunctionId, funExpression),
+    t.variableDeclaration('const', [
+      t.variableDeclarator(privateFunctionId, funExpression),
     ]),
-    BabelTypes.expressionStatement(
-      BabelTypes.assignmentExpression(
+    t.expressionStatement(
+      t.assignmentExpression(
         '=',
-        BabelTypes.memberExpression(
-          privateFunctionId,
-          t.identifier('_closure'),
-          false
-        ),
-        BabelTypes.objectExpression(
+        t.memberExpression(privateFunctionId, t.identifier('_closure'), false),
+        t.objectExpression(
           variables.map((variable) =>
-            BabelTypes.objectProperty(
-              t.identifier(variable.name),
-              variable,
-              false,
-              true
-            )
+            t.objectProperty(t.identifier(variable.name), variable, false, true)
           )
         )
       )
     ),
-    BabelTypes.expressionStatement(
-      BabelTypes.assignmentExpression(
+    t.expressionStatement(
+      t.assignmentExpression(
         '=',
-        BabelTypes.memberExpression(
+        t.memberExpression(
           privateFunctionId,
           t.identifier('__initData'),
           false
@@ -574,15 +565,15 @@ function makeWorklet(
         initDataId
       )
     ),
-    BabelTypes.expressionStatement(
-      BabelTypes.assignmentExpression(
+    t.expressionStatement(
+      t.assignmentExpression(
         '=',
-        BabelTypes.memberExpression(
+        t.memberExpression(
           privateFunctionId,
           t.identifier('__workletHash'),
           false
         ),
-        BabelTypes.numericLiteral(workletHash)
+        t.numericLiteral(workletHash)
       )
     ),
   ];
@@ -881,7 +872,7 @@ function processWorklets(
       BabelCore.NodePath<BabelTypes.ObjectMethod | BabelTypes.ObjectProperty>
     >;
     for (const property of properties) {
-      if (BabelTypes.isObjectMethod(property.node)) {
+      if (t.isObjectMethod(property.node)) {
         processWorkletObjectMethod(
           t,
           property as BabelCore.NodePath<BabelTypes.ObjectMethod>,
