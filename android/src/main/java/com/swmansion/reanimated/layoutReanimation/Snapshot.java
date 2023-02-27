@@ -9,6 +9,7 @@ import android.view.ViewOutlineProvider;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.facebook.react.views.view.ReactViewGroup;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,7 @@ public class Snapshot {
   public static final String TRANSFORM_MATRIX = "transformMatrix";
   public static final String GLOBAL_ORIGIN_X = "globalOriginX";
   public static final String GLOBAL_ORIGIN_Y = "globalOriginY";
+  public static final String BORDER_RADIUS = "borderRadius";
 
   public static final String CURRENT_WIDTH = "currentWidth";
   public static final String CURRENT_HEIGHT = "currentHeight";
@@ -31,6 +33,7 @@ public class Snapshot {
   public static final String CURRENT_TRANSFORM_MATRIX = "currentTransformMatrix";
   public static final String CURRENT_GLOBAL_ORIGIN_X = "currentGlobalOriginX";
   public static final String CURRENT_GLOBAL_ORIGIN_Y = "currentGlobalOriginY";
+  public static final String CURRENT_BORDER_RADIUS = "currentBorderRadius";
 
   public static final String TARGET_WIDTH = "targetWidth";
   public static final String TARGET_HEIGHT = "targetHeight";
@@ -39,6 +42,7 @@ public class Snapshot {
   public static final String TARGET_TRANSFORM_MATRIX = "targetTransformMatrix";
   public static final String TARGET_GLOBAL_ORIGIN_X = "targetGlobalOriginX";
   public static final String TARGET_GLOBAL_ORIGIN_Y = "targetGlobalOriginY";
+  public static final String TARGET_BORDER_RADIUS = "targetBorderRadius";
 
   public View view;
   public ViewGroup parent;
@@ -121,14 +125,10 @@ public class Snapshot {
     }
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
-    ViewOutlineProvider outlineProvider =
-        ((ReactViewGroup) view).getChildAt(0).getOutlineProvider();
-    Outline outline = new Outline();
-    outlineProvider.getOutline(((ReactViewGroup) view).getChildAt(0), outline);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      borderRadius = outline.getRadius();
+    if (view.getBackground() != null) {
+      // TODO: handle image case, ReactImageView, view.getChildAt(0).mBorderRadius
+      borderRadius = ((ReactViewBackgroundDrawable) view.getBackground()).getFullBorderRadius();
     }
-    //    borderRadius = 0;
     Log.v("a", "");
   }
 
@@ -140,6 +140,7 @@ public class Snapshot {
     data.put(Snapshot.TARGET_HEIGHT, height);
     data.put(Snapshot.TARGET_WIDTH, width);
     data.put(Snapshot.TARGET_TRANSFORM_MATRIX, transformMatrix);
+    data.put(Snapshot.TARGET_BORDER_RADIUS, borderRadius);
   }
 
   private void addCurrentConfig(HashMap<String, Object> data) {
@@ -150,6 +151,7 @@ public class Snapshot {
     data.put(Snapshot.CURRENT_HEIGHT, height);
     data.put(Snapshot.CURRENT_WIDTH, width);
     data.put(Snapshot.CURRENT_TRANSFORM_MATRIX, transformMatrix);
+    data.put(Snapshot.CURRENT_BORDER_RADIUS, borderRadius);
   }
 
   private void addBasicConfig(HashMap<String, Object> data) {
@@ -160,6 +162,7 @@ public class Snapshot {
     data.put(Snapshot.HEIGHT, height);
     data.put(Snapshot.WIDTH, width);
     data.put(Snapshot.TRANSFORM_MATRIX, transformMatrix);
+    data.put(Snapshot.BORDER_RADIUS, borderRadius);
   }
 
   public HashMap<String, Object> toTargetMap() {

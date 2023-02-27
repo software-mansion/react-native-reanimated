@@ -16,14 +16,14 @@ import { StackScreenProps } from '@react-navigation/stack';
 const Stack = createNativeStackNavigator();
 const DATA = [
   { id: 'a1', title: 'a1' },
-  { id: 'a2', title: 'a2' },
-  { id: 'a3', title: 'a3' },
-  { id: 'a4', title: 'a4' },
-  { id: 'a5', title: 'a5' },
-  { id: 'a6', title: 'a6' },
-  { id: 'a7', title: 'a7' },
-  { id: 'a8', title: 'a8' },
-  { id: 'a9', title: 'a9' },
+  // { id: 'a2', title: 'a2' },
+  // { id: 'a3', title: 'a3' },
+  // { id: 'a4', title: 'a4' },
+  // { id: 'a5', title: 'a5' },
+  // { id: 'a6', title: 'a6' },
+  // { id: 'a7', title: 'a7' },
+  // { id: 'a8', title: 'a8' },
+  // { id: 'a9', title: 'a9' },
 ];
 const photo = require('./assets/image.jpg');
 
@@ -33,10 +33,10 @@ const Item = ({ item, parentItem, onPress }: any) => (
     <Animated.View
       style={[styles.item]}
       sharedTransitionTag={item.id + '-' + parentItem.index}>
-      <Animated.Image
+      <Animated.View
         sharedTransitionTag={item.id + '-' + parentItem.index + 'image'}
-        source={photo}
-        style={{ width: '100%', maxHeight: 100, borderRadius: 10 }}
+        // source={photo}
+        style={{ /*width: '100%', */maxHeight: 100, borderRadius: 10, width: 100, height: 100, backgroundColor: 'red' }}
       />
     </Animated.View>
   </TouchableOpacity>
@@ -60,7 +60,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1 }}>
       <FlatList
-        data={[...new Array(3)]}
+        data={[...new Array(1)]}
         renderItem={(parentItem) => (
           <FlatList
             data={DATA}
@@ -81,10 +81,10 @@ function Screen2({ route, navigation }: any) {
   return (
     <View style={{ flex: 1 }}>
       <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
-      <Animated.Image
+      <Animated.View
         sharedTransitionTag={route.params.sharedTransitionTag + 'image'}
-        source={photo}
-        style={{ width: '100%', height: 200, borderRadius: 100 }}
+        // source={photo}
+        style={{ width: '100%', height: 200, borderRadius: 100, backgroundColor: 'red' }}
       />
     </View>
   );

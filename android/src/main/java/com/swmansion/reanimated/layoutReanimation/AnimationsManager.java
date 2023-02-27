@@ -21,6 +21,7 @@ import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.Scheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -344,6 +345,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
       // as far, let's support only scale and translation. Rotation maybe the future feature
       // (http://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf)
 
+      props.remove(Snapshot.TRANSFORM_MATRIX);
+    }
+
+    if (props.containsKey(Snapshot.BORDER_RADIUS)) {
+      Double borderRadius = (Double) props.get(Snapshot.BORDER_RADIUS);
+      if (borderRadius != null) {
+        ((ReactViewBackgroundDrawable)view.getBackground()).setRadius(borderRadius.floatValue());
+      }
       props.remove(Snapshot.TRANSFORM_MATRIX);
     }
 
