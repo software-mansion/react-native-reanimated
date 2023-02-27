@@ -200,13 +200,9 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   const expression = BabelTypes.isFunctionDeclaration(draftExpression)
     ? draftExpression
     : draftExpression.expression;
-  if (
-    !BabelTypes.isFunctionDeclaration(expression) &&
-    !BabelTypes.isFunctionExpression(expression) &&
-    !BabelTypes.isObjectMethod(expression)
-  )
+  if (!('params' in expression && BabelTypes.isBlockStatement(expression.body)))
     throw new Error(
-      "'expression' is not FunctionDeclaration or FunctionExpression or ObjectMethod\n"
+      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
     );
   const workletFunction = BabelTypes.functionExpression(
     BabelTypes.identifier(name),
@@ -243,7 +239,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   return [transformed.code, JSON.stringify(sourceMap)];
 }
 function makeWorkletName(t, fun) {
-  if (t.isObjectMethod(fun.node)) {
+  if (t.isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
   if (t.isFunctionDeclaration(fun.node) && fun.node.id) {
@@ -267,6 +263,8 @@ function makeWorklet(t, fun, state) {
       }
     },
   });
+  if (!state.file.opts.filename)
+    throw new Error("'state.file.opts.filename' is undefined\n");
   const codeObject = (0, generator_1.default)(fun.node, {
     sourceMaps: true,
     sourceFileName: state.file.opts.filename,
@@ -344,7 +342,7 @@ function makeWorklet(t, fun, state) {
   if (!funString) throw new Error("'funString' is not defined\n");
   const workletHash = hash(funString);
   let location = state.file.opts.filename;
-  if (state.opts && state.opts.relativeSourceLocation) {
+  if (state.opts.relativeSourceLocation) {
     const path = require('path');
     location = path.relative(state.cwd, location);
   }
@@ -380,7 +378,9 @@ function makeWorklet(t, fun, state) {
     BabelTypes.isFunctionDeclaration(funExpression) ||
     BabelTypes.isObjectMethod(funExpression)
   )
-    throw new Error("'funExpression' is not defined\n");
+    throw new Error(
+      "'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n"
+    );
   const statements = [
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),
@@ -511,6 +511,7 @@ function processIfWorkletNode(t, fun, state) {
 function processIfGestureHandlerEventCallbackFunctionNode(t, fun, state) {
   if (
     t.isCallExpression(fun.parent) &&
+    t.isExpression(fun.parent.callee) &&
     isGestureObjectEventCallbackMethod(t, fun.parent.callee)
   ) {
     processWorkletFunction(t, fun, state);
@@ -551,9 +552,10 @@ function processWorklets(t, path, state) {
   const callee = BabelTypes.isSequenceExpression(path.node.callee)
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
     : path.node.callee;
-  const name = BabelTypes.isMemberExpression(callee)
-    ? callee.property.name
-    : callee.name;
+  let name = '';
+  if ('name' in callee) name = callee.name;
+  else if ('property' in callee && 'name' in callee.property)
+    name = callee.property.name;
   if (
     objectHooks.has(name) &&
     BabelTypes.isObjectExpression(path.get('arguments.0').node)

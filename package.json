@@ -140,9 +140,10 @@
       "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin",
       "prettier --write"
     ],
-    "plugin/**/*.(js|ts)": [
-      "eslint --ext '.ts", "prettier --write"
+    "plugin/**/*.ts": [
+      "eslint", "prettier --write"
     ],
+    "plugin/**/*.js": "prettier --write",
     "**/*.{h,cpp}": "yarn lint:cpp",
     "android/src/**/*.java": "yarn format:java",
     "android/src/**/*.{h,cpp}": "yarn format:android",
