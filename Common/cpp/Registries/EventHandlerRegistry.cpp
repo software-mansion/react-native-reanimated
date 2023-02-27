@@ -10,7 +10,7 @@ void EventHandlerRegistry::registerEventHandler(
   eventHandlers[eventHandler->id] = eventHandler;
 }
 
-void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
+void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
@@ -24,6 +24,7 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 
 void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
+    double eventTimestamp,
     const std::string &eventName,
     const jsi::Value &eventPayload) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
@@ -40,7 +41,7 @@ void EventHandlerRegistry::processEvent(
   eventPayload.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
   for (auto handler : handlersForEvent) {
-    handler->process(rt, eventPayload);
+    handler->process(eventTimestamp, eventPayload);
   }
 }
 

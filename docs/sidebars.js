@@ -13,7 +13,6 @@ module.exports = {
         'fundamentals/custom_events',
         'fundamentals/layout_animations',
         'fundamentals/architecture',
-        'fundamentals/migration',
         'fundamentals/web-support',
         'fundamentals/troubleshooting',
       ],
@@ -72,7 +71,12 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guide/testing', 'guide/debugging'],
+      items: [
+        'guide/testing',
+        'guide/debugging',
+        'guide/migration-from-1.x',
+        'guide/migration-from-2.x',
+      ],
     },
     {
       type: 'category',

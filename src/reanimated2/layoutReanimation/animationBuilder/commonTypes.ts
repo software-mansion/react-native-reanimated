@@ -60,13 +60,20 @@ export interface LayoutAnimationsValues {
   windowHeight: number;
 }
 
+export enum LayoutAnimationType {
+  ENTERING = 1,
+  EXITING = 2,
+  LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+}
+
 export type LayoutAnimationFunction = (
   targetValues: LayoutAnimationsValues
 ) => LayoutAnimation;
 
 export type LayoutAnimationStartFunction = (
   tag: number,
-  type: string,
+  type: LayoutAnimationType,
   yogaValues: LayoutAnimationsValues,
   config: LayoutAnimationFunction
 ) => void;

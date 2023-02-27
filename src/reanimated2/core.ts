@@ -15,12 +15,14 @@ import {
   makeMutable as makeMutableUnwrapped,
   makeRemote as makeRemoteUnwrapped,
 } from './mutables';
-import { LayoutAnimationFunction } from './layoutReanimation';
+import {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+} from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
-export { getTimestamp } from './time';
 
 export type ReanimatedConsole = Pick<
   Console,
@@ -115,9 +117,16 @@ export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
 ): string {
+  function handleAndFlushImmediates(eventTimestamp: number, event: T) {
+    'worklet';
+    global.__frameTimestamp = eventTimestamp;
+    eventHandler(event);
+    global.__flushAnimationFrame(eventTimestamp);
+    global.__frameTimestamp = undefined;
+  }
   return NativeReanimatedModule.registerEventHandler(
     eventHash,
-    makeShareableCloneRecursive(eventHandler)
+    makeShareableCloneRecursive(handleAndFlushImmediates)
   );
 }
 
@@ -129,8 +138,18 @@ export function subscribeForKeyboardEvents(
   eventHandler: (state: number, height: number) => void,
   options: AnimatedKeyboardOptions
 ): number {
+  // TODO: this should really go with the same code path as other events, that is
+  // via registerEventHandler. For now we are copying the code from there.
+  function handleAndFlushImmediates(state: number, height: number) {
+    'worklet';
+    const now = performance.now();
+    global.__frameTimestamp = now;
+    eventHandler(state, height);
+    global.__flushAnimationFrame(now);
+    global.__frameTimestamp = undefined;
+  }
   return NativeReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(eventHandler),
+    makeShareableCloneRecursive(handleAndFlushImmediates),
     options.isStatusBarTranslucentAndroid ?? false
   );
 }
@@ -196,7 +215,7 @@ export function enableLayoutAnimations(
 
 export function configureLayoutAnimations(
   viewTag: number,
-  type: string,
+  type: LayoutAnimationType,
   config: LayoutAnimationFunction | Keyframe,
   sharedTransitionTag = ''
 ): void {
