@@ -1,7 +1,7 @@
 ---
-id: migration
-title: Migrating from Reanimated 1.x
-sidebar_label: Migration from v1
+id: migration-from-1.x
+title: Migrating from Reanimated 1.x to 2.x
+sidebar_label: Migration from 1.x
 ---
 
 We wanted to make it possible to migrate from Reanimated 1 to Reanimated 2 incrementally.

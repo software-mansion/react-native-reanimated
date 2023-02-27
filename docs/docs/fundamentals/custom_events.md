@@ -4,7 +4,7 @@ title: Custom Events
 sidebar_label: Custom Events
 ---
 
-Apart from gestures and scroll events, Reanimated 2.x exposes a low-level API to create custom animated event handlers for custom animated components. With this API you can create handler hooks similar to the `useAnimatedGestureHandler` and `useAnimatedScrollHandler`.
+Apart from gestures and scroll events, Reanimated exposes a low-level API to create custom animated event handlers for custom animated components. With this API you can create handler hooks similar to the `useAnimatedGestureHandler` and `useAnimatedScrollHandler`.
 
 ## Handling events from custom animated component
 
