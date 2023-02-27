@@ -289,7 +289,9 @@ function buildWorkletString(
 
   if (!inputMap) throw new Error("'inputMap' is not defined"); // temporary [TO DO]
 
-  if (shouldGenerateSourceMap()) {
+  const includeSourceMap = shouldGenerateSourceMap();
+
+  if (includeSourceMap) {
     // Clear contents array (should be empty anyways)
     inputMap.sourcesContent = [];
     // Include source contents in source map, because Flipper/iframe is not
@@ -300,8 +302,6 @@ function buildWorkletString(
       );
     }
   }
-
-  const includeSourceMap = shouldGenerateSourceMap();
 
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
