@@ -9,6 +9,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ViewGroupManager;
+import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -533,7 +534,7 @@ public class SharedTransitionManager {
       return;
     }
     ViewGroup viewGroup;
-    ViewGroupManager<ViewGroup> viewGroupManager;
+    ViewGroupManager<ViewGroup> viewGroupManager = null;
     ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager =
         mAnimationsManager.getReanimatedNativeHierarchyManager();
     try {
@@ -543,8 +544,10 @@ public class SharedTransitionManager {
         return;
       }
       viewGroup = (ViewGroup) view;
-      viewGroupManager =
-          (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(tag);
+      ViewManager viewManager = reanimatedNativeHierarchyManager.resolveViewManager(tag);
+      if (viewManager instanceof ViewGroupManager) {
+        viewGroupManager = (ViewGroupManager<ViewGroup>) viewManager;
+      }
     } catch (IllegalViewOperationException e) {
       return;
     }
