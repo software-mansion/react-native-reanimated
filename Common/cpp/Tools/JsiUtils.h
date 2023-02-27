@@ -28,7 +28,7 @@ inline int get<int>(jsi::Runtime &rt, const jsi::Value *value) {
 
 template <>
 inline bool get<bool>(jsi::Runtime &rt, const jsi::Value *value) {
-  return value->asBool();
+  return value->isBool() && value->getBool();
 }
 
 template <>
