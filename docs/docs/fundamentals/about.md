@@ -37,7 +37,7 @@ This makes it possible to respond to touch events immediately and update the UI 
 
 The developments of Reanimated 3 were focused on improving the stability and performance. This version uses the Reanimated v2 API you know and love continuously embracing worklets and shared value architecture.
 
-It comes with a full rewrite of the [Shared Value mechanism](shared-values.md) and [Layout Animations](/layout_animations.md) and the introduction of Shared Element Transitions of which we're really excited about.
+It comes with a full rewrite of the [Shared Value mechanism](shared-values.md) and [Layout Animations](layout_animations.md) and the introduction of Shared Element Transitions of which we're really excited about.
 
 Alongside many improvements and features Reanimated 3.x also introduces support for the [New Architecture](https://reactnative.dev/docs/new-architecture-intro). In order to make that happen we had to drop the support for Reanimated v1 API. When your application (or a library that you're using) uses Reanimated v1 API it won't work with Reanimated 3.x anymore.
 
