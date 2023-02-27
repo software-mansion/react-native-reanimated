@@ -39,7 +39,6 @@ const globals = new Set([
     'this',
     'console',
     'performance',
-    '_chronoNow',
     'Date',
     'Array',
     'ArrayBuffer',
@@ -64,6 +63,7 @@ const globals = new Set([
     'null',
     'UIManager',
     'requestAnimationFrame',
+    'setImmediate',
     '_WORKLET',
     'arguments',
     'Boolean',
@@ -90,8 +90,6 @@ const globals = new Set([
     '_dispatchCommand',
     '_setGestureState',
     '_getCurrentTime',
-    '_eventTimestamp',
-    '_frameTimestamp',
     'isNaN',
     'LayoutAnimationRepository',
     '_notifyAboutProgress',
@@ -187,13 +185,13 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     const code = (0, generator_1.default)(workletFunction).code;
     if (!inputMap)
         throw new Error("'inputMap' is not defined");
-    if (shouldGenerateSourceMap()) {
+    const includeSourceMap = shouldGenerateSourceMap();
+    if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
             inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString('utf-8'));
         }
     }
-    const includeSourceMap = shouldGenerateSourceMap();
     const transformed = (0, core_1.transformSync)(code, {
         plugins: [prependClosureVariablesIfNecessary()],
         compact: !includeSourceMap,
