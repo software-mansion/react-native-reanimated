@@ -14,7 +14,7 @@ Looking for an older version? Check the [Reanimated 2.x](/docs/2.x/) or [Reanima
 
 :::caution
 
-Reanimated **3.0.0** supports `react-native` `0.64+`. Subsequent releases aim to support [3 last stable React Native versions](https://github.com/reactwg/react-native-releases#which-versions-are-currently-supported).
+Reanimated **3.0.0** supports React Native 0.64+. Subsequent releases aim to support [3 last stable React Native versions](https://github.com/reactwg/react-native-releases#which-versions-are-currently-supported).
 
 :::
 
