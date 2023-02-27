@@ -3,7 +3,8 @@
     "target": "ESNext",
     "removeComments": true,
     "module": "commonjs",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "sourceMap": true
   },
   "files": ["index.ts"]
 }
