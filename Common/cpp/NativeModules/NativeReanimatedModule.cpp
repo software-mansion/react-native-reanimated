@@ -254,8 +254,14 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       shareable = std::make_shared<ShareableHandle>(runtimeHelper, rt, object);
     } else if (object.isFunction(rt)) {
-      shareable = std::make_shared<ShareableRemoteFunction>(
-          runtimeHelper, rt, object.asFunction(rt));
+      auto function = object.asFunction(rt);
+      if (function.isHostFunction(rt)) {
+        shareable = std::make_shared<ShareableHostFunction>(
+            runtimeHelper, rt, function.getHostFunction(rt));
+      } else {
+        shareable = std::make_shared<ShareableRemoteFunction>(
+            runtimeHelper, rt, std::move(function));
+      }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableArray>>(
