@@ -5,14 +5,16 @@
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
-    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
+    "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
+    "lint:plugin": "eslint --ext '.ts' plugin && yarn prettier --check plugin/",
     "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
     "lint:ios": "./scripts/validate-ios.sh && yarn format:ios --dry-run",
-    "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
+    "format": "yarn format:js && yarn format:plugin && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
     "format:js": "prettier --write --list-different './src/'",
+    "format:plugin": "prettier --write --list-different './plugin/'",
     "format:java": "node ./scripts/format-java.js",
     "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
@@ -76,7 +78,6 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
-    "@types/convert-source-map": "^2.0.0",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
@@ -98,6 +99,7 @@
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
+    "@types/convert-source-map": "^2.0.0",
     "@types/babel-types": "^7.0.11",
     "@types/babel__core": "^7.1.18",
     "@types/babel__generator": "^7.6.4",
@@ -137,6 +139,9 @@
     "*.(js|ts|tsx)": [
       "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin",
       "prettier --write"
+    ],
+    "plugin/**/*.(js|ts)": [
+      "eslint --ext '.ts", "prettier --write"
     ],
     "**/*.{h,cpp}": "yarn lint:cpp",
     "android/src/**/*.java": "yarn format:java",
