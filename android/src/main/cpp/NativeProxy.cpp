@@ -411,9 +411,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction =
-      [this](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
-        this->synchronouslyUpdateUIProps(rt, tag, props);
-      };
+      bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 #else
   auto configurePropsFunction = bindThis(&NativeProxy::configureProps);
 #endif
