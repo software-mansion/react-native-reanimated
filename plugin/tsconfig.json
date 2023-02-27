@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ESNext",
     "removeComments": true,
-    "module": "commonjs"
+    "module": "commonjs",
+    "forceConsistentCasingInFileNames": true
   },
   "files": ["index.ts"]
 }
