@@ -279,24 +279,11 @@ class ShareableHostFunction : public Shareable {
   ShareableHostFunction(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       jsi::Runtime &rt,
-      jsi::HostFunctionType hostFunction,
-      const std::string &name,
-      const unsigned int paramCount)
-      : Shareable(HostFunctionType),
-        hostFunction_(hostFunction),
-        name_(name),
-        paramCount_(paramCount) {}
-
-  ShareableHostFunction(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      jsi::Runtime &rt,
       jsi::Function function)
-      : ShareableHostFunction(
-            runtimeHelper,
-            rt,
-            function.getHostFunction(rt),
-            function.getProperty(rt, "name").asString(rt).utf8(rt),
-            function.getProperty(rt, "length").asNumber()) {}
+      : Shareable(HostFunctionType),
+        hostFunction_(function.getHostFunction(rt)),
+        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
+        paramCount_(function.getProperty(rt, "length").asNumber()) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     return jsi::Function::createFromHostFunction(
