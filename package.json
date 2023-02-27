@@ -135,7 +135,7 @@
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs",
+      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin",
       "prettier --write"
     ],
     "**/*.{h,cpp}": "yarn lint:cpp",
