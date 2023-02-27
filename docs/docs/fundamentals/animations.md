@@ -4,7 +4,7 @@ title: Animations
 sidebar_label: Animations
 ---
 
-Animations are first-class citizens in Reanimated 2.
+Animations are first-class citizens in Reanimated.
 The library comes bundled with a number of animation helper methods that make it very easy to go from immediate property updates into animated ones.
 
 In the previous article about [Shared Values](shared-values) we learned about the `useAnimatedStyle` hook, that allows for creating an association between Reanimated code and view properties.
@@ -15,7 +15,7 @@ In this article we explore the methods that can be used to perform animated view
 
 ## Shared Value Animated Transitions
 
-One of the easiest ways of starting an animation in Reanimated 2, is by making an animated transition of a Shared Value.
+One of the easiest ways of starting an animation in Reanimated, is by making an animated transition of a Shared Value.
 Animated Shared Value updates require just a tiny change compared to immediate updates.
 Let us recall the example from the previous article, where we'd update a Shared Value with some random number on every button tap:
 
@@ -46,7 +46,7 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 
 ![](/docs/shared-values/sv-immediate.gif)
 
-With Reanimated 2, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring).
+With Reanimated, such Shared Value updates can be transformed to animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring).
 The only change that we can do now, is to wrap the random offset value with a `withSpring` call as shown below:
 
 ```js {3}
@@ -93,7 +93,7 @@ With this change added, we no longer need to animate the `offset` Shared Value u
 As a result we will get the exact same behavior as when animating the `offset` value update.
 However, in this case we move the control over how value updates need to be performed from the place where we make Shared Value amends to the place where we define the View styles.
 This approach is more convenient in many cases, especially when view properties are derived from Shared Value as opposed to the Shared Value being directly mapped to given styles.
-Also, keeping all the aspects of view styles and transitions colocated often makes it easier to keep control over your components' code.
+Also, keeping all the aspects of view styles and transitions collocated often makes it easier to keep control over your components' code.
 It forces you to have everything defined in one place vs scattered around the codebase allowing for animated transitions being triggered from anywhere.
 
 ## Animations in inline styles
@@ -164,7 +164,7 @@ In the former case, when you make an update to a Shared Value that is being anim
 Interruptions also work correctly for animations defined in `useAnimatedStyle` hook.
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.
 
-We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the usecases, and hence we made it the default.
+We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the use cases, and hence we made it the default.
 In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or the [`cancelAnimation`](../api/animations/cancelAnimation) method in the latter case.
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
@@ -368,12 +368,11 @@ Such a change will cause each of the items to reposition and also change their d
 The change of the dimensions for each of the views may trigger further layout recalculations of the nested views down to the leaf nodes.
 As you can see, a single property change can trigger a lot of recomputation.
 It may perform just fine when we need to fire it once, but if we decided to run such computation during animation for every frame, the outcome may not be satisfactory especially on low-end devices.
-As we work to improve performance of complex layout updates in Reanimated 2, when you experience  issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/react-native-reanimated/docs/1.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
 
 ## Animating Non-Style Properties
 
 View styles are definitely the most frequently animated properties out there.
-However, in some usecases it is important to also animate properties that do not belong to styles.
+However, in some use cases it is important to also animate properties that do not belong to styles.
 This is especially important if we have native components that expose native properties that we want to animate.
 In such a case we want to avoid roundtrips to the main JavaScript thread in order to update such properties while animating.
 Thankfully, Reanimated allows for that, but as the properties do not belong to styles we can't just use the `useAnimatedStyle` hook.

@@ -57,7 +57,7 @@ Reanimated plugin has to be listed last.
 
 :::info
 
-After adding the `react-native-reanimated/plugin` to your project you may encounter a false-positive "Reanimated 2 failed to create a worklet" error. In most cases, this can be fixed by cleaning the application's cache. Depending on your workflow or favourite package manager that could be done by:
+After adding the `react-native-reanimated/plugin` to your project you may encounter a false-positive "Reanimated 2 failed to create a worklet" error. In most cases, this can be fixed by cleaning the application's cache. Depending on your workflow or favorite package manager that could be done by:
 
 - `yarn start --reset-cache`
 - `npm start -- --reset-cache`

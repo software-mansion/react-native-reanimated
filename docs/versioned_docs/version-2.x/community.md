@@ -69,4 +69,4 @@ In our community we have really smart and talented peoples who helped us many ti
 ## Community projects
 We want to appreciate also great initiatives managed by our reanimated community - great job!
 - [Can it be done in React Native?](https://www.youtube.com/user/wcandill) - William Candillon's YouTube channel where you can find many awesome examples of animation in React Native provided by Reanimated
-- https://reanimated.funcs.io/ - nice interactive playground to test Ranimated API in user friendly way, created by [Pranshu Chittora](https://github.com/pranshuchittora)
+- https://reanimated.funcs.io/ - nice interactive playground to test Reanimated API in user friendly way, created by [Pranshu Chittora](https://github.com/pranshuchittora)
