@@ -6,10 +6,6 @@ sidebar_label: Interpolate
 
 Sometimes you need to map a value from one range to another. This is where you should use the `interpolate` function which approximates values between points in the output range and lets you map a value inside the input range to a corresponding approximation in the output range. It also supports a few types of Extrapolation to enable mapping outside the range.
 
-:::info
-Be aware that `interpolate` was renamed to `interpolateNode` in Reanimated v2 and should not be confused with `interpolate` from the new API. When using `interpolate` imported directly from react-native-reanimated v1, in v2 you should use `interpolateNode` instead. If you were using a class member method AnimatedValue.interpolate, no change is necessary.
-:::
-
 ### Arguments
 
 #### `value` [Float]
