@@ -28,7 +28,10 @@ inline int get<int>(jsi::Runtime &rt, const jsi::Value *value) {
 
 template <>
 inline bool get<bool>(jsi::Runtime &rt, const jsi::Value *value) {
-  return value->isBool() && value->getBool();
+  if (!value->isBool()) {
+    throw jsi::JSINativeException("Expected a boolean");
+  }
+  return value->getBool();
 }
 
 template <>
