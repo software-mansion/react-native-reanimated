@@ -289,7 +289,7 @@ class ShareableHostFunction : public Shareable {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     return jsi::Function::createFromHostFunction(
-        rt, jsi::PropNameID::forAscii(rt, name_), paramCount_, hostFunction_);
+        rt, jsi::PropNameID::forUtf8(rt, name_), paramCount_, hostFunction_);
   }
 
  protected:
