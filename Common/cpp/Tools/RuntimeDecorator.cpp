@@ -9,17 +9,18 @@
 
 namespace reanimated {
 
-static void logValue(jsi::Runtime &rt, jsi::Value const &value) {
-  if (value.isString()) {
-    Logger::log(value.getString(rt).utf8(rt).c_str());
-  } else if (value.isNumber()) {
-    Logger::log(value.getNumber());
-  } else if (value.isUndefined()) {
-    Logger::log("undefined");
-  } else {
-    Logger::log("unsupported value type");
-  }
-}
+static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
+    [](jsi::Runtime &rt, jsi::Value const &value) {
+      if (value.isString()) {
+        Logger::log(value.getString(rt).utf8(rt).c_str());
+      } else if (value.isNumber()) {
+        Logger::log(value.getNumber());
+      } else if (value.isUndefined()) {
+        Logger::log("undefined");
+      } else {
+        Logger::log("unsupported value type");
+      }
+    };
 
 std::unordered_map<RuntimePointer, RuntimeType>
     &RuntimeDecorator::runtimeRegistry() {
@@ -104,7 +105,8 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
   jsi_utils::installJsiFunction(rt, "_scrollTo", scrollTo);
 
-  auto _measure = [measure](jsi::Runtime &rt, int viewTag) -> jsi::Value {
+  std::function<jsi::Value(jsi::Runtime &, int)> _measure =
+      [measure](jsi::Runtime &rt, int viewTag) -> jsi::Value {
     auto result = measure(viewTag);
     jsi::Object resultObject(rt);
     for (auto &i : result) {
