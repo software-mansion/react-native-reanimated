@@ -257,7 +257,11 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
       auto function = object.asFunction(rt);
       if (function.isHostFunction(rt)) {
         shareable = std::make_shared<ShareableHostFunction>(
-            runtimeHelper, rt, function.getHostFunction(rt));
+            runtimeHelper,
+            rt,
+            function.getHostFunction(rt),
+            function.getProperty(rt, "name").asString(rt).utf8(rt),
+            function.getProperty(rt, "length").asNumber());
       } else {
         shareable = std::make_shared<ShareableRemoteFunction>(
             runtimeHelper, rt, std::move(function));
