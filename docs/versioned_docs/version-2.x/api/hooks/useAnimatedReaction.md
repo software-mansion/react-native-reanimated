@@ -44,7 +44,7 @@ const App = () => {
 
 - `undefined`(argument skipped) - worklets will be rebuilt if there is any change in their bodies or any values from their closure(variables from outer scope used in worklet),
 - empty array(`[]`) - worklets will be rebuilt only if their body change,
-- array of values(`[val1, val2, ..., valN]`) - worklets will be rebuilt if there is any change in thier bodies or any values from the given array.
+- array of values(`[val1, val2, ..., valN]`) - worklets will be rebuilt if there is any change in their bodies or any values from the given array.
 
 ## Example
 

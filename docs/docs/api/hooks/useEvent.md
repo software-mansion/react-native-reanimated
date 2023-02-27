@@ -21,7 +21,7 @@ Array of event names that will be handled by handler.
 
 #### `rebuilt` [boolean]
 
-Value indicating whether handler shouldbe rebuilt.
+Value indicating whether handler should be rebuilt.
 
 ### Returns
 
