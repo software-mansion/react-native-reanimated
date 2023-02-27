@@ -4,7 +4,8 @@
     "removeComments": true,
     "module": "commonjs",
     "skipLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "declaration": true
   },
   "files": ["index.ts"]
 }
