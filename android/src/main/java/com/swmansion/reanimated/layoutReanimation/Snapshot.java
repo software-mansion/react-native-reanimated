@@ -1,10 +1,15 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.graphics.Outline;
+import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.views.view.ReactViewGroup;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,6 +54,7 @@ public class Snapshot {
       new ArrayList<>(Arrays.asList(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f));
   public int originXByParent;
   public int originYByParent;
+  public float borderRadius;
   private float[] identityMatrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 
   public static ArrayList<String> targetKeysToTransform =
@@ -115,6 +121,15 @@ public class Snapshot {
     }
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
+    ViewOutlineProvider outlineProvider =
+        ((ReactViewGroup) view).getChildAt(0).getOutlineProvider();
+    Outline outline = new Outline();
+    outlineProvider.getOutline(((ReactViewGroup) view).getChildAt(0), outline);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      borderRadius = outline.getRadius();
+    }
+    //    borderRadius = 0;
+    Log.v("a", "");
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
