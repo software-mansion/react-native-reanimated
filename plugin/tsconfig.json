@@ -3,7 +3,7 @@
     "target": "ESNext",
     "removeComments": true,
     "module": "commonjs",
-    "forceConsistentCasingInFileNames": true
+    "skipLibCheck": true
   },
   "files": ["index.ts"]
 }

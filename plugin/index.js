@@ -243,10 +243,10 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
   return [transformed.code, JSON.stringify(sourceMap)];
 }
 function makeWorkletName(t, fun) {
-  if (BabelTypes.isObjectMethod(fun.node)) {
+  if (t.isObjectMethod(fun.node)) {
     return fun.node.key.name;
   }
-  if (BabelTypes.isFunctionDeclaration(fun.node) && fun.node.id) {
+  if (t.isFunctionDeclaration(fun.node) && fun.node.id) {
     return fun.node.id.name;
   }
   if (
@@ -382,33 +382,24 @@ function makeWorklet(t, fun, state) {
   )
     throw new Error("'funExpression' is not defined\n");
   const statements = [
-    BabelTypes.variableDeclaration('const', [
-      BabelTypes.variableDeclarator(privateFunctionId, funExpression),
+    t.variableDeclaration('const', [
+      t.variableDeclarator(privateFunctionId, funExpression),
     ]),
-    BabelTypes.expressionStatement(
-      BabelTypes.assignmentExpression(
+    t.expressionStatement(
+      t.assignmentExpression(
         '=',
-        BabelTypes.memberExpression(
-          privateFunctionId,
-          t.identifier('_closure'),
-          false
-        ),
-        BabelTypes.objectExpression(
+        t.memberExpression(privateFunctionId, t.identifier('_closure'), false),
+        t.objectExpression(
           variables.map((variable) =>
-            BabelTypes.objectProperty(
-              t.identifier(variable.name),
-              variable,
-              false,
-              true
-            )
+            t.objectProperty(t.identifier(variable.name), variable, false, true)
           )
         )
       )
     ),
-    BabelTypes.expressionStatement(
-      BabelTypes.assignmentExpression(
+    t.expressionStatement(
+      t.assignmentExpression(
         '=',
-        BabelTypes.memberExpression(
+        t.memberExpression(
           privateFunctionId,
           t.identifier('__initData'),
           false
@@ -416,15 +407,15 @@ function makeWorklet(t, fun, state) {
         initDataId
       )
     ),
-    BabelTypes.expressionStatement(
-      BabelTypes.assignmentExpression(
+    t.expressionStatement(
+      t.assignmentExpression(
         '=',
-        BabelTypes.memberExpression(
+        t.memberExpression(
           privateFunctionId,
           t.identifier('__workletHash'),
           false
         ),
-        BabelTypes.numericLiteral(workletHash)
+        t.numericLiteral(workletHash)
       )
     ),
   ];
@@ -569,7 +560,7 @@ function processWorklets(t, path, state) {
   ) {
     const properties = path.get('arguments.0.properties');
     for (const property of properties) {
-      if (BabelTypes.isObjectMethod(property.node)) {
+      if (t.isObjectMethod(property.node)) {
         processWorkletObjectMethod(t, property, state);
       } else {
         const value = property.get('value');
