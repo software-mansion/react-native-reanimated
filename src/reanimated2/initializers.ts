@@ -128,7 +128,7 @@ function setupRequestAnimationFrame() {
         global.__frameTimestamp = undefined;
       });
     }
-    // Reanimated currently does not support cancelling calbacks requested with
+    // Reanimated currently does not support cancelling callbacks requested with
     // requestAnimationFrame. We return -1 as identifier which isn't in line
     // with the spec but it should give users better clue in case they actually
     // attempt to store the value returned from rAF and use it for cancelling.
