@@ -12,7 +12,7 @@
   "readmeFilename": "README.md",
   "scripts": {
     "postinstall": "yarn tsc && yarn format",
-    "format": "prettier --write --list-different './'",
+    "format": "prettier --write --list-different *.js",
     "clear": "rm -f *.js && rm -f *.js.map && rm -rf dec"
   }
 }
