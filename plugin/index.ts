@@ -492,9 +492,10 @@ function makeWorklet(
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
-    : fun.findParent((path) =>
-        (path.parentPath as BabelCore.NodePath<BabelCore.Node>).isProgram()
-      );
+    : (fun.findParent(
+        (path) =>
+          (path.parentPath as BabelCore.NodePath<BabelCore.Node>).isProgram() // this causes typescript error on Windows CI build
+      ) as BabelCore.NodePath<BabelCore.Node>); // this causes typescript error on Windows CI build
 
   const initDataId =
     pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
