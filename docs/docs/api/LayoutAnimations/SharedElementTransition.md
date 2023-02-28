@@ -18,7 +18,7 @@ To create a shared transition animation between two components on different scre
 **Screen A**
 ```tsx {2}
 <View 
-  sharedTransitionTag="reanimatedTransition" // <-- shared tag
+  sharedTransitionTag="sharedTag"
   style={{ width: 100, height: 200 }}
 />
 ```
