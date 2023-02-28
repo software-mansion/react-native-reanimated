@@ -5,7 +5,6 @@ import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
-import * as path from 'path';
 
 function hash(str: string): number {
   let i = str.length;
@@ -477,6 +476,7 @@ function makeWorklet(
 
   let location = state.file.opts.filename;
   if (state.opts.relativeSourceLocation) {
+    const path = require('path');
     location = path.relative(state.cwd, location);
   }
 
@@ -492,7 +492,9 @@ function makeWorklet(
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
-    : fun.findParent((path) => path.parentPath.isProgram());
+    : fun.findParent((path) =>
+        (path.parentPath as BabelCore.NodePath<BabelCore.Node>).isProgram()
+      );
 
   const initDataId =
     pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
