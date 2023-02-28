@@ -71,6 +71,7 @@ import ModalsExample from './SharedElementTransition/Modals';
 import FlatListExample from './SharedElementTransition/FlatList';
 import ImageStackExample from './SharedElementTransition/ImageStack';
 import RestoreStateExample from './SharedElementTransition/RestoreState';
+import ProfilesExample from './SharedElementTransition/Profiles';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -128,6 +129,10 @@ const SCREENS: Screens = {
   RestoreStateExample: {
     screen: RestoreStateExample,
     title: '[SET] Restore State',
+  },
+  ProfilesExample: {
+    screen: ProfilesExample,
+    title: '[SET] Profiles',
   },
   ColorInterpolation: {
     screen: ColorInterpolationExample,
@@ -368,7 +373,10 @@ const Reanimated2 = () => (
         key={name}
         name={name}
         getComponent={() => SCREENS[name].screen}
-        options={{ title: SCREENS[name].title || name }}
+        options={{
+          title: SCREENS[name].title,
+          headerShown: name !== 'ProfilesExample',
+        }}
       />
     ))}
   </Stack.Navigator>
