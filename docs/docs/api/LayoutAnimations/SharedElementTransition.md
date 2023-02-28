@@ -102,7 +102,7 @@ export default function SharedElementExample() {
 
 ## Limitation and known issues
 - Only the native stack is supported.
-- You can only animate width, height, originX, originY, and transformMatrix properties when using the shared transition.
+- You can only animate `width`, `height`, `originX`, `originY`, and `transformMatrix` properties when using the shared transition.
 - The layout for shared view children is not computed during the transition.
 
 ## Plans for future
