@@ -1,0 +1,13 @@
+{
+  "name": "ReanimatedPlugin",
+  "devDependencies": {
+    "typescript": "^4.1.3"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "scripts": {
+    "postinstall": "yarn tsc && yarn format",
+    "format": "prettier --write --list-different '.'",
+    "clear": "rm -f *.js && rm -f *.js.map && rm -rf dec"
+  }
+}

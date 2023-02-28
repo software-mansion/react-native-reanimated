@@ -14,7 +14,7 @@
     "lint:ios": "./scripts/validate-ios.sh && yarn format:ios --dry-run",
     "format": "yarn format:js && yarn format:plugin && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
     "format:js": "prettier --write --list-different './src/'",
-    "format:plugin": "prettier --write --list-different './plugin/'",
+    "format:plugin": "cd plugin && yarn format",
     "format:java": "node ./scripts/format-java.js",
     "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
@@ -28,7 +28,7 @@
     "reset": "yarn clean && yarn setup",
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep && yarn setup",
-    "plugin": "cd plugin && tsc && yarn format:plugin && cd ..",
+    "plugin": "cd plugin && yarn && cd ..",
     "postinstall": "yarn plugin"
   },
   "main": "lib/commonjs/index",

@@ -213,7 +213,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
     expression.params,
     expression.body
   );
-  const code = generator_1.default(workletFunction).code;
+  const code = (0, generator_1.default)(workletFunction).code;
   if (!inputMap) throw new Error("'inputMap' is not defined");
   const includeSourceMap = shouldGenerateSourceMap();
   if (includeSourceMap) {
@@ -224,7 +224,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
       );
     }
   }
-  const transformed = core_1.transformSync(code, {
+  const transformed = (0, core_1.transformSync)(code, {
     plugins: [prependClosureVariablesIfNecessary()],
     compact: !includeSourceMap,
     sourceMaps: includeSourceMap,
@@ -269,13 +269,13 @@ function makeWorklet(t, fun, state) {
   });
   if (!state.file.opts.filename)
     throw new Error("'state.file.opts.filename' is undefined\n");
-  const codeObject = generator_1.default(fun.node, {
+  const codeObject = (0, generator_1.default)(fun.node, {
     sourceMaps: true,
     sourceFileName: state.file.opts.filename,
   });
   const code =
     '(' + (t.isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
-  const transformed = core_1.transformSync(code, {
+  const transformed = (0, core_1.transformSync)(code, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
@@ -292,7 +292,7 @@ function makeWorklet(t, fun, state) {
   });
   if (!transformed || !transformed.ast)
     throw new Error("'transformed' or 'transformed.ast' is undefined\n");
-  traverse_1.default(transformed.ast, {
+  (0, traverse_1.default)(transformed.ast, {
     Identifier(path) {
       if (!path.isReferencedIdentifier()) return;
       const name = path.node.name;
