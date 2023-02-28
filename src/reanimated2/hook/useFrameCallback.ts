@@ -31,6 +31,7 @@ export function useFrameCallback(
     ref.current.setActive(ref.current.isActive);
 
     return () => {
+      ref.current.setActive(false);
       frameCallbackRegistry.unregisterFrameCallback(ref.current.callbackId);
       ref.current.callbackId = -1;
     };
