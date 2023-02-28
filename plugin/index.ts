@@ -497,10 +497,10 @@ function makeWorklet(
           (path.parentPath as BabelCore.NodePath<BabelCore.Node>).isProgram() // this causes typescript error on Windows CI build
       ) as BabelCore.NodePath<BabelCore.Node>); // this causes typescript error on Windows CI build
 
-  const initDataId =
-    pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
-      `worklet_${workletHash}_init_data`
-    );
+  const initDataId = (
+    pathForStringDefinitions.parentPath as BabelCore.NodePath<BabelCore.Node>
+  ).scope // this causes typescript error on Windows CI build
+    .generateUidIdentifier(`worklet_${workletHash}_init_data`);
 
   const initDataObjectExpression = t.objectExpression([
     t.objectProperty(t.identifier('code'), t.stringLiteral(funString)),
