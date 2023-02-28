@@ -19,15 +19,15 @@ To create a shared transition animation between two components on different scre
 ```tsx {2}
 <View 
   sharedTransitionTag="sharedTag"
-  style={{ width: 100, height: 200 }}
+  style={{ width: 150, height: 150, backgroundColor: 'green' }}
 />
 ```
 
 **Screen B**
 ```tsx {2}
 <View 
-  sharedTransitionTag="reanimatedTransition" // <-- shared tag
-  style={{ width: 200, height: 100 }}
+  sharedTransitionTag="sharedTag"
+  style={{ width: 100, height: 100, backgroundColor: 'green' }}
 />
 ```
 
@@ -46,9 +46,9 @@ const transition = SharedTransition.custom((values) => {
 2. You need to add custom transition as `sharedTransitionStyle` prop to your both components (on both screens):
 ```tsx {2,3}
 <View 
-  sharedTransitionTag="reanimatedTransition" // <-- shared tag
-  sharedTransitionStyle={transition}         // <-- transition animation
-  style={{ width: 200, height: 100 }}
+  sharedTransitionTag="reanimatedTransition"
+  sharedTransitionStyle={transition}
+  style={{ backgroundColor: 'blue', width: 200, height: 100 }}
 />
 ```
 
