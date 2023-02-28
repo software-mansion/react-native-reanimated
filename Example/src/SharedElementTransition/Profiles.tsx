@@ -9,6 +9,7 @@ import {
   Image,
   FlatList,
   ScrollView,
+  StatusBar,
 } from 'react-native';
 import {
   createNativeStackNavigator,
@@ -16,9 +17,18 @@ import {
 } from '@react-navigation/native-stack';
 import Animated, {
   FadeIn,
+  FadeOut,
+  runOnJS,
   SharedTransition,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 // const florence = require('./assets/florence.jpg');
 // const countryside = require('./assets/countryside.jpg');
@@ -87,7 +97,7 @@ const profiles = {
     image: wolf,
     title: 'Margaret',
   },
-};
+} as const;
 
 type Tag = keyof typeof profiles;
 
@@ -103,6 +113,7 @@ function ProfilesScreen({
 
   return (
     <View style={styles.profilesContainer}>
+      <StatusBar barStyle={'light-content'} />
       <Image
         source={nature}
         style={{
@@ -226,6 +237,8 @@ function HomeScreen({
 
   return (
     <View style={styles.homeContainer}>
+      <StatusBar barStyle={'dark-content'} />
+
       <View
         style={{
           height: 120,
@@ -283,10 +296,13 @@ function HomeScreen({
         style={{ marginLeft: 10 }}
         renderItem={(item: any) => {
           return (
-            <View style={{ marginHorizontal: 10, height: 150 }}>
+            <Pressable
+              style={{ marginHorizontal: 10 }}
+              onPress={() => {
+                navigation.navigate('Details', { item: item.item });
+              }}>
               <Animated.Image
                 sharedTransitionTag={item.item.id}
-                sharedTransitionStyle={transition}
                 source={item.item.image}
                 style={{
                   height: 200,
@@ -296,8 +312,6 @@ function HomeScreen({
                 }}
               />
               <Animated.Text
-                sharedTransitionTag={`${item.item.id}-text`}
-                sharedTransitionStyle={transition}
                 style={{
                   fontFamily: 'Poppins-Regular',
                   fontSize: 16,
@@ -305,7 +319,7 @@ function HomeScreen({
                 }}>
                 {item.item.title}
               </Animated.Text>
-            </View>
+            </Pressable>
           );
         }}
         keyExtractor={(item) => item.id}
@@ -330,7 +344,6 @@ function HomeScreen({
             <Pressable
               style={{ marginHorizontal: 10 }}
               onPress={() => {
-                console.log('pressed', item.item.id);
                 navigation.navigate('Details', { item: item.item });
               }}>
               <Animated.Image
@@ -367,45 +380,97 @@ function DetailsScreen({
 }: NativeStackScreenProps<StackParamList, 'Details'>) {
   const { item } = route.params;
 
+  const translation = {
+    x: useSharedValue(0),
+    y: useSharedValue(0),
+  };
+  type AnimatedGHContext = {
+    startX: number;
+    startY: number;
+  };
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_, ctx) => {
+      ctx.startX = translation.x.value;
+      ctx.startY = translation.y.value;
+    },
+    onActive: (event, ctx) => {
+      translation.x.value = ctx.startX + event.translationX;
+      translation.y.value = ctx.startY + event.translationY;
+    },
+    onEnd: (_) => {
+      translation.x.value = withSpring(0);
+      translation.y.value = withSpring(0);
+    },
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translation.x.value },
+        { translateY: translation.y.value },
+        {
+          scale:
+            1 -
+            (Math.abs(translation.x.value) + Math.abs(translation.y.value)) /
+              500,
+        },
+      ],
+    };
+  });
+
   return (
-    <View style={styles.detailContainer}>
-      <Animated.Image
-        sharedTransitionTag={item.id}
-        source={item.image}
-        style={{
-          height: 300,
-          width: 500,
-        }}
-      />
-      <Animated.Text
-        entering={FadeIn.delay(200).duration(1000)}
-        style={{
-          ...styles.header,
-          fontSize: 40,
-          color: '#0f172a',
-          fontFamily: 'Poppins-Medium',
-          marginHorizontal: 20,
-        }}>
-        {item.title}
-      </Animated.Text>
-      <Animated.Text
-        entering={FadeIn.delay(400).duration(1000)}
-        style={styles.text}>
-        Nature is a symphony of sights, sounds, and sensations that awaken our
-        senses and nourish our souls. From the gentle rustling of leaves in the
-        breeze to the awe-inspiring grandeur of towering mountains, nature is a
-        masterpiece that never ceases to amaze us.
-      </Animated.Text>
-      <Animated.View
-        entering={FadeIn.delay(800).duration(1000)}
-        style={styles.callToActionWrapper}>
-        <Pressable
-          style={styles.callToAction}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.callToActionText}>Looks good!</Text>
-        </Pressable>
-      </Animated.View>
-    </View>
+    <>
+      <StatusBar barStyle={'dark-content'} />
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.detailContainer, animatedStyle]}>
+          <Animated.Image
+            sharedTransitionTag={item.id}
+            source={item.image}
+            style={{
+              height: 300,
+              width: 500,
+            }}
+          />
+          <Animated.View
+            style={{ flex: 1, backgroundColor: '#f8fafc' }}
+            entering={FadeIn.delay(50).duration(600)}>
+            <Animated.Text
+              entering={FadeIn.delay(200).duration(1000)}
+              style={{
+                ...styles.header,
+                fontSize: 40,
+                color: '#0f172a',
+                fontFamily: 'Poppins-Medium',
+                marginHorizontal: 20,
+                marginTop: 15,
+                marginBottom: 20,
+              }}>
+              {item.title}
+            </Animated.Text>
+            <Animated.Text
+              entering={FadeIn.delay(400).duration(1000)}
+              style={styles.text}>
+              Nature is a symphony of sights, sounds, and sensations that awaken
+              our senses and nourish our souls. From the gentle rustling of
+              leaves in the breeze to the awe-inspiring grandeur of towering
+              mountains, nature is a masterpiece that never ceases to amaze us.
+            </Animated.Text>
+            <Animated.View
+              entering={FadeIn.delay(800).duration(1000)}
+              style={styles.callToActionWrapper}>
+              <Pressable
+                style={styles.callToAction}
+                onPress={() => navigation.goBack()}>
+                <Text style={styles.callToActionText}>Looks good!</Text>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
+      </PanGestureHandler>
+    </>
   );
 }
 
@@ -418,8 +483,8 @@ export default function ProfilesExample() {
         name="Details"
         component={DetailsScreen}
         options={{
-          animation: 'none',
-          // presentation: 'transparentModal',
+          animation: 'fade',
+          presentation: 'transparentModal',
           headerShown: false,
         }}
       />
@@ -441,7 +506,8 @@ const styles = StyleSheet.create({
   },
   detailContainer: {
     flex: 1,
-    backgroundColor: '#fafaf9',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   wrapper: {
     flex: 1,
