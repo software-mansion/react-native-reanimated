@@ -120,6 +120,7 @@ function isInlineStyleTransform(transform: any): boolean {
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
+  if (!style) return false
   return Object.keys(style).some((key) => {
     const styleValue = style[key];
     return (
@@ -139,6 +140,7 @@ function extractSharedValuesMapFromProps(
     if (key === 'style') {
       const styles = flattenArray<StyleProps>(props.style ?? []);
       styles.forEach((style) => {
+        if (!style) return
         for (const [key, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
             inlineProps[key] = styleValue;
