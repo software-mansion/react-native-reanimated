@@ -8,6 +8,7 @@ import {
   ImageBackground,
   Image,
   FlatList,
+  ScrollView,
 } from 'react-native';
 import {
   createNativeStackNavigator,
@@ -46,6 +47,7 @@ const wolf = require('./assets/wolf-avatar.png');
 type StackParamList = {
   Profiles: undefined;
   Home: { tag: Tag };
+  Details: { item: any };
 };
 
 const transition = SharedTransition.custom((values) => {
@@ -100,7 +102,7 @@ function ProfilesScreen({
   const windowHeight = Dimensions.get('window').height;
 
   return (
-    <View style={styles.homeContainer}>
+    <View style={styles.profilesContainer}>
       <Image
         source={nature}
         style={{
@@ -155,29 +157,6 @@ function ProfilesScreen({
     </View>
   );
 }
-
-// const lakes = {
-//   lake1: {
-//     image: lake1,
-//     title: 'Lake 1',
-//   },
-//   lake2: {
-//     image: lake2,
-//     title: 'Lake 2',
-//   },
-//   lake3: {
-//     image: lake3,
-//     title: 'Lake 3',
-//   },
-//   lake4: {
-//     image: lake4,
-//     title: 'Lake 4',
-//   },
-//   lake5: {
-//     image: lake5,
-//     title: 'Lake 5',
-//   },
-// };
 
 // I totally made these names up, im sorry
 // French names in the US Top 200 for girls include Annabelle, Charlotte, Claire, Josephine, and Sophie.
@@ -246,7 +225,7 @@ function HomeScreen({
   const { tag } = route.params;
 
   return (
-    <View style={styles.detailContainer}>
+    <View style={styles.homeContainer}>
       <View
         style={{
           height: 120,
@@ -293,7 +272,7 @@ function HomeScreen({
         style={{
           fontSize: 24,
           fontFamily: 'Poppins-Medium',
-          color: '#1e40af',
+          color: '#334155',
           marginBottom: 15,
           marginLeft: 20,
         }}>
@@ -322,7 +301,7 @@ function HomeScreen({
                 style={{
                   fontFamily: 'Poppins-Regular',
                   fontSize: 16,
-                  color: '#1e40af',
+                  color: '#1e293b',
                 }}>
                 {item.item.title}
               </Animated.Text>
@@ -337,7 +316,7 @@ function HomeScreen({
         style={{
           fontSize: 24,
           fontFamily: 'Poppins-Medium',
-          color: '#166534',
+          color: '#334155',
           marginBottom: 15,
           marginLeft: 20,
         }}>
@@ -348,10 +327,14 @@ function HomeScreen({
         style={{ marginLeft: 10 }}
         renderItem={(item: any) => {
           return (
-            <View style={{ marginHorizontal: 10 }}>
+            <Pressable
+              style={{ marginHorizontal: 10 }}
+              onPress={() => {
+                console.log('pressed', item.item.id);
+                navigation.navigate('Details', { item: item.item });
+              }}>
               <Animated.Image
                 sharedTransitionTag={item.item.id}
-                sharedTransitionStyle={transition}
                 source={item.item.image}
                 style={{
                   height: 200,
@@ -361,16 +344,14 @@ function HomeScreen({
                 }}
               />
               <Animated.Text
-                sharedTransitionTag={`${item.item.id}-text`}
-                sharedTransitionStyle={transition}
                 style={{
                   fontFamily: 'Poppins-Regular',
                   fontSize: 16,
-                  color: '#064e3b',
+                  color: '#1e293b',
                 }}>
                 {item.item.title}
               </Animated.Text>
-            </View>
+            </Pressable>
           );
         }}
         keyExtractor={(item) => item.id}
@@ -380,22 +361,83 @@ function HomeScreen({
   );
 }
 
+function DetailsScreen({
+  route,
+  navigation,
+}: NativeStackScreenProps<StackParamList, 'Details'>) {
+  const { item } = route.params;
+
+  return (
+    <View style={styles.detailContainer}>
+      <Animated.Image
+        sharedTransitionTag={item.id}
+        source={item.image}
+        style={{
+          height: 300,
+          width: 500,
+        }}
+      />
+      <Animated.Text
+        entering={FadeIn.delay(200).duration(1000)}
+        style={{
+          ...styles.header,
+          fontSize: 40,
+          color: '#0f172a',
+          fontFamily: 'Poppins-Medium',
+          marginHorizontal: 20,
+        }}>
+        {item.title}
+      </Animated.Text>
+      <Animated.Text
+        entering={FadeIn.delay(400).duration(1000)}
+        style={styles.text}>
+        Nature is a symphony of sights, sounds, and sensations that awaken our
+        senses and nourish our souls. From the gentle rustling of leaves in the
+        breeze to the awe-inspiring grandeur of towering mountains, nature is a
+        masterpiece that never ceases to amaze us.
+      </Animated.Text>
+      <Animated.View
+        entering={FadeIn.delay(800).duration(1000)}
+        style={styles.callToActionWrapper}>
+        <Pressable
+          style={styles.callToAction}
+          onPress={() => navigation.goBack()}>
+          <Text style={styles.callToActionText}>Looks good!</Text>
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+}
+
 export default function ProfilesExample() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Profiles" component={ProfilesScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Details"
+        component={DetailsScreen}
+        options={{
+          animation: 'none',
+          // presentation: 'transparentModal',
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
-  homeContainer: {
+  profilesContainer: {
     flex: 1,
     // marginHorizontal: 25,
     paddingTop: 100,
     backgroundColor: '#000',
     // alignItems: 'center',
+  },
+  homeContainer: {
+    flex: 1,
+    backgroundColor: '#fafaf9',
   },
   detailContainer: {
     flex: 1,
@@ -418,6 +460,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     marginTop: 8,
+    fontFamily: 'Poppins-Regular',
+    marginHorizontal: 20,
   },
   chip: {
     borderWidth: 1,
@@ -439,13 +483,13 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   callToAction: {
-    backgroundColor: '#add8e6',
+    backgroundColor: '#0f172a',
     padding: 16,
     width: 250,
     borderRadius: 5,
   },
   callToActionText: {
-    color: '#015571',
+    color: '#f8fafc',
     textAlign: 'center',
     textTransform: 'uppercase',
     fontSize: 16,
