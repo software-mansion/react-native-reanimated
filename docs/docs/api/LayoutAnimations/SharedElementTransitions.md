@@ -1,5 +1,5 @@
 ---
-id: sharedElementTransition
+id: sharedElementTransitions
 title: Shared Element Transition
 sidebar_label: Shared Element Transition
 ---
