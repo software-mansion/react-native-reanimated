@@ -1,5 +1,8 @@
 {
   "name": "ReanimatedPlugin",
+  "dependencies": {
+    "convert-source-map": "^2.0.0"
+  },
   "devDependencies": {
     "typescript": "^4.1.3"
   },
