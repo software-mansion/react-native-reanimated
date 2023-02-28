@@ -168,22 +168,12 @@ function shouldGenerateSourceMap() {
   return true;
 }
 
-interface BabelMapType {
-  version: number;
-  sources: string[];
-  names: string[];
-  sourceRoot?: string | undefined;
-  sourcesContent?: string[] | undefined;
-  mappings: string;
-  file: string;
-}
-
 function buildWorkletString(
   t: typeof BabelCore.types,
   fun: BabelCore.types.File,
   closureVariables: Array<BabelTypes.Identifier>,
   name: string,
-  inputMap: BabelMapType | null | undefined
+  inputMap: BabelCore.BabelFileResult['map']
 ): Array<string | null | undefined> {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = t.variableDeclaration('const', [

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES6",
     "removeComments": true,
     "module": "commonjs",
     "skipLibCheck": true,
