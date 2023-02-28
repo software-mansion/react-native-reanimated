@@ -4,7 +4,7 @@ title: Shared Values
 sidebar_label: Shared Values
 ---
 
-Shared Values are among the fundamental concepts behind Reanimated 2.0.
+Shared Values are among the fundamental concepts behind Reanimated.
 If you are familiar with React Native's [Animated API](https://reactnative.dev/docs/animated) you can compare them to `Animated.Values`.
 They serve a similar purpose of carrying "animateable" data, providing a notion of reactiveness, and driving animations.
 We will discuss each of those key roles of Shared Values in sections below.
@@ -12,12 +12,12 @@ At the end we present a brief overview of the differences between Shared Values 
 
 ## Carrying data
 
-One of the primary goals of Shared Values is to provide a notion of shared memory in Reanimated 2.0 (hence their name).
-As you might've learned in the article about [worklets](worklets), Reanimated 2.0 runs animation code in a separate thread using a separate JS VM context.
+One of the primary goals of Shared Values is to provide a notion of shared memory in Reanimated (hence their name).
+As you might've learned in the article about [worklets](worklets), Reanimated runs animation code in a separate thread using a separate JS VM context.
 Shared Values make it possible to maintain a reference to mutable data that can be read and modified securely across those threads.
 
 Shared Value objects serve as references to pieces of shared data that can be accessed and modified using their `.value` property.
-It is important to remember that whether you want to access or update shared data, you should use `.value` property (one of the most common sources of mistakes in Reanimated 2 code, is to expect the Shared Value reference to return the data instead of accessing it's `.value` property).
+It is important to remember that whether you want to access or update shared data, you should use `.value` property (one of the most common sources of mistakes in Reanimated code, is to expect the Shared Value reference to return the data instead of accessing it's `.value` property).
 
 In order to provide secure and fast ways of accessing shared data across two threads, we had to make some tradeoffs when designing Shared Values.
 As, during animations, updates most of the time happen on the UI thread, Shared Values are optimized to be updated and read from the UI thread.
@@ -136,7 +136,7 @@ This is what you will observe:
 
 ## Driving animations
 
-Animations in Reanimated 2 are first-class citizens, and the library comes bundled with a number of utility methods that help you run and customize animations (refer to the section about [animations](animations) to learn about the APIs in Reanimated 2 for controlling animations).
+Animations in Reanimated are first-class citizens, and the library comes bundled with a number of utility methods that help you run and customize animations (refer to the section about [animations](animations) to learn about the APIs in Reanimated for controlling animations).
 One of the ways for animations to be launched is by starting an animated transition of a Shared Value.
 This can be done by wrapping the target value with one of the animation utility methods from reanimated library (e.g. [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring)):
 

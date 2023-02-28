@@ -1,4 +1,4 @@
-import { NodePath, PluginPass } from '@babel/core';
+import { NodePath } from '@babel/core';
 import {
   FunctionDeclaration,
   FunctionExpression,
@@ -11,13 +11,14 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
+import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
 
 export function processWorkletFunction(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
-  state: PluginPass
+  state: ReanimatedPluginPass
 ) {
   // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
   // with a workletized version of itself.

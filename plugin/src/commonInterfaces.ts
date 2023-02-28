@@ -1,9 +1,15 @@
-export interface BabelMapType {
-  version: number;
-  sources: string[];
-  names: string[];
-  sourceRoot?: string | undefined;
-  sourcesContent?: string[] | undefined;
-  mappings: string;
-  file: string;
+import { BabelFile } from "@babel/core";
+
+export interface ReanimatedPluginPass {
+  file: BabelFile;
+  key: string;
+  opts: {
+    relativeSourceLocation?: boolean;
+    disableInlineStylesWarning?: boolean;
+  };
+  cwd: string;
+  filename: string | undefined;
+  get(key: unknown): any;
+  set(key: unknown, value: unknown): void;
+  [key: string]: unknown;
 }

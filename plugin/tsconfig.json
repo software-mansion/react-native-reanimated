@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "noImplicitAny": true,
+    "target": "ES6",
     "removeComments": true,
-    "preserveConstEnums": true,
-    "target": "es6",
+    "module": "commonjs",
+    "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "declaration": true,
     "declarationDir": "dec/",
     "outDir": "."
-  }, "exclude": ["dec", "node_modules"],
+  },
+  "exclude": ["dec", "node_modules"],
+  "include": ["src/**/*.ts"]
 }

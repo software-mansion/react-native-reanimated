@@ -1,4 +1,4 @@
-import { NodePath, PluginPass } from '@babel/core';
+import { NodePath } from '@babel/core';
 import {
   FunctionDeclaration,
   FunctionExpression,
@@ -7,7 +7,9 @@ import {
   isCallExpression,
   Expression,
   isMemberExpression,
+  isExpression,
 } from '@babel/types';
+import { ReanimatedPluginPass } from './commonInterfaces';
 import {
   gestureHandlerBuilderMethods,
   gestureHandlerGestureObjects,
@@ -70,7 +72,7 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
-  state: PluginPass
+  state: ReanimatedPluginPass
 ) {
   // Auto-workletizes React Native Gesture Handler callback functions.
   // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
@@ -122,7 +124,8 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
 
   if (
     isCallExpression(fun.parent) &&
-    isGestureObjectEventCallbackMethod(fun.parent.callee as Expression) // [TO DO] this is temporary
+    isExpression(fun.parent.callee) &&
+    isGestureObjectEventCallbackMethod(fun.parent.callee)
   ) {
     processWorkletFunction(fun, state);
   }

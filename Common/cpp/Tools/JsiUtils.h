@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -27,7 +28,10 @@ inline int get<int>(jsi::Runtime &rt, const jsi::Value *value) {
 
 template <>
 inline bool get<bool>(jsi::Runtime &rt, const jsi::Value *value) {
-  return value->asBool();
+  if (!value->isBool()) {
+    throw jsi::JSINativeException("Expected a boolean");
+  }
+  return value->getBool();
 }
 
 template <>
@@ -162,6 +166,11 @@ template <typename Fun>
 void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
   installJsiFunction(rt, name, std::function(std::forward<Fun>(function)));
 }
+
+jsi::Array convertStringToArray(
+    jsi::Runtime &rt,
+    const std::string &value,
+    const unsigned int expectedSize);
 
 } // namespace jsi_utils
 } // namespace reanimated

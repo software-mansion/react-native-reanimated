@@ -69,7 +69,7 @@ public class NativeProxy extends NativeProxyCommon {
     public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
         return new NativeMethodsHolder() {
             @Override
-            public void startAnimation(int tag, String type, HashMap<String, Float> values) {}
+            public void startAnimation(int tag, int type, HashMap<String, Object> values) {}
 
             @Override
             public boolean isLayoutAnimationEnabled() {
@@ -82,7 +82,7 @@ public class NativeProxy extends NativeProxyCommon {
             }
 
             @Override
-            public boolean hasAnimation(int tag, String type) {
+            public boolean hasAnimation(int tag, int type) {
                 return false;
             }
 
@@ -90,7 +90,7 @@ public class NativeProxy extends NativeProxyCommon {
             public void clearAnimationConfig(int tag) {}
 
             @Override
-            public void cancelAnimation(int tag, String type, boolean cancelled, boolean removeView) {}
+            public void cancelAnimation(int tag, int type, boolean cancelled, boolean removeView) {}
         };
     }
 }

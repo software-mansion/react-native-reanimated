@@ -29,4 +29,10 @@ public class Utils {
     }
     return res;
   }
+
+  public static String simplifyStringNumbersList(String list) {
+    // transforms string: '[1, 2, 3]' -> '1 2 3'
+    // to make usage of std::istringstream in C++ easier
+    return list.replace(",", "").replace("[", "").replace("]", "");
+  }
 }

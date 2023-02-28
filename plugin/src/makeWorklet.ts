@@ -1,4 +1,10 @@
-import { NodePath, PluginPass, transformSync, traverse } from '@babel/core';
+import {
+  BabelFileResult,
+  NodePath,
+  transformSync,
+  traverse,
+  Node as BabelNode,
+} from '@babel/core';
 import generate from '@babel/generator';
 import {
   ObjectMethod,
@@ -21,8 +27,11 @@ import {
   VariableDeclaration,
   ExpressionStatement,
   ReturnStatement,
+  isObjectProperty,
+  isObjectExpression,
   expressionStatement,
   assignmentExpression,
+  isMemberExpression,
   memberExpression,
   numericLiteral,
   arrayExpression,
@@ -36,13 +45,14 @@ import {
   thisExpression,
   isExpression,
   isExpressionStatement,
+  isProgram,
 } from '@babel/types';
 import { hash, isRelease, shouldGenerateSourceMap } from './commonFunctions';
-import { BabelMapType } from './commonInterfaces';
 import { globals } from './commonObjects';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
 import { assertIsDefined } from './asserts';
+import { ReanimatedPluginPass } from './commonInterfaces';
 
 function makeWorkletName(
   fun: NodePath<
@@ -52,8 +62,7 @@ function makeWorkletName(
     | ArrowFunctionExpression
   >
 ): string {
-  if (isObjectMethod(fun.node)) {
-    // @ts-expect-error [TO DO] how to fix it cheap?
+  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
   if (isFunctionDeclaration(fun.node) && fun.node.id) {
@@ -69,7 +78,7 @@ function buildWorkletString(
   fun: BabelTypesFile,
   closureVariables: Array<Identifier>,
   name: string,
-  inputMap: BabelMapType | null | undefined
+  inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
   function prependClosureVariablesIfNecessary() {
     const closureDeclaration = variableDeclaration('const', [
@@ -96,7 +105,7 @@ function buildWorkletString(
         | ObjectMethod
       >
     ) {
-      if (closureVariables.length === 0 || path.parent.type !== 'Program') {
+      if (closureVariables.length === 0 || isProgram(path.parent)) {
         return;
       }
 
@@ -113,7 +122,7 @@ function buildWorkletString(
       >
     ) {
       if (
-        path.parent.type === 'Program' &&
+        isProgram(path.parent) &&
         !isArrowFunctionExpression(path.node) &&
         !isObjectMethod(path.node) &&
         path.node.id &&
@@ -158,20 +167,16 @@ function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  assertIsDefined(draftExpression); // [TO DO] temporary
+  assertIsDefined(draftExpression);
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
     : draftExpression.expression;
 
-  if (
-    !isFunctionDeclaration(expression) &&
-    !isFunctionExpression(expression) &&
-    !isObjectMethod(expression)
-  )
+  if (!('params' in expression && isBlockStatement(expression.body)))
     throw new Error(
-      "'expression' is not FunctionDeclaration or FunctionExpression or ObjectMethod"
-    ); // [TO DO] temporary
+      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
+    );
 
   const workletFunction = functionExpression(
     identifier(name),
@@ -181,9 +186,11 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  assertIsDefined(inputMap); // temporary [TO DO]
+  assertIsDefined(inputMap);
 
-  if (shouldGenerateSourceMap()) {
+  const includeSourceMap = shouldGenerateSourceMap();
+
+  if (includeSourceMap) {
     // Clear contents array (should be empty anyways)
     inputMap.sourcesContent = [];
     // Include source contents in source map, because Flipper/iframe is not
@@ -194,8 +201,6 @@ function buildWorkletString(
       );
     }
   }
-
-  const includeSourceMap = shouldGenerateSourceMap();
 
   const transformed = transformSync(code, {
     plugins: [prependClosureVariablesIfNecessary()],
@@ -208,7 +213,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  assertIsDefined(transformed); // temporary [TO DO]
+  assertIsDefined(transformed);
 
   let sourceMap;
   if (includeSourceMap) {
@@ -230,7 +235,7 @@ export function makeWorklet(
     | ObjectMethod
     | ArrowFunctionExpression
   >,
-  state: PluginPass
+  state: ReanimatedPluginPass
 ): FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
@@ -250,10 +255,11 @@ export function makeWorklet(
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
+  assertIsDefined(state.file.opts.filename);
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
-    sourceFileName: state.file.opts.filename as string | undefined,
+    sourceFileName: state.file.opts.filename,
   });
 
   // We need to add a newline at the end, because there could potentially be a
@@ -279,8 +285,8 @@ export function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  assertIsDefined(transformed); // temporary [TO DO]
-  assertIsDefined(transformed.ast); // temporary [TO DO]
+  assertIsDefined(transformed);
+  assertIsDefined(transformed.ast);
 
   traverse(transformed.ast, {
     Identifier(path) {
@@ -299,7 +305,7 @@ export function makeWorklet(
       const parentNode = path.parent;
 
       if (
-        parentNode.type === 'MemberExpression' &&
+        isMemberExpression(parentNode) &&
         parentNode.property === path.node &&
         !parentNode.computed
       ) {
@@ -307,8 +313,8 @@ export function makeWorklet(
       }
 
       if (
-        parentNode.type === 'ObjectProperty' &&
-        path.parentPath.parent.type === 'ObjectExpression' &&
+        isObjectProperty(parentNode) &&
+        isObjectExpression(path.parentPath.parent) &&
         path.node !== parentNode.value
       ) {
         return;
@@ -341,11 +347,11 @@ export function makeWorklet(
     transformed.map
   );
 
-  assertIsDefined(funString); // temporary [TO DO]
+  assertIsDefined(funString);
 
   const workletHash = hash(funString);
 
-  let location = state.file.opts.filename; // @ts-expect-error [TO DO]
+  let location = state.file.opts.filename;
   if (state.opts && state.opts.relativeSourceLocation) {
     const path = require('path');
     location = path.relative(state.cwd, location);
@@ -365,12 +371,14 @@ export function makeWorklet(
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
-    : fun.findParent((path) => path.parentPath.isProgram());
+    : (fun.findParent(
+        (path) => (path.parentPath as NodePath<BabelNode>).isProgram() // lack of this 'as ...' causes typescript error on Windows CI build
+      ) as NodePath<BabelNode>); // lack of this 'as ...' this causes typescript error on Windows CI build
 
-  const initDataId =
-    pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
-      `worklet_${workletHash}_init_data`
-    );
+  const initDataId = (
+    pathForStringDefinitions as NodePath<BabelNode>
+  ).parentPath.scope // lack of this 'as ...' this causes typescript error on Windows CI build
+    .generateUidIdentifier(`worklet_${workletHash}_init_data`);
 
   const initDataObjectExpression = objectExpression([
     objectProperty(identifier('code'), stringLiteral(funString)),

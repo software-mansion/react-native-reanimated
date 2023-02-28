@@ -1,4 +1,4 @@
-import { NodePath, PluginPass } from '@babel/core';
+import { NodePath } from '@babel/core';
 import {
   FunctionDeclaration,
   FunctionExpression,
@@ -6,13 +6,14 @@ import {
   isBlockStatement,
   isDirectiveLiteral,
 } from '@babel/types';
+import { ReanimatedPluginPass } from './commonInterfaces';
 import { processWorkletFunction } from './processWorkletFunction';
 
 export function processIfWorkletNode(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
-  state: PluginPass
+  state: ReanimatedPluginPass
 ) {
   fun.traverse({
     DirectiveLiteral(path) {

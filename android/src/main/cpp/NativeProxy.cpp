@@ -11,6 +11,7 @@
 
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
+#include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
@@ -137,24 +138,9 @@ void NativeProxy::installJSIBindings(
     return static_cast<double>(output);
   };
 
-  auto requestRender = [this, getCurrentTime](
+  auto requestRender = [this](
                            std::function<void(double)> onRender,
-                           jsi::Runtime &rt) {
-    // doNoUse -> NodesManager passes here a timestamp from choreographer which
-    // is useless for us as we use diffrent timer to better handle events. The
-    // lambda is translated to NodeManager.OnAnimationFrame and treated just
-    // like reanimated 1 frame callbacks which make use of the timestamp.
-    auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
-      jsi::Object global = rt.global();
-      jsi::String frameTimestampName =
-          jsi::String::createFromAscii(rt, "_frameTimestamp");
-      double frameTimestamp = getCurrentTime();
-      global.setProperty(rt, frameTimestampName, frameTimestamp);
-      onRender(frameTimestamp);
-      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
-    };
-    this->requestRender(std::move(wrappedOnRender));
-  };
+                           jsi::Runtime &rt) { this->requestRender(onRender); };
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction =
@@ -350,17 +336,23 @@ void NativeProxy::installJSIBindings(
 
   layoutAnimations->cthis()->setAnimationStartingBlock(
       [wrt, weakModule, weakErrorHandler](
-          int tag,
-          alias_ref<JString> type,
-          alias_ref<JMap<jstring, jstring>> values) {
+          int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
         auto &rt = *wrt.lock();
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
           try {
-            auto key =
-                jsi::String::createFromAscii(rt, entry.first->toStdString());
-            auto value = stod(entry.second->toStdString());
-            yogaValues.setProperty(rt, key, value);
+            std::string keyString = entry.first->toStdString();
+            std::string valueString = entry.second->toStdString();
+            auto key = jsi::String::createFromAscii(rt, keyString);
+            if (keyString == "currentTransformMatrix" ||
+                keyString == "targetTransformMatrix") {
+              jsi::Array matrix =
+                  jsi_utils::convertStringToArray(rt, valueString, 9);
+              yogaValues.setProperty(rt, key, matrix);
+            } else {
+              auto value = stod(valueString);
+              yogaValues.setProperty(rt, key, value);
+            }
           } catch (std::invalid_argument e) {
             if (auto errorHandler = weakErrorHandler.lock()) {
               errorHandler->setError("Failed to convert value to number");
@@ -369,33 +361,48 @@ void NativeProxy::installJSIBindings(
           }
         }
 
-        weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
-            rt, tag, type->toStdString(), yogaValues);
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
   layoutAnimations->cthis()->setHasAnimationBlock(
-      [weakModule](int tag, const std::string &type) {
-        return weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation(
-            tag, type);
+      [weakModule](int tag, int type) {
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return false;
+        }
+
+        return reaModule->layoutAnimationsManager().hasLayoutAnimation(
+            tag, static_cast<LayoutAnimationType>(type));
       });
 
   layoutAnimations->cthis()->setClearAnimationConfigBlock(
       [weakModule](int tag) {
-        weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig(
-            tag);
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
       });
 
   layoutAnimations->cthis()->setCancelAnimationForTag(
       [wrt, weakModule](
-          int tag,
-          alias_ref<JString> type,
-          jboolean cancelled,
-          jboolean removeView) {
+          int tag, int type, jboolean cancelled, jboolean removeView) {
         if (auto reaModule = weakModule.lock()) {
           if (auto runtime = wrt.lock()) {
             jsi::Runtime &rt = *runtime;
             reaModule->layoutAnimationsManager().cancelLayoutAnimation(
-                rt, tag, type->toStdString(), cancelled, removeView);
+                rt,
+                tag,
+                static_cast<LayoutAnimationType>(type),
+                cancelled,
+                removeView);
           }
         }
       });

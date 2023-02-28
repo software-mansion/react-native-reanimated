@@ -1,4 +1,4 @@
-import { PluginItem, NodePath, PluginPass } from '@babel/core';
+import { PluginItem, NodePath } from '@babel/core';
 import { globals } from './commonObjects';
 import {
   CallExpression,
@@ -9,6 +9,8 @@ import {
 import { processWorklets } from './processWorklets';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
+import { ReanimatedPluginPass } from './commonInterfaces';
+import { processInlineStylesWarning } from './processInlineStylesWarning';
 
 module.exports = function (): PluginItem {
   return {
@@ -22,7 +24,7 @@ module.exports = function (): PluginItem {
     },
     visitor: {
       CallExpression: {
-        enter(path: NodePath<CallExpression>, state: PluginPass) {
+        enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
           processWorklets(path, state);
         },
       },
@@ -31,10 +33,15 @@ module.exports = function (): PluginItem {
           path: NodePath<
             FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,
-          state: PluginPass
+          state: ReanimatedPluginPass
         ) {
           processIfWorkletNode(path, state);
           processIfGestureHandlerEventCallbackFunctionNode(path, state);
+        },
+      },
+      JSXAttribute: {
+        enter(path, state) {
+          processInlineStylesWarning(path, state);
         },
       },
     },

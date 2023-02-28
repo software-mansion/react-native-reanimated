@@ -32,6 +32,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   private volatile boolean mInitialized = false;
   private final ReactApplicationContext mContext;
   private final WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManager;
+  private final ArrayList<View> viewsToSnapshot = new ArrayList<>();
 
   ReaLayoutAnimator(
       ReactApplicationContext context, NativeViewHierarchyManager nativeViewHierarchyManager) {
@@ -63,6 +64,22 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     return (viewToAnimate.getParent() != null);
   }
 
+  @Override
+  public void reset() {
+    super.reset();
+    // we have to make snapshots of the views after all of them have updated layouts
+    // to have correct global coordinates in the snapshots
+    // we do it here because React calls reset() method after all views have updated layouts
+    // and there is no semantically valid place to do it
+    for(View view : viewsToSnapshot) {
+              mAnimationsManager.onViewCreate(
+            view,
+            (ViewGroup) view.getParent(),
+            new Snapshot(view, mWeakNativeViewHierarchyManager.get()));
+    }
+    viewsToSnapshot.clear();
+  }
+
   /**
    * Update layout of given view, via immediate update or animation depending on the current batch
    * layout animation configuration supplied during initialization. Handles create and update
@@ -85,17 +102,14 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     // otherwise use update animation. This approach is easier than maintaining a list of tags
     // for recently created views.
     if (view.getWidth() == 0 || view.getHeight() == 0) {
-      if (!mAnimationsManager.hasAnimationForTag(view.getId(), "entering")) {
+      if (!mAnimationsManager.hasAnimationForTag(view.getId(), LayoutAnimations.Types.ENTERING)) {
         super.applyLayoutUpdate(view, x, y, width, height);
         mAnimationsManager.maybeRegisterSharedView(view);
         return;
       }
       view.layout(x, y, x + width, y + height);
       if (view.getId() != -1) {
-        mAnimationsManager.onViewCreate(
-            view,
-            (ViewGroup) view.getParent(),
-            new Snapshot(view, mWeakNativeViewHierarchyManager.get()));
+        viewsToSnapshot.add(view);
       }
       return;
     }

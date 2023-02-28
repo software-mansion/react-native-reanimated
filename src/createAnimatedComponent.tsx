@@ -10,6 +10,8 @@ import {
   configureLayoutAnimations,
   enableLayoutAnimations,
   runOnUI,
+  startMapper,
+  stopMapper,
 } from './reanimated2/core';
 import {
   isJest,
@@ -23,6 +25,7 @@ import {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
+  LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import {
   SharedValue,
@@ -30,10 +33,14 @@ import {
   ShadowNodeWrapper,
 } from './reanimated2/commonTypes';
 import {
+  makeViewDescriptorsSet,
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
+import updateProps from './reanimated2/UpdateProps';
+import NativeReanimatedModule from './reanimated2/NativeReanimated';
+import { isSharedValue } from './reanimated2';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -108,6 +115,78 @@ const has = <K extends string>(
   return false;
 };
 
+function isInlineStyleTransform(transform: any): boolean {
+  return transform.some((t: Record<string, any>) => hasInlineStyles(t));
+}
+
+function hasInlineStyles(style: StyleProps): boolean {
+  return Object.keys(style).some((key) => {
+    const styleValue = style[key];
+    return (
+      isSharedValue(styleValue) ||
+      (key === 'transform' && isInlineStyleTransform(styleValue))
+    );
+  });
+}
+
+function extractSharedValuesMapFromProps(
+  props: AnimatedComponentProps<InitialComponentProps>
+): Record<string, any> {
+  const inlineProps: Record<string, any> = {};
+
+  for (const key in props) {
+    const value = props[key];
+    if (key === 'style') {
+      const styles = flattenArray<StyleProps>(props.style ?? []);
+      styles.forEach((style) => {
+        for (const [key, styleValue] of Object.entries(style)) {
+          if (isSharedValue(styleValue)) {
+            inlineProps[key] = styleValue;
+          } else if (
+            key === 'transform' &&
+            isInlineStyleTransform(styleValue)
+          ) {
+            inlineProps[key] = styleValue;
+          }
+        }
+      });
+    } else if (isSharedValue(value)) {
+      inlineProps[key] = value;
+    }
+  }
+
+  return inlineProps;
+}
+
+function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
+  if (Object.keys(styles1).length !== Object.keys(styles2).length) {
+    return true;
+  }
+
+  for (const key of Object.keys(styles1)) {
+    if (styles1[key] !== styles2[key]) return true;
+  }
+
+  return false;
+}
+
+function getInlinePropsUpdate(inlineProps: Record<string, any>) {
+  'worklet';
+  const update: Record<string, any> = {};
+  for (const [key, styleValue] of Object.entries(inlineProps)) {
+    if (key === 'transform') {
+      update[key] = styleValue.map((transform: Record<string, any>) => {
+        return getInlinePropsUpdate(transform);
+      });
+    } else if (isSharedValue(styleValue)) {
+      update[key] = styleValue.value;
+    } else {
+      update[key] = styleValue;
+    }
+  }
+  return update;
+}
+
 interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   viewsRef?: ViewRefSet<unknown>;
@@ -172,6 +251,9 @@ export default function createAnimatedComponent(
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
     _component: ComponentRef | null = null;
+    _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
+    _inlinePropsMapperId: number | null = null;
+    _inlineProps: StyleProps = {};
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -184,11 +266,13 @@ export default function createAnimatedComponent(
     componentWillUnmount() {
       this._detachNativeEvents();
       this._detachStyles();
+      this._detachInlineProps();
     }
 
     componentDidMount() {
       this._attachNativeEvents();
       this._attachAnimatedStyles();
+      this._attachInlineProps();
     }
 
     _getEventViewRef() {
@@ -301,23 +385,16 @@ export default function createAnimatedComponent(
       }
     }
 
-    _attachAnimatedStyles() {
-      const styles = this.props.style
-        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
-        : [];
-      const prevStyles = this._styles;
-      this._styles = styles;
-
-      const prevAnimatedProps = this._animatedProps;
-      this._animatedProps = this.props.animatedProps;
-
+    _getViewInfo() {
       let viewTag: number | null;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
+      let viewConfig;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
         shadowNodeWrapper = null;
+        viewConfig = null;
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
@@ -333,17 +410,36 @@ export default function createAnimatedComponent(
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
-        // update UI props whitelist for this view
-        const hasReanimated2Props =
-          this.props.animatedProps?.viewDescriptors || styles.length;
-        if (hasReanimated2Props && hostInstance?.viewConfig) {
-          adaptViewConfig(hostInstance.viewConfig);
-        }
+
+        viewConfig = hostInstance?.viewConfig;
 
         if (global._IS_FABRIC) {
           shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
+      return { viewTag, viewName, shadowNodeWrapper, viewConfig };
+    }
+
+    _attachAnimatedStyles() {
+      const styles = this.props.style
+        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
+        : [];
+      const prevStyles = this._styles;
+      this._styles = styles;
+
+      const prevAnimatedProps = this._animatedProps;
+      this._animatedProps = this.props.animatedProps;
+
+      const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
+        this._getViewInfo();
+
+      // update UI props whitelist for this view
+      const hasReanimated2Props =
+        this.props.animatedProps?.viewDescriptors || styles.length;
+      if (hasReanimated2Props && viewConfig) {
+        adaptViewConfig(viewConfig);
+      }
+
       this._viewTag = viewTag as number;
 
       // remove old styles
@@ -409,11 +505,72 @@ export default function createAnimatedComponent(
       }
     }
 
+    _attachInlineProps() {
+      const newInlineProps: Record<string, any> =
+        extractSharedValuesMapFromProps(this.props);
+      const hasChanged = inlinePropsHasChanged(
+        newInlineProps,
+        this._inlineProps
+      );
+
+      if (hasChanged) {
+        if (!this._inlinePropsViewDescriptors) {
+          this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
+
+          const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
+            this._getViewInfo();
+
+          if (Object.keys(newInlineProps).length && viewConfig) {
+            adaptViewConfig(viewConfig);
+          }
+
+          this._inlinePropsViewDescriptors.add({
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            tag: viewTag!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            name: viewName!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            shadowNodeWrapper: shadowNodeWrapper!,
+          });
+        }
+        const sharableViewDescriptors =
+          this._inlinePropsViewDescriptors.sharableViewDescriptors;
+
+        const maybeViewRef = NativeReanimatedModule.native
+          ? undefined
+          : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
+
+        const updaterFunction = () => {
+          'worklet';
+          const update = getInlinePropsUpdate(newInlineProps);
+          updateProps(sharableViewDescriptors, update, maybeViewRef);
+        };
+        this._inlineProps = newInlineProps;
+        if (this._inlinePropsMapperId) {
+          stopMapper(this._inlinePropsMapperId);
+        }
+        this._inlinePropsMapperId = null;
+        if (Object.keys(newInlineProps).length) {
+          this._inlinePropsMapperId = startMapper(
+            updaterFunction,
+            Object.values(newInlineProps)
+          );
+        }
+      }
+    }
+
+    _detachInlineProps() {
+      if (this._inlinePropsMapperId) {
+        stopMapper(this._inlinePropsMapperId);
+      }
+    }
+
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
       this._reattachNativeEvents(prevProps);
       this._attachAnimatedStyles();
+      this._attachInlineProps();
     }
 
     _setComponentRef = setAndForwardRef<Component>({
@@ -433,20 +590,32 @@ export default function createAnimatedComponent(
             enableLayoutAnimations(true, false);
           }
           if (layout) {
-            configureLayoutAnimations(tag, 'layout', maybeBuild(layout));
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.LAYOUT,
+              maybeBuild(layout)
+            );
           }
           if (entering) {
-            configureLayoutAnimations(tag, 'entering', maybeBuild(entering));
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.ENTERING,
+              maybeBuild(entering)
+            );
           }
           if (exiting) {
-            configureLayoutAnimations(tag, 'exiting', maybeBuild(exiting));
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.EXITING,
+              maybeBuild(exiting)
+            );
           }
           if (sharedTransitionTag) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? DefaultSharedTransition;
             configureLayoutAnimations(
               tag,
-              'sharedElementTransition',
+              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
               maybeBuild(sharedElementTransition),
               sharedTransitionTag
             );
@@ -479,6 +648,20 @@ export default function createAnimatedComponent(
                 };
               }
               return this.initialStyle;
+            } else if (hasInlineStyles(style)) {
+              if (this._isFirstRender) {
+                return getInlinePropsUpdate(style);
+              }
+              const newStyle: StyleProps = {};
+              for (const [key, styleValue] of Object.entries(style)) {
+                if (
+                  !isSharedValue(styleValue) &&
+                  !(key === 'transform' && isInlineStyleTransform(styleValue))
+                ) {
+                  newStyle[key] = styleValue;
+                }
+              }
+              return newStyle;
             } else {
               return style;
             }
@@ -508,6 +691,10 @@ export default function createAnimatedComponent(
             });
           } else {
             props[key] = dummyListener;
+          }
+        } else if (isSharedValue(value)) {
+          if (this._isFirstRender) {
+            props[key] = (value as SharedValue<any>).value;
           }
         } else if (
           key !== 'onGestureHandlerStateChange' ||

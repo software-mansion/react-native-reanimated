@@ -1,4 +1,4 @@
-import { NodePath, PluginPass } from '@babel/core';
+import { NodePath } from '@babel/core';
 import {
   ObjectMethod,
   identifier,
@@ -7,11 +7,12 @@ import {
   objectProperty,
   callExpression,
 } from '@babel/types';
+import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
 
 export function processWorkletObjectMethod(
   path: NodePath<ObjectMethod>,
-  state: PluginPass
+  state: ReanimatedPluginPass
 ) {
   // Replaces ObjectMethod with a workletized version of itself.
 

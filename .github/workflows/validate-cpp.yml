@@ -6,12 +6,14 @@ on:
       - main
     paths:
       - '.github/workflows/validate-cpp.yml'
+      - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
       - 'ios/native/**'
       - 'android/src/main/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
+      - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
       - 'ios/native/**'
       - 'android/src/main/cpp/**'

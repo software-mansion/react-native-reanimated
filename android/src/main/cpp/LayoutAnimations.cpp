@@ -20,7 +20,7 @@ void LayoutAnimations::setAnimationStartingBlock(
 
 void LayoutAnimations::startAnimationForTag(
     int tag,
-    alias_ref<JString> type,
+    int type,
     alias_ref<JMap<jstring, jstring>> values) {
   this->animationStartingBlock_(tag, type, values);
 }
@@ -51,7 +51,7 @@ void LayoutAnimations::setHasAnimationBlock(
   this->hasAnimationBlock_ = hasAnimationBlock;
 }
 
-bool LayoutAnimations::hasAnimationForTag(int tag, std::string type) {
+bool LayoutAnimations::hasAnimationForTag(int tag, int type) {
   return hasAnimationBlock_(tag, type);
 }
 
@@ -65,13 +65,13 @@ void LayoutAnimations::clearAnimationConfigForTag(int tag) {
 }
 
 void LayoutAnimations::setCancelAnimationForTag(
-    CancelAnimationConfigBlock cancelAnimationBlock) {
+    CancelAnimationBlock cancelAnimationBlock) {
   this->cancelAnimationBlock_ = cancelAnimationBlock;
 }
 
 void LayoutAnimations::cancelAnimationForTag(
     int tag,
-    alias_ref<JString> type,
+    int type,
     jboolean cancelled,
     jboolean removeView) {
   this->cancelAnimationBlock_(tag, type, cancelled, removeView);
