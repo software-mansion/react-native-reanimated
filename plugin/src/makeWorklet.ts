@@ -376,8 +376,8 @@ export function makeWorklet(
       ) as NodePath<BabelNode>); // lack of this 'as ...' this causes typescript error on Windows CI build
 
   const initDataId = (
-    pathForStringDefinitions as NodePath<BabelNode>
-  ).parentPath.scope // lack of this 'as ...' this causes typescript error on Windows CI build
+    pathForStringDefinitions.parentPath as NodePath<BabelNode>
+  ).scope // lack of this 'as ...' this causes typescript error on Windows CI build
     .generateUidIdentifier(`worklet_${workletHash}_init_data`);
 
   const initDataObjectExpression = objectExpression([
