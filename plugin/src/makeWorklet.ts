@@ -105,7 +105,7 @@ function buildWorkletString(
         | ObjectMethod
       >
     ) {
-      if (closureVariables.length === 0 || isProgram(path.parent)) {
+      if (closureVariables.length === 0 || !isProgram(path.parent)) {
         return;
       }
 
