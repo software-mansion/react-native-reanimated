@@ -6,7 +6,7 @@ sidebar_label: Shared Element Transition
 
 :::caution
 
-The Shared Element Transition is an experimental feature. No recommended for production usage. We are waiting for your feedback to improve implementation.
+Shared Element Transitions is an experimental feature, not recommended for production use yet. We are waiting for your feedback to improve implementation.
 
 :::
 
