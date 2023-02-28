@@ -47,14 +47,6 @@ module.exports = {
             'api/hooks/useScrollViewOffset',
             'api/hooks/useSharedValue',
           ],
-          'Layout Animations': [
-            'api/LayoutAnimations/customAnimations',
-            'api/LayoutAnimations/entryAnimations',
-            'api/LayoutAnimations/exitAnimations',
-            'api/LayoutAnimations/keyframeAnimations',
-            'api/LayoutAnimations/layoutTransitions',
-            'api/LayoutAnimations/sharedElementTransitions',
-          ],
           'Native methods': [
             'api/nativeMethods/measure',
             'api/nativeMethods/scrollTo',
@@ -66,7 +58,15 @@ module.exports = {
             'api/miscellaneous/runOnUI',
             'api/miscellaneous/interpolateColors',
           ],
+          'Layout Animations': [
+            'api/LayoutAnimations/customAnimations',
+            'api/LayoutAnimations/entryAnimations',
+            'api/LayoutAnimations/exitAnimations',
+            'api/LayoutAnimations/keyframeAnimations',
+            'api/LayoutAnimations/layoutTransitions',
+          ],
         },
+        'api/sharedElementTransitions',
       ],
     },
     {
