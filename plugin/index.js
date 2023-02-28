@@ -6,7 +6,6 @@ const traverse_1 = require('@babel/traverse');
 const core_1 = require('@babel/core');
 const fs = require('fs');
 const convertSourceMap = require('convert-source-map');
-const path = require('path');
 function hash(str) {
   let i = str.length;
   let hash1 = 5381;
@@ -348,6 +347,7 @@ function makeWorklet(t, fun, state) {
   const workletHash = hash(funString);
   let location = state.file.opts.filename;
   if (state.opts.relativeSourceLocation) {
+    const path = require('path');
     location = path.relative(state.cwd, location);
   }
   let lineOffset = 1;
