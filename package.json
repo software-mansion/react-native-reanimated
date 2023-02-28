@@ -27,7 +27,9 @@
     "clean": "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
     "reset": "yarn clean && yarn setup",
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
-    "reset:deep": "yarn clean:deep && yarn setup"
+    "reset:deep": "yarn clean:deep && yarn setup",
+    "plugin": "cd plugin && tsc && yarn format:plugin && cd ..",
+    "postinstall": "yarn plugin"
   },
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
