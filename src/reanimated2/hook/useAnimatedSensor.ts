@@ -7,6 +7,7 @@ import {
   ValueRotation,
   IOSReferenceFrame,
 } from '../commonTypes';
+import { flushImmediates } from '../threads';
 
 export type SensorConfig = {
   interval: number | 'auto';
@@ -144,6 +145,7 @@ export function useAnimatedSensor(
           }
         }
         sensorData.value = data;
+        flushImmediates();
       }
     );
 
