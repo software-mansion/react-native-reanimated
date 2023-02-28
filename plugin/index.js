@@ -161,6 +161,7 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         path.node.body.body.unshift(closureDeclaration);
     }
     function prependRecursiveDeclaration(path) {
+      var _a;
       if (
         path.parent.type === 'Program' &&
         !BabelTypes.isArrowFunctionExpression(path.node) &&
@@ -169,7 +170,10 @@ function buildWorkletString(t, fun, closureVariables, name, inputMap) {
         path.scope.parent
       ) {
         const hasRecursiveCalls =
-          path.scope.parent.bindings[path.node.id.name]?.references > 0;
+          ((_a = path.scope.parent.bindings[path.node.id.name]) === null ||
+          _a === void 0
+            ? void 0
+            : _a.references) > 0;
         if (hasRecursiveCalls) {
           path.node.body.body.unshift(
             t.variableDeclaration('const', [
