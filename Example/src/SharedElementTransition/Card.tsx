@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, TouchableNativeFeedback } from 'react-native';
+import { View, TouchableNativeFeedback, Text } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -33,19 +33,23 @@ function Card({
             ? { height: 500, marginTop: 50, backgroundColor: 'green' }
             : { height: 120, marginTop: 20, backgroundColor: 'green' }
         }
-        sharedTransitionTag={transitionTag + '1'}>
+        // sharedTransitionTag={transitionTag + '1'}
+      >
         <Animated.Text
-          sharedTransitionTag={transitionTag + '2'}
+          // sharedTransitionTag={transitionTag + '2'}
           style={{ width: '100%', height: 20 }}>
           {title}
         </Animated.Text>
+        {/* <Text>mleko</Text> */}
         <Animated.Image
           sharedTransitionTag={transitionTag + '3'}
           source={photo}
           style={{ width: '100%', height: isOpen ? 300 : 100 }}
         />
+        <Text>mleko</Text>
+        {/* <Text>mleko</Text> */}
         <Animated.Text
-          sharedTransitionTag={transitionTag + '4'}
+          // sharedTransitionTag={transitionTag + '4'}
           style={{ width: '100%', height: isOpen ? 100 : 0 }}>
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid,
           earum non, dignissimos fugit rerum exercitationem ab consequatur,
@@ -60,7 +64,7 @@ function Card({
 function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
-      {[...Array(6)].map((_, i) => (
+      {[...Array(1)].map((_, i) => (
         <Card
           key={i}
           navigation={navigation}
