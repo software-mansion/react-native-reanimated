@@ -35,13 +35,13 @@ export default function ArticleProgressExample() {
     const scrollViewHeightOffset =
       (measuredScroll.height / maxOffset) * scrollHandler.value;
 
-    return {
-      width: Math.max(
-        ((scrollHandler.value + scrollViewHeightOffset) / measuredText.height) *
-          measuredScroll.width,
-        0
-      ),
-    };
+    const width = Math.max(
+      ((scrollHandler.value + scrollViewHeightOffset) / measuredText.height) *
+        measuredScroll.width,
+      0
+    );
+
+    return { width };
   }, []);
 
   return (
@@ -51,7 +51,7 @@ export default function ArticleProgressExample() {
         ref={scrollViewRef}
         scrollEventThrottle={16}
         style={styles.articleScrollView}>
-        <Animated.Text ref={textRef}>{loremImpsum}</Animated.Text>
+        <Animated.Text ref={textRef}>{loremIpsum}</Animated.Text>
       </Animated.ScrollView>
     </SafeAreaView>
   );
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const loremImpsum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sit amet ultrices nisl. Sed aliquam vel justo ut maximus. Ut lacinia odio id metus pulvinar, sed imperdiet risus tincidunt. Pellentesque dapibus rutrum metus nec consequat. Nunc ligula turpis, aliquet quis feugiat eu, aliquet ut metus. Maecenas et pellentesque massa, tempor bibendum eros. Duis tempus, mi nec consectetur tempor, mauris nibh volutpat turpis, eu dictum nunc ipsum et lectus. Duis dictum, urna eget imperdiet ullamcorper, urna orci posuere magna, vel consectetur ipsum urna id urna. Vestibulum mollis ex rutrum pulvinar mollis. Morbi vitae dictum velit. Mauris congue nibh at egestas aliquam. Morbi et odio at ligula ullamcorper pellentesque.
+const loremIpsum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sit amet ultrices nisl. Sed aliquam vel justo ut maximus. Ut lacinia odio id metus pulvinar, sed imperdiet risus tincidunt. Pellentesque dapibus rutrum metus nec consequat. Nunc ligula turpis, aliquet quis feugiat eu, aliquet ut metus. Maecenas et pellentesque massa, tempor bibendum eros. Duis tempus, mi nec consectetur tempor, mauris nibh volutpat turpis, eu dictum nunc ipsum et lectus. Duis dictum, urna eget imperdiet ullamcorper, urna orci posuere magna, vel consectetur ipsum urna id urna. Vestibulum mollis ex rutrum pulvinar mollis. Morbi vitae dictum velit. Mauris congue nibh at egestas aliquam. Morbi et odio at ligula ullamcorper pellentesque.
 
 In volutpat lacus gravida faucibus ultricies. Etiam nibh sem, tincidunt in ipsum non, volutpat ultrices tortor. Fusce vitae velit lorem. Aliquam ut consectetur sapien. Donec tempus placerat vehicula. Nulla sit amet nisi vitae lacus aliquet pulvinar. Integer at magna posuere, placerat justo ac, rutrum nisl. Fusce tortor enim, laoreet in ligula sit amet, tristique tincidunt arcu. Integer quis libero malesuada, facilisis lorem eu, volutpat metus.
 

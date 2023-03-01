@@ -8,9 +8,8 @@ import {
   GestureDetector,
   enableExperimentalWebImplementation,
 } from 'react-native-gesture-handler';
-import { StyleSheet, View } from 'react-native';
-
-import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, View, Text } from 'react-native';
+import { WithoutBabelTest } from './WithoutBabel';
 
 enableExperimentalWebImplementation(true);
 
@@ -53,10 +52,12 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
       <GestureDetector gesture={gesture}>
-        <Animated.View style={[styles.ball, animatedStyle]} />
+        <Animated.View style={[styles.ball, animatedStyle]}>
+          <Text style={styles.text}>I need Babel plugin</Text>
+        </Animated.View>
       </GestureDetector>
+      <WithoutBabelTest />
     </View>
   );
 }
@@ -74,5 +75,11 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     backgroundColor: 'blue',
     alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    color: 'white',
+    textAlign: 'center',
   },
 });
