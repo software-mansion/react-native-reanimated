@@ -1,13 +1,24 @@
 import { useEffect, useRef } from 'react';
 import { initialUpdaterRun } from '../animation';
-import { BasicWorkletFunction, SharedValue } from '../commonTypes';
+import { InferAnimationReturnType } from '../animation/commonTypes';
+import { Animation, BasicWorkletFunction, SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<T> = Readonly<SharedValue<T>>;
 
-export function useDerivedValue<T>(
+function useDerivedValue<T extends Animation<T>>(
+  processor: BasicWorkletFunction<Animation<T>>,
+  dependencies?: DependencyList
+): DerivedValue<InferAnimationReturnType<T>>;
+
+function useDerivedValue<T>(
+  processor: BasicWorkletFunction<T>,
+  dependencies?: DependencyList
+): DerivedValue<T>;
+
+function useDerivedValue<T>(
   processor: BasicWorkletFunction<T>,
   dependencies?: DependencyList
 ): DerivedValue<T> {
@@ -53,3 +64,5 @@ export function useDerivedValue<T>(
 
   return sharedValue;
 }
+
+export { useDerivedValue };
