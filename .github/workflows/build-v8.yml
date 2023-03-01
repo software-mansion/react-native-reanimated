@@ -12,7 +12,7 @@ on:
       - main
 
 env:
-  REACT_NATIVE_VERSION: "0.70.5"
+  REACT_NATIVE_VERSION: "0.71.3"
 
 jobs:
   build:
