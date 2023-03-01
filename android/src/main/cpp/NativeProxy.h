@@ -252,6 +252,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
     };
   }
 
+  template <class Signature>
+  JMethod<Signature> getJniMethod(std::string const &methodName) {
+    return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
+  }
+
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
       jsi::Runtime *rt,

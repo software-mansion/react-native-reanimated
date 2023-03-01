@@ -181,9 +181,7 @@ void NativeProxy::requestRender(
     std::function<void(double)> onRender,
     jsi::Runtime &rt) {
   static auto method =
-      javaPart_->getClass()
-          ->getMethod<void(AnimationFrameCallback::javaobject)>(
-              "requestRender");
+      getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(
       javaPart_.get(),
       AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
@@ -192,8 +190,7 @@ void NativeProxy::requestRender(
 void NativeProxy::registerEventHandler() {
   auto eventHandler = bindThis(&NativeProxy::handleEvent);
   static auto method =
-      javaPart_->getClass()->getMethod<void(EventHandler::javaobject)>(
-          "registerEventHandler");
+      getJniMethod<void(EventHandler::javaobject)>("registerEventHandler");
   method(
       javaPart_.get(),
       EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
@@ -206,10 +203,9 @@ jsi::Value NativeProxy::obtainProp(
     jsi::Runtime &rt,
     const int viewTag,
     const jsi::String &propName) {
-  auto method =
-      javaPart_->getClass()
-          ->getMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>(
-              "obtainProp");
+  static auto method =
+      getJniMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>(
+          "obtainProp");
   local_ref<JString> propNameJStr =
       jni::make_jstring(propName.utf8(rt).c_str());
   auto result = method(javaPart_.get(), viewTag, propNameJStr);
@@ -221,10 +217,9 @@ void NativeProxy::configureProps(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
-  auto method = javaPart_->getClass()
-                    ->getMethod<void(
-                        ReadableNativeArray::javaobject,
-                        ReadableNativeArray::javaobject)>("configureProps");
+  static auto method = getJniMethod<void(
+      ReadableNativeArray::javaobject, ReadableNativeArray::javaobject)>(
+      "configureProps");
   method(
       javaPart_.get(),
       ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps))
@@ -239,23 +234,21 @@ void NativeProxy::updateProps(
     int viewTag,
     const jsi::Value &viewName,
     const jsi::Object &props) {
-  auto method = javaPart_->getClass()
-                    ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-                        "updateProps");
+  static auto method =
+      getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
+          "updateProps");
   method(
       javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
-  auto method =
-      javaPart_->getClass()->getMethod<void(int, double, double, bool)>(
-          "scrollTo");
+  static auto method =
+      getJniMethod<void(int, double, double, bool)>("scrollTo");
   method(javaPart_.get(), viewTag, x, y, animated);
 }
 
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
-  auto method =
-      javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>("measure");
+  static auto method = getJniMethod<local_ref<JArrayFloat>(int)>("measure");
   local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
   size_t size = output->size();
   auto elements = output->getRegion(0, size);
@@ -285,9 +278,8 @@ void NativeProxy::synchronouslyUpdateUIProps(
     Tag tag,
     const jsi::Value &props) {
   static const auto method =
-      javaPart_->getClass()
-          ->getMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
-              "synchronouslyUpdateUIProps");
+      getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
+          "synchronouslyUpdateUIProps");
   jni::local_ref<ReadableMap::javaobject> uiProps = castReadableMap(
       ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
   method(javaPart_.get(), tag, uiProps);
@@ -300,8 +292,7 @@ int NativeProxy::registerSensor(
     int iosReferenceFrame,
     std::function<void(double[], int)> setter) {
   static auto method =
-      javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
-          "registerSensor");
+      getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
   return method(
       javaPart_.get(),
       sensorType,
@@ -309,23 +300,21 @@ int NativeProxy::registerSensor(
       SensorSetter::newObjectCxxArgs(std::move(setter)).get());
 }
 void NativeProxy::unregisterSensor(int sensorId) {
-  auto method = javaPart_->getClass()->getMethod<void(int)>("unregisterSensor");
+  static auto method = getJniMethod<void(int)>("unregisterSensor");
   method(javaPart_.get(), sensorId);
 }
 
 void NativeProxy::setGestureState(int handlerTag, int newState) {
-  auto method =
-      javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");
+  static auto method = getJniMethod<void(int, int)>("setGestureState");
   method(javaPart_.get(), handlerTag, newState);
 }
 
 int NativeProxy::subscribeForKeyboardEvents(
     std::function<void(int, int)> keyboardEventDataUpdater,
     bool isStatusBarTranslucent) {
-  auto method =
-      javaPart_->getClass()
-          ->getMethod<int(KeyboardEventDataUpdater::javaobject, bool)>(
-              "subscribeForKeyboardEvents");
+  static auto method =
+      getJniMethod<int(KeyboardEventDataUpdater::javaobject, bool)>(
+          "subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),
       KeyboardEventDataUpdater::newObjectCxxArgs(
@@ -335,14 +324,12 @@ int NativeProxy::subscribeForKeyboardEvents(
 }
 
 void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
-  auto method = javaPart_->getClass()->getMethod<void(int)>(
-      "unsubscribeFromKeyboardEvents");
+  static auto method = getJniMethod<void(int)>("unsubscribeFromKeyboardEvents");
   method(javaPart_.get(), listenerId);
 }
 
 double NativeProxy::getCurrentTime() {
-  static const auto method =
-      javaPart_->getClass()->getMethod<jlong()>("getCurrentTime");
+  static auto method = getJniMethod<jlong()>("getCurrentTime");
   jlong output = method(javaPart_.get());
   return static_cast<double>(output);
 }
