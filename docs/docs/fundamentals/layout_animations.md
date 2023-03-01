@@ -8,7 +8,7 @@ sidebar_label: Layout Animations
 
 In React Native every component appears instantly whenever you add it to the component hierarchy. It's not something we are used to in the real world. Layout Animations are here to address the problem and help you animate the appearance of any view.
 
-When unmounting a component from the hierarchy of views, it just disappears in the next frame. However you can beautify this process using Exiting Animations. Reanimated inlcludes gorgeous exit animations for your components.
+When unmounting a component from the hierarchy of views, it just disappears in the next frame. However you can beautify this process using Exiting Animations. Reanimated includes gorgeous exit animations for your components.
 
 ### [Read more about LayoutAnimations](./../api/LayoutAnimations/entryAnimations)
 
