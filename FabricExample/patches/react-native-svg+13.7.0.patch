@@ -1,0 +1,48 @@
+diff --git a/node_modules/react-native-svg/android/build.gradle b/node_modules/react-native-svg/android/build.gradle
+index e7b0d7a..c9d66c1 100644
+--- a/node_modules/react-native-svg/android/build.gradle
++++ b/node_modules/react-native-svg/android/build.gradle
+@@ -84,9 +84,5 @@ repositories {
+ }
+ 
+ dependencies {
+-    if (isNewArchitectureEnabled()) {
+-        implementation project(":ReactAndroid")
+-    } else {
+-        implementation 'com.facebook.react:react-native:+'
+-    }
++    implementation 'com.facebook.react:react-native:+'
+ }
+diff --git a/node_modules/react-native-svg/apple/Elements/RNSVGImage.mm b/node_modules/react-native-svg/apple/Elements/RNSVGImage.mm
+index 5a3cb91..6bb29f4 100644
+--- a/node_modules/react-native-svg/apple/Elements/RNSVGImage.mm
++++ b/node_modules/react-native-svg/apple/Elements/RNSVGImage.mm
+@@ -39,6 +39,8 @@
+ 
+ #endif // RN_FABRIC_ENABLED
+ 
++using namespace facebook::react;
++
+ @implementation RNSVGImage {
+   CGImageRef _image;
+   CGSize _imageSize;
+@@ -49,18 +51,14 @@ @implementation RNSVGImage {
+   RCTImageResponseObserverProxy _imageResponseObserverProxy;
+ #endif // RN_FABRIC_ENABLED
+ }
+-#ifdef RN_FABRIC_ENABLED
+-using namespace facebook::react;
+ 
++#ifdef RN_FABRIC_ENABLED
+ - (instancetype)initWithFrame:(CGRect)frame
+ {
+   if (self = [super initWithFrame:frame]) {
+     static const auto defaultProps = std::make_shared<const RNSVGImageProps>();
+     _props = defaultProps;
+-
+-#ifdef RN_FABRIC_ENABLED
+     _imageResponseObserverProxy = RCTImageResponseObserverProxy(self);
+-#endif
+   }
+   return self;
+ }

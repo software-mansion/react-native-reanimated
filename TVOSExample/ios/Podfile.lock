@@ -322,7 +322,7 @@ PODS:
     - React-jsi (= 0.69.5-2)
     - React-logger (= 0.69.5-2)
     - React-perflogger (= 0.69.5-2)
-  - RNReanimated (3.0.0-rc.5):
+  - RNReanimated (3.0.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -538,7 +538,7 @@ SPEC CHECKSUMS:
   React-RCTText: 16122ecd9be53be613b2206a13e5cf987835c8cf
   React-runtimeexecutor: 44fe73dca7d31245dfc031971a2ce14085c8d5fe
   ReactCommon: 3f6173ad12133f7e032f4c8d061dba181115c1c0
-  RNReanimated: 751b6e690a44c6ed5dcfbe426e28cf5250f30721
+  RNReanimated: a6d92c5a9476b1be4ea6918222a7d2a0bfbe97b2
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 5f6b76dc63952163378af6afc502d8bab96643a1
   YogaKit: 1e22bf2228b3a5ac8cc88965153061ae92c494b5
