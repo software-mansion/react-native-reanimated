@@ -13,7 +13,7 @@
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
-#include "LayoutAnimationsProxy.h"
+#include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
@@ -25,46 +25,50 @@ namespace reanimated {
 
 using FrameCallback = std::function<void(double)>;
 
-class ShareableValue;
-class MutableValue;
-class MapperRegistry;
 class EventHandlerRegistry;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec,
                                public RuntimeManager {
-  friend ShareableValue;
-  friend MutableValue;
-
  public:
   NativeReanimatedModule(
-      std::shared_ptr<CallInvoker> jsInvoker,
-      std::shared_ptr<Scheduler> scheduler,
-      std::shared_ptr<jsi::Runtime> rt,
-      std::shared_ptr<ErrorHandler> errorHandler,
+      const std::shared_ptr<CallInvoker> &jsInvoker,
+      const std::shared_ptr<Scheduler> &scheduler,
+      const std::shared_ptr<jsi::Runtime> &rt,
+      const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
       std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
           propObtainer,
 #endif
-      std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
       PlatformDepMethodsHolder platformDepMethodsHolder);
 
-  void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
-      override;
+  ~NativeReanimatedModule();
 
-  jsi::Value makeShareable(jsi::Runtime &rt, const jsi::Value &value) override;
-  jsi::Value makeMutable(jsi::Runtime &rt, const jsi::Value &value) override;
-  jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) override;
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper;
 
-  jsi::Value startMapper(
+  void installCoreFunctions(
       jsi::Runtime &rt,
-      const jsi::Value &worklet,
-      const jsi::Value &inputs,
-      const jsi::Value &outputs,
-      const jsi::Value &updater,
-      const jsi::Value &viewDescriptors) override;
-  void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
+      const jsi::Value &callGuard,
+      const jsi::Value &valueUnpacker) override;
+
+  jsi::Value makeShareableClone(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote) override;
+
+  jsi::Value makeSynchronizedDataHolder(
+      jsi::Runtime &rt,
+      const jsi::Value &initialShareable) override;
+  jsi::Value getDataSynchronously(
+      jsi::Runtime &rt,
+      const jsi::Value &synchronizedDataHolderRef) override;
+  void updateDataSynchronously(
+      jsi::Runtime &rt,
+      const jsi::Value &synchronizedDataHolderRef,
+      const jsi::Value &newData);
+
+  void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -86,13 +90,20 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps) override;
+  jsi::Value configureLayoutAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &type,
+      const jsi::Value &sharedTransitionTag,
+      const jsi::Value &config) override;
 
   void onRender(double timestampMs);
-#ifdef RCT_NEW_ARCH_ENABLED
-  void onEvent(std::string eventName, jsi::Value &&eventAsString);
-#else
-  void onEvent(std::string eventName, std::string eventAsString);
-#endif
+
+  void onEvent(
+      double eventTimestamp,
+      const std::string &eventName,
+      const jsi::Value &payload);
+
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
@@ -100,7 +111,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   bool handleEvent(
       const std::string &eventName,
-      jsi::Value &&payload,
+      const jsi::Value &payload,
       double currentTime);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -111,9 +122,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &shadowNodeValue,
       const jsi::Value &props);
 
-  void removeShadowNodeFromRegistry(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeValue);
+  void removeShadowNodeFromRegistry(jsi::Runtime &rt, const jsi::Value &tag);
 
   void performOperations();
 
@@ -135,30 +144,36 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       jsi::Runtime &rt,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
+      const jsi::Value &iosReferenceFrame,
       const jsi::Value &sensorDataContainer) override;
   void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+
+  void cleanupSensors();
+
   jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
-      const jsi::Value &keyboardEventContainer) override;
+      const jsi::Value &keyboardEventContainer,
+      const jsi::Value &isStatusBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
+
+  inline LayoutAnimationsManager &layoutAnimationsManager() {
+    return layoutAnimationsManager_;
+  }
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  std::shared_ptr<MapperRegistry> mapperRegistry;
-  std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
+  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
   std::function<void(FrameCallback &, jsi::Runtime &)> requestRender;
-  std::shared_ptr<jsi::Value> dummyEvent;
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)>
       propObtainer;
   std::function<void(double)> onRenderCallback;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
 
@@ -180,6 +195,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
+  LayoutAnimationsManager layoutAnimationsManager_;
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;

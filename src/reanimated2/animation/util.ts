@@ -4,7 +4,14 @@ import {
   StyleLayoutAnimation,
 } from './commonTypes';
 /* global _WORKLET */
-import { ParsedColorArray, convertToHSVA, isColor, toRGBA } from '../Colors';
+import {
+  ParsedColorArray,
+  isColor,
+  convertToRGBA,
+  rgbaArrayToRGBAColor,
+  toGammaSpace,
+  toLinearSpace,
+} from '../Colors';
 
 import {
   AnimatedStyle,
@@ -26,6 +33,7 @@ export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = false;
   return result;
 }
+
 interface RecognizedPrefixSuffix {
   prefix?: string;
   suffix?: string;
@@ -122,55 +130,59 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return res;
   };
 
-  const tab = ['H', 'S', 'V', 'A'];
+  const tab = ['R', 'G', 'B', 'A'];
   const colorOnStart = (
     animation: Animation<AnimationObject>,
     value: string | number,
     timestamp: Timestamp,
     previousAnimation: Animation<AnimationObject>
   ): void => {
-    let HSVAValue: ParsedColorArray;
-    let HSVACurrent: ParsedColorArray;
-    let HSVAToValue: ParsedColorArray;
+    let RGBAValue: ParsedColorArray;
+    let RGBACurrent: ParsedColorArray;
+    let RGBAToValue: ParsedColorArray;
     const res: Array<number> = [];
     if (isColor(value)) {
-      HSVACurrent = convertToHSVA(animation.current);
-      HSVAValue = convertToHSVA(value);
+      RGBACurrent = toLinearSpace(convertToRGBA(animation.current));
+      RGBAValue = toLinearSpace(convertToRGBA(value));
       if (animation.toValue) {
-        HSVAToValue = convertToHSVA(animation.toValue);
+        RGBAToValue = toLinearSpace(convertToRGBA(animation.toValue));
       }
     }
     tab.forEach((i, index) => {
       animation[i] = Object.assign({}, animationCopy);
-      animation[i].current = HSVACurrent[index];
-      animation[i].toValue = HSVAToValue ? HSVAToValue[index] : undefined;
+      animation[i].current = RGBACurrent[index];
+      animation[i].toValue = RGBAToValue ? RGBAToValue[index] : undefined;
       animation[i].onStart(
         animation[i],
-        HSVAValue[index],
+        RGBAValue[index],
         timestamp,
         previousAnimation ? previousAnimation[i] : undefined
       );
       res.push(animation[i].current);
     });
 
-    animation.current = toRGBA(res as ParsedColorArray);
+    animation.current = rgbaArrayToRGBAColor(
+      toGammaSpace(res as ParsedColorArray)
+    );
   };
 
   const colorOnFrame = (
     animation: Animation<AnimationObject>,
     timestamp: Timestamp
   ): boolean => {
-    const HSVACurrent = convertToHSVA(animation.current);
+    const RGBACurrent = toLinearSpace(convertToRGBA(animation.current));
     const res: Array<number> = [];
     let finished = true;
     tab.forEach((i, index) => {
-      animation[i].current = HSVACurrent[index];
+      animation[i].current = RGBACurrent[index];
       // @ts-ignore: disable-next-line
       finished &= animation[i].onFrame(animation[i], timestamp);
       res.push(animation[i].current);
     });
 
-    animation.current = toRGBA(res as ParsedColorArray);
+    animation.current = rgbaArrayToRGBAColor(
+      toGammaSpace(res as ParsedColorArray)
+    );
     return finished;
   };
 
@@ -239,6 +251,8 @@ type AnimationToDecoration<
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
 
+const IS_NATIVE = NativeReanimatedModule.native;
+
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
   U extends AnimationObject | StyleLayoutAnimation = T // type that's received
@@ -254,8 +268,8 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !NativeReanimatedModule.native) {
-    return create() as unknown as T;
+  if (_WORKLET || !IS_NATIVE) {
+    return create();
   }
   // @ts-ignore: eslint-disable-line
   return create;

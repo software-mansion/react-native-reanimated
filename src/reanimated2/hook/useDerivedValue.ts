@@ -4,6 +4,7 @@ import { InferAnimationReturnType } from '../animation/commonTypes';
 import { Animation, BasicWorkletFunction, SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import { DependencyList } from './commonTypes';
+import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<T> = Readonly<SharedValue<T>>;
 
@@ -22,7 +23,13 @@ function useDerivedValue<T>(
   dependencies?: DependencyList
 ): DerivedValue<T> {
   const initRef = useRef<SharedValue<T> | null>(null);
-  const inputs = Object.values(processor._closure ?? {});
+  let inputs = Object.values(processor._closure ?? {});
+  if (shouldBeUseWeb()) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
+  }
 
   // build dependencies
   if (dependencies === undefined) {

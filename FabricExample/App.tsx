@@ -126,15 +126,15 @@ const EXAMPLES = [
     component: ScrollToExample,
   },
   {
-    name: 'ScrollViewPositionExample',
+    name: 'ScrollViewOffsetExample',
     icon: '𝌍',
-    title: 'useScrollViewPosition',
+    title: 'useScrollViewOffset',
     component: ScrollViewOffsetExample,
   },
   {
     name: 'ArticleProgressExample',
     icon: '📰',
-    title: 'Article Progress Example',
+    title: 'Article progress',
     component: ArticleProgressExample,
   },
   {
@@ -201,6 +201,7 @@ function HomeScreen() {
       style={styles.list}
       data={EXAMPLES}
       ItemSeparatorComponent={ItemSeparator}
+      initialNumToRender={EXAMPLES.length}
       renderItem={({ item }) => (
         <Item
           title={item.icon + '  ' + item.title}

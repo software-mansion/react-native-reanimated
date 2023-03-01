@@ -1,100 +1,43 @@
-import MapperRegistry from './MapperRegistry';
-import Mapper from './Mapper';
-import MutableValue from './MutableValue';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import {
-  Timestamp,
-  NestedObjectValues,
-  AnimatedKeyboardInfo,
+  SensorType,
+  ShareableRef,
+  Value3D,
+  ValueRotation,
 } from '../commonTypes';
-import { isJest } from '../PlatformChecker';
+import { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
-  _valueSetter?: <T>(value: T) => void = undefined;
-
-  _renderRequested = false;
-  _mapperRegistry: MapperRegistry<any> = new MapperRegistry(this);
-  _frames: ((timestamp: Timestamp) => void)[] = [];
-  timeProvider: { now: () => number };
+  nextSensorId = 0;
+  sensors = new Map<number, WebSensor>();
 
   constructor() {
     super(false);
-    if (isJest()) {
-      this.timeProvider = { now: () => global.ReanimatedDataMock.now() };
-    } else {
-      this.timeProvider = { now: () => window.performance.now() };
-    }
   }
 
-  pushFrame(frame: (timestamp: Timestamp) => void): void {
-    this._frames.push(frame);
-    this.maybeRequestRender();
+  makeShareableClone<T>(value: T): ShareableRef<T> {
+    return { __hostObjectShareableJSRef: value };
   }
 
-  getTimestamp(): number {
-    return this.timeProvider.now();
+  installCoreFunctions(
+    _callGuard: <T extends Array<any>, U>(
+      fn: (...args: T) => U,
+      ...args: T
+    ) => void,
+    _valueUnpacker: <T>(value: T) => T
+  ): void {
+    // noop
   }
 
-  maybeRequestRender(): void {
-    if (!this._renderRequested) {
-      this._renderRequested = true;
-
-      requestAnimationFrame((_timestampMs) => {
-        this._renderRequested = false;
-
-        this._onRender(this.getTimestamp());
-      });
-    }
+  scheduleOnUI<T>(worklet: ShareableRef<T>) {
+    // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
+    requestAnimationFrame(worklet);
   }
 
-  _onRender(timestampMs: number): void {
-    this._mapperRegistry.execute();
-
-    const frames = [...this._frames];
-    this._frames = [];
-
-    for (let i = 0, len = frames.length; i < len; ++i) {
-      frames[i](timestampMs);
-    }
-
-    if (this._mapperRegistry.needRunOnRender) {
-      this._mapperRegistry.execute();
-    }
-  }
-
-  installCoreFunctions(valueSetter: <T>(value: T) => void): void {
-    this._valueSetter = valueSetter;
-  }
-
-  makeShareable<T>(value: T): T {
-    return value;
-  }
-
-  makeMutable<T>(value: T): MutableValue<T> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return new MutableValue(value, this._valueSetter!);
-  }
-
-  makeRemote<T>(object = {}): T {
-    return object as T;
-  }
-
-  startMapper(
-    mapper: () => void,
-    inputs: NestedObjectValues<MutableValue<unknown>>[] = [],
-    outputs: NestedObjectValues<MutableValue<unknown>>[] = []
-  ): number {
-    const instance = new Mapper(this, mapper, inputs, outputs);
-    const mapperId = this._mapperRegistry.startMapper(instance);
-    this.maybeRequestRender();
-    return mapperId;
-  }
-
-  stopMapper(mapperId: number): void {
-    this._mapperRegistry.stopMapper(mapperId);
-  }
-
-  registerEventHandler<T>(_: string, __: (event: T) => void): string {
+  registerEventHandler<T>(
+    _eventHash: string,
+    _eventHandler: ShareableRef<T>
+  ): string {
     // noop
     return '';
   }
@@ -109,29 +52,65 @@ export default class JSReanimated extends NativeReanimated {
     );
   }
 
-  registerSensor(): number {
-    console.warn('[Reanimated] useAnimatedSensor is not available on web yet.');
-    return -1;
-  }
+  registerSensor(
+    sensorType: SensorType,
+    interval: number,
+    iosReferenceFrame: number,
+    eventHandler: (data: Value3D | ValueRotation) => void
+  ): number {
+    if (!(this.getSensorName(sensorType) in window)) {
+      return -1;
+    }
 
-  unregisterSensor(): void {
-    // noop
-  }
+    const sensor: WebSensor = this.initializeSensor(sensorType, interval);
+    let callback;
+    if (sensorType === SensorType.ROTATION) {
+      callback = () => {
+        const [qw, qx, qy, qz] = sensor.quaternion;
 
-  jestResetModule() {
-    if (isJest()) {
-      /**
-       * If someone used timers to stop animation before the end,
-       * then _renderRequested was set as true
-       * and any new update from another test wasn't applied.
-       */
-      this._renderRequested = false;
+        // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
+        const yaw = Math.atan2(
+          2.0 * (qy * qz + qw * qx),
+          qw * qw - qx * qx - qy * qy + qz * qz
+        );
+        const pitch = Math.sin(-2.0 * (qx * qz - qw * qy));
+        const roll = Math.atan2(
+          2.0 * (qx * qy + qw * qz),
+          qw * qw + qx * qx - qy * qy - qz * qz
+        );
+        eventHandler({
+          qw,
+          qx,
+          qy,
+          qz,
+          yaw,
+          pitch,
+          roll,
+          interfaceOrientation: 0,
+        });
+      };
     } else {
-      throw Error('This method can be only use in Jest testing.');
+      callback = () => {
+        const { x, y, z } = sensor;
+        eventHandler({ x, y, z, interfaceOrientation: 0 });
+      };
+    }
+    sensor.addEventListener('reading', callback);
+    sensor.start();
+
+    this.sensors.set(this.nextSensorId, sensor);
+    return this.nextSensorId++;
+  }
+
+  unregisterSensor(id: number): void {
+    const sensor: WebSensor | undefined = this.sensors.get(id);
+    if (sensor !== undefined) {
+      sensor.stop();
+      this.sensors.delete(id);
     }
   }
 
-  subscribeForKeyboardEvents(_: AnimatedKeyboardInfo): number {
+  subscribeForKeyboardEvents(_: ShareableRef<number>): number {
     console.warn(
       '[Reanimated] useAnimatedKeyboard is not available on web yet.'
     );
@@ -140,5 +119,39 @@ export default class JSReanimated extends NativeReanimated {
 
   unsubscribeFromKeyboardEvents(_: number): void {
     // noop
+  }
+
+  initializeSensor(sensorType: SensorType, interval: number): WebSensor {
+    const config =
+      interval <= 0
+        ? { referenceFrame: 'device' }
+        : { frequency: 1000 / interval };
+    switch (sensorType) {
+      case SensorType.ACCELEROMETER:
+        return new window.Accelerometer(config);
+      case SensorType.GYROSCOPE:
+        return new window.Gyroscope(config);
+      case SensorType.GRAVITY:
+        return new window.GravitySensor(config);
+      case SensorType.MAGNETIC_FIELD:
+        return new window.Magnetometer(config);
+      case SensorType.ROTATION:
+        return new window.AbsoluteOrientationSensor(config);
+    }
+  }
+
+  getSensorName(sensorType: SensorType): string {
+    switch (sensorType) {
+      case SensorType.ACCELEROMETER:
+        return 'Accelerometer';
+      case SensorType.GRAVITY:
+        return 'GravitySensor';
+      case SensorType.GYROSCOPE:
+        return 'Gyroscope';
+      case SensorType.MAGNETIC_FIELD:
+        return 'Magnetometer';
+      case SensorType.ROTATION:
+        return 'AbsoluteOrientationSensor';
+    }
   }
 }
