@@ -22,16 +22,16 @@ describe('babel plugin', () => {
         useAnimatedStyle,
         useSharedValue,
       } from 'react-native-reanimated';
-      
+
       function Box() {
         const offset = useSharedValue(0);
-      
+
         const animatedStyles = useAnimatedStyle(() => {
           return {
             transform: [{ translateX: offset.value * 255 }],
           };
         });
-      
+
         return (
           <>
             <Animated.View style={[styles.box, animatedStyles]} />
@@ -51,13 +51,13 @@ describe('babel plugin', () => {
 
       function Box() {
         const offset = Reanimated.useSharedValue(0);
-      
+
         const animatedStyles = Reanimated.useAnimatedStyle(() => {
           return {
             transform: [{ translateX: offset.value * 255 }],
           };
         });
-      
+
         return (
           <>
             <Animated.View style={[styles.box, animatedStyles]} />
@@ -141,7 +141,7 @@ describe('babel plugin', () => {
       const x = 5;
 
       const objX = { x };
-      
+
       function f() {
         'worklet';
         return { res: x + objX.x };
@@ -483,6 +483,138 @@ describe('babel plugin', () => {
         'worklet';
         console.log(...arg);
       }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports recursive calls', () => {
+    const input = `
+      const a = 1;
+      function foo(t) {
+        'worklet';
+        if (t > 0) {
+          return a + foo(t-1);
+        }
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression', () => {
+    const input = `
+    function App(){
+      (0, fun)({ onStart() {} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, with objectHook', () => {
+    const input = `
+    function App(){
+      (0, useAnimatedGestureHandler)({ onStart() {} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, with worklet', () => {
+    const input = `
+    function App(){
+      (0, fun)({ onStart() {'worklet'} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, many arguments', () => {
+    const input = `
+    function App(){
+      (0, 3, fun)({ onStart() {'worklet'} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports SequenceExpression, with worklet closure', () => {
+    const input = `
+    function App(){
+      const obj = {a: 1, b: 2};
+      (0, fun)({ onStart() {'worklet'; const a = obj.a;} }, []);
+    }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style', () => {
+    const input = `
+    function App() {
+      return <Animated.View style={{ width: sharedValue.value }} />;
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style, style array', () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={[style, { width: sharedValue.value }]} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style, transforms', () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={{ transform: [{ translateX: sharedValue.value }] }} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't show a warning if user writes something like style={styles.value}", () => {
+    const input = `
+    function App() {
+      return <Animated.View style={styles.value} />;
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't break if there is a spread syntax", () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={[style, { ...styles.container, width: sharedValue.value }]} />
+      );
+    }    
     `;
 
     const { code } = runPlugin(input);

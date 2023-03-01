@@ -313,24 +313,6 @@ using namespace facebook::react;
 }
 #endif
 
-- (BOOL)isDirectEvent:(id<RCTEvent>)event
-{
-  static NSArray<NSString *> *directEventNames;
-  static dispatch_once_t directEventNamesToken;
-  dispatch_once(&directEventNamesToken, ^{
-    directEventNames = @[
-      @"topContentSizeChange",
-      @"topMomentumScrollBegin",
-      @"topMomentumScrollEnd",
-      @"topScroll",
-      @"topScrollBeginDrag",
-      @"topScrollEndDrag"
-    ];
-  });
-
-  return [directEventNames containsObject:RCTNormalizeInputEventName(event.eventName)];
-}
-
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
   NSString *key = [NSString stringWithFormat:@"%@%@", event.viewTag, RCTNormalizeInputEventName(event.eventName)];
@@ -349,9 +331,7 @@ using namespace facebook::react;
         return;
       }
       eventHandler(eventHash, event);
-      if ([strongSelf isDirectEvent:event]) {
-        [strongSelf performOperations];
-      }
+      [strongSelf performOperations];
     });
   }
 }
