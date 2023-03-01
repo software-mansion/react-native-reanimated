@@ -46,17 +46,28 @@ Values:
 * `MAGNETIC_FIELD`  
   measurements output as [[3DVector](#3dvector-object)]. Measured in μT.
 * `ROTATION`  
-  measurements output as [[RotationVector](#rotationvector-object)]. [qx, qy, qz, qw] is a normalized quaternion. [yaw, pitch, roll] are rotations measured in radians along respective axes.
+  measurements output as [[RotationVector](#rotationvector-object)]. [qx, qy, qz, qw] is a normalized quaternion. [yaw, pitch, roll] are rotations measured in radians along respective axes. We follow the iOS [convention](https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data/understanding_reference_frames_and_device_attitude).
 
 #### `UserConfig: [object]`
 Properties:
 * `interval: [number | auto]` - interval in milliseconds between shared value updates. Pass `'auto'` to select interval based on device frame rate. Default: `'auto'`.
+* `iosReferenceFrame: [[IOSReferenceFrame](#iosreferenceframe-enum)]` - reference frame to use on iOS. Default: `Auto`.
+* `adjustToInterfaceOrientation: [boolean]` - whether to adjust measurements to the current interface orientation. For example, in the landscape orientation axes x and y may need to be reversed when drawn on the screen. It's `true` by default.
+
+#### `IOSReferenceFrame: [enum]`
+`IOSReferenceFrame` is an enum describing reference frame to use on iOS. It follows Apple's [documentation](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe). Possible values:
+* `XArbitraryZVertical`
+* `XArbitraryCorrectedZVertical`
+* `XMagneticNorthZVertical`
+* `XTrueNorthZVertical`
+* `Auto` - on devices without magnetometer (for example iPods) `XArbitraryZVertical`, on devices with magnetometer `XArbitraryCorrectedZVertical`
 
 #### `3DVector: [object]`
 Properties:
 * `x: number`
 * `y: number`
 * `z: number`
+* `interfaceOrientation: [[InterfaceOrientation](#interfaceorientation-enum)]`
 
 #### `RotationVector: [object]`
 Properties:
@@ -67,6 +78,14 @@ Properties:
 * `yaw: number`
 * `pitch: number`
 * `roll: number`
+* `interfaceOrientation: [[InterfaceOrientation](#interfaceorientation-enum)]`
+
+#### `InterfaceOrientation: [enum]`
+Values:
+* `ROTATION_0` - default rotation on Android, portrait orientation on iOS
+* `ROTATION_90` - 90 degrees rotation on Android, landscape right orientation on iOS (landscape and home button on the right)
+* `ROTATION_180` - 180 degrees rotation on Android, upside down orientation on iOS
+* `ROTATION_270` - 270 degrees rotation on Android, landscape left orientation on iOS (landscape and home button on the left)
 
 ### Example
 ```js
