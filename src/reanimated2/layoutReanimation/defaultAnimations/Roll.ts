@@ -1,4 +1,3 @@
-import { Dimensions } from 'react-native';
 import {
   ComplexAnimationBuilder,
   BaseAnimationBuilder,
@@ -7,8 +6,6 @@ import {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
-
-const { width } = Dimensions.get('window');
 
 export class RollInLeft
   extends ComplexAnimationBuilder
@@ -27,7 +24,7 @@ export class RollInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
@@ -37,7 +34,10 @@ export class RollInLeft
           ],
         },
         initialValues: {
-          transform: [{ translateX: -width }, { rotate: '-180deg' }],
+          transform: [
+            { translateX: -values.windowWidth },
+            { rotate: '-180deg' },
+          ],
           ...initialValues,
         },
         callback: callback,
@@ -63,7 +63,7 @@ export class RollInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
@@ -73,7 +73,7 @@ export class RollInRight
           ],
         },
         initialValues: {
-          transform: [{ translateX: width }, { rotate: '180deg' }],
+          transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }],
           ...initialValues,
         },
         callback: callback,
@@ -99,12 +99,17 @@ export class RollOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
           transform: [
-            { translateX: delayFunction(delay, animation(-width, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(-values.windowWidth, config)
+              ),
+            },
             { rotate: delayFunction(delay, animation('-180deg', config)) },
           ],
         },
@@ -135,12 +140,17 @@ export class RollOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
           transform: [
-            { translateX: delayFunction(delay, animation(width, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(values.windowWidth, config)
+              ),
+            },
             { rotate: delayFunction(delay, animation('180deg', config)) },
           ],
         },

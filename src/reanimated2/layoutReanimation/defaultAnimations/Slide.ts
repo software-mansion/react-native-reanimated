@@ -5,13 +5,10 @@ import {
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
-import { Dimensions } from 'react-native';
 import {
   ComplexAnimationBuilder,
   BaseAnimationBuilder,
 } from '../animationBuilder';
-
-const { width, height } = Dimensions.get('window');
 
 export class SlideInRight
   extends ComplexAnimationBuilder
@@ -40,7 +37,7 @@ export class SlideInRight
           ),
         },
         initialValues: {
-          originX: values.targetOriginX + width,
+          originX: values.targetOriginX + values.windowWidth,
           ...initialValues,
         },
         callback: callback,
@@ -76,7 +73,7 @@ export class SlideInLeft
           ),
         },
         initialValues: {
-          originX: values.targetOriginX - width,
+          originX: values.targetOriginX - values.windowWidth,
           ...initialValues,
         },
         callback: callback,
@@ -108,7 +105,13 @@ export class SlideOutRight
         animations: {
           originX: delayFunction(
             delay,
-            animation(Math.max(values.currentOriginX + width, width), config)
+            animation(
+              Math.max(
+                values.currentOriginX + values.windowWidth,
+                values.windowWidth
+              ),
+              config
+            )
           ),
         },
         initialValues: {
@@ -144,7 +147,13 @@ export class SlideOutLeft
         animations: {
           originX: delayFunction(
             delay,
-            animation(Math.min(values.currentOriginX - width, -width), config)
+            animation(
+              Math.min(
+                values.currentOriginX - values.windowWidth,
+                -values.windowWidth
+              ),
+              config
+            )
           ),
         },
         initialValues: {
@@ -184,7 +193,7 @@ export class SlideInUp
           ),
         },
         initialValues: {
-          originY: -height,
+          originY: -values.windowHeight,
           ...initialValues,
         },
         callback: callback,
@@ -220,7 +229,7 @@ export class SlideInDown
           ),
         },
         initialValues: {
-          originY: values.targetOriginY + height,
+          originY: values.targetOriginY + values.windowHeight,
           ...initialValues,
         },
         callback: callback,
@@ -252,7 +261,13 @@ export class SlideOutUp
         animations: {
           originY: delayFunction(
             delay,
-            animation(Math.min(values.currentOriginY - height, -height), config)
+            animation(
+              Math.min(
+                values.currentOriginY - values.windowHeight,
+                -values.windowHeight
+              ),
+              config
+            )
           ),
         },
         initialValues: { originY: values.currentOriginY, ...initialValues },
@@ -285,7 +300,13 @@ export class SlideOutDown
         animations: {
           originY: delayFunction(
             delay,
-            animation(Math.max(values.currentOriginY + height, height), config)
+            animation(
+              Math.max(
+                values.currentOriginY + values.windowHeight,
+                values.windowHeight
+              ),
+              config
+            )
           ),
         },
         initialValues: { originY: values.currentOriginY, ...initialValues },

@@ -46,7 +46,15 @@ function AnimatedView() {
     'worklet';
 
     return {
-      initialValues: {},
+      initialValues: {
+        transform: [
+          { translateY: targetValues.currentHeight / 2 },
+          { perspective: 500 },
+          { rotateX: '0deg' },
+          { translateY: -targetValues.currentHeight / 2 },
+          { translateY: 0 },
+        ],
+      },
       animations: {
         transform: [
           { translateY: withTiming(targetValues.currentHeight / 2) },
