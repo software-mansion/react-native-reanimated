@@ -5,6 +5,7 @@ import Animated, {
   withTiming,
   withDelay,
   LayoutAnimationFunction,
+  withSequence,
 } from 'react-native-reanimated';
 
 function CustomLayoutTransiton(): LayoutAnimationFunction {
@@ -26,12 +27,17 @@ function CustomLayoutTransiton(): LayoutAnimationFunction {
         ),
         width: withTiming(values.targetWidth, { duration: 1000 }),
         height: withTiming(values.targetHeight, { duration: 1000 }),
+        backgroundColor: withSequence(
+          withTiming('blue', { duration: 1000 }),
+          withTiming('red', { duration: 1000 })
+        ),
       },
       initialValues: {
         originX: values.currentOriginX,
         originY: values.currentGlobalOriginY,
         width: values.currentWidth,
         height: values.currentHeight,
+        backgroundColor: 'red',
       },
     };
   };

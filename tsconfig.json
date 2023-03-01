@@ -16,6 +16,8 @@
     "paths": {
       "react-native-reanimated": ["./src"],
     },
+    "resolveJsonModule": true,
   },
+  "include": ["src"],
   "exclude": ["Example", "FabricExample", "TVOSExample", "WebExample", "docs"]
 }
