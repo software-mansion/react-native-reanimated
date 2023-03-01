@@ -8,5 +8,5 @@
     },
   },
   "exclude": [],
-  "include": ["react-native-reanimated-tests.tsx"]
+  "include": ["react-native-reanimated-tests.tsx", "src"]
 }

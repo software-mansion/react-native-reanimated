@@ -2,27 +2,45 @@ import type {
   AnimatedStyle,
   StyleProps,
   MeasuredDimensions,
+  MapperRegistry,
+  ShareableRef,
+  ShareableSyncDataHolderRef,
 } from './commonTypes';
-import type { ReanimatedConsole } from './core';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { ShadowNodeWrapper } from './hook/commonTypes';
+import { LayoutAnimationStartFunction } from './layoutReanimation';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 
 declare global {
   const _WORKLET: boolean;
   const _IS_FABRIC: boolean;
-  const _frameTimestamp: number | null;
-  const _eventTimestamp: number;
+  const _REANIMATED_VERSION_CPP: string;
   const __reanimatedModuleProxy: NativeReanimated;
-  const _setGlobalConsole: (console?: ReanimatedConsole) => void;
+  const evalWithSourceMap: (
+    js: string,
+    sourceURL: string,
+    sourceMap: string
+  ) => any;
+  const evalWithSourceUrl: (js: string, sourceURL: string) => any;
   const _log: (s: string) => void;
   const _getCurrentTime: () => number;
-  const _stopObservingProgress: (tag: number, flag: boolean) => void;
-  const _startObservingProgress: (
+  const _notifyAboutProgress: (
     tag: number,
-    flag: { value: boolean; _value: boolean }
+    value: number,
+    isSharedTransition: boolean
+  ) => void;
+  const _notifyAboutEnd: (
+    tag: number,
+    finished: boolean,
+    removeView: boolean
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
+  const _makeShareableClone: (value: any) => any;
+  const _updateDataSynchronously: (
+    dataHolder: ShareableSyncDataHolderRef,
+    data: ShareableRef
+  ) => void;
+  const _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
   const _updatePropsPaper: (
     tag: number,
     name: string,
@@ -32,9 +50,7 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
   ) => void;
-  const _removeShadowNodeFromRegistry: (
-    shadowNodeWrapper: ShadowNodeWrapper
-  ) => void;
+  const _removeShadowNodeFromRegistry: (viewTag: number) => void;
   const _measure: (viewTag: number) => MeasuredDimensions;
   const _scrollTo: (
     viewTag: number,
@@ -47,35 +63,40 @@ declare global {
     commandName: string,
     args: Array<unknown>
   ) => void;
-  const _chronoNow: () => number;
   const performance: { now: () => number };
-  const LayoutAnimationRepository: {
-    configs: Record<string, unknown>;
-    registerConfig(tag: number, config: Record<string, unknown>): void;
-    removeConfig(tag: number): void;
-    startAnimationForTag(tag: number, type: string, yogaValues: unknown): void;
-  };
   const ReanimatedDataMock: {
     now: () => number;
   };
+  const ErrorUtils: {
+    reportFatalError: (error: Error) => void;
+  };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
+  const requestAnimationFrame: (callback: (time: number) => void) => number;
+  const setImmediate: (callback: (time: number) => void) => number;
+  const console: Console;
 
   namespace NodeJS {
     interface Global {
       _WORKLET: boolean;
       _IS_FABRIC: boolean;
-      _frameTimestamp: number | null;
-      _eventTimestamp: number;
+      _REANIMATED_VERSION_CPP: string;
       __reanimatedModuleProxy: NativeReanimated;
-      _setGlobalConsole: (console?: ReanimatedConsole) => void;
+      __frameTimestamp?: number;
+      evalWithSourceMap: (
+        js: string,
+        sourceURL: string,
+        sourceMap: string
+      ) => any;
+      evalWithSourceUrl: (js: string, sourceURL: string) => any;
       _log: (s: string) => void;
       _getCurrentTime: () => number;
-      _stopObservingProgress: (tag: number, flag: boolean) => void;
-      _startObservingProgress: (
-        tag: number,
-        flag: { value: boolean; _value: boolean }
-      ) => void;
       _setGestureState: (handlerTag: number, newState: number) => void;
+      _makeShareableClone: (value: any) => any;
+      _updateDataSynchronously: (
+        ShareableSyncDataHolderRef,
+        ShareableRef
+      ) => void;
+      _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
       _updatePropsPaper: (
         tag: number,
         name: string,
@@ -85,9 +106,7 @@ declare global {
         shadowNodeWrapper: ShadowNodeWrapper,
         props: StyleProps | AnimatedStyle
       ) => void;
-      _removeShadowNodeFromRegistry: (
-        shadowNodeWrapper: ShadowNodeWrapper
-      ) => void;
+      _removeShadowNodeFromRegistry: (viewTag: number) => void;
       _measure: (viewTag: number) => MeasuredDimensions;
       _scrollTo: (
         viewTag: number,
@@ -100,22 +119,25 @@ declare global {
         commandName: string,
         args: Array<unknown>
       ) => void;
-      _chronoNow: () => number;
       performance: { now: () => number };
-      LayoutAnimationRepository: {
-        configs: Record<string, unknown>;
-        registerConfig(tag: number, config: Record<string, unknown>): void;
-        removeConfig(tag: number): void;
-        startAnimationForTag(
-          tag: number,
-          type: string,
-          yogaValues: unknown
-        ): void;
+      LayoutAnimationsManager: {
+        start: LayoutAnimationStartFunction;
       };
       ReanimatedDataMock: {
         now: () => number;
       };
+      ErrorUtils: {
+        reportFatalError: (error: Error) => void;
+      };
       _frameCallbackRegistry: FrameCallbackRegistryUI;
+      __workletsCache?: Map<string, (...args: any[]) => any>;
+      __handleCache?: WeakMap<any, any>;
+      __mapperRegistry?: MapperRegistry;
+      __flushImmediates: () => void;
+      __flushAnimationFrame: (frameTimestamp: number) => void;
+      requestAnimationFrame: (callback: (time: number) => void) => number;
+      setImmediate: (callback: (time: number) => void) => number;
+      console: Console;
     }
   }
 }
