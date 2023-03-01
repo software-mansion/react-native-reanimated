@@ -247,8 +247,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   template <class TReturn, class... TParams>
   std::function<TReturn(TParams...)> bindThis(
       TReturn (NativeProxy::*methodPtr)(TParams...)) {
-    return [this, methodPtr](TParams... args) {
-      return (this->*methodPtr)(args...);
+    return [this, methodPtr](TParams &&...args) {
+      return (this->*methodPtr)(std::forward<TParams>(args)...);
     };
   }
 
