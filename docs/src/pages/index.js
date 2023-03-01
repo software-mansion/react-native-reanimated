@@ -37,7 +37,7 @@ const bannerTitle =
 const bannerDescription =
   'eact Native Reanimated provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.';
 const blogUrl =
-  'https://blog.swmansion.com/introducing-reanimated-2-752b913af8b3';
+  'https://blog.swmansion.com/releasing-reanimated-3-0-17fab4cb2394';
 const exampleUrl =
   'https://github.com/software-mansion/react-native-reanimated/tree/main/Example';
 const playgroundUrl =
