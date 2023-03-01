@@ -11,13 +11,14 @@
 
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
-#include "LayoutAnimationsProxy.h"
+#include "JsiUtils.h"
+#include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
+#include "ReanimatedVersion.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <JFabricUIManager.h>
 #include "FabricUtils.h"
 #include "NewestShadowNodesRegistry.h"
 #include "ReanimatedUIManagerBinding.h"
@@ -63,6 +64,11 @@ NativeProxy::NativeProxy(
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
+
+  // cleanup all animated sensors here, since NativeProxy
+  // has already been destroyed when AnimatedSensorModule's
+  // destructor is ran
+  _nativeReanimatedModule->cleanupSensors();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -132,24 +138,9 @@ void NativeProxy::installJSIBindings(
     return static_cast<double>(output);
   };
 
-  auto requestRender = [this, getCurrentTime](
+  auto requestRender = [this](
                            std::function<void(double)> onRender,
-                           jsi::Runtime &rt) {
-    // doNoUse -> NodesManager passes here a timestamp from choreographer which
-    // is useless for us as we use diffrent timer to better handle events. The
-    // lambda is translated to NodeManager.OnAnimationFrame and treated just
-    // like reanimated 1 frame callbacks which make use of the timestamp.
-    auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
-      jsi::Object global = rt.global();
-      jsi::String frameTimestampName =
-          jsi::String::createFromAscii(rt, "_frameTimestamp");
-      double frameTimestamp = getCurrentTime();
-      global.setProperty(rt, frameTimestampName, frameTimestamp);
-      onRender(frameTimestamp);
-      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
-    };
-    this->requestRender(std::move(wrappedOnRender));
-  };
+                           jsi::Runtime &rt) { this->requestRender(onRender); };
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction =
@@ -180,8 +171,11 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto registerSensorFunction =
-      [this](int sensorType, int interval, std::function<void(double[])> setter)
-      -> int {
+      [this](
+          int sensorType,
+          int interval,
+          int iosReferenceFrame,
+          std::function<void(double[], int)> setter) -> int {
     return this->registerSensor(sensorType, interval, std::move(setter));
   };
   auto unregisterSensorFunction = [this](int sensorId) {
@@ -193,8 +187,11 @@ void NativeProxy::installJSIBindings(
   };
 
   auto subscribeForKeyboardEventsFunction =
-      [this](std::function<void(int, int)> keyboardEventDataUpdater) -> int {
-    return subscribeForKeyboardEvents(std::move(keyboardEventDataUpdater));
+      [this](
+          std::function<void(int, int)> keyboardEventDataUpdater,
+          bool isStatusBarTranslucent) -> int {
+    return subscribeForKeyboardEvents(
+        std::move(keyboardEventDataUpdater), isStatusBarTranslucent);
   };
 
   auto unsubscribeFromKeyboardEventsFunction = [this](int listenerId) -> void {
@@ -205,46 +202,44 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       ReanimatedRuntime::make(runtime_, jsQueue);
 
+  auto &rt = *runtime_;
+
   auto workletRuntimeValue =
-      runtime_->global()
-          .getProperty(*runtime_, "ArrayBuffer")
-          .asObject(*runtime_)
-          .asFunction(*runtime_)
-          .callAsConstructor(*runtime_, {static_cast<double>(sizeof(void *))});
+      rt.global()
+          .getPropertyAsObject(rt, "ArrayBuffer")
+          .asFunction(rt)
+          .callAsConstructor(rt, {static_cast<double>(sizeof(void *))});
   uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
-      workletRuntimeValue.getObject(*runtime_).getArrayBuffer(*runtime_).data(
-          *runtime_));
+      workletRuntimeValue.getObject(rt).getArrayBuffer(rt).data(rt));
   workletRuntimeData[0] = reinterpret_cast<uintptr_t>(animatedRuntime.get());
 
-  runtime_->global().setProperty(
-      *runtime_, "_WORKLET_RUNTIME", workletRuntimeValue);
+  rt.global().setProperty(rt, "_WORKLET_RUNTIME", workletRuntimeValue);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", true);
+  rt.global().setProperty(rt, "_IS_FABRIC", true);
 #else
-  runtime_->global().setProperty(*runtime_, "_IS_FABRIC", false);
+  rt.global().setProperty(rt, "_IS_FABRIC", false);
 #endif
+
+  auto version = getReanimatedVersionString(rt);
+  rt.global().setProperty(rt, "_REANIMATED_VERSION_CPP", version);
 
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
-
-  // Layout Animations Start
-
-  auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
-    this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
-  };
-
-  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-    this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
-  };
-
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-      std::make_shared<LayoutAnimationsProxy>(
-          notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
 
-  // Layout Animations End
+  auto progressLayoutAnimation =
+      [this, wrt](
+          int tag, const jsi::Object &newProps, bool isSharedTransition) {
+        auto newPropsJNI = JNIHelper::ConvertToPropsMap(*wrt.lock(), newProps);
+        this->layoutAnimations->cthis()->progressLayoutAnimation(
+            tag, newPropsJNI, isSharedTransition);
+      };
+
+  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
+    this->layoutAnimations->cthis()->endLayoutAnimation(
+        tag, isCancelled, removeView);
+  };
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -257,6 +252,8 @@ void NativeProxy::installJSIBindings(
       configurePropsFunction,
 #endif
       getCurrentTime,
+      progressLayoutAnimation,
+      endLayoutAnimation,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -274,46 +271,50 @@ void NativeProxy::installJSIBindings(
 #else
       propObtainer,
 #endif
-      layoutAnimationsProxy,
       platformDepMethodsHolder);
 
+  scheduler_->setRuntimeManager(module);
+
   _nativeReanimatedModule = module;
-
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
-#ifdef RCT_NEW_ARCH_ENABLED
-  this->registerEventHandler([weakModule, getCurrentTime](
-                                 std::string eventName,
-                                 std::string eventAsString) {
-    if (auto module = weakModule.lock()) {
-      // handles RCTEvents from RNGestureHandler
 
+  this->registerEventHandler([weakModule, getCurrentTime](
+                                 jni::alias_ref<JString> eventKey,
+                                 jni::alias_ref<react::WritableMap> event) {
+    // handles RCTEvents from RNGestureHandler
+    if (auto module = weakModule.lock()) {
+      auto eventName = eventKey->toString();
+
+      // TODO: convert event directly to jsi::Value without JSON serialization
+      std::string eventAsString;
+      try {
+        eventAsString = event->toString();
+      } catch (std::exception &) {
+        // Events from other libraries may contain NaN or INF values which
+        // cannot be represented in JSON. See
+        // https://github.com/software-mansion/react-native-reanimated/issues/1776
+        // for details.
+        return;
+      }
       std::string eventJSON = eventAsString.substr(
           13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
-      jsi::Runtime &rt = *module->runtime;
-      jsi::Value payload =
-          jsi::valueFromDynamic(rt, folly::parseJson(eventJSON));
-      // TODO: support NaN and INF values
-      // TODO: convert event directly to jsi::Value without JSON serialization
+      if (eventJSON == "null") {
+        return;
+      }
 
-      module->handleEvent(eventName, std::move(payload), getCurrentTime());
+      jsi::Runtime &rt = *module->runtime;
+      jsi::Value payload;
+      try {
+        payload = jsi::Value::createFromJsonUtf8(
+            rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+      } catch (std::exception &) {
+        // Ignore events with malformed JSON payload.
+        return;
+      }
+
+      module->handleEvent(eventName, payload, getCurrentTime());
     }
   });
-#else
-  this->registerEventHandler(
-      [weakModule, getCurrentTime](
-          std::string eventName, std::string eventAsString) {
-        if (auto module = weakModule.lock()) {
-          jsi::Object global = module->runtime->global();
-          jsi::String eventTimestampName =
-              jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-          global.setProperty(
-              *module->runtime, eventTimestampName, getCurrentTime());
-          module->onEvent(eventName, eventAsString);
-          global.setProperty(
-              *module->runtime, eventTimestampName, jsi::Value::undefined());
-        }
-      });
-#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
@@ -331,10 +332,95 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
 
-  runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(*runtime_, module));
+  std::weak_ptr<ErrorHandler> weakErrorHandler = errorHandler;
+
+  layoutAnimations->cthis()->setAnimationStartingBlock(
+      [wrt, weakModule, weakErrorHandler](
+          int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
+        auto &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (const auto &entry : *values) {
+          try {
+            std::string keyString = entry.first->toStdString();
+            std::string valueString = entry.second->toStdString();
+            auto key = jsi::String::createFromAscii(rt, keyString);
+            if (keyString == "currentTransformMatrix" ||
+                keyString == "targetTransformMatrix") {
+              jsi::Array matrix =
+                  jsi_utils::convertStringToArray(rt, valueString, 9);
+              yogaValues.setProperty(rt, key, matrix);
+            } else {
+              auto value = stod(valueString);
+              yogaValues.setProperty(rt, key, value);
+            }
+          } catch (std::invalid_argument e) {
+            if (auto errorHandler = weakErrorHandler.lock()) {
+              errorHandler->setError("Failed to convert value to number");
+              errorHandler->raise();
+            }
+          }
+        }
+
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().startLayoutAnimation(
+            rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
+      });
+
+  layoutAnimations->cthis()->setHasAnimationBlock(
+      [weakModule](int tag, int type) {
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return false;
+        }
+
+        return reaModule->layoutAnimationsManager().hasLayoutAnimation(
+            tag, static_cast<LayoutAnimationType>(type));
+      });
+
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
+      [weakModule](int tag) {
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        reaModule->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
+      });
+
+  layoutAnimations->cthis()->setCancelAnimationForTag(
+      [wrt, weakModule](
+          int tag, int type, jboolean cancelled, jboolean removeView) {
+        if (auto reaModule = weakModule.lock()) {
+          if (auto runtime = wrt.lock()) {
+            jsi::Runtime &rt = *runtime;
+            reaModule->layoutAnimationsManager().cancelLayoutAnimation(
+                rt,
+                tag,
+                static_cast<LayoutAnimationType>(type),
+                cancelled,
+                removeView);
+          }
+        }
+      });
+
+  layoutAnimations->cthis()->setFindPrecedingViewTagForTransition(
+      [weakModule](int tag) {
+        if (auto module = weakModule.lock()) {
+          return module->layoutAnimationsManager()
+              .findPrecedingViewTagForTransition(tag);
+        } else {
+          return -1;
+        }
+      });
+
+  rt.global().setProperty(
+      rt,
+      jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
+      jsi::Object::createFromHostObject(rt, module));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
@@ -368,7 +454,9 @@ void NativeProxy::requestRender(std::function<void(double)> onRender) {
 }
 
 void NativeProxy::registerEventHandler(
-    std::function<void(std::string, std::string)> handler) {
+    std::function<
+        void(jni::alias_ref<JString>, jni::alias_ref<react::WritableMap>)>
+        handler) {
   static auto method =
       javaPart_->getClass()->getMethod<void(EventHandler::javaobject)>(
           "registerEventHandler");
@@ -442,7 +530,7 @@ void NativeProxy::synchronouslyUpdateUIProps(
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
-    std::function<void(double[])> setter) {
+    std::function<void(double[], int)> setter) {
   static auto method =
       javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
           "registerSensor");
@@ -481,15 +569,18 @@ void NativeProxy::configureProps(
 }
 
 int NativeProxy::subscribeForKeyboardEvents(
-    std::function<void(int, int)> keyboardEventDataUpdater) {
-  auto method = javaPart_->getClass()
-                    ->getMethod<int(KeyboardEventDataUpdater::javaobject)>(
-                        "subscribeForKeyboardEvents");
+    std::function<void(int, int)> keyboardEventDataUpdater,
+    bool isStatusBarTranslucent) {
+  auto method =
+      javaPart_->getClass()
+          ->getMethod<int(KeyboardEventDataUpdater::javaobject, bool)>(
+              "subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),
       KeyboardEventDataUpdater::newObjectCxxArgs(
           std::move(keyboardEventDataUpdater))
-          .get());
+          .get(),
+      isStatusBarTranslucent);
 }
 
 void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
