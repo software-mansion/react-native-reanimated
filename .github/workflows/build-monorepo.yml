@@ -5,6 +5,7 @@ on:
       - .github/workflows/build-monorepo.yml
       - .github/workflows/build-monorepo-action.yml
       - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
       - android/build.gradle
   push:
     branches:

@@ -65,12 +65,12 @@ const App = () => {
   return (
     <Stack.Navigator
       detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
         animationEnabled: false,
         cardStyle: { backgroundColor: 'white' },
         headerStyle: { backgroundColor: 'red' },
         gestureEnabled: true,
+        presentation: 'modal',
         // cardOverlayEnabled: true,
       }}>
       <Stack.Screen component={Screen1} name="Screen1" />

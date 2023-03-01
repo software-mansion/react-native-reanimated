@@ -1,0 +1,190 @@
+import { SharedValue } from './commonTypes';
+import { isJest } from './PlatformChecker';
+import { runOnUI } from './threads';
+
+const IS_JEST = isJest();
+
+export type Mapper = {
+  id: number;
+  dirty: boolean;
+  worklet: () => void;
+  inputs: SharedValue<any>[];
+  outputs?: SharedValue<any>[];
+};
+
+export function createMapperRegistry() {
+  'worklet';
+  const mappers = new Map();
+  let sortedMappers: Mapper[] = [];
+
+  let runRequested = false;
+
+  function updateMappersOrder() {
+    // sort mappers topologically
+    // the algorithm here takes adventage of a fact that the topological order
+    // of a transposed graph is a reverse topological order of the original graph
+    // The graph in our case consists of mappers and an edge between two mappers
+    // A and B exists if there is a shared value that's on A's output lists and on
+    // B's input list.
+    //
+    // We don't need however to calculate that graph as it is easier to work with
+    // the transposed version of it that can be calculated ad-hoc. For the transposed
+    // version to be traversed we use "pre" map that maps share value to mappers that
+    // output that shared value. Then we can infer all the outgoing edges for a given
+    // mapper simply by scanning it's input list and checking if any of the shared values
+    // from that list exists in the "pre" map. If they do, then we have an edge between
+    // that mapper and the mappers from the "pre" list for the given shared value.
+    //
+    // For topological sorting we use a dfs-based approach that requires the graph to
+    // be traversed in dfs order and each node after being processed lands at the
+    // beginning of the topological order list. Since we traverse a transposed graph,
+    // instead of reversing that order we can use a normal array and push processed
+    // mappers to the end. There is no need to reverse that array after we are done.
+    const pre = new Map(); // map from sv -> mapper that outputs that sv
+    mappers.forEach((mapper) => {
+      if (mapper.outputs) {
+        for (const output of mapper.outputs) {
+          const preMappers = pre.get(output);
+          if (preMappers === undefined) {
+            pre.set(output, [mapper]);
+          } else {
+            preMappers.push(mapper);
+          }
+        }
+      }
+    });
+    const visited = new Set();
+    const newOrder: Mapper[] = [];
+    function dfs(mapper: Mapper) {
+      visited.add(mapper);
+      for (const input of mapper.inputs) {
+        const preMappers = pre.get(input);
+        if (preMappers) {
+          for (const preMapper of preMappers) {
+            if (!visited.has(preMapper)) {
+              dfs(preMapper);
+            }
+          }
+        }
+      }
+      newOrder.push(mapper);
+    }
+    mappers.forEach((mapper) => {
+      if (!visited.has(mapper)) {
+        dfs(mapper);
+      }
+    });
+    sortedMappers = newOrder;
+  }
+
+  function mapperRun() {
+    runRequested = false;
+    if (mappers.size !== sortedMappers.length) {
+      updateMappersOrder();
+    }
+    for (const mapper of sortedMappers) {
+      if (mapper.dirty) {
+        mapper.dirty = false;
+        mapper.worklet();
+      }
+    }
+  }
+
+  function maybeRequestUpdates() {
+    if (IS_JEST) {
+      // On Jest environment we avoid using setImmediate as that'd require test
+      // to advance the clock manually. This on other hand would require tests
+      // to know how many times mappers need to run. As we don't want tests to
+      // make any assumptions on that number it is easier to execute mappers
+      // immediately for testing purposes and only expect test to advance timers
+      // if they want to make any assertions on the effects of animations being run.
+      mapperRun();
+    } else if (!runRequested) {
+      setImmediate(mapperRun);
+      runRequested = true;
+    }
+  }
+
+  function extractInputs(
+    inputs: any,
+    resultArray: SharedValue<any>[]
+  ): SharedValue<any>[] {
+    if (Array.isArray(inputs)) {
+      for (const input of inputs) {
+        input && extractInputs(input, resultArray);
+      }
+    } else if (inputs.addListener) {
+      resultArray.push(inputs);
+    } else if (typeof inputs === 'object') {
+      for (const element of Object.values(inputs)) {
+        element && extractInputs(element, resultArray);
+      }
+    }
+    return resultArray;
+  }
+
+  return {
+    start: (
+      mapperID: number,
+      worklet: () => void,
+      inputs: SharedValue<any>[],
+      outputs?: SharedValue<any>[]
+    ) => {
+      const mapper = {
+        id: mapperID,
+        dirty: true,
+        worklet,
+        inputs: extractInputs(inputs, []),
+        outputs,
+      };
+      mappers.set(mapper.id, mapper);
+      sortedMappers = [];
+      for (const sv of mapper.inputs) {
+        sv.addListener(mapper.id, () => {
+          mapper.dirty = true;
+          maybeRequestUpdates();
+        });
+      }
+      maybeRequestUpdates();
+    },
+    stop: (mapperID: number) => {
+      const mapper = mappers.get(mapperID);
+      if (mapper) {
+        mappers.delete(mapper.id);
+        sortedMappers = [];
+        for (const sv of mapper.inputs) {
+          sv.removeListener(mapper.id);
+        }
+      }
+    },
+  };
+}
+
+let MAPPER_ID = 9999;
+
+export function startMapper(
+  worklet: () => void,
+  inputs: any[] = [],
+  outputs: any[] = []
+): number {
+  const mapperID = (MAPPER_ID += 1);
+
+  runOnUI(() => {
+    'worklet';
+    let mapperRegistry = global.__mapperRegistry;
+    if (mapperRegistry === undefined) {
+      mapperRegistry = global.__mapperRegistry = createMapperRegistry();
+    }
+    mapperRegistry.start(mapperID, worklet, inputs, outputs);
+  })();
+
+  return mapperID;
+}
+
+export function stopMapper(mapperID: number): void {
+  runOnUI(() => {
+    'worklet';
+    const mapperRegistry = global.__mapperRegistry;
+    mapperRegistry?.stop(mapperID);
+  })();
+}

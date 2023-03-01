@@ -4,6 +4,7 @@ on:
     paths:
       - .github/workflows/ios-build.yml
       - RNReanimated.podspec
+      - scripts/reanimated_utils.rb
       - ios/**
       - Common/**
       - Example/package.json
