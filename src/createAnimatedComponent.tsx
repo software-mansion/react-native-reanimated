@@ -67,23 +67,34 @@ function maybeBuild(
 }
 
 type NestedArray<T> = T | NestedArray<T>[];
-function flattenArray<T>(array: NestedArray<T>): T[] {
-  if (!Array.isArray(array)) {
-    return [array];
-  }
-  const resultArr: T[] = [];
 
-  const _flattenArray = (arr: NestedArray<T>[]): void => {
-    arr.forEach((item) => {
-      if (Array.isArray(item)) {
-        _flattenArray(item);
-      } else {
-        resultArr.push(item);
+function flattenStyleProps(
+  style: NestedArray<StyleProps | null | undefined> | null | undefined
+): StyleProps[] {
+  if (style === null || typeof style !== 'object') {
+    return [];
+  }
+  if (!Array.isArray(style)) {
+    return [style];
+  }
+
+  const result: StyleProps[] = [];
+  const _flattenStyleProps = (
+    items: NestedArray<StyleProps | null | undefined>[]
+  ): void => {
+    for (const item of items) {
+      if (item === null || typeof item !== 'object') {
+        continue;
       }
-    });
+      if (Array.isArray(item)) {
+        _flattenStyleProps(item);
+        continue;
+      }
+      result.push(item);
+    }
   };
-  _flattenArray(array);
-  return resultArr;
+  _flattenStyleProps(style);
+  return result;
 }
 
 function onlyAnimatedStyles(styles: StyleProps[]) {
@@ -116,17 +127,24 @@ const has = <K extends string>(
 };
 
 function isInlineStyleTransform(transform: any): boolean {
-  return transform.some((t: Record<string, any>) => hasInlineStyles(t));
+  return (
+    Array.isArray(transform) &&
+    transform.some((t: Record<string, any>) => hasInlineStyles(t))
+  );
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
-  return Object.keys(style).some((key) => {
-    const styleValue = style[key];
-    return (
-      isSharedValue(styleValue) ||
-      (key === 'transform' && isInlineStyleTransform(styleValue))
-    );
-  });
+  return (
+    style !== null &&
+    typeof style === 'object' &&
+    Object.keys(style).some((key) => {
+      const styleValue = style[key];
+      return (
+        isSharedValue(styleValue) ||
+        (key === 'transform' && isInlineStyleTransform(styleValue))
+      );
+    })
+  );
 }
 
 function extractSharedValuesMapFromProps(
@@ -137,7 +155,7 @@ function extractSharedValuesMapFromProps(
   for (const key in props) {
     const value = props[key];
     if (key === 'style') {
-      const styles = flattenArray<StyleProps>(props.style ?? []);
+      const styles = flattenStyleProps(props.style);
       styles.forEach((style) => {
         for (const [key, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
@@ -421,9 +439,7 @@ export default function createAnimatedComponent(
     }
 
     _attachAnimatedStyles() {
-      const styles = this.props.style
-        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
-        : [];
+      const styles = onlyAnimatedStyles(flattenStyleProps(this.props.style));
       const prevStyles = this._styles;
       this._styles = styles;
 
@@ -636,7 +652,7 @@ export default function createAnimatedComponent(
         const value = inputProps[key];
         if (key === 'style') {
           const styleProp = inputProps.style;
-          const styles = flattenArray<StyleProps>(styleProp ?? []);
+          const styles = flattenStyleProps(styleProp);
           const processedStyle: StyleProps = styles.map((style) => {
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle

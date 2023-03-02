@@ -71,6 +71,7 @@ import ModalsExample from './SharedElementTransition/Modals';
 import FlatListExample from './SharedElementTransition/FlatList';
 import ImageStackExample from './SharedElementTransition/ImageStack';
 import RestoreStateExample from './SharedElementTransition/RestoreState';
+import FalsyPropsExample from './FalsyPropsExample';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -304,6 +305,10 @@ const SCREENS: Screens = {
   InvertedFlatListExample: {
     screen: InvertedFlatListExample,
     title: 'Inverted FlatList Example',
+  },
+  FalsyPropsExample: {
+    screen: FalsyPropsExample,
+    title: 'Falsy Props Example',
   },
 };
 
