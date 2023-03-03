@@ -120,6 +120,9 @@ function isInlineStyleTransform(transform: any): boolean {
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
+  if (!style) {
+    return false;
+  }
   return Object.keys(style).some((key) => {
     const styleValue = style[key];
     return (
