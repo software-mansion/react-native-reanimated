@@ -180,7 +180,7 @@ void NativeProxy::registerNatives() {
 void NativeProxy::requestRender(
     std::function<void(double)> onRender,
     jsi::Runtime &rt) {
-  static auto method =
+  static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(
       javaPart_.get(),
@@ -189,7 +189,7 @@ void NativeProxy::requestRender(
 
 void NativeProxy::registerEventHandler() {
   auto eventHandler = bindThis(&NativeProxy::handleEvent);
-  static auto method =
+  static const auto method =
       getJniMethod<void(EventHandler::javaobject)>("registerEventHandler");
   method(
       javaPart_.get(),
@@ -203,7 +203,7 @@ jsi::Value NativeProxy::obtainProp(
     jsi::Runtime &rt,
     const int viewTag,
     const jsi::String &propName) {
-  static auto method =
+  static const auto method =
       getJniMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>(
           "obtainProp");
   local_ref<JString> propNameJStr =
@@ -217,7 +217,7 @@ void NativeProxy::configureProps(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
-  static auto method = getJniMethod<void(
+  static const auto method = getJniMethod<void(
       ReadableNativeArray::javaobject, ReadableNativeArray::javaobject)>(
       "configureProps");
   method(
@@ -234,7 +234,7 @@ void NativeProxy::updateProps(
     int viewTag,
     const jsi::Value &viewName,
     const jsi::Object &props) {
-  static auto method =
+  static const auto method =
       getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
           "updateProps");
   method(
@@ -242,13 +242,14 @@ void NativeProxy::updateProps(
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
-  static auto method =
+  static const auto method =
       getJniMethod<void(int, double, double, bool)>("scrollTo");
   method(javaPart_.get(), viewTag, x, y, animated);
 }
 
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
-  static auto method = getJniMethod<local_ref<JArrayFloat>(int)>("measure");
+  static const auto method =
+      getJniMethod<local_ref<JArrayFloat>(int)>("measure");
   local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
   size_t size = output->size();
   auto elements = output->getRegion(0, size);
@@ -291,7 +292,7 @@ int NativeProxy::registerSensor(
     int interval,
     int iosReferenceFrame,
     std::function<void(double[], int)> setter) {
-  static auto method =
+  static const auto method =
       getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
   return method(
       javaPart_.get(),
@@ -300,19 +301,19 @@ int NativeProxy::registerSensor(
       SensorSetter::newObjectCxxArgs(std::move(setter)).get());
 }
 void NativeProxy::unregisterSensor(int sensorId) {
-  static auto method = getJniMethod<void(int)>("unregisterSensor");
+  static const auto method = getJniMethod<void(int)>("unregisterSensor");
   method(javaPart_.get(), sensorId);
 }
 
 void NativeProxy::setGestureState(int handlerTag, int newState) {
-  static auto method = getJniMethod<void(int, int)>("setGestureState");
+  static const auto method = getJniMethod<void(int, int)>("setGestureState");
   method(javaPart_.get(), handlerTag, newState);
 }
 
 int NativeProxy::subscribeForKeyboardEvents(
     std::function<void(int, int)> keyboardEventDataUpdater,
     bool isStatusBarTranslucent) {
-  static auto method =
+  static const auto method =
       getJniMethod<int(KeyboardEventDataUpdater::javaobject, bool)>(
           "subscribeForKeyboardEvents");
   return method(
@@ -324,12 +325,13 @@ int NativeProxy::subscribeForKeyboardEvents(
 }
 
 void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
-  static auto method = getJniMethod<void(int)>("unsubscribeFromKeyboardEvents");
+  static const auto method =
+      getJniMethod<void(int)>("unsubscribeFromKeyboardEvents");
   method(javaPart_.get(), listenerId);
 }
 
 double NativeProxy::getCurrentTime() {
-  static auto method = getJniMethod<jlong()>("getCurrentTime");
+  static const auto method = getJniMethod<jlong()>("getCurrentTime");
   jlong output = method(javaPart_.get());
   return static_cast<double>(output);
 }
@@ -476,12 +478,12 @@ void NativeProxy::setupLayoutAnimations() {
   layoutAnimations_->cthis()->setAnimationStartingBlock(
       [weakModule](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
-        auto reaModule = weakModule.lock();
-        if (reaModule == nullptr) {
+        auto module = weakModule.lock();
+        if (module == nullptr) {
           return;
         }
-        auto &rt = *reaModule->runtime;
-        auto errorHandler = reaModule->errorHandler;
+        auto &rt = *module->runtime;
+        auto errorHandler = module->errorHandler;
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -504,36 +506,36 @@ void NativeProxy::setupLayoutAnimations() {
           }
         }
 
-        reaModule->layoutAnimationsManager().startLayoutAnimation(
+        module->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
   layoutAnimations_->cthis()->setHasAnimationBlock(
       [weakModule](int tag, int type) {
-        auto reaModule = weakModule.lock();
-        if (reaModule == nullptr) {
+        auto module = weakModule.lock();
+        if (module == nullptr) {
           return false;
         }
 
-        return reaModule->layoutAnimationsManager().hasLayoutAnimation(
+        return module->layoutAnimationsManager().hasLayoutAnimation(
             tag, static_cast<LayoutAnimationType>(type));
       });
 
   layoutAnimations_->cthis()->setClearAnimationConfigBlock(
       [weakModule](int tag) {
-        auto reaModule = weakModule.lock();
-        if (reaModule == nullptr) {
+        auto module = weakModule.lock();
+        if (module == nullptr) {
           return;
         }
 
-        reaModule->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
+        module->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(
       [weakModule](int tag, int type, jboolean cancelled, jboolean removeView) {
-        if (auto reaModule = weakModule.lock()) {
-          jsi::Runtime &rt = *reaModule->runtime;
-          reaModule->layoutAnimationsManager().cancelLayoutAnimation(
+        if (auto module = weakModule.lock()) {
+          jsi::Runtime &rt = *module->runtime;
+          module->layoutAnimationsManager().cancelLayoutAnimation(
               rt,
               tag,
               static_cast<LayoutAnimationType>(type),
