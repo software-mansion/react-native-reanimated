@@ -3,7 +3,7 @@
  * with the version used to build the native part of the library in runtime.
  * Remember to keep this in sync with the version declared in `package.json`
  */
-const jsVersion = '3.0.0';
+const jsVersion = '3.0.1';
 
 /**
  * Checks that native and js versions of reanimated match.
