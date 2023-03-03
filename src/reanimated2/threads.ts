@@ -7,7 +7,7 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
-const IS_WEB_IMPEMENTATION = shouldBeUseWeb();
+const IS_WEB = shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
@@ -99,7 +99,7 @@ export function runOnUI<A extends any[], R>(
 export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__ && !IS_WEB_IMPEMENTATION) {
+  if (__DEV__ && !IS_WEB) {
     if (worklet.__workletHash === undefined) {
       throw new Error('runOnUI() can only be used on worklets');
     }
