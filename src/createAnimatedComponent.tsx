@@ -648,7 +648,7 @@ export default function createAnimatedComponent(
                 };
               }
               return this.initialStyle;
-            } else if (hasInlineStyles(style)) {
+            } else if (style && hasInlineStyles(style)) {
               if (this._isFirstRender) {
                 return getInlinePropsUpdate(style);
               }
