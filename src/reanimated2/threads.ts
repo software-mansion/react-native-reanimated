@@ -50,10 +50,8 @@ export const flushImmediates = shouldBeUseWeb()
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__ && !shouldBeUseWeb()) {
-    if (worklet.__workletHash === undefined) {
-      throw new Error('runOnUI() can only be used on worklets');
-    }
+  if (__DEV__ && !shouldBeUseWeb() && worklet.__workletHash === undefined) {
+    throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
     if (IS_JEST) {
