@@ -57,8 +57,6 @@ declare module 'react-native-reanimated' {
     import('./lib/types/lib/reanimated2/commonTypes').MeasuredDimensions;
 
   namespace Animated {
-    type Nullable<T> = T | null | undefined;
-
     export enum Extrapolate {
       EXTEND = 'extend',
       CLAMP = 'clamp',
@@ -80,22 +78,10 @@ declare module 'react-native-reanimated' {
 
     export type SharedValue<T> = { value: T };
     export type DerivedValue<T> = Readonly<SharedValue<T>>;
-    export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
       | T
-      | AnimatedNode<T>
-      | ReadonlyArray<T | AnimatedNode<T> | ReadonlyArray<T | AnimatedNode<T>>>
+      | ReadonlyArray<T | ReadonlyArray<T>>
       | SharedValue<T>;
-    type BinaryOperator<T = number> = (
-      left: Adaptable<number>,
-      right: Adaptable<number>
-    ) => AnimatedNode<T>;
-    type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
-    type MultiOperator<T = number> = (
-      a: Adaptable<number>,
-      b: Adaptable<number>,
-      ...others: Adaptable<number>[]
-    ) => AnimatedNode<T>;
 
     export type TransformStyleTypes = TransformsStyle['transform'] extends
       | readonly (infer T)[]
@@ -116,13 +102,7 @@ declare module 'react-native-reanimated' {
         ? AnimateStyle<S[K]>
         : S[K] extends ColorValue | undefined
         ? S[K] | number
-        :
-            | S[K]
-            | AnimatedNode<
-                // allow `number` where `string` normally is to support colors
-                S[K] extends ColorValue | undefined ? S[K] | number : S[K]
-              >
-            | SharedValue<AnimatableValue>;
+        : S[K] | SharedValue<AnimatableValue>;
     };
 
     export type StylesOrDefault<T> = 'style' extends keyof T
@@ -130,10 +110,7 @@ declare module 'react-native-reanimated' {
       : Record<string, unknown>;
 
     export type AnimateProps<P extends object> = {
-      [K in keyof Omit<P, 'style'>]:
-        | P[K]
-        | AnimatedNode<P[K]>
-        | SharedValue<P[K]>;
+      [K in keyof Omit<P, 'style'>]: P[K] | SharedValue<P[K]>;
     } & {
       style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
@@ -290,7 +267,6 @@ declare module 'react-native-reanimated' {
   export type SharedValue<T> = Animated.SharedValue<T>;
   export type AnimateStyle<S> = Animated.AnimateStyle<S>;
   export type DerivedValue<T> = Animated.DerivedValue<T>;
-  export type Mapping = Animated.Mapping;
   export type Adaptable<T> = Animated.Adaptable<T>;
   export type TransformStyleTypes = Animated.TransformStyleTypes;
   export type AdaptTransforms<T> = Animated.AdaptTransforms<T>;
