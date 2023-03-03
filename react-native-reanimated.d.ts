@@ -864,6 +864,8 @@ declare module 'react-native-reanimated' {
 
   export function enableLayoutAnimations(flag: boolean): void;
 
+  export const Extrapolate: typeof Animated.Extrapolate;
+
   type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
 
   export class SharedTransition implements ILayoutAnimationBuilder {
