@@ -50,7 +50,7 @@ export const flushImmediates = shouldBeUseWeb()
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__ && !shouldBeUseWeb() && worklet.__workletHash === undefined) {
+  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
     throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
@@ -97,10 +97,8 @@ export function runOnUI<A extends any[], R>(
 export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__ && !IS_WEB) {
-    if (worklet.__workletHash === undefined) {
-      throw new Error('runOnUI() can only be used on worklets');
-    }
+  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+    throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
