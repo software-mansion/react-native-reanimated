@@ -133,82 +133,6 @@ declare module 'react-native-reanimated' {
       sharedTransitionStyle?: ILayoutAnimationBuilder;
     };
 
-    export interface PhysicsAnimationState extends AnimationState {
-      velocity: AnimatedValue<number>;
-    }
-
-    export type DecayState = PhysicsAnimationState;
-
-    export interface DecayConfig {
-      deceleration: Adaptable<number>;
-    }
-    export interface BackwardCompatibleWrapper {
-      start: (callback?: (data: { finished: boolean }) => any) => void;
-      stop: () => void;
-    }
-
-    export interface TimingState extends AnimationState {
-      frameTime: AnimatedValue<number>;
-    }
-    export type EasingNodeFunction = (
-      value: Adaptable<number>
-    ) => AnimatedNode<number>;
-    export type EasingFunction = (value: number) => number;
-    export interface TimingConfig {
-      toValue: Adaptable<number>;
-      duration: Adaptable<number>;
-      easing: EasingNodeFunction;
-    }
-
-    export type SpringState = PhysicsAnimationState;
-
-    export interface SpringConfig {
-      damping: Adaptable<number>;
-      mass: Adaptable<number>;
-      stiffness: Adaptable<number>;
-      overshootClamping: Adaptable<number> | boolean;
-      restSpeedThreshold: Adaptable<number>;
-      restDisplacementThreshold: Adaptable<number>;
-      toValue: Adaptable<number>;
-    }
-    interface SpringConfigWithOrigamiTensionAndFriction {
-      tension: Adaptable<number>;
-      mass: Adaptable<number>;
-      friction: Adaptable<number>;
-      overshootClamping: Adaptable<number> | boolean;
-      restSpeedThreshold: Adaptable<number>;
-      restDisplacementThreshold: Adaptable<number>;
-      toValue: Adaptable<number>;
-    }
-
-    interface SpringConfigWithBouncinessAndSpeed {
-      bounciness: Adaptable<number>;
-      mass: Adaptable<number>;
-      speed: Adaptable<number>;
-      overshootClamping: Adaptable<number> | boolean;
-      restSpeedThreshold: Adaptable<number>;
-      restDisplacementThreshold: Adaptable<number>;
-      toValue: Adaptable<number>;
-    }
-
-    type SpringUtils = {
-      makeDefaultConfig: () => SpringConfig;
-      makeConfigFromBouncinessAndSpeed: (
-        prevConfig: SpringConfigWithBouncinessAndSpeed
-      ) => SpringConfig;
-      makeConfigFromOrigamiTensionAndFriction: (
-        prevConfig: SpringConfigWithOrigamiTensionAndFriction
-      ) => SpringConfig;
-    };
-
-    export const SpringUtils: SpringUtils;
-
-    type CodeProps = {
-      exec?: AnimatedNode<number>;
-      children?: () => AnimatedNode<number>;
-      dependencies?: Array<any>;
-    };
-
     // components
     export class View extends Component<AnimateProps<ViewProps>> {
       getNode(): ReactNativeView;
@@ -230,8 +154,6 @@ declare module 'react-native-reanimated' {
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
     export interface ScrollView extends ReactNativeScrollView {}
-
-    export class Code extends Component<CodeProps> {}
     export interface FlatListPropsWithLayout<T> extends FlatListProps<T> {
       itemLayoutAnimation?: ILayoutAnimationBuilder;
     }
@@ -908,32 +830,6 @@ declare module 'react-native-reanimated' {
   export class RollInRight extends ComplexAnimationBuilder {}
   export class RollOutLeft extends ComplexAnimationBuilder {}
   export class RollOutRight extends ComplexAnimationBuilder {}
-  interface EasingNodeStatic {
-    linear: Animated.EasingNodeFunction;
-    ease: Animated.EasingNodeFunction;
-    quad: Animated.EasingNodeFunction;
-    cubic: Animated.EasingNodeFunction;
-    poly(n: Animated.Adaptable<number>): Animated.EasingNodeFunction;
-    sin: Animated.EasingNodeFunction;
-    circle: Animated.EasingNodeFunction;
-    exp: Animated.EasingNodeFunction;
-    elastic(
-      bounciness?: Animated.Adaptable<number>
-    ): Animated.EasingNodeFunction;
-    back(s?: Animated.Adaptable<number>): Animated.EasingNodeFunction;
-    bounce: Animated.EasingNodeFunction;
-    bezier(
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number
-    ): Animated.EasingNodeFunction;
-    in(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
-    out(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
-    inOut(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
-  }
-
-  export const EasingNode: EasingNodeStatic;
 
   interface EasingStatic {
     linear: Animated.EasingFunction;
