@@ -120,6 +120,9 @@ function isInlineStyleTransform(transform: any): boolean {
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
+  if (!style) {
+    return false;
+  }
   return Object.keys(style).some((key) => {
     const styleValue = style[key];
     return (
@@ -648,7 +651,7 @@ export default function createAnimatedComponent(
                 };
               }
               return this.initialStyle;
-            } else if (style && hasInlineStyles(style)) {
+            } else if (hasInlineStyles(style)) {
               if (this._isFirstRender) {
                 return getInlinePropsUpdate(style);
               }
