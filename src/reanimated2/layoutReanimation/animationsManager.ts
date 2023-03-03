@@ -88,6 +88,9 @@ function createLayoutAnimationManager() {
     },
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);
+      if (!value) {
+        return;
+      }
       stopObservingProgress(tag, value, true, true);
     },
   };
