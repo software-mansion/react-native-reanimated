@@ -3,29 +3,43 @@ import {
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
-  isFunctionParent,
   callExpression,
   isScopable,
   isExportNamedDeclaration,
   isArrowFunctionExpression,
   variableDeclaration,
+  isFunctionDeclaration,
+  isFunctionExpression,
   variableDeclarator,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
 
-export function processWorkletFunction(
+export function processIfWorkletFunction(
+  path: NodePath<any> | Array<NodePath<any>>,
+  state: ReanimatedPluginPass
+): void {
+  if (
+    isFunctionDeclaration(path) ||
+    isFunctionExpression(path) ||
+    isArrowFunctionExpression(path)
+  )
+    processWorkletFunction(
+      path as NodePath<
+        FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
+      >,
+      state
+    );
+}
+
+function processWorkletFunction(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
-) {
+): void {
   // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
   // with a workletized version of itself.
-
-  if (!isFunctionParent(fun)) {
-    return;
-  }
 
   const newFun = makeWorklet(fun, state);
 
@@ -39,7 +53,7 @@ export function processWorkletFunction(
   const needDeclaration =
     isScopable(fun.parent) || isExportNamedDeclaration(fun.parent);
   fun.replaceWith(
-    !isArrowFunctionExpression(fun.node) && fun.node.id && needDeclaration
+    'id' in fun.node && fun.node.id && needDeclaration
       ? variableDeclaration('const', [
           variableDeclarator(fun.node.id, replacement),
         ])

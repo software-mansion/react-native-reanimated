@@ -175,7 +175,7 @@ function buildWorkletString(
 
   if (!('params' in expression && isBlockStatement(expression.body)))
     throw new Error(
-      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
+      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent!\n'"
     );
 
   const workletFunction = functionExpression(
@@ -247,7 +247,10 @@ export function makeWorklet(
   // remove 'worklet'; directive before generating string
   fun.traverse({
     DirectiveLiteral(path) {
+      // if (path.node.value === 'worklet') {
       if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        // Why do we want to remove only the 'outer' worklet? There are no tests for inner ones. [RESEARCH]
+        // defineAnimation ...
         path.parentPath.remove();
       }
     },
@@ -265,9 +268,9 @@ export function makeWorklet(
   // We need to add a newline at the end, because there could potentially be a
   // comment after the function that gets included here, and then the closing
   // bracket would become part of the comment thus resulting in an error, since
-  // there is a missing closing brackeBabelTypes.
+  // there is a missing closing bracketBabelTypes.
   const code =
-    '(' + (isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
+    '(' + (isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)'; // how could it be an object method? [RESEARCH]
 
   const transformed = transformSync(code, {
     filename: state.file.opts.filename,
@@ -288,17 +291,19 @@ export function makeWorklet(
   assertIsDefined(transformed);
   assertIsDefined(transformed.ast);
 
+  // was it done empirically? [RESEARCH]
   traverse(transformed.ast, {
     Identifier(path) {
-      if (!path.isReferencedIdentifier()) return;
+      if (!path.isReferencedIdentifier()) return; // what is referenced identifier and why check that? [RESEARCH]
       const name = path.node.name;
       if (
         globals.has(name) ||
-        (!isArrowFunctionExpression(fun.node) &&
-          !isObjectMethod(fun.node) &&
+        ('id' in fun.node &&
           fun.node.id &&
+          'name' in fun.node.id &&
           fun.node.id.name === name)
       ) {
+        // this (in parentheses) skips recursion [RESEARCH]
         return;
       }
 
@@ -307,15 +312,15 @@ export function makeWorklet(
       if (
         isMemberExpression(parentNode) &&
         parentNode.property === path.node &&
-        !parentNode.computed
+        !parentNode.computed // computed stays for eg. array access [RESEARCH]
       ) {
-        return;
+        return; // why do we need this? what is that case? [RESEARCH]
       }
 
       if (
-        isObjectProperty(parentNode) &&
-        isObjectExpression(path.parentPath.parent) &&
-        path.node !== parentNode.value
+        isObjectProperty(parentNode) && // parent is object property
+        isObjectExpression(path.parentPath.parent) && // grandparent is object expression
+        path.node !== parentNode.value // but node is not the value (is not the right side) [RESEARCH]
       ) {
         return;
       }
@@ -328,7 +333,7 @@ export function makeWorklet(
         }
         currentScope = currentScope.parent;
       }
-      closure.set(name, path.node);
+      closure.set(name, path.node); // this represents all values that were accessed? [RESEARCH]
     },
   });
 
@@ -357,7 +362,7 @@ export function makeWorklet(
     location = path.relative(state.cwd, location);
   }
 
-  assertIsDefined(location); // temporary [TO DO]
+  assertIsDefined(location);
 
   let lineOffset = 1;
   if (closure.size > 0) {
@@ -443,7 +448,7 @@ export function makeWorklet(
           arrayExpression([
             newExpression(identifier('Error'), []),
             numericLiteral(lineOffset),
-            numericLiteral(-20), // the placement of opening bracket after Exception in line that defined '_e' variable
+            numericLiteral(-20), // the placement of opening bracket after Exception in line that defined '_e' variable // what does it refer to? where to find information about this? [RESEARCH]
           ])
         ),
       ])

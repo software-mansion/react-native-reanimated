@@ -136,6 +136,20 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  it("doesn't remove nested 'worklets'", () => {
+    const input = `
+    function foo(x){
+      'worklet';
+      function bar(x){
+        'worklet'
+        return x+2;
+      }
+      return bar(x)+1;
+    }`;
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
   it('captures worklets environment', () => {
     const input = `
       const x = 5;

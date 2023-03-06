@@ -14,7 +14,7 @@ import {
   gestureHandlerBuilderMethods,
   gestureHandlerGestureObjects,
 } from './commonObjects';
-import { processWorkletFunction } from './processWorkletFunction';
+import { processIfWorkletFunction } from './processIfWorkletFunction';
 
 function isGestureObject(node: Expression) {
   // Checks if node matches `Gesture.Tap()` or similar.
@@ -127,6 +127,6 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
     isExpression(fun.parent.callee) &&
     isGestureObjectEventCallbackMethod(fun.parent.callee)
   ) {
-    processWorkletFunction(fun, state);
+    processIfWorkletFunction(fun, state);
   }
 }

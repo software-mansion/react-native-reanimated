@@ -11,7 +11,7 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "postinstall": "yarn tsc && yarn format",
-    "format": "prettier --write --list-different *.js"
+    "postinstall": "yarn tsc",
+    "format": "prettier --write --list-different src/**/*.ts"
   }
 }
