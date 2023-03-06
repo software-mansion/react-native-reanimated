@@ -158,6 +158,7 @@
 
   if (!affectedShadowViews.count) {
     // no frame change results in no UI update block
+    [_animationsManager notAffectedLayout];
     return nil;
   }
 

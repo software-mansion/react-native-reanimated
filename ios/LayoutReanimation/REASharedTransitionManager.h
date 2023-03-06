@@ -3,6 +3,7 @@
 
 @interface REASharedTransitionManager : NSObject
 
+- (void)invalidate;
 - (void)notifyAboutNewView:(UIView *)view;
 - (void)notifyAboutViewLayout:(UIView *)view withViewFrame:(CGRect)frame;
 - (void)viewsDidLayout;
@@ -13,5 +14,6 @@
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock;
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
 - (UIView *)getTransitioningView:(NSNumber *)tag;
+- (void)clearFlag;
 
 @end

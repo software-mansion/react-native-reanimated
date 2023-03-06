@@ -69,6 +69,11 @@
   return [view isKindOfClass:[RNSScreen class]] == YES;
 }
 
++ (NSNumber *)getDefaultHeaderSize
+{
+  return @(44);
+}
+
 #else
 
 + (UIView *)getScreenForView:(UIView *)view
@@ -99,6 +104,11 @@
 + (bool)isRNSScreenType:(UIView *)screen
 {
   return false;
+}
+
++ (NSNumber *)getDefaultHeaderSize
+{
+  return @(0);
 }
 
 #endif // LOAD_SCREENS_HEADERS

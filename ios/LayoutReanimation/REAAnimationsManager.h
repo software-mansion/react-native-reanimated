@@ -53,6 +53,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
 - (void)viewsDidLayout;
+- (void)notAffectedLayout;
 - (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
                                           targetValues:(NSMutableDictionary *)targetValues;
 - (UIView *)viewForTag:(NSNumber *)tag;

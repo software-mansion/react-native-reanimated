@@ -15,5 +15,6 @@
 + (UIView *)getScreenWrapper:(UIView *)view;
 + (int)getScreenType:(UIView *)screen;
 + (bool)isRNSScreenType:(UIView *)screen;
++ (NSNumber *)getDefaultHeaderSize;
 
 @end

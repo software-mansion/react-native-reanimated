@@ -80,6 +80,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)invalidate
 {
+  [_sharedTransitionManager invalidate];
   _startAnimationForTag = nil;
   _hasAnimationForTag = nil;
   _uiManager = nil;
@@ -545,6 +546,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)viewsDidLayout
 {
   [_sharedTransitionManager viewsDidLayout];
+}
+
+- (void)notAffectedLayout
+{
+  [_sharedTransitionManager clearFlag];
 }
 
 - (void)setFindPrecedingViewTagForTransitionBlock:

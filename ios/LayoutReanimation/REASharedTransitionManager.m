@@ -23,6 +23,7 @@
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
   BOOL _isAsyncSharedTransitionConfigured;
+  BOOL _fastRefresHappend;
 }
 
 /*
@@ -50,20 +51,51 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _isAsyncSharedTransitionConfigured = NO;
+    _fastRefresHappend = NO;
     [self swizzleScreensMethods];
+    [self listenForFastRefresh];
   }
   return self;
 }
 
 - (void)invalidate
 {
-  _snapshotRegistry = nil;
-  _currentSharedTransitionViews = nil;
-  _addedSharedViews = nil;
-  _sharedTransitionParent = nil;
-  _sharedTransitionInParentIndex = nil;
-  _sharedElements = nil;
-  _animationManager = nil;
+  if (_transitionContainer != nil) {
+    UIView *transitionContainer = _transitionContainer;
+    RCTExecuteOnMainQueue(^() {
+      [transitionContainer removeFromSuperview];
+    });
+  }
+}
+
+- (void)listenForFastRefresh
+{
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserver:self
+                         selector:@selector(handleFastRefresh)
+                             name:RCTBridgeFastRefreshNotification
+                           object:nil];
+}
+
+- (void)handleFastRefresh
+{
+  _fastRefresHappend = YES;
+  if ([_currentSharedTransitionViews count] > 0) {
+    for (NSNumber *viewTag in [_currentSharedTransitionViews allKeys]) {
+      [self cancelAnimation:viewTag];
+    }
+    if (_transitionContainer != nil) {
+      [_transitionContainer removeFromSuperview];
+      for (UIView *child in [_transitionContainer subviews]) {
+        [child removeFromSuperview];
+      }
+    }
+  }
+}
+
+- (void)clearFlag
+{
+  _fastRefresHappend = NO;
 }
 
 - (UIView *)getTransitioningView:(NSNumber *)tag
@@ -97,10 +129,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)configureAsyncSharedTransitionForViews:(NSArray<UIView *> *)views
 {
-  if ([views count] > 0) {
+  if ([views count] > 0 && !_fastRefresHappend) {
     NSArray *sharedViews = [self sortViewsByTags:views];
     _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
-    _isAsyncSharedTransitionConfigured = YES;
+    if ([_sharedElements count] > 0) {
+      _isAsyncSharedTransitionConfigured = YES;
+    }
   }
 }
 
@@ -266,6 +300,19 @@ static REASharedTransitionManager *_sharedTransitionManager;
       _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     } else {
       targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
+      if (targetViewSnapshot == nil) {
+        // it could happens after hot reloaed
+        targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
+        UIView *targetScreen = [REAScreensHelper getScreenForView:viewTarget];
+        UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
+        CGPoint absolutePosition = [stack convertPoint:targetScreen.center toView:mainWindow];
+        float originY = absolutePosition.y - sharedViewScreen.bounds.size.height / 2.0;
+        bool hasHeader = ![[targetScreen.reactSubviews[0] valueForKey:@"hide"] boolValue];
+        float headerOffset = hasHeader ? [[REAScreensHelper getDefaultHeaderSize] floatValue] : 0;
+        targetViewSnapshot.values[@"originY"] =
+            @(originY + [targetViewSnapshot.values[@"originY"] floatValue] + headerOffset);
+        _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
+      }
     }
 
     [newTransitionViews addObject:viewSource];
@@ -356,6 +403,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)screenRemovedFromStack:(UIView *)screen
 {
+  _fastRefresHappend = NO;
   UIView *stack = [REAScreensHelper getStackForView:screen];
   bool isModal = [REAScreensHelper isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
