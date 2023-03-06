@@ -14,7 +14,7 @@
     "lint:ios": "./scripts/validate-ios.sh && yarn format:ios --dry-run",
     "format": "yarn format:js && yarn format:plugin && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
     "format:js": "prettier --write --list-different './src/'",
-    "format:plugin": "cd plugin && yarn format",
+    "format:plugin": "cd plugin && yarn format && cd ..",
     "format:java": "node ./scripts/format-java.js",
     "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
     "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
@@ -143,7 +143,8 @@
       "prettier --write"
     ],
     "plugin/**/*.ts": [
-      "eslint", "prettier --write"
+      "eslint",
+      "prettier --write"
     ],
     "plugin/**/*.js": "prettier --write",
     "**/*.{h,cpp}": "yarn lint:cpp",
