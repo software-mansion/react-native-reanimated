@@ -28,8 +28,7 @@
     "reset": "yarn clean && yarn setup",
     "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep && yarn setup",
-    "plugin": "cd plugin && yarn && cd ..",
-    "postinstall": "yarn plugin"
+    "plugin": "cd plugin && yarn && cd .."
   },
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
