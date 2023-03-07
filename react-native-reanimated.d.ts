@@ -242,6 +242,13 @@ declare module 'react-native-reanimated' {
 
   export type SensorValue3D = SharedValue<Value3D>;
 
+  export enum InterfaceOrientation {
+    ROTATION_0 = 0,
+    ROTATION_90 = 90,
+    ROTATION_180 = 180,
+    ROTATION_270 = 270,
+  }
+
   export type ValueRotation = {
     qw: number;
     qx: number;
