@@ -62,11 +62,6 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@types/convert-source-map@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@types/convert-source-map/-/convert-source-map-2.0.0.tgz#a36c2d21963caa18fe32de6cdec3d21a7d2c92b3"
-  integrity sha512-QUm4YOC/ENo0VjPVl2o8HGyTbHHQGDOw8PCg3rXBucYHKyZN/XjXRbPFAV1tB2FvM0/wyFoDct4cTIctzKrQFg==
-
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"
@@ -146,11 +141,6 @@ concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
-
-convert-source-map@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-2.0.0.tgz#4b560f649fc4e918dd0ab75cf4961e8bc882d82a"
-  integrity sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==
 
 cross-spawn@^7.0.2:
   version "7.0.3"

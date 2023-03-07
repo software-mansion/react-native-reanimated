@@ -1,7 +1,5 @@
 {
   "devDependencies": {
-    "@types/convert-source-map": "^2.0.0",
-    "convert-source-map": "^2.0.0",
     "eslint": "^8.35.0",
     "prettier": "^2.5.1",
     "typescript": "^4.1.3"
