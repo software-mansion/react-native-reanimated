@@ -27,7 +27,7 @@ jobs:
         run: yarn
       - name: Check types
         working-directory: plugin
-        run: yarn tsc --noEmit
+        run: yarn type:check
       - name: Lint and format
         working-directory: plugin
         run: yarn lint
