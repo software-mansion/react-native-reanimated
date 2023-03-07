@@ -33,3 +33,6 @@ jobs:
         run: yarn lint
       - name: Diff
         run: git update-index --refresh && git diff-index --quiet HEAD --
+      - name: Show diff
+        if: always()
+        run: git diff
