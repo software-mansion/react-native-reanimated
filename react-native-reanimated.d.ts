@@ -133,6 +133,8 @@ declare module 'react-native-reanimated' {
       sharedTransitionStyle?: ILayoutAnimationBuilder;
     };
 
+    export type EasingFunction = (value: number) => number;
+
     // components
     export class View extends Component<AnimateProps<ViewProps>> {
       getNode(): ReactNativeView;
