@@ -20,7 +20,9 @@
   width: 500px;
   position: absolute;
   opacity: 0.3;
+  pointer-events: none;
 }
+
 .announcementBarLeftAdornment {
   left: -125px;
   top: -150px;
