@@ -21,6 +21,8 @@ jobs:
           node-version: 16
           cache: 'yarn'
       - name: Install node dependencies
+        run: yarn
+      - name: Install plugin dependencies
         working-directory: plugin
         run: yarn
       - name: Check types
