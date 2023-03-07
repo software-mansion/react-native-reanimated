@@ -40,6 +40,17 @@ public class SharedTransitionManager {
     mAnimationsManager = animationsManager;
   }
 
+  public void onCatalystInstanceDestroy() {
+    if (mTransitionContainer != null) {
+      mAnimationsManager.getContext().runOnUiQueueThread(() -> {
+        ViewGroup transitionContainerParent = (ViewGroup) mTransitionContainer.getParent();
+        if (transitionContainerParent != null) {
+          transitionContainerParent.removeView(mTransitionContainer);
+        }
+      });
+    }
+  }
+
   protected void notifyAboutNewView(View view) {
     mAddedSharedViews.add(view);
   }
@@ -306,6 +317,12 @@ public class SharedTransitionManager {
         sourceViewSnapshot = mSnapshotRegistry.get(viewSource.getId());
       }
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
+      if (targetViewSnapshot == null) {
+        // may happen after hot reload
+        targetViewSnapshot = new Snapshot(viewTarget);
+        int statusBarHeight = 52;
+        targetViewSnapshot.originY += statusBarHeight;
+      }
 
       newTransitionViews.add(viewSource);
       newTransitionViews.add(viewTarget);
@@ -361,25 +378,39 @@ public class SharedTransitionManager {
       View viewTarget = sharedElement.targetView;
 
       if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
-        mSharedTransitionParent.put(viewSource.getId(), (View) viewSource.getParent());
-        mSharedTransitionInParentIndex.put(
-            viewSource.getId(), ((ViewGroup) viewSource.getParent()).indexOfChild(viewSource));
-        ((ViewGroup) viewSource.getParent()).removeView(viewSource);
+        ViewGroup parent = (ViewGroup) viewSource.getParent();
+        mSharedTransitionInParentIndex.put(viewSource.getId(), parent.indexOfChild(viewSource));
+      }
+
+      if (!mSharedTransitionParent.containsKey(viewTarget.getId())) {
+        ViewGroup parent = (ViewGroup) viewTarget.getParent();
+        mSharedTransitionInParentIndex.put(viewTarget.getId(), parent.indexOfChild(viewTarget));
+      }
+    }
+
+    for (SharedElement sharedElement : sharedElements) {
+      View viewSource = sharedElement.sourceView;
+      View viewTarget = sharedElement.targetView;
+
+      if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
+        ViewGroup parent = (ViewGroup) viewSource.getParent();
+        mSharedTransitionParent.put(viewSource.getId(), parent);
+        parent.removeView(viewSource);
         ((ViewGroup) mTransitionContainer).addView(viewSource);
       }
 
       if (!mSharedTransitionParent.containsKey(viewTarget.getId())) {
-        mSharedTransitionParent.put(viewTarget.getId(), (View) viewTarget.getParent());
-        mSharedTransitionInParentIndex.put(
-            viewTarget.getId(), ((ViewGroup) viewTarget.getParent()).indexOfChild(viewTarget));
-        ((ViewGroup) viewTarget.getParent()).removeView(viewTarget);
+        ViewGroup parent = (ViewGroup) viewTarget.getParent();
+        mSharedTransitionParent.put(viewTarget.getId(), parent);
+        parent.removeView(viewTarget);
         ((ViewGroup) mTransitionContainer).addView(viewTarget);
       }
     }
   }
 
   private void startSharedTransition(List<SharedElement> sharedElements) {
-    for (SharedElement sharedElement : sharedElements) {
+    for (int i = sharedElements.size() - 1; i >= 0; i--) {
+      SharedElement sharedElement = sharedElements.get(i);
       startSharedAnimationForView(
           sharedElement.sourceView,
           sharedElement.sourceViewSnapshot,
@@ -424,13 +455,12 @@ public class SharedTransitionManager {
       View parentView = mSharedTransitionParent.get(viewTag);
       int childIndex = mSharedTransitionInParentIndex.get(viewTag);
       ViewGroup parentViewGroup = ((ViewGroup) parentView);
-      if (childIndex <= parentViewGroup.getChildCount()) {
+      boolean isInNativeTree = parentViewGroup.getParent() != null;
+      if (isInNativeTree) {
         parentViewGroup.addView(view, childIndex);
-      } else {
-        parentViewGroup.addView(view);
       }
       Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(viewTag);
-      if (viewSourcePreviousSnapshot != null) {
+      if (viewSourcePreviousSnapshot != null && isInNativeTree) {
         int originY = viewSourcePreviousSnapshot.originY;
         if (findStack(view) == null) {
           viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.originYByParent;

@@ -66,6 +66,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void onCatalystInstanceDestroy() {
+    mSharedTransitionManager.onCatalystInstanceDestroy();
     isCatalystInstanceDestroyed = true;
     mNativeMethodsHolder = null;
     mContext = null;
