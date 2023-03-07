@@ -14,6 +14,13 @@ export default function AnnouncementBar() {
   }
   const { backgroundColor, textColor, isCloseable } = announcementBar;
 
+  // hide announcement bar after app.js
+  const today = new Date();
+  const endOfAppJS = new Date('2023-05-13T00:00:00.000Z');
+  if (today > endOfAppJS) {
+    return null;
+  }
+
   return (
     <div
       className={styles.announcementBar}
