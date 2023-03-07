@@ -7,7 +7,7 @@
     "test:unit": "jest",
     "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
-    "lint:plugin": "eslint --ext '.ts' plugin && yarn prettier --check plugin/",
+    "lint:plugin": "cd plugin && yarn lint && cd ..",
     "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
     "lint:cpp": "./scripts/cpplint.sh",
@@ -142,11 +142,7 @@
       "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin",
       "prettier --write"
     ],
-    "plugin/**/*.ts": [
-      "eslint",
-      "prettier --write"
-    ],
-    "plugin/**/*.js": "prettier --write",
+    "plugin/**/*.ts": "yarn lint:plugin",
     "**/*.{h,cpp}": "yarn lint:cpp",
     "android/src/**/*.java": "yarn format:java",
     "android/src/**/*.{h,cpp}": "yarn format:android",

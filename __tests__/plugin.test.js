@@ -138,13 +138,13 @@ describe('babel plugin', () => {
 
   it("doesn't remove nested 'worklets'", () => {
     const input = `
-    function foo(x){
+    function foo(x) {
       'worklet';
-      function bar(x){
-        'worklet'
-        return x+2;
+      function bar(x) {
+        'worklet';
+        return x + 2;
       }
-      return bar(x)+1;
+      return bar(x) + 1;
     }`;
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();

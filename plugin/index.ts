@@ -28,7 +28,7 @@ interface ReanimatedPluginPass {
   };
   cwd: string;
   filename: string | undefined;
-  get(key: unknown): any;
+  get(key: unknown): unknown;
   set(key: unknown, value: unknown): void;
   [key: string]: unknown;
 }
@@ -476,6 +476,7 @@ function makeWorklet(
 
   let location = state.file.opts.filename;
   if (state.opts.relativeSourceLocation) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const path = require('path');
     location = path.relative(state.cwd, location);
   }
