@@ -1,6 +1,5 @@
 import React from 'react';
 import clsx from 'clsx';
-import { useThemeConfig } from '@docusaurus/theme-common';
 import styles from './styles.module.css';
 
 export default function AnnouncementBarContent(props) {

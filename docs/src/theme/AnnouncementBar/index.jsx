@@ -4,8 +4,7 @@ import { useAnnouncementBar } from '@docusaurus/theme-common/internal';
 import AnnouncementBarCloseButton from '@theme/AnnouncementBar/CloseButton';
 import AnnouncementBarContent from '@theme/AnnouncementBar/Content';
 import styles from './styles.module.css';
-
-const particles = 'img/particles.svg';
+import Particles from './particles.svg';
 
 export default function AnnouncementBar() {
   const { announcementBar } = useThemeConfig();
@@ -23,8 +22,7 @@ export default function AnnouncementBar() {
         color: textColor,
       }}
       role="banner">
-      <img
-        src={particles}
+      <Particles
         className={`${styles.announcementBarAdornment} ${styles.announcementBarLeftAdornment}`}
       />
       {isCloseable && <div className={styles.announcementBarPlaceholder} />}
@@ -35,8 +33,7 @@ export default function AnnouncementBar() {
           className={styles.announcementBarClose}
         />
       )}
-      <img
-        src={particles}
+      <Particles
         className={`${styles.announcementBarAdornment} ${styles.announcementBarRightAdornment}`}
       />
     </div>
