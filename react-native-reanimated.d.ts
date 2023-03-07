@@ -160,7 +160,10 @@ declare module 'react-native-reanimated' {
       : Record<string, unknown>;
 
     export type AnimateProps<P extends object> = {
-      [K in keyof Omit<P, 'style'>]: P[K] | AnimatedNode<P[K]> | SharedValue<P[K]>;
+      [K in keyof Omit<P, 'style'>]:
+        | P[K]
+        | AnimatedNode<P[K]>
+        | SharedValue<P[K]>;
     } & {
       style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
@@ -696,6 +699,7 @@ declare module 'react-native-reanimated' {
     restSpeedThreshold?: number;
     restDisplacementThreshold?: number;
     velocity?: number;
+    duration?: number;
   }
   export function withTiming<T extends AnimatableValue>(
     toValue: T,

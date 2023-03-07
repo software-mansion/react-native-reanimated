@@ -14,11 +14,13 @@ interface SpringConfig {
   restSpeedThreshold?: number;
   velocity?: number;
   damping?: number;
+  duration?: number;
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
   current: AnimatableValue;
   toValue: AnimatableValue;
+  startValue: number;
   velocity: number;
   lastTimestamp: Timestamp;
 }
@@ -50,6 +52,7 @@ export function withSpring(
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
       velocity: 0,
+      duration: 0,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach(
@@ -75,7 +78,7 @@ export function withSpring(
       const omega0 = Math.sqrt(k / m); // undamped angular frequency of the oscillator (rad/ms)
       const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
 
-      const t = deltaTime / 1000;
+      const t = (deltaTime / 1000) * animation.frameRatio;
 
       const sin1 = Math.sin(omega1 * t);
       const cos1 = Math.cos(omega1 * t);
@@ -132,6 +135,7 @@ export function withSpring(
         }
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
+        animation.startValue = 0;
         return true;
       }
       return false;
@@ -144,12 +148,35 @@ export function withSpring(
       previousAnimation: SpringAnimation
     ): void {
       animation.current = value;
+
+      let frameRatio;
+
+      if (config.duration) {
+        const c = config.damping;
+        const m = config.mass;
+        const amplitude = Number(animation.toValue) - animation.startValue;
+
+        const expectedDuration =
+          1000 *
+          (-Math.log(config.restDisplacementThreshold / Math.abs(amplitude)) *
+            ((2 * m) / c));
+        frameRatio = expectedDuration / config.duration;
+        console.log(frameRatio);
+      } else {
+        frameRatio = 1;
+      }
+
       if (previousAnimation) {
         animation.velocity =
           previousAnimation.velocity || animation.velocity || 0;
         animation.lastTimestamp = previousAnimation.lastTimestamp || now;
+        animation.startValue = previousAnimation.startValue || value;
+        animation.frameRatio = previousAnimation.frameRatio || frameRatio;
       } else {
         animation.lastTimestamp = now;
+        animation.startTime = now;
+        animation.startValue = value;
+        animation.frameRatio = frameRatio;
       }
     }
 
@@ -161,6 +188,8 @@ export function withSpring(
       current: toValue,
       callback,
       lastTimestamp: 0,
+      startValue: 0,
+      startTime: 0,
     } as SpringAnimation;
   });
 }
