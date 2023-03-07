@@ -1,4 +1,4 @@
-### ReanimatedPlugin is now in TypeScript.
+# Reanimated Babel plugin
 
 To compile it, either use `yarn` or explicitly use `yarn plugin` in the root directory or `yarn` in `plugin/`.
 
