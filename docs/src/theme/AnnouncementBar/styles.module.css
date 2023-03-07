@@ -57,18 +57,13 @@ html[data-announcement-bar-initially-dismissed='true'] .announcementBar {
 
 @media screen and (max-width: 996px) {
   .announcementBarClose {
-    flex-basis: 50px;
+    margin: 0;
   }
   .announcementBarPlaceholder {
     display: none;
   }
 }
 @media screen and (max-width: 600px) {
-  .announcementBarClose {
-    margin: 0;
-    flex-basis: 50px;
-  }
-
   .announcementBarRightAdornment {
     display: none;
   }
