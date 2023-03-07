@@ -125,6 +125,15 @@ module.exports = {
     prism: {
       theme: prismConfig,
     },
+    announcementBar: {
+      id: 'appjs_announcement',
+      content: `
+        <strong>We're organizing app.js</strong> - a React Native & Expo-focused conference
+        <a href="https://appjs.co/" target="_blank" rel="noopener noreferrer">Learn more</a>
+      `,
+      backgroundColor: '#0033CC',
+      textColor: '#FFFFFF',
+    },
   },
   presets: [
     [

@@ -1,0 +1,9 @@
+.closeButton {
+  padding: 0;
+  line-height: 0;
+  opacity: 1;
+}
+
+.closeButton svg {
+  color: white;
+}
