@@ -127,10 +127,7 @@ module.exports = {
     },
     announcementBar: {
       id: 'appjs_announcement',
-      content: `
-        <strong>We're organizing app.js</strong> - a React Native & Expo-focused conference
-        <a href="https://appjs.co/" target="_blank" rel="noopener noreferrer">Learn more</a>
-      `,
+      content: '', // content is set in swizzled component
       backgroundColor: '#0033CC',
       textColor: '#FFFFFF',
     },

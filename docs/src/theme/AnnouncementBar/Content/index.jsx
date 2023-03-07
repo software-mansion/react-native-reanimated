@@ -1,17 +1,24 @@
 import React from 'react';
 import clsx from 'clsx';
-import {useThemeConfig} from '@docusaurus/theme-common';
+import { useThemeConfig } from '@docusaurus/theme-common';
 import styles from './styles.module.css';
+
 export default function AnnouncementBarContent(props) {
-  const {announcementBar} = useThemeConfig();
-  const {content} = announcementBar;
   return (
-    <div
-      {...props}
-      className={clsx(styles.content, props.className)}
-      // Developer provided the HTML, so assume it's safe.
-      // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{__html: content}}
-    />
+    <div {...props} className={clsx(styles.content, props.className)}>
+      <div className={styles.wrapper}>
+        <strong className={styles.headline}>We're organizing app.js</strong>
+        <p className={styles.subText}>
+          a React Native & Expo-focused conference
+        </p>
+      </div>
+      <a
+        className={styles.link}
+        href="https://appjs.co/"
+        target="_blank"
+        rel="noreferrer noopener">
+        Learn more
+      </a>
+    </div>
   );
 }

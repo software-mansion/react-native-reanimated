@@ -1,13 +1,9 @@
 :root {
-  --docusaurus-announcement-bar-height: 64px;
   --docusaurus-announcement-bar-font-size: 24px;
-  --docusaurus-announcement-bar-link-font-size: 20px;
 }
 
 .announcementBar {
   display: flex;
-  align-items: center;
-  height: var(--docusaurus-announcement-bar-height);
   font-size: var(--docusaurus-announcement-bar-font-size);
   background-color: var(--ifm-color-white);
   color: var(--ifm-color-black);
@@ -33,21 +29,20 @@
   top: -100px;
 }
 
-.announcementBar a {
-  font-size: var(--docusaurus-announcement-bar-link-font-size);
-}
-
 html[data-announcement-bar-initially-dismissed='true'] .announcementBar {
   display: none;
 }
 
 .announcementBarPlaceholder {
-  flex: 0 0 10px;
+  flex: 0 0 30px;
+  margin: 0 25px;
 }
 
 .announcementBarClose {
   flex: 0 0 30px;
+  margin: 0 25px;
   align-self: stretch;
+  opacity: 1;
 }
 
 .announcementBarContent {
@@ -60,13 +55,21 @@ html[data-announcement-bar-initially-dismissed='true'] .announcementBar {
   }
 }
 
-@media (min-width: 997px) {
-  :root {
-    --docusaurus-announcement-bar-height: 60px;
-  }
-
-  .announcementBarPlaceholder,
+@media screen and (max-width: 996px) {
   .announcementBarClose {
     flex-basis: 50px;
+  }
+  .announcementBarPlaceholder {
+    display: none;
+  }
+}
+@media screen and (max-width: 600px) {
+  .announcementBarClose {
+    margin: 0;
+    flex-basis: 50px;
+  }
+
+  .announcementBarRightAdornment {
+    display: none;
   }
 }
