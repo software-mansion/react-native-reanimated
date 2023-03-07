@@ -47,7 +47,7 @@ instead of
 ```TypeScript
  const scrollHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
-      `worklet`;
+      'worklet';
       position.value = e.contentOffset.x;
     },
     onEndDrag: (e) => {
