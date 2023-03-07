@@ -1,0 +1,33 @@
+name: Validate plugin
+on:
+  pull_request:
+    paths:
+      - 'plugin/**'
+  push:
+    branches:
+      - main
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: plugin-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          cache: 'yarn'
+      - name: Install node dependencies
+        working-directory: plugin
+        run: yarn
+      - name: Check types
+        working-directory: plugin
+        run: yarn tsc --noEmit
+      - name: Lint and format
+        working-directory: plugin
+        run: yarn lint
+      - name: Diff
+        run: git update-index --refresh && git diff-index --quiet HEAD --
