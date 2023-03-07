@@ -69,9 +69,25 @@
   return [view isKindOfClass:[RNSScreen class]] == YES;
 }
 
+// TODO: get function from RNScreens/RNSUtils.h, when will be available
 + (NSNumber *)getDefaultHeaderSize
 {
-  return @(44);
+  UIUserInterfaceIdiom interfaceIdiom = [[UIDevice currentDevice] userInterfaceIdiom];
+  UIInterfaceOrientation orientation = UIInterfaceOrientationPortrait;
+  if (@available(iOS 13.0, *)) {
+    orientation = UIApplication.sharedApplication.windows.firstObject.windowScene.interfaceOrientation;
+  } else {
+    orientation = UIApplication.sharedApplication.statusBarOrientation;
+  }
+  int headerHeight = 44;
+  const bool isLandscape =
+      orientation == UIDeviceOrientationLandscapeRight || orientation == UIDeviceOrientationLandscapeLeft;
+  if (interfaceIdiom == UIUserInterfaceIdiomPad || interfaceIdiom == UIUserInterfaceIdiomTV) {
+    headerHeight = 50;
+  } else if (isLandscape) {
+    headerHeight = 32;
+  }
+  return @(headerHeight);
 }
 
 #else
