@@ -127,7 +127,7 @@ module.exports = {
     },
     announcementBar: {
       id: 'appjs_announcement',
-      content: '', // content is set in swizzled component
+      content: 'mleko', // content is set in swizzled component but docusaurus requires it to be non-empty
       backgroundColor: '#0033CC',
       textColor: '#FFFFFF',
     },
