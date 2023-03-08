@@ -6,7 +6,7 @@ import {
   FunctionExpression,
   ArrowFunctionExpression,
 } from '@babel/types';
-import { processIfCalleeHasWorklets } from './processIfCalleeHasWorklets';
+import { processForCalleesWorklets } from './processForCalleesWorklets';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
 import { ReanimatedPluginPass } from './commonInterfaces';
@@ -25,7 +25,7 @@ module.exports = function (): PluginItem {
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
-          processIfCalleeHasWorklets(path, state);
+          processForCalleesWorklets(path, state);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
