@@ -51,7 +51,6 @@ const globals = new Set([
     'Uint32Array',
     'Float32Array',
     'Float64Array',
-    'Date',
     'HermesInternal',
     'JSON',
     'Math',
@@ -338,9 +337,9 @@ function makeWorklet(t, fun, state) {
     if (!isRelease()) {
         statements.unshift(t.variableDeclaration('const', [
             t.variableDeclarator(t.identifier('_e'), t.arrayExpression([
-                t.newExpression(t.identifier('Error'), []),
+                t.newExpression(t.memberExpression(t.identifier('global'), t.identifier('Error')), []),
                 t.numericLiteral(lineOffset),
-                t.numericLiteral(-20),
+                t.numericLiteral(-27),
             ])),
         ]));
         statements.push(t.expressionStatement(t.assignmentExpression('=', t.memberExpression(privateFunctionId, t.identifier('__stackDetails'), false), t.identifier('_e'))));
