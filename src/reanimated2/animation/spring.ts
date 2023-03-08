@@ -20,9 +20,9 @@ interface SpringConfig {
 export interface SpringAnimation extends Animation<SpringAnimation> {
   current: AnimatableValue;
   toValue: AnimatableValue;
-  startValue: number;
   velocity: number;
   lastTimestamp: Timestamp;
+  newDamping: number;
 }
 
 export interface InnerSpringAnimation
@@ -67,7 +67,7 @@ export function withSpring(
       const deltaTime = Math.min(now - lastTimestamp, 64);
       animation.lastTimestamp = now;
 
-      const c = config.damping;
+      const c = config.duration ? animation.newDamping : config.damping;
       const m = config.mass;
       const k = config.stiffness;
 
@@ -78,7 +78,7 @@ export function withSpring(
       const omega0 = Math.sqrt(k / m); // undamped angular frequency of the oscillator (rad/ms)
       const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
 
-      const t = (deltaTime / 1000) * animation.frameRatio;
+      const t = deltaTime / 1000;
 
       const sin1 = Math.sin(omega1 * t);
       const cos1 = Math.cos(omega1 * t);
@@ -135,7 +135,6 @@ export function withSpring(
         }
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-        animation.startValue = 0;
         return true;
       }
       return false;
@@ -149,34 +148,28 @@ export function withSpring(
     ): void {
       animation.current = value;
 
-      let frameRatio;
+      let newDamping = config.duration;
 
       if (config.duration) {
-        const c = config.damping;
         const m = config.mass;
-        const amplitude = Number(animation.toValue) - animation.startValue;
+        const amplitude = Number(animation.toValue) - value;
 
-        const expectedDuration =
-          1000 *
-          (-Math.log(config.restDisplacementThreshold / Math.abs(amplitude)) *
-            ((2 * m) / c));
-        frameRatio = expectedDuration / config.duration;
-        console.log(frameRatio);
-      } else {
-        frameRatio = 1;
+        /** Use this formulae https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
+         * to find the asympotote and esitmate the damping that gives us the expected duration */
+
+        newDamping =
+          -((2 * m) / (0.001 * config.duration)) *
+          Math.log(config.restDisplacementThreshold / Math.abs(amplitude));
       }
 
       if (previousAnimation) {
         animation.velocity =
           previousAnimation.velocity || animation.velocity || 0;
         animation.lastTimestamp = previousAnimation.lastTimestamp || now;
-        animation.startValue = previousAnimation.startValue || value;
-        animation.frameRatio = previousAnimation.frameRatio || frameRatio;
+        animation.newDamping = previousAnimation.newDamping || newDamping;
       } else {
         animation.lastTimestamp = now;
-        animation.startTime = now;
-        animation.startValue = value;
-        animation.frameRatio = frameRatio;
+        animation.newDamping = newDamping;
       }
     }
 
@@ -188,8 +181,7 @@ export function withSpring(
       current: toValue,
       callback,
       lastTimestamp: 0,
-      startValue: 0,
-      startTime: 0,
+      newDamping: 0,
     } as SpringAnimation;
   });
 }
