@@ -45,7 +45,6 @@ const globals = new Set([
   'Uint32Array',
   'Float32Array',
   'Float64Array',
-  'Date',
   'HermesInternal',
   'JSON',
   'Math',
@@ -450,9 +449,12 @@ function makeWorklet(t, fun, state) {
         t.variableDeclarator(
           t.identifier('_e'),
           t.arrayExpression([
-            t.newExpression(t.identifier('Error'), []),
+            t.newExpression(t.memberExpression(
+              t.identifier('global'),
+              t.identifier('Error'),
+            ), []),
             t.numericLiteral(lineOffset),
-            t.numericLiteral(-20), // the placement of opening bracket after Exception in line that defined '_e' variable
+            t.numericLiteral(-27), // the placement of opening bracket after Exception in line that defined '_e' variable
           ])
         ),
       ])
