@@ -232,3 +232,8 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
   }
 }
+
+if (!global.setImmediate) {
+  // @ts-ignore disable-next-line
+  global.setImmediate = requestAnimationFrame;
+}
