@@ -18,7 +18,7 @@ function hash(str: string): number {
   }
 
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
-}
+} // this comment is for CI check
 interface ReanimatedPluginPass {
   file: BabelCore.BabelFile;
   key: string;
