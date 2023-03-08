@@ -39,6 +39,10 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
     let workletFun = workletsCache.get(workletHash);
     if (workletFun === undefined) {
       const initData = objectToUnpack.__initData;
+      if (initData == null)
+        throw new Error(
+          "The given function could not be parsed as a Worklet. It looks like the Reanimated Babel Plugin is missing, make sure reanimated's babel plugin is installed in your babel.config.js (you should have 'react-native-reanimated/plugin' listed there - also see the above link for details) \n2) Make sure you reset build cache after updating the config, run: yarn start --reset-cache"
+        );
       if (global.evalWithSourceMap) {
         // if the runtime (hermes only for now) supports loading source maps
         // we want to use the proper filename for the location as it guarantees
