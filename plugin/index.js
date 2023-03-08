@@ -6,7 +6,7 @@ const traverse_1 = require("@babel/traverse");
 const core_1 = require("@babel/core");
 const fs = require("fs");
 const convertSourceMap = require("convert-source-map");
-function hash(str) {
+function hash(str ) {
     let i = str.length;
     let hash1 = 5381;
     let hash2 = 52711;
