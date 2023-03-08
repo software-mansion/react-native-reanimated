@@ -6,7 +6,7 @@ const traverse_1 = require("@babel/traverse");
 const core_1 = require("@babel/core");
 const fs = require("fs");
 const convertSourceMap = require("convert-source-map");
-function hash(str ) {
+function hash(str) {
     let i = str.length;
     let hash1 = 5381;
     let hash2 = 52711;
@@ -16,8 +16,8 @@ function hash(str ) {
         hash2 = (hash2 * 33) ^ char;
     }
     return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
-}
-const functionArgsToWorkletize = new Map([
+} // this comment is for CI check
+const functionArgsToWorkletize = new Map([ś
     ['useFrameCallback', [0]],
     ['useAnimatedStyle', [0]],
     ['useAnimatedProps', [0]],
