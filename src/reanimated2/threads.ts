@@ -7,26 +7,27 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
+const IS_WEB = shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
 export function setupSetImmediate() {
   'worklet';
 
-  let immediateCalbacks: Array<() => void> = [];
+  let immediateCallbacks: Array<() => void> = [];
 
   // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
   global.setImmediate = (callback: () => void): number => {
-    immediateCalbacks.push(callback);
+    immediateCallbacks.push(callback);
     return -1;
   };
 
   global.__flushImmediates = () => {
-    for (let index = 0; index < immediateCalbacks.length; index += 1) {
+    for (let index = 0; index < immediateCallbacks.length; index += 1) {
       // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
-      immediateCalbacks[index]();
+      immediateCallbacks[index]();
     }
-    immediateCalbacks = [];
+    immediateCallbacks = [];
   };
 }
 
@@ -49,10 +50,8 @@ export const flushImmediates = shouldBeUseWeb()
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__ && !shouldBeUseWeb()) {
-    if (worklet.__workletHash === undefined) {
-      throw new Error('runOnUI() can only be used on worklets');
-    }
+  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+    throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
     if (IS_JEST) {
@@ -98,10 +97,8 @@ export function runOnUI<A extends any[], R>(
 export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__) {
-    if (worklet.__workletHash === undefined) {
-      throw new Error('runOnUI() can only be used on worklets');
-    }
+  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+    throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
