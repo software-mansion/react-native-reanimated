@@ -58,6 +58,39 @@ var f = function () {
 }();"
 `;
 
+exports[`babel plugin doesn't remove nested 'worklets' 1`] = `
+"var _worklet_1678749606628_init_data = {
+  code: \\"function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}\\",
+  location: \\"${ process.cwd() }/jest tests fixture\\"
+};
+var _worklet_16974800582491_init_data = {
+  code: \\"function bar(x){return x+2;}\\",
+  location: \\"${ process.cwd() }/jest tests fixture\\"
+};
+var foo = function () {
+  var _e = [new Error(), 1, -20];
+  var _f = function _f(x) {
+    var bar = function () {
+      var _e = [new Error(), 1, -20];
+      var _f = function _f(x) {
+        return x + 2;
+      };
+      _f._closure = {};
+      _f.__initData = _worklet_16974800582491_init_data;
+      _f.__workletHash = 16974800582491;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    return bar(x) + 1;
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1678749606628_init_data;
+  _f.__workletHash = 1678749606628;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
 exports[`babel plugin doesn't show a warning if user writes something like style={styles.value} 1`] = `
 "function App() {
   return React.createElement(Animated.View, {
