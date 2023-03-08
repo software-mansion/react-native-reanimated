@@ -68,10 +68,10 @@ var _worklet_16974800582491_init_data = {
   location: \\"${ process.cwd() }/jest tests fixture\\"
 };
 var foo = function () {
-  var _e = [new Error(), 1, -20];
+  var _e = [new global.Error(), 1, -27];
   var _f = function _f(x) {
     var bar = function () {
-      var _e = [new Error(), 1, -20];
+      var _e = [new global.Error(), 1, -27];
       var _f = function _f(x) {
         return x + 2;
       };
