@@ -1,1 +1,2 @@
-plugin/**/*.js
+# plugin/**/*.js
+# !plugin/**/*.json
