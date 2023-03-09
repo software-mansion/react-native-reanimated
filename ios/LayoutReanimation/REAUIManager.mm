@@ -91,6 +91,12 @@
       UIViewController *controller = ((UIView *)container).reactViewController;
       UIViewController *parentController = ((UIView *)container).superview.reactViewController;
       containerIsRootOfViewController = controller != parentController;
+      for (UIView *view in permanentlyRemovedChildren) {
+        if ([_animationsManager hasAnimationForTag:view.reactTag type:SHARED_ELEMENT_TRANSITION]) {
+          // to clear Layout Animation Manager registers after hot reload
+          [_animationsManager clearAnimationConfigForTag:view.reactTag];
+        }
+      }
     }
 
     // we check if the container we`re removing from is a root view
