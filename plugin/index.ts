@@ -1010,8 +1010,6 @@ function processInlineStylesWarning(
   if (path.node.name.name !== 'style') return;
   if (!t.isJSXExpressionContainer(path.node.value)) return;
 
-  const x = 1;
-  if (!x) console.log('.');
   const expression = path
     .get('value')
     .get('expression') as BabelCore.NodePath<BabelTypes.Expression>;
