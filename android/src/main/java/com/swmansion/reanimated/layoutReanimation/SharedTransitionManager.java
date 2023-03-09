@@ -42,12 +42,15 @@ public class SharedTransitionManager {
 
   public void onCatalystInstanceDestroy() {
     if (mTransitionContainer != null) {
-      mAnimationsManager.getContext().runOnUiQueueThread(() -> {
-        ViewGroup transitionContainerParent = (ViewGroup) mTransitionContainer.getParent();
-        if (transitionContainerParent != null) {
-          transitionContainerParent.removeView(mTransitionContainer);
-        }
-      });
+      mAnimationsManager
+          .getContext()
+          .runOnUiQueueThread(
+              () -> {
+                ViewGroup transitionContainerParent = (ViewGroup) mTransitionContainer.getParent();
+                if (transitionContainerParent != null) {
+                  transitionContainerParent.removeView(mTransitionContainer);
+                }
+              });
     }
   }
 

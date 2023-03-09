@@ -303,14 +303,22 @@ static REASharedTransitionManager *_sharedTransitionManager;
       if (targetViewSnapshot == nil) {
         // it could happens after hot reloaed
         targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
+        UIView *sourceScreen = [REAScreensHelper getScreenForView:viewSource];
         UIView *targetScreen = [REAScreensHelper getScreenForView:viewTarget];
         UIView *mainWindow = UIApplication.sharedApplication.keyWindow;
         CGPoint absolutePosition = [stack convertPoint:targetScreen.center toView:mainWindow];
         float originY = absolutePosition.y - sharedViewScreen.bounds.size.height / 2.0;
-        bool hasHeader = ![[targetScreen.reactSubviews[0] valueForKey:@"hide"] boolValue];
-        float headerOffset = hasHeader ? [[REAScreensHelper getDefaultHeaderSize] floatValue] : 0;
+        bool sourceScreenHasHeader = ![[sourceScreen.reactSubviews[0] valueForKey:@"hide"] boolValue];
+        bool targetScreenHasHeader = ![[targetScreen.reactSubviews[0] valueForKey:@"hide"] boolValue];
+        float headerSize = [[REAScreensHelper getDefaultHeaderSize] floatValue];
+        float topOffset = 0;
+        if (targetScreenHasHeader) {
+          topOffset = headerSize;
+        } else if (sourceScreenHasHeader) {
+          topOffset = -(headerSize / 2);
+        }
         targetViewSnapshot.values[@"originY"] =
-            @(originY + [targetViewSnapshot.values[@"originY"] floatValue] + headerOffset);
+            @(originY + [targetViewSnapshot.values[@"originY"] floatValue] + topOffset);
         _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
       }
     }

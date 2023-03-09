@@ -43,7 +43,8 @@
       // case for modal with header
       UIView *parentScreen = [REAScreensHelper getScreenForView:screen.reactSuperview];
       if (parentScreen != nil) {
-        isModal = [parentScreen valueForKey:@"stackPresentation"];
+        presentationMode = [parentScreen valueForKey:@"stackPresentation"];
+        isModal = ![presentationMode isEqual:@(0)];
       }
     }
     return isModal;
