@@ -388,7 +388,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
     const jsi::Value &config) {
   layoutAnimationsManager_.configureAnimation(
       viewTag.asNumber(),
-      type.asString(rt).utf8(rt),
+      static_cast<LayoutAnimationType>(type.asNumber()),
       sharedTransitionTag.asString(rt).utf8(rt),
       extractShareableOrThrow(rt, config));
   return jsi::Value::undefined();
@@ -500,7 +500,13 @@ bool NativeReanimatedModule::handleRawEvent(
   jsi::Runtime &rt = *runtime.get();
   jsi::Value payload = payloadFactory(rt);
 
-  return handleEvent(eventName, std::move(payload), currentTime);
+  auto res = handleEvent(eventName, std::move(payload), currentTime);
+  // TODO: we should call performOperations conditionally if event is handled
+  // (res == true), but for now handleEvent always returns false. Thankfully,
+  // performOperations does not trigger a lot of code if there is nothing to be
+  // done so this is fine for now.
+  performOperations();
+  return res;
 }
 
 void NativeReanimatedModule::updateProps(

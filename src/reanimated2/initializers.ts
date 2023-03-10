@@ -100,6 +100,7 @@ function setupRequestAnimationFrame() {
   const nativeRequestAnimationFrame = global.requestAnimationFrame;
 
   let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
+  let lastNativeAnimationFrameTimestamp = -1;
 
   global.__flushAnimationFrame = (frameTimestamp: number) => {
     const currentCallbacks = animationFrameCallbacks;
@@ -117,6 +118,11 @@ function setupRequestAnimationFrame() {
       // is added and then use it to execute all the enqueued callbacks. Once
       // the callbacks are run, we clear the array.
       nativeRequestAnimationFrame((timestamp) => {
+        if (lastNativeAnimationFrameTimestamp >= timestamp) {
+          // Make sure we only execute the callbacks once for a given frame
+          return;
+        }
+        lastNativeAnimationFrameTimestamp = timestamp;
         global.__frameTimestamp = timestamp;
         global.__flushAnimationFrame(timestamp);
         global.__frameTimestamp = undefined;
