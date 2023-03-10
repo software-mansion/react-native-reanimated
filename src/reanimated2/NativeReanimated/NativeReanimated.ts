@@ -5,7 +5,10 @@ import {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import { LayoutAnimationFunction } from '../layoutReanimation';
+import {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+} from '../layoutReanimation';
 import { checkVersion } from '../platform-specific/checkVersion';
 
 export class NativeReanimated {
@@ -20,6 +23,15 @@ export class NativeReanimated {
     this.InnerNativeModule = global.__reanimatedModuleProxy;
     this.native = native;
     if (native) {
+      if (this.InnerNativeModule === undefined) {
+        console.error(
+          `[Reanimated] The native part of Reanimated doesn't seem to be initialized. This could be caused by\n\
+  - not rebuilding the app after installing or upgrading Reanimated\n\
+  - trying to run Reanimated on an unsupported platform\n\
+  - running in a brownfield app without manually initializing the native library`
+        );
+        return;
+      }
       checkVersion();
     }
   }
@@ -107,7 +119,7 @@ export class NativeReanimated {
 
   configureLayoutAnimation(
     viewTag: number,
-    type: string,
+    type: LayoutAnimationType,
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
   ) {
