@@ -45,7 +45,7 @@ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bo
   // When we use useScrollValueOffset hook, we don't know the direction of scrolling
   if (x == INFINITY) {
     bool isHorizontal = scrollView.scrollView.contentSize.width > scrollView.frame.size.width;
-    double scrollValue = fmin(x, y);
+    double scrollValue = y;
     x = isHorizontal ? scrollValue : 0;
     y = isHorizontal ? 0 : scrollValue;
   }

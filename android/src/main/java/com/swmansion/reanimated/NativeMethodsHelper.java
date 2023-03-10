@@ -57,7 +57,7 @@ public class NativeMethodsHelper {
 
     // When we use useScrollValueOffset hook, we don't know the direction of scrolling
     if (Double.isInfinite(argX)) {
-      int scrollValue = Math.min(x, y);
+      int scrollValue = y;
       x = horizontal ? scrollValue : 0;
       y = horizontal ? 0 : scrollValue;
     }
