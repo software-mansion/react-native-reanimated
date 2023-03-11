@@ -268,13 +268,13 @@ public class SharedTransitionManager {
           mCurrentSharedTransitionViews.containsKey(viewTarget.getId());
 
       if (!(isSourceViewInTransition || isTargetViewInTransition)) {
-        View viewSourceScreen = findScreen(viewSource);
-        View viewTargetScreen = findScreen(viewTarget);
+        View viewSourceScreen = ScreensHelper.findScreen(viewSource);
+        View viewTargetScreen = ScreensHelper.findScreen(viewTarget);
         if (viewSourceScreen == null || viewTargetScreen == null) {
           continue;
         }
 
-        ViewGroup stack = (ViewGroup) findStack(viewSourceScreen);
+        ViewGroup stack = (ViewGroup) ScreensHelper.findStack(viewSourceScreen);
         if (stack == null) {
           continue;
         }
@@ -323,8 +323,30 @@ public class SharedTransitionManager {
       if (targetViewSnapshot == null) {
         // may happen after hot reload
         targetViewSnapshot = new Snapshot(viewTarget);
-        int statusBarHeight = 52;
-        targetViewSnapshot.originY += statusBarHeight;
+        // It is necessary to calculate the top offset manually because the getLocationOnScreen
+        // method doesn't work well for not visible views
+        int offsetX = viewTarget.getLeft();
+        int offsetY = viewTarget.getTop();
+        View parent = (View) viewTarget.getParent();
+        while (parent != null) {
+          offsetX += parent.getLeft();
+          offsetY += parent.getTop();
+          parent = (View) parent.getParent();
+        }
+        int[] location = {0, 0};
+        View viewSourceScreen = ScreensHelper.findScreen(viewSource);
+        if (viewSourceScreen != null) {
+          viewSourceScreen.getLocationOnScreen(location);
+        }
+        offsetX += location[0];
+        offsetY += location[1];
+        if (viewSourceScreen != null && ScreensHelper.hasScreenHeader(viewSourceScreen)) {
+          offsetY -= viewSourceScreen.getTop();
+        }
+
+        targetViewSnapshot.originX = offsetX;
+        targetViewSnapshot.originY = offsetY;
+        mSnapshotRegistry.put(viewTarget.getId(), targetViewSnapshot);
       }
 
       newTransitionViews.add(viewSource);
@@ -465,7 +487,7 @@ public class SharedTransitionManager {
       Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(viewTag);
       if (viewSourcePreviousSnapshot != null && isInNativeTree) {
         int originY = viewSourcePreviousSnapshot.originY;
-        if (findStack(view) == null) {
+        if (ScreensHelper.findStack(view) == null) {
           viewSourcePreviousSnapshot.originY = viewSourcePreviousSnapshot.originYByParent;
         }
         Map<String, Object> snapshotMap = viewSourcePreviousSnapshot.toBasicMap();
@@ -498,30 +520,6 @@ public class SharedTransitionManager {
       mSharedElements.clear();
       mIsSharedTransitionActive = false;
     }
-  }
-
-  @Nullable
-  private View findScreen(View view) {
-    ViewParent parent = view.getParent();
-    while (parent != null) {
-      if (parent.getClass().getSimpleName().equals("Screen")) {
-        return (View) parent;
-      }
-      parent = parent.getParent();
-    }
-    return null;
-  }
-
-  @Nullable
-  private View findStack(View view) {
-    ViewParent parent = view.getParent();
-    while (parent != null) {
-      if (parent.getClass().getSimpleName().equals("ScreenStack")) {
-        return (View) parent;
-      }
-      parent = parent.getParent();
-    }
-    return null;
   }
 
   protected void makeSnapshot(View view) {

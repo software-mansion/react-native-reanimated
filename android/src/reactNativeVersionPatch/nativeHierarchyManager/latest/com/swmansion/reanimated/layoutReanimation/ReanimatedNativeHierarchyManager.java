@@ -284,16 +284,18 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   }
 
   private boolean checkIfTopScreenHasHeader(ViewGroup screenStack) {
-    try {
-      ViewGroup fragment = (ViewGroup)screenStack.getChildAt(0);
-      ViewGroup screen = (ViewGroup)fragment.getChildAt(0);
-      View headerConfig = screen.getChildAt(0);
-      Field field = headerConfig.getClass().getDeclaredField("mIsHidden");
-      field.setAccessible(true);
-      return !field.getBoolean(headerConfig);
-    } catch (NullPointerException | NoSuchFieldException | IllegalAccessException e) {
+    if (screenStack == null) {
       return false;
     }
+    ViewGroup fragment = (ViewGroup)screenStack.getChildAt(0);
+    if (fragment == null) {
+      return false;
+    }
+    ViewGroup screen = (ViewGroup)fragment.getChildAt(0);
+    if (screen == null) {
+      return false;
+    }
+    return ScreensHelper.hasScreenHeader(screen);
   }
 
   @Override
