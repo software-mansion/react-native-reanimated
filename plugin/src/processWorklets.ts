@@ -1,16 +1,25 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import { NodePath } from '@babel/core';
+import {
+  CallExpression,
+  isSequenceExpression,
+  isObjectExpression,
+  ObjectMethod,
+  ObjectProperty,
+  isObjectMethod,
+  FunctionDeclaration,
+  FunctionExpression,
+  ArrowFunctionExpression,
+} from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { objectHooks, functionArgsToWorkletize } from './commonObjects';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processWorkletFunction } from './processWorkletFunction';
 
 function processWorklets(
-  t: typeof BabelCore.types,
-  path: BabelCore.NodePath<BabelTypes.CallExpression>,
+  path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
 ) {
-  const callee = BabelTypes.isSequenceExpression(path.node.callee)
+  const callee = isSequenceExpression(path.node.callee)
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
     : path.node.callee;
 
@@ -22,34 +31,24 @@ function processWorklets(
 
   if (
     objectHooks.has(name) &&
-    BabelTypes.isObjectExpression(
-      (
-        path.get('arguments.0') as BabelCore.NodePath<
-          BabelTypes.CallExpression['arguments'][number]
-        >
-      ).node
+    isObjectExpression(
+      (path.get('arguments.0') as NodePath<CallExpression['arguments'][number]>)
+        .node
     )
   ) {
     const properties = path.get('arguments.0.properties') as Array<
-      BabelCore.NodePath<BabelTypes.ObjectMethod | BabelTypes.ObjectProperty>
+      NodePath<ObjectMethod | ObjectProperty>
     >;
     for (const property of properties) {
-      if (t.isObjectMethod(property.node)) {
-        processWorkletObjectMethod(
-          t,
-          property as BabelCore.NodePath<BabelTypes.ObjectMethod>,
-          state
-        );
+      if (isObjectMethod(property.node)) {
+        processWorkletObjectMethod(property as NodePath<ObjectMethod>, state);
       } else {
-        const value = property.get('value') as BabelCore.NodePath<
-          BabelTypes.ObjectProperty['value']
+        const value = property.get('value') as NodePath<
+          ObjectProperty['value']
         >;
         processWorkletFunction(
-          t,
-          value as BabelCore.NodePath<
-            | BabelTypes.FunctionDeclaration
-            | BabelTypes.FunctionExpression
-            | BabelTypes.ArrowFunctionExpression
+          value as NodePath<
+            FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,
           state
         ); // temporarily given 3 types [TO DO]
@@ -60,11 +59,8 @@ function processWorklets(
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
         processWorkletFunction(
-          t,
-          path.get(`arguments.${index}`) as BabelCore.NodePath<
-            | BabelTypes.FunctionDeclaration
-            | BabelTypes.FunctionExpression
-            | BabelTypes.ArrowFunctionExpression
+          path.get(`arguments.${index}`) as NodePath<
+            FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,
           state
         ); // temporarily given 3 types [TO DO]

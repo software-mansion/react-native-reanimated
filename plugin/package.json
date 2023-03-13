@@ -10,7 +10,7 @@
   "scripts": {
     "prepare": "yarn generate",
     "generate": "yarn tsc && yarn bundle",
-    "bundle": "yarn esbuild src/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --platform=node --sourcemap=linked --outfile=index.js && rm src/*.js src/*.js.map",
+    "bundle": "yarn esbuild src/plugin.js --log-level=silent --bundle --external:@babel --external:convert-source-map --external:fs --platform=node --sourcemap=linked --outfile=index.js && rm src/*.js src/*.js.map",
     "format": "yarn prettier --write --list-different **/*.ts",
     "lint": "yarn eslint --max-warnings=0 --ext .ts . && yarn prettier --check **/*.ts",
     "type:check": "yarn tsc --noEmit"

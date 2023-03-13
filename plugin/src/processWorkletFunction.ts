@@ -1,27 +1,35 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import { NodePath } from '@babel/core';
+import {
+  FunctionDeclaration,
+  FunctionExpression,
+  ArrowFunctionExpression,
+  callExpression,
+  isScopable,
+  isExportNamedDeclaration,
+  isArrowFunctionExpression,
+  variableDeclaration,
+  isFunctionParent,
+  variableDeclarator,
+} from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
 
 function processWorkletFunction(
-  t: typeof BabelCore.types,
-  fun: BabelCore.NodePath<
-    | BabelTypes.FunctionDeclaration
-    | BabelTypes.FunctionExpression
-    | BabelTypes.ArrowFunctionExpression
+  fun: NodePath<
+    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
 ) {
   // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
   // with a workletized version of itself.
 
-  if (!t.isFunctionParent(fun)) {
+  if (!isFunctionParent(fun)) {
     return;
   }
 
-  const newFun = makeWorklet(t, fun, state);
+  const newFun = makeWorklet(fun, state);
 
-  const replacement = t.callExpression(newFun, []);
+  const replacement = callExpression(newFun, []);
 
   // we check if function needs to be assigned to variable declaration.
   // This is needed if function definition directly in a scope. Some other ways
@@ -29,13 +37,11 @@ function processWorkletFunction(
   // const ggg = function foo() { }
   // ^ in such a case we don't need to define variable for the function
   const needDeclaration =
-    t.isScopable(fun.parent) || t.isExportNamedDeclaration(fun.parent);
+    isScopable(fun.parent) || isExportNamedDeclaration(fun.parent);
   fun.replaceWith(
-    !BabelTypes.isArrowFunctionExpression(fun.node) &&
-      fun.node.id &&
-      needDeclaration
-      ? t.variableDeclaration('const', [
-          t.variableDeclarator(fun.node.id, replacement),
+    !isArrowFunctionExpression(fun.node) && fun.node.id && needDeclaration
+      ? variableDeclaration('const', [
+          variableDeclarator(fun.node.id, replacement),
         ])
       : replacement
   );

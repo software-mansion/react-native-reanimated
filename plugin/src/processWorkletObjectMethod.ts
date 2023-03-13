@@ -1,24 +1,28 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import { NodePath } from '@babel/core';
+import {
+  ObjectMethod,
+  identifier,
+  isIdentifier,
+  isFunctionParent,
+  objectProperty,
+  callExpression,
+} from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
 
 function processWorkletObjectMethod(
-  t: typeof BabelCore.types,
-  path: BabelCore.NodePath<BabelTypes.ObjectMethod>,
+  path: NodePath<ObjectMethod>,
   state: ReanimatedPluginPass
 ) {
   // Replaces ObjectMethod with a workletized version of itself.
 
-  if (!BabelTypes.isFunctionParent(path)) return;
+  if (!isFunctionParent(path)) return;
 
-  const newFun = makeWorklet(t, path, state);
+  const newFun = makeWorklet(path, state);
 
-  const replacement = BabelTypes.objectProperty(
-    BabelTypes.identifier(
-      BabelTypes.isIdentifier(path.node.key) ? path.node.key.name : ''
-    ),
-    t.callExpression(newFun, [])
+  const replacement = objectProperty(
+    identifier(isIdentifier(path.node.key) ? path.node.key.name : ''),
+    callExpression(newFun, [])
   );
 
   path.replaceWith(replacement);
