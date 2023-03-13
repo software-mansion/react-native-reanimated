@@ -552,7 +552,7 @@ function injectVersion(path) {
         return;
     const versionString = package_json_1.default.version;
     const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
-    path.node.body.push(pluginVersion);
+    path.node.body = Array.prototype.concat([pluginVersion], path.node.body);
     globals.add(injectedName);
 }
 module.exports = function ({ types: t, }) {
