@@ -10,7 +10,7 @@ import {
   isExpression,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
-import { processWorkletFunction } from './processWorkletFunction';
+import { processIfWorkletFunction } from './processIfWorkletFunction';
 import {
   gestureHandlerBuilderMethods,
   gestureHandlerGestureObjects,
@@ -75,7 +75,7 @@ function processIfGestureHandlerEventCallbackFunctionNode(
     isExpression(fun.parent.callee) &&
     isGestureObjectEventCallbackMethod(fun.parent.callee)
   ) {
-    processWorkletFunction(fun, state);
+    processIfWorkletFunction(fun, state);
   }
 }
 

@@ -13,9 +13,9 @@ import {
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { objectHooks, functionArgsToWorkletize } from './commonObjects';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
-import { processWorkletFunction } from './processWorkletFunction';
+import { processIfWorkletFunction } from './processIfWorkletFunction';
 
-function processWorklets(
+function processForCalleesWorklets(
   path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
 ) {
@@ -46,7 +46,7 @@ function processWorklets(
         const value = property.get('value') as NodePath<
           ObjectProperty['value']
         >;
-        processWorkletFunction(
+        processIfWorkletFunction(
           value as NodePath<
             FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,
@@ -58,7 +58,7 @@ function processWorklets(
     const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processWorkletFunction(
+        processIfWorkletFunction(
           path.get(`arguments.${index}`) as NodePath<
             FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,
@@ -69,4 +69,4 @@ function processWorklets(
   }
 }
 
-export { processWorklets };
+export { processForCalleesWorklets };

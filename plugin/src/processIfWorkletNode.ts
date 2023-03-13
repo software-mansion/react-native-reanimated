@@ -7,7 +7,7 @@ import {
   isDirectiveLiteral,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
-import { processWorkletFunction } from './processWorkletFunction';
+import { processIfWorkletFunction } from './processIfWorkletFunction';
 
 function processIfWorkletNode(
   fun: NodePath<
@@ -36,7 +36,7 @@ function processIfWorkletNode(
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(fun, state);
+          processIfWorkletFunction(fun, state);
         }
       }
     },

@@ -505,8 +505,8 @@ var init_processWorkletObjectMethod = __esm({
   }
 });
 
-// src/processWorkletFunction.ts
-function processWorkletFunction(fun, state) {
+// src/processIfWorkletFunction.ts
+function processIfWorkletFunction(fun, state) {
   if (!(0, import_types3.isFunctionParent)(fun)) {
     return;
   }
@@ -520,20 +520,20 @@ function processWorkletFunction(fun, state) {
   );
 }
 var import_types3;
-var init_processWorkletFunction = __esm({
-  "src/processWorkletFunction.ts"() {
+var init_processIfWorkletFunction = __esm({
+  "src/processIfWorkletFunction.ts"() {
     "use strict";
     import_types3 = require("@babel/types");
     init_makeWorklet();
   }
 });
 
-// src/processWorklets.ts
-var processWorklets_exports = {};
-__export(processWorklets_exports, {
-  processWorklets: () => processWorklets
+// src/processForCalleesWorklets.ts
+var processForCalleesWorklets_exports = {};
+__export(processForCalleesWorklets_exports, {
+  processForCalleesWorklets: () => processForCalleesWorklets
 });
-function processWorklets(path, state) {
+function processForCalleesWorklets(path, state) {
   const callee = (0, import_types4.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
   let name = "";
   if ("name" in callee)
@@ -549,7 +549,7 @@ function processWorklets(path, state) {
         processWorkletObjectMethod(property, state);
       } else {
         const value = property.get("value");
-        processWorkletFunction(
+        processIfWorkletFunction(
           value,
           state
         );
@@ -559,7 +559,7 @@ function processWorklets(path, state) {
     const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processWorkletFunction(
+        processIfWorkletFunction(
           path.get(`arguments.${index}`),
           state
         );
@@ -568,13 +568,13 @@ function processWorklets(path, state) {
   }
 }
 var import_types4;
-var init_processWorklets = __esm({
-  "src/processWorklets.ts"() {
+var init_processForCalleesWorklets = __esm({
+  "src/processForCalleesWorklets.ts"() {
     "use strict";
     import_types4 = require("@babel/types");
     init_commonObjects();
     init_processWorkletObjectMethod();
-    init_processWorkletFunction();
+    init_processIfWorkletFunction();
   }
 });
 
@@ -592,7 +592,7 @@ function processIfWorkletNode(fun, state) {
         if (directives && directives.length > 0 && directives.some(
           (directive) => (0, import_types5.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet"
         )) {
-          processWorkletFunction(fun, state);
+          processIfWorkletFunction(fun, state);
         }
       }
     }
@@ -603,7 +603,7 @@ var init_processIfWorkletNode = __esm({
   "src/processIfWorkletNode.ts"() {
     "use strict";
     import_types5 = require("@babel/types");
-    init_processWorkletFunction();
+    init_processIfWorkletFunction();
   }
 });
 
@@ -614,7 +614,7 @@ __export(processIfGestureHandlerEventCallbackFunctionNode_exports, {
 });
 function processIfGestureHandlerEventCallbackFunctionNode(fun, state) {
   if ((0, import_types6.isCallExpression)(fun.parent) && (0, import_types6.isExpression)(fun.parent.callee) && isGestureObjectEventCallbackMethod(fun.parent.callee)) {
-    processWorkletFunction(fun, state);
+    processIfWorkletFunction(fun, state);
   }
 }
 function isGestureObjectEventCallbackMethod(node) {
@@ -637,7 +637,7 @@ var init_processIfGestureHandlerEventCallbackFunctionNode = __esm({
   "src/processIfGestureHandlerEventCallbackFunctionNode.ts"() {
     "use strict";
     import_types6 = require("@babel/types");
-    init_processWorkletFunction();
+    init_processIfWorkletFunction();
     init_commonObjects();
   }
 });
@@ -747,7 +747,7 @@ var init_processInlineStylesWarning = __esm({
 // src/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var commonObjects_1 = (init_commonObjects(), __toCommonJS(commonObjects_exports));
-var processWorklets_1 = (init_processWorklets(), __toCommonJS(processWorklets_exports));
+var processForCalleesWorklets_1 = (init_processForCalleesWorklets(), __toCommonJS(processForCalleesWorklets_exports));
 var processIfWorkletNode_1 = (init_processIfWorkletNode(), __toCommonJS(processIfWorkletNode_exports));
 var processIfGestureHandlerEventCallbackFunctionNode_1 = (init_processIfGestureHandlerEventCallbackFunctionNode(), __toCommonJS(processIfGestureHandlerEventCallbackFunctionNode_exports));
 var processInlineStylesWarning_1 = (init_processInlineStylesWarning(), __toCommonJS(processInlineStylesWarning_exports));
@@ -763,7 +763,7 @@ module.exports = function() {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          (0, processWorklets_1.processWorklets)(path, state);
+          (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
