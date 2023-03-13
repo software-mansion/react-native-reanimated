@@ -1,11 +1,38 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const BabelTypes = require("@babel/types");
-const generator_1 = require("@babel/generator");
-const traverse_1 = require("@babel/traverse");
+const BabelTypes = __importStar(require("@babel/types"));
+const generator_1 = __importDefault(require("@babel/generator"));
+const traverse_1 = __importDefault(require("@babel/traverse"));
 const core_1 = require("@babel/core");
-const fs = require("fs");
-const convertSourceMap = require("convert-source-map");
+const fs = __importStar(require("fs"));
+const convertSourceMap = __importStar(require("convert-source-map"));
+const package_json_1 = __importDefault(require("./package.json"));
 function hash(str) {
     let i = str.length;
     let hash1 = 5381;
@@ -519,6 +546,15 @@ function processInlineStylesWarning(t, path, state) {
         processStyleObjectForInlineStylesWarning(t, expression);
     }
 }
+function injectVersion(path) {
+    const injectedName = '_REANIMATEDPLUGINVERSION';
+    if (injectedName in globals)
+        return;
+    const versionString = package_json_1.default.version;
+    const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
+    path.node.body.push(pluginVersion);
+    globals.add(injectedName);
+}
 module.exports = function ({ types: t, }) {
     return {
         pre() {
@@ -529,6 +565,11 @@ module.exports = function ({ types: t, }) {
             }
         },
         visitor: {
+            Program: {
+                enter(path) {
+                    injectVersion(path);
+                },
+            },
             CallExpression: {
                 enter(path, state) {
                     processWorklets(t, path, state);

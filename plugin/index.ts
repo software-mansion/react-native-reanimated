@@ -5,6 +5,7 @@ import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
+import reanimatedPluginVersion from './package.json';
 
 function hash(str: string): number {
   let i = str.length;
@@ -1036,6 +1037,24 @@ function processInlineStylesWarning(
   }
 }
 
+function injectVersion(path: BabelCore.NodePath<BabelTypes.Program>) {
+  const injectedName = '_REANIMATEDPLUGINVERSION';
+  if (injectedName in globals) return;
+  const versionString = reanimatedPluginVersion.version;
+  const pluginVersion = BabelTypes.expressionStatement(
+    BabelTypes.assignmentExpression(
+      '=',
+      BabelTypes.memberExpression(
+        BabelTypes.identifier('global'),
+        BabelTypes.identifier(injectedName)
+      ),
+      BabelTypes.stringLiteral(versionString)
+    )
+  );
+  path.node.body.push(pluginVersion);
+  globals.add(injectedName);
+}
+
 module.exports = function ({
   types: t,
 }: typeof BabelCore): BabelCore.PluginItem {
@@ -1049,6 +1068,11 @@ module.exports = function ({
       }
     },
     visitor: {
+      Program: {
+        enter(path: BabelCore.NodePath<BabelTypes.Program>) {
+          injectVersion(path);
+        },
+      },
       CallExpression: {
         enter(
           path: BabelCore.NodePath<BabelTypes.CallExpression>,
