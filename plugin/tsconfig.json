@@ -7,5 +7,5 @@
     "sourceMap": true,
     "strict": true
   },
-  "files": ["index.ts"]
+  "files": ["src/plugin.ts"]
 }
