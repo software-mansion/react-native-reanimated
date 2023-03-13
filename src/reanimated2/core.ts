@@ -233,7 +233,7 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
   }
 }
 
-/** Function SetImmediate is not in global runtime if the user doesn't use expo. So if it's undefined we add it to runtime as a copy of requestAnimationFrame.
+/** Function setImmediate is not in global runtime if the user doesn't use Expo. So if it's undefined we add it to runtime as a copy of requestAnimationFrame.
  */
 if (!global.setImmediate) {
   // @ts-ignore disable-next-line
