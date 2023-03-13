@@ -546,9 +546,9 @@ function processInlineStylesWarning(t, path, state) {
         processStyleObjectForInlineStylesWarning(t, expression);
     }
 }
-function injectVersion(path) {
-    const injectedName = '_REANIMATEDPLUGINVERSION';
-    if (injectedName in globals)
+function injectVersion(path, state) {
+    const injectedName = '_REANIMATED_VERSION_PLUGIN';
+    if (state.opts.disablePluginVersionInjection || injectedName in globals)
         return;
     const versionString = package_json_1.default.version;
     const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
@@ -566,8 +566,8 @@ module.exports = function ({ types: t, }) {
         },
         visitor: {
             Program: {
-                enter(path) {
-                    injectVersion(path);
+                enter(path, state) {
+                    injectVersion(path, state);
                 },
             },
             CallExpression: {

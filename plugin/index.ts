@@ -26,6 +26,7 @@ interface ReanimatedPluginPass {
   opts: {
     relativeSourceLocation?: boolean;
     disableInlineStylesWarning?: boolean;
+    disablePluginVersionInjection?: boolean;
   };
   cwd: string;
   filename: string | undefined;
@@ -1037,9 +1038,13 @@ function processInlineStylesWarning(
   }
 }
 
-function injectVersion(path: BabelCore.NodePath<BabelTypes.Program>) {
-  const injectedName = '_REANIMATEDPLUGINVERSION';
-  if (injectedName in globals) return;
+function injectVersion(
+  path: BabelCore.NodePath<BabelTypes.Program>,
+  state: ReanimatedPluginPass
+) {
+  const injectedName = '_REANIMATED_VERSION_PLUGIN';
+  if (state.opts.disablePluginVersionInjection || injectedName in globals)
+    return;
   const versionString = reanimatedPluginVersion.version;
   const pluginVersion = BabelTypes.expressionStatement(
     BabelTypes.assignmentExpression(
@@ -1069,8 +1074,11 @@ module.exports = function ({
     },
     visitor: {
       Program: {
-        enter(path: BabelCore.NodePath<BabelTypes.Program>) {
-          injectVersion(path);
+        enter(
+          path: BabelCore.NodePath<BabelTypes.Program>,
+          state: ReanimatedPluginPass
+        ) {
+          injectVersion(path, state);
         },
       },
       CallExpression: {

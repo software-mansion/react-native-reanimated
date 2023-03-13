@@ -6,7 +6,7 @@ function runPlugin(input, opts = {}) {
   return transform(input, {
     filename: 'jest tests fixture',
     compact: false,
-    plugins: [plugin],
+    plugins: [[plugin, { disablePluginVersionInjection: true }]],
     ...opts,
   });
 }

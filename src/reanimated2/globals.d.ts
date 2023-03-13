@@ -80,6 +80,7 @@ declare global {
       _WORKLET: boolean;
       _IS_FABRIC: boolean;
       _REANIMATED_VERSION_CPP: string;
+      _REANIMATED_VERSION_PLUGIN: string;
       __reanimatedModuleProxy: NativeReanimated;
       __frameTimestamp?: number;
       evalWithSourceMap: (
