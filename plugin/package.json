@@ -1,17 +1,18 @@
 {
   "name": "ReanimatedPlugin",
   "dependencies": {
-    "convert-source-map": "^2.0.0"
+    "convert-source-map": "^2.0.0",
+    "esbuild": "^0.17.11"
   },
   "devDependencies": {
-    "typescript": "^4.1.3",
+    "@types/convert-source-map": "^2.0.0",
     "prettier": "^2.5.1",
-    "@types/convert-source-map": "^2.0.0"
+    "typescript": "^4.1.3"
   },
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "postinstall": "yarn tsc",
+    "build": "yarn tsc && yarn esbuild src/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --platform=node --sourcemap=linked --outfile=index.js && rm src/*.js src/*.js.map",
     "format": "prettier --write --list-different src/**/*.ts"
   }
 }

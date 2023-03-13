@@ -5,10 +5,7 @@
     "module": "commonjs",
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true,
-    "declaration": true,
-    "declarationDir": "dec/",
-    "outDir": "."
+    "strict": true
   },
   "exclude": ["dec", "node_modules"],
   "include": ["src/**/*.ts"]
