@@ -181,6 +181,18 @@ var init_commonFunctions = __esm({
   }
 });
 
+// src/asserts.ts
+function assertIsDefined(value) {
+  if (value === void 0 || value === null) {
+    throw new Error(`${value} is not defined`);
+  }
+}
+var init_asserts = __esm({
+  "src/asserts.ts"() {
+    "use strict";
+  }
+});
+
 // src/makeWorklet.ts
 function buildWorkletString(fun, closureVariables, name, inputMap) {
   function prependClosureVariablesIfNecessary() {
@@ -234,8 +246,7 @@ function buildWorkletString(fun, closureVariables, name, inputMap) {
   const draftExpression = fun.program.body.find(
     (obj) => (0, import_types.isFunctionDeclaration)(obj)
   ) || fun.program.body.find((obj) => (0, import_types.isExpressionStatement)(obj)) || void 0;
-  if (!draftExpression)
-    throw new Error("'draftExpression' is not defined\n");
+  assertIsDefined(draftExpression);
   const expression = (0, import_types.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
   if (!("params" in expression && (0, import_types.isBlockStatement)(expression.body)))
     throw new Error(
@@ -247,8 +258,7 @@ function buildWorkletString(fun, closureVariables, name, inputMap) {
     expression.body
   );
   const code = (0, import_generator.default)(workletFunction).code;
-  if (!inputMap)
-    throw new Error("'inputMap' is not defined");
+  assertIsDefined(inputMap);
   const includeSourceMap = shouldGenerateSourceMap();
   if (includeSourceMap) {
     inputMap.sourcesContent = [];
@@ -268,8 +278,7 @@ function buildWorkletString(fun, closureVariables, name, inputMap) {
     configFile: false,
     comments: false
   });
-  if (!transformed)
-    throw new Error("transformed is null!\n");
+  assertIsDefined(transformed);
   let sourceMap;
   if (includeSourceMap) {
     sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
@@ -299,8 +308,7 @@ function makeWorklet(fun, state) {
       }
     }
   });
-  if (!state.file.opts.filename)
-    throw new Error("'state.file.opts.filename' is undefined\n");
+  assertIsDefined(state.file.opts.filename);
   const codeObject = (0, import_generator.default)(fun.node, {
     sourceMaps: true,
     sourceFileName: state.file.opts.filename
@@ -321,8 +329,8 @@ function makeWorklet(fun, state) {
     configFile: false,
     inputSourceMap: codeObject.map
   });
-  if (!transformed || !transformed.ast)
-    throw new Error("'transformed' or 'transformed.ast' is undefined\n");
+  assertIsDefined(transformed);
+  assertIsDefined(transformed.ast);
   (0, import_core.traverse)(transformed.ast, {
     Identifier(path) {
       if (!path.isReferencedIdentifier())
@@ -358,8 +366,7 @@ function makeWorklet(fun, state) {
     functionName,
     transformed.map
   );
-  if (!funString)
-    throw new Error("'funString' is not defined\n");
+  assertIsDefined(funString);
   const workletHash = hash(funString);
   let location = state.file.opts.filename;
   if (state.opts.relativeSourceLocation) {
@@ -474,6 +481,7 @@ var init_makeWorklet = __esm({
     convertSourceMap = __toESM(require("convert-source-map"));
     init_commonFunctions();
     init_commonObjects();
+    init_asserts();
   }
 });
 

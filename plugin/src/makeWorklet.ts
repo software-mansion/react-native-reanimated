@@ -48,6 +48,7 @@ import * as convertSourceMap from 'convert-source-map';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { shouldGenerateSourceMap, hash, isRelease } from './commonFunctions';
 import { globals } from './commonObjects';
+import { assertIsDefined } from './asserts';
 
 function buildWorkletString(
   fun: BabelTypesFile,
@@ -142,7 +143,7 @@ function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  if (!draftExpression) throw new Error("'draftExpression' is not defined\n");
+  assertIsDefined(draftExpression);
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
@@ -161,7 +162,7 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  if (!inputMap) throw new Error("'inputMap' is not defined");
+  assertIsDefined(inputMap);
 
   const includeSourceMap = shouldGenerateSourceMap();
 
@@ -188,7 +189,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  if (!transformed) throw new Error('transformed is null!\n');
+  assertIsDefined(transformed);
 
   let sourceMap;
   if (includeSourceMap) {
@@ -250,8 +251,7 @@ function makeWorklet(
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  if (!state.file.opts.filename)
-    throw new Error("'state.file.opts.filename' is undefined\n");
+  assertIsDefined(state.file.opts.filename);
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
@@ -281,8 +281,8 @@ function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  if (!transformed || !transformed.ast)
-    throw new Error("'transformed' or 'transformed.ast' is undefined\n");
+  assertIsDefined(transformed);
+  assertIsDefined(transformed.ast);
 
   traverse(transformed.ast, {
     Identifier(path) {
@@ -342,7 +342,7 @@ function makeWorklet(
     functionName,
     transformed.map
   );
-  if (!funString) throw new Error("'funString' is not defined\n");
+  assertIsDefined(funString);
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
