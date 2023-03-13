@@ -212,7 +212,7 @@ function buildWorkletString(fun, closureVariables, name, inputMap) {
       )
     ]);
     function prependClosure(path) {
-      if (closureVariables.length === 0 || path.parent.type !== "Program") {
+      if (closureVariables.length === 0 || !(0, import_types.isProgram)(path.parent)) {
         return;
       }
       if (!(0, import_types.isExpression)(path.node.body))
@@ -220,7 +220,7 @@ function buildWorkletString(fun, closureVariables, name, inputMap) {
     }
     function prependRecursiveDeclaration(path) {
       var _a;
-      if (path.parent.type === "Program" && !(0, import_types.isArrowFunctionExpression)(path.node) && !(0, import_types.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
+      if ((0, import_types.isProgram)(path.parent) && !(0, import_types.isArrowFunctionExpression)(path.node) && !(0, import_types.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
         const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) == null ? void 0 : _a.references) > 0;
         if (hasRecursiveCalls) {
           path.node.body.body.unshift(
@@ -250,7 +250,7 @@ function buildWorkletString(fun, closureVariables, name, inputMap) {
   const expression = (0, import_types.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
   if (!("params" in expression && (0, import_types.isBlockStatement)(expression.body)))
     throw new Error(
-      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
+      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent!\n'"
     );
   const workletFunction = (0, import_types.functionExpression)(
     (0, import_types.identifier)(name),
@@ -336,14 +336,14 @@ function makeWorklet(fun, state) {
       if (!path.isReferencedIdentifier())
         return;
       const name = path.node.name;
-      if (globals.has(name) || !(0, import_types.isArrowFunctionExpression)(fun.node) && !(0, import_types.isObjectMethod)(fun.node) && fun.node.id && fun.node.id.name === name) {
+      if (globals.has(name) || "id" in fun.node && fun.node.id && "name" in fun.node.id && fun.node.id.name === name) {
         return;
       }
       const parentNode = path.parent;
-      if (parentNode.type === "MemberExpression" && parentNode.property === path.node && !parentNode.computed) {
+      if ((0, import_types.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
         return;
       }
-      if (parentNode.type === "ObjectProperty" && path.parentPath.parent.type === "ObjectExpression" && path.node !== parentNode.value) {
+      if ((0, import_types.isObjectProperty)(parentNode) && (0, import_types.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
         return;
       }
       let currentScope = path.scope;

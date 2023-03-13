@@ -27,6 +27,10 @@ import {
   VariableDeclaration,
   ExpressionStatement,
   ReturnStatement,
+  isProgram,
+  isObjectProperty,
+  isMemberExpression,
+  isObjectExpression,
   expressionStatement,
   assignmentExpression,
   memberExpression,
@@ -81,7 +85,7 @@ function buildWorkletString(
         | ObjectMethod
       >
     ) {
-      if (closureVariables.length === 0 || path.parent.type !== 'Program') {
+      if (closureVariables.length === 0 || !isProgram(path.parent)) {
         return;
       }
 
@@ -98,7 +102,7 @@ function buildWorkletString(
       >
     ) {
       if (
-        path.parent.type === 'Program' &&
+        isProgram(path.parent) &&
         !isArrowFunctionExpression(path.node) &&
         !isObjectMethod(path.node) &&
         path.node.id &&
@@ -151,7 +155,7 @@ function buildWorkletString(
 
   if (!('params' in expression && isBlockStatement(expression.body)))
     throw new Error(
-      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
+      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent!\n'"
     );
 
   const workletFunction = functionExpression(
@@ -290,9 +294,9 @@ function makeWorklet(
       const name = path.node.name;
       if (
         globals.has(name) ||
-        (!isArrowFunctionExpression(fun.node) &&
-          !isObjectMethod(fun.node) &&
+        ('id' in fun.node &&
           fun.node.id &&
+          'name' in fun.node.id &&
           fun.node.id.name === name)
       ) {
         return;
@@ -301,7 +305,7 @@ function makeWorklet(
       const parentNode = path.parent;
 
       if (
-        parentNode.type === 'MemberExpression' &&
+        isMemberExpression(parentNode) &&
         parentNode.property === path.node &&
         !parentNode.computed
       ) {
@@ -309,8 +313,8 @@ function makeWorklet(
       }
 
       if (
-        parentNode.type === 'ObjectProperty' &&
-        path.parentPath.parent.type === 'ObjectExpression' &&
+        isObjectProperty(parentNode) &&
+        isObjectExpression(path.parentPath.parent) &&
         path.node !== parentNode.value
       ) {
         return;
