@@ -506,16 +506,20 @@ var init_processWorkletObjectMethod = __esm({
 });
 
 // src/processIfWorkletFunction.ts
-function processIfWorkletFunction(fun, state) {
-  if (!(0, import_types3.isFunctionParent)(fun)) {
-    return;
-  }
-  const newFun = makeWorklet(fun, state);
+function processIfWorkletFunction(path, state) {
+  if ((0, import_types3.isFunctionDeclaration)(path) || (0, import_types3.isFunctionExpression)(path) || (0, import_types3.isArrowFunctionExpression)(path))
+    processWorkletFunction(
+      path,
+      state
+    );
+}
+function processWorkletFunction(path, state) {
+  const newFun = makeWorklet(path, state);
   const replacement = (0, import_types3.callExpression)(newFun, []);
-  const needDeclaration = (0, import_types3.isScopable)(fun.parent) || (0, import_types3.isExportNamedDeclaration)(fun.parent);
-  fun.replaceWith(
-    !(0, import_types3.isArrowFunctionExpression)(fun.node) && fun.node.id && needDeclaration ? (0, import_types3.variableDeclaration)("const", [
-      (0, import_types3.variableDeclarator)(fun.node.id, replacement)
+  const needDeclaration = (0, import_types3.isScopable)(path.parent) || (0, import_types3.isExportNamedDeclaration)(path.parent);
+  path.replaceWith(
+    "id" in path.node && path.node.id && needDeclaration ? (0, import_types3.variableDeclaration)("const", [
+      (0, import_types3.variableDeclarator)(path.node.id, replacement)
     ]) : replacement
   );
 }

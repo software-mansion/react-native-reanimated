@@ -7,27 +7,41 @@ import {
   isScopable,
   isExportNamedDeclaration,
   isArrowFunctionExpression,
+  isFunctionDeclaration,
+  isFunctionExpression,
   variableDeclaration,
-  isFunctionParent,
   variableDeclarator,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
 
+// Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
+// with a workletized version of itself.
+
 function processIfWorkletFunction(
-  fun: NodePath<
+  path: NodePath<unknown> | Array<NodePath<unknown>>,
+  state: ReanimatedPluginPass
+): void {
+  if (
+    isFunctionDeclaration(path) ||
+    isFunctionExpression(path) ||
+    isArrowFunctionExpression(path)
+  )
+    processWorkletFunction(
+      path as NodePath<
+        FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
+      >,
+      state
+    );
+}
+
+function processWorkletFunction(
+  path: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
 ) {
-  // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
-  // with a workletized version of itself.
-
-  if (!isFunctionParent(fun)) {
-    return;
-  }
-
-  const newFun = makeWorklet(fun, state);
+  const newFun = makeWorklet(path, state);
 
   const replacement = callExpression(newFun, []);
 
@@ -37,11 +51,11 @@ function processIfWorkletFunction(
   // const ggg = function foo() { }
   // ^ in such a case we don't need to define variable for the function
   const needDeclaration =
-    isScopable(fun.parent) || isExportNamedDeclaration(fun.parent);
-  fun.replaceWith(
-    !isArrowFunctionExpression(fun.node) && fun.node.id && needDeclaration
+    isScopable(path.parent) || isExportNamedDeclaration(path.parent);
+  path.replaceWith(
+    'id' in path.node && path.node.id && needDeclaration
       ? variableDeclaration('const', [
-          variableDeclarator(fun.node.id, replacement),
+          variableDeclarator(path.node.id, replacement),
         ])
       : replacement
   );
