@@ -6,23 +6,38 @@ import {
   Timestamp,
 } from '../commonTypes';
 
-interface SpringConfig {
-  mass?: number;
+type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
-  damping?: number;
-  duration?: number;
-}
+} & (
+  | {
+      mass?: never;
+      damping?: number;
+      duration?: number;
+    }
+  | {
+      mass?: number;
+      damping?: never;
+      duration?: number;
+    }
+  | {
+      mass?: number;
+      damping?: number;
+      duration?: undefined;
+    }
+);
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
   current: AnimatableValue;
   toValue: AnimatableValue;
   velocity: number;
   lastTimestamp: Timestamp;
+  firstTimestamp: Timestamp;
   newDamping: number;
+  newMass: number;
 }
 
 export interface InnerSpringAnimation
@@ -40,11 +55,7 @@ export function withSpring(
 
   return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
-
-    // TODO: figure out why we can't use spread or Object.assign here
-    // when user config is "frozen object" we can't enumerate it (perhaps
-    // something is wrong with the object prototype).
-    const config: Required<SpringConfig> = {
+    const defaultConfig: Record<keyof SpringConfig, any> = {
       damping: 10,
       mass: 1,
       stiffness: 100,
@@ -52,23 +63,35 @@ export function withSpring(
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
       velocity: 0,
-      duration: 0,
-    };
-    if (userConfig) {
-      Object.keys(userConfig).forEach(
-        (key) =>
-          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
-      );
-    }
+      duration: undefined,
+    } as const;
+
+    const config = { ...defaultConfig, ...userConfig };
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
-      const { toValue, lastTimestamp, current, velocity } = animation;
+      const { toValue, firstTimestamp, lastTimestamp, current, velocity } =
+        animation;
+
+      const timeFromStart = now - firstTimestamp;
+      if (userConfig?.duration && timeFromStart > userConfig.duration * 1.1) {
+        animation.current = toValue;
+
+        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
+        animation.lastTimestamp = 0;
+        return true;
+      }
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
       animation.lastTimestamp = now;
 
-      const c = config.duration ? animation.newDamping : config.damping;
-      const m = config.mass;
+      const c =
+        config.duration && !userConfig?.damping
+          ? animation.newDamping
+          : config.damping;
+      const m =
+        config.duration && userConfig?.damping
+          ? animation.newMass
+          : config.mass;
       const k = config.stiffness;
 
       const v0 = -velocity;
@@ -149,27 +172,47 @@ export function withSpring(
       animation.current = value;
 
       let newDamping = config.duration;
+      let newMass = config.mass;
 
-      if (config.duration) {
-        const m = config.mass;
+      if (userConfig?.duration && userConfig?.damping && userConfig?.mass) {
+        console.warn(
+          "You've specified to all the parameters: damping, mass and duration. At least one of them must be calculated depending on the two others"
+        );
+      }
+
+      if (userConfig?.duration) {
         const amplitude = Number(animation.toValue) - value;
 
-        /** Use this formulae https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
-         * to find the asympotote and esitmate the damping that gives us the expected duration */
+        if (!userConfig?.damping) {
+          // If damping is not provided calculate new damping
 
-        newDamping =
-          -((2 * m) / (0.001 * config.duration)) *
-          Math.log(config.restDisplacementThreshold / Math.abs(amplitude));
+          /** Use this formulae https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
+           * to find the asympotote and esitmate the damping that gives us the expected duration */
+          const m = config.mass;
+          newDamping =
+            -((2 * m) / (0.001 * config.duration)) *
+            Math.log(config.restDisplacementThreshold / Math.abs(amplitude));
+        } else {
+          // calculate new mass
+          const d = config.damping;
+          newMass =
+            -(0.002 * d * config.duration) /
+            Math.log(config.restDisplacementThreshold / Math.abs(amplitude));
+        }
       }
 
       if (previousAnimation) {
         animation.velocity =
           previousAnimation.velocity || animation.velocity || 0;
         animation.lastTimestamp = previousAnimation.lastTimestamp || now;
+        animation.firstTimestamp = previousAnimation.firstTimestamp || now;
         animation.newDamping = previousAnimation.newDamping || newDamping;
+        animation.newMass = previousAnimation.newMass || newMass;
       } else {
         animation.lastTimestamp = now;
+        animation.firstTimestamp = now;
         animation.newDamping = newDamping;
+        animation.newMass = newMass;
       }
     }
 
@@ -181,7 +224,9 @@ export function withSpring(
       current: toValue,
       callback,
       lastTimestamp: 0,
+      firstTimestamp: 0,
       newDamping: 0,
+      newMass: 0,
     } as SpringAnimation;
   });
 }
