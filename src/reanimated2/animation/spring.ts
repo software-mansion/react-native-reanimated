@@ -12,22 +12,11 @@ type SpringConfig = {
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
-} & (
-  | {
-      mass?: never;
-      damping?: number;
-      duration?: number;
-    }
-  | {
-      mass?: number;
-      damping?: never;
-      duration?: number;
-    }
-  | {
-      mass?: number;
-      damping?: number;
-      duration?: undefined;
-    }
+} & /** When duration is provided damping is set to some calculated value unless damping value is specified in config. If damping is specified mass is calculated. If both mass and damping are provided typescript error is thrown.
+Also initial velocity must be zero if duration is specified. */ (
+  | { velocity?: never; mass?: never; damping?: number; duration?: number }
+  | { velocity?: never; mass?: number; damping?: never; duration?: number }
+  | { velocity?: number; mass?: number; damping?: number; duration?: never }
 );
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
@@ -67,17 +56,85 @@ export function withSpring(
     } as const;
 
     const config = { ...defaultConfig, ...userConfig };
+    if (userConfig?.duration) {
+      config.velocity = 0;
+    }
+
+    function criticallyDampedSpring(
+      animation: InnerSpringAnimation,
+      precalculatedValues: {
+        v0: number;
+        x0: number;
+        omega0: number;
+        t: number;
+      }
+    ): { position: number; velocity: number } {
+      const { toValue } = animation;
+
+      const { v0, x0, omega0, t } = precalculatedValues;
+
+      const criticallyDampedEnvelope = Math.exp(-omega0 * t);
+      const criticallyDampedPosition =
+        toValue - criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
+
+      const criticallyDampedVelocity =
+        criticallyDampedEnvelope *
+        (v0 * (t * omega0 - 1) + t * x0 * omega0 * omega0);
+
+      return {
+        position: criticallyDampedPosition,
+        velocity: criticallyDampedVelocity,
+      };
+    }
+
+    function underDampedSpring(
+      animation: InnerSpringAnimation,
+      precalculatedValues: {
+        zeta: number;
+        v0: number;
+        x0: number;
+        omega0: number;
+        omega1: number;
+        t: number;
+      }
+    ): { position: number; velocity: number } {
+      const { toValue, current, velocity } = animation;
+
+      const { zeta, t, omega0, omega1 } = precalculatedValues;
+
+      const v0 = -velocity;
+      const x0 = toValue - current;
+
+      const sin1 = Math.sin(omega1 * t);
+      const cos1 = Math.cos(omega1 * t);
+
+      // under damped
+      const underDampedEnvelope = Math.exp(-zeta * omega0 * t);
+      const underDampedFrag1 =
+        underDampedEnvelope *
+        (sin1 * ((v0 + zeta * omega0 * x0) / omega1) + x0 * cos1);
+
+      const underDampedPosition = toValue - underDampedFrag1;
+      // This looks crazy -- it's actually just the derivative of the oscillation function
+      const underDampedVelocity =
+        zeta * omega0 * underDampedFrag1 -
+        underDampedEnvelope *
+          (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
+
+      return { position: underDampedPosition, velocity: underDampedVelocity };
+    }
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
       const { toValue, firstTimestamp, lastTimestamp, current, velocity } =
         animation;
 
       const timeFromStart = now - firstTimestamp;
-      if (userConfig?.duration && timeFromStart > userConfig.duration * 1.1) {
+      if (userConfig?.duration && timeFromStart > userConfig.duration) {
         animation.current = toValue;
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
+        animation.firstTimestamp = 0;
         return true;
       }
 
@@ -103,30 +160,18 @@ export function withSpring(
 
       const t = deltaTime / 1000;
 
-      const sin1 = Math.sin(omega1 * t);
-      const cos1 = Math.cos(omega1 * t);
-
-      // under damped
-      const underDampedEnvelope = Math.exp(-zeta * omega0 * t);
-      const underDampedFrag1 =
-        underDampedEnvelope *
-        (sin1 * ((v0 + zeta * omega0 * x0) / omega1) + x0 * cos1);
-
-      const underDampedPosition = toValue - underDampedFrag1;
-      // This looks crazy -- it's actually just the derivative of the oscillation function
-      const underDampedVelocity =
-        zeta * omega0 * underDampedFrag1 -
-        underDampedEnvelope *
-          (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
-
-      // critically damped
-      const criticallyDampedEnvelope = Math.exp(-omega0 * t);
-      const criticallyDampedPosition =
-        toValue - criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
-
-      const criticallyDampedVelocity =
-        criticallyDampedEnvelope *
-        (v0 * (t * omega0 - 1) + t * x0 * omega0 * omega0);
+      const { position: newPosition, velocity: newVelocity } =
+        // always use underDamped motion if duration was provided
+        zeta < 1 || userConfig?.duration
+          ? underDampedSpring(animation, {
+              zeta,
+              v0,
+              x0,
+              omega0,
+              omega1,
+              t,
+            })
+          : criticallyDampedSpring(animation, { v0, x0, omega0, t });
 
       const isOvershooting = () => {
         if (config.overshootClamping && config.stiffness !== 0) {
@@ -143,13 +188,8 @@ export function withSpring(
         config.stiffness === 0 ||
         Math.abs(toValue - current) < config.restDisplacementThreshold;
 
-      if (zeta < 1) {
-        animation.current = underDampedPosition;
-        animation.velocity = underDampedVelocity;
-      } else {
-        animation.current = criticallyDampedPosition;
-        animation.velocity = criticallyDampedVelocity;
-      }
+      animation.current = newPosition;
+      animation.velocity = newVelocity;
 
       if (isOvershooting() || (isVelocity && isDisplacement)) {
         if (config.stiffness !== 0) {
@@ -158,6 +198,7 @@ export function withSpring(
         }
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
+        animation.firstTimestamp = 0;
         return true;
       }
       return false;
@@ -178,6 +219,10 @@ export function withSpring(
         console.warn(
           "You've specified to all the parameters: damping, mass and duration. At least one of them must be calculated depending on the two others"
         );
+      }
+
+      if (userConfig?.duration && userConfig?.velocity) {
+        console.warn('Passing both velocity and duration is not allowed');
       }
 
       if (userConfig?.duration) {
