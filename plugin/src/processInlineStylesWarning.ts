@@ -77,7 +77,7 @@ function processTransformPropertyForInlineStylesWarning(
       if (isObjectExpression(element.node)) {
         processStyleObjectForInlineStylesWarning(
           element as NodePath<ObjectExpression>
-        ); // why is it not inferred? [TO DO]
+        );
       }
     }
   }
@@ -126,7 +126,7 @@ function processInlineStylesWarning(
       if (isObjectExpression(element.node)) {
         processStyleObjectForInlineStylesWarning(
           element as NodePath<ObjectExpression>
-        ); // why is it not inferred? [TO DO]
+        );
       }
     }
   }
@@ -134,7 +134,7 @@ function processInlineStylesWarning(
   else if (isObjectExpression(expression.node)) {
     processStyleObjectForInlineStylesWarning(
       expression as NodePath<ObjectExpression>
-    ); // why is it not inferred? [TO DO]
+    );
   }
 }
 
