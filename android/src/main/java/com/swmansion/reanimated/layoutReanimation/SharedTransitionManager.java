@@ -25,7 +25,7 @@ public class SharedTransitionManager {
   private NativeMethodsHolder mNativeMethodsHolder;
   private final List<View> mAddedSharedViews = new ArrayList<>();
   private final Map<Integer, View> mSharedTransitionParent = new HashMap<>();
-  private final Map<Integer, Integer> mSharedTransitionInParentIndex = new HashMap<>();
+  private final Map<Integer, View> mSharedVievSuccessorInParent = new HashMap<>();
   private boolean mIsSharedTransitionActive;
   private final Map<Integer, Snapshot> mSnapshotRegistry = new HashMap<>();
   private final Map<Integer, View> mCurrentSharedTransitionViews = new HashMap<>();
@@ -223,9 +223,46 @@ public class SharedTransitionManager {
     /*
       All shared views during the transition have the same parent. It is problematic if parent
       view and their children are in the same transition. To keep the valid order in the z-axis,
-      we need to sort views by tags. Parent tag is lower than children tags.
+      we need to sort views by tags.
     */
     Collections.sort(views, (v1, v2) -> Integer.compare(v2.getId(), v1.getId()));
+    Set<View> sharedViewSet = new HashSet<>(views);
+    Map<View, List<View>> viewsParentsMap = new HashMap<>();
+    for (View view : views) {
+      viewsParentsMap.put(view, getParents(view));
+    }
+    for (int i = 0; i < views.size(); i++) {
+      View view = views.get(i);
+      List<View> viewParents = viewsParentsMap.get(view);
+      View sharedParent = null;
+      for (View parent : viewParents) {
+        if (sharedViewSet.contains(parent)) {
+          sharedParent = parent;
+          break;
+        }
+      }
+      if (sharedParent != null) {
+        int sharedParentIndex = views.indexOf(sharedParent);
+        if (sharedParentIndex > i) {
+          views.remove(i);
+          i--;
+          views.add(sharedParentIndex, view);
+        }
+      }
+    }
+  }
+
+  private List<View> getParents(View view) {
+    List<View> parents = new ArrayList<>();
+    ViewParent parent = view.getParent();
+    while (parent != null) {
+      parents.add((View) parent);
+      if (parent.getClass().getSimpleName().equals("Screen")) {
+        break;
+      }
+      parent = parent.getParent();
+    }
+    return parents;
   }
 
   private List<SharedElement> getSharedElementsForCurrentTransition(
@@ -399,43 +436,40 @@ public class SharedTransitionManager {
 
   private void reparentSharedViewsForCurrentTransition(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
-      View viewSource = sharedElement.sourceView;
-      View viewTarget = sharedElement.targetView;
-
-      if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
-        ViewGroup parent = (ViewGroup) viewSource.getParent();
-        mSharedTransitionInParentIndex.put(viewSource.getId(), parent.indexOfChild(viewSource));
-      }
-
-      if (!mSharedTransitionParent.containsKey(viewTarget.getId())) {
-        ViewGroup parent = (ViewGroup) viewTarget.getParent();
-        mSharedTransitionInParentIndex.put(viewTarget.getId(), parent.indexOfChild(viewTarget));
-      }
+      maybeFindSuccessor(sharedElement.sourceView);
+      maybeFindSuccessor(sharedElement.targetView);
     }
-
     for (SharedElement sharedElement : sharedElements) {
-      View viewSource = sharedElement.sourceView;
-      View viewTarget = sharedElement.targetView;
-
-      if (!mSharedTransitionParent.containsKey(viewSource.getId())) {
-        ViewGroup parent = (ViewGroup) viewSource.getParent();
-        mSharedTransitionParent.put(viewSource.getId(), parent);
-        parent.removeView(viewSource);
-        ((ViewGroup) mTransitionContainer).addView(viewSource);
-      }
-
-      if (!mSharedTransitionParent.containsKey(viewTarget.getId())) {
-        ViewGroup parent = (ViewGroup) viewTarget.getParent();
-        mSharedTransitionParent.put(viewTarget.getId(), parent);
-        parent.removeView(viewTarget);
-        ((ViewGroup) mTransitionContainer).addView(viewTarget);
-      }
+      maybeReparentView(sharedElement.sourceView);
+      maybeReparentView(sharedElement.targetView);
     }
   }
 
+  private void maybeFindSuccessor(View view) {
+    if (mSharedTransitionParent.containsKey(view.getId())) {
+      return;
+    }
+    ViewGroup parent = (ViewGroup) view.getParent();
+    View successor = null;
+    int inParentIndex = parent.indexOfChild(view);
+    if (inParentIndex < parent.getChildCount() - 1) {
+      successor = parent.getChildAt(inParentIndex + 1);
+    }
+    mSharedVievSuccessorInParent.put(view.getId(), successor);
+  }
+
+  private void maybeReparentView(View view) {
+    if (mSharedTransitionParent.containsKey(view.getId())) {
+      return;
+    }
+    ViewGroup parent = (ViewGroup) view.getParent();
+    mSharedTransitionParent.put(view.getId(), parent);
+    parent.removeView(view);
+    ((ViewGroup) mTransitionContainer).addView(view);
+  }
+
   private void startSharedTransition(List<SharedElement> sharedElements) {
-    for (int i = sharedElements.size() - 1; i >= 0; i--) {
-      SharedElement sharedElement = sharedElements.get(i);
+    for (SharedElement sharedElement : sharedElements) {
       startSharedAnimationForView(
           sharedElement.sourceView,
           sharedElement.sourceViewSnapshot,
@@ -478,10 +512,10 @@ public class SharedTransitionManager {
       int viewTag = view.getId();
       ((ViewGroup) mTransitionContainer).removeView(view);
       View parentView = mSharedTransitionParent.get(viewTag);
-      int childIndex = mSharedTransitionInParentIndex.get(viewTag);
       ViewGroup parentViewGroup = ((ViewGroup) parentView);
-      boolean isInNativeTree = parentViewGroup.getParent() != null;
+      boolean isInNativeTree = parentViewGroup != null && parentViewGroup.getParent() != null;
       if (isInNativeTree) {
+        int childIndex = computeValidIndex(view, parentView);
         parentViewGroup.addView(view, childIndex);
       }
       Snapshot viewSourcePreviousSnapshot = mSnapshotRegistry.get(viewTag);
@@ -508,7 +542,7 @@ public class SharedTransitionManager {
       }
       mCurrentSharedTransitionViews.remove(viewTag);
       mSharedTransitionParent.remove(viewTag);
-      mSharedTransitionInParentIndex.remove(viewTag);
+      mSharedVievSuccessorInParent.remove(viewTag);
     }
     if (mCurrentSharedTransitionViews.isEmpty()) {
       if (mTransitionContainer != null) {
@@ -520,6 +554,19 @@ public class SharedTransitionManager {
       mSharedElements.clear();
       mIsSharedTransitionActive = false;
     }
+  }
+
+  private int computeValidIndex(View sharedView, View parent) {
+    ViewGroup parentGroup = (ViewGroup) parent;
+    View successor = mSharedVievSuccessorInParent.get(sharedView.getId());
+    if (successor == null) {
+      return parentGroup.getChildCount();
+    }
+    int successorIndex = parentGroup.indexOfChild(successor);
+    if (successorIndex == -1) {
+      return parentGroup.getChildCount();
+    }
+    return successorIndex;
   }
 
   protected void makeSnapshot(View view) {
@@ -555,7 +602,9 @@ public class SharedTransitionManager {
         mAnimationsManager.getReanimatedNativeHierarchyManager();
     for (int viewTag : viewTags) {
       View view = reanimatedNativeHierarchyManager.resolveView(viewTag);
-      visitTree(view, treeVisitor);
+      if (view.getClass().getSimpleName().equals("Screen")) {
+        visitTree(view, treeVisitor);
+      }
     }
   }
 
