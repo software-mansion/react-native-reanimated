@@ -626,13 +626,8 @@ var processIfGestureHandlerEventCallbackFunctionNode_exports = {};
 __export(processIfGestureHandlerEventCallbackFunctionNode_exports, {
   processIfGestureHandlerEventCallbackFunctionNode: () => processIfGestureHandlerEventCallbackFunctionNode
 });
-function processIfGestureHandlerEventCallbackFunctionNode(fun, state) {
-  if ((0, import_types6.isCallExpression)(fun.parent) && (0, import_types6.isExpression)(fun.parent.callee) && isGestureObjectEventCallbackMethod(fun.parent.callee)) {
-    processIfWorkletFunction(fun, state);
-  }
-}
-function isGestureObjectEventCallbackMethod(node) {
-  return (0, import_types6.isMemberExpression)(node) && (0, import_types6.isIdentifier)(node.property) && gestureHandlerBuilderMethods.has(node.property.name) && containsGestureObject(node.object);
+function isGestureObject(node) {
+  return (0, import_types6.isCallExpression)(node) && (0, import_types6.isMemberExpression)(node.callee) && (0, import_types6.isIdentifier)(node.callee.object) && node.callee.object.name === "Gesture" && (0, import_types6.isIdentifier)(node.callee.property) && gestureHandlerGestureObjects.has(node.callee.property.name);
 }
 function containsGestureObject(node) {
   if (isGestureObject(node)) {
@@ -643,8 +638,13 @@ function containsGestureObject(node) {
   }
   return false;
 }
-function isGestureObject(node) {
-  return (0, import_types6.isCallExpression)(node) && (0, import_types6.isMemberExpression)(node.callee) && (0, import_types6.isIdentifier)(node.callee.object) && node.callee.object.name === "Gesture" && (0, import_types6.isIdentifier)(node.callee.property) && gestureHandlerGestureObjects.has(node.callee.property.name);
+function isGestureObjectEventCallbackMethod(node) {
+  return (0, import_types6.isMemberExpression)(node) && (0, import_types6.isIdentifier)(node.property) && gestureHandlerBuilderMethods.has(node.property.name) && containsGestureObject(node.object);
+}
+function processIfGestureHandlerEventCallbackFunctionNode(path, state) {
+  if ((0, import_types6.isCallExpression)(path.parent) && (0, import_types6.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee)) {
+    processIfWorkletFunction(path, state);
+  }
 }
 var import_types6;
 var init_processIfGestureHandlerEventCallbackFunctionNode = __esm({
