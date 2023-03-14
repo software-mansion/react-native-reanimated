@@ -539,36 +539,46 @@ __export(processForCalleesWorklets_exports, {
 });
 function processForCalleesWorklets(path, state) {
   const callee = (0, import_types4.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
-  let name = "";
+  let name;
   if ("name" in callee)
     name = callee.name;
   else if ("property" in callee && "name" in callee.property)
     name = callee.property.name;
-  if (objectHooks.has(name) && (0, import_types4.isObjectExpression)(
-    path.get("arguments.0").node
-  )) {
-    const properties = path.get("arguments.0.properties");
-    for (const property of properties) {
-      if ((0, import_types4.isObjectMethod)(property.node)) {
-        processWorkletObjectMethod(property, state);
-      } else {
-        const value = property.get("value");
-        processIfWorkletFunction(
-          value,
-          state
-        );
-      }
+  else
+    return;
+  if (objectHooks.has(name)) {
+    const workletToProcess = path.get("arguments.0");
+    if ((0, import_types4.isObjectExpression)(workletToProcess))
+      processObjectHookArgument(
+        workletToProcess,
+        state
+      );
+  } else
+    processArguments(name, path, state);
+}
+function processObjectHookArgument(path, state) {
+  const properties = path.get("properties");
+  for (const property of properties) {
+    if ((0, import_types4.isObjectMethod)(property)) {
+      processWorkletObjectMethod(property, state);
+    } else if ((0, import_types4.isObjectProperty)(property)) {
+      const value = property.get("value");
+      processIfWorkletFunction(value, state);
+    } else {
+      throw new Error(
+        "[Reanimated] Spread syntax (Babel SpreadElement type) as to-be workletized arguments is not supported for object hooks!\n"
+      );
     }
-  } else {
-    const indexes = functionArgsToWorkletize.get(name);
-    if (Array.isArray(indexes)) {
-      indexes.forEach((index) => {
-        processIfWorkletFunction(
-          path.get(`arguments.${index}`),
-          state
-        );
-      });
-    }
+  }
+}
+function processArguments(name, path, state) {
+  const indexes = functionArgsToWorkletize.get(name);
+  if (Array.isArray(indexes)) {
+    const argumentsArray = path.get("arguments");
+    indexes.forEach((index) => {
+      const argumentToWorkletize = argumentsArray[index];
+      processIfWorkletFunction(argumentToWorkletize, state);
+    });
   }
 }
 var import_types4;
