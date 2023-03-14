@@ -1056,7 +1056,7 @@ function injectVersion(
       BabelTypes.stringLiteral(versionString)
     )
   );
-  path.node.body = Array.prototype.concat([pluginVersion], path.node.body);
+  path.node.body.unshift(pluginVersion);
   globals.add(injectedName);
 }
 
