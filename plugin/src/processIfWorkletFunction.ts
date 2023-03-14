@@ -40,7 +40,7 @@ function processWorkletFunction(
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
-) {
+): void {
   const newFun = makeWorklet(path, state);
 
   const replacement = callExpression(newFun, []);

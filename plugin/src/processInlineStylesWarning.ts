@@ -20,11 +20,14 @@ import {
   blockStatement,
   ObjectProperty,
   isIdentifier,
+  CallExpression,
 } from '@babel/types';
 import { isRelease } from './commonFunctions';
 import { ReanimatedPluginPass } from './commonInterfaces';
 
-function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
+function generateInlineStylesWarning(
+  path: NodePath<MemberExpression>
+): CallExpression {
   // replaces `sharedvalue.value` with `(()=>{console.warn(require('react-native-reanimated').getUseOfValueInStyleWarning());return sharedvalue.value;})()`
   return callExpression(
     arrowFunctionExpression(
@@ -55,7 +58,7 @@ function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
 
 function processPropertyValueForInlineStylesWarning(
   path: NodePath<ObjectProperty['value']>
-) {
+): void {
   // if it's something like object.value then raise a warning
   if (isMemberExpression(path.node) && isIdentifier(path.node.property)) {
     if (path.node.property.name === 'value') {
@@ -68,7 +71,7 @@ function processPropertyValueForInlineStylesWarning(
 
 function processTransformPropertyForInlineStylesWarning(
   path: NodePath<ObjectProperty['value']>
-) {
+): void {
   if (isArrayExpression(path.node)) {
     const elements = path.get('elements') as Array<
       NodePath<ArrayExpression['elements'][number]>
@@ -85,7 +88,7 @@ function processTransformPropertyForInlineStylesWarning(
 
 function processStyleObjectForInlineStylesWarning(
   path: NodePath<ObjectExpression>
-) {
+): void {
   const properties = path.get('properties') as Array<
     NodePath<ObjectExpression['properties'][number]>
   >;
@@ -108,7 +111,7 @@ function processStyleObjectForInlineStylesWarning(
 function processInlineStylesWarning(
   path: NodePath<JSXAttribute>,
   state: ReanimatedPluginPass
-) {
+): void {
   if (isRelease()) return;
   if (state.opts.disableInlineStylesWarning) return;
   if (path.node.name.name !== 'style') return;

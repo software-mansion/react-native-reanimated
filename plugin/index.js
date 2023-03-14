@@ -487,8 +487,6 @@ var init_makeWorklet = __esm({
 
 // src/processWorkletObjectMethod.ts
 function processWorkletObjectMethod(path, state) {
-  if (!(0, import_types2.isFunctionParent)(path))
-    return;
   const newFun = makeWorklet(path, state);
   const replacement = (0, import_types2.objectProperty)(
     (0, import_types2.identifier)((0, import_types2.isIdentifier)(path.node.key) ? path.node.key.name : ""),

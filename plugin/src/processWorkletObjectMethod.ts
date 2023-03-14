@@ -3,7 +3,6 @@ import {
   ObjectMethod,
   identifier,
   isIdentifier,
-  isFunctionParent,
   objectProperty,
   callExpression,
 } from '@babel/types';
@@ -13,10 +12,8 @@ import { makeWorklet } from './makeWorklet';
 function processWorkletObjectMethod(
   path: NodePath<ObjectMethod>,
   state: ReanimatedPluginPass
-) {
+): void {
   // Replaces ObjectMethod with a workletized version of itself.
-
-  if (!isFunctionParent(path)) return;
 
   const newFun = makeWorklet(path, state);
 

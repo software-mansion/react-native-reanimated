@@ -4,6 +4,7 @@ import {
   transformSync,
   traverse,
   Node as BabelNode,
+  PluginItem,
 } from '@babel/core';
 import generate from '@babel/generator';
 import {
@@ -60,7 +61,7 @@ function buildWorkletString(
   name: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
-  function prependClosureVariablesIfNecessary() {
+  function prependClosureVariablesIfNecessary(): PluginItem {
     const closureDeclaration = variableDeclaration('const', [
       variableDeclarator(
         objectPattern(
@@ -84,7 +85,7 @@ function buildWorkletString(
         | ArrowFunctionExpression
         | ObjectMethod
       >
-    ) {
+    ): void {
       if (closureVariables.length === 0 || !isProgram(path.parent)) {
         return;
       }
@@ -100,7 +101,7 @@ function buildWorkletString(
         | ArrowFunctionExpression
         | ObjectMethod
       >
-    ) {
+    ): void {
       if (
         isProgram(path.parent) &&
         !isArrowFunctionExpression(path.node) &&

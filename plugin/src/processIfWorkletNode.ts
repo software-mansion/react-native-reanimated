@@ -14,7 +14,7 @@ function processIfWorkletNode(
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
-) {
+): void {
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;

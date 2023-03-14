@@ -18,7 +18,7 @@ function isRelease() {
   );
 }
 
-function shouldGenerateSourceMap() {
+function shouldGenerateSourceMap(): boolean {
   if (isRelease()) {
     return false;
   }
