@@ -21,6 +21,7 @@ jobs:
       is_hoisted: false
 
   build_ios_reanimated_non_hoisted:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Setup upterm session
