@@ -25,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      uses: mxschmitt/action-tmate@v3
     - name: iOS (non-hoisted Reanimated)
       uses: ./.github/workflows/build-monorepo-action.yml
       with:
