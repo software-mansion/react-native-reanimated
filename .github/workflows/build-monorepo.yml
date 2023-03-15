@@ -21,9 +21,9 @@ jobs:
         is_hoisted: false
 
     build_ios_reanimated_non_hoisted:
-      - uses: actions/checkout@v2
-        uses: lhotari/action-upterm@v1
-        name: iOS (non-hoisted Reanimated)
+      uses: actions/checkout@v2
+      uses: lhotari/action-upterm@v1
+      name: iOS (non-hoisted Reanimated)
         uses: ./.github/workflows/build-monorepo-action.yml
         with:
           platform: iOS
