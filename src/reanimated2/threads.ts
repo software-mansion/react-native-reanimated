@@ -11,36 +11,36 @@ const IS_WEB = shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
-export function setupSetImmediate() {
+export function setupMicrotasks() {
   'worklet';
 
-  let immediateCallbacks: Array<() => void> = [];
+  let microtasksQueue: Array<() => void> = [];
 
   // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.setImmediate = (callback: () => void): number => {
-    immediateCallbacks.push(callback);
+  global.queueMicrotask = (callback: () => void): number => {
+    microtasksQueue.push(callback);
     return -1;
   };
 
-  global.__flushImmediates = () => {
-    for (let index = 0; index < immediateCallbacks.length; index += 1) {
+  global.__callMicrotasks = () => {
+    for (let index = 0; index < microtasksQueue.length; index += 1) {
       // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
-      immediateCallbacks[index]();
+      microtasksQueue[index]();
     }
-    immediateCallbacks = [];
+    microtasksQueue = [];
   };
 }
 
-function flushImmediatesOnUIThread() {
+function callMicrotasksOnUIThread() {
   'worklet';
-  global.__flushImmediates();
+  global.__callMicrotasks();
 }
 
-export const flushImmediates = shouldBeUseWeb()
+export const callMicrotasks = shouldBeUseWeb()
   ? () => {
       // on web flushing is a noop as immediates are handled by the browser
     }
-  : flushImmediatesOnUIThread;
+  : callMicrotasksOnUIThread;
 
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
@@ -74,7 +74,7 @@ export function runOnUI<A extends any[], R>(
     }
     _runOnUIQueue.push([worklet, args]);
     if (_runOnUIQueue.length === 1) {
-      setImmediate(() => {
+      queueMicrotask(() => {
         const queue = _runOnUIQueue;
         _runOnUIQueue = [];
         NativeReanimatedModule.scheduleOnUI(
@@ -83,7 +83,7 @@ export function runOnUI<A extends any[], R>(
             queue.forEach(([worklet, args]) => {
               worklet(...args);
             });
-            flushImmediates();
+            callMicrotasks();
           })
         );
       });

@@ -1,6 +1,6 @@
 import { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
-import { runOnUI } from './threads';
+import { callMicrotasks, runOnUI } from './threads';
 
 const IS_JEST = isJest();
 
@@ -100,7 +100,7 @@ export function createMapperRegistry() {
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
     } else if (!runRequested) {
-      setImmediate(mapperRun);
+      queueMicrotask(mapperRun);
       runRequested = true;
     }
   }

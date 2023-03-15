@@ -72,7 +72,6 @@ declare global {
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
   const requestAnimationFrame: (callback: (time: number) => void) => number;
-  const setImmediate: (callback: (time: number) => void) => number;
   const console: Console;
 
   namespace NodeJS {
@@ -134,10 +133,9 @@ declare global {
       __workletsCache?: Map<string, (...args: any[]) => any>;
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
-      __flushImmediates: () => void;
+      __callMicrotasks: () => void;
       __flushAnimationFrame: (frameTimestamp: number) => void;
       requestAnimationFrame: (callback: (time: number) => void) => number;
-      setImmediate: (callback: (time: number) => void) => number;
       console: Console;
     }
   }
