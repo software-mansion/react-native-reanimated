@@ -226,14 +226,13 @@ export function withSpring(
         const k = config.stiffness;
         const m = config.mass;
 
-        let amplitude = Math.sqrt((m * v0 * v0 + k * x0 * x0) / k);
-
         if (!userConfig?.damping) {
           // If damping is not provided calculate new damping
 
           /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
            * to find the asympotote and esitmate the damping that gives us the expected duration */
-          const m = config.mass;
+          const amplitude = Math.sqrt((m * v0 * v0 + k * x0 * x0) / k);
+
           newDamping =
             -((2 * m) / (0.001 * config.duration)) *
             Math.log(config.restDisplacementThreshold / Math.abs(amplitude));
@@ -245,10 +244,15 @@ export function withSpring(
            * However the solution contain Lambert W function (https://en.wikipedia.org/wiki/Lambert_W_function)
            * And this function is difficult to implement.
            *
-           * Howeve if initial velocity is zero the kinetic energy is zero too and all the calculations get much simpler,
+           * However if initial velocity is zero the kinetic energy is zero too and all the calculations get much simpler
            */
-          config.velocity = 0;
-          amplitude = x0;
+          if (config.velocity !== 0) {
+            console.warn(
+              "You've specified damping, velocity and duration in your spring config. This combination of parameters is not supported, your velocity will be overwritten with value 0."
+            );
+            config.velocity = 0;
+          }
+          const amplitude = x0;
 
           // calculate new mass
           const d = config.damping;
