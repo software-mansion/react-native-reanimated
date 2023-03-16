@@ -11,6 +11,7 @@ import {
   isFunctionExpression,
   variableDeclaration,
   variableDeclarator,
+  Node as BabelNode,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
@@ -19,7 +20,7 @@ import { makeWorklet } from './makeWorklet';
 // with a workletized version of itself.
 
 function processIfWorkletFunction(
-  path: NodePath<unknown> | Array<NodePath<unknown>>,
+  path: NodePath<BabelNode> | Array<NodePath<BabelNode>>,
   state: ReanimatedPluginPass
 ): void {
   if (
