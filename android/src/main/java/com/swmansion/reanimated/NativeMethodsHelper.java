@@ -57,9 +57,22 @@ public class NativeMethodsHelper {
 
     if (animated) {
       if (horizontal) {
-        ((ReactHorizontalScrollView) view).smoothScrollTo((int) x, (int) y);
+        View finalView = view;
+        view.post(new Runnable() {
+          @Override
+          public void run() {
+            ((ReactHorizontalScrollView) finalView).smoothScrollTo(x, y);
+          }
+        });
+
       } else {
-        ((ReactScrollView) view).smoothScrollTo((int) x, (int) y);
+        View finalView = view;
+        view.post(new Runnable() {
+          @Override
+          public void run() {
+            ((ReactScrollView) finalView).smoothScrollTo(x, y);
+          }
+        });
       }
     } else {
       if (horizontal) {
