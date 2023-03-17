@@ -6,6 +6,17 @@
 #import <React/RCTTextView.h>
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
+#import <React/RCTShadowView.h>
+#import <React/RCTUIManager.h>
+#import <React/RCTUIManagerUtils.h>
+
+@interface RCTUIManager ()
+
+- (void)updateView:(nonnull NSNumber *)reactTag viewName:(NSString *)viewName props:(NSDictionary *)props;
+
+- (void)setNeedsLayout;
+
+@end
 
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
@@ -180,18 +191,18 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)setNewProps:(NSMutableDictionary *)newProps forView:(UIView *)view convertFromAbsolute:(BOOL)convertFromAbsolute
 {
   if (newProps[@"height"]) {
-    double height = [self getDoubleOrZero:newProps[@"height"]];
-    double oldHeight = view.bounds.size.height;
-    view.bounds = CGRectMake(0, 0, view.bounds.size.width, height);
-    view.center = CGPointMake(view.center.x, view.center.y - oldHeight / 2.0 + view.bounds.size.height / 2.0);
-    [newProps removeObjectForKey:@"height"];
+//    double height = [self getDoubleOrZero:newProps[@"height"]];
+//    double oldHeight = view.bounds.size.height;
+//    view.bounds = CGRectMake(0, 0, view.bounds.size.width, height);
+//    view.center = CGPointMake(view.center.x, view.center.y - oldHeight / 2.0 + view.bounds.size.height / 2.0);
+//    [newProps removeObjectForKey:@"height"];
   }
   if (newProps[@"width"]) {
-    double width = [self getDoubleOrZero:newProps[@"width"]];
-    double oldWidth = view.bounds.size.width;
-    view.bounds = CGRectMake(0, 0, width, view.bounds.size.height);
-    view.center = CGPointMake(view.center.x + view.bounds.size.width / 2.0 - oldWidth / 2.0, view.center.y);
-    [newProps removeObjectForKey:@"width"];
+//    double width = [self getDoubleOrZero:newProps[@"width"]];
+//    double oldWidth = view.bounds.size.width;
+//    view.bounds = CGRectMake(0, 0, width, view.bounds.size.height);
+//    view.center = CGPointMake(view.center.x + view.bounds.size.width / 2.0 - oldWidth / 2.0, view.center.y);
+//    [newProps removeObjectForKey:@"width"];
   }
 
   bool needsViewPositionUpdate = false;
@@ -232,9 +243,51 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [newProps removeObjectForKey:@"transformMatrix"];
   }
 
-  NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
-  RCTComponentData *componentData = componentDataByName[@"RCTView"];
-  [componentData setProps:newProps forView:view];
+//  NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
+//  RCTComponentData *componentData = componentDataByName[@"RCTView"];
+//  [componentData setProps:newProps forView:view];
+  
+//  NSMutableDictionary *_shadowViewRegistry = [_uiManager valueForKey:@"_shadowViewRegistry"];
+//  RCTShadowView *shadowView = _shadowViewRegistry[view.reactTag];
+//  YGValue a = {
+//    [newProps[@"width"] floatValue],
+//    YGUnitAuto
+//  };
+//  [shadowView setWidth:a];
+//  componentData = componentDataByName[shadowView.viewName];
+//  [componentData setProps:newProps forShadowView:shadowView];
+  
+//  RCTExecuteOnUIManagerQueue(^() {
+//    [self->_uiManager updateView:view.reactTag viewName:@"RCTView" props:newProps];
+//  });
+//  [_uiManager setNeedsLayout];
+  
+//  CGRect frame = CGRectMake(view.frame.origin.x, view.frame.origin.y, [self getDoubleOrZero:newProps[@"width"]], view.frame.size.height);
+//  [view setFrame:frame];
+//  [view reactSetFrame:frame];
+//  [view setNeedsLayout];
+//  [view layoutIfNeeded];
+//  [view layoutSubviews];
+//  [view setNeedsUpdateConstraints];
+//  [view updateConstraintsIfNeeded];
+//  [view setNeedsDisplay];
+//  for (UIView *child in view.subviews) {
+//    [child setNeedsLayout];
+//    [child layoutIfNeeded];
+//    [child layoutSubviews];
+//    [child setNeedsUpdateConstraints];
+//    [child updateConstraintsIfNeeded];
+//    [child setNeedsDisplay];
+//  }
+
+//  // works
+//  RCTExecuteOnUIManagerQueue(^{
+//    [self->_reaUiManager updateView:view.reactTag viewName:@"RCTView" props:newProps];
+//    [self->_reaUiManager setNeedsLayout];
+//  });
+//  // works
+  [_nodeManager enqueueUpdateViewOnNativeThread:view.reactTag viewName:@"RCTView" nativeProps:newProps trySynchronously:YES];
+//  NSLog(@"%@", newProps[@"width"]);
 }
 
 - (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values frameConfig:(FrameConfigType)frameConfig

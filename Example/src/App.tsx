@@ -89,6 +89,10 @@ const SCREENS: Screens = {
     screen: CardExample,
     title: '[SET] Card',
   },
+  AnimatedStyleUpdate: {
+    screen: AnimatedStyleUpdateExample,
+    title: 'Animated Style Update',
+  },
   CustomTransitionExample: {
     screen: CustomTransitionExample,
     title: '[SET] Custom transition',
@@ -236,10 +240,6 @@ const SCREENS: Screens = {
   PagerExample: {
     screen: PagerExample,
     title: 'Custom Handler Example - Pager',
-  },
-  AnimatedStyleUpdate: {
-    screen: AnimatedStyleUpdateExample,
-    title: 'Animated Style Update',
   },
   AnimatedSharedStyle: {
     screen: AnimatedSharedStyleExample,

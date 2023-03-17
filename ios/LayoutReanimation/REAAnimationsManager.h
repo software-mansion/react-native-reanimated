@@ -29,7 +29,7 @@ typedef int (^REATreeVisitor)(id<RCTComponent>);
 BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 
 @interface REAAnimationsManager : NSObject
-
+@property REANodesManager *nodeManager;
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager;
 - (void)setAnimationStartingBlock:(REAAnimationStartingBlock)startAnimation;
 - (void)setHasAnimationBlock:(REAHasAnimationBlock)hasAnimation;

@@ -90,7 +90,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   [self configureAsyncSharedTransitionForViews:_addedSharedViews];
   [_addedSharedViews removeAllObjects];
-  [self maybeRestartAnimationWithNewLayout];
+//  [self maybeRestartAnimationWithNewLayout];
   [_layoutedSharedViewsTags removeAllObjects];
   [_layoutedSharedViewsFrame removeAllObjects];
 }
