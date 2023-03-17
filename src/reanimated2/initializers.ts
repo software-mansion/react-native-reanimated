@@ -153,7 +153,9 @@ export function initializeUIRuntime() {
     };
   }
 
-  const capturableConsole = console;
+  // We really have to create a copy of console here. Function runOnJS we use on elements inside
+  // this object makes it not configurable
+  const capturableConsole = { ...console };
   runOnUIImmediately(() => {
     'worklet';
     // setup error handler
@@ -166,15 +168,19 @@ export function initializeUIRuntime() {
       },
     };
 
-    // setup console
-    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-    global.console = {
-      debug: runOnJS(capturableConsole.debug),
-      log: runOnJS(capturableConsole.log),
-      warn: runOnJS(capturableConsole.warn),
-      error: runOnJS(capturableConsole.error),
-      info: runOnJS(capturableConsole.info),
+    const props = {
+      configurable: true,
+      enumerable: true,
+      writable: true,
     };
+
+    Object.defineProperties(global.console, {
+      debug: { ...props, value: runOnJS(capturableConsole.debug) },
+      log: { ...props, value: capturableConsole.log },
+      warn: { ...props, value: capturableConsole.warn },
+      error: { ...props, value: capturableConsole.error },
+      info: { ...props, value: capturableConsole.info },
+    });
 
     if (!IS_JEST) {
       setupSetImmediate();
