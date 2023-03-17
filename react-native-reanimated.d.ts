@@ -114,6 +114,7 @@ declare module 'react-native-reanimated' {
         | Keyframe;
       sharedTransitionTag?: string;
       sharedTransitionStyle?: ILayoutAnimationBuilder;
+      sharedTransitionProgress?: ILayoutAnimationBuilder | boolean;
     };
 
     export type EasingFunction = (value: number) => number;
@@ -859,12 +860,15 @@ declare module 'react-native-reanimated' {
   export const Extrapolate: typeof Extrapolation;
 
   type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
+  type ProgressAnimationFactoryType = (values: LayoutAnimationsValues, progress: number) => StyleProps;
 
   export class SharedTransition implements ILayoutAnimationBuilder {
     animationFactory: AnimationFactoryType | null = null;
     static createInstance(): SharedTransition;
     static custom(animationFactory: AnimationFactoryType): SharedTransition;
     custom(animationFactory: AnimationFactoryType): SharedTransition;
+    static progressAnimation(progressAnimationFactory: ProgressAnimationFactoryType): SharedTransition;
+    progressAnimation(progressAnimationFactory: ProgressAnimationFactoryType): SharedTransition;
     static build(): LayoutAnimationFunction;
     build(): LayoutAnimationFunction;
   }

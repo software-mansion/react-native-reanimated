@@ -20,6 +20,16 @@ const transition = SharedTransition.custom((values) => {
   };
 });
 
+const progressAnimation = SharedTransition.progressAnimation((values, progress) => {
+  'worklet';
+  return {
+    width: progress * (values.currentWidth - values.targetWidth) + values.currentWidth,
+    height: progress * (values.currentHeight - values.targetHeight) + values.currentHeight,
+    originX: progress * (values.currentOriginX - values.targetOriginX) + values.currentOriginX,
+    originY: progress * (values.currentOriginY - values.targetOriginY) + values.currentOriginY,
+  };
+});
+
 function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
@@ -33,6 +43,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
         }}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
+        sharedTransitionProgress={progressAnimation}
       />
       <Button
         onPress={() => navigation.navigate('Screen2')}

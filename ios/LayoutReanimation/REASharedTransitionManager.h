@@ -1,7 +1,8 @@
+#import <RNReanimated/REASharedTransitionManagerPublic.h>
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REASnapshot.h>
 
-@interface REASharedTransitionManager : NSObject
+@interface REASharedTransitionManager : REASharedTransitionManagerPublic
 
 - (void)notifyAboutNewView:(UIView *)view;
 - (void)notifyAboutViewLayout:(UIView *)view withViewFrame:(CGRect)frame;

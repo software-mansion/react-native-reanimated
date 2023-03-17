@@ -9,6 +9,7 @@ import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
+  registerJSCallback,
   runOnUI,
   startMapper,
   stopMapper,
@@ -31,6 +32,7 @@ import {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
+  JSCallbackType,
 } from './reanimated2/commonTypes';
 import {
   makeViewDescriptorsSet,
@@ -628,6 +630,12 @@ export default function createAnimatedComponent(
               maybeBuild(sharedElementTransition),
               sharedTransitionTag
             );
+            if (this.props.sharedTransitionProgress) {
+              registerJSCallback(JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK, { viewTag: tag }, (values, progress) => {
+                'worklet'
+                // console.log('mleko', values, progress)
+              })
+            }
           }
         }
 

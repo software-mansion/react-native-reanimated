@@ -580,4 +580,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _startAnimationForTag(tag, type, yogaValues, depth);
 }
 
+- (REASharedTransitionManagerPublic *)getSharedTransitionManager
+{
+  return _sharedTransitionManager;
+}
+
 @end

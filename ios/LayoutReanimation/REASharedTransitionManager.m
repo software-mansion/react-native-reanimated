@@ -4,6 +4,23 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
 
+@implementation REASharedTransitionManagerPublic
+
+- (instancetype)init
+{
+  if (self = [super init]) {
+    onTransitionProgressCallbackBlocks = [NSMutableDictionary new];
+  }
+  return self;
+}
+
+- (void)registerTransitionProgressCallback:(OnTransitionProgressCallbackBlock)onTransitionProgressCallbackBlock withViewTag:(NSNumber *)viewTag
+{
+  onTransitionProgressCallbackBlocks[viewTag] = onTransitionProgressCallbackBlock;
+}
+
+@end
+
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
   NSMutableDictionary<NSNumber *, NSNumber *> *_sharedTransitionInParentIndex;
@@ -317,6 +334,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [self swizzleMethod:@selector(notifyWillDisappear)
                    with:@selector(swizzled_notifyWillDisappear)
                forClass:[RNSScreenView class]];
+    [self swizzleMethod:@selector(notifyTransitionProgress:closing:goingForward:)
+                   with:@selector(swizzled_notifyTransitionProgress:closing:goingForward:)
+               forClass:[RNSScreenView class]];
   });
 #endif
 }
@@ -345,6 +365,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
   // call original method from react-native-screens, self == RNSScreenView
   [self swizzled_notifyWillDisappear];
   [_sharedTransitionManager screenRemovedFromStack:(UIView *)self];
+}
+
+- (void)swizzled_notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
+{
+  // call original method from react-native-screens, self == RNSScreenView
+  [self swizzled_notifyTransitionProgress:progress closing:closing goingForward:goingForward];
+  [_sharedTransitionManager onScreenTransitionProgress:progress closing:closing goingForward:goingForward];
 }
 
 - (void)screenAddedToStack:(UIView *)screen
@@ -376,6 +403,14 @@ static REASharedTransitionManager *_sharedTransitionManager;
   } else {
     // removed stack
     [self clearConfigForStack:stack];
+  }
+}
+
+- (void)onScreenTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
+{
+  for (NSNumber *viewTag in onTransitionProgressCallbackBlocks) {
+    OnTransitionProgressCallbackBlock callback = onTransitionProgressCallbackBlocks[viewTag];
+    callback();
   }
 }
 

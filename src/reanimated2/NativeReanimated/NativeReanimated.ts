@@ -1,5 +1,6 @@
 import { NativeModules } from 'react-native';
 import {
+  JSCallbackType,
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
@@ -151,5 +152,13 @@ export class NativeReanimated {
 
   unsubscribeFromKeyboardEvents(listenerId: number): void {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
+  registerJSCallback(type: JSCallbackType, configuration: any, callback: (...args: any) => void): number {
+    return this.InnerNativeModule.registerJSCallback(type, configuration, callback);
+  }
+
+  unregisterJSCallback(type: JSCallbackType, callbackId: number): void {
+    this.InnerNativeModule.unregisterJSCallback(type, callbackId);
   }
 }

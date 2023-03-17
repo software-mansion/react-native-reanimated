@@ -23,6 +23,7 @@
 #include "RuntimeDecorator.h"
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
+#include "Consts.h"
 
 using namespace facebook;
 
@@ -44,6 +45,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
+      jsCallbacksManager_(runtimeHelper, platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -672,6 +674,21 @@ void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
+}
+
+jsi::Value NativeReanimatedModule::registerJSCallback(
+    jsi::Runtime &rt,
+    const jsi::Value &type,
+    const jsi::Value &configuration,
+    const jsi::Value &callback) {
+  return jsCallbacksManager_.registerJSCallback(rt, type, configuration, callback);
+}
+
+void NativeReanimatedModule::unregisterJSCallback(
+    jsi::Runtime &rt,
+    const jsi::Value &type,
+    const jsi::Value &callbackId) {
+  jsCallbacksManager_.unregisterJSCallback(rt, type, callbackId);
 }
 
 } // namespace reanimated

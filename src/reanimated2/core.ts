@@ -3,6 +3,7 @@ import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   AnimatedKeyboardOptions,
   BasicWorkletFunction,
+  JSCallbackType,
   Value3D,
   ValueRotation,
 } from './commonTypes';
@@ -231,4 +232,12 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
   if (!nativeShouldBeMock()) {
     NativeReanimatedModule.configureProps(uiProps, nativeProps);
   }
+}
+
+export function registerJSCallback(type: JSCallbackType, configuration: any, callback: (...args: any) => void): number {
+  return NativeReanimatedModule.registerJSCallback(type, configuration, makeShareableCloneRecursive(callback));
+}
+
+export function unregisterJSCallback(type: JSCallbackType, callbackId: number): void {
+  return NativeReanimatedModule.unregisterJSCallback(type, callbackId);
 }

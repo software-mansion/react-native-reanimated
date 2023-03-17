@@ -2,6 +2,7 @@
 #import <RNReanimated/LayoutAnimationType.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASnapshot.h>
+#import <RNReanimated/REASharedTransitionManagerPublic.h>
 #import <React/RCTUIManager.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -62,6 +63,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
                         type:(LayoutAnimationType)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
+- (REASharedTransitionManagerPublic *)getSharedTransitionManager;
 
 @end
 

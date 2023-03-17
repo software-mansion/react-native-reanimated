@@ -244,6 +244,26 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
   };
   // end keyboard events
+  
+  // JS callbacks
+  auto registerJSCallbackFunction = [weakAnimationsManager, wrt](jsi::Runtime &rt, JSCallbackType type, const jsi::Value &configuration, const jsi::Value &callback) {
+    if (type == SHARED_TRANSITION_PROGRESS_CALLBACK) {
+      NSNumber *viewTag = @((int)configuration.asObject(rt).getProperty(rt, "viewTag").asNumber());
+      auto shareableHandler = extractShareableOrThrow(rt, callback);
+      REASharedTransitionManagerPublic *sharedTransitionManager = [weakAnimationsManager getSharedTransitionManager];
+      [sharedTransitionManager registerTransitionProgressCallback:^(){
+        jsi::Runtime &reanimatedRuntime = *wrt.lock();
+        callback.asObject(reanimatedRuntime).asFunction(reanimatedRuntime).call(reanimatedRuntime, jsi::Value::undefined(), 0);
+      } withViewTag:viewTag];
+    } else if (type == KEYBOARD_CALLBACK) {
+    
+    } else if (type == SENSOR_CALLBACK) {
+    
+    }
+    return -1;
+  };
+  auto unregisterJSCallbackFunction = [](jsi::Runtime &runtime, JSCallbackType type, const jsi::Value &callbackId) {};
+  // end JS callbacks
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -263,6 +283,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
+      registerJSCallbackFunction,
+      unregisterJSCallbackFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(

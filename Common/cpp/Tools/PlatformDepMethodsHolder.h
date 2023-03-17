@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "Consts.h"
+
 using namespace facebook;
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -68,6 +70,8 @@ using ConfigurePropsFunction = std::function<void(
 using KeyboardEventSubscribeFunction =
     std::function<int(std::function<void(int, int)>, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
+using RegisterJSCallbackFunction = std::function<int(jsi::Runtime&, JSCallbackType, const jsi::Value&, const jsi::Value&)>;
+using UnregisterJSCallbackFunction = std::function<void(jsi::Runtime&, JSCallbackType, const jsi::Value&)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
@@ -87,6 +91,8 @@ struct PlatformDepMethodsHolder {
   SetGestureStateFunction setGestureStateFunction;
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
+  RegisterJSCallbackFunction registerJSCallbackFunction;
+  UnregisterJSCallbackFunction unregisterJSCallbackFunction;
 };
 
 } // namespace reanimated

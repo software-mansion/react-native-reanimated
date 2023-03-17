@@ -20,6 +20,7 @@
 #include "RuntimeManager.h"
 #include "Scheduler.h"
 #include "SingleInstanceChecker.h"
+#include "JSCallbacksManager.h"
 
 namespace reanimated {
 
@@ -157,6 +158,16 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
+      
+  jsi::Value registerJSCallback(
+    jsi::Runtime &rt,
+    const jsi::Value &type,
+    const jsi::Value &configuration,
+    const jsi::Value &callback) override;
+  void unregisterJSCallback(
+    jsi::Runtime &rt,
+    const jsi::Value &type,
+    const jsi::Value &callbackId) override;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return layoutAnimationsManager_;
@@ -199,6 +210,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
+  JSCallbacksManager jsCallbacksManager_;
 
 #ifdef DEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;

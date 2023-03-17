@@ -9,9 +9,11 @@ import { StyleProps } from '../../commonTypes';
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
 type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
+type ProgressAnimationFactoryType = (values: LayoutAnimationsValues, progress: number) => StyleProps;
 
 export class SharedTransition implements ILayoutAnimationBuilder {
   animationFactory: AnimationFactoryType | null = null;
+  progressAnimationFactory: ProgressAnimationFactoryType | null = null;
   defaultDuration = 500;
 
   static createInstance(): SharedTransition {
@@ -81,6 +83,23 @@ export class SharedTransition implements ILayoutAnimationBuilder {
 
       return { initialValues, animations };
     };
+  }
+
+  static progressAnimation(progressAnimationFactory: ProgressAnimationFactoryType): SharedTransition {
+    return this.createInstance().progressAnimation(progressAnimationFactory);
+  }
+
+  progressAnimation(progressAnimationFactory: ProgressAnimationFactoryType): SharedTransition {
+    this.progressAnimationFactory = progressAnimationFactory;
+    return this;
+  }
+
+  static getProgressAnimation(): any {
+    return {};
+  }
+
+  getProgressAnimation(): any {
+    return {};
   }
 }
 
