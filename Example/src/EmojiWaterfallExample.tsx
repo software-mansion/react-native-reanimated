@@ -79,8 +79,18 @@ function EmojiWaterfallProvider({ children }: React.PropsWithChildren) {
   );
 }
 
+export function useEmojiWaterfall() {
+  const context = useContext(EmojiWaterfallContext);
+  if (context == null) {
+    throw new Error(
+      'No context provided: useEmojiWaterfall() can only be used in a descendant of <EmojiWaterfallProvider>'
+    );
+  }
+  return context;
+}
+
 function ControlPanel() {
-  const { startAnimation } = useContext(EmojiWaterfallContext);
+  const { startAnimation } = useEmojiWaterfall();
 
   return <Button title="Click me!" onPress={startAnimation} />;
 }
