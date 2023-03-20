@@ -166,16 +166,6 @@ export function initializeUIRuntime() {
       },
     };
 
-    // setup console
-    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-    global.console = {
-      debug: runOnJS(capturableConsole.debug),
-      log: runOnJS(capturableConsole.log),
-      warn: runOnJS(capturableConsole.warn),
-      error: runOnJS(capturableConsole.error),
-      info: runOnJS(capturableConsole.info),
-    };
-
     if (!IS_JEST) {
       setupSetImmediate();
       setupRequestAnimationFrame();
