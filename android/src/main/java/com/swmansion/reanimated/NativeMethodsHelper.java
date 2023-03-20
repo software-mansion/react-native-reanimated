@@ -5,6 +5,7 @@ import android.graphics.RectF;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewParent;
+import android.widget.ScrollView;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.RootViewUtil;
 import com.facebook.react.views.scroll.ReactHorizontalScrollView;
@@ -56,32 +57,20 @@ public class NativeMethodsHelper {
     }
 
     if (animated) {
-      if (horizontal) {
-        ReactHorizontalScrollView finalView = (ReactHorizontalScrollView) view;
-        view.post(
-            new Runnable() {
-              @Override
-              public void run() {
-                finalView.smoothScrollTo(x, y);
+      View finalView = view;
+      boolean finalHorizontal = horizontal;
+      view.post(
+          new Runnable() {
+            @Override
+            public void run() {
+              if (finalHorizontal){
+              ((ReactHorizontalScrollView) finalView).smoothScrollTo(x, y);
               }
-            });
-
-      } else {
-        ReactScrollView finalView = (ReactScrollView) view;
-        view.post(
-            new Runnable() {
-              @Override
-              public void run() {
-                finalView.smoothScrollTo(x, y);
-              }
-            });
-      }
+              else {((ReactScrollView) finalView).smoothScrollTo( x, y);}
+            }
+          });
     } else {
-      if (horizontal) {
-        ((ReactHorizontalScrollView) view).scrollTo((int) x, (int) y);
-      } else {
-        ((ReactScrollView) view).scrollTo((int) x, (int) y);
-      }
+      (view).scrollTo((int) x, (int) y);
     }
   }
 
