@@ -57,7 +57,7 @@ public class NativeMethodsHelper {
 
     if (animated) {
       if (horizontal) {
-        ReactHorizontalScrollView finalView = view;
+        ReactHorizontalScrollView finalView = (ReactHorizontalScrollView) view;
         view.post(
             new Runnable() {
               @Override
@@ -67,7 +67,7 @@ public class NativeMethodsHelper {
             });
 
       } else {
-        ReactScrollView finalView = view;
+        ReactScrollView finalView = (ReactScrollView) view;
         view.post(
             new Runnable() {
               @Override
