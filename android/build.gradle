@@ -1004,6 +1004,7 @@ task packageNdkLibs(type: Copy) {
         include("**/libturbomodulejsijni.so")
     }
     into("$projectDir/src/main/jniLibs")
+    dependsOn('mergeDebugJniLibFolders')
 }
 
 repositories {
