@@ -63,11 +63,11 @@ jobs:
       - name: Build iOS app RootApp
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/RootApp
-        run: yarn react-native run-ios
+        run: yarn react-native run-ios --simulator='iPhone 14'
       - name: Build iOS app PackageApp
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/packages/PackageApp
-        run: yarn react-native run-ios
+        run: yarn react-native run-ios --simulator='iPhone14'
 
       - name: Build Android RootApp
         if: ${{ inputs.platform == 'Android' }}
