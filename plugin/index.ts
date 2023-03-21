@@ -35,6 +35,10 @@ interface ReanimatedPluginPass {
   [key: string]: unknown;
 }
 
+type globalThisReanimated = typeof globalThis & {
+  _injectedReanimatedVersionBabelPlugin?: string;
+};
+
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -1043,9 +1047,13 @@ function injectVersion(
   state: ReanimatedPluginPass
 ) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
+
   // We want to inject plugin's version only once,
   // hence if injectedName is already defined in babel's global we return from the function.
-  if (state.opts.disablePluginVersionInjection || injectedName in globalThis) {
+  if (
+    state.opts.disablePluginVersionInjection ||
+    (globalThis as globalThisReanimated)._injectedReanimatedVersionBabelPlugin
+  ) {
     return;
   }
   const versionString = reanimatedPluginVersion.version;
@@ -1062,10 +1070,8 @@ function injectVersion(
   path.node.body.unshift(pluginVersion);
 
   // Injecting a property to babel's global.
-  Object.defineProperty(globalThis, injectedName, {
-    value: {
-      flag: true,
-    },
+  Object.defineProperty(globalThis, '_injectedReanimatedVersionBabelPlugin', {
+    value: true,
     enumerable: false,
     configurable: true,
     writable: true,
