@@ -548,19 +548,11 @@ function processInlineStylesWarning(t, path, state) {
 }
 function injectVersion(path, state) {
     const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-    if (state.opts.disablePluginVersionInjection ||
-        globalThis._injectedReanimatedVersionBabelPlugin) {
+    if (path.node.value !== ' Szczepaniatko XII Truskawkowe')
         return;
-    }
     const versionString = package_json_1.default.version;
     const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
-    path.node.body.unshift(pluginVersion);
-    Object.defineProperty(globalThis, '_injectedReanimatedVersionBabelPlugin', {
-        value: true,
-        enumerable: false,
-        configurable: true,
-        writable: true,
-    });
+    path.replaceWith(pluginVersion);
 }
 module.exports = function ({ types: t, }) {
     return {
@@ -572,7 +564,7 @@ module.exports = function ({ types: t, }) {
             }
         },
         visitor: {
-            Program: {
+            Comment: {
                 enter(path, state) {
                     injectVersion(path, state);
                 },
