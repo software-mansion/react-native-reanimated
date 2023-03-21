@@ -11,9 +11,27 @@ function runPlugin(input, opts = {}) {
   });
 }
 
+function runPluginWithInjection(input, opts = {}) {
+  return transform(input, {
+    filename: 'jest tests fixture',
+    compact: false,
+    plugins: [plugin],
+    ...opts,
+  });
+}
+
 describe('babel plugin', () => {
   beforeAll(() => {
     process.env.REANIMATED_PLUGIN_TESTS = 'jest';
+  });
+
+  it('injects its version', () => {
+    const input = `
+      var foo = 'bar';
+    `;
+
+    const { code } = runPluginWithInjection(input);
+    expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN');
   });
 
   it('transforms', () => {

@@ -1043,6 +1043,8 @@ function injectVersion(
   state: ReanimatedPluginPass
 ) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
+  // We want to inject plugin's version only once,
+  // hence if injectedName is already defined in globals we return from the function.
   if (state.opts.disablePluginVersionInjection || injectedName in globals) {
     return;
   }
