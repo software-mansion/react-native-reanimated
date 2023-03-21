@@ -2,11 +2,11 @@ import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 
-function runPlugin(input, opts = {}, versionFlag = true) {
+function runPlugin(input, opts = {}, disablePluginVersionInjection = true) {
   return transform(input, {
     filename: 'jest tests fixture',
     compact: false,
-    plugins: [[plugin, { disablePluginVersionInjection: versionFlag }]],
+    plugins: [[plugin, { disablePluginVersionInjection }]],
     ...opts,
   });
 }
