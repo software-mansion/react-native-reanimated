@@ -1044,8 +1044,8 @@ function injectVersion(
 ) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
   // We want to inject plugin's version only once,
-  // hence if injectedName is already defined in globals we return from the function.
-  if (state.opts.disablePluginVersionInjection || injectedName in globals) {
+  // hence if injectedName is already defined in babel's global we return from the function.
+  if (state.opts.disablePluginVersionInjection || injectedName in globalThis) {
     return;
   }
   const versionString = reanimatedPluginVersion.version;
@@ -1060,7 +1060,16 @@ function injectVersion(
     )
   );
   path.node.body.unshift(pluginVersion);
-  globals.add(injectedName);
+
+  // Injecting a property to babel's global.
+  Object.defineProperty(globalThis, injectedName, {
+    value: {
+      flag: true,
+    },
+    enumerable: false,
+    configurable: true,
+    writable: true,
+  });
 }
 
 module.exports = function ({
