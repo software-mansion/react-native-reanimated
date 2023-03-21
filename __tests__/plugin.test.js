@@ -2,23 +2,20 @@ import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 
-function runPlugin(input, opts = {}) {
-  return transform(input, {
-    filename: 'jest tests fixture',
-    compact: false,
-    plugins: [[plugin, { disablePluginVersionInjection: true }]],
-    ...opts,
-  });
+function generateRunFunction(plugins) {
+  return (input, opts) =>
+    transform(input, {
+      filename: 'jest tests fixture',
+      compact: false,
+      ...plugins,
+      ...opts,
+    });
 }
 
-function runPluginWithInjection(input, opts = {}) {
-  return transform(input, {
-    filename: 'jest tests fixture',
-    compact: false,
-    plugins: [plugin],
-    ...opts,
-  });
-}
+const runPlugin = generateRunFunction({
+  plugins: [[plugin, { disablePluginVersionInjection: true }]],
+});
+const runPluginWithInjection = generateRunFunction({ plugins: [plugin] });
 
 describe('babel plugin', () => {
   beforeAll(() => {
@@ -31,7 +28,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPluginWithInjection(input);
-    expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN');
+    expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN = "');
   });
 
   it('transforms', () => {
