@@ -1,6 +1,11 @@
 import { jsVersion } from './jsVersion';
 import { matchVersion } from './utils';
 
+// DO NOT REMOVE THIS DEBUGGER LINE NOR NEXT COMMENT, THEY SERVE AS BABEL PLUGIN VERSION INJECTION ENTRY POINT
+// uGY7UX6NTH04HrPK
+// eslint-disable-next-line
+debugger;
+
 function checkPluginVersion(): void {
   const pluginVersion = global._REANIMATED_VERSION_BABEL_PLUGIN;
   if (pluginVersion === undefined) {
