@@ -1043,8 +1043,9 @@ function injectVersion(
   state: ReanimatedPluginPass
 ) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-  if (state.opts.disablePluginVersionInjection || injectedName in globals)
+  if (state.opts.disablePluginVersionInjection || injectedName in globals) {
     return;
+  }
   const versionString = reanimatedPluginVersion.version;
   const pluginVersion = BabelTypes.expressionStatement(
     BabelTypes.assignmentExpression(
