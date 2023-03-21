@@ -2,11 +2,11 @@ import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 
-function runPlugin(input, opts = {}, disablePluginVersionInjection = true) {
+function runPlugin(input, opts = {}) {
   return transform(input, {
     filename: 'jest tests fixture',
     compact: false,
-    plugins: [[plugin, { disablePluginVersionInjection }]],
+    plugins: [plugin],
     ...opts,
   });
 }
@@ -18,10 +18,13 @@ describe('babel plugin', () => {
 
   it('injects its version', () => {
     const input = `
+      // version injection
+      // uGY7UX6NTH04HrPK
+      debugger;
       var foo = 'bar';
     `;
 
-    const { code } = runPlugin(input, {}, false);
+    const { code } = runPlugin(input, {});
     expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN = "');
   });
 

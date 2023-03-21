@@ -26,7 +26,6 @@ interface ReanimatedPluginPass {
   opts: {
     relativeSourceLocation?: boolean;
     disableInlineStylesWarning?: boolean;
-    disablePluginVersionInjection?: boolean;
   };
   cwd: string;
   filename: string | undefined;
@@ -34,10 +33,6 @@ interface ReanimatedPluginPass {
   set(key: unknown, value: unknown): void;
   [key: string]: unknown;
 }
-
-type globalThisReanimated = typeof globalThis & {
-  _injectedReanimatedVersionBabelPlugin?: string;
-};
 
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
@@ -1042,17 +1037,18 @@ function processInlineStylesWarning(
   }
 }
 
-function injectVersion(
-  path: BabelCore.NodePath<BabelTypes.Program>,
-  state: ReanimatedPluginPass
-) {
+function injectVersion(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
 
   // We want to inject plugin's version only once,
-  // hence if injectedName is already defined in babel's global we return from the function.
+  // hence we have a unique debugger line with a comment containing some
+  // randomly generated unique string in Reanimated code that will get
+  // transformed to version injection line.
+  // See src/reanimated2/platform-specific/checkVersion.ts to see the details of this
+  // 'not tricky at all' implementation.
   if (
-    state.opts.disablePluginVersionInjection ||
-    (globalThis as globalThisReanimated)._injectedReanimatedVersionBabelPlugin
+    path.node.leadingComments &&
+    path.node.leadingComments[1].value !== ' uGY7UX6NTH04HrPK'
   ) {
     return;
   }
@@ -1067,15 +1063,7 @@ function injectVersion(
       BabelTypes.stringLiteral(versionString)
     )
   );
-  path.node.body.unshift(pluginVersion);
-
-  // Injecting a property to babel's global.
-  Object.defineProperty(globalThis, '_injectedReanimatedVersionBabelPlugin', {
-    value: true,
-    enumerable: false,
-    configurable: true,
-    writable: true,
-  });
+  path.replaceWith(pluginVersion);
 }
 
 module.exports = function ({
@@ -1091,12 +1079,9 @@ module.exports = function ({
       }
     },
     visitor: {
-      Program: {
-        enter(
-          path: BabelCore.NodePath<BabelTypes.Program>,
-          state: ReanimatedPluginPass
-        ) {
-          injectVersion(path, state);
+      DebuggerStatement: {
+        enter(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
+          injectVersion(path);
         },
       },
       CallExpression: {

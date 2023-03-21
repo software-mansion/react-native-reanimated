@@ -546,21 +546,15 @@ function processInlineStylesWarning(t, path, state) {
         processStyleObjectForInlineStylesWarning(t, expression);
     }
 }
-function injectVersion(path, state) {
+function injectVersion(path) {
     const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-    if (state.opts.disablePluginVersionInjection ||
-        globalThis._injectedReanimatedVersionBabelPlugin) {
+    if (path.node.leadingComments &&
+        path.node.leadingComments[1].value !== ' uGY7UX6NTH04HrPK') {
         return;
     }
     const versionString = package_json_1.default.version;
     const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
-    path.node.body.unshift(pluginVersion);
-    Object.defineProperty(globalThis, '_injectedReanimatedVersionBabelPlugin', {
-        value: true,
-        enumerable: false,
-        configurable: true,
-        writable: true,
-    });
+    path.replaceWith(pluginVersion);
 }
 module.exports = function ({ types: t, }) {
     return {
@@ -572,9 +566,9 @@ module.exports = function ({ types: t, }) {
             }
         },
         visitor: {
-            Program: {
-                enter(path, state) {
-                    injectVersion(path, state);
+            DebuggerStatement: {
+                enter(path) {
+                    injectVersion(path);
                 },
             },
             CallExpression: {

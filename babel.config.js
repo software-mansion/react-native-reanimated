@@ -13,7 +13,10 @@ module.exports = {
   ],
   plugins: [
     '@babel/plugin-proposal-class-properties',
-    ['./plugin', { disableInlineStylesWarning: true }],
+    [
+      './plugin',
+      { disableInlineStylesWarning: true, disablePluginVersionInjection: true },
+    ],
     [
       '@babel/plugin-transform-react-jsx',
       {
