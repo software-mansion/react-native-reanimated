@@ -1042,7 +1042,7 @@ function injectVersion(
   path: BabelCore.NodePath<BabelTypes.Program>,
   state: ReanimatedPluginPass
 ) {
-  const injectedName = '_REANIMATED_VERSION_PLUGIN';
+  const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
   if (state.opts.disablePluginVersionInjection || injectedName in globals)
     return;
   const versionString = reanimatedPluginVersion.version;

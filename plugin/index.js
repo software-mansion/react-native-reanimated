@@ -32,7 +32,7 @@ const traverse_1 = __importDefault(require("@babel/traverse"));
 const core_1 = require("@babel/core");
 const fs = __importStar(require("fs"));
 const convertSourceMap = __importStar(require("convert-source-map"));
-const package_json_1 = __importDefault(require("./package.json"));
+const package_json_1 = __importDefault(require("../package.json"));
 function hash(str) {
     let i = str.length;
     let hash1 = 5381;
@@ -547,7 +547,7 @@ function processInlineStylesWarning(t, path, state) {
     }
 }
 function injectVersion(path, state) {
-    const injectedName = '_REANIMATED_VERSION_PLUGIN';
+    const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
     if (state.opts.disablePluginVersionInjection || injectedName in globals)
         return;
     const versionString = package_json_1.default.version;
