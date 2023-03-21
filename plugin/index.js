@@ -547,9 +547,12 @@ function processInlineStylesWarning(t, path, state) {
     }
 }
 function injectVersion(path) {
+    var _a;
     const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-    if (path.node.leadingComments &&
-        path.node.leadingComments[1].value !== ' uGY7UX6NTH04HrPK') {
+    const parentPath = path.getFunctionParent();
+    if (!(parentPath &&
+        'id' in parentPath.node &&
+        ((_a = parentPath.node.id) === null || _a === void 0 ? void 0 : _a.name) === '__checkPluginVersion')) {
         return;
     }
     const versionString = package_json_1.default.version;

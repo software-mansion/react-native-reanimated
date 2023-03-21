@@ -18,14 +18,25 @@ describe('babel plugin', () => {
 
   it('injects its version', () => {
     const input = `
-      // version injection
-      // uGY7UX6NTH04HrPK
-      debugger;
-      var foo = 'bar';
+      function __checkPluginVersion() {
+        debugger;
+        var foo = 'bar';
+      }
     `;
 
     const { code } = runPlugin(input, {});
     expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN = "');
+    expect(code).not.toContain('debugger');
+  });
+
+  it("doesn't bother other debugger statements", () => {
+    const input = `
+    debugger;
+    var foo = 'bar';
+  `;
+
+    const { code } = runPlugin(input, {});
+    expect(code).toContain('debugger');
   });
 
   it('transforms', () => {

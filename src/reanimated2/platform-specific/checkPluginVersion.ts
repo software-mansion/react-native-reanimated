@@ -1,12 +1,11 @@
 import { jsVersion } from './jsVersion';
 import { matchVersion } from './utils';
 
-// DO NOT REMOVE THIS DEBUGGER LINE NOR NEXT COMMENT, THEY SERVE AS BABEL PLUGIN VERSION INJECTION ENTRY POINT
-// uGY7UX6NTH04HrPK
-// eslint-disable-next-line
-debugger;
-
-function checkPluginVersion(): void {
+// Do not change name of this function unless you also change it in Reanimated Babel Plugin
+export function __checkPluginVersion(): void {
+  // Do not remove debugger line, it serves as Reanimated Babel Plugin version injection entry point.
+  // eslint-disable-next-line
+  debugger;
   const pluginVersion = global._REANIMATED_VERSION_BABEL_PLUGIN;
   if (pluginVersion === undefined) {
     console.error(
@@ -23,4 +22,4 @@ function checkPluginVersion(): void {
   }
 }
 
-export { checkPluginVersion };
+export { __checkPluginVersion as checkPluginVersion };

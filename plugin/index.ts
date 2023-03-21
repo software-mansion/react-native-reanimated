@@ -1046,9 +1046,13 @@ function injectVersion(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
   // transformed to version injection line.
   // See src/reanimated2/platform-specific/checkVersion.ts to see the details of this
   // 'not tricky at all' implementation.
+  const parentPath = path.getFunctionParent();
   if (
-    path.node.leadingComments &&
-    path.node.leadingComments[1].value !== ' uGY7UX6NTH04HrPK'
+    !(
+      parentPath &&
+      'id' in parentPath.node &&
+      parentPath.node.id?.name === '__checkPluginVersion'
+    )
   ) {
     return;
   }
