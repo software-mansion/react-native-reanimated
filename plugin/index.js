@@ -549,8 +549,9 @@ function processInlineStylesWarning(t, path, state) {
 function injectVersion(path) {
     const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
     if (path.node.leadingComments &&
-        path.node.leadingComments[0].value !== ' Szczepaniatko XII Truskawkowe')
+        path.node.leadingComments[1].value !== ' uGY7UX6NTH04HrPK') {
         return;
+    }
     const versionString = package_json_1.default.version;
     const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
     path.replaceWith(pluginVersion);

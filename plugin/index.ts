@@ -26,7 +26,6 @@ interface ReanimatedPluginPass {
   opts: {
     relativeSourceLocation?: boolean;
     disableInlineStylesWarning?: boolean;
-    disablePluginVersionInjection?: boolean;
   };
   cwd: string;
   filename: string | undefined;
@@ -1042,12 +1041,17 @@ function injectVersion(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
 
   // We want to inject plugin's version only once,
-  // hence if injectedName is already defined in babel's global we return from the function.
+  // hence we have a unique debugger line with a comment containing some
+  // randomly generated unique string in Reanimated code that will get
+  // transformed to version injection line.
+  // See src/reanimated2/platform-specific/checkVersion.ts to see the details of this
+  // 'not tricky at all' implementation.
   if (
     path.node.leadingComments &&
-    path.node.leadingComments[0].value !== ' Szczepaniatko XII Truskawkowe'
-  )
+    path.node.leadingComments[1].value !== ' uGY7UX6NTH04HrPK'
+  ) {
     return;
+  }
   const versionString = reanimatedPluginVersion.version;
   const pluginVersion = BabelTypes.expressionStatement(
     BabelTypes.assignmentExpression(
