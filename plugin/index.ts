@@ -5,7 +5,7 @@ import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
-import reanimatedPluginVersion from './package.json';
+import reanimatedPluginVersion from '../package.json';
 
 function hash(str: string): number {
   let i = str.length;

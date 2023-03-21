@@ -2,6 +2,7 @@
  * Checks that native and js versions of reanimated match.
  */
 import { jsVersion } from './jsVersion';
+
 export function checkCppVersion(): void {
   const cppVersion = global._REANIMATED_VERSION_CPP;
   if (cppVersion === undefined) {

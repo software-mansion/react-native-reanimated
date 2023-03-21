@@ -4,7 +4,7 @@ export function checkPluginVersion(): void {
   const pluginVersion = global._REANIMATED_VERSION_PLUGIN;
   if (pluginVersion === undefined) {
     console.error(
-      `[Reanimated] Couldn't determine the version of babel plugin of Reanimated. Did you forget to add 'react-native-reanimated/plugin' to your 'babel.config.js' file?`
+      `[Reanimated] Couldn't determine the version of Reanimated Babel plugin. Did you forget to add 'react-native-reanimated/plugin' to your 'babel.config.js' file?`
     );
     return;
   }
@@ -24,7 +24,7 @@ export function checkPluginVersion(): void {
   })();
   if (!ok) {
     console.error(
-      `[Reanimated] Mismatch between JavaScript part and babel plugin part of Reanimated (${jsVersion} vs. ${pluginVersion}). Did you forget to re-build the app after upgrading react-native-reanimated?`
+      `[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${pluginVersion}). Please clear your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
     );
   }
 }
