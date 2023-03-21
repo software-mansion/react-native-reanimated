@@ -2,20 +2,14 @@ import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 
-function generateRunFunction(plugins) {
-  return (input, opts) =>
-    transform(input, {
-      filename: 'jest tests fixture',
-      compact: false,
-      ...plugins,
-      ...opts,
-    });
+function runPlugin(input, opts = {}, versionFlag = true) {
+  return transform(input, {
+    filename: 'jest tests fixture',
+    compact: false,
+    plugins: [[plugin, { disablePluginVersionInjection: versionFlag }]],
+    ...opts,
+  });
 }
-
-const runPlugin = generateRunFunction({
-  plugins: [[plugin, { disablePluginVersionInjection: true }]],
-});
-const runPluginWithInjection = generateRunFunction({ plugins: [plugin] });
 
 describe('babel plugin', () => {
   beforeAll(() => {
@@ -27,7 +21,7 @@ describe('babel plugin', () => {
       var foo = 'bar';
     `;
 
-    const { code } = runPluginWithInjection(input);
+    const { code } = runPlugin(input, {}, false);
     expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN = "');
   });
 
