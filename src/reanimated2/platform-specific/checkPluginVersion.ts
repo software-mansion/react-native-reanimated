@@ -5,7 +5,7 @@ function checkPluginVersion(): void {
   const pluginVersion = global._REANIMATED_VERSION_BABEL_PLUGIN;
   if (pluginVersion === undefined) {
     console.error(
-      `[Reanimated] Couldn't determine the version of Reanimated Babel plugin. Did you forget to add \`react-native-reanimated/plugin\` to your \`babel.config.js\` file?`
+      "[Reanimated] Couldn't determine the version of Reanimated Babel plugin. Did you forget to add 'react-native-reanimated/plugin' to your `babel.config.js` file?"
     );
     return;
   }
