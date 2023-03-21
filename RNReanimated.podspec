@@ -65,7 +65,9 @@ Pod::Spec.new do |s|
   s.dependency "RCTTypeSafety"
   s.dependency "ReactCommon/turbomodule/core"
   s.dependency 'FBLazyVector'
-  s.dependency 'FBReactNativeSpec'
+  if config[:react_native_minor_version] <= 71
+    s.dependency 'FBReactNativeSpec'
+  end
   s.dependency 'React-Core'
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
