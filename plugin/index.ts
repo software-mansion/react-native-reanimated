@@ -1042,12 +1042,20 @@ function processInlineStylesWarning(
   }
 }
 
-function injectVersion(path: BabelCore.NodePath<BabelTypes.Comment>) {
+function injectVersion(
+  path: BabelCore.NodePath<BabelTypes.Program>,
+  state: ReanimatedPluginPass
+) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
 
   // We want to inject plugin's version only once,
   // hence if injectedName is already defined in babel's global we return from the function.
-  if (path.node.value !== ' Szczepaniatko XII Truskawkowe') return;
+  if (
+    state.opts.disablePluginVersionInjection ||
+    (globalThis as globalThisReanimated)._injectedReanimatedVersionBabelPlugin
+  ) {
+    return;
+  }
   const versionString = reanimatedPluginVersion.version;
   const pluginVersion = BabelTypes.expressionStatement(
     BabelTypes.assignmentExpression(
@@ -1059,7 +1067,15 @@ function injectVersion(path: BabelCore.NodePath<BabelTypes.Comment>) {
       BabelTypes.stringLiteral(versionString)
     )
   );
-  path.replaceWith(pluginVersion);
+  path.node.body.unshift(pluginVersion);
+
+  // Injecting a property to babel's global.
+  Object.defineProperty(globalThis, '_injectedReanimatedVersionBabelPlugin', {
+    value: true,
+    enumerable: false,
+    configurable: true,
+    writable: true,
+  });
 }
 
 module.exports = function ({
@@ -1075,9 +1091,12 @@ module.exports = function ({
       }
     },
     visitor: {
-      Comment: {
-        enter(path: BabelCore.NodePath<BabelTypes.Comment>) {
-          injectVersion(path);
+      Program: {
+        enter(
+          path: BabelCore.NodePath<BabelTypes.Program>,
+          state: ReanimatedPluginPass
+        ) {
+          injectVersion(path, state);
         },
       },
       CallExpression: {
