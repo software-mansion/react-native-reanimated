@@ -244,7 +244,7 @@ using namespace facebook::react;
 - (BOOL)uiManager:(RCTUIManager *)manager performMountingWithBlock:(RCTUIManagerMountingBlock)block
 {
   RCTAssert(_mounting == nil, @"Mouting block is expected to not be set");
-  @synchronized (_syncLayoutUpdatesWaitLock) {
+  @synchronized(_syncLayoutUpdatesWaitLock) {
     if (_syncLayoutUpdatesWaitTimedOut) {
       return NO;
     } else {
@@ -300,7 +300,7 @@ using namespace facebook::react;
       // there is no point of synchronizing layout with the UI interaction as we get that one frame delay anyways.
       long result = dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, 16 * NSEC_PER_MSEC));
       if (result != 0) {
-        @synchronized (_syncLayoutUpdatesWaitLock) {
+        @synchronized(_syncLayoutUpdatesWaitLock) {
           _syncLayoutUpdatesWaitTimedOut = YES;
         }
       }
