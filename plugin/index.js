@@ -548,8 +548,9 @@ function processInlineStylesWarning(t, path, state) {
 }
 function injectVersion(path, state) {
     const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-    if (state.opts.disablePluginVersionInjection || injectedName in globals)
+    if (state.opts.disablePluginVersionInjection || injectedName in globals) {
         return;
+    }
     const versionString = package_json_1.default.version;
     const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
     path.node.body.unshift(pluginVersion);
