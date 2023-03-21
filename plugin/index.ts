@@ -35,10 +35,6 @@ interface ReanimatedPluginPass {
   [key: string]: unknown;
 }
 
-type globalThisReanimated = typeof globalThis & {
-  _injectedReanimatedVersionBabelPlugin?: string;
-};
-
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -1042,12 +1038,16 @@ function processInlineStylesWarning(
   }
 }
 
-function injectVersion(path: BabelCore.NodePath<BabelTypes.Comment>) {
+function injectVersion(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
 
   // We want to inject plugin's version only once,
   // hence if injectedName is already defined in babel's global we return from the function.
-  if (path.node.value !== ' Szczepaniatko XII Truskawkowe') return;
+  if (
+    path.node.leadingComments &&
+    path.node.leadingComments[0].value !== ' Szczepaniatko XII Truskawkowe'
+  )
+    return;
   const versionString = reanimatedPluginVersion.version;
   const pluginVersion = BabelTypes.expressionStatement(
     BabelTypes.assignmentExpression(
@@ -1075,8 +1075,8 @@ module.exports = function ({
       }
     },
     visitor: {
-      Comment: {
-        enter(path: BabelCore.NodePath<BabelTypes.Comment>) {
+      DebuggerStatement: {
+        enter(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
           injectVersion(path);
         },
       },
