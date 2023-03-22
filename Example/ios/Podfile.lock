@@ -454,7 +454,6 @@ PODS:
   - RNReanimated (3.0.2):
     - DoubleConversion
     - FBLazyVector
-    - FBReactNativeSpec
     - glog
     - RCT-Folly
     - RCTRequired
@@ -722,7 +721,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: bc0170f389056201c82a55e242e5d90070e18e5a
   RNCPicker: 914b557e20b3b8317b084aca9ff4b4edb95f61e4
   RNGestureHandler: 071d7a9ad81e8b83fe7663b303d132406a7d8f39
-  RNReanimated: a877bae3e9cd691a56186e255c1d17975f13eab0
+  RNReanimated: 43c3dc05fc7b929651aad86e149df74d419c1d41
   RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   RNSVG: c1e76b81c76cdcd34b4e1188852892dc280eb902
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
