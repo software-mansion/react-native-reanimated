@@ -29,6 +29,12 @@ export type ReanimatedConsole = Pick<
   'debug' | 'log' | 'warn' | 'info' | 'error'
 >;
 
+// TODO: move to global.ts
+if (isWeb()) {
+  // @ts-ignore trust me bro
+  global.setImmediate = requestAnimationFrame;
+}
+
 const testWorklet: BasicWorkletFunction<void> = () => {
   'worklet';
 };

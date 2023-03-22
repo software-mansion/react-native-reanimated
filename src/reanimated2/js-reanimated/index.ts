@@ -1,10 +1,11 @@
 import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
+import { isWeb } from '../PlatformChecker';
 
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = (c) => c;
-global._scheduleOnJS = setImmediate;
+global._scheduleOnJS = isWeb() ? requestAnimationFrame : setImmediate;
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;

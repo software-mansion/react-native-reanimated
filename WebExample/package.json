@@ -1,7 +1,7 @@
 {
   "name": "webexample",
   "version": "1.0.0",
-  "main": "AppEntry.js",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -10,23 +10,24 @@
     "web:plugin": "DISABLE_BABEL_PLUGIN=1 expo start --web"
   },
   "dependencies": {
-    "@expo/webpack-config": "^0.17.2",
-    "expo": "~46.0.13",
-    "expo-status-bar": "~1.4.0",
-    "react": "18.0.0",
-    "react-dom": "18.0.0",
-    "react-native": "0.69.6",
-    "react-native-gesture-handler": "2.7.0",
+    "@expo/webpack-config": "^18.0.1",
+    "expo": "~48.0.9",
+    "expo-status-bar": "~1.4.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-native": "0.71.4",
+    "react-native-gesture-handler": "~2.9.0",
     "react-native-reanimated": "link:../",
-    "react-native-web": "~0.18.7"
+    "react-native-web": "~0.18.10"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
+    "@babel/core": "^7.20.0",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
-    "@babel/preset-env": "^7.19.4",
-    "@types/react": "~18.0.14",
-    "@types/react-native": "~0.69.1",
-    "typescript": "~4.3.5"
+    "@tsconfig/react-native": "^2.0.3",
+    "@types/jest": "^29.5.0",
+    "@types/react": "^18.0.28",
+    "@types/react-test-renderer": "^18.0.0",
+    "typescript": "^4.9.4"
   },
   "private": true
 }
