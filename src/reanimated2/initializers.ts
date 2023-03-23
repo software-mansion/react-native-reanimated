@@ -168,19 +168,15 @@ export function initializeUIRuntime() {
       },
     };
 
-    const props = {
-      configurable: true,
-      enumerable: true,
-      writable: true,
+    // setup console
+    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
+    global.console = {
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
     };
-
-    Object.defineProperties(global.console, {
-      debug: { ...props, value: runOnJS(capturableConsole.debug) },
-      log: { ...props, value: runOnJS(capturableConsole.log) },
-      warn: { ...props, value: runOnJS(capturableConsole.warn) },
-      error: { ...props, value: runOnJS(capturableConsole.error) },
-      info: { ...props, value: runOnJS(capturableConsole.info) },
-    });
 
     if (!IS_JEST) {
       setupSetImmediate();
