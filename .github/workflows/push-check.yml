@@ -30,11 +30,13 @@ jobs:
           ./createNPMPackage.sh ${{ inputs.version }} 2> build.log
 
       - name: Check if node_modules were packed
-        run: ! grep --silent node_modules build.log
+        run: >-
+        ! grep --silent node_modules build.log
 
       - name: Show packed node_modules
         if: steps.check-if-node_modules-were-packed.outcome != 'success'
-        run: ! grep node_modules build.log
+        run: >-
+        ! grep node_modules build.log
 
       - name: Check if size is over 1MB
         run: grep --silent -E "npm notice package size:\s*[0-9]{3}(.[0-9])?\s*kB" build.log
