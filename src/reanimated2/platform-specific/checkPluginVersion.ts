@@ -4,7 +4,7 @@ import { matchVersion } from './utils';
 export function checkPluginVersion(): void {
   // Do not remove the following line and do not add any other directives here,
   // they all will be deleteded (see Reanimated Babel Plugin).
-  '__Reanimated Babel Plugin version injection entry point';
+  'inject Reanimated Babel plugin version';
   const pluginVersion = global._REANIMATED_VERSION_BABEL_PLUGIN;
   if (pluginVersion === undefined) {
     console.error(
