@@ -547,17 +547,16 @@ function processInlineStylesWarning(t, path, state) {
     }
 }
 function injectVersion(path) {
-    var _a;
-    const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-    const parentPath = path.getFunctionParent();
-    if (!(parentPath &&
-        'id' in parentPath.node &&
-        ((_a = parentPath.node.id) === null || _a === void 0 ? void 0 : _a.name) === '__checkPluginVersion')) {
+    if (path.node.value !==
+        '__Reanimated Babel Plugin version injection entry point') {
         return;
     }
+    const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
     const versionString = package_json_1.default.version;
-    const pluginVersion = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
-    path.replaceWith(pluginVersion);
+    const pluginVersionNode = BabelTypes.expressionStatement(BabelTypes.assignmentExpression('=', BabelTypes.memberExpression(BabelTypes.identifier('global'), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
+    const functionParent = path.getFunctionParent().node;
+    functionParent.body.directives = [];
+    functionParent.body.body.unshift(pluginVersionNode);
 }
 module.exports = function ({ types: t, }) {
     return {
@@ -569,7 +568,7 @@ module.exports = function ({ types: t, }) {
             }
         },
         visitor: {
-            DebuggerStatement: {
+            DirectiveLiteral: {
                 enter(path) {
                     injectVersion(path);
                 },

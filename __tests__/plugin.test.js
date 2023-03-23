@@ -18,21 +18,25 @@ describe('babel plugin', () => {
 
   it('injects its version', () => {
     const input = `
-      function __checkPluginVersion() {
-        debugger;
+      function foo() {
+        '__Reanimated Babel Plugin version injection entry point';
         var foo = 'bar';
       }
     `;
 
     const { code } = runPlugin(input, {});
     expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN = "');
-    expect(code).not.toContain('debugger');
+    expect(code).not.toContain(
+      '__Reanimated Babel Plugin version injection entry point'
+    );
   });
 
-  it("doesn't bother other debugger statements", () => {
+  it("doesn't bother other Directive Literals", () => {
     const input = `
-    debugger;
-    var foo = 'bar';
+    function foo() {
+      'debugger';
+      var foo = 'bar';
+    }
   `;
 
     const { code } = runPlugin(input, {});

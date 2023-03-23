@@ -1037,27 +1037,20 @@ function processInlineStylesWarning(
   }
 }
 
-function injectVersion(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
-  const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-
+function injectVersion(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
   // We want to inject plugin's version only once,
-  // hence we have a unique debugger line with a comment containing some
-  // randomly generated unique string in Reanimated code that will get
-  // transformed to version injection line.
-  // See src/reanimated2/platform-specific/checkVersion.ts to see the details of this
-  // 'not tricky at all' implementation.
-  const parentPath = path.getFunctionParent();
+  // hence we have a Directive Literal line in Reanimated code.
+  // See src/reanimated2/platform-specific/checkVersion.ts
+  // to see the details of this implementation.
   if (
-    !(
-      parentPath &&
-      'id' in parentPath.node &&
-      parentPath.node.id?.name === '__checkPluginVersion'
-    )
+    path.node.value !==
+    '__Reanimated Babel Plugin version injection entry point'
   ) {
     return;
   }
+  const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
   const versionString = reanimatedPluginVersion.version;
-  const pluginVersion = BabelTypes.expressionStatement(
+  const pluginVersionNode = BabelTypes.expressionStatement(
     BabelTypes.assignmentExpression(
       '=',
       BabelTypes.memberExpression(
@@ -1067,7 +1060,13 @@ function injectVersion(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
       BabelTypes.stringLiteral(versionString)
     )
   );
-  path.replaceWith(pluginVersion);
+
+  const functionParent = (
+    path.getFunctionParent() as BabelCore.NodePath<BabelTypes.FunctionDeclaration>
+  ).node;
+  // DirectiveLiteral is in property of its function parent 'directives' hence we cannot just replace it.
+  functionParent.body.directives = [];
+  functionParent.body.body.unshift(pluginVersionNode);
 }
 
 module.exports = function ({
@@ -1083,8 +1082,8 @@ module.exports = function ({
       }
     },
     visitor: {
-      DebuggerStatement: {
-        enter(path: BabelCore.NodePath<BabelTypes.DebuggerStatement>) {
+      DirectiveLiteral: {
+        enter(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
           injectVersion(path);
         },
       },
