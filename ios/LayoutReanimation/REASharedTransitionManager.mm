@@ -4,6 +4,25 @@
 #import <RNReanimated/REASharedTransitionManager.h>
 #import <objc/runtime.h>
 
+BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
+{
+  if (!view.reactTag) {
+    return NO;
+  }
+
+  if (block(view)) {
+    return YES;
+  }
+
+  for (id<RCTComponent> subview in view.reactSubviews) {
+    if (REANodeFind(subview, block)) {
+      return YES;
+    }
+  }
+
+  return NO;
+}
+
 @implementation REASharedTransitionManagerPublic
 
 - (instancetype)init
@@ -40,6 +59,8 @@
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
   BOOL _isAsyncSharedTransitionConfigured;
+  double screenTransitionProgress;
+  bool tmp;
 }
 
 /*
@@ -67,6 +88,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _isAsyncSharedTransitionConfigured = NO;
+    screenTransitionProgress = 0;
+    tmp = false;
     [self swizzleScreensMethods];
   }
   return self;
@@ -173,7 +196,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
-  [self startSharedTransition:sharedElements];
+//  [self startSharedTransition:sharedElements];
   return YES;
 }
 
@@ -343,9 +366,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)swizzleMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
 {
-  Class class = [self class];
+  Class classA = [self class];
   Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
-  Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+  Method swizzledMethod = class_getInstanceMethod(classA, swizzledSelector);
   IMP originalImp = method_getImplementation(originalMethod);
   IMP swizzledImp = method_getImplementation(swizzledMethod);
   class_replaceMethod(originalClass, swizzledSelector, originalImp, method_getTypeEncoding(originalMethod));
@@ -389,6 +412,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
     bool isInteractive =
         [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
+    tmp = isInteractive;
+    isInteractive = false;
     // screen is removed from React tree (navigation.navigate(<screenName>))
     bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
     // click on button goBack on native header
@@ -408,10 +433,24 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)onScreenTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
 {
-  for (NSNumber *viewTag in onTransitionProgressCallbackBlocks) {
-    OnTransitionProgressCallbackBlock callback = onTransitionProgressCallbackBlocks[viewTag];
-    callback();
+//  for (NSNumber *viewTag in onTransitionProgressCallbackBlocks) {
+//    OnTransitionProgressCallbackBlock callback = onTransitionProgressCallbackBlocks[viewTag];
+//    callback();
+//  }
+  screenTransitionProgress = progress;
+#ifdef __cplusplus
+//  jsi::Value tmp = super.jsCallbacksManager->tmp(progress);
+//  int a = 0;
+  for (NSNumber *sharedViewTag in _currentSharedTransitionViews) {
+    REASnapshot *snapshot = _snapshotRegistry[sharedViewTag];
+    NSMutableDictionary *values = snapshot.values;
+    values[@"width"] = @(progress * 100 + 50);
+    values[@"height"] = @(progress * 100 + 50);
+    [_animationManager progressLayoutAnimationWithStyle:values
+                                                 forTag:sharedViewTag
+                                     isSharedTransition:YES];
   }
+#endif
 }
 
 - (void)makeSnapshotForScreenViews:(UIView *)screen

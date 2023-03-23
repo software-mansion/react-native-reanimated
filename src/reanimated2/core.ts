@@ -234,8 +234,12 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
   }
 }
 
-export function registerJSCallback(type: JSCallbackType, configuration: any, callback: (...args: any) => void): number {
-  return NativeReanimatedModule.registerJSCallback(type, configuration, makeShareableCloneRecursive(callback));
+export function registerJSCallback(type: JSCallbackType, configuration: any, callback: (...args: any) => any): number {
+  return NativeReanimatedModule.registerJSCallback(
+    type, 
+    configuration, 
+    makeShareableCloneRecursive(callback)
+  );
 }
 
 export function unregisterJSCallback(type: JSCallbackType, callbackId: number): void {

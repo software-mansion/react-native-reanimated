@@ -10,25 +10,26 @@ import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 
-const transition = SharedTransition.custom((values) => {
-  'worklet';
-  return {
-    width: withSpring(values.targetWidth),
-    height: withSpring(values.targetHeight),
-    originX: withSpring(values.targetOriginX),
-    originY: withSpring(values.targetOriginY),
-  };
-});
-
-const progressAnimation = SharedTransition.progressAnimation((values, progress) => {
-  'worklet';
-  return {
-    width: progress * (values.currentWidth - values.targetWidth) + values.currentWidth,
-    height: progress * (values.currentHeight - values.targetHeight) + values.currentHeight,
-    originX: progress * (values.currentOriginX - values.targetOriginX) + values.currentOriginX,
-    originY: progress * (values.currentOriginY - values.targetOriginY) + values.currentOriginY,
-  };
-});
+const transition = SharedTransition
+  .setTransitionDuration(1000)
+  .custom((values) => {
+    'worklet';
+    return {
+      width: withSpring(values.targetWidth),
+      height: withSpring(values.targetHeight),
+      originX: withSpring(values.targetOriginX),
+      originY: withSpring(values.targetOriginY),
+    };
+  })
+  .progressAnimation((values, progress) => {
+    'worklet';
+    return {
+      width: progress * (values.currentWidth - values.targetWidth) + values.currentWidth,
+      height: progress * (values.currentHeight - values.targetHeight) + values.currentHeight,
+      originX: progress * (values.currentOriginX - values.targetOriginX) + values.currentOriginX,
+      originY: progress * (values.currentOriginY - values.targetOriginY) + values.currentOriginY,
+    };
+  });
 
 function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   return (
@@ -37,13 +38,13 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
         style={{
           width: 150,
           height: 150,
-          marginLeft: 20,
-          marginTop: 50,
+          // marginLeft: 20,
+          // marginTop: 50,
           backgroundColor: 'green',
         }}
         sharedTransitionTag="tag"
+        sharedTransitionType='progress'
         sharedTransitionStyle={transition}
-        sharedTransitionProgress={progressAnimation}
       />
       <Button
         onPress={() => navigation.navigate('Screen2')}
@@ -58,10 +59,10 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
     <View style={{ flex: 1 }}>
       <Animated.View
         style={{
-          width: 200,
-          height: 300,
-          marginLeft: 60,
-          marginTop: 100,
+          width: 50,
+          height: 50,
+          // marginLeft: 60,
+          // marginTop: 100,
           backgroundColor: 'green',
         }}
         sharedTransitionTag="tag"

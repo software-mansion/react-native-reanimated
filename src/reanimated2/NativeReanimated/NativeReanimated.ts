@@ -154,7 +154,7 @@ export class NativeReanimated {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 
-  registerJSCallback(type: JSCallbackType, configuration: any, callback: (...args: any) => void): number {
+  registerJSCallback(type: JSCallbackType, configuration: any, callback: ShareableRef<(...args: any) => any>): number {
     return this.InnerNativeModule.registerJSCallback(type, configuration, callback);
   }
 

@@ -22,7 +22,7 @@ import {
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
-  DefaultSharedTransition,
+  SharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -224,7 +224,8 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: ILayoutAnimationBuilder;
+  sharedTransitionType?: 'animation' | 'progress';
+  sharedTransitionStyle?: SharedTransition;
 };
 
 type Options<P> = {
@@ -622,20 +623,29 @@ export default function createAnimatedComponent(
             );
           }
           if (sharedTransitionTag) {
-            const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
+            if (this.props.sharedTransitionType === 'progress') {
+              // TODO 
+            }
+
+            const sharedElementTransitionStyle =
+              this.props.sharedTransitionStyle ?? SharedTransition;
+            if (!SharedTransition.isValidObject(sharedElementTransitionStyle)) {
+              throw new Error("[Reanimated] Invalid value of property `sharedTransitionStyle`");
+            }
+            sharedElementTransitionStyle.build();
+            const transitionAnimation = sharedElementTransitionStyle.getTransitionAnimation();
+            const progressAnimation = sharedElementTransitionStyle.getProgressAnimation();
             configureLayoutAnimations(
               tag,
               LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-              maybeBuild(sharedElementTransition),
+              transitionAnimation,
               sharedTransitionTag
             );
-            if (this.props.sharedTransitionProgress) {
-              registerJSCallback(JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK, { viewTag: tag }, (values, progress) => {
-                'worklet'
-                // console.log('mleko', values, progress)
-              })
-            }
+            registerJSCallback(
+              JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK, 
+              { viewTag: tag }, 
+              progressAnimation
+            );
           }
         }
 

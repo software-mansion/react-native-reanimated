@@ -172,6 +172,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return layoutAnimationsManager_;
   }
+  
+  JSCallbacksManager jsCallbacksManager;
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -210,7 +212,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
-  JSCallbacksManager jsCallbacksManager_;
 
 #ifdef DEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;

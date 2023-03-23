@@ -81,15 +81,25 @@ class JSRuntimeHelper {
 
   template <typename... Args>
   inline void runOnUIGuarded(const jsi::Value &function, Args &&...args) {
+    jsi::Runtime &rt = *uiRuntime_;
+#ifdef DEBUG
+    callGuard->call(rt, function, args...);
+#else
+    function.asObject(rt).asFunction(rt).call(rt, args...);
+#endif
+  }
+  
+  template <typename... Args>
+  inline jsi::Value runOnUIGuardedWithResult(const jsi::Value &function, Args &&...args) {
     // We only use callGuard in debug mode, otherwise we call the provided
     // function directly. CallGuard provides a way of capturing exceptions in
     // JavaScript and propagating them to the main React Native thread such that
     // they can be presented using RN's LogBox.
     jsi::Runtime &rt = *uiRuntime_;
 #ifdef DEBUG
-    callGuard->call(rt, function, args...);
+    return callGuard->call(rt, function, args...);
 #else
-    function.asObject(rt).asFunction(rt).call(rt, args...);
+    return function.asObject(rt).asFunction(rt).call(rt, args...);
 #endif
   }
 };

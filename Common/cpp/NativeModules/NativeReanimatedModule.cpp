@@ -45,7 +45,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      jsCallbacksManager_(runtimeHelper, platformDepMethodsHolder),
+      jsCallbacksManager(runtimeHelper, platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -184,6 +184,7 @@ void NativeReanimatedModule::installCoreFunctions(
     // instace of the helper to exists.
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
+    jsCallbacksManager.runtimeHelper_ = runtimeHelper;
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
@@ -681,14 +682,14 @@ jsi::Value NativeReanimatedModule::registerJSCallback(
     const jsi::Value &type,
     const jsi::Value &configuration,
     const jsi::Value &callback) {
-  return jsCallbacksManager_.registerJSCallback(rt, type, configuration, callback);
+  return jsCallbacksManager.registerJSCallback(rt, type, configuration, callback);
 }
 
 void NativeReanimatedModule::unregisterJSCallback(
     jsi::Runtime &rt,
     const jsi::Value &type,
     const jsi::Value &callbackId) {
-  jsCallbacksManager_.unregisterJSCallback(rt, type, callbackId);
+  jsCallbacksManager.unregisterJSCallback(rt, type, callbackId);
 }
 
 } // namespace reanimated

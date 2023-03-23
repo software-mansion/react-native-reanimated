@@ -252,8 +252,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       auto shareableHandler = extractShareableOrThrow(rt, callback);
       REASharedTransitionManagerPublic *sharedTransitionManager = [weakAnimationsManager getSharedTransitionManager];
       [sharedTransitionManager registerTransitionProgressCallback:^(){
-        jsi::Runtime &reanimatedRuntime = *wrt.lock();
-        callback.asObject(reanimatedRuntime).asFunction(reanimatedRuntime).call(reanimatedRuntime, jsi::Value::undefined(), 0);
+//        jsi::Runtime &reanimatedRuntime = *wrt.lock();
+//        callback.asObject(reanimatedRuntime).asFunction(reanimatedRuntime).call(reanimatedRuntime, jsi::Value::undefined(), 0); 
+        
       } withViewTag:viewTag];
     } else if (type == KEYBOARD_CALLBACK) {
     
@@ -382,6 +383,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
+#endif
+
+#ifdef __cplusplus
+  REASharedTransitionManagerPublic *sharedTransitionManager = [weakAnimationsManager getSharedTransitionManager];
+//  sharedTransitionManager->jsCallbacksManager = &module->jsCallbacksManager;
+  sharedTransitionManager.jsCallbacksManager = &module->jsCallbacksManager;
 #endif
 
   return module;

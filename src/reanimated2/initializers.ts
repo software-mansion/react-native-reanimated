@@ -15,7 +15,7 @@ function callGuardDEV<T extends Array<any>, U>(
 ): void {
   'worklet';
   try {
-    fn(...args);
+    return fn(...args);
   } catch (e) {
     if (global.ErrorUtils) {
       global.ErrorUtils.reportFatalError(e as Error);
