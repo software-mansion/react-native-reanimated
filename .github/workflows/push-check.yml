@@ -51,4 +51,4 @@ jobs:
 
       - name: Show exceeded package size
         if: always() && steps.size.outcome == 'failure'
-        run: grep -E "npm notice package size:\s*[0-9]{3}(\.[0-9]*)?\s*kB" build.log
+        run: grep -E "npm notice package size:" build.log
