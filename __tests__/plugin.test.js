@@ -34,11 +34,11 @@ describe('babel plugin', () => {
 
   it("doesn't bother other Directive Literals", () => {
     const input = `
-    function foo() {
-      'foobar';
-      var foo = 'bar';
-    }
-  `;
+      function foo() {
+        'foobar';
+        var foo = 'bar';
+      }
+    `;
 
     const { code } = runPlugin(input, {});
     expect(code).toContain('foobar');
