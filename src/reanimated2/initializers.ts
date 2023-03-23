@@ -176,10 +176,10 @@ export function initializeUIRuntime() {
 
     Object.defineProperties(global.console, {
       debug: { ...props, value: runOnJS(capturableConsole.debug) },
-      log: { ...props, value: capturableConsole.log },
-      warn: { ...props, value: capturableConsole.warn },
-      error: { ...props, value: capturableConsole.error },
-      info: { ...props, value: capturableConsole.info },
+      log: { ...props, value: runOnJS(capturableConsole.log) },
+      warn: { ...props, value: runOnJS(capturableConsole.warn) },
+      error: { ...props, value: runOnJS(capturableConsole.error) },
+      info: { ...props, value: runOnJS(capturableConsole.info) },
     });
 
     if (!IS_JEST) {
