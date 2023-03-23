@@ -33,7 +33,7 @@ function DefaultInterpolation({
 
   useEffect(() => {
     color.value = color1;
-  }, [color1]);
+  }, [color, color1]);
 
   return (
     <View>
