@@ -5,6 +5,7 @@ import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
+import reanimatedPluginVersion from '../package.json';
 
 function hash(str: string): number {
   let i = str.length;
@@ -1036,6 +1037,35 @@ function processInlineStylesWarning(
   }
 }
 
+function injectVersion(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
+  // We want to inject plugin's version only once,
+  // hence we have a Directive Literal line in Reanimated code.
+  // See src/reanimated2/platform-specific/checkPluginVersion.ts
+  // to see the details of this implementation.
+  if (path.node.value !== 'inject Reanimated Babel plugin version') {
+    return;
+  }
+  const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
+  const versionString = reanimatedPluginVersion.version;
+  const pluginVersionNode = BabelTypes.expressionStatement(
+    BabelTypes.assignmentExpression(
+      '=',
+      BabelTypes.memberExpression(
+        BabelTypes.identifier('global'),
+        BabelTypes.identifier(injectedName)
+      ),
+      BabelTypes.stringLiteral(versionString)
+    )
+  );
+
+  const functionParent = (
+    path.getFunctionParent() as BabelCore.NodePath<BabelTypes.FunctionDeclaration>
+  ).node;
+  // DirectiveLiteral is in property of its function parent 'directives' hence we cannot just replace it.
+  functionParent.body.directives = [];
+  functionParent.body.body.unshift(pluginVersionNode);
+}
+
 module.exports = function ({
   types: t,
 }: typeof BabelCore): BabelCore.PluginItem {
@@ -1049,6 +1079,11 @@ module.exports = function ({
       }
     },
     visitor: {
+      DirectiveLiteral: {
+        enter(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
+          injectVersion(path);
+        },
+      },
       CallExpression: {
         enter(
           path: BabelCore.NodePath<BabelTypes.CallExpression>,
