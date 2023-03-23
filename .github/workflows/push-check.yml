@@ -24,28 +24,31 @@ jobs:
           ndk-version: r21d
 
       - name: Build package
+        id: build
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
           ./createNPMPackage.sh ${{ inputs.version }} 2> build.log
 
       - name: Check if any node_modules were packed
+        id: node_modules
         run: >-
           ! grep --silent node_modules build.log
 
       - name: Check if size is over 1MB
+        id: size
         run: grep --silent -E "npm notice package size:\s*[0-9]{3}(.[0-9])?\s*kB" build.log
 
       - name: Show build log
-        if: failure()
+        if: steps.build.outcome != 'success'
         run: >-
           cat build.log
 
       - name: Show packed node_modules
-        if: failure()
+        if: steps.node_modules.outcome != 'success'
         run: >-
           ! grep node_modules build.log
 
       - name: Show package size
-        if: failure()
+        if: steps.size.outcome != 'success'
         run: grep -E "npm notice package size:\s*[0-9]{3}(.[0-9])?\s*kB" build.log
