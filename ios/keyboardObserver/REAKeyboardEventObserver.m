@@ -92,6 +92,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
     [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
+  _shouldInvalidateDisplayLink = false;
 }
 
 - (void)stopAnimation
