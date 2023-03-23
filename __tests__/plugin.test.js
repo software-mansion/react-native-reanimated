@@ -25,7 +25,10 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input, {});
-    expect(code).toContain('global._REANIMATED_VERSION_BABEL_PLUGIN = "');
+    const { version: packageVersion } = require('../package.json');
+    expect(code).toContain(
+      `global._REANIMATED_VERSION_BABEL_PLUGIN = "${packageVersion}"`
+    );
     expect(code).not.toContain(
       '__Reanimated Babel Plugin version injection entry point'
     );
@@ -34,13 +37,13 @@ describe('babel plugin', () => {
   it("doesn't bother other Directive Literals", () => {
     const input = `
     function foo() {
-      'debugger';
+      'foobar';
       var foo = 'bar';
     }
   `;
 
     const { code } = runPlugin(input, {});
-    expect(code).toContain('debugger');
+    expect(code).toContain('foobar');
   });
 
   it('transforms', () => {
