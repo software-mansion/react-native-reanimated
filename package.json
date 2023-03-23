@@ -60,7 +60,8 @@
     "!android/.gradle/",
     "!__snapshots__",
     "!*.test.js",
-    "!*.test.js.map"
+    "!*.test.js.map",
+    "!**/node_modules"
   ],
   "repository": {
     "type": "git",
