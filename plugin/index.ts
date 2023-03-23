@@ -1040,7 +1040,7 @@ function processInlineStylesWarning(
 function injectVersion(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
   // We want to inject plugin's version only once,
   // hence we have a Directive Literal line in Reanimated code.
-  // See src/reanimated2/platform-specific/checkVersion.ts
+  // See src/reanimated2/platform-specific/checkPluginVersion.ts
   // to see the details of this implementation.
   if (path.node.value !== 'inject Reanimated Babel plugin version') {
     return;
