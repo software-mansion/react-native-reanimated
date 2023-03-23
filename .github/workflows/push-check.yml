@@ -40,15 +40,15 @@ jobs:
         run: grep --silent -E "npm notice package size:\s*[0-9]{3}(\.[0-9]*)?\s*kB" build.log
 
       - name: Show build log
-        if: steps.build.outcome != 'success'
+        if: always() && steps.build.outcome != 'success'
         run: >-
           cat build.log
 
       - name: Show packed node_modules
-        if: steps.node_modules.outcome != 'success'
+        if: always() && steps.node_modules.outcome != 'success'
         run: >-
           ! grep node_modules build.log
 
       - name: Show exceeded package size
-        if: steps.size.outcome != 'success'
+        if: always() && steps.size.outcome != 'success'
         run: grep -E "npm notice package size:\s*[0-9]{3}(\.[0-9]*)?\s*kB" build.log
