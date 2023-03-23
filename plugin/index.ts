@@ -1042,10 +1042,7 @@ function injectVersion(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
   // hence we have a Directive Literal line in Reanimated code.
   // See src/reanimated2/platform-specific/checkVersion.ts
   // to see the details of this implementation.
-  if (
-    path.node.value !==
-    '__Reanimated Babel Plugin version injection entry point'
-  ) {
+  if (path.node.value !== 'inject Reanimated Babel plugin version') {
     return;
   }
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';

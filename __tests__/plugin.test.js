@@ -19,7 +19,7 @@ describe('babel plugin', () => {
   it('injects its version', () => {
     const input = `
       function foo() {
-        '__Reanimated Babel Plugin version injection entry point';
+        'inject Reanimated Babel plugin version';
         var foo = 'bar';
       }
     `;
@@ -29,9 +29,7 @@ describe('babel plugin', () => {
     expect(code).toContain(
       `global._REANIMATED_VERSION_BABEL_PLUGIN = "${packageVersion}"`
     );
-    expect(code).not.toContain(
-      '__Reanimated Babel Plugin version injection entry point'
-    );
+    expect(code).not.toContain('inject Reanimated Babel plugin version');
   });
 
   it("doesn't bother other Directive Literals", () => {

@@ -547,8 +547,7 @@ function processInlineStylesWarning(t, path, state) {
     }
 }
 function injectVersion(path) {
-    if (path.node.value !==
-        '__Reanimated Babel Plugin version injection entry point') {
+    if (path.node.value !== 'inject Reanimated Babel plugin version') {
         return;
     }
     const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
