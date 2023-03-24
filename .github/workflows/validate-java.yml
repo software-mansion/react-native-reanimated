@@ -2,6 +2,7 @@ name: Java Lint
 on:
   pull_request:
     paths:
+      - '.github/workflows/validate-java.yml'
       - 'android/src/main/java/**'
       - 'android/build.gradle'
   push:
@@ -16,10 +17,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: Use Node.js 14
-        uses: actions/setup-node@v2
+      - name: Use Node.js 16
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           cache: 'yarn'
       - name: Install node dependencies
         run: yarn

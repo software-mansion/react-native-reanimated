@@ -3,6 +3,7 @@ name: Test docs build
 on:
   pull_request:
     paths:
+      - '.github/workflows/docs-check.yml'
       - 'docs/**'
 
 jobs:
@@ -14,7 +15,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v1
       - name: Use Node.js 16
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16
           cache: 'yarn'
