@@ -60,11 +60,16 @@ export interface LayoutAnimationsValues {
   windowHeight: number;
 }
 
-export interface SharedTransitionAnimationsValues extends LayoutAnimationsValues {
+export interface SharedTransitionAnimationsValues
+  extends LayoutAnimationsValues {
   [key: string]: number | number[];
   currentTransformMatrix: number[];
   targetTransformMatrix: number[];
 }
+
+export type SharedTransitionAnimationsFunction = (
+  values: SharedTransitionAnimationsValues
+) => LayoutAnimation;
 
 export enum LayoutAnimationType {
   ENTERING = 1,

@@ -1,24 +1,31 @@
 import { withTiming } from '../../animation';
 import {
   ISharedTransitionAnimationBuilder,
-  LayoutAnimationFunction,
-  LayoutAnimationsValues,
-  SharedTransitionAnimationsValues
+  SharedTransitionAnimationsFunction,
+  SharedTransitionAnimationsValues,
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
 
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
-type AnimationFactoryType = (values: SharedTransitionAnimationsValues) => StyleProps;
-type ProgressAnimationCallbackType = (values: SharedTransitionAnimationsValues, progress: number) => StyleProps;
+type AnimationFactoryType = (
+  values: SharedTransitionAnimationsValues
+) => StyleProps;
+type ProgressAnimationCallbackType = (
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => StyleProps;
 
 export class SharedTransition implements ISharedTransitionAnimationBuilder {
   private customAnimationFactory: AnimationFactoryType | null = null;
-  private transitionAnimation: LayoutAnimationFunction | null = null;
+  private transitionAnimation: SharedTransitionAnimationsFunction | null = null;
   private transitionDuration = 500;
 
-  private customProgressAnimationCallback: ProgressAnimationCallbackType | null = null;
-  private progressAnimationCallback: ProgressAnimationCallbackType | null = null;
+  private customProgressAnimationCallback: ProgressAnimationCallbackType | null =
+    null;
+
+  private progressAnimationCallback: ProgressAnimationCallbackType | null =
+    null;
 
   custom(animationFactory: AnimationFactoryType): SharedTransition {
     this.customAnimationFactory = animationFactory;
@@ -27,7 +34,7 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
 
   build(): void {
     this.buildTransitionAnimation();
-    this.buildTransitionAnimation()
+    this.buildTransitionAnimation();
   }
 
   buildTransitionAnimation() {
@@ -92,35 +99,41 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
       const output: { [key: string]: number | number[] } = {};
       for (const propertyName of supportedProps) {
         if (propertyName === 'transform') {
-          // this is not the perfect solution, but at this moment it just interpolates the whole 
-          // matrix instead of interpolating scale, translate, rotate, etc. separately 
+          // this is not the perfect solution, but at this moment it just interpolates the whole
+          // matrix instead of interpolating scale, translate, rotate, etc. separately
           const currentMatrix = values.currentTransformMatrix as number[];
           const targetMatrix = values.targetTransformMatrix as number[];
           const newMatrix = new Array(9);
           for (let i = 0; i < 9; i++) {
-            newMatrix[i] = progress * (currentMatrix[i] - targetMatrix[i]) + currentMatrix[i];
+            newMatrix[i] =
+              progress * (currentMatrix[i] - targetMatrix[i]) +
+              currentMatrix[i];
           }
           output.transformMatrix = newMatrix;
         } else {
           // PropertyName == propertyName with capitalized fist letter, (width -> Width)
-          const PropertyName = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
-          const currentValue = values['current' + PropertyName];
-          const targetValue = values['target' + PropertyName];
-          output[propertyName] = progress * (currentValue - targetValue) + currentValue;
+          const PropertyName =
+            propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
+          const currentValue = values['current' + PropertyName] as number;
+          const targetValue = values['target' + PropertyName] as number;
+          output[propertyName] =
+            progress * (currentValue - targetValue) + currentValue;
         }
       }
-      return {}
+      return {};
     };
   }
 
-  getTransitionAnimation(): LayoutAnimationFunction {
+  getTransitionAnimation(): SharedTransitionAnimationsFunction {
     if (!this.transitionAnimation) {
       this.build();
     }
     return this.transitionAnimation!;
   }
 
-  progressAnimation(progressAnimationCallback: ProgressAnimationCallbackType): SharedTransition {
+  progressAnimation(
+    progressAnimationCallback: ProgressAnimationCallbackType
+  ): SharedTransition {
     this.customProgressAnimationCallback = progressAnimationCallback;
     return this;
   }
@@ -132,8 +145,9 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
     return this.progressAnimationCallback!;
   }
 
-  setTransitionDuration(duration: number): void {
+  setTransitionDuration(duration: number): SharedTransition {
     this.transitionDuration = duration;
+    return this;
   }
 
   static createInstance(): SharedTransition {
@@ -148,11 +162,13 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
     this.createInstance().build();
   }
 
-  static getTransitionAnimation(): LayoutAnimationFunction {
+  static getTransitionAnimation(): SharedTransitionAnimationsFunction {
     return this.createInstance().getTransitionAnimation();
   }
 
-  static progressAnimation(progressAnimationFactory: ProgressAnimationCallbackType): SharedTransition {
+  static progressAnimation(
+    progressAnimationFactory: ProgressAnimationCallbackType
+  ): SharedTransition {
     return this.createInstance().progressAnimation(progressAnimationFactory);
   }
 
@@ -160,11 +176,11 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
     return this.createInstance().getProgressAnimation();
   }
 
-  static setTransitionDuration(duration: number): void {
+  static setTransitionDuration(duration: number): SharedTransition {
     return this.createInstance().setTransitionDuration(duration);
   }
 
-  static isValidObject(object: {}): boolean {
+  static isValidObject(object: any): boolean {
     return 'build' in object && typeof object.build === 'function';
   }
 }

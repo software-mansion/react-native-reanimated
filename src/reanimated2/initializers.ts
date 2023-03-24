@@ -12,7 +12,7 @@ import {
 function callGuardDEV<T extends Array<any>, U>(
   fn: (...args: T) => U,
   ...args: T
-): void {
+): any {
   'worklet';
   try {
     return fn(...args);

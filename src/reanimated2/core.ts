@@ -21,6 +21,7 @@ import {
   LayoutAnimationType,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
+import { SharedTransitionAnimationsFunction } from './layoutReanimation/animationBuilder/commonTypes';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
@@ -217,7 +218,10 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: LayoutAnimationType,
-  config: LayoutAnimationFunction | Keyframe,
+  config:
+    | LayoutAnimationFunction
+    | Keyframe
+    | SharedTransitionAnimationsFunction,
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
@@ -234,14 +238,21 @@ export function configureProps(uiProps: string[], nativeProps: string[]): void {
   }
 }
 
-export function registerJSCallback(type: JSCallbackType, configuration: any, callback: (...args: any) => any): number {
+export function registerJSCallback(
+  type: JSCallbackType,
+  configuration: any,
+  callback: (...args: any) => any
+): number {
   return NativeReanimatedModule.registerJSCallback(
-    type, 
-    configuration, 
+    type,
+    configuration,
     makeShareableCloneRecursive(callback)
   );
 }
 
-export function unregisterJSCallback(type: JSCallbackType, callbackId: number): void {
+export function unregisterJSCallback(
+  type: JSCallbackType,
+  callbackId: number
+): void {
   return NativeReanimatedModule.unregisterJSCallback(type, callbackId);
 }
