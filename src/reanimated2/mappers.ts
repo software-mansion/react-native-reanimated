@@ -1,6 +1,6 @@
 import { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
-import { callMicrotasks, runOnUI } from './threads';
+import { runOnUI } from './threads';
 
 const IS_JEST = isJest();
 
