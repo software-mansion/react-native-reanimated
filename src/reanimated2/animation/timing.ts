@@ -37,12 +37,16 @@ export function withTiming(
 
   return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
-    const defaultConfig: Required<TimingConfig> = {
+    const config: Required<TimingConfig> = {
       duration: 300,
       easing: Easing.inOut(Easing.quad),
     };
-
-    const config = { ...defaultConfig, ...userConfig };
+    if (userConfig) {
+      Object.keys(userConfig).forEach(
+        (key) =>
+          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
+      );
+    }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
       const { toValue, startTime, startValue } = animation;

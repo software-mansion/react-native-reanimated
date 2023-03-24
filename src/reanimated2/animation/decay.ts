@@ -9,12 +9,19 @@ import {
 import { Platform } from 'react-native';
 
 interface DecayConfig {
-  velocity?: number;
   deceleration?: number;
   velocityFactor?: number;
   clamp?: number[];
+  velocity?: number;
+}
+
+interface DefaultDecayConfig {
+  deceleration: number;
+  velocityFactor: number;
+  clamp?: number[];
+  velocity: number;
   rubberBandEffect?: boolean;
-  rubberBandFactor?: number;
+  rubberBandFactor: number;
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
@@ -39,18 +46,20 @@ export function withDecay(
 
   return defineAnimation<DecayAnimation>(0, () => {
     'worklet';
-    const defaultConfig: Required<DecayConfig> = {
-      velocity: 0,
+    const config: DefaultDecayConfig = {
       deceleration: 0.998,
-      clamp: [],
-      velocityFactor: 1,
+      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
+      velocity: 0,
       rubberBandFactor: 0.6,
-      rubberBandEffect: false,
     };
+    if (userConfig) {
+      Object.keys(userConfig).forEach(
+        (key) =>
+          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
+      );
+    }
 
-    const config = { ...defaultConfig, ...userConfig };
-
-    const VELOCITY_EPS = 1;
+    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
     // @piaskowyk: Velocity is expressed in pixels per second
@@ -74,14 +83,14 @@ export function withDecay(
         const deltaTime = Math.min(now - lastTimestamp, 64);
         const clampIndex = initialVelocity > 0 ? 1 : 0;
         let derivative = 0;
-        if (current < config.clamp[0] || current > config.clamp[1]) {
-          derivative = current - config.clamp[clampIndex];
+        if (current < config.clamp![0] || current > config.clamp![1]) {
+          derivative = current - config.clamp![clampIndex];
         }
 
         if (derivative !== 0) {
           animation.springActive = true;
         } else if (derivative === 0 && animation.springActive) {
-          animation.current = config.clamp[clampIndex];
+          animation.current = config.clamp![clampIndex];
           return true;
         }
 

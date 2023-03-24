@@ -38,7 +38,11 @@ export function withSpring(
 
   return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
-    const defaultConfig: Required<SpringConfig> = {
+
+    // TODO: figure out why we can't use spread or Object.assign here
+    // when user config is "frozen object" we can't enumerate it (perhaps
+    // something is wrong with the object prototype).
+    const config: Required<SpringConfig> = {
       damping: 10,
       mass: 1,
       stiffness: 100,
@@ -47,8 +51,12 @@ export function withSpring(
       restSpeedThreshold: 2,
       velocity: 0,
     };
-
-    const config = { ...defaultConfig, ...userConfig };
+    if (userConfig) {
+      Object.keys(userConfig).forEach(
+        (key) =>
+          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
+      );
+    }
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
       const { toValue, lastTimestamp, current, velocity } = animation;
