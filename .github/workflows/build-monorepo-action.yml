@@ -25,6 +25,12 @@ jobs:
       group: ${{ inputs.concurrency_group }}
       cancel-in-progress: true
     steps:
+      - name: Create RootApp
+        working-directory: monorepo
+        run: npx react-native@next init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }} --verbose
+      - name: Create PackageApp
+        working-directory: monorepo/packages
+        run: npx react-native@next init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }} --verbose
       - name: Create monorepo
         run: |
           mkdir monorepo
@@ -32,15 +38,6 @@ jobs:
           echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
           yarn
           mkdir packages
-      - name: Uninstall react-native
-        run: npm uninstall -g react-native
-      - name: Create RootApp
-        working-directory: monorepo
-        run: npx react-native@next init RootApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }} --verbose
-      - name: Create PackageApp
-        working-directory: monorepo/packages
-        run: npx react-native@next init PackageApp --skip-install ${{ env.REACT_NATIVE_TEMPLATE }} --verbose
-      
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
         run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
