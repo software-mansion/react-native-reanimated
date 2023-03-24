@@ -5,7 +5,9 @@
     "module": "commonjs",
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "files": ["src/plugin.ts"]
 }

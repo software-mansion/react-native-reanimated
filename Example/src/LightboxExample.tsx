@@ -257,7 +257,7 @@ function ImageTransition({
 
     animationProgress.value = withTiming(1, timingConfig);
     backdropOpacity.value = withTiming(1, timingConfig);
-  }, []);
+  }, [animationProgress, backdropOpacity, imageOpacity]);
 
   return (
     <View style={StyleSheet.absoluteFillObject}>
