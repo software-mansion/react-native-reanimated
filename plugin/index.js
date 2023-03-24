@@ -736,6 +736,224 @@ var init_processInlineStylesWarning = __esm({
   }
 });
 
+// ../package.json
+var package_default;
+var init_package = __esm({
+  "../package.json"() {
+    package_default = {
+      name: "react-native-reanimated",
+      version: "3.0.2",
+      description: "More powerful alternative to Animated library for React Native.",
+      scripts: {
+        test: "yarn run format:js && yarn run lint:js && yarn run test:unit",
+        "test:unit": "jest",
+        lint: "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
+        "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
+        "lint:plugin": "cd plugin && yarn lint && cd ..",
+        "lint:docs": "cd docs && yarn lint && cd ..",
+        "lint:java": "./android/gradlew -p android spotlessCheck -q",
+        "lint:cpp": "./scripts/cpplint.sh",
+        "lint:ios": "./scripts/validate-ios.sh && yarn format:ios --dry-run",
+        format: "yarn format:js && yarn format:plugin && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
+        "format:js": "prettier --write --list-different './src/'",
+        "format:plugin": "cd plugin && yarn format && cd ..",
+        "format:java": "node ./scripts/format-java.js",
+        "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i --Werror",
+        "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
+        "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
+        release: "npm login && release-it",
+        "type:check": "yarn tsc --noEmit && cd plugin && yarn type:check && cd ..",
+        prepare: "bob build && husky install && yarn plugin",
+        circular_dependency_check: "yarn madge --extensions js,ts,tsx --circular src lib",
+        setup: "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
+        clean: "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
+        reset: "yarn clean && yarn setup",
+        "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
+        "reset:deep": "yarn clean:deep && yarn setup",
+        plugin: "cd plugin && yarn && cd .."
+      },
+      main: "lib/commonjs/index",
+      module: "lib/module/index",
+      "react-native": "src/index",
+      source: "src/index",
+      types: "react-native-reanimated.d.ts",
+      files: [
+        "Common/",
+        "src/",
+        "lib/",
+        "react-native-reanimated.d.ts",
+        "android/src/main/AndroidManifest.xml",
+        "android/src/main/java/",
+        "android/build.gradle",
+        "android/",
+        "ios/",
+        "RNReanimated.podspec",
+        "scripts/reanimated_utils.rb",
+        "README.md",
+        "mock.js",
+        "plugin/",
+        "!**/__tests__",
+        "!**/__fixtures__",
+        "!**/__mocks__",
+        "!lib/typescript",
+        "!ios/build/",
+        "!android/build/",
+        "!android/.cxx/",
+        "!android/.gradle/",
+        "!__snapshots__",
+        "!*.test.js",
+        "!*.test.js.map",
+        "!**/node_modules"
+      ],
+      repository: {
+        type: "git",
+        url: "git+https://github.com/software-mansion/react-native-reanimated.git"
+      },
+      author: {
+        email: "krzys.magiera@gmail.com",
+        name: "Krzysztof Magiera"
+      },
+      license: "MIT",
+      readmeFilename: "README.md",
+      bugs: {
+        url: "https://github.com/software-mansion/react-native-reanimated/issues"
+      },
+      homepage: "https://github.com/software-mansion/react-native-reanimated#readme",
+      dependencies: {
+        "@babel/plugin-transform-object-assign": "^7.16.7",
+        "@babel/preset-typescript": "^7.16.7",
+        "convert-source-map": "^2.0.0",
+        invariant: "^2.2.4",
+        "lodash.isequal": "^4.5.0",
+        setimmediate: "^1.0.5",
+        "string-hash-64": "^1.0.3"
+      },
+      peerDependencies: {
+        "@babel/core": "^7.0.0-0",
+        react: "*",
+        "react-native": "*"
+      },
+      devDependencies: {
+        "@types/node": "12.7.12",
+        "@babel/cli": "^7.17.6",
+        "@babel/core": "^7.20.0",
+        "@babel/plugin-proposal-class-properties": "^7.16.7",
+        "@babel/plugin-proposal-optional-chaining": "^7.16.7",
+        "@babel/preset-env": "^7.20.0",
+        "@react-native-community/eslint-config": "^3.2.0",
+        "@testing-library/jest-native": "^4.0.4",
+        "@testing-library/react-hooks": "^8.0.0",
+        "@testing-library/react-native": "^7.1.0",
+        "@types/convert-source-map": "^2.0.0",
+        "@types/babel-types": "^7.0.11",
+        "@types/babel__core": "^7.1.18",
+        "@types/babel__generator": "^7.6.4",
+        "@types/babel__traverse": "^7.14.2",
+        "@types/invariant": "^2.2.35",
+        "@types/jest": "^27.4.0",
+        "@types/react": "^18.0.26",
+        "@typescript-eslint/eslint-plugin": "^5.11.0",
+        "@typescript-eslint/parser": "^5.11.0",
+        "babel-eslint": "^10.1.0",
+        "babel-jest": "^27.5.1",
+        "babel-plugin-module-resolver": "^4.1.0",
+        "clang-format": "^1.6.0",
+        eslint: "^8.8.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-config-standard": "^16.0.3",
+        "eslint-import-resolver-babel-module": "^5.3.1",
+        "eslint-plugin-import": "^2.25.4",
+        "eslint-plugin-jest": "^27.2.1",
+        "eslint-plugin-node": "^11.1.0",
+        "eslint-plugin-promise": "^6.0.0",
+        "eslint-plugin-standard": "^5.0.0",
+        husky: "^7.0.4",
+        jest: "^27.5.1",
+        "lint-staged": "^11.2.0",
+        madge: "^5.0.1",
+        prettier: "^2.5.1",
+        react: "17.0.2",
+        "react-native": "0.71.3",
+        "react-native-builder-bob": "^0.18.3",
+        "react-native-gesture-handler": "^2.4.2",
+        "react-test-renderer": "17.0.2",
+        "release-it": "^13.7.2",
+        typescript: "^4.1.3"
+      },
+      "lint-staged": {
+        "*.(js|ts|tsx)": [
+          "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin",
+          "prettier --write"
+        ],
+        "plugin/**/*.ts": "yarn lint:plugin",
+        "**/*.{h,cpp}": "yarn lint:cpp",
+        "android/src/**/*.java": "yarn format:java",
+        "android/src/**/*.{h,cpp}": "yarn format:android",
+        "ios/**/*.{h,m,mm,cpp}": "yarn format:ios",
+        "Common/**/*.{h,cpp}": "yarn format:common",
+        "docs/**/*.{md,mdx}": "yarn lint:docs"
+      },
+      "release-it": {
+        hooks: {
+          "before:git:bump": [
+            "# check if version corresponds to changes in native files  \n  if git diff --name-only ${latestVersion} HEAD | egrep '(android/.*)|(ios/.*)' -q ; then egrep '\\.0$' -q <<< ${version} ; else true ; fi ;"
+          ]
+        }
+      },
+      "react-native-builder-bob": {
+        source: "src",
+        output: "lib",
+        targets: [
+          "commonjs",
+          "module",
+          [
+            "typescript",
+            {
+              project: "tsconfig.json"
+            }
+          ]
+        ]
+      },
+      sideEffects: [
+        "./lib/reanimated2/core",
+        "./lib/reanimated2/js-reanimated/global",
+        "./lib/index"
+      ]
+    };
+  }
+});
+
+// src/injectVersion.ts
+var injectVersion_exports = {};
+__export(injectVersion_exports, {
+  injectVersion: () => injectVersion
+});
+function injectVersion(path) {
+  if (path.node.value !== "inject Reanimated Babel plugin version") {
+    return;
+  }
+  const injectedName = "_REANIMATED_VERSION_BABEL_PLUGIN";
+  const versionString = package_default.version;
+  const pluginVersionNode = (0, import_types8.expressionStatement)(
+    (0, import_types8.assignmentExpression)(
+      "=",
+      (0, import_types8.memberExpression)((0, import_types8.identifier)("global"), (0, import_types8.identifier)(injectedName)),
+      (0, import_types8.stringLiteral)(versionString)
+    )
+  );
+  const functionParent = path.getFunctionParent().node;
+  functionParent.body.directives = [];
+  functionParent.body.body.unshift(pluginVersionNode);
+}
+var import_types8;
+var init_injectVersion = __esm({
+  "src/injectVersion.ts"() {
+    "use strict";
+    import_types8 = require("@babel/types");
+    init_package();
+  }
+});
+
 // src/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var commonObjects_1 = (init_commonObjects(), __toCommonJS(commonObjects_exports));
@@ -743,6 +961,7 @@ var processWorklets_1 = (init_processWorklets(), __toCommonJS(processWorklets_ex
 var processIfWorkletNode_1 = (init_processIfWorkletNode(), __toCommonJS(processIfWorkletNode_exports));
 var processIfGestureHandlerEventCallbackFunctionNode_1 = (init_processIfGestureHandlerEventCallbackFunctionNode(), __toCommonJS(processIfGestureHandlerEventCallbackFunctionNode_exports));
 var processInlineStylesWarning_1 = (init_processInlineStylesWarning(), __toCommonJS(processInlineStylesWarning_exports));
+var injectVersion_1 = (init_injectVersion(), __toCommonJS(injectVersion_exports));
 module.exports = function() {
   return {
     pre() {
@@ -753,6 +972,11 @@ module.exports = function() {
       }
     },
     visitor: {
+      DirectiveLiteral: {
+        enter(path) {
+          (0, injectVersion_1.injectVersion)(path);
+        }
+      },
       CallExpression: {
         enter(path, state) {
           (0, processWorklets_1.processWorklets)(path, state);
