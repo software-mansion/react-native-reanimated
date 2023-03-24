@@ -6,6 +6,9 @@
 
 #include <iostream>
 #include <string>
+// #include <android/log.h>
+#include "Logger.h"
+
 
 namespace reanimated {
 
@@ -22,8 +25,11 @@ class SingleInstanceChecker {
  private:
   void assertWithMessage(bool condition, std::string message) {
     if (!condition) {
-      std::cerr << message << std::endl;
+    std::cerr << message << std::endl;
+    
+    #ifdef IS_REANIMATED_EXAMPLE_APP
       assert(condition);
+    #endif
     }
   }
 

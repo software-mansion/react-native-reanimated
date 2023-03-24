@@ -206,6 +206,7 @@ def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 100
 def REANIMATED_PACKAGE_BUILD = System.getenv("REANIMATED_PACKAGE_BUILD")
 def REANIMATED_VERSION = getReanimatedVersion()
 def REANIMATED_MAJOR_VERSION = getReanimatedMajorVersion()
+def IS_REANIMATED_EXAMPLE_APP = isDeveloperMode()
 
 // for React Native <= 0.70
 def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")

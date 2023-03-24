@@ -14,6 +14,7 @@ folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = fabric_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
+reanimated_example_flag = (ENV['REANIMATED_EXAMPLE_APP_NAME'] == 'Example' || ENV['REANIMATED_EXAMPLE_APP_NAME'] == 'FabricExample' ) ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 
 Pod::Spec.new do |s|
   
@@ -48,7 +49,7 @@ Pod::Spec.new do |s|
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags + ' -DHERMES_ENABLE_DEBUGGER'
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{config[:react_native_common_dir]}\"",
-    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags + " " + version_flag
+    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags + " " + version_flag + " " + reanimated_example_flag
   }
 
   s.requires_arc = true
