@@ -6,6 +6,7 @@ import { processWorklets } from './processWorklets';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
+import { injectVersion } from './injectVersion';
 
 module.exports = function ({
   types: t,
@@ -20,6 +21,11 @@ module.exports = function ({
       }
     },
     visitor: {
+      DirectiveLiteral: {
+        enter(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
+          injectVersion(path);
+        },
+      },
       CallExpression: {
         enter(
           path: BabelCore.NodePath<BabelTypes.CallExpression>,
