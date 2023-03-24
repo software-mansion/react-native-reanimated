@@ -26,8 +26,8 @@ public:
     jsi::Runtime &rt,
     const jsi::Value &type,
     const jsi::Value &callbackId);
-  void unregisterJSCallback(JSCallbackType type, int callbackId);
-  void setRuntimeHelper(std::shared_ptr<JSRuntimeHelper> runtimeHelper);
+  void unregisterJSCallback(const JSCallbackType type, const int callbackId);
+  void setRuntimeHelper(const std::shared_ptr<JSRuntimeHelper> runtimeHelper);
   std::shared_ptr<JSRuntimeHelper> getRuntimeHelper();
   jsi::Value executeSharedAnimationProgressCallback(
     const int viewTag, 
@@ -37,7 +37,7 @@ public:
 
 private:
   void addSharedAnimationProgressCallback(
-    std::shared_ptr<Shareable> shareableCallback,
+    const std::shared_ptr<Shareable> shareableCallback,
     const jsi::Value &configuration
   );
   

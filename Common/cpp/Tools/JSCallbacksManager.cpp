@@ -25,14 +25,17 @@ void JSCallbacksManager::unregisterJSCallback(
     const jsi::Value &type,
     const jsi::Value &callbackId) {
   JSCallbackType typeEnum = static_cast<JSCallbackType>(static_cast<int>(type.asNumber()));
-  // to do
+  int callbackIdInt = callbackId.asNumber();
+  unregisterJSCallback(typeEnum, callbackIdInt);
 }
 
-void JSCallbacksManager::unregisterJSCallback(JSCallbackType type, int callbackId) {
-  // to do
+void JSCallbacksManager::unregisterJSCallback(const JSCallbackType type, const int callbackId) {
+  if (type == JSCallbackType::SHARED_TRANSITION_PROGRESS_CALLBACK) {
+    sharedAnimationProgressCallback_.erase(callbackId);
+  }
 }
 
-void JSCallbacksManager::setRuntimeHelper(std::shared_ptr<JSRuntimeHelper> runtimeHelper) {
+void JSCallbacksManager::setRuntimeHelper(const std::shared_ptr<JSRuntimeHelper> runtimeHelper) {
   runtimeHelper_ = runtimeHelper;
 }
 
@@ -41,7 +44,7 @@ std::shared_ptr<JSRuntimeHelper> JSCallbacksManager::getRuntimeHelper() {
 }
 
 void JSCallbacksManager::addSharedAnimationProgressCallback(
-  std::shared_ptr<Shareable> shareableCallback,
+  const std::shared_ptr<Shareable> shareableCallback,
   const jsi::Value &configuration
 ) {
   auto &rt = *runtimeHelper_->rnRuntime();

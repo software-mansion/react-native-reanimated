@@ -25,8 +25,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 }
 
 @implementation REASharedTransitionManagerPublic
-
-
 @end
 
 @implementation REASharedTransitionManager {
@@ -47,8 +45,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
+  BOOL _isProgressTransition;
   BOOL _isAsyncSharedTransitionConfigured;
-  bool tmp;
 }
 
 /*
@@ -76,7 +74,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _isAsyncSharedTransitionConfigured = NO;
-    tmp = false;
+    _isProgressTransition = NO;
     [self swizzleScreensMethods];
   }
   return self;
@@ -183,7 +181,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
-//  [self startSharedTransition:sharedElements];
+  if (!_isProgressTransition) {
+    [self startSharedTransition:sharedElements];
+  }
   return YES;
 }
 
@@ -341,6 +341,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [self swizzleMethod:@selector(viewDidLayoutSubviews)
                    with:@selector(swizzled_viewDidLayoutSubviews)
                forClass:[RNSScreen class]];
+   [self swizzleMethod:@selector(viewDidAppear:)
+                   with:@selector(swizzled_viewDidAppear:)
+               forClass:[RNSScreen class]];
     [self swizzleMethod:@selector(notifyWillDisappear)
                    with:@selector(swizzled_notifyWillDisappear)
                forClass:[RNSScreenView class]];
@@ -381,9 +384,16 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   // call original method from react-native-screens, self == RNSScreenView
   [self swizzled_notifyTransitionProgress:progress closing:closing goingForward:goingForward];
-  if (closing && !goingForward) { // TODO
+  if (closing) {
     [_sharedTransitionManager onScreenTransitionProgress:progress closing:closing goingForward:goingForward];
   }
+}
+
+- (void)swizzled_viewDidAppear:(BOOL)animated
+{
+  // call original method from react-native-screens, self == RNSScreenView
+  [self swizzled_viewDidAppear:animated];
+  [_sharedTransitionManager screenTransitionFinished];
 }
 
 - (void)screenAddedToStack:(UIView *)screen
@@ -401,13 +411,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
     bool isInteractive =
         [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
-    tmp = isInteractive;
-    isInteractive = false;
+    _isProgressTransition = isInteractive ? YES : NO;
     // screen is removed from React tree (navigation.navigate(<screenName>))
     bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
     // click on button goBack on native header
     bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
-    bool shouldRunTransition = !isInteractive && (isScreenRemovedFromReactTree || isTriggeredByGoBackButton);
+    bool shouldRunTransition = isScreenRemovedFromReactTree || isTriggeredByGoBackButton;
     if (shouldRunTransition) {
       [self runSharedTransitionForSharedViewsOnScreen:screen];
     } else {
@@ -438,6 +447,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)onScreenTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
 {
+  if (!_isProgressTransition) {
+    return;
+  }
   for (REASharedElement *sharedElement in _sharedElements) {
     NSDictionary *values =  [self computeAnimationFrameWithProgress:progress forSharedElement:sharedElement];
     [_animationManager progressLayoutAnimationWithStyle:values
@@ -696,6 +708,21 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [_disableCleaningForView removeObjectForKey:viewTag];
   } else {
     _disableCleaningForView[viewTag] = @(counterInt - 1);
+  }
+}
+
+- (void)screenTransitionFinished
+{
+  if (_isProgressTransition) {
+    NSMutableArray<UIView *> *sharedViewToClean = [NSMutableArray new];
+    for (REASharedElement *sharedElement in _sharedElements) {
+      [sharedViewToClean addObject:sharedElement.sourceView];
+      [sharedViewToClean addObject:sharedElement.targetView];
+    }
+    for (UIView *sharedView in sharedViewToClean) {
+      [self finishSharedAnimation:sharedView];
+    }
+    _isProgressTransition = NO;
   }
 }
 

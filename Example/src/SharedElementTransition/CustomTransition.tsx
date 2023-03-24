@@ -24,10 +24,10 @@ const transition = SharedTransition
   .progressAnimation((values, progress) => {
     'worklet';
     return {
-      width: progress * (values.currentWidth - values.targetWidth) + values.currentWidth,
-      height: progress * (values.currentHeight - values.targetHeight) + values.currentHeight,
-      originX: progress * (values.currentOriginX - values.targetOriginX) + values.currentOriginX,
-      originY: progress * (values.currentOriginY - values.targetOriginY) + values.currentOriginY,
+      width: progress * (values.targetWidth - values.currentWidth) + values.currentWidth,
+      height: progress * (values.targetHeight - values.currentHeight) + values.currentHeight,
+      originX: progress * (values.targetOriginX - values.currentOriginX) + values.currentOriginX,
+      originY: progress * (values.targetOriginY - values.currentOriginY) + values.currentOriginY,
     };
   });
 
@@ -38,8 +38,8 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
         style={{
           width: 150,
           height: 150,
-          // marginLeft: 20,
-          // marginTop: 50,
+          marginLeft: 20,
+          marginTop: 50,
           backgroundColor: 'green',
         }}
         sharedTransitionTag="tag"
@@ -59,10 +59,10 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
     <View style={{ flex: 1 }}>
       <Animated.View
         style={{
-          width: 50,
-          height: 50,
-          // marginLeft: 60,
-          // marginTop: 100,
+          width: 200,
+          height: 300,
+          marginLeft: 60,
+          marginTop: 100,
           backgroundColor: 'green',
         }}
         sharedTransitionTag="tag"
