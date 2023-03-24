@@ -13,7 +13,7 @@ jobs:
       WORKING_DIRECTORY: docs
     steps:
       - name: Check out
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
       - name: Use Node.js 16
         uses: actions/setup-node@v3
         with:
