@@ -24,7 +24,7 @@ export function setupMicrotasks() {
 
   global.__callMicrotasks = () => {
     for (let index = 0; index < microtasksQueue.length; index += 1) {
-      // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
+      // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to queueMicrotask calls
       microtasksQueue[index]();
     }
     microtasksQueue = [];
@@ -44,7 +44,7 @@ export const callMicrotasks = shouldBeUseWeb()
 
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
- * waits for other worklets to be scheduled within the same JS loop. It uses setImmediate to schedule all the worklets
+ * waits for other worklets to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
  * at once making sure they will run within the same frame boundaries on the UI thread.
  */
 export function runOnUI<A extends any[], R>(
@@ -55,7 +55,7 @@ export function runOnUI<A extends any[], R>(
   }
   return (...args) => {
     if (IS_JEST) {
-      // Mocking time in Jest is tricky as both requestAnimationFrame and setImmediate
+      // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
       // callbacks run on the same queue and can be interleaved. There is no way
       // to flush particular queue in Jest and the only control over mocked timers
       // is by using jest.advanceTimersByTime() method which advances all types
