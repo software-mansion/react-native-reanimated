@@ -172,8 +172,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return layoutAnimationsManager_;
   }
-  
-  JSCallbacksManager jsCallbacksManager;
+  std::shared_ptr<JSCallbacksManager> getJSCallbacksManager();
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -212,6 +211,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
+  std::shared_ptr<JSCallbacksManager> jsCallbacksManager_;
 
 #ifdef DEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;

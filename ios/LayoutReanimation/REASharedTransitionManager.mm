@@ -2,6 +2,7 @@
 #import <RNReanimated/REAScreensHelper.h>
 #import <RNReanimated/REASharedElement.h>
 #import <RNReanimated/REASharedTransitionManager.h>
+#import <RNReanimated/REAJSIUtils.h>
 #import <objc/runtime.h>
 
 BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
@@ -25,18 +26,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 @implementation REASharedTransitionManagerPublic
 
-- (instancetype)init
-{
-  if (self = [super init]) {
-    onTransitionProgressCallbackBlocks = [NSMutableDictionary new];
-  }
-  return self;
-}
-
-- (void)registerTransitionProgressCallback:(OnTransitionProgressCallbackBlock)onTransitionProgressCallbackBlock withViewTag:(NSNumber *)viewTag
-{
-  onTransitionProgressCallbackBlocks[viewTag] = onTransitionProgressCallbackBlock;
-}
 
 @end
 
@@ -59,7 +48,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
   BOOL _isAsyncSharedTransitionConfigured;
-  double screenTransitionProgress;
   bool tmp;
 }
 
@@ -88,7 +76,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _isAsyncSharedTransitionConfigured = NO;
-    screenTransitionProgress = 0;
     tmp = false;
     [self swizzleScreensMethods];
   }
@@ -394,7 +381,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
 {
   // call original method from react-native-screens, self == RNSScreenView
   [self swizzled_notifyTransitionProgress:progress closing:closing goingForward:goingForward];
-  [_sharedTransitionManager onScreenTransitionProgress:progress closing:closing goingForward:goingForward];
+  if (closing && !goingForward) { // TODO
+    [_sharedTransitionManager onScreenTransitionProgress:progress closing:closing goingForward:goingForward];
+  }
 }
 
 - (void)screenAddedToStack:(UIView *)screen
@@ -431,26 +420,33 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
+- (NSDictionary *)computeAnimationFrameWithProgress:(double)progress forSharedElement:(REASharedElement *)sharedElement
+{
+  NSMutableDictionary *sourceViewSnapshotValues = sharedElement.sourceViewSnapshot.values;
+  NSMutableDictionary *targetViewSnapshotValues = sharedElement.targetViewSnapshot.values;
+  NSDictionary *componentStyle = [_animationManager prepareDataForLayoutAnimatingWorklet:sourceViewSnapshotValues
+                                                                            targetValues:targetViewSnapshotValues];
+  jsi::Runtime &runtime = *jsCallbacksManager->getRuntimeHelper()->uiRuntime();
+  jsi::Value componentStyleJsValue = convertNSDictionaryToJSIObject(runtime, componentStyle);
+  jsi::Value animationFrameData = jsCallbacksManager->executeSharedAnimationProgressCallback(
+    [sharedElement.sourceView.reactTag intValue], 
+    progress, 
+    componentStyleJsValue
+  );
+  return convertJSIObjectToNSDictionary(runtime, animationFrameData.asObject(runtime));
+}
+
 - (void)onScreenTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
 {
-//  for (NSNumber *viewTag in onTransitionProgressCallbackBlocks) {
-//    OnTransitionProgressCallbackBlock callback = onTransitionProgressCallbackBlocks[viewTag];
-//    callback();
-//  }
-  screenTransitionProgress = progress;
-#ifdef __cplusplus
-//  jsi::Value tmp = super.jsCallbacksManager->tmp(progress);
-//  int a = 0;
-  for (NSNumber *sharedViewTag in _currentSharedTransitionViews) {
-    REASnapshot *snapshot = _snapshotRegistry[sharedViewTag];
-    NSMutableDictionary *values = snapshot.values;
-    values[@"width"] = @(progress * 100 + 50);
-    values[@"height"] = @(progress * 100 + 50);
+  for (REASharedElement *sharedElement in _sharedElements) {
+    NSDictionary *values =  [self computeAnimationFrameWithProgress:progress forSharedElement:sharedElement];
     [_animationManager progressLayoutAnimationWithStyle:values
-                                                 forTag:sharedViewTag
+                                                 forTag:sharedElement.sourceView.reactTag
+                                     isSharedTransition:YES];
+     [_animationManager progressLayoutAnimationWithStyle:values
+                                                 forTag:sharedElement.targetView.reactTag
                                      isSharedTransition:YES];
   }
-#endif
 }
 
 - (void)makeSnapshotForScreenViews:(UIView *)screen

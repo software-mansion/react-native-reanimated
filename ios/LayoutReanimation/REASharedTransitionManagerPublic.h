@@ -1,19 +1,12 @@
 #ifdef __cplusplus
 #import <RNReanimated/JSCallbacksManager.h>
+#import <memory>
 #endif
-
-typedef void (^ OnTransitionProgressCallbackBlock)();
 
 @interface REASharedTransitionManagerPublic : NSObject {
-  @protected
-  NSMutableDictionary<NSNumber *, OnTransitionProgressCallbackBlock> *onTransitionProgressCallbackBlocks;
-//  @public
-//  reanimated::JSCallbacksManager *jsCallbacksManager;
-}
-
 #ifdef __cplusplus
-@property reanimated::JSCallbacksManager *jsCallbacksManager;
+  @public
+  std::shared_ptr<reanimated::JSCallbacksManager> jsCallbacksManager;
 #endif
-- (void)registerTransitionProgressCallback:(OnTransitionProgressCallbackBlock)onTransitionProgressCallbackBlock withViewTag:(NSNumber *)viewTag;
-
+}
 @end

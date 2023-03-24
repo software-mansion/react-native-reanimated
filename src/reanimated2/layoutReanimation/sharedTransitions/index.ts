@@ -34,7 +34,7 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
 
   build(): void {
     this.buildTransitionAnimation();
-    this.buildTransitionAnimation();
+    this.buildProgressAnimation();
   }
 
   buildTransitionAnimation() {
@@ -106,7 +106,7 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
           const newMatrix = new Array(9);
           for (let i = 0; i < 9; i++) {
             newMatrix[i] =
-              progress * (currentMatrix[i] - targetMatrix[i]) +
+              progress * (targetMatrix[i] - currentMatrix[i]) +
               currentMatrix[i];
           }
           output.transformMatrix = newMatrix;
@@ -117,10 +117,10 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
           const currentValue = values['current' + PropertyName] as number;
           const targetValue = values['target' + PropertyName] as number;
           output[propertyName] =
-            progress * (currentValue - targetValue) + currentValue;
+            progress * (targetValue - currentValue) + currentValue;
         }
       }
-      return {};
+      return output;
     };
   }
 

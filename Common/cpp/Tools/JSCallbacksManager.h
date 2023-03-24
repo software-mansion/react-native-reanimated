@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <vector>
+#include <map>
 #include <jsi/jsi.h>
 
 #include "Shareables.h"
@@ -12,10 +12,10 @@ namespace reanimated {
 
 class JSCallbacksManager {
 
-  std::vector<std::function<jsi::Value(double)>> callbacks_;
+  std::map<int, std::function<jsi::Value(const jsi::Value &, const double)>> sharedAnimationProgressCallback_;
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   
 public:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   JSCallbacksManager(std::shared_ptr<JSRuntimeHelper> runtimeHelper, PlatformDepMethodsHolder platformDepMethodsHolder);
   jsi::Value registerJSCallback(
     jsi::Runtime &rt,
@@ -26,7 +26,20 @@ public:
     jsi::Runtime &rt,
     const jsi::Value &type,
     const jsi::Value &callbackId);
-  jsi::Value tmp(double progress);
+  void unregisterJSCallback(JSCallbackType type, int callbackId);
+  void setRuntimeHelper(std::shared_ptr<JSRuntimeHelper> runtimeHelper);
+  std::shared_ptr<JSRuntimeHelper> getRuntimeHelper();
+  jsi::Value executeSharedAnimationProgressCallback(
+    const int viewTag, 
+    const double progress, 
+    const jsi::Value &sharedAnimationWorkletData
+  );
+
+private:
+  void addSharedAnimationProgressCallback(
+    std::shared_ptr<Shareable> shareableCallback,
+    const jsi::Value &configuration
+  );
   
 };
 
