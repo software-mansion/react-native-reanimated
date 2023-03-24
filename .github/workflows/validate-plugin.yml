@@ -2,6 +2,7 @@ name: Validate plugin
 on:
   pull_request:
     paths:
+      - '.github/workflows/validate-plugin.yml'
       - 'plugin/**'
   push:
     branches:

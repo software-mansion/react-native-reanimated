@@ -3,6 +3,7 @@ name: Test docs build
 on:
   pull_request:
     paths:
+      - '.github/workflows/docs-check.yml'
       - 'docs/**'
 
 jobs:

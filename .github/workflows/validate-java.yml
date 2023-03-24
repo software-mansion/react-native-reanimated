@@ -2,6 +2,7 @@ name: Java Lint
 on:
   pull_request:
     paths:
+      - '.github/workflows/validate-java.yml'
       - 'android/src/main/java/**'
       - 'android/build.gradle'
   push:
