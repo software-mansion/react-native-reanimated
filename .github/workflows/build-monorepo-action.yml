@@ -29,7 +29,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'yarn'
       - name: Create monorepo
         run: |
           mkdir monorepo
