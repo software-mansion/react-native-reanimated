@@ -67,7 +67,7 @@ public class NativeMethodsHelper {
             }
           });
     } else {
-      (view).scrollTo((int) x, (int) y);
+      view.scrollTo(x, y);
     }
   }
 
