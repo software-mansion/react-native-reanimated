@@ -1,8 +1,7 @@
 import Animated, {
   useSharedValue,
-  withTiming,
   useAnimatedStyle,
-  Easing,
+  withSpring,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
@@ -11,13 +10,18 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
   const randomWidth = useSharedValue(10);
 
   const config = {
-    duration: 500,
-    easing: Easing.bezierFn(0.5, 0.01, 0, 1),
+    duration: 2000,
+    damping: 10,
   };
 
-  const style = useAnimatedStyle(() => {
+  const style1 = useAnimatedStyle(() => {
     return {
-      width: withTiming(randomWidth.value, config),
+      width: withSpring(randomWidth.value, config),
+    };
+  });
+  const style2 = useAnimatedStyle(() => {
+    return {
+      width: randomWidth.value,
     };
   });
 
@@ -29,14 +33,31 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       }}>
       <Animated.View
         style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
+          {
+            width: 100,
+            height: 80,
+            backgroundColor: 'black',
+            margin: 30,
+            marginBottom: 0,
+          },
+          style1,
+        ]}
+      />
+      <Animated.View
+        style={[
+          {
+            height: 80,
+            backgroundColor: 'pink',
+            margin: 30,
+            marginTop: 0,
+          },
+          style2,
         ]}
       />
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = Math.random() * 350;
+          randomWidth.value = Math.random() * 250 + 100;
         }}
       />
     </View>

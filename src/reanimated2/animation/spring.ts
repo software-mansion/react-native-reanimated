@@ -24,7 +24,8 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   toValue: AnimatableValue;
   velocity: number;
   lastTimestamp: Timestamp;
-  firstTimestamp: Timestamp;
+  startTimestamp: Timestamp;
+  startValue: number;
   newDamping: number;
   newMass: number;
 }
@@ -125,16 +126,16 @@ export function withSpring(
     }
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
-      const { toValue, firstTimestamp, lastTimestamp, current, velocity } =
+      const { toValue, startTimestamp, lastTimestamp, current, velocity } =
         animation;
 
-      const timeFromStart = now - firstTimestamp;
+      const timeFromStart = now - startTimestamp;
       if (userConfig?.duration && timeFromStart > userConfig.duration) {
         animation.current = toValue;
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-        animation.firstTimestamp = 0;
+
         return true;
       }
 
@@ -197,7 +198,6 @@ export function withSpring(
         }
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-        animation.firstTimestamp = 0;
         return true;
       }
       return false;
@@ -210,6 +210,7 @@ export function withSpring(
       previousAnimation: SpringAnimation
     ): void {
       animation.current = value;
+      animation.startValue = value;
 
       let newDamping = config.duration;
       let newMass = config.mass;
@@ -221,7 +222,11 @@ export function withSpring(
       }
 
       if (userConfig?.duration) {
-        const x0 = Number(animation.toValue) - value;
+        let x0 = Number(animation.toValue) - value;
+        if (Number(previousAnimation?.startValue)) {
+          // It makes our animation a bit smoother, especially if sb triggered same animation twice
+          x0 = Number(animation.toValue) - Number(previousAnimation.startValue);
+        }
         const v0 = config.velocity;
         const k = config.stiffness;
         const m = config.mass;
@@ -266,31 +271,39 @@ export function withSpring(
       }
 
       if (previousAnimation) {
+        // Check if we could have triggered the same animation twice.
+        // In such a case we don't want to extend its duration and we will copy previous start timestamp
+        const triggeredTwice =
+          previousAnimation.type === 'spring' &&
+          previousAnimation.toValue === animation.toValue;
+
         animation.velocity =
           previousAnimation.velocity || animation.velocity || 0;
         animation.lastTimestamp = previousAnimation.lastTimestamp || now;
-        animation.newDamping = previousAnimation.newDamping || newDamping;
-        animation.newMass = previousAnimation.newMass || newMass;
-        animation.firstTimestamp = now;
+        animation.startTimestamp = triggeredTwice
+          ? previousAnimation.startTimestamp || now
+          : now;
       } else {
         animation.lastTimestamp = now;
-        animation.firstTimestamp = now;
+        animation.startTimestamp = now;
         animation.newDamping = newDamping;
         animation.newMass = newMass;
       }
 
-      animation.firstTimestamp = now;
+      animation.startTimestamp = now;
     }
 
     return {
+      type: 'spring',
       onFrame: spring,
       onStart,
       toValue,
       velocity: config.velocity || 0,
       current: toValue,
+      startValue: 0,
       callback,
       lastTimestamp: 0,
-      firstTimestamp: 0,
+      startTimestamp: 0,
       newDamping: 0,
       newMass: 0,
     } as SpringAnimation;
