@@ -2,6 +2,7 @@ name: Test TypeScript and Lint
 on:
   pull_request:
     paths:
+      - '.github/workflows/static-example-apps-checks.yml'
       - 'Example/**'
       - 'FabricExample/**'
       - '*'
@@ -19,9 +20,9 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Use Node.js 16
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16
           cache: 'yarn'

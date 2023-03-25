@@ -115,7 +115,10 @@ export function createMapperRegistry() {
       }
     } else if (inputs.addListener) {
       resultArray.push(inputs);
-    } else if (typeof inputs === 'object') {
+    } else if (Object.getPrototypeOf(inputs) === Object.prototype) {
+      // we only extract inputs recursively from "plain" objects here, if object
+      // is of a derivative class (e.g. HostObject on web, or Map) we don't scan
+      // it recursively
       for (const element of Object.values(inputs)) {
         element && extractInputs(element, resultArray);
       }

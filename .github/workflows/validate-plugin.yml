@@ -2,6 +2,7 @@ name: Validate plugin
 on:
   pull_request:
     paths:
+      - '.github/workflows/validate-plugin.yml'
       - 'plugin/**'
   push:
     branches:
@@ -14,9 +15,9 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Use Node.js 16
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16
           cache: 'yarn'
