@@ -15,6 +15,7 @@ export function setupSetImmediate() {
   'worklet';
 
   let immediateCallbacks: Array<() => void> = [];
+  let flashImmediateRunning = false;
 
   // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
   global.setImmediate = (callback: () => void): number => {
@@ -23,11 +24,16 @@ export function setupSetImmediate() {
   };
 
   global.__flushImmediates = () => {
+    if (flashImmediateRunning) {
+      return;
+    }
+    flashImmediateRunning = true;
     for (let index = 0; index < immediateCallbacks.length; index += 1) {
       // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
       immediateCallbacks[index]();
     }
     immediateCallbacks = [];
+    flashImmediateRunning = false;
   };
 }
 
