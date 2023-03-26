@@ -478,7 +478,7 @@ function Frame() {
   return <View pointerEvents="none" style={styles.frame} />;
 }
 
-export default function BillardExample() {
+export default function BilliardExample() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.content}>

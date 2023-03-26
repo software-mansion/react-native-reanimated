@@ -10,7 +10,7 @@ import AnimatedSensorExample from './src/AnimatedSensorExample';
 import AnimatedTextInputExample from './src/AnimatedTextInputExample';
 import AnimatedTextWidthExample from './src/AnimatedTextWidthExample';
 import ArticleProgressExample from './src/ArticleProgressExample';
-import BillardExample from './src/BillardExample';
+import BilliardExample from './src/BilliardExample';
 import BokehExample from './src/BokehExample';
 import BouncingBoxExample from './src/BouncingBoxExample';
 import BubblesExample from './src/BubblesExample';
@@ -67,10 +67,10 @@ const EXAMPLES = [
     component: BubblesExample,
   },
   {
-    name: 'BillardExample',
+    name: 'BilliardExample',
     icon: '🎱',
-    title: 'Billard',
-    component: BillardExample,
+    title: 'Billiard',
+    component: BilliardExample,
   },
   {
     name: 'ColorExample',
