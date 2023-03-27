@@ -1,6 +1,5 @@
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
-import reanimatedPluginVersion from '../../package.json';
 
 export function injectVersion(
   path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>
@@ -13,7 +12,8 @@ export function injectVersion(
     return;
   }
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-  const versionString = reanimatedPluginVersion.version;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const versionString = require('../../package.json').version;
   const pluginVersionNode = BabelTypes.expressionStatement(
     BabelTypes.assignmentExpression(
       '=',

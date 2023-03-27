@@ -1,7 +1,7 @@
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
-import { isRelease } from './commonFunctions';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { isRelease } from './utils';
+import { ReanimatedPluginPass } from './types';
 
 function generateInlineStylesWarning(
   t: typeof BabelCore.types,

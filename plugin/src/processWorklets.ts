@@ -1,6 +1,6 @@
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processWorkletFunction } from './processWorkletFunction';
 

@@ -1,7 +1,7 @@
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
 import { globals } from './commonObjects';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { processWorklets } from './processWorklets';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';

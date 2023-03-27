@@ -5,8 +5,8 @@ import traverse from '@babel/traverse';
 import { transformSync } from '@babel/core';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
-import { ReanimatedPluginPass } from './commonInterfaces';
-import { isRelease } from './commonFunctions';
+import { ReanimatedPluginPass } from './types';
+import { isRelease } from './utils';
 import { globals } from './commonObjects';
 
 function hash(str: string): number {
