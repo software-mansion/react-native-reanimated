@@ -1,6 +1,7 @@
 # Reanimated Babel plugin
 
 To compile it, either use `yarn` or explicitly use `yarn plugin` in the root directory or `yarn` in `plugin/`.
+If you want to make any changes to Reanimated Babel plugin, do not edit anything in `build/`, it's a directory for automatically bundled files. Commit your changes to `.ts` files in `src/` instead and make sure to compile them afterwards.
 
 ## Why do we need this plugin?
 
