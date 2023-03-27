@@ -11,6 +11,7 @@ function hash(str: string): number {
 
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
+
 function isRelease() {
   return (
     process.env.BABEL_ENV &&
@@ -31,4 +32,5 @@ function shouldGenerateSourceMap() {
 
   return true;
 }
+
 export { hash, isRelease, shouldGenerateSourceMap };
