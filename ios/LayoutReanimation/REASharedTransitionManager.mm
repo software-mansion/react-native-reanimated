@@ -414,12 +414,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
     bool isInteractive = [self isInteractiveScreenChange:screen];
-    _isSharedProgressTransition = isInteractive ? YES : NO;
     // screen is removed from React tree (navigation.navigate(<screenName>))
     bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
     // click on button goBack on native header
     bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
-    bool shouldRunTransition = isScreenRemovedFromReactTree || isTriggeredByGoBackButton;
+    bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) && !(isInteractive && [_currentSharedTransitionViews count] > 0);
+    _isSharedProgressTransition = isInteractive && shouldRunTransition ? YES : NO;
     if (shouldRunTransition) {
       [self runSharedTransitionForSharedViewsOnScreen:screen];
     } else {
