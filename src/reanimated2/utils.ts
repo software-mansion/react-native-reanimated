@@ -30,5 +30,5 @@ export function getRelativeCoords(
 
 export function isSharedValue<T>(value: any): value is SharedValue<T> {
   'worklet';
-  return typeof value === 'object' && value._isReanimatedSharedValue === true;
+  return value?._isReanimatedSharedValue === true;
 }

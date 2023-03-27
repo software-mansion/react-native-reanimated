@@ -28,7 +28,7 @@ class BaseAnimationMock {
     return this;
   }
 
-  withCallback(_: (finsihed: boolean) => void) {
+  withCallback(_: (finished: boolean) => void) {
     return this;
   }
 
