@@ -45,8 +45,10 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
-  BOOL _isProgressTransition;
+  BOOL _isSharedProgressTransition;
   BOOL _isAsyncSharedTransitionConfigured;
+  double _lastTransitionProgressValue;
+  UIView *_droppedStack;
 }
 
 /*
@@ -74,7 +76,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _isAsyncSharedTransitionConfigured = NO;
-    _isProgressTransition = NO;
+    _isSharedProgressTransition = NO;
+    _lastTransitionProgressValue = -1;
     [self swizzleScreensMethods];
   }
   return self;
@@ -177,11 +180,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
   NSArray<REASharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
                                                                            withNewElements:NO];
   if ([sharedElements count] == 0) {
+    _isSharedProgressTransition = NO;
     return NO;
   }
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
-  if (!_isProgressTransition) {
+  if (!_isSharedProgressTransition) {
     [self startSharedTransition:sharedElements];
   }
   return YES;
@@ -391,7 +395,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)swizzled_viewDidAppear:(BOOL)animated
 {
-  // call original method from react-native-screens, self == RNSScreenView
+  // call original method from react-native-screens, self == RNSScreen
   [self swizzled_viewDidAppear:animated];
   [_sharedTransitionManager screenTransitionFinished];
 }
@@ -409,9 +413,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
   bool isModal = [REAScreensHelper isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
   if ((stack != nil || isModal) && !isRemovedInParentStack) {
-    bool isInteractive =
-        [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
-    _isProgressTransition = isInteractive ? YES : NO;
+    bool isInteractive = [self isInteractiveScreenChange:screen];
+    _isSharedProgressTransition = isInteractive ? YES : NO;
     // screen is removed from React tree (navigation.navigate(<screenName>))
     bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
     // click on button goBack on native header
@@ -425,8 +428,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [self restoreViewsVisibility];
   } else {
     // removed stack
-    [self clearConfigForStack:stack];
+    [self maybeClearConfigForStack:stack isInteractive:[self isInteractiveScreenChange:screen]];
   }
+}
+
+- (bool)isInteractiveScreenChange:(UIView *)screen
+{
+  return [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
 }
 
 - (NSDictionary *)computeAnimationFrameWithProgress:(double)progress forSharedElement:(REASharedElement *)sharedElement
@@ -447,7 +455,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)onScreenTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
 {
-  if (!_isProgressTransition) {
+  _lastTransitionProgressValue = progress;
+  if (!_isSharedProgressTransition) {
     return;
   }
   for (REASharedElement *sharedElement in _sharedElements) {
@@ -485,7 +494,16 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [_viewsToHide removeAllObjects];
 }
 
-- (void)clearConfigForStack:(UIView *)stack
+- (void)maybeClearConfigForStack:(UIView *)stack isInteractive:(bool)isInteractive
+{
+  if (isInteractive) {
+    [self maybeClearConfigForStackLeater:stack];
+  } else {
+    [self clearConfigForStackNow:stack];
+  }
+}
+
+- (void)clearConfigForStackNow:(UIView *)stack
 {
   for (UIView *child in stack.reactSubviews) {
     REANodeFind(child, ^int(id<RCTComponent> _Nonnull view) {
@@ -493,6 +511,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
       return false;
     });
   }
+}
+
+- (void)maybeClearConfigForStackLeater:(UIView *)stack
+{
+  _droppedStack = stack;
 }
 
 - (BOOL)isScreen:(UIView *)screen outsideStack:(UIView *)stack
@@ -713,7 +736,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)screenTransitionFinished
 {
-  if (_isProgressTransition) {
+  if (_isSharedProgressTransition) {
+    if ([self isSwipeBackDismissed]) {
+      [_removedViews removeAllObjects];
+    }
     NSMutableArray<UIView *> *sharedViewToClean = [NSMutableArray new];
     for (REASharedElement *sharedElement in _sharedElements) {
       [sharedViewToClean addObject:sharedElement.sourceView];
@@ -722,8 +748,23 @@ static REASharedTransitionManager *_sharedTransitionManager;
     for (UIView *sharedView in sharedViewToClean) {
       [self finishSharedAnimation:sharedView];
     }
-    _isProgressTransition = NO;
+    _isSharedProgressTransition = NO;
   }
+  if (_droppedStack != nil && ![self isSwipeBackDismissed]) {
+    [self clearConfigForStackNow:_droppedStack];
+  }
+  _droppedStack = nil;
+}
+
+/* 
+  The transition progress should change from 0 to 1, but if it ends up
+  being 0, it means that the user dismissed the swipe back and stayed 
+  on the same screen. Since '_lastTransitionProgressValue' is a type 
+  of double, comparing it to 0 using '==' might not always work. 
+*/
+- (bool)isSwipeBackDismissed
+{
+  return _lastTransitionProgressValue < 0.5;
 }
 
 @end
