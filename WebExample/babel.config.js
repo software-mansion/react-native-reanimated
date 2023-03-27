@@ -1,5 +1,10 @@
 module.exports = function (api) {
-  api.cache(true);
+  const disableBabelPlugin = process.env.DISABLE_BABEL_PLUGIN === '1';
+  // https://babeljs.io/docs/en/config-files#apicache
+  api.cache.invalidate(() => disableBabelPlugin);
+  if (disableBabelPlugin) {
+    console.log('Starting Web example without Babel plugin.');
+  }
   return {
     presets: ['babel-preset-expo'],
     plugins: [
@@ -15,7 +20,7 @@ module.exports = function (api) {
         },
       ],
       '@babel/plugin-proposal-export-namespace-from',
-      'react-native-reanimated/plugin',
-    ],
+      !disableBabelPlugin && 'react-native-reanimated/plugin',
+    ].filter(Boolean),
   };
 };
