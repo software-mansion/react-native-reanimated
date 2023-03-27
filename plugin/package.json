@@ -9,9 +9,9 @@
   "readmeFilename": "README.md",
   "scripts": {
     "prepare": "yarn generate",
-    "generate": "yarn tsc && yarn bundle",
+    "generate": "yarn tsc && yarn bundle && yarn clean",
     "clean": "rm src/*.js src/*.js.map",
-    "bundle": "yarn esbuild src/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --log-level=warning --platform=node --sourcemap=linked --outfile=build/plugin.js && yarn clean",
+    "bundle": "yarn esbuild src/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --log-level=warning --platform=node --sourcemap=linked --outfile=build/plugin.js",
     "format": "yarn prettier --write --list-different **/*.ts",
     "lint": "yarn eslint --max-warnings=0 --ext .ts . && yarn prettier --check **/*.ts",
     "type:check": "yarn tsc --noEmit"
