@@ -1,23 +1,23 @@
-import React from 'react';
-import {
-  ScreenStack,
-  Screen,
-  ScreenStackHeaderConfig,
-} from 'react-native-screens';
 import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  PanGestureChangeEventPayload,
   GestureUpdateEvent,
+  PanGestureChangeEventPayload,
 } from 'react-native-gesture-handler';
-// import { useJSThreadKiller } from './useJSThreadKiller';
+import {
+  Screen,
+  ScreenStack,
+  ScreenStackHeaderConfig,
+} from 'react-native-screens';
+import { StyleSheet, View } from 'react-native';
+
+import React from 'react';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   ScreenStackHeaderConfig

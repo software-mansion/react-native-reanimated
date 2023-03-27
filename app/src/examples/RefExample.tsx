@@ -3,7 +3,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, View, StyleSheet } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
@@ -11,7 +11,7 @@ export type ChildHandle = {
   toggleState: () => void;
 };
 
-type ChildProps = {};
+type ChildProps = Record<string, never>;
 
 const Child = React.forwardRef<ChildHandle, ChildProps>((_, ref) => {
   const [state, setState] = React.useState(0);

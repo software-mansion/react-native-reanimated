@@ -1,16 +1,17 @@
 import Animated, {
-  useAnimatedStyle,
-  useAnimatedKeyboard,
   KeyboardState,
+  useAnimatedKeyboard,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
 import {
-  View,
   Button,
-  TextInput,
-  StyleSheet,
   Keyboard,
   ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from 'react-native';
+
 import React from 'react';
 
 const BOX_SIZE = 50;
@@ -20,7 +21,7 @@ function NestedView(): React.ReactElement {
   return <View style={styles.nestedView} />;
 }
 
-function AnimatedStyleUpdateExample(): React.ReactElement {
+export default function AnimatedKeyboardExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const OPENING = KeyboardState.OPENING;
   const style = useAnimatedStyle(() => {
@@ -85,5 +86,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffff00',
   },
 });
-
-export default AnimatedStyleUpdateExample;
