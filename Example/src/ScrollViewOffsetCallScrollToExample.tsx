@@ -24,18 +24,20 @@ export default function ScrollViewOffsetCallScrollToExample() {
     scrollHandler.value = withTiming(Math.random() * 5000);
   };
 
-  useAnimatedReaction(() => {
-    return scrollHandler.value
-  }, 
+  useAnimatedReaction(
+    () => {
+      return scrollHandler.value;
+    },
     (value) => {
-    scrollTo(aref2, 0, value, false);
-  })
+      scrollTo(aref2, 0, value, false);
+    }
+  );
 
   useAnimatedStyle(() => {
     console.log(scrollHandler.value);
     console.log(scrollHandler2.value);
     return {};
-  })
+  });
 
   return (
     <>
@@ -52,24 +54,20 @@ export default function ScrollViewOffsetCallScrollToExample() {
       </View>
       <View style={styles.divider} />
       <View style={styles.scrollsContainer}>
-      <Animated.ScrollView
-        ref={aref}
-        style={styles.scrollView}>
-        {[...Array(100)].map((_, i) => (
-          <Text key={i} style={styles.text}>
-            {i}
-          </Text>
-        ))}
-      </Animated.ScrollView>
-      <Animated.ScrollView
-        ref={aref2}
-        style={styles.scrollView}>
-        {[...Array(100)].map((_, i) => (
-          <Text key={i} style={styles.text}>
-            {i}
-          </Text>
-        ))}
-      </Animated.ScrollView>
+        <Animated.ScrollView ref={aref} style={styles.scrollView}>
+          {[...Array(100)].map((_, i) => (
+            <Text key={i} style={styles.text}>
+              {i}
+            </Text>
+          ))}
+        </Animated.ScrollView>
+        <Animated.ScrollView ref={aref2} style={styles.scrollView}>
+          {[...Array(100)].map((_, i) => (
+            <Text key={i} style={styles.text}>
+              {i}
+            </Text>
+          ))}
+        </Animated.ScrollView>
       </View>
     </>
   );
