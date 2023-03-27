@@ -1,6 +1,6 @@
 import * as BabelCore from '@babel/core';
 
-interface ReanimatedPluginPass {
+export interface ReanimatedPluginPass {
   file: BabelCore.BabelFile;
   key: string;
   opts: {
@@ -13,5 +13,3 @@ interface ReanimatedPluginPass {
   set(key: unknown, value: unknown): void;
   [key: string]: unknown;
 }
-
-export { ReanimatedPluginPass };

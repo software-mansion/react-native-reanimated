@@ -96,7 +96,7 @@ function processStyleObjectForInlineStylesWarning(
   }
 }
 
-function processInlineStylesWarning(
+export function processInlineStylesWarning(
   t: typeof BabelCore.types,
   path: BabelCore.NodePath<BabelTypes.JSXAttribute>,
   state: ReanimatedPluginPass
@@ -131,5 +131,3 @@ function processInlineStylesWarning(
     ); // why is it not inferred? [TO DO]
   }
 }
-
-export { processInlineStylesWarning };

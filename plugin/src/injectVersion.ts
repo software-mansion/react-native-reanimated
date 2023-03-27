@@ -2,7 +2,9 @@ import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
 import reanimatedPluginVersion from '../../package.json';
 
-function injectVersion(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
+export function injectVersion(
+  path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>
+) {
   // We want to inject plugin's version only once,
   // hence we have a Directive Literal line in Reanimated code.
   // See src/reanimated2/platform-specific/checkPluginVersion.ts
@@ -30,5 +32,3 @@ function injectVersion(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
   functionParent.body.directives = [];
   functionParent.body.body.unshift(pluginVersionNode);
 }
-
-export { injectVersion };

@@ -3,7 +3,7 @@ import * as BabelTypes from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { makeWorklet } from './makeWorklet';
 
-function processWorkletObjectMethod(
+export function processWorkletObjectMethod(
   t: typeof BabelCore.types,
   path: BabelCore.NodePath<BabelTypes.ObjectMethod>,
   state: ReanimatedPluginPass
@@ -23,5 +23,3 @@ function processWorkletObjectMethod(
 
   path.replaceWith(replacement);
 }
-
-export { processWorkletObjectMethod };

@@ -2,12 +2,37 @@ import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { processWorkletFunction } from './processWorkletFunction';
-import {
-  gestureHandlerBuilderMethods,
-  gestureHandlerGestureObjects,
-} from './commonObjects';
 
-function processIfGestureHandlerEventCallbackFunctionNode(
+const gestureHandlerGestureObjects = new Set([
+  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
+  'Tap',
+  'Pan',
+  'Pinch',
+  'Rotation',
+  'Fling',
+  'LongPress',
+  'ForceTouch',
+  'Native',
+  'Manual',
+  'Race',
+  'Simultaneous',
+  'Exclusive',
+]);
+
+const gestureHandlerBuilderMethods = new Set([
+  'onBegin',
+  'onStart',
+  'onEnd',
+  'onFinalize',
+  'onUpdate',
+  'onChange',
+  'onTouchesDown',
+  'onTouchesMove',
+  'onTouchesUp',
+  'onTouchesCancelled',
+]);
+
+export function processIfGestureHandlerEventCallbackFunctionNode(
   t: typeof BabelCore.types,
   fun: BabelCore.NodePath<
     | BabelTypes.FunctionDeclaration
@@ -133,5 +158,3 @@ function isGestureObject(
     gestureHandlerGestureObjects.has(node.callee.property.name)
   );
 }
-
-export { processIfGestureHandlerEventCallbackFunctionNode };

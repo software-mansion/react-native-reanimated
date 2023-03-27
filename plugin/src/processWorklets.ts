@@ -1,11 +1,34 @@
 import * as BabelCore from '@babel/core';
 import * as BabelTypes from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
-import { objectHooks, functionArgsToWorkletize } from './commonObjects';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processWorkletFunction } from './processWorkletFunction';
 
-function processWorklets(
+/**
+ * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
+ */
+const functionArgsToWorkletize = new Map([
+  ['useFrameCallback', [0]],
+  ['useAnimatedStyle', [0]],
+  ['useAnimatedProps', [0]],
+  ['createAnimatedPropAdapter', [0]],
+  ['useDerivedValue', [0]],
+  ['useAnimatedScrollHandler', [0]],
+  ['useAnimatedReaction', [0, 1]],
+  ['useWorkletCallback', [0]],
+  // animations' callbacks
+  ['withTiming', [2]],
+  ['withSpring', [2]],
+  ['withDecay', [1]],
+  ['withRepeat', [3]],
+]);
+
+const objectHooks = new Set([
+  'useAnimatedGestureHandler',
+  'useAnimatedScrollHandler',
+]);
+
+export function processWorklets(
   t: typeof BabelCore.types,
   path: BabelCore.NodePath<BabelTypes.CallExpression>,
   state: ReanimatedPluginPass
@@ -72,5 +95,3 @@ function processWorklets(
     }
   }
 }
-
-export { processWorklets };

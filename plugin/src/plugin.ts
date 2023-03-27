@@ -8,9 +8,7 @@ import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGes
 import { processInlineStylesWarning } from './processInlineStylesWarning';
 import { injectVersion } from './injectVersion';
 
-module.exports = function ({
-  types: t,
-}: typeof BabelCore): BabelCore.PluginItem {
+export default function ({ types: t }: typeof BabelCore): BabelCore.PluginItem {
   return {
     pre() {
       // allows adding custom globals such as host-functions
@@ -54,4 +52,4 @@ module.exports = function ({
       },
     },
   };
-};
+}

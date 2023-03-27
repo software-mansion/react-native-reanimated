@@ -3,7 +3,7 @@ import * as BabelTypes from '@babel/types';
 import { ReanimatedPluginPass } from './commonInterfaces';
 import { processWorkletFunction } from './processWorkletFunction';
 
-function processIfWorkletNode(
+export function processIfWorkletNode(
   t: typeof BabelCore.types,
   fun: BabelCore.NodePath<
     | BabelTypes.FunctionDeclaration
@@ -39,5 +39,3 @@ function processIfWorkletNode(
     },
   });
 }
-
-export { processIfWorkletNode };
