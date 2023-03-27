@@ -255,6 +255,19 @@ if(${JS_RUNTIME} STREQUAL "hermes")
                 NO_CMAKE_FIND_ROOT_PATH
             )
         endif()
+        if(${REACT_NATIVE_MINOR_VERSION} LESS_EQUAL 67)
+            find_library(
+                    HERMES_INSPECTOR_LIB
+                    hermes-inspector
+                    PATHS ${LIBRN_DIR}
+                    NO_DEFAULT_PATH
+                    NO_CMAKE_FIND_ROOT_PATH
+            )
+            target_link_libraries(
+                    ${PACKAGE_NAME}
+                    ${HERMES_INSPECTOR_LIB}
+            )
+        endif()
         target_link_libraries(
                 ${PACKAGE_NAME}
                 ${HERMES_EXECUTOR_LIB}

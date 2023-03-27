@@ -157,7 +157,6 @@ describe('colors interpolation', () => {
 
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
 
     expect(view).toHaveAnimatedStyle(
       { backgroundColor: 'rgba(71, 117, 73, 1)' },
@@ -165,7 +164,6 @@ describe('colors interpolation', () => {
     );
 
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
 
     expect(view).toHaveAnimatedStyle(
       { backgroundColor: 'rgba(96, 144, 32, 1)' },

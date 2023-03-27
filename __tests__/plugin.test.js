@@ -16,6 +16,34 @@ describe('babel plugin', () => {
     process.env.REANIMATED_PLUGIN_TESTS = 'jest';
   });
 
+  it('injects its version', () => {
+    const input = `
+      function foo() {
+        'inject Reanimated Babel plugin version';
+        var foo = 'bar';
+      }
+    `;
+
+    const { code } = runPlugin(input, {});
+    const { version: packageVersion } = require('../package.json');
+    expect(code).toContain(
+      `global._REANIMATED_VERSION_BABEL_PLUGIN = "${packageVersion}"`
+    );
+    expect(code).not.toContain('inject Reanimated Babel plugin version');
+  });
+
+  it("doesn't bother other Directive Literals", () => {
+    const input = `
+      function foo() {
+        'foobar';
+        var foo = 'bar';
+      }
+    `;
+
+    const { code } = runPlugin(input, {});
+    expect(code).toContain('foobar');
+  });
+
   it('transforms', () => {
     const input = `
       import Animated, {
@@ -132,6 +160,20 @@ describe('babel plugin', () => {
       }
     `;
 
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't remove nested 'worklets'", () => {
+    const input = `
+    function foo(x) {
+      'worklet';
+      function bar(x) {
+        'worklet';
+        return x + 2;
+      }
+      return bar(x) + 1;
+    }`;
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
@@ -554,6 +596,67 @@ describe('babel plugin', () => {
       const obj = {a: 1, b: 2};
       (0, fun)({ onStart() {'worklet'; const a = obj.a;} }, []);
     }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style', () => {
+    const input = `
+    function App() {
+      return <Animated.View style={{ width: sharedValue.value }} />;
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style, style array', () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={[style, { width: sharedValue.value }]} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('shows a warning if user uses .value inside inline style, transforms', () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={{ transform: [{ translateX: sharedValue.value }] }} />
+      );
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't show a warning if user writes something like style={styles.value}", () => {
+    const input = `
+    function App() {
+      return <Animated.View style={styles.value} />;
+    }    
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't break if there is a spread syntax", () => {
+    const input = `
+    function App() {
+      return (
+        <Animated.View style={[style, { ...styles.container, width: sharedValue.value }]} />
+      );
+    }    
     `;
 
     const { code } = runPlugin(input);

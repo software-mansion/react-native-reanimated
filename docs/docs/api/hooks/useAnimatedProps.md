@@ -6,11 +6,11 @@ sidebar_label: useAnimatedProps
 
 This hook is a counterpart of [`useAnimatedStyle`](useAnimatedStyle.md) hook, but works for a non-style view properties.
 It allows for defining a set of native view properties that can be updated on the UI thread as a response to a Shared Value change.
-Similarily to [`useAnimatedStyle`](useAnimatedStyle.md), this hook takes a single worklet (it is not necessary to add `worklet` directive here, because the method will be converted to worklet automatically).
-The provided worklet is responsible for returning a object with view properties.
+Similarly to [`useAnimatedStyle`](useAnimatedStyle.md), this hook takes a single worklet (it is not necessary to add `worklet` directive here, because the method will be converted to worklet automatically).
+The provided worklet is responsible for returning an object with view properties.
 
 Only "native" properties of "native views" can be set via `useAnimatedProps`.
-The most common usecase for this hook is when we want to animate properties of some third-party native component, since most of the properties for the core React Native components are a part of the styles anyways (at least the properties for which it makes sense to be animated).
+The most common use case for this hook is when we want to animate properties of some third-party native component, since most of the properties for the core React Native components are a part of the styles anyways (at least the properties for which it makes sense to be animated).
 You can use the following functions to animate properties that Reanimated don't support by default:
 
 1. `addWhitelistedNativeProps()` is used to animate properties that trigger layout recalculation, you can find them [here](https://github.com/software-mansion/react-native-reanimated/blob/2.3.0/src/ConfigHelper.ts#L31).

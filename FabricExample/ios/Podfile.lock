@@ -779,7 +779,7 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-  - RNReanimated (3.0.0-rc.10):
+  - RNReanimated (3.0.2):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -808,7 +808,7 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (3.19.0):
+  - RNScreens (3.20.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -816,8 +816,8 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 3.19.0)
-  - RNScreens/common (3.19.0):
+    - RNScreens/common (= 3.20.0)
+  - RNScreens/common (3.20.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -825,7 +825,7 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-  - RNSVG (13.7.0):
+  - RNSVG (13.8.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -833,8 +833,8 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-    - RNSVG/common (= 13.7.0)
-  - RNSVG/common (13.7.0):
+    - RNSVG/common (= 13.8.0)
+  - RNSVG/common (13.8.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1077,9 +1077,9 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 7bf0dafc7b727d93c8cb94eb00a9d3753c446c3e
   ReactCommon: 6f65ea5b7d84deb9e386f670dd11ce499ded7b40
   RNGestureHandler: 9d2ebd17a9fef618d9720e3d95ff5e6607acf8d4
-  RNReanimated: ece347a0bbce1a358629b469ff88a37fc8c00f42
-  RNScreens: a838934f2f0d915c8a756409d674a862b70b1677
-  RNSVG: f49e247b4ea8b56c27ac52aa92259361b202ba7e
+  RNReanimated: b38271c7b72560b7f9c3d0bf531faa8feb4da93a
+  RNScreens: 4666ca0a74ee229b2332c5d22d2a8b81ba9202be
+  RNSVG: 6b96501d7df80ed8b4fe55d903b4f1476a57e8a5
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 5ed1699acbba8863755998a4245daa200ff3817b
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a

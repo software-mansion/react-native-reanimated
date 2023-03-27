@@ -13,7 +13,6 @@ module.exports = {
         'fundamentals/custom_events',
         'fundamentals/layout_animations',
         'fundamentals/architecture',
-        'fundamentals/migration',
         'fundamentals/web-support',
         'fundamentals/troubleshooting',
       ],
@@ -55,6 +54,9 @@ module.exports = {
             'api/LayoutAnimations/keyframeAnimations',
             'api/LayoutAnimations/layoutTransitions',
           ],
+        },
+        'api/sharedElementTransitions',
+        {
           'Native methods': [
             'api/nativeMethods/measure',
             'api/nativeMethods/scrollTo',
@@ -72,7 +74,12 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guide/testing', 'guide/debugging'],
+      items: [
+        'guide/testing',
+        'guide/debugging',
+        'guide/migration-from-1.x',
+        'guide/migration-from-2.x',
+      ],
     },
     {
       type: 'category',

@@ -16,7 +16,7 @@ CoreFunction::CoreFunction(
                       .asString(rt)
                       .utf8(rt);
   location_ = "worklet_" +
-      std::to_string(static_cast<unsigned long long>(
+      std::to_string(static_cast<uint64_t>(
           workletObject.getProperty(rt, "__workletHash").getNumber()));
 }
 

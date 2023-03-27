@@ -42,6 +42,12 @@
   return NSStringFromClass([RCTUIManager class]);
 }
 
+- (void)invalidate
+{
+  [_animationsManager invalidate];
+  [super invalidate];
+}
+
 - (void)setBridge:(RCTBridge *)bridge
 {
   if (!_blockSetter) {
@@ -223,6 +229,8 @@
 
     __block NSUInteger completionsCalled = 0;
 
+    NSMutableDictionary<NSNumber *, REASnapshot *> *snapshotsBefore = [NSMutableDictionary dictionary];
+
     NSInteger index = 0;
     for (NSNumber *reactTag in reactTags) {
       RCTFrameData frameData = frameDataArray[index++];
@@ -259,6 +267,7 @@
 
       // Reanimated changes /start
       REASnapshot *snapshotBefore = isNew ? nil : [self->_animationsManager prepareSnapshotBeforeMountForView:view];
+      snapshotsBefore[reactTag] = snapshotBefore;
       // Reanimated changes /end
 
       if (creatingLayoutAnimation) {
@@ -305,19 +314,30 @@
         [view reactSetFrame:frame];
         completion(YES);
       }
+    }
 
-      // Reanimated changes /start
+    // Reanimated changes /start
+    index = 0;
+    for (NSNumber *reactTag in reactTags) {
+      RCTFrameData frameData = frameDataArray[index++];
+      UIView *view = viewRegistry[reactTag];
+      BOOL isNew = frameData.isNew;
+      CGRect frame = frameData.frame;
+
+      REASnapshot *snapshotBefore = snapshotsBefore[reactTag];
+
       if (isNew || snapshotBefore != nil) {
         [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
       }
-      // Reanimated changes /end
     }
+
     // Clean up
     // below line serves as this one uiManager->_layoutAnimationGroup = nil;, because we don't have access to the
     // private field
     [uiManager setNextLayoutAnimationGroup:nil];
 
     [self->_animationsManager viewsDidLayout];
+    // Reanimated changes /end
   };
 }
 

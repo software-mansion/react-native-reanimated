@@ -95,7 +95,7 @@ describe('Tests of animations', () => {
 
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers(); // timers scheduled for the exact 250ms won't run without this additional call
+
     style.width = 50; // value of component width after 150ms of animation
     expect(view).toHaveAnimatedStyle(style);
   });
@@ -109,7 +109,6 @@ describe('Tests of animations', () => {
 
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
-    jest.runOnlyPendingTimers();
     style.width = 50; // value of component width after 250ms of animation
     expect(view).toHaveAnimatedStyle(style, true);
   });

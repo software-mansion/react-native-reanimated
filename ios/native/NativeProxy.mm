@@ -1,3 +1,4 @@
+#import <RNReanimated/LayoutAnimationsManager.h>
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
@@ -152,11 +153,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
-      jsi::Object global = rt.global();
-      jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
-      global.setProperty(rt, frameTimestampName, frameTimestamp);
       onRender(frameTimestamp);
-      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
     }];
   };
 
@@ -300,36 +297,57 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 #else
   // Layout Animation callbacks setup
-  [animationsManager setAnimationStartingBlock:^(
-                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
-    jsi::Runtime &rt = *wrt.lock();
-    jsi::Object yogaValues(rt);
-    for (NSString *key in values.allKeys) {
-      NSNumber *value = values[key];
-      yogaValues.setProperty(rt, [key UTF8String], [value doubleValue]);
+  [animationsManager
+      setAnimationStartingBlock:^(
+          NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
+        auto reaModule = weakModule.lock();
+        if (reaModule == nullptr) {
+          return;
+        }
+
+        jsi::Runtime &rt = *wrt.lock();
+        jsi::Object yogaValues(rt);
+        for (NSString *key in values.allKeys) {
+          NSObject *value = values[key];
+          if ([values[key] isKindOfClass:[NSArray class]]) {
+            NSArray *transformArray = (NSArray *)value;
+            jsi::Array matrix(rt, 9);
+            for (int i = 0; i < 9; i++) {
+              matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+            }
+            yogaValues.setProperty(rt, [key UTF8String], matrix);
+          } else {
+            yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
+          }
+        }
+
+        reaModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
+      }];
+
+  [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
+    auto reaModule = weakModule.lock();
+    if (reaModule == nullptr) {
+      return NO;
     }
-
-    weakModule.lock()->layoutAnimationsManager().startLayoutAnimation(
-        rt, [tag intValue], std::string([type UTF8String]), yogaValues);
-  }];
-
-  [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type) {
-    bool hasLayoutAnimation =
-        weakModule.lock()->layoutAnimationsManager().hasLayoutAnimation([tag intValue], std::string([type UTF8String]));
+    bool hasLayoutAnimation = reaModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
     return hasLayoutAnimation ? YES : NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    weakModule.lock()->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+    auto reaModule = weakModule.lock();
+    if (reaModule == nullptr) {
+      return;
+    }
+    reaModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
   [animationsManager
-      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, NSString *_Nonnull type, BOOL cancelled, BOOL removeView) {
+      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
         if (auto reaModule = weakModule.lock()) {
           if (auto runtime = wrt.lock()) {
             jsi::Runtime &rt = *runtime;
             reaModule->layoutAnimationsManager().cancelLayoutAnimation(
-                rt, [tag intValue], std::string([type UTF8String]), cancelled == YES, removeView == YES);
+                rt, [tag intValue], type, cancelled == YES, removeView == YES);
           }
         }
       }];
@@ -346,4 +364,4 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   return module;
 }
 
-}
+} // namespace reanimated

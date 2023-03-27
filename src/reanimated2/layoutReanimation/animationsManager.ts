@@ -1,21 +1,23 @@
-import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
 import {
   LayoutAnimationFunction,
+  LayoutAnimationType,
   LayoutAnimationsValues,
 } from './animationBuilder';
+import { runOnUIImmediately } from '../threads';
 
 const TAG_OFFSET = 1e9;
 
 function startObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
-  animationType: string
+  animationType: LayoutAnimationType
 ): void {
   'worklet';
-  const isSharedTransition = animationType === 'sharedElementTransition';
+  const isSharedTransition =
+    animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
     _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
@@ -35,22 +37,21 @@ function stopObservingProgress(
 function createLayoutAnimationManager() {
   'worklet';
   const enteringAnimationForTag = new Map();
-  const sharedTransitionForTag = new Map();
   const mutableValuesForTag = new Map();
 
   return {
     start(
       tag: number,
-      type: string,
+      type: LayoutAnimationType,
       yogaValues: LayoutAnimationsValues,
       config: LayoutAnimationFunction
     ) {
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 
-      if (type === 'entering') {
+      if (type === LayoutAnimationType.ENTERING) {
         enteringAnimationForTag.set(tag, currentAnimation);
-      } else if (type === 'layout') {
+      } else if (type === LayoutAnimationType.LAYOUT) {
         // When layout animation is requested, but entering is still running, we merge
         // new layout animation targets into the ongoing animation
         const enteringAnimation = enteringAnimationForTag.get(tag);
@@ -64,15 +65,8 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
+        stopObservingProgress(tag, value, false, false);
         value._value = style.initialValues;
-      }
-
-      if (sharedTransitionForTag.get(tag)) {
-        stopObservingProgress(tag, value, true, false);
-      }
-
-      if (type === 'sharedElementTransition') {
-        sharedTransitionForTag.set(tag, currentAnimation);
       }
 
       // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
@@ -81,9 +75,8 @@ function createLayoutAnimationManager() {
       animation.callback = (finished?: boolean) => {
         if (finished) {
           enteringAnimationForTag.delete(tag);
-          sharedTransitionForTag.delete(tag);
           mutableValuesForTag.delete(tag);
-          const shouldRemoveView = type === 'exiting';
+          const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
         style.callback &&
@@ -95,12 +88,15 @@ function createLayoutAnimationManager() {
     },
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);
+      if (!value) {
+        return;
+      }
       stopObservingProgress(tag, value, true, true);
     },
   };
 }
 
-runOnUI(() => {
+runOnUIImmediately(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
 })();
