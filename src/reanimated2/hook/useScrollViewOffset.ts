@@ -52,10 +52,6 @@ function useScrollToSharedValue<T>(
     makeMutable(init, oneWayReadsOnly, scrollSetter)
   );
 
-  if (ref.current === null) {
-    ref.current = makeMutable(init, oneWayReadsOnly, scrollSetter);
-  }
-
   useEffect(() => {
     return () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

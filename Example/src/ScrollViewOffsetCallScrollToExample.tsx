@@ -4,12 +4,17 @@ import Animated, {
   useScrollViewOffset,
   useAnimatedRef,
   withTiming,
+  useAnimatedReaction,
+  scrollTo,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
 export default function ScrollViewOffsetCallScrollToExample() {
   const aref = useAnimatedRef<Animated.ScrollView>();
+  const aref2 = useAnimatedRef<Animated.ScrollView>();
   const scrollHandler = useScrollViewOffset(aref);
+  const scrollHandler2 = useScrollViewOffset(aref2);
 
   const onChangeScrollValue = () => {
     scrollHandler.value = Math.random() * 5000;
@@ -18,6 +23,19 @@ export default function ScrollViewOffsetCallScrollToExample() {
   const onAnimatedChangeScrollValue = () => {
     scrollHandler.value = withTiming(Math.random() * 5000);
   };
+
+  useAnimatedReaction(() => {
+    return scrollHandler.value
+  }, 
+    (value) => {
+    scrollTo(aref2, 0, value, false);
+  })
+
+  useAnimatedStyle(() => {
+    console.log(scrollHandler.value);
+    console.log(scrollHandler2.value);
+    return {};
+  })
 
   return (
     <>
@@ -33,9 +51,9 @@ export default function ScrollViewOffsetCallScrollToExample() {
         />
       </View>
       <View style={styles.divider} />
+      <View style={styles.scrollsContainer}>
       <Animated.ScrollView
         ref={aref}
-        scrollEventThrottle={16}
         style={styles.scrollView}>
         {[...Array(100)].map((_, i) => (
           <Text key={i} style={styles.text}>
@@ -43,6 +61,16 @@ export default function ScrollViewOffsetCallScrollToExample() {
           </Text>
         ))}
       </Animated.ScrollView>
+      <Animated.ScrollView
+        ref={aref2}
+        style={styles.scrollView}>
+        {[...Array(100)].map((_, i) => (
+          <Text key={i} style={styles.text}>
+            {i}
+          </Text>
+        ))}
+      </Animated.ScrollView>
+      </View>
     </>
   );
 }
@@ -51,6 +79,9 @@ const styles = StyleSheet.create({
   positionView: {
     margin: 20,
     alignItems: 'center',
+  },
+  scrollsContainer: {
+    flexDirection: 'row',
   },
   scrollView: {
     flex: 1,
