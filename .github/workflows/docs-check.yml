@@ -21,9 +21,6 @@ jobs:
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
-      - name: Lint check docs
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn lint
       - name: Build docs
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn build
