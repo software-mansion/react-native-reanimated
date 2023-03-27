@@ -8,6 +8,7 @@ import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
 import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
+import ConfigExample from './ConfigExample';
 import EmptyExample from './EmptyExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import GestureHandlerExample from './GestureHandlerExample';
@@ -33,6 +34,11 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  ConfigExample: {
+    icon: '⚙️',
+    title: 'Config example',
+    screen: ConfigExample,
+  },
   WithoutBabelPluginExample: {
     icon: '🔌',
     title: 'Without Babel plugin example',
