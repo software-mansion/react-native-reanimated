@@ -588,49 +588,6 @@ export default function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
-        // TODO update config
-        const tag = findNodeHandle(ref);
-        const { layout, entering, exiting, sharedTransitionTag } = this.props;
-        if (
-          (layout || entering || exiting || sharedTransitionTag) &&
-          tag != null
-        ) {
-          if (!shouldBeUseWeb()) {
-            enableLayoutAnimations(true, false);
-          }
-          if (layout) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.LAYOUT,
-              maybeBuild(layout)
-            );
-          }
-          if (entering) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.ENTERING,
-              maybeBuild(entering)
-            );
-          }
-          if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.EXITING,
-              maybeBuild(exiting)
-            );
-          }
-          if (sharedTransitionTag) {
-            const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-              maybeBuild(sharedElementTransition),
-              sharedTransitionTag
-            );
-          }
-        }
-
         if (ref !== this._component) {
           this._component = ref;
         }
@@ -715,6 +672,59 @@ export default function createAnimatedComponent(
       return props;
     }
 
+    _configureLayoutAnimations() {
+      // other idea: keep list of refs to FiberNodes and get tag once React assigns it (before completeRoot)
+      // console.log(this._reactInternals.stateNode._reactInternalInstance);
+
+      // NOTE: This is a serious hack.
+      // When Fabric is enabled, `_setLocalRef` is called after `completeRoot`.
+      // Because of this, layout animation config is unknown during mounting.
+      // Unfortunately, React tag is assigned after `render` method is called.
+      // The function below will be called by ReanimatedUIManagerBinding when React calls "cloneNode".
+      global.__reanimatedCallMeLater = (tag: number) => {
+        const { layout, entering, exiting, sharedTransitionTag } = this.props;
+        if (
+          (layout || entering || exiting || sharedTransitionTag) &&
+          tag != null
+        ) {
+          if (!shouldBeUseWeb()) {
+            enableLayoutAnimations(true, false);
+          }
+          if (layout) {
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.LAYOUT,
+              maybeBuild(layout)
+            );
+          }
+          if (entering) {
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.ENTERING,
+              maybeBuild(entering)
+            );
+          }
+          if (exiting) {
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.EXITING,
+              maybeBuild(exiting)
+            );
+          }
+          if (sharedTransitionTag) {
+            const sharedElementTransition =
+              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+              maybeBuild(sharedElementTransition),
+              sharedTransitionTag
+            );
+          }
+        }
+      };
+    }
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
@@ -729,6 +739,9 @@ export default function createAnimatedComponent(
         web: {},
         default: { collapsable: false },
       });
+
+      this._configureLayoutAnimations();
+
       return (
         <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );

@@ -14,13 +14,17 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
+#import <RNReanimated/ReanimatedCommitHook.h>
 #import <RNReanimated/ReanimatedUIManagerBinding.h>
 #endif
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REASnapshot.h>
 #import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
+
+// #include <algorithm>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -43,8 +47,10 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
+  __weak RCTUIManager *_uiManager; // viewForReactTag
   std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_; // for observing shadow tree changes
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
@@ -67,6 +73,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
 #ifdef RCT_NEW_ARCH_ENABLED
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self.bridge.surfacePresenter removeObserver:self];
 #endif
   [_nodesManager invalidate];
   [super invalidate];
@@ -110,6 +117,15 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
   newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  // install ReanimatedCommitHook to observe ShadowTree changes
+  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule = reanimatedModule_.lock();
+  assert(nativeReanimatedModule != nullptr);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(nativeReanimatedModule);
+  uiManager->registerCommitHook(*commitHook_);
+#endif // RCT_NEW_ARCH_ENABLED
+
   [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
   [self setUpNativeReanimatedModule:uiManager];
 }
@@ -169,7 +185,13 @@ RCT_EXPORT_MODULE(ReanimatedModule);
                                              object:nil];
 
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  [bridge.surfacePresenter addObserver:self];
+  _uiManager = bridge.uiManager;
+#else
   [bridge.uiManager.observerCoordinator addObserver:self];
+#endif
 
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
@@ -247,7 +269,11 @@ RCT_EXPORT_METHOD(installTurboModule)
   _nodesManager = [[REANodesManager alloc] initWithModule:self uiManager:self.bridge.uiManager];
   _operations = [NSMutableArray new];
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  [bridge.surfacePresenter addObserver:self];
+#else
   [bridge.uiManager.observerCoordinator addObserver:self];
+#endif
 }
 
 #pragma mark-- Batch handling
@@ -310,5 +336,117 @@ RCT_EXPORT_METHOD(installTurboModule)
     [super sendEventWithName:eventName body:body];
   }
 }
+
+#pragma mark - RCTSurfacePresenterObserver
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+static NSMutableDictionary *beforeSnapshots = nil;
+static NSMutableDictionary *removedViews = nil;
+
+- (void)willMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+
+  if (beforeSnapshots == nil) {
+    beforeSnapshots = [[NSMutableDictionary alloc] init];
+    removedViews = [[NSMutableDictionary alloc] init];
+  }
+
+  [CATransaction begin];
+  // this transaction wraps transaction inside RCTPerformMountInstructions
+  // because we don't want to splash view for a single frame before entering/layout animations starts
+
+  //  if (auto reanimatedModule = reanimatedModule_.lock()) {
+  //    auto layoutAnimationsManager = reanimatedModule->layoutAnimationsManager();
+  //
+  //    // layout animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfUpdatedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "layout")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+  //          beforeSnapshots[@(tag)] = snapshot;
+  //        }
+  //      }
+  //    }
+  //
+  //    // exiting animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfRemovedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "exiting")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          view.reactTag = @(tag);
+  //          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+  //          beforeSnapshots[@(tag)] = snapshot;
+  //          UIView *removedView = [view snapshotViewAfterScreenUpdates:NO];
+  //          removedView.frame = view.frame;
+  //          removedViews[@(tag)] = removedView;
+  //        }
+  //      }
+  //    }
+  //  }
+}
+
+- (void)didMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+
+  //  if (auto reanimatedModule = reanimatedModule_.lock()) {
+  //    auto layoutAnimationsProxy = reanimatedModule->layoutAnimationsProxy_;
+  //
+  //    // entering animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfCreatedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "entering")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          view.reactTag = @(tag);
+  //          REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+  //          [self.nodesManager.animationsManager onViewCreate:view after:afterSnapshot];
+  //        }
+  //      }
+  //      layoutAnimationsProxy->tagsOfCreatedViews_.clear();
+  //    }
+  //
+  //    // layout animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfUpdatedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "layout")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+  //          [self.nodesManager.animationsManager onViewUpdate:view before:beforeSnapshots[@(tag)]
+  //          after:afterSnapshot];
+  //        }
+  //      }
+  //      layoutAnimationsProxy->tagsOfUpdatedViews_.clear();
+  //    }
+  //
+  //    // exiting animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfRemovedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "exiting")) {
+  //          UIView *windowView = UIApplication.sharedApplication.keyWindow;
+  //          UIView *removedView = removedViews[@(tag)];
+  //          [removedViews removeObjectForKey:@(tag)];
+  //          [windowView addSubview:removedView];
+  //          removedView.reactTag = @(tag);
+  //          UIView *superview = removedView.superview;
+  //          // TODO: fix exiting animations
+  //          [self.nodesManager.animationsManager removeChildren:@[ removedView ] fromContainer:superview];
+  //        }
+  //      }
+  //      layoutAnimationsProxy->tagsOfRemovedViews_.clear();
+  //    }
+  //  }
+
+  [CATransaction commit];
+}
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end

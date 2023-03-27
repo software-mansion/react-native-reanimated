@@ -12,7 +12,11 @@
 
 #import <RNReanimated/REANodesManager.h>
 
+#ifdef RCT_NEW_ARCH_ENABLED
+@interface REAModule : RCTEventEmitter <RCTBridgeModule, RCTEventDispatcherObserver, RCTSurfacePresenterObserver>
+#else
 @interface REAModule : RCTEventEmitter <RCTBridgeModule, RCTEventDispatcherObserver, RCTUIManagerObserver>
+#endif
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 

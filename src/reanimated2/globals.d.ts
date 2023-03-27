@@ -71,6 +71,7 @@ declare global {
     reportFatalError: (error: Error) => void;
   };
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
+  const __reanimatedCallMeLater: (tag: number) => void;
   const requestAnimationFrame: (callback: (time: number) => void) => number;
   const setImmediate: (callback: (time: number) => void) => number;
   const console: Console;
@@ -131,6 +132,20 @@ declare global {
         reportFatalError: (error: Error) => void;
       };
       _frameCallbackRegistry: FrameCallbackRegistryUI;
+
+      __reanimatedLastLayoutAnimation: {
+        config: LayoutAnimationFunction | Keyframe;
+        sv: SharedValue<null | Record<string, unknown>>;
+      };
+      __reanimatedLastEnteringAnimation: {
+        config: LayoutAnimationFunction | Keyframe;
+        sv: SharedValue<null | Record<string, unknown>>;
+      };
+      __reanimatedLastExitingAnimation: {
+        config: LayoutAnimationFunction | Keyframe;
+        sv: SharedValue<null | Record<string, unknown>>;
+      };
+      __reanimatedCallMeLater: (tag: number) => void;
       __workletsCache?: Map<string, (...args: any[]) => any>;
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
