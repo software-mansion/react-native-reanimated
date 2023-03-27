@@ -3,9 +3,9 @@
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
-#include "LayoutAnimationsProxy.h"
-
 #include <memory>
+
+#include "NativeReanimatedModule.h"
 
 using namespace facebook::react;
 
@@ -14,8 +14,8 @@ namespace reanimated {
 class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
-      std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy)
-      : layoutAnimationsProxy_(layoutAnimationsProxy) {}
+      std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule)
+      : nativeReanimatedModule_(nativeReanimatedModule) {}
 
   void commitHookWasRegistered(
       UIManager const &uiManager) const noexcept override {}
@@ -32,7 +32,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   virtual ~ReanimatedCommitHook() noexcept = default;
 
  private:
-  std::weak_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+  std::weak_ptr<NativeReanimatedModule> nativeReanimatedModule_;
 };
 
 } // namespace reanimated

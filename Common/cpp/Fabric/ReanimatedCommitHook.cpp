@@ -52,11 +52,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   }
 
   // TODO: schedule on UI
-  if (auto layoutAnimationsProxy = layoutAnimationsProxy_.lock()) {
-    layoutAnimationsProxy->tagsOfCreatedViews_ = tagsOfCreatedViews;
-    layoutAnimationsProxy->tagsOfUpdatedViews_ = tagsOfUpdatedViews;
-    layoutAnimationsProxy->tagsOfRemovedViews_ = tagsOfRemovedViews;
-  }
+  //  if (auto layoutAnimationsProxy = layoutAnimationsProxy_.lock()) {
+  //    layoutAnimationsProxy->tagsOfCreatedViews_ = tagsOfCreatedViews;
+  //    layoutAnimationsProxy->tagsOfUpdatedViews_ = tagsOfUpdatedViews;
+  //    layoutAnimationsProxy->tagsOfRemovedViews_ = tagsOfRemovedViews;
+  //  }
 
   return newRootShadowNode;
 }

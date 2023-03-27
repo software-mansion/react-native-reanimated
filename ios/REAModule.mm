@@ -120,12 +120,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   // install ReanimatedCommitHook to observe ShadowTree changes
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
-  if (auto reanimatedModule = reanimatedModule_.lock()) {
-    layoutAnimationsProxy = reanimatedModule->layoutAnimationsProxy_;
-  }
-  assert(layoutAnimationsProxy != nullptr);
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(layoutAnimationsProxy);
+  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule = reanimatedModule_.lock();
+  assert(nativeReanimatedModule != nullptr);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(nativeReanimatedModule);
   uiManager->registerCommitHook(*commitHook_);
 #endif // RCT_NEW_ARCH_ENABLED
 
@@ -360,91 +357,92 @@ static NSMutableDictionary *removedViews = nil;
   // this transaction wraps transaction inside RCTPerformMountInstructions
   // because we don't want to splash view for a single frame before entering/layout animations starts
 
-  if (auto reanimatedModule = reanimatedModule_.lock()) {
-    auto layoutAnimationsProxy = reanimatedModule->layoutAnimationsProxy_;
-
-    // layout animations
-    {
-      const auto &tags = layoutAnimationsProxy->tagsOfUpdatedViews_;
-      for (auto tag : tags) {
-        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "layout")) {
-          UIView *view = [_uiManager viewForReactTag:@(tag)];
-          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-          beforeSnapshots[@(tag)] = snapshot;
-        }
-      }
-    }
-
-    // exiting animations
-    {
-      const auto &tags = layoutAnimationsProxy->tagsOfRemovedViews_;
-      for (auto tag : tags) {
-        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "exiting")) {
-          UIView *view = [_uiManager viewForReactTag:@(tag)];
-          view.reactTag = @(tag);
-          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-          beforeSnapshots[@(tag)] = snapshot;
-          UIView *removedView = [view snapshotViewAfterScreenUpdates:NO];
-          removedView.frame = view.frame;
-          removedViews[@(tag)] = removedView;
-        }
-      }
-    }
-  }
+  //  if (auto reanimatedModule = reanimatedModule_.lock()) {
+  //    auto layoutAnimationsManager = reanimatedModule->layoutAnimationsManager();
+  //
+  //    // layout animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfUpdatedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "layout")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+  //          beforeSnapshots[@(tag)] = snapshot;
+  //        }
+  //      }
+  //    }
+  //
+  //    // exiting animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfRemovedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "exiting")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          view.reactTag = @(tag);
+  //          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+  //          beforeSnapshots[@(tag)] = snapshot;
+  //          UIView *removedView = [view snapshotViewAfterScreenUpdates:NO];
+  //          removedView.frame = view.frame;
+  //          removedViews[@(tag)] = removedView;
+  //        }
+  //      }
+  //    }
+  //  }
 }
 
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
 {
   RCTAssertMainQueue();
 
-  if (auto reanimatedModule = reanimatedModule_.lock()) {
-    auto layoutAnimationsProxy = reanimatedModule->layoutAnimationsProxy_;
-
-    // entering animations
-    {
-      const auto &tags = layoutAnimationsProxy->tagsOfCreatedViews_;
-      for (auto tag : tags) {
-        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "entering")) {
-          UIView *view = [_uiManager viewForReactTag:@(tag)];
-          view.reactTag = @(tag);
-          REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
-          [self.nodesManager.animationsManager onViewCreate:view after:afterSnapshot];
-        }
-      }
-      layoutAnimationsProxy->tagsOfCreatedViews_.clear();
-    }
-
-    // layout animations
-    {
-      const auto &tags = layoutAnimationsProxy->tagsOfUpdatedViews_;
-      for (auto tag : tags) {
-        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "layout")) {
-          UIView *view = [_uiManager viewForReactTag:@(tag)];
-          REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
-          [self.nodesManager.animationsManager onViewUpdate:view before:beforeSnapshots[@(tag)] after:afterSnapshot];
-        }
-      }
-      layoutAnimationsProxy->tagsOfUpdatedViews_.clear();
-    }
-
-    // exiting animations
-    {
-      const auto &tags = layoutAnimationsProxy->tagsOfRemovedViews_;
-      for (auto tag : tags) {
-        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "exiting")) {
-          UIView *windowView = UIApplication.sharedApplication.keyWindow;
-          UIView *removedView = removedViews[@(tag)];
-          [removedViews removeObjectForKey:@(tag)];
-          [windowView addSubview:removedView];
-          removedView.reactTag = @(tag);
-          UIView *superview = removedView.superview;
-          // TODO: fix exiting animations
-          [self.nodesManager.animationsManager removeChildren:@[ removedView ] fromContainer:superview];
-        }
-      }
-      layoutAnimationsProxy->tagsOfRemovedViews_.clear();
-    }
-  }
+  //  if (auto reanimatedModule = reanimatedModule_.lock()) {
+  //    auto layoutAnimationsProxy = reanimatedModule->layoutAnimationsProxy_;
+  //
+  //    // entering animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfCreatedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "entering")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          view.reactTag = @(tag);
+  //          REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+  //          [self.nodesManager.animationsManager onViewCreate:view after:afterSnapshot];
+  //        }
+  //      }
+  //      layoutAnimationsProxy->tagsOfCreatedViews_.clear();
+  //    }
+  //
+  //    // layout animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfUpdatedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "layout")) {
+  //          UIView *view = [_uiManager viewForReactTag:@(tag)];
+  //          REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+  //          [self.nodesManager.animationsManager onViewUpdate:view before:beforeSnapshots[@(tag)]
+  //          after:afterSnapshot];
+  //        }
+  //      }
+  //      layoutAnimationsProxy->tagsOfUpdatedViews_.clear();
+  //    }
+  //
+  //    // exiting animations
+  //    {
+  //      const auto &tags = layoutAnimationsProxy->tagsOfRemovedViews_;
+  //      for (auto tag : tags) {
+  //        if (layoutAnimationsProxy->hasLayoutAnimation(tag, "exiting")) {
+  //          UIView *windowView = UIApplication.sharedApplication.keyWindow;
+  //          UIView *removedView = removedViews[@(tag)];
+  //          [removedViews removeObjectForKey:@(tag)];
+  //          [windowView addSubview:removedView];
+  //          removedView.reactTag = @(tag);
+  //          UIView *superview = removedView.superview;
+  //          // TODO: fix exiting animations
+  //          [self.nodesManager.animationsManager removeChildren:@[ removedView ] fromContainer:superview];
+  //        }
+  //      }
+  //      layoutAnimationsProxy->tagsOfRemovedViews_.clear();
+  //    }
+  //  }
 
   [CATransaction commit];
 }

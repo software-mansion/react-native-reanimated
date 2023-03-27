@@ -166,15 +166,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 #endif // RCT_NEW_ARCH_ENABLED
 
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    // noop
-  };
-
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
-    // noop
-  };
-
-#else
   // Layout Animations start
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -194,7 +185,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  nodesManager.animationsManager = animationsManager;
+//  nodesManager.animationsManager = animationsManager;
 #else
   [reaUiManagerNoCast setUp:animationsManager];
 #endif // RCT_NEW_ARCH_ENABLED
