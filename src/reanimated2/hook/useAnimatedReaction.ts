@@ -3,6 +3,7 @@ import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
+import { shouldBeUseWeb } from '../PlatformChecker';
 
 export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
   (prepared: T, previous: T | null): void;
@@ -19,6 +20,13 @@ export function useAnimatedReaction<T>(
   dependencies: DependencyList
 ): void {
   const previous = useSharedValue<T | null>(null);
+  let inputs = Object.values(prepare._closure ?? {});
+  if (shouldBeUseWeb()) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
+  }
   if (dependencies === undefined) {
     dependencies = [
       Object.values(prepare._closure ?? {}),
@@ -37,11 +45,7 @@ export function useAnimatedReaction<T>(
       react(input, previous.value);
       previous.value = input;
     };
-    const mapperId = startMapper(
-      fun,
-      Object.values(prepare._closure ?? {}),
-      []
-    );
+    const mapperId = startMapper(fun, inputs, []);
     return () => {
       stopMapper(mapperId);
     };
