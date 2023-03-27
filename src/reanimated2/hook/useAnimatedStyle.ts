@@ -409,7 +409,18 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const viewDescriptors: ViewDescriptorsSet = makeViewDescriptorsSet();
   const initRef = useRef<AnimationRef>();
-  const inputs = Object.values(updater._closure ?? {});
+  let inputs = Object.values(updater._closure ?? {});
+  if (shouldBeUseWeb()) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
+    if (__DEV__ && !inputs.length && !dependencies && !updater.__workletHash) {
+      console.error(
+        `useAnimatedStyle was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel/SWC plugin. For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/web-support#web-without-a-babel-plugin`
+      );
+    }
+  }
   const adaptersArray: AdapterWorkletFunction[] = adapters
     ? Array.isArray(adapters)
       ? adapters
