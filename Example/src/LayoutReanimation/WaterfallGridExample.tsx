@@ -90,7 +90,7 @@ export function WaterfallGrid({
       });
     }
     setPoks(poks);
-  }, [dims, setPoks]);
+  }, [dims, setPoks, pokemons]);
   const [cardsMemo, height] = useMemo<[Array<JSX.Element>, number]>(() => {
     if (poks.length === 0) {
       return [[], 0];
@@ -132,7 +132,7 @@ export function WaterfallGrid({
       );
     }
     return [cardsResult, Math.max(...heights) + margin / 2];
-  }, [poks, columns, transition]);
+  }, [poks, columns, transition, width]);
   return (
     <View onLayout={handleOnLayout} style={{ flex: 1 }}>
       {cardsMemo.length === 0 && <Text> Loading </Text>}

@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <JFabricUIManager.h>
+#include <react/fabric/JFabricUIManager.h>
 #endif
 
 #include <ReactCommon/CallInvokerHolder.h>
@@ -32,7 +32,7 @@ using namespace facebook::jni;
 class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$AnimationFrameCallback;";
+      "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
 
   void onAnimationFrame(double timestampMs) {
     callback_(timestampMs);
@@ -57,24 +57,12 @@ class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
 class EventHandler : public HybridClass<EventHandler> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$EventHandler;";
+      "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
 
   void receiveEvent(
       jni::alias_ref<JString> eventKey,
       jni::alias_ref<react::WritableMap> event) {
-    std::string eventAsString = "{NativeMap:null}";
-    if (event != nullptr) {
-      try {
-        eventAsString = event->toString();
-      } catch (std::exception &) {
-        // Events from other libraries may contain NaN or INF values which
-        // cannot be represented in JSON. See
-        // https://github.com/software-mansion/react-native-reanimated/issues/1776
-        // for details.
-        return;
-      }
-    }
-    handler_(eventKey->toString(), eventAsString);
+    handler_(eventKey, event);
   }
 
   static void registerNatives() {
@@ -86,25 +74,29 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  explicit EventHandler(std::function<void(std::string, std::string)> handler)
+  explicit EventHandler(std::function<void(
+                            jni::alias_ref<JString>,
+                            jni::alias_ref<react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
-  std::function<void(std::string, std::string)> handler_;
+  std::function<
+      void(jni::alias_ref<JString>, jni::alias_ref<react::WritableMap>)>
+      handler_;
 };
 
 class SensorSetter : public HybridClass<SensorSetter> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$SensorSetter;";
+      "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
 
-  void sensorSetter(jni::alias_ref<JArrayFloat> value) {
+  void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
     size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
     for (int i = 0; i < size; i++) {
       array[i] = elements[i];
     }
-    callback_(array);
+    callback_(array, orientationDegrees);
   }
 
   static void registerNatives() {
@@ -116,16 +108,16 @@ class SensorSetter : public HybridClass<SensorSetter> {
  private:
   friend HybridBase;
 
-  explicit SensorSetter(std::function<void(double[])> callback)
+  explicit SensorSetter(std::function<void(double[], int)> callback)
       : callback_(std::move(callback)) {}
 
-  std::function<void(double[])> callback_;
+  std::function<void(double[], int)> callback_;
 };
 
 class KeyboardEventDataUpdater : public HybridClass<KeyboardEventDataUpdater> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy$KeyboardEventDataUpdater;";
+      "Lcom/swmansion/reanimated/nativeProxy/KeyboardEventDataUpdater;";
 
   void keyboardEventDataUpdater(int keyboardState, int height) {
     callback_(keyboardState, height);
@@ -199,20 +191,22 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   bool isAnyHandlerWaitingForEvent(std::string);
   void performOperations();
   void requestRender(std::function<void(double)> onRender);
-  void registerEventHandler(
-      std::function<void(std::string, std::string)> handler);
+  void registerEventHandler(std::function<void(
+                                jni::alias_ref<JString>,
+                                jni::alias_ref<react::WritableMap>)> handler);
   void setGestureState(int handlerTag, int newState);
   int registerSensor(
       int sensorType,
       int interval,
-      std::function<void(double[])> setter);
+      std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   void configureProps(
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
   int subscribeForKeyboardEvents(
-      std::function<void(int, int)> keyboardEventDataUpdater);
+      std::function<void(int, int)> keyboardEventDataUpdater,
+      bool isStatusBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing

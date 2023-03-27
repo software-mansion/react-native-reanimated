@@ -2,7 +2,7 @@
 
 ### React Native's Animated library reimplemented
 
-> Reanimated 2 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
+> Reanimated 3 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
 
 React Native Reanimated provides a more comprehensive,
 low level abstraction for the Animated library API to be built

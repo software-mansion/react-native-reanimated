@@ -13,10 +13,6 @@ jni::local_ref<LayoutAnimations::jhybriddata> LayoutAnimations::initHybrid(
   return makeCxxInstance(jThis);
 }
 
-void LayoutAnimations::setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt) {
-  this->weakUIRuntime = wrt;
-}
-
 void LayoutAnimations::setAnimationStartingBlock(
     AnimationStartingBlock animationStartingBlock) {
   this->animationStartingBlock_ = animationStartingBlock;
@@ -24,24 +20,20 @@ void LayoutAnimations::setAnimationStartingBlock(
 
 void LayoutAnimations::startAnimationForTag(
     int tag,
-    alias_ref<JString> type,
+    int type,
     alias_ref<JMap<jstring, jstring>> values) {
   this->animationStartingBlock_(tag, type, values);
 }
 
 void LayoutAnimations::progressLayoutAnimation(
     int tag,
-    const jsi::Value &progress) {
-  if (auto rt = this->weakUIRuntime.lock()) {
-    static const auto method =
-        javaPart_->getClass()
-            ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-                "progressLayoutAnimation");
-    method(
-        javaPart_.get(),
-        tag,
-        JNIHelper::ConvertToPropsMap(*rt, progress.asObject(*rt)).get());
-  }
+    const jni::local_ref<JNIHelper::PropsMap> &updates,
+    bool isSharedTransition) {
+  static const auto method =
+      javaPart_->getClass()
+          ->getMethod<void(int, JMap<JString, JObject>::javaobject, bool)>(
+              "progressLayoutAnimation");
+  method(javaPart_.get(), tag, updates.get(), isSharedTransition);
 }
 
 void LayoutAnimations::endLayoutAnimation(
@@ -59,7 +51,7 @@ void LayoutAnimations::setHasAnimationBlock(
   this->hasAnimationBlock_ = hasAnimationBlock;
 }
 
-bool LayoutAnimations::hasAnimationForTag(int tag, std::string type) {
+bool LayoutAnimations::hasAnimationForTag(int tag, int type) {
   return hasAnimationBlock_(tag, type);
 }
 
@@ -72,8 +64,32 @@ void LayoutAnimations::clearAnimationConfigForTag(int tag) {
   clearAnimationConfigBlock_(tag);
 }
 
+void LayoutAnimations::setCancelAnimationForTag(
+    CancelAnimationBlock cancelAnimationBlock) {
+  this->cancelAnimationBlock_ = cancelAnimationBlock;
+}
+
+void LayoutAnimations::cancelAnimationForTag(
+    int tag,
+    int type,
+    jboolean cancelled,
+    jboolean removeView) {
+  this->cancelAnimationBlock_(tag, type, cancelled, removeView);
+}
+
 bool LayoutAnimations::isLayoutAnimationEnabled() {
   return FeaturesConfig::isLayoutAnimationEnabled();
+}
+
+void LayoutAnimations::setFindPrecedingViewTagForTransition(
+    FindPrecedingViewTagForTransitionBlock
+        findPrecedingViewTagForTransitionBlock) {
+  findPrecedingViewTagForTransitionBlock_ =
+      findPrecedingViewTagForTransitionBlock;
+}
+
+int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
+  return findPrecedingViewTagForTransitionBlock_(tag);
 }
 
 void LayoutAnimations::registerNatives() {
@@ -87,9 +103,13 @@ void LayoutAnimations::registerNatives() {
           "clearAnimationConfigForTag",
           LayoutAnimations::clearAnimationConfigForTag),
       makeNativeMethod(
+          "cancelAnimationForTag", LayoutAnimations::cancelAnimationForTag),
+      makeNativeMethod(
           "isLayoutAnimationEnabled",
           LayoutAnimations::isLayoutAnimationEnabled),
+      makeNativeMethod(
+          "findPrecedingViewTagForTransition",
+          LayoutAnimations::findPrecedingViewTagForTransition),
   });
 }
-
 }; // namespace reanimated

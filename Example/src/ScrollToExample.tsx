@@ -42,6 +42,7 @@ function ScrollToScreen(): React.ReactElement {
 }
 
 function getDigit(number: Animated.SharedValue<number>, i: number) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useDerivedValue(() => {
     return Math.floor(number.value / 10 ** i) % 10;
   });

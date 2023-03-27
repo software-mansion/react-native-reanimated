@@ -138,6 +138,7 @@ function ScrollExample(): React.ReactElement {
         showsHorizontalScrollIndicator={false}
         onScroll={scrollHandler}>
         {data.map(({ artist, song }, i) => {
+          // eslint-disable-next-line react-hooks/rules-of-hooks
           const uas = useAnimatedStyle(() => {
             const style: {
               opacity?: number;

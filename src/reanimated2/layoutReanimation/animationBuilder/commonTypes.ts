@@ -21,6 +21,8 @@ export interface EntryAnimationsValues {
   targetHeight: number;
   targetGlobalOriginX: number;
   targetGlobalOriginY: number;
+  windowWidth: number;
+  windowHeight: number;
 }
 
 export interface ExitAnimationsValues {
@@ -30,6 +32,8 @@ export interface ExitAnimationsValues {
   currentHeight: number;
   currentGlobalOriginX: number;
   currentGlobalOriginY: number;
+  windowWidth: number;
+  windowHeight: number;
 }
 
 export type EntryExitAnimationFunction = (
@@ -39,6 +43,7 @@ export type EntryExitAnimationFunction = (
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
 export interface LayoutAnimationsValues {
+  [key: string]: number;
   currentOriginX: number;
   currentOriginY: number;
   currentWidth: number;
@@ -55,9 +60,23 @@ export interface LayoutAnimationsValues {
   windowHeight: number;
 }
 
+export enum LayoutAnimationType {
+  ENTERING = 1,
+  EXITING = 2,
+  LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+}
+
 export type LayoutAnimationFunction = (
   targetValues: LayoutAnimationsValues
 ) => LayoutAnimation;
+
+export type LayoutAnimationStartFunction = (
+  tag: number,
+  type: LayoutAnimationType,
+  yogaValues: LayoutAnimationsValues,
+  config: LayoutAnimationFunction
+) => void;
 
 export interface ILayoutAnimationBuilder {
   build: () => LayoutAnimationFunction;

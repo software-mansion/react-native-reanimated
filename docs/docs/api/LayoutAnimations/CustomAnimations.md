@@ -141,7 +141,7 @@ function CardView() {
 
 ```
 
-## Custom Layout Transtion
+## Custom Layout Transition
 
 What our layout transition builders do under the hood is generating a worklet function that returns essential data for starting particular transition. 
 The high level template looks like this:

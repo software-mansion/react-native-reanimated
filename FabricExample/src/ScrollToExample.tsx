@@ -1,9 +1,12 @@
 /* global _WORKLET */
-import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
+import Animated, {
+  runOnUI,
+  scrollTo,
+  useAnimatedRef,
+} from 'react-native-reanimated';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
 
 import React from 'react';
-import { runOnUI } from '../../src/reanimated2/core';
 
 export default function ScrollToExample() {
   const [animated, setAnimated] = React.useState(true);

@@ -39,10 +39,6 @@ import Animated, {
   useAnimatedReaction,
   interpolateColor,
   makeMutable,
-  interpolateNode,
-  useValue,
-  color,
-  interpolateColors,
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
@@ -705,35 +701,6 @@ function interpolateColorTest() {
   interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');
 
   return null;
-}
-
-function interpolateNodeTest() {
-  const value = useValue(0);
-  interpolateNode(value, {
-    inputRange: [0, 1],
-    outputRange: ['0deg', '100deg'],
-  });
-  interpolateNode(value, {
-    inputRange: [0, 1],
-    outputRange: ['0rad', `${Math.PI}rad`],
-  });
-}
-
-function colorTest() {
-  const r = useValue(255);
-  const g = useValue(255);
-  const b = useValue(255);
-  const a = useValue(255);
-  return color(r, g, b, a);
-}
-
-function interpolateColorsTest() {
-  const animationValue = useValue(0);
-  const color = interpolateColors(animationValue, {
-    inputRange: [0, 1],
-    outputColorRange: ['red', 'blue'],
-  });
-  return color;
 }
 
 // update props

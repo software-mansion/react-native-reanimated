@@ -666,3 +666,7 @@ header > .container {
 * {
   scroll-behavior: smooth;
 }
+
+.theme-back-to-top-button {
+  display: none;
+}

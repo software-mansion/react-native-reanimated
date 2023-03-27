@@ -7,7 +7,7 @@ sidebar_label: useFrameCallback
 This hook allows you to run a piece of code on every frame update.
 
 ```js
-useFrameCallback(callback: (frameInfo: frameInfo) => void, autostart = true): [FrameCallback]
+useFrameCallback(callback: (frameInfo: FrameInfo) => void, autostart = true): [FrameCallback]
 ```
 
 ### Arguments

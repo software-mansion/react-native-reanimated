@@ -1,6 +1,5 @@
 import React from 'react';
 import Animated, {
-  withTiming,
   useAnimatedStyle,
   useAnimatedSensor,
   SensorType,
@@ -8,13 +7,11 @@ import Animated, {
 import { View, Button, StyleSheet } from 'react-native';
 
 export default function AnimatedStyleUpdateExample() {
-  const animatedSensor = useAnimatedSensor(SensorType.ROTATION);
+  const animatedSensor = useAnimatedSensor(SensorType.GRAVITY);
   const style = useAnimatedStyle(() => {
-    const pitch = Math.abs(animatedSensor.sensor.value.pitch);
-    const roll = Math.abs(animatedSensor.sensor.value.roll);
+    const { x, y } = animatedSensor.sensor.value;
     return {
-      height: withTiming(pitch * 200 + 20, { duration: 100 }),
-      width: withTiming(roll * 200 + 20, { duration: 100 }),
+      transform: [{ translateX: x * 5 }, { translateY: y * 5 }],
     };
   });
 
@@ -24,7 +21,9 @@ export default function AnimatedStyleUpdateExample() {
         title={'log data'}
         onPress={() => console.log(animatedSensor.sensor.value)}
       />
-      <Animated.View style={[componentStyle.square, style]} />
+      <Animated.View style={[componentStyle.rect]}>
+        <Animated.View style={[componentStyle.square, style]} />
+      </Animated.View>
     </View>
   );
 }
@@ -36,9 +35,16 @@ const componentStyle = StyleSheet.create({
     alignItems: 'center',
   },
   square: {
-    width: 50,
-    height: 50,
+    width: 10,
+    height: 10,
+    backgroundColor: 'red',
+    position: 'absolute',
+    left: 90,
+    top: 90,
+  },
+  rect: {
+    width: 200,
+    height: 200,
     backgroundColor: 'black',
-    margin: 30,
   },
 });

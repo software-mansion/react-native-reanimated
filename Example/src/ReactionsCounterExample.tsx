@@ -44,7 +44,7 @@ function ReactionsCounter({
 
   React.useEffect(() => {
     newCount.value = count;
-  }, [count]);
+  }, [newCount, count]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {

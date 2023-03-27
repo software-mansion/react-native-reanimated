@@ -25,6 +25,10 @@
 #include <hermes/hermes.h>
 #endif
 
+#if REACT_NATIVE_MINOR_VERSION >= 71
+#include <hermes/inspector/chrome/Registration.h>
+#endif
+
 namespace reanimated {
 
 using namespace facebook;
@@ -116,8 +120,13 @@ class ReanimatedHermesRuntime
   ~ReanimatedHermesRuntime();
 
  private:
-  std::shared_ptr<facebook::hermes::HermesRuntime> runtime_;
+  std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
+#if HERMES_ENABLE_DEBUGGER
+#if REACT_NATIVE_MINOR_VERSION >= 71
+  facebook::hermes::inspector::chrome::DebugSessionToken debugToken_;
+#endif // REACT_NATIVE_MINOR_VERSION >= 71
+#endif // HERMES_ENABLE_DEBUGGER
 };
 
 } // namespace reanimated

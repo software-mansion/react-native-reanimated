@@ -1,0 +1,314 @@
+{
+  "version-1.x/docs": [
+    {
+      "type": "category",
+      "label": "Overview",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-1.x/about"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/getting_started"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/declarative"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/examples"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/transitions"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/config"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Features",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-1.x/value"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/clock"
+        },
+        {
+          "type": "category",
+          "label": "Animations",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-1.x/animations/timing"
+            },
+            {
+              "type": "doc",
+              "id": "version-1.x/animations/decay"
+            },
+            {
+              "type": "doc",
+              "id": "version-1.x/animations/spring"
+            },
+            {
+              "type": "doc",
+              "id": "version-1.x/animations/spring_utils"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Nodes",
+          "items": [
+            {
+              "type": "category",
+              "label": "Math",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/abs"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/add"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/ceil"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/divide"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/exp"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/floor"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/log"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/max"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/min"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/modulo"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/multiply"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/pow"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/round"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/sqrt"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/sub"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Trigonometry",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/acos"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/asin"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/atan"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/cos"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/sin"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/tan"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Logical expressions",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/and"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/eq"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/greaterOrEq"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/greaterThan"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/lessOrEq"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/lessThan"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/neq"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/not"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/or"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Clock",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/clockRunning"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/startClock"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/stopClock"
+                }
+              ]
+            },
+            {
+              "type": "category",
+              "label": "Others",
+              "items": [
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/acc"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/block"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/call"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/color"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/concat"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/cond"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/debug"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/defined"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/diff"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/diffClamp"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/event"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/interpolate"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/interpolateColors"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/onChange"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/proc"
+                },
+                {
+                  "type": "doc",
+                  "id": "version-1.x/nodes/set"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/event"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/view"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x/code"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "removeComments": true,
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "files": ["index.ts"]
+}

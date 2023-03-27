@@ -21,6 +21,7 @@
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/REASnapshot.h>
+#import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 
 // #include <algorithm>
@@ -240,6 +241,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
     runtime.global().setProperty(runtime, "_IS_FABRIC", true);
+
+    auto version = getReanimatedVersionString(runtime);
+    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
 
     runtime.global().setProperty(
         runtime,

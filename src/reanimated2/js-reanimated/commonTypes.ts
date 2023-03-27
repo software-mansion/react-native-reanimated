@@ -32,7 +32,6 @@ export interface JSReanimated {
   _frames: ((timestamp: Timestamp) => void)[];
   timeProvider: { now: () => number };
   pushFrame(frame: (timestamp: Timestamp) => void): void;
-  getTimestamp(): number;
   maybeRequestRender(): void;
   _onRender(timestampMs: number): void;
   installCoreFunctions(valueSetter: <T>(value: T) => void): void;

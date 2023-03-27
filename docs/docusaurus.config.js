@@ -125,6 +125,12 @@ module.exports = {
     prism: {
       theme: prismConfig,
     },
+    announcementBar: {
+      id: 'appjs_announcement',
+      content: 'mleko', // content is set in swizzled component but docusaurus requires it to be non-empty
+      backgroundColor: '#0033CC',
+      textColor: '#FFFFFF',
+    },
   },
   presets: [
     [
@@ -134,14 +140,12 @@ module.exports = {
           path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: undefined, // hide edit button
+          lastVersion: 'current', // <- this makes 3.x docs as default
           versions: {
-            '2.5.x': {
-              label: '2.5.x – 2.10.x',
+            current: {
+              label: '3.x',
             },
-            '2.3.x': {
-              label: '2.3.x – 2.4.x',
-            },
-          }
+          },
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

@@ -21,7 +21,7 @@ import {
   PanGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { useHeaderHeight } from '@react-navigation/stack';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -219,7 +219,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
       });
       backdropOpacity.value = withTiming(1, timingConfig);
     })();
-  }, []);
+  }, [animationProgress, backdropOpacity, imageOpacity]);
 
   return (
     <View style={StyleSheet.absoluteFillObject}>

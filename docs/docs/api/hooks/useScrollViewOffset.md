@@ -20,7 +20,7 @@ appropriate `ScrollView` in the `ref` prop.
 
 ### Returns
 
-A Shared Value which holds the current offset of the `ScrollView`.
+A shared value which holds the current offset of the `ScrollView`.
 
 ## Example
 
