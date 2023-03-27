@@ -8,12 +8,67 @@ import {
   GestureDetector,
   enableExperimentalWebImplementation,
 } from 'react-native-gesture-handler';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useEffect, useState } from 'react';
 
 enableExperimentalWebImplementation(true);
 
-export function WithoutBabelTest() {
+export default function WithoutBabelPluginExample() {
+  return (
+    <View style={styles.container}>
+      <WithBabel />
+      <WithoutBabel />
+    </View>
+  );
+}
+
+function WithBabel() {
+  const isPressed = useSharedValue(false);
+  const offset = useSharedValue({ x: 0, y: 0 });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: offset.value.x },
+        { translateY: offset.value.y },
+        { scale: withSpring(isPressed.value ? 1.2 : 1) },
+      ],
+      backgroundColor: isPressed.value ? 'blue' : 'navy',
+      cursor: isPressed.value ? 'grabbing' : 'grab',
+    };
+  });
+
+  const gesture = Gesture.Pan()
+    .manualActivation(true)
+    .onBegin(() => {
+      'worklet';
+      isPressed.value = true;
+    })
+    .onChange((e) => {
+      'worklet';
+      offset.value = {
+        x: e.changeX + offset.value.x,
+        y: e.changeY + offset.value.y,
+      };
+    })
+    .onFinalize(() => {
+      'worklet';
+      isPressed.value = false;
+    })
+    .onTouchesMove((_, state) => {
+      state.activate();
+    });
+
+  return (
+    <GestureDetector gesture={gesture}>
+      <Animated.View style={[styles.ball, animatedStyle]}>
+        <Text style={styles.text}>I need Babel plugin</Text>
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
+export function WithoutBabel() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
 
@@ -38,7 +93,7 @@ export function WithoutBabelTest() {
         { translateY: offset.value.y },
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
       ],
-      backgroundColor: isPressed.value ? 'cyan' : 'hotpink',
+      backgroundColor: isPressed.value ? 'pink' : 'hotpink',
       cursor: isPressed.value ? 'grabbing' : 'grab',
     };
   }, [isPressed, offset, stateObject, stateBoolean, stateNumber]);
@@ -74,11 +129,16 @@ export function WithoutBabelTest() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   ball: {
     width: 100,
     height: 100,
     borderRadius: 100,
-    backgroundColor: 'hotpink',
     alignSelf: 'center',
     padding: 8,
     justifyContent: 'center',
@@ -86,5 +146,6 @@ const styles = StyleSheet.create({
   },
   text: {
     textAlign: 'center',
+    color: 'white',
   },
 });

@@ -23,6 +23,7 @@ import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SvgExample from './SvgExample';
 import TransformExample from './TransformExample';
 import WidthExample from './WidthExample';
+import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WorkletExample from './WorkletExample';
 
 interface Example {
@@ -32,6 +33,11 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  WithoutBabelPluginExample: {
+    icon: '🔌',
+    title: 'Without Babel plugin example',
+    screen: WithoutBabelPluginExample,
+  },
   AnimatedKeyboardExample: {
     icon: '⌨️',
     title: 'Animated keyboard example',
