@@ -6,16 +6,27 @@ import ArticleProgressExample from './ArticleProgressExample';
 import BokehExample from './BokehExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
+import CardExample from './SharedElementTransitions/Card';
 import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
 import ConfigExample from './ConfigExample';
+import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
 import EmptyExample from './EmptyExample';
+import FlatListExample from './SharedElementTransitions/FlatList';
 import FrameCallbackExample from './FrameCallbackExample';
+import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
+import ImageStackExample from './SharedElementTransitions/ImageStack';
+import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import ManyScreensExample from './SharedElementTransitions/ManyScreens';
+import ManyTagsExample from './SharedElementTransitions/ManyTags';
 import MeasureExample from './MeasureExample';
+import ModalsExample from './SharedElementTransitions/Modals';
+import NestedStacksExample from './SharedElementTransitions/NestedStacks';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import RefExample from './RefExample';
+import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollToExample from './ScrollToExample';
@@ -34,6 +45,61 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  CardExample: {
+    icon: '',
+    title: '[SET] Card',
+    screen: CardExample,
+  },
+  CustomTransitionExample: {
+    icon: '',
+    title: '[SET] Custom transition',
+    screen: CustomTransitionExample,
+  },
+  GalleryExample: {
+    icon: '',
+    title: '[SET] Gallery',
+    screen: GalleryExample,
+  },
+  LayoutAnimationExample: {
+    icon: '',
+    title: '[SET] Layout Animation',
+    screen: LayoutAnimationExample,
+  },
+  ManyScreensExample: {
+    icon: '',
+    title: '[SET] Many screens',
+    screen: ManyScreensExample,
+  },
+  ManyTagsExample: {
+    icon: '',
+    title: '[SET] Many tags',
+    screen: ManyTagsExample,
+  },
+  NestedStacksExample: {
+    icon: '',
+    title: '[SET] Nested stacks',
+    screen: NestedStacksExample,
+  },
+  ModalsExample: {
+    icon: '',
+    title: '[SET] Modals',
+    screen: ModalsExample,
+  },
+  FlatListExample: {
+    icon: '',
+    title: '[SET] FlatList',
+    screen: FlatListExample,
+  },
+  ImageStackExample: {
+    icon: '',
+    title: '[SET] Image Stack',
+    screen: ImageStackExample,
+  },
+  RestoreStateExample: {
+    icon: '',
+    title: '[SET] Restore State',
+    screen: RestoreStateExample,
+  },
   ConfigExample: {
     icon: '⚙️',
     title: 'Config example',

@@ -61,17 +61,6 @@ import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
 import CubesExample from './CubesExample';
-import CardExample from './SharedElementTransition/Card';
-import CustomTransitionExample from './SharedElementTransition/CustomTransition';
-import GalleryExample from './SharedElementTransition/Gallery';
-import LayoutAnimationExample from './SharedElementTransition/LayoutAnimation';
-import ManyScreensExample from './SharedElementTransition/ManyScreens';
-import ManyTagsExample from './SharedElementTransition/ManyTags';
-import NestedStacksExample from './SharedElementTransition/NestedStacks';
-import ModalsExample from './SharedElementTransition/Modals';
-import FlatListExample from './SharedElementTransition/FlatList';
-import ImageStackExample from './SharedElementTransition/ImageStack';
-import RestoreStateExample from './SharedElementTransition/RestoreState';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -86,50 +75,6 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
-  CardExample: {
-    screen: CardExample,
-    title: '[SET] Card',
-  },
-  CustomTransitionExample: {
-    screen: CustomTransitionExample,
-    title: '[SET] Custom transition',
-  },
-  GalleryExample: {
-    screen: GalleryExample,
-    title: '[SET] Gallery',
-  },
-  LayoutAnimationExample: {
-    screen: LayoutAnimationExample,
-    title: '[SET] Layout Animation',
-  },
-  ManyScreensExample: {
-    screen: ManyScreensExample,
-    title: '[SET] Many screens',
-  },
-  ManyTagsExample: {
-    screen: ManyTagsExample,
-    title: '[SET] Many tags',
-  },
-  NestedStacksExample: {
-    screen: NestedStacksExample,
-    title: '[SET] Nested stacks',
-  },
-  ModalsExample: {
-    screen: ModalsExample,
-    title: '[SET] Modals',
-  },
-  FlatListExample: {
-    screen: FlatListExample,
-    title: '[SET] FlatList',
-  },
-  ImageStackExample: {
-    screen: ImageStackExample,
-    title: '[SET] Image Stack',
-  },
-  RestoreStateExample: {
-    screen: RestoreStateExample,
-    title: '[SET] Restore State',
-  },
   ColorInterpolation: {
     screen: ColorInterpolationExample,
     title: 'Color interpolation',
