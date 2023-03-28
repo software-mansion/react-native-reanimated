@@ -13,7 +13,14 @@
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "exclude": ["Example", "FabricExample", "TVOSExample", "WebExample", "docs"]
+  "exclude": [
+    "Example",
+    "FabricExample",
+    "TVOSExample",
+    "WebExample",
+    "docs",
+    "plugin"
+  ]
 }

@@ -33,7 +33,8 @@ jobs:
         working-directory: plugin
         run: yarn lint
       - name: Diff
+        id: diff
         run: git update-index --refresh && git diff-index --quiet HEAD --
       - name: Show diff
-        if: always()
+        if: failure() && steps.diff.outcome == 'failure'
         run: git diff
