@@ -23,9 +23,9 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
+std::shared_ptr<jsi::Runtime> makePureRuntime(
     jsi::Runtime *rnRuntime,
-    std::shared_ptr<MessageQueueThread> jsQueue) {
+    const std::shared_ptr<MessageQueueThread> &jsQueue) {
 #if JS_RUNTIME_HERMES
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
       facebook::hermes::makeHermesRuntime();
@@ -50,6 +50,13 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
 
   return facebook::jsc::makeJSCRuntime();
 #endif
+}
+
+std::shared_ptr<ReanimatedRuntime> ReanimatedRuntime::make(
+    jsi::Runtime *rnRuntime,
+    const std::shared_ptr<MessageQueueThread> &jsQueue) {
+  auto uiRuntime = makePureRuntime(rnRuntime, jsQueue);
+  return std::make_shared<ReanimatedRuntime>(std::move(uiRuntime));
 }
 
 } // namespace reanimated

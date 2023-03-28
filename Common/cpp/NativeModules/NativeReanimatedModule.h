@@ -16,6 +16,7 @@
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
+#include "ReanimatedRuntime.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
 #include "Scheduler.h"
@@ -33,7 +34,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   NativeReanimatedModule(
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<Scheduler> &scheduler,
-      const std::shared_ptr<jsi::Runtime> &rt,
+      const std::shared_ptr<ReanimatedRuntime> &rt,
       const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
@@ -69,6 +70,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &newData);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
+      override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,

@@ -3,6 +3,7 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include "ErrorHandler.h"
+#include "ReanimatedRuntime.h"
 #include "RuntimeDecorator.h"
 #include "Scheduler.h"
 
@@ -16,7 +17,7 @@ using namespace facebook;
 class RuntimeManager {
  public:
   RuntimeManager(
-      std::shared_ptr<jsi::Runtime> runtime,
+      std::shared_ptr<ReanimatedRuntime> runtime,
       std::shared_ptr<ErrorHandler> errorHandler,
       std::shared_ptr<Scheduler> scheduler,
       RuntimeType runtimeType = RuntimeType::Worklet)
@@ -27,7 +28,7 @@ class RuntimeManager {
   /**
    Holds the jsi::Runtime this RuntimeManager is managing.
    */
-  std::shared_ptr<jsi::Runtime> runtime;
+  std::shared_ptr<ReanimatedRuntime> runtime;
   /**
    Holds the error handler that will be invoked when any kind of error occurs.
    */

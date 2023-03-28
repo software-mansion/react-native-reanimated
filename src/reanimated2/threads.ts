@@ -91,6 +91,20 @@ export function runOnUI<A extends any[], R>(
   };
 }
 
+export function executeOnUIRuntimeSync<A extends any[], R>(
+  worklet: ComplexWorkletFunction<A, R>
+): (...args: A) => R {
+  return (...args) => {
+    return NativeReanimatedModule.executeOnUIRuntimeSync(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        const ret = worklet(...args);
+        return makeShareableCloneOnUIRecursive(ret);
+      })
+    );
+  };
+}
+
 /**
  * Schedule a worklet to execute on the UI runtime skipping batching mechanism.
  */

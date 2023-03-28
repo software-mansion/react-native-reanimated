@@ -31,7 +31,7 @@ namespace reanimated {
 NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<Scheduler> &scheduler,
-    const std::shared_ptr<jsi::Runtime> &rt,
+    const std::shared_ptr<ReanimatedRuntime> &rt,
     const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
@@ -215,6 +215,22 @@ void NativeReanimatedModule::scheduleOnUI(
     auto workletValue = shareableWorklet->getJSValue(rt);
     runtimeHelper->runOnUIGuarded(workletValue);
   });
+}
+
+jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) {
+  auto shareableWorklet = extractShareableOrThrow(rt, worklet);
+  assert(
+      shareableWorklet->valueType() == Shareable::WorkletType &&
+      "only worklets can be scheduled to run on UI");
+  auto lock = runtime->lock();
+  jsi::Runtime &uiRuntime = *runtimeHelper->uiRuntime();
+  auto workletValue = shareableWorklet->getJSValue(uiRuntime);
+  auto result = runtimeHelper->runOnUIGuarded(workletValue);
+  auto shareableResult = extractShareableOrThrow(uiRuntime, result);
+  lock.unlock();
+  return shareableResult->getJSValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(

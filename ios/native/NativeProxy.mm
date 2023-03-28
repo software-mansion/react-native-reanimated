@@ -143,7 +143,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     throw error;
   });
   auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reanimatedModule.bridge.runtime);
-  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
+  std::shared_ptr<ReanimatedRuntime> animatedRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);

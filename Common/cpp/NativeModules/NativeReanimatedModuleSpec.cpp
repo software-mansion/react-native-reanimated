@@ -59,6 +59,15 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(executeOnUIRuntimeSync)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->executeOnUIRuntimeSync(rt, std::move(args[0]));
+}
+
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -181,6 +190,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{1, SPEC_PREFIX(getDataSynchronously)};
 
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
+  methodMap_["executeOnUIRuntimeSync"] =
+      MethodMetadata{1, SPEC_PREFIX(executeOnUIRuntimeSync)};
 
   methodMap_["registerEventHandler"] =
       MethodMetadata{2, SPEC_PREFIX(registerEventHandler)};

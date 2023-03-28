@@ -80,6 +80,10 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
+  executeOnUIRuntimeSync<T>(shareable: ShareableRef<T>): T {
+    return this.InnerNativeModule.executeOnUIRuntimeSync(shareable);
+  }
+
   registerSensor<T>(
     sensorType: number,
     interval: number,

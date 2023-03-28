@@ -9,13 +9,13 @@ import {
 } from './threads';
 
 // callGuard is only used with debug builds
-function callGuardDEV<T extends Array<any>, U>(
+function callGuardDEV<T extends Array<any>, U extends void>(
   fn: (...args: T) => U,
   ...args: T
 ): void {
   'worklet';
   try {
-    fn(...args);
+    return fn(...args);
   } catch (e) {
     if (global.ErrorUtils) {
       global.ErrorUtils.reportFatalError(e as Error);

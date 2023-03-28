@@ -22,7 +22,7 @@ import {
 import { initializeUIRuntime } from './initializers';
 
 export { stopMapper } from './mappers';
-export { runOnJS, runOnUI } from './threads';
+export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
 
 export type ReanimatedConsole = Pick<
   Console,
