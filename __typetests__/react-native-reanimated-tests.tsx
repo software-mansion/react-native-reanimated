@@ -1,56 +1,56 @@
+import Animated, {
+  Animation,
+  DecayAnimation,
+  DelayAnimation,
+  Easing,
+  RepeatAnimation,
+  SequenceAnimation,
+  SpringAnimation,
+  StyleLayoutAnimation,
+  TimingAnimation,
+  cancelAnimation,
+  createAnimatedPropAdapter,
+  interpolateColor,
+  makeMutable,
+  runOnUI,
+  useAnimatedGestureHandler,
+  useAnimatedProps,
+  useAnimatedReaction,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  useWorkletCallback,
+  withDecay,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import {
+  Button,
+  FlatListProps,
+  Image,
+  ImageProps,
+  StyleSheet,
+  Text,
+  View,
+  ViewProps,
+} from 'react-native';
+import {
+  FlatList,
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+  PinchGestureHandler,
+  PinchGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/rules-of-hooks */
-import React, { useState, useCallback, forwardRef } from 'react';
-import {
-  Text,
-  StyleSheet,
-  Button,
-  View,
-  Image,
-  FlatListProps,
-  ViewProps,
-  ImageProps,
-} from 'react-native';
-import {
-  PanGestureHandler,
-  PinchGestureHandlerGestureEvent,
-  PinchGestureHandler,
-  PanGestureHandlerGestureEvent,
-  FlatList,
-} from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useDerivedValue,
-  useAnimatedStyle,
-  useAnimatedScrollHandler,
-  useAnimatedGestureHandler,
-  Easing,
-  withTiming,
-  withSpring,
-  cancelAnimation,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withDecay,
-  useWorkletCallback,
-  runOnUI,
-  useAnimatedReaction,
-  interpolateColor,
-  makeMutable,
-  createAnimatedPropAdapter,
-  useAnimatedProps,
-  useAnimatedRef,
-  TimingAnimation,
-  SpringAnimation,
-  DecayAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
-  StyleLayoutAnimation,
-  Animation,
-} from 'react-native-reanimated';
+import React, { forwardRef, useCallback, useState } from 'react';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {
