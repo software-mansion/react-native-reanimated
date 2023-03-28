@@ -145,6 +145,8 @@ It's simple. After compilation we have generated `.js.map` file. We strongly rec
 
 ### Reanimated Babel plugin flowchart
 
+This flowchart represents the high-level logic of our plugin's control flow. It's not perfect at the moment and one of our goals is to make this graph more understandable and fix all the gaps and remove unnecessary steps in its logic through meticulous refactoring of the code.
+
 ```mermaid
 flowchart TB
 node([ASTnode])
