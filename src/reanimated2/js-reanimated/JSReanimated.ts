@@ -47,7 +47,9 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   enableLayoutAnimations() {
-    console.warn('[Reanimated] Layout Animations are not supported on web yet.');
+    console.warn(
+      '[Reanimated] Layout Animations are not supported on web yet.'
+    );
   }
 
   configureLayoutAnimation() {
