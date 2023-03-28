@@ -33,7 +33,7 @@ function Second() {
   );
 }
 
-export function NestedNativeStacksWithLayout() {
+export default function NestedNativeStacksWithLayout() {
   const [visible, setVisible] = React.useState(true);
 
   return (

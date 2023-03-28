@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
-  SlideInRight,
-  SlideOutRight,
-  SlideInDown,
-  SlideOutUp,
   FadeIn,
   FadeOut,
-  SlideOutLeft,
+  SlideInDown,
   SlideInLeft,
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
+  SlideOutUp,
 } from 'react-native-reanimated';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
@@ -40,7 +40,7 @@ function SWMLogo() {
   );
 }
 
-export function MountingUnmounting(): React.ReactElement {
+export default function MountingUnmounting(): React.ReactElement {
   const [show, setShow] = useState(false);
   return (
     <View style={{ flexDirection: 'column-reverse' }}>

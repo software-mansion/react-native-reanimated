@@ -136,7 +136,7 @@ function Button({ onPress, children }: ButtonProps): React.ReactElement {
   );
 }
 
-export function ReactionsCounterExample(): React.ReactElement {
+export default function ReactionsCounterExample(): React.ReactElement {
   const [others, setOthers] = React.useState(3);
   const [you, setYou] = React.useState(false);
 

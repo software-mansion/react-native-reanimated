@@ -13,27 +13,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import {
-  BasicLayoutAnimation,
-  BasicNestedAnimation,
-  BasicNestedLayoutAnimation,
-  Carousel,
-  CombinedTest,
-  CustomLayoutAnimationScreen,
-  DefaultAnimations,
-  DeleteAncestorOfExiting,
-  Modal,
-  ModalNewAPI,
-  MountingUnmounting,
-  NativeModals,
-  NestedTest,
-  NestedNativeStacksWithLayout,
-  SpringLayoutAnimation,
-  SwipeableList,
-} from './LayoutReanimation';
-
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
-import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -44,20 +24,16 @@ import { EmojiWaterfallExample } from './EmojiWaterfallExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
-import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
-import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
 import { PagerExample } from './CustomHandler';
-import { ReactionsCounterExample } from './ReactionsCounterExample';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
-import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import WobbleExample from './WobbleExample';
 import { ColorInterpolationExample } from './ColorInterpolationExample';
 import CubesExample from './CubesExample';
@@ -79,38 +55,6 @@ const SCREENS: Screens = {
     screen: ColorInterpolationExample,
     title: 'Color interpolation',
   },
-  DeleteAncestorOfExiting: {
-    screen: DeleteAncestorOfExiting,
-    title: '[LA] Deleting view with an exiting animation',
-  },
-  NestedNativeStacksWithLayout: {
-    screen: NestedNativeStacksWithLayout,
-    title: '[LA] Nested NativeStacks with layout',
-  },
-  BasicLayoutAnimation: {
-    screen: BasicLayoutAnimation,
-    title: '[LA] Basic layout animation',
-  },
-  BasicNestedAnimation: {
-    screen: BasicNestedAnimation,
-    title: '[LA] Basic nested animation',
-  },
-  BasicNestedLayoutAnimation: {
-    screen: BasicNestedLayoutAnimation,
-    title: '[LA] Basic nested layout animation',
-  },
-  NestedLayoutAnimations: {
-    screen: NestedTest,
-    title: '[LA] Nested layout animations',
-  },
-  CombinedLayoutAnimations: {
-    screen: CombinedTest,
-    title: '[LA] Entering and Exiting with Layout',
-  },
-  DefaultAnimations: {
-    screen: DefaultAnimations,
-    title: '[LA] Default layout animations',
-  },
   AnimatedKeyboard: {
     screen: AnimatedKeyboardExample,
     title: 'Use Animated Keyboard',
@@ -126,58 +70,6 @@ const SCREENS: Screens = {
   FrameCallbackExample: {
     screen: FrameCallbackExample,
     title: 'Frame callback example',
-  },
-  DefaultTransistions: {
-    screen: WaterfallGridExample,
-    title: '[LA] Default layout transitions',
-  },
-  KeyframeAnimation: {
-    screen: KeyframeAnimation,
-    title: '[LA] Keyframe animation',
-  },
-  ParticipantList: {
-    screen: AnimatedListExample,
-    title: '[LA] Participant List',
-  },
-  OlympicAnimation: {
-    screen: OlympicAnimation,
-    title: '[LA] Olympic animation',
-  },
-  CustomLayoutAnimation: {
-    screen: CustomLayoutAnimationScreen,
-    title: '[LA] Custom layout animation',
-  },
-  ModalNewAPI: {
-    title: '[LA] ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    title: '[LA] Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '[LA] Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  ReactionsCounterExample: {
-    screen: ReactionsCounterExample,
-    title: '[LA] Reactions counter',
-  },
-  SwipeableList: {
-    title: '[LA] Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '[LA] Modal',
-    screen: Modal,
-  },
-  NativeModals: {
-    title: '[LA] Native modals (RN and Screens)',
-    screen: NativeModals,
-  },
-  Carousel: {
-    title: '[LA] Carousel',
-    screen: Carousel,
   },
   PagerExample: {
     screen: PagerExample,

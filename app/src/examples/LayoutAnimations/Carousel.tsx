@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated';
 import {
-  View,
-  Text,
   Button,
-  StyleSheet,
   Image,
   ImageSourcePropType,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated';
+import React, { useState } from 'react';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -59,7 +59,7 @@ function AnimatedView({ pokemon }: { pokemon: Pokemon }) {
   );
 }
 
-export function Carousel(): React.ReactElement {
+export default function Carousel(): React.ReactElement {
   const [currentIndex, incrementIndex] = useState(0);
   return (
     <View style={{ flexDirection: 'column-reverse' }}>

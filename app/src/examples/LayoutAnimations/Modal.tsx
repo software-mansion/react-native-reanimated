@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
+  EntryAnimationsValues,
+  EntryExitAnimationFunction,
+  ExitAnimationsValues,
   useAnimatedStyle,
   withTiming,
-  EntryExitAnimationFunction,
-  EntryAnimationsValues,
-  ExitAnimationsValues,
 } from 'react-native-reanimated';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
 
 function AnimatedView() {
   const style = useAnimatedStyle(() => {
@@ -76,7 +76,7 @@ function AnimatedView() {
   );
 }
 
-export function Modal(): React.ReactElement {
+export default function Modal(): React.ReactElement {
   const [show, setShow] = useState(true);
   return (
     <View style={{ flexDirection: 'column-reverse' }}>

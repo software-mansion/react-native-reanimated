@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
-  makeMutable,
-  withTiming,
-  withDelay,
   LayoutAnimationFunction,
+  makeMutable,
+  withDelay,
   withSequence,
+  withTiming,
 } from 'react-native-reanimated';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
 
 function CustomLayoutTransiton(): LayoutAnimationFunction {
   const isEven = makeMutable(1);
@@ -53,7 +53,7 @@ function Box({ label, state }: { label: string; state: boolean }) {
   );
 }
 
-export function CustomLayoutAnimationScreen(): React.ReactElement {
+export default function CustomLayoutAnimationScreen(): React.ReactElement {
   const [state, setState] = useState(true);
   return (
     <View style={{ marginTop: 30 }}>

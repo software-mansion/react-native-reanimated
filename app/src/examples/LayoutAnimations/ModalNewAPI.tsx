@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, Button, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
-  withTiming,
-  withDelay,
-  EntryExitAnimationFunction,
-  Layout,
   EntryAnimationsValues,
+  EntryExitAnimationFunction,
   ExitAnimationsValues,
+  Layout,
+  withDelay,
+  withTiming,
 } from 'react-native-reanimated';
+import { Button, Dimensions, StyleSheet, Text, View } from 'react-native';
+import React, { useRef, useState } from 'react';
 
 const { width } = Dimensions.get('window');
 
@@ -67,7 +67,7 @@ function AnimatedView() {
   );
 }
 
-export function ModalNewAPI(): React.ReactElement {
+export default function ModalNewAPI(): React.ReactElement {
   const [show, setShow] = useState(false);
   return (
     <View style={{ flexDirection: 'column-reverse' }}>

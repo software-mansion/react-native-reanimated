@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Button, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
+import { Button, View } from 'react-native';
+import React, { useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
 
-export function OlympicAnimation(): React.ReactElement {
+export default function OlympicAnimation(): React.ReactElement {
   const [show, setShow] = useState(true);
 
   const blueRingAnimation = new Keyframe({

@@ -1,30 +1,48 @@
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import AnimatedSensorExample from './AnimatedSensorExample';
 import AnimatedTextInputExample from './AnimatedTextInputExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
+import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
+import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
+import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
 import BokehExample from './BokehExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
 import CardExample from './SharedElementTransitions/Card';
+import Carousel from './LayoutAnimations/Carousel';
 import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
+import CombinedTest from './LayoutAnimations/Combined';
 import ConfigExample from './ConfigExample';
+import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
+import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
+import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
 import EmptyExample from './EmptyExample';
 import FlatListExample from './SharedElementTransitions/FlatList';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
+import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
 import ManyTagsExample from './SharedElementTransitions/ManyTags';
 import MeasureExample from './MeasureExample';
+import Modal from './LayoutAnimations/Modal';
+import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import ModalsExample from './SharedElementTransitions/Modals';
+import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import NativeModals from './LayoutAnimations/NativeModals';
+import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
+import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
+import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
@@ -32,8 +50,11 @@ import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderCo
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SvgExample from './SvgExample';
+import SwipeableList from './LayoutAnimations/SwipeableList';
 import TransformExample from './TransformExample';
+import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
 import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WorkletExample from './WorkletExample';
@@ -45,6 +66,111 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  DeleteAncestorOfExiting: {
+    icon: '',
+    title: '[LA] Deleting view with an exiting animation',
+    screen: DeleteAncestorOfExiting,
+  },
+  NestedNativeStacksWithLayout: {
+    icon: '',
+    title: '[LA] Nested NativeStacks with layout',
+    screen: NestedNativeStacksWithLayout,
+  },
+  BasicLayoutAnimation: {
+    icon: '',
+    title: '[LA] Basic layout animation',
+    screen: BasicLayoutAnimation,
+  },
+  BasicNestedAnimation: {
+    icon: '',
+    title: '[LA] Basic nested animation',
+    screen: BasicNestedAnimation,
+  },
+  BasicNestedLayoutAnimation: {
+    icon: '',
+    title: '[LA] Basic nested layout animation',
+    screen: BasicNestedLayoutAnimation,
+  },
+  NestedLayoutAnimations: {
+    icon: '',
+    title: '[LA] Nested layout animations',
+    screen: NestedTest,
+  },
+  CombinedLayoutAnimations: {
+    icon: '',
+    title: '[LA] Entering and Exiting with Layout',
+    screen: CombinedTest,
+  },
+  DefaultAnimations: {
+    icon: '',
+    title: '[LA] Default layout animations',
+    screen: DefaultAnimations,
+  },
+  DefaultTransitions: {
+    icon: '',
+    title: '[LA] Default layout transitions',
+    screen: WaterfallGridExample,
+  },
+  KeyframeAnimation: {
+    icon: '',
+    title: '[LA] Keyframe animation',
+    screen: KeyframeAnimation,
+  },
+  ParticipantList: {
+    icon: '',
+    title: '[LA] Participant List',
+    screen: AnimatedListExample,
+  },
+  OlympicAnimation: {
+    icon: '',
+    title: '[LA] Olympic animation',
+    screen: OlympicAnimation,
+  },
+  CustomLayoutAnimation: {
+    icon: '',
+    title: '[LA] Custom layout animation',
+    screen: CustomLayoutAnimationScreen,
+  },
+  ModalNewAPI: {
+    icon: '',
+    title: '[LA] ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    icon: '',
+    title: '[LA] Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    icon: '',
+    title: '[LA] Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  ReactionsCounterExample: {
+    icon: '',
+    title: '[LA] Reactions counter',
+    screen: ReactionsCounterExample,
+  },
+  SwipeableList: {
+    icon: '',
+    title: '[LA] Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    icon: '',
+    title: '[LA] Modal',
+    screen: Modal,
+  },
+  NativeModals: {
+    icon: '',
+    title: '[LA] Native modals (RN and Screens)',
+    screen: NativeModals,
+  },
+  Carousel: {
+    icon: '',
+    title: '[LA] Carousel',
+    screen: Carousel,
+  },
   CardExample: {
     icon: '',
     title: '[SET] Card',

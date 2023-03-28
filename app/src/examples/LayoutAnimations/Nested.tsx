@@ -1,5 +1,5 @@
 import Animated, { FadeOut } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
+import { Button, View } from 'react-native';
 import React, { useState } from 'react';
 
 const levelOne = {
@@ -21,7 +21,7 @@ const levelThree = {
   margin: 20,
 };
 
-export function NestedTest() {
+export default function NestedTest() {
   const [toggle, setToggle] = useState(false);
 
   return (

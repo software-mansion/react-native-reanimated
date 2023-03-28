@@ -1,10 +1,6 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, LayoutChangeEvent, Image } from 'react-native';
-import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   BaseAnimationBuilder,
   BounceOut,
-  combineTransition,
   CurvedTransition,
   FadingTransition,
   JumpingTransition,
@@ -13,7 +9,12 @@ import Animated, {
   LightSpeedInRight,
   PinwheelOut,
   SequencedTransition,
+  combineTransition,
 } from 'react-native-reanimated';
+import { Image, LayoutChangeEvent, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
+
 import { Picker } from '@react-native-community/picker';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -144,7 +145,7 @@ export function WaterfallGrid({
     </View>
   );
 }
-export function WaterfallGridExample() {
+export default function WaterfallGridExample() {
   const [selectedTransition, setSelectedTransition] = useState<string>(
     'SequencedTransition'
   );

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Alert, Modal, StyleSheet, Text, Pressable, View } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
-  createNativeStackNavigator,
   NativeStackNavigationProp,
+  createNativeStackNavigator,
 } from '@react-navigation/native-stack';
+import React, { useState } from 'react';
+
 import { ParamListBase } from '@react-navigation/native';
 
 // import { createStackNavigator } from "@react-navigation/stack";
@@ -12,7 +13,7 @@ const Stack = createNativeStackNavigator();
 // you can check if normal stack works ok too
 // const Stack = createStackNavigator();
 
-export function NativeModals() {
+export default function NativeModals() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Home" component={App} />

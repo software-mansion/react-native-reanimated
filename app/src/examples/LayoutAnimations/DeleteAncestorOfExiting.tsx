@@ -3,7 +3,7 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-export function DeleteAncestorOfExiting() {
+export default function DeleteAncestorOfExiting() {
   const [outer, setOuter] = React.useState(false);
   const [inner, setInner] = React.useState(true);
 

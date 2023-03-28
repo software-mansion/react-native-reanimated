@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, { Layout } from 'react-native-reanimated';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
 
 function Box({ label, state }: { label: string; state: boolean }) {
   const ind = label.charCodeAt(0) - 'A'.charCodeAt(0);
@@ -21,7 +21,7 @@ function Box({ label, state }: { label: string; state: boolean }) {
   );
 }
 
-export function SpringLayoutAnimation(): React.ReactElement {
+export default function SpringLayoutAnimation(): React.ReactElement {
   const [state, setState] = useState(true);
   return (
     <View style={{ marginTop: 30 }}>

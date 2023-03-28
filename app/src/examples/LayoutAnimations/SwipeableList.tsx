@@ -1,10 +1,10 @@
+import Animated, { Layout, ZoomOut } from 'react-native-reanimated';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import React, { useState } from 'react';
-import { View, Button, Text, StyleSheet } from 'react-native';
-import Animated, { ZoomOut, Layout } from 'react-native-reanimated';
 
 const FRUITS = ['banana', 'strawberry', 'apple', 'kiwi', 'orange', 'blueberry'];
 
-export function SwipeableList() {
+export default function SwipeableList() {
   const [fruits, setFruits] = useState(FRUITS);
   return (
     <View>

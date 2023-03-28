@@ -10,7 +10,7 @@ import Animated, {
 import { Button, StyleSheet, View } from 'react-native';
 import React, { useEffect } from 'react';
 
-export function BasicNestedAnimation() {
+export default function BasicNestedAnimation() {
   const sv = useSharedValue(0);
 
   useEffect(() => {

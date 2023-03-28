@@ -1,5 +1,5 @@
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
+import { Button, View } from 'react-native';
 import React, { useState } from 'react';
 
 const style = {
@@ -15,7 +15,7 @@ const style = {
   Exiting should stop the layout animation, and begin playing the exiting animation
   from the component's current location.
 */
-export function CombinedTest() {
+export default function CombinedTest() {
   const [toggle, setToggle] = useState(false);
   const [height, setHeight] = useState(6 * 70);
 
