@@ -80,11 +80,11 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
+    "@babel/core": "^7.20.0",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
-    "setimmediate": "^1.0.5",
-    "string-hash-64": "^1.0.3"
+    "setimmediate": "^1.0.5"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
@@ -93,8 +93,7 @@
   },
   "devDependencies": {
     "@types/node": "12.7.12",
-    "@babel/cli": "^7.17.6",
-    "@babel/core": "^7.20.0",
+    "@babel/cli": "^7.20.0",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "@babel/preset-env": "^7.20.0",
@@ -103,8 +102,8 @@
     "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^7.1.0",
     "@types/convert-source-map": "^2.0.0",
-    "@types/babel-types": "^7.0.11",
-    "@types/babel__core": "^7.1.18",
+    "@babel/types": "^7.20.0",
+    "@types/babel__core": "^7.20.0",
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.14.2",
     "@types/invariant": "^2.2.35",
