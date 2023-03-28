@@ -10,7 +10,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 
 const size = 40;
 
-function ScrollExample(): React.ReactElement {
+export default function ScrollEventExample(): React.ReactElement {
   const transY = useSharedValue(0);
   const isScrolling = useSharedValue(false);
   const headerHeight = useHeaderHeight();
@@ -88,5 +88,3 @@ const styles = StyleSheet.create({
     marginVertical: 300,
   },
 });
-
-export default ScrollExample;

@@ -157,7 +157,7 @@ function Followers({
   );
 }
 
-function Main(): React.ReactElement {
+export default function ChatHeadsExample(): React.ReactElement {
   return (
     <View style={{ flex: 1, margin: 50 }}>
       <ChatHeads>
@@ -179,5 +179,3 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
 });
-
-export default Main;

@@ -24,7 +24,7 @@ export default function MeasureExample() {
   };
 
   const handleMeasureFromJS = () => {
-    aref.current?.measure((x, y, width, height, pageX, pageY) =>
+    aref.current?.measure?.((x, y, width, height, pageX, pageY) =>
       console.log(_WORKLET, { x, y, width, height, pageX, pageY })
     );
   };

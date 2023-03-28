@@ -13,7 +13,7 @@ const cardSize = 200;
 const cardMargin = 10;
 const cardInterval = cardSize + cardMargin * 2;
 
-function InvertedFlatListExample() {
+export default function InvertedFlatListExample() {
   return (
     <>
       <List />
@@ -134,5 +134,3 @@ const styles = StyleSheet.create({
     fontSize: 32,
   },
 });
-
-export default InvertedFlatListExample;

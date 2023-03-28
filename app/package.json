@@ -11,10 +11,15 @@
     "react-native": "*"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.4.0",
+    "@fortawesome/free-solid-svg-icons": "^6.4.0",
+    "@fortawesome/react-native-fontawesome": "^0.3.0",
     "@react-native-masked-view/masked-view": "^0.2.8",
     "@react-native-picker/picker": "^2.4.9",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
+    "@react-navigation/stack": "^6.3.16",
+    "d3-shape": "^3.2.0",
     "react-dom": "18.0.0",
     "react-native-gesture-handler": "^2.9.0",
     "react-native-pager-view": "5.4.24",
@@ -26,6 +31,7 @@
   },
   "devDependencies": {
     "@tsconfig/react-native": "^2.0.3",
+    "@types/d3-shape": "^3.1.1",
     "eslint": "^8.36.0",
     "prettier": "^2.8.7",
     "typescript": "^5.0.2"

@@ -146,7 +146,7 @@ function Box({ color }: { color: string }) {
   );
 }
 
-function Example(): React.ReactElement {
+export default function ScrollableViewExample(): React.ReactElement {
   const headerHeight = useHeaderHeight();
 
   const height =
@@ -168,5 +168,3 @@ const styles = StyleSheet.create({
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },
 });
-
-export default Example;

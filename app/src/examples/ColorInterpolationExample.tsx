@@ -139,7 +139,7 @@ function hsvStarInterpolation(
   return interpolateColor(progress, [0, 1], [color1, color2], 'HSV');
 }
 
-export function ColorInterpolationExample() {
+export default function ColorInterpolationExample() {
   const [color1, setColor1] = useState('#ff0000');
   const [color2, setColor2] = useState('#00ffff');
   const [color1Text, setColor1Text] = useState('#ff0000');

@@ -40,7 +40,7 @@ const BIG_BALL_SIZE = 200;
 const SMALL_BALL_SIZE = 50;
 const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
-function ScrollExample(): React.ReactElement {
+export default function IPodExample(): React.ReactElement {
   const position = useSharedValue(0);
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
 
@@ -241,5 +241,3 @@ const styles = StyleSheet.create({
     marginLeft: ITEM_SIZE.size / 2 - 100 / 2,
   },
 });
-
-export default ScrollExample;

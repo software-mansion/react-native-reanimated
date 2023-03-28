@@ -7,7 +7,7 @@ import Animated, {
 import { View, Button, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 
-export default function AnimatedSharedStyleExample() {
+export default function SharedStyleExample() {
   const randomWidth = useSharedValue(100);
 
   const [blueCounter, setBlueCounter] = useState<number>(0);

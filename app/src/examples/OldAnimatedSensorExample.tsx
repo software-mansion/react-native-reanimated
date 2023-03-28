@@ -6,7 +6,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet } from 'react-native';
 
-export default function AnimatedStyleUpdateExample() {
+export default function OldAnimatedSensorExample() {
   const animatedSensor = useAnimatedSensor(SensorType.GRAVITY);
   const style = useAnimatedStyle(() => {
     const { x, y } = animatedSensor.sensor.value;

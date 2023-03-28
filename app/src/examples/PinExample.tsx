@@ -21,7 +21,7 @@ const range = [0, 9999];
 
 const dotSize = 40;
 
-function ScrollToScreen(): React.ReactElement {
+export default function PinExample(): React.ReactElement {
   const progress = useSharedValue(0);
   const number = useDerivedValue(() => {
     const val = range[0] + Math.round(progress.value * (range[1] - range[0]));
@@ -171,5 +171,3 @@ const styles = StyleSheet.create({
     height: dotSize,
   },
 });
-
-export default ScrollToScreen;

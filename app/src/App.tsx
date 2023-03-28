@@ -12,11 +12,6 @@ import { EXAMPLES } from './examples';
 import { NavigationContainer } from '@react-navigation/native';
 import React from 'react';
 
-// TODO: remove this
-declare global {
-  const _WORKLET: boolean;
-}
-
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };

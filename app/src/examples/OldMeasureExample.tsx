@@ -51,7 +51,7 @@ function createSharedVariables() {
   };
 }
 
-function MeasureExample(): React.ReactElement {
+export default function OldMeasureExample(): React.ReactElement {
   const { heights, contentHeights } = createSharedVariables();
 
   return (
@@ -274,5 +274,3 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
 });
-
-export default MeasureExample;

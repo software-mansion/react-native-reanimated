@@ -95,7 +95,7 @@ function ControlPanel() {
   return <Button title="Click me!" onPress={startAnimation} />;
 }
 
-export function EmojiWaterfallExample() {
+export default function EmojiWaterfallExample() {
   return (
     <View style={styles.container}>
       <EmojiWaterfallProvider>

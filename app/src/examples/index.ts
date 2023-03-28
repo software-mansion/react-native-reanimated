@@ -1,6 +1,8 @@
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import AnimatedTabBarExample from './AnimatedTabBarExample';
 import AnimatedTextInputExample from './AnimatedTextInputExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
@@ -12,20 +14,28 @@ import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
 import CardExample from './SharedElementTransitions/Card';
 import Carousel from './LayoutAnimations/Carousel';
+import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
+import ColorInterpolationExample from './ColorInterpolationExample';
 import CombinedTest from './LayoutAnimations/Combined';
 import ConfigExample from './ConfigExample';
+import CubesExample from './CubesExample';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DragAndSnapExample from './DragAndSnapExample';
+import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
+import ExtrapolationExample from './ExtrapolationExample';
 import FlatListExample from './SharedElementTransitions/FlatList';
 import FrameCallbackExample from './FrameCallbackExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import GestureHandlerExample from './GestureHandlerExample';
+import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
+import InvertedFlatListExample from './InvertedFlatListExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import LightBoxExample from './LightBoxExample';
@@ -42,24 +52,32 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
+import OldAnimatedSensorExample from './OldAnimatedSensorExample';
+import OldMeasureExample from './OldMeasureExample';
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PagerExample from './CustomHandler/PagerExample';
+import PinExample from './PinExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
+import ScrollEventExample from './ScrollEventExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SharedStyleExample from './SharedStyleExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SvgExample from './SvgExample';
 import SwipeableList from './LayoutAnimations/SwipeableList';
+import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
 import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
+import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 
 interface Example {
@@ -69,6 +87,96 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  IPodExample: {
+    icon: '🎧',
+    title: 'iPod example',
+    screen: IPodExample,
+  },
+  SharedStyleExample: {
+    icon: '',
+    title: 'Shared style example',
+    screen: SharedStyleExample,
+  },
+  AnimatedStyleUpdateExample: {
+    icon: '',
+    title: 'Animated style update example',
+    screen: AnimatedStyleUpdateExample,
+  },
+  AnimatedTabBarExample: {
+    icon: '',
+    title: 'Animated tab bar example',
+    screen: AnimatedTabBarExample,
+  },
+  ChatHeadsExample: {
+    icon: '',
+    title: 'Chat heads example',
+    screen: ChatHeadsExample,
+  },
+  CubesExample: {
+    icon: '',
+    title: 'Cubes example',
+    screen: CubesExample,
+  },
+  DragAndSnapExample: {
+    icon: '',
+    title: 'Drag and snap example',
+    screen: DragAndSnapExample,
+  },
+  ColorInterpolationExample: {
+    icon: '',
+    title: 'Color interpolation example',
+    screen: ColorInterpolationExample,
+  },
+  EmojiWaterfallExample: {
+    icon: '',
+    title: 'Emoji waterfall example',
+    screen: EmojiWaterfallExample,
+  },
+  ExtrapolationExample: {
+    icon: '',
+    title: 'Extrapolation example',
+    screen: ExtrapolationExample,
+  },
+  InvertedFlatListExample: {
+    icon: '',
+    title: 'Inverted FlatList example',
+    screen: InvertedFlatListExample,
+  },
+  OldAnimatedSensorExample: {
+   icon: '',
+   title: 'Old animated sensor example',
+   screen: OldAnimatedSensorExample,
+  },
+  OldMeasureExample: {
+    icon: '',
+    title: 'Old measure example',
+    screen: OldMeasureExample,
+  },
+  PinExample: {
+    icon: '',
+    title: 'PIN example',
+    screen: PinExample,
+  },
+  ScrollableViewExample: {
+    icon: '',
+    title: 'Scrollable view example',
+    screen: ScrollableViewExample,
+  },
+  ScrollEventExample: {
+    icon: '',
+    title: 'Scroll event example',
+    screen: ScrollEventExample,
+  },
+  SwipeableListExample: {
+    icon: '',
+    title: 'Swipeable list example',
+    screen: SwipeableListExample,
+  },
+  WobbleExample: {
+    icon: '',
+    title: 'Wobble example',
+    screen: WobbleExample,
+  },
   LightBoxExample: {
     icon: '🖼️',
     title: 'LightBox example',
