@@ -15,7 +15,8 @@ import { Image, LayoutChangeEvent, Text, View } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 
-import { Picker } from '@react-native-community/picker';
+import { Picker } from '@react-native-picker/picker';
+import { isFabric } from '../../../utils';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 type Props = {
@@ -158,25 +159,27 @@ export default function WaterfallGridExample() {
           height: 60,
           padding: 10,
         }}>
-        <Picker
-          mode="dropdown"
-          selectedValue={selectedTransition}
-          style={{ height: 50, width: 250 }}
-          itemStyle={{ height: 50 }}
-          onValueChange={(itemValue) => {
-            setSelectedTransition(itemValue as string);
-          }}>
-          <Picker.Item label="LinearTransition" value="LinearTransition" />
-          <Picker.Item
-            label="SequencedTransition"
-            value="SequencedTransition"
-          />
-          <Picker.Item label="ReverseSequenced" value="ReverseSequenced" />
-          <Picker.Item label="FadingTransition" value="FadingTransition" />
-          <Picker.Item label="JumpingTransition" value="JumpingTransition" />
-          <Picker.Item label="CurvedTransition" value="CurvedTransition" />
-          <Picker.Item label="EntryExit" value="EntryExit" />
-        </Picker>
+        {!isFabric() && (
+          <Picker
+            mode="dropdown"
+            selectedValue={selectedTransition}
+            style={{ height: 50, width: 250 }}
+            itemStyle={{ height: 50 }}
+            onValueChange={(itemValue) => {
+              setSelectedTransition(itemValue as string);
+            }}>
+            <Picker.Item label="LinearTransition" value="LinearTransition" />
+            <Picker.Item
+              label="SequencedTransition"
+              value="SequencedTransition"
+            />
+            <Picker.Item label="ReverseSequenced" value="ReverseSequenced" />
+            <Picker.Item label="FadingTransition" value="FadingTransition" />
+            <Picker.Item label="JumpingTransition" value="JumpingTransition" />
+            <Picker.Item label="CurvedTransition" value="CurvedTransition" />
+            <Picker.Item label="EntryExit" value="EntryExit" />
+          </Picker>
+        )}
       </View>
       <WaterfallGrid
         key={selectedTransition}

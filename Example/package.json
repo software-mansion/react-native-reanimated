@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
+    "@react-native-picker/picker": "^2.4.9",
     "@react-navigation/native": "^6.0.13",
     "@react-navigation/native-stack": "^6.9.0",
     "react": "18.2.0",
