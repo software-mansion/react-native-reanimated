@@ -21,10 +21,6 @@ import {
 
 import React from 'react';
 
-declare global {
-  const _WORKLET: boolean;
-}
-
 function RunOnUIDemo() {
   const someWorklet = (x: number) => {
     'worklet';

@@ -1,3 +1,5 @@
+import './types';
+
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   GestureHandlerRootView,
