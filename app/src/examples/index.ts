@@ -42,6 +42,7 @@ import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
+import PagerExample from './CustomHandler/PagerExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
@@ -66,6 +67,11 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  PagerExample: {
+    icon: '📟',
+    title: 'Pager example',
+    screen: PagerExample,
+  },
   DeleteAncestorOfExiting: {
     icon: '',
     title: '[LA] Deleting view with an exiting animation',
