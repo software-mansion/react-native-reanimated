@@ -275,7 +275,10 @@ function steps(n = 10, start = true): EasingFn {
   return (t) => {
     'worklet';
     const value = Math.min(Math.max(t, 0), 1) * n;
-    return (start ? Math.ceil(value) : Math.floor(value)) / n;
+    if (start) {
+      return Math.ceil(value) / n;
+    }
+    return Math.floor(value) / n;
   };
 }
 
