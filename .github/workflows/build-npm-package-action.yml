@@ -46,7 +46,7 @@ jobs:
           ! grep --silent -E "node_modules/.+"
 
       - name: Check if size is over 1MB
-        if: ${{inputs.ref}} != 'Reanimated2'
+        if: ${{ inputs.ref != 'Reanimated2' }}
         id: size
         run: grep --silent -E "npm notice package size:\s*[0-9][0-9]?[0-9]?(\.[0-9]*)?\s*kB" build.log
 
