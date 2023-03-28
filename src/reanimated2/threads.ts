@@ -15,7 +15,7 @@ export function setupMicrotasks() {
   'worklet';
 
   let microtasksQueue: Array<() => void> = [];
-  let callMicrotasksRunning = false;
+  let isExecutingMicrotasksQueue = false;
 
   // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
   global.queueMicrotask = (callback: () => void): number => {
@@ -24,16 +24,19 @@ export function setupMicrotasks() {
   };
 
   global.__callMicrotasks = () => {
-    if (callMicrotasksRunning) {
+    if (isExecutingMicrotasksQueue) {
       return;
     }
-    callMicrotasksRunning = true;
-    for (let index = 0; index < microtasksQueue.length; index += 1) {
-      // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to queueMicrotask calls
-      microtasksQueue[index]();
+    try {
+      isExecutingMicrotasksQueue = true;
+      for (let index = 0; index < microtasksQueue.length; index += 1) {
+        // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to queueMicrotask calls
+        microtasksQueue[index]();
+      }
+      microtasksQueue = [];
+    } finally {
+      isExecutingMicrotasksQueue = false;
     }
-    microtasksQueue = [];
-    callMicrotasksRunning = false;
   };
 }
 
