@@ -1,12 +1,11 @@
 {
-  "extends": "@tsconfig/react-native/tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "react-native-reanimated": ["../"],
-      "react": ["./node_modules/@types/react"],
-    },
+      "react": ["./node_modules/@types/react"]
+    }
   },
-  "exclude": [],
-  "include": ["index.js", "src/", "test/**/*"]
+  "exclude": []
 }
