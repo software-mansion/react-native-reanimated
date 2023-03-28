@@ -264,6 +264,21 @@ function inOut(easing: EasingFn): EasingFn {
   };
 }
 
+/**
+ * The `steps` easing function jumps between discrete values at regular intervals,
+ * creating a stepped animation effect. The `n` parameter determines the number of
+ * steps in the animation, and the `start` parameter determines whether the animation
+ * should start at the beginning or end of each step.
+ */
+function steps(n = 10, start = true): EasingFn {
+  'worklet';
+  const trunc = start ? Math.ceil : Math.floor;
+  return (t) => {
+    'worklet';
+    return trunc(Math.min(Math.max(t, 0), 1) * n) / n;
+  };
+}
+
 const EasingObject = {
   linear,
   ease,
@@ -278,6 +293,7 @@ const EasingObject = {
   bounce,
   bezier,
   bezierFn,
+  steps,
   in: in_,
   out,
   inOut,
