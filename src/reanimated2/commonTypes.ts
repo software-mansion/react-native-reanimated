@@ -60,10 +60,6 @@ export type ShareableRef<T> = {
   __hostObjectShareableJSRef: T;
 };
 
-export type ShareableSyncDataHolderRef<T> = {
-  __hostObjectShareableJSRefSyncDataHolder: T;
-};
-
 export type MapperRegistry = {
   start: (
     mapperID: number,

@@ -1,10 +1,5 @@
 import { NativeModules } from 'react-native';
-import {
-  ShareableRef,
-  ShareableSyncDataHolderRef,
-  Value3D,
-  ValueRotation,
-} from '../commonTypes';
+import { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
 import {
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -57,23 +52,6 @@ export class NativeReanimated {
       value,
       shouldPersistRemote
     );
-  }
-
-  makeSynchronizedDataHolder<T>(
-    valueRef: ShareableRef<T>
-  ): ShareableSyncDataHolderRef<T> {
-    return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
-  }
-
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T {
-    return this.InnerNativeModule.getDataSynchronously(ref);
-  }
-
-  updateDataSynchronously<T>(
-    ref: ShareableSyncDataHolderRef<T>,
-    value: T
-  ): void {
-    this.InnerNativeModule.updateDataSynchronously(ref, value);
   }
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {

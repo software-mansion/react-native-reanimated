@@ -87,7 +87,6 @@ void RuntimeDecorator::decorateUIRuntime(
     const RequestFrameFunction requestFrame,
     const ScheduleOnJSFunction scheduleOnJS,
     const MakeShareableCloneFunction makeShareableClone,
-    const UpdateDataSynchronouslyFunction updateDataSynchronously,
     const TimeProviderFunction getCurrentTime,
     const SetGestureStateFunction setGestureState,
     const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
@@ -121,8 +120,6 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(rt, "requestAnimationFrame", requestFrame);
   jsi_utils::installJsiFunction(rt, "_scheduleOnJS", scheduleOnJS);
   jsi_utils::installJsiFunction(rt, "_makeShareableClone", makeShareableClone);
-  jsi_utils::installJsiFunction(
-      rt, "_updateDataSynchronously", updateDataSynchronously);
 
   auto performanceNow = [getCurrentTime](
                             jsi::Runtime &rt,

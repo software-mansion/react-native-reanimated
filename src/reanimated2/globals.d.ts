@@ -4,7 +4,6 @@ import type {
   MeasuredDimensions,
   MapperRegistry,
   ShareableRef,
-  ShareableSyncDataHolderRef,
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { ShadowNodeWrapper } from './hook/commonTypes';
@@ -36,10 +35,6 @@ declare global {
   ) => void;
   const _setGestureState: (handlerTag: number, newState: number) => void;
   const _makeShareableClone: (value: any) => any;
-  const _updateDataSynchronously: (
-    dataHolder: ShareableSyncDataHolderRef,
-    data: ShareableRef
-  ) => void;
   const _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
   const _updatePropsPaper: (
     tag: number,
@@ -92,10 +87,6 @@ declare global {
       _getCurrentTime: () => number;
       _setGestureState: (handlerTag: number, newState: number) => void;
       _makeShareableClone: (value: any) => any;
-      _updateDataSynchronously: (
-        ShareableSyncDataHolderRef,
-        ShareableRef
-      ) => void;
       _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
       _updatePropsPaper: (
         tag: number,

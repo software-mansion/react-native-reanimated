@@ -102,15 +102,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     return this->makeShareableClone(rt, value, jsi::Value::undefined());
   };
 
-  auto updateDataSynchronously =
-      [this](
-          jsi::Runtime &rt,
-          const jsi::Value &synchronizedDataHolderRef,
-          const jsi::Value &newData) {
-        return this->updateDataSynchronously(
-            rt, synchronizedDataHolderRef, newData);
-      };
-
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](
                          jsi::Runtime &rt,
@@ -152,7 +143,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       requestAnimationFrame,
       scheduleOnJS,
       makeShareableClone,
-      updateDataSynchronously,
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
@@ -231,31 +221,6 @@ jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
   auto shareableResult = extractShareableOrThrow(uiRuntime, result);
   lock.unlock();
   return shareableResult->getJSValue(rt);
-}
-
-jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
-    jsi::Runtime &rt,
-    const jsi::Value &initialShareable) {
-  auto dataHolder = std::make_shared<ShareableSynchronizedDataHolder>(
-      runtimeHelper, rt, initialShareable);
-  return dataHolder->getJSValue(rt);
-}
-
-void NativeReanimatedModule::updateDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef,
-    const jsi::Value &newData) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  dataHolder->set(rt, newData);
-}
-
-jsi::Value NativeReanimatedModule::getDataSynchronously(
-    jsi::Runtime &rt,
-    const jsi::Value &synchronizedDataHolderRef) {
-  auto dataHolder = extractShareableOrThrow<ShareableSynchronizedDataHolder>(
-      rt, synchronizedDataHolderRef);
-  return dataHolder->get(rt);
 }
 
 jsi::Value NativeReanimatedModule::makeShareableClone(

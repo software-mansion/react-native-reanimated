@@ -1,18 +1,19 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
+import { SharedValue } from './commonTypes';
 import {
-  makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from './shareables';
-import { runOnUI } from './threads';
+import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 export { stopMapper } from './mappers';
 
-export function makeUIMutable<T>(
-  initial: T,
-  syncDataHolder?: ShareableSyncDataHolderRef<T>
-) {
+function uiValueGetter<T>(sharedValue: SharedValue<T>) {
+  'worklet';
+  return sharedValue.value;
+}
+
+export function makeUIMutable<T>(initial: T) {
   'worklet';
 
   const listeners = new Map();
@@ -33,12 +34,6 @@ export function makeUIMutable<T>(
      */
     set _value(newValue: T) {
       value = newValue;
-      if (syncDataHolder) {
-        _updateDataSynchronously(
-          syncDataHolder,
-          makeShareableCloneOnUIRecursive(newValue)
-        );
-      }
       listeners.forEach((listener) => {
         listener(newValue);
       });
@@ -58,23 +53,12 @@ export function makeUIMutable<T>(
   return self;
 }
 
-export function makeMutable<T>(
-  initial: T,
-  oneWayReadsOnly = false
-): SharedValue<T> {
+export function makeMutable<T>(initial: T): SharedValue<T> {
   let value: T = initial;
-  let syncDataHolder: ShareableSyncDataHolderRef<T> | undefined;
-  if (!oneWayReadsOnly && NativeReanimatedModule.native) {
-    // updates are always synchronous when running on web or in Jest environment
-    syncDataHolder = NativeReanimatedModule.makeSynchronizedDataHolder(
-      makeShareableCloneRecursive(value)
-    );
-    registerShareableMapping(syncDataHolder);
-  }
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      return makeUIMutable(initial, syncDataHolder);
+      return makeUIMutable(initial);
     },
   });
   // listeners can only work on JS thread on Web and jest environments
@@ -91,8 +75,8 @@ export function makeMutable<T>(
       }
     },
     get value() {
-      if (syncDataHolder) {
-        return NativeReanimatedModule.getDataSynchronously(syncDataHolder);
+      if (NativeReanimatedModule.native) {
+        return executeOnUIRuntimeSync(uiValueGetter)(mutable);
       }
       return value;
     },

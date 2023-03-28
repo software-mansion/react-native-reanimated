@@ -114,7 +114,6 @@ class Shareable {
     WorkletType,
     RemoteFunctionType,
     HandleType,
-    SynchronizedDataHolder,
     HostObjectType,
   };
 
@@ -369,58 +368,6 @@ class ShareableHandle : public Shareable {
     }
     return jsi::Value(rt, *remoteValue_);
   }
-};
-
-class ShareableSynchronizedDataHolder
-    : public Shareable,
-      public std::enable_shared_from_this<ShareableSynchronizedDataHolder> {
- private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
-  std::shared_ptr<Shareable> data_;
-  std::shared_ptr<jsi::Value> uiValue_;
-  std::shared_ptr<jsi::Value> rnValue_;
-  std::mutex dataAccessMutex_; // Protects `data_`.
-
- public:
-  ShareableSynchronizedDataHolder(
-      std::shared_ptr<JSRuntimeHelper> runtimeHelper,
-      jsi::Runtime &rt,
-      const jsi::Value &initialValue)
-      : Shareable(SynchronizedDataHolder),
-        runtimeHelper_(runtimeHelper),
-        data_(extractShareableOrThrow(rt, initialValue)) {}
-
-  jsi::Value get(jsi::Runtime &rt) {
-    std::unique_lock<std::mutex> read_lock(dataAccessMutex_);
-    if (runtimeHelper_->isUIRuntime(rt)) {
-      if (uiValue_ == nullptr) {
-        auto value = data_->getJSValue(rt);
-        uiValue_ = std::make_shared<jsi::Value>(rt, value);
-        return value;
-      } else {
-        return jsi::Value(rt, *uiValue_);
-      }
-    } else {
-      if (rnValue_ == nullptr) {
-        auto value = data_->getJSValue(rt);
-        rnValue_ = std::make_shared<jsi::Value>(rt, value);
-        return value;
-      } else {
-        return jsi::Value(rt, *rnValue_);
-      }
-    }
-  }
-
-  void set(jsi::Runtime &rt, const jsi::Value &data) {
-    std::unique_lock<std::mutex> write_lock(dataAccessMutex_);
-    data_ = extractShareableOrThrow(rt, data);
-    uiValue_.reset();
-    rnValue_.reset();
-  }
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    return ShareableJSRef::newHostObject(rt, shared_from_this());
-  };
 };
 
 class ShareableString : public Shareable {

@@ -103,7 +103,6 @@ const globals = new Set([
     '_log',
     '_scheduleOnJS',
     '_makeShareableClone',
-    '_updateDataSynchronously',
     'eval',
     '_updatePropsPaper',
     '_updatePropsFabric',
