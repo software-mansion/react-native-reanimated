@@ -38,6 +38,7 @@ var require_commonObjects = __commonJS({
       "UIManager",
       "requestAnimationFrame",
       "setImmediate",
+      "queueMicrotask",
       "_WORKLET",
       "arguments",
       "Boolean",
@@ -854,7 +855,6 @@ var require_package = __commonJS({
         "convert-source-map": "^2.0.0",
         invariant: "^2.2.4",
         "lodash.isequal": "^4.5.0",
-        setimmediate: "^1.0.5",
         "string-hash-64": "^1.0.3"
       },
       peerDependencies: {
