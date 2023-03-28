@@ -4,7 +4,7 @@
     "type:check": "yarn tsc --noEmit",
     "lint": "yarn lint:eslint && yarn lint:prettier",
     "lint:eslint": "yarn eslint --max-warnings=0 .",
-    "lint:prettier": "yarn prettier --check **/*.ts"
+    "lint:prettier": "yarn prettier --check ."
   },
   "peerDependencies": {
     "react": "*",
