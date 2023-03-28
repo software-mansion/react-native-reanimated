@@ -143,9 +143,9 @@ export const EXAMPLES: Record<string, Example> = {
     screen: InvertedFlatListExample,
   },
   OldAnimatedSensorExample: {
-   icon: '',
-   title: 'Old animated sensor example',
-   screen: OldAnimatedSensorExample,
+    icon: '',
+    title: 'Old animated sensor example',
+    screen: OldAnimatedSensorExample,
   },
   OldMeasureExample: {
     icon: '',

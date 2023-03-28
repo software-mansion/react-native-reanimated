@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "type:check": "yarn tsc --noEmit",
-    "yarn lint": "yarn lint:eslint && yarn lint:prettier",
+    "lint": "yarn lint:eslint && yarn lint:prettier",
     "lint:eslint": "yarn eslint --max-warnings=0 .",
     "lint:prettier": "yarn prettier --check **/*.ts"
   },

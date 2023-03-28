@@ -254,4 +254,3 @@ const s = StyleSheet.create({
     width: windowDimensions.width,
   },
 });
-
