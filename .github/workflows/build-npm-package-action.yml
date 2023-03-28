@@ -43,7 +43,7 @@ jobs:
       - name: Check if any node_modules were packed
         id: node_modules
         run: >-
-          ! grep --silent node_modules build.log
+          ! grep --silent -E "node_modules/.+"
 
       - name: Check if size is over 1MB
         if: ${{inputs.ref}} != 'Reanimated2'
@@ -58,7 +58,7 @@ jobs:
       - name: Show packed node_modules
         if: failure() && steps.node_modules.outcome == 'failure'
         run: >-
-          ! grep node_modules build.log
+          ! grep -E "node_modules/.+"
 
       - name: Show exceeded package size
         if: failure() && steps.size.outcome == 'failure'
