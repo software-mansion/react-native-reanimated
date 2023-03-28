@@ -75,8 +75,6 @@ const App = ({
   );
 };
 
-// export default App;
-
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,

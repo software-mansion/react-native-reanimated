@@ -24,13 +24,13 @@ interface ContentProps {
   title2: string;
 }
 
-export default ({
+export default function Content({
   color,
   backgroundColor,
   source,
   title1,
   title2,
-}: ContentProps) => {
+}: ContentProps) {
   return (
     <View
       style={{
@@ -53,4 +53,4 @@ export default ({
       </View>
     </View>
   );
-};
+}
