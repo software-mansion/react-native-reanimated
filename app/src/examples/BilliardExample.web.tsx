@@ -2,10 +2,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import React from 'react';
 
-export default function LiquidSwipe() {
+export default function BilliardExample() {
   return (
     <View style={styles.container}>
-      <Text>MaskedView is not supported on web</Text>
+      <Text>react-native-box2d is not supported on web</Text>
     </View>
   );
 }

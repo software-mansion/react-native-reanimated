@@ -9,6 +9,7 @@ import ArticleProgressExample from './ArticleProgressExample';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
 import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
+import BilliardExample from './BilliardExample';
 import BokehExample from './BokehExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
@@ -87,6 +88,11 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  BilliardExample: {
+    icon: '🎱',
+    title: 'Billiard example',
+    screen: BilliardExample,
+  },
   IPodExample: {
     icon: '🎧',
     title: 'iPod example',

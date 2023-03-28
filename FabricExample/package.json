@@ -20,6 +20,7 @@
     "@react-navigation/native-stack": "^6.9.0",
     "react": "18.2.0",
     "react-native": "0.71.3",
+    "react-native-box2d": "^0.2.5",
     "react-native-gesture-handler": "^2.9.0",
     "react-native-pager-view": "5.4.24",
     "react-native-reanimated": "link:../",

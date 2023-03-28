@@ -92,7 +92,7 @@ export function createMapperRegistry() {
 
   function maybeRequestUpdates() {
     if (IS_JEST) {
-      // On Jest environment we avoid using setImmediate as that'd require test
+      // On Jest environment we avoid using queueMicrotask as that'd require test
       // to advance the clock manually. This on other hand would require tests
       // to know how many times mappers need to run. As we don't want tests to
       // make any assumptions on that number it is easier to execute mappers
@@ -100,7 +100,7 @@ export function createMapperRegistry() {
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
     } else if (!runRequested) {
-      setImmediate(mapperRun);
+      queueMicrotask(mapperRun);
       runRequested = true;
     }
   }
