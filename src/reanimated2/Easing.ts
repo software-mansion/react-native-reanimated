@@ -272,10 +272,10 @@ function inOut(easing: EasingFn): EasingFn {
  */
 function steps(n = 10, start = true): EasingFn {
   'worklet';
-  const trunc = start ? Math.ceil : Math.floor;
   return (t) => {
     'worklet';
-    return trunc(Math.min(Math.max(t, 0), 1) * n) / n;
+    const value = Math.min(Math.max(t, 0), 1) * n;
+    return (start ? Math.ceil(value) : Math.floor(value)) / n;
   };
 }
 
