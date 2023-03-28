@@ -365,4 +365,4 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   return module;
 }
 
-}
+} // namespace reanimated

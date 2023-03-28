@@ -9,14 +9,39 @@ import {
   isMemberExpression,
   isExpression,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { processWorkletFunction } from './processWorkletFunction';
-import {
-  gestureHandlerBuilderMethods,
-  gestureHandlerGestureObjects,
-} from './commonObjects';
 
-function processIfGestureHandlerEventCallbackFunctionNode(
+const gestureHandlerGestureObjects = new Set([
+  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
+  'Tap',
+  'Pan',
+  'Pinch',
+  'Rotation',
+  'Fling',
+  'LongPress',
+  'ForceTouch',
+  'Native',
+  'Manual',
+  'Race',
+  'Simultaneous',
+  'Exclusive',
+]);
+
+const gestureHandlerBuilderMethods = new Set([
+  'onBegin',
+  'onStart',
+  'onEnd',
+  'onFinalize',
+  'onUpdate',
+  'onChange',
+  'onTouchesDown',
+  'onTouchesMove',
+  'onTouchesUp',
+  'onTouchesCancelled',
+]);
+
+export function processIfGestureHandlerEventCallbackFunctionNode(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
@@ -130,5 +155,3 @@ function isGestureObject(node: Expression) {
     gestureHandlerGestureObjects.has(node.callee.property.name)
   );
 }
-
-export { processIfGestureHandlerEventCallbackFunctionNode };

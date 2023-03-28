@@ -7,7 +7,9 @@
     "sourceMap": true,
     "strict": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "outDir": "lib/",
+    "rootDir": "src/"
   },
   "files": ["src/plugin.ts"]
 }

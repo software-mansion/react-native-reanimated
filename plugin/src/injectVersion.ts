@@ -8,9 +8,8 @@ import {
   stringLiteral,
   FunctionDeclaration,
 } from '@babel/types';
-import reanimatedPluginVersion from '../../package.json';
 
-function injectVersion(path: NodePath<DirectiveLiteral>) {
+export function injectVersion(path: NodePath<DirectiveLiteral>): void {
   // We want to inject plugin's version only once,
   // hence we have a Directive Literal line in Reanimated code.
   // See src/reanimated2/platform-specific/checkPluginVersion.ts
@@ -19,7 +18,8 @@ function injectVersion(path: NodePath<DirectiveLiteral>) {
     return;
   }
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-  const versionString = reanimatedPluginVersion.version;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const versionString = require('../../package.json').version;
   const pluginVersionNode = expressionStatement(
     assignmentExpression(
       '=',
@@ -35,5 +35,3 @@ function injectVersion(path: NodePath<DirectiveLiteral>) {
   functionParent.body.directives = [];
   functionParent.body.body.unshift(pluginVersionNode);
 }
-
-export { injectVersion };

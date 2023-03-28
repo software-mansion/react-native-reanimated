@@ -190,7 +190,6 @@ export const setUpTests = (userConfig = {}) => {
     }
   }
 
-  require('setimmediate');
   frameTime = Math.round(1000 / config.fps);
 
   config = {
