@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "outDir": "lib/",
-    "rootDir": "src"
+    "rootDir": "src/"
   },
   "files": ["src/plugin.ts"]
 }
