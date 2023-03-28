@@ -86,6 +86,7 @@ const globals = new Set([
   'UIManager',
   'requestAnimationFrame',
   'setImmediate',
+  'queueMicrotask',
   '_WORKLET',
   'arguments',
   'Boolean',
