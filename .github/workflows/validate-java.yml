@@ -5,6 +5,11 @@ on:
       - '.github/workflows/validate-java.yml'
       - 'android/src/main/java/**'
       - 'android/build.gradle'
+  merge_group:
+    paths:
+      - '.github/workflows/validate-java.yml'
+      - 'android/src/main/java/**'
+      - 'android/build.gradle'
   push:
     branches:
       - main

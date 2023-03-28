@@ -4,6 +4,10 @@ on:
     paths:
       - '.github/workflows/validate-plugin.yml'
       - 'plugin/**'
+  merge_group:
+    paths:
+      - '.github/workflows/validate-plugin.yml'
+      - 'plugin/**'
   push:
     branches:
       - main

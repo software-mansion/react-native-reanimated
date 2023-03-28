@@ -17,6 +17,13 @@ on:
       - 'Common/cpp/**'
       - 'ios/native/**'
       - 'android/src/main/cpp/**'
+  merge_group:
+    paths:
+      - '.github/workflows/validate-cpp.yml'
+      - 'scripts/cpplint.sh'
+      - 'Common/cpp/**'
+      - 'ios/native/**'
+      - 'android/src/main/cpp/**'
 
 jobs:
   lint:

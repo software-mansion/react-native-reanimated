@@ -15,6 +15,12 @@ on:
       - 'ios/**'
       - 'package.json'
       - 'scripts/validate-ios.sh'
+  merge_group:
+    paths:
+      - '.github/workflows/validate-ios.yml'
+      - 'ios/**'
+      - 'package.json'
+      - 'scripts/validate-ios.sh'
 
 jobs:
   check:

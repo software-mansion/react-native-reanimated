@@ -6,6 +6,12 @@ on:
       - 'android/**'
       - 'Common/**'
       - package.json
+  merge_group:
+    paths:
+      - '.github/workflows/build-on-windows.yml'
+      - 'android/**'
+      - 'Common/**'
+      - package.json
   push:
     branches:
       - main

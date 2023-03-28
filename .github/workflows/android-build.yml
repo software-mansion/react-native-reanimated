@@ -9,6 +9,15 @@ on:
       - Example/android/**
       - FabricExample/package.json
       - FabricExample/android/**
+  merge_group:
+    paths:
+        - .github/workflows/android-build.yml
+        - android/**
+        - Common/**
+        - Example/package.json
+        - Example/android/**
+        - FabricExample/package.json
+        - FabricExample/android/**
   push:
     branches:
       - main
