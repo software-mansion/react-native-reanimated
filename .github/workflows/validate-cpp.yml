@@ -18,12 +18,8 @@ on:
       - 'ios/native/**'
       - 'android/src/main/cpp/**'
   merge_group:
-    paths:
-      - '.github/workflows/validate-cpp.yml'
-      - 'scripts/cpplint.sh'
-      - 'Common/cpp/**'
-      - 'ios/native/**'
-      - 'android/src/main/cpp/**'
+    branches:
+      - main
 
 jobs:
   lint:

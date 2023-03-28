@@ -6,10 +6,8 @@ on:
       - 'src/**'
       - '*'
   merge_group:
-    paths:
-      - '.github/workflows/static-root-checks.yml'
-      - 'src/**'
-      - '*'
+    branches:
+      - main
   push:
     branches:
       - main

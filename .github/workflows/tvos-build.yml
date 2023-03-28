@@ -9,13 +9,8 @@ on:
       - 'TVOSExample/package.json'
       - 'TVOSExample/ios/**'
   merge_group:
-    paths:
-      - '.github/workflows/tvos-build.yml'
-      - 'RNReanimated.podspec'
-      - 'ios/**'
-      - 'Common/**'
-      - 'TVOSExample/package.json'
-      - 'TVOSExample/ios/**'
+    branches:
+      - main
   push:
     branches:
       - main

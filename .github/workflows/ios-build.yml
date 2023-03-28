@@ -12,16 +12,8 @@ on:
       - FabricExample/package.json
       - FabricExample/ios/**
   merge_group:
-    paths:
-      - .github/workflows/ios-build.yml
-      - RNReanimated.podspec
-      - scripts/reanimated_utils.rb
-      - ios/**
-      - Common/**
-      - Example/package.json
-      - Example/ios/**
-      - FabricExample/package.json
-      - FabricExample/ios/**
+    branches:
+      - main
   push:
     branches:
       - main

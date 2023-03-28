@@ -8,12 +8,8 @@ on:
       - 'FabricExample/package.json'
       - 'Example/package.json'
   merge_group:
-    paths:
-      - '.github/workflows/build-v8.yml'
-      - 'android/**'
-      - 'Common/**'
-      - 'FabricExample/package.json'
-      - 'Example/package.json'
+    branches:
+      - main
   push:
     branches:
       - main

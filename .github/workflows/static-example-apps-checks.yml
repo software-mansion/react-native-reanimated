@@ -7,11 +7,8 @@ on:
       - 'FabricExample/**'
       - '*'
   merge_group:
-    paths:
-      - '.github/workflows/static-example-apps-checks.yml'
-      - 'Example/**'
-      - 'FabricExample/**'
-      - '*'
+    branches:
+      - main
   push:
     branches:
       - main

@@ -6,9 +6,8 @@ on:
       - '.github/workflows/docs-check.yml'
       - 'docs/**'
   merge_group:
-    paths:
-      - '.github/workflows/docs-check.yml'
-      - 'docs/**'
+    branches:
+      - main
 
 jobs:
   build:

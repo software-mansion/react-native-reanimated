@@ -8,12 +8,8 @@ on:
       - scripts/reanimated_utils.rb
       - android/build.gradle
   merge_group:
-    paths:
-      - .github/workflows/build-monorepo.yml
-      - .github/workflows/build-monorepo-action.yml
-      - RNReanimated.podspec
-      - scripts/reanimated_utils.rb
-      - android/build.gradle
+    branches:
+      - main
   push:
     branches:
       - main
