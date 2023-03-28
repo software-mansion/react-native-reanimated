@@ -1,3 +1,4 @@
+import AboutExample from './AboutExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import AnimatedSensorExample from './AnimatedSensorExample';
@@ -20,7 +21,6 @@ import ChessboardExample from './ChessboardExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import CombinedTest from './LayoutAnimations/Combined';
-import ConfigExample from './ConfigExample';
 import CubesExample from './CubesExample';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
@@ -358,10 +358,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
   },
-  ConfigExample: {
-    icon: '⚙️',
-    title: 'Config example',
-    screen: ConfigExample,
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
   },
   WithoutBabelPluginExample: {
     icon: '🔌',

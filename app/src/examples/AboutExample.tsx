@@ -19,7 +19,7 @@ function getPlatformVersion() {
 }
 
 function getMode() {
-  return __DEV__ ? 'debug' : 'release';
+  return __DEV__ ? 'Debug' : 'Release';
 }
 
 function getRuntime() {
@@ -35,7 +35,7 @@ function getReactNativeVersion() {
   return `${major}.${minor}.${patch}`;
 }
 
-export default function ConfigExample() {
+export default function AboutExample() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
@@ -43,7 +43,7 @@ export default function ConfigExample() {
         {getPlatformVersion()}
       </Text>
       <Text style={styles.text}>
-        <Text style={styles.bold}>Mode:</Text> {getMode()}
+        <Text style={styles.bold}>Build type:</Text> {getMode()}
       </Text>
       {!isWeb() && (
         <>
@@ -51,10 +51,10 @@ export default function ConfigExample() {
             <Text style={styles.bold}>Architecture:</Text> {getArchitecture()}
           </Text>
           <Text style={styles.text}>
-            <Text style={styles.bold}>Runtime:</Text> {getRuntime()}
+            <Text style={styles.bold}>JS runtime:</Text> {getRuntime()}
           </Text>
           <Text style={styles.text}>
-            <Text style={styles.bold}>React Native version:</Text>{' '}
+            <Text style={styles.bold}>RN version:</Text>{' '}
             {getReactNativeVersion()}
           </Text>
         </>
