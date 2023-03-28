@@ -83,8 +83,7 @@
     "@babel/core": "^7.20.0",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4",
-    "lodash.isequal": "^4.5.0",
-    "setimmediate": "^1.0.5"
+    "lodash.isequal": "^4.5.0"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
