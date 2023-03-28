@@ -28,6 +28,7 @@ import GestureHandlerExample from './GestureHandlerExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import LightBoxExample from './LightBoxExample';
 import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
 import ManyTagsExample from './SharedElementTransitions/ManyTags';
@@ -68,6 +69,11 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  LightBoxExample: {
+    icon: '🖼️',
+    title: 'LightBox example',
+    screen: LightBoxExample,
+  },
   LiquidSwipe: {
     icon: '♣️',
     title: 'Liquid swipe example',

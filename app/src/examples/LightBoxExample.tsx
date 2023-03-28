@@ -14,6 +14,7 @@ import Animated, {
   Extrapolate,
   withTiming,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
 import { Dimensions, StyleSheet, View, Image, Platform } from 'react-native';
 import {
@@ -170,7 +171,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
 
         animationProgress.value = withTiming(0, timingConfig, () => {
           imageOpacity.value = 1;
-          onClose();
+          runOnJS(onClose)();
         });
 
         backdropOpacity.value = withTiming(0, timingConfig);
@@ -242,7 +243,7 @@ const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-function LightboxExample(): React.ReactElement {
+export default function LightBoxExample(): React.ReactElement {
   const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
     null
   );
@@ -308,5 +309,3 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
   },
 });
-
-export default LightboxExample;
