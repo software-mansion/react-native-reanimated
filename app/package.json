@@ -11,6 +11,7 @@
     "react-native": "*"
   },
   "dependencies": {
+    "@react-native-masked-view/masked-view": "^0.2.8",
     "@react-native-picker/picker": "^2.4.9",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",

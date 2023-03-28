@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function LiquidSwipe(): React.ReactElement {
+export default function LiquidSwipe(): React.ReactElement {
   const isBack = useSharedValue(0);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
@@ -113,5 +113,3 @@ function LiquidSwipe(): React.ReactElement {
     </View>
   );
 }
-
-export default LiquidSwipe;

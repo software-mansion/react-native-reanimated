@@ -28,6 +28,7 @@ import GestureHandlerExample from './GestureHandlerExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
 import ManyTagsExample from './SharedElementTransitions/ManyTags';
 import MeasureExample from './MeasureExample';
@@ -67,6 +68,11 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  LiquidSwipe: {
+    icon: '♣️',
+    title: 'Liquid swipe example',
+    screen: LiquidSwipe,
+  },
   PagerExample: {
     icon: '📟',
     title: 'Pager example',
