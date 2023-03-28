@@ -67,14 +67,20 @@ export default function App() {
           <Stack.Screen
             name="Home"
             component={HomeScreen}
-            options={{ headerTitle: '🐎 Reanimated examples' }}
+            options={{
+              headerTitle: '🐎 Reanimated examples',
+              title: 'Reanimated examples',
+            }}
           />
           {EXAMPLES_NAMES.map((name) => (
             <Stack.Screen
               key={name}
               name={name}
               component={EXAMPLES[name].screen}
-              options={{ headerTitle: EXAMPLES[name].title }}
+              options={{
+                headerTitle: EXAMPLES[name].title,
+                title: EXAMPLES[name].title,
+              }}
             />
           ))}
         </Stack.Navigator>
