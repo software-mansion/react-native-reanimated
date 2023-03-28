@@ -1,0 +1,37 @@
+name: Validate app
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/validate-app.yml'
+      - 'app/**'
+  push:
+    branches:
+      - main
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: app-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Use Node.js 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+      - name: Install node dependencies
+        run: yarn
+      - name: Install app dependencies
+        working-directory: app
+        run: yarn
+      - name: Check types
+        working-directory: app
+        run: yarn type:check
+      - name: Lint with ESLint
+        working-directory: app
+        run: yarn lint:eslint
+      - name: Lint with Prettier
+        working-directory: app
+        run: yarn lint:prettier
