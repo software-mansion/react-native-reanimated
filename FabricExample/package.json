@@ -5,9 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:js": "yarn eslint src/ && yarn prettier --check src/",
-    "ts-check": "yarn tsc --noEmit",
+    "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
     "postinstall": "patch-package"
