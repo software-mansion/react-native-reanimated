@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
-import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 const DATA = [
@@ -42,7 +44,7 @@ const Item = ({ item, parentItem, onPress }: any) => (
   </TouchableOpacity>
 );
 
-function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
+function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   const renderItem = ({ item, parentItem }: any) => {
     return (
       <Item

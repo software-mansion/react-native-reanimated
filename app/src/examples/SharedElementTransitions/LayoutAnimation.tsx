@@ -1,15 +1,17 @@
 import * as React from 'react';
 import { Button, View } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StackScreenProps } from '@react-navigation/stack';
+import {
+  createNativeStackNavigator,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import Animated, { SlideInLeft, SlideOutLeft } from 'react-native-reanimated';
 
 const photo = require('./assets/image.jpg');
 const Stack = createNativeStackNavigator();
 const AnimatedButton = Animated.createAnimatedComponent(Button);
 
-function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
+function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       <View
@@ -33,7 +35,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
+function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1 }}>
       <Animated.Text

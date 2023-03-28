@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { TouchableNativeFeedback } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import Animated, {
   runOnJS,
   useAnimatedGestureHandler,
@@ -9,7 +12,6 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { StackScreenProps } from '@react-navigation/stack';
 import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
@@ -67,7 +69,7 @@ function Card({
   );
 }
 
-function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
+function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
       {[...Array(6)].map((_, i) => (
@@ -83,7 +85,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ route, navigation }: StackScreenProps<ParamListBase>) {
+function Screen2({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
   const { title, sharedTransitionTag } = route.params as any;
 
   const goNext = () => {

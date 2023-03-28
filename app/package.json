@@ -18,7 +18,6 @@
     "@react-native-picker/picker": "^2.4.9",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
-    "@react-navigation/stack": "^6.3.16",
     "d3-shape": "^3.2.0",
     "react-dom": "18.0.0",
     "react-native-box2d": "^0.2.5",

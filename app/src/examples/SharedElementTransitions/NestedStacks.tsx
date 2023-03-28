@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { View, Button } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
-import { StackScreenProps } from '@react-navigation/stack';
 
 const Stack = createNativeStackNavigator();
 
-function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
+function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1 }}>
       <Animated.View
@@ -25,7 +27,7 @@ function Screen1({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
+function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1, marginTop: 50 }}>
       <Animated.View
@@ -43,7 +45,7 @@ function Screen2({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen3({ navigation }: StackScreenProps<ParamListBase>) {
+function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1 }}>
       <Animated.View

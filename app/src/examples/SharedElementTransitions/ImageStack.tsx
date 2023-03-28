@@ -1,7 +1,9 @@
 import { ParamListBase } from '@react-navigation/native';
-import { StackScreenProps } from '@react-navigation/stack';
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import {
   View,
   ImageSourcePropType,
@@ -71,7 +73,9 @@ export function ImageStack({
   );
 }
 
-export function ScreenOne({ navigation }: StackScreenProps<ParamListBase>) {
+export function ScreenOne({
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Animated.Text
@@ -91,7 +95,9 @@ export function ScreenOne({ navigation }: StackScreenProps<ParamListBase>) {
   );
 }
 
-export function ScreenTwo({ navigation }: StackScreenProps<ParamListBase>) {
+export function ScreenTwo({
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
   return (
     <ScrollView style={{ flex: 1 }}>
       <Animated.Text
@@ -114,7 +120,7 @@ export function ScreenTwo({ navigation }: StackScreenProps<ParamListBase>) {
 export function ScreenThree({
   navigation,
   route,
-}: StackScreenProps<ParamListBase>) {
+}: NativeStackScreenProps<ParamListBase>) {
   const { image, index } = route.params as any;
   return (
     <View style={{ flex: 1 }}>
