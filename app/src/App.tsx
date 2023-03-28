@@ -33,7 +33,8 @@ function HomeScreen({ navigation }: HomeScreenProps) {
       initialNumToRender={EXAMPLES_NAMES.length}
       renderItem={({ item: name }) => (
         <Item
-          title={EXAMPLES[name].icon + '  ' + EXAMPLES[name].title}
+          icon={EXAMPLES[name].icon}
+          title={EXAMPLES[name].title}
           onPress={() => navigation.navigate(name)}
         />
       )}
@@ -43,13 +44,15 @@ function HomeScreen({ navigation }: HomeScreenProps) {
 }
 
 interface ItemProps {
+  icon?: string;
   title: string;
   onPress: () => void;
 }
 
-function Item({ title, onPress }: ItemProps) {
+function Item({ icon, title, onPress }: ItemProps) {
   return (
     <RectButton style={styles.button} onPress={onPress}>
+      {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
     </RectButton>
   );

@@ -82,307 +82,22 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 
 interface Example {
-  icon: string;
+  icon?: string;
   title: string;
   screen: React.FC;
 }
 
 export const EXAMPLES: Record<string, Example> = {
-  BilliardExample: {
-    icon: '🎱',
-    title: 'Billiard example',
-    screen: BilliardExample,
-  },
-  IPodExample: {
-    icon: '🎧',
-    title: 'iPod example',
-    screen: IPodExample,
-  },
-  SharedStyleExample: {
-    icon: '',
-    title: 'Shared style example',
-    screen: SharedStyleExample,
-  },
-  AnimatedStyleUpdateExample: {
-    icon: '',
-    title: 'Animated style update example',
-    screen: AnimatedStyleUpdateExample,
-  },
-  AnimatedTabBarExample: {
-    icon: '',
-    title: 'Animated tab bar example',
-    screen: AnimatedTabBarExample,
-  },
-  ChatHeadsExample: {
-    icon: '',
-    title: 'Chat heads example',
-    screen: ChatHeadsExample,
-  },
-  CubesExample: {
-    icon: '',
-    title: 'Cubes example',
-    screen: CubesExample,
-  },
-  DragAndSnapExample: {
-    icon: '',
-    title: 'Drag and snap example',
-    screen: DragAndSnapExample,
-  },
-  ColorInterpolationExample: {
-    icon: '',
-    title: 'Color interpolation example',
-    screen: ColorInterpolationExample,
-  },
-  EmojiWaterfallExample: {
-    icon: '',
-    title: 'Emoji waterfall example',
-    screen: EmojiWaterfallExample,
-  },
-  ExtrapolationExample: {
-    icon: '',
-    title: 'Extrapolation example',
-    screen: ExtrapolationExample,
-  },
-  InvertedFlatListExample: {
-    icon: '',
-    title: 'Inverted FlatList example',
-    screen: InvertedFlatListExample,
-  },
-  OldAnimatedSensorExample: {
-    icon: '',
-    title: 'Old animated sensor example',
-    screen: OldAnimatedSensorExample,
-  },
-  OldMeasureExample: {
-    icon: '',
-    title: 'Old measure example',
-    screen: OldMeasureExample,
-  },
-  PinExample: {
-    icon: '',
-    title: 'PIN example',
-    screen: PinExample,
-  },
-  ScrollableViewExample: {
-    icon: '',
-    title: 'Scrollable view example',
-    screen: ScrollableViewExample,
-  },
-  ScrollEventExample: {
-    icon: '',
-    title: 'Scroll event example',
-    screen: ScrollEventExample,
-  },
-  SwipeableListExample: {
-    icon: '',
-    title: 'Swipeable list example',
-    screen: SwipeableListExample,
-  },
-  WobbleExample: {
-    icon: '',
-    title: 'Wobble example',
-    screen: WobbleExample,
-  },
-  LightBoxExample: {
-    icon: '🖼️',
-    title: 'LightBox example',
-    screen: LightBoxExample,
-  },
-  LiquidSwipe: {
-    icon: '♣️',
-    title: 'Liquid swipe example',
-    screen: LiquidSwipe,
-  },
-  PagerExample: {
-    icon: '📟',
-    title: 'Pager example',
-    screen: PagerExample,
-  },
-  DeleteAncestorOfExiting: {
-    icon: '',
-    title: '[LA] Deleting view with an exiting animation',
-    screen: DeleteAncestorOfExiting,
-  },
-  NestedNativeStacksWithLayout: {
-    icon: '',
-    title: '[LA] Nested NativeStacks with layout',
-    screen: NestedNativeStacksWithLayout,
-  },
-  BasicLayoutAnimation: {
-    icon: '',
-    title: '[LA] Basic layout animation',
-    screen: BasicLayoutAnimation,
-  },
-  BasicNestedAnimation: {
-    icon: '',
-    title: '[LA] Basic nested animation',
-    screen: BasicNestedAnimation,
-  },
-  BasicNestedLayoutAnimation: {
-    icon: '',
-    title: '[LA] Basic nested layout animation',
-    screen: BasicNestedLayoutAnimation,
-  },
-  NestedLayoutAnimations: {
-    icon: '',
-    title: '[LA] Nested layout animations',
-    screen: NestedTest,
-  },
-  CombinedLayoutAnimations: {
-    icon: '',
-    title: '[LA] Entering and Exiting with Layout',
-    screen: CombinedTest,
-  },
-  DefaultAnimations: {
-    icon: '',
-    title: '[LA] Default layout animations',
-    screen: DefaultAnimations,
-  },
-  DefaultTransitions: {
-    icon: '',
-    title: '[LA] Default layout transitions',
-    screen: WaterfallGridExample,
-  },
-  KeyframeAnimation: {
-    icon: '',
-    title: '[LA] Keyframe animation',
-    screen: KeyframeAnimation,
-  },
-  ParticipantList: {
-    icon: '',
-    title: '[LA] Participant List',
-    screen: AnimatedListExample,
-  },
-  OlympicAnimation: {
-    icon: '',
-    title: '[LA] Olympic animation',
-    screen: OlympicAnimation,
-  },
-  CustomLayoutAnimation: {
-    icon: '',
-    title: '[LA] Custom layout animation',
-    screen: CustomLayoutAnimationScreen,
-  },
-  ModalNewAPI: {
-    icon: '',
-    title: '[LA] ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    icon: '',
-    title: '[LA] Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    icon: '',
-    title: '[LA] Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  ReactionsCounterExample: {
-    icon: '',
-    title: '[LA] Reactions counter',
-    screen: ReactionsCounterExample,
-  },
-  SwipeableList: {
-    icon: '',
-    title: '[LA] Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    icon: '',
-    title: '[LA] Modal',
-    screen: Modal,
-  },
-  NativeModals: {
-    icon: '',
-    title: '[LA] Native modals (RN and Screens)',
-    screen: NativeModals,
-  },
-  Carousel: {
-    icon: '',
-    title: '[LA] Carousel',
-    screen: Carousel,
-  },
-  CardExample: {
-    icon: '',
-    title: '[SET] Card',
-    screen: CardExample,
-  },
-  CustomTransitionExample: {
-    icon: '',
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-  },
-  GalleryExample: {
-    icon: '',
-    title: '[SET] Gallery',
-    screen: GalleryExample,
-  },
-  LayoutAnimationExample: {
-    icon: '',
-    title: '[SET] Layout Animation',
-    screen: LayoutAnimationExample,
-  },
-  ManyScreensExample: {
-    icon: '',
-    title: '[SET] Many screens',
-    screen: ManyScreensExample,
-  },
-  ManyTagsExample: {
-    icon: '',
-    title: '[SET] Many tags',
-    screen: ManyTagsExample,
-  },
-  NestedStacksExample: {
-    icon: '',
-    title: '[SET] Nested stacks',
-    screen: NestedStacksExample,
-  },
-  ModalsExample: {
-    icon: '',
-    title: '[SET] Modals',
-    screen: ModalsExample,
-  },
-  FlatListExample: {
-    icon: '',
-    title: '[SET] FlatList',
-    screen: FlatListExample,
-  },
-  ImageStackExample: {
-    icon: '',
-    title: '[SET] Image Stack',
-    screen: ImageStackExample,
-  },
-  RestoreStateExample: {
-    icon: '',
-    title: '[SET] Restore State',
-    screen: RestoreStateExample,
-  },
+  // About
+
   AboutExample: {
     icon: 'ℹ️',
     title: 'About',
     screen: AboutExample,
   },
-  WithoutBabelPluginExample: {
-    icon: '🔌',
-    title: 'Without Babel plugin example',
-    screen: WithoutBabelPluginExample,
-  },
-  AnimatedKeyboardExample: {
-    icon: '⌨️',
-    title: 'Animated keyboard example',
-    screen: AnimatedKeyboardExample,
-  },
-  AnimatedTextInputExample: {
-    icon: '🎰',
-    title: 'Animated.TextInput value',
-    screen: AnimatedTextInputExample,
-  },
-  AnimatedTextWidthExample: {
-    icon: '✂️',
-    title: 'Animated.Text width',
-    screen: AnimatedTextWidthExample,
-  },
+
+  // Showcase
+
   BokehExample: {
     icon: '✨',
     title: 'Bokeh',
@@ -393,9 +108,57 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Bubbles',
     screen: BubblesExample,
   },
+  IPodExample: {
+    icon: '🎧',
+    title: 'iPod',
+    screen: IPodExample,
+  },
+  BilliardExample: {
+    icon: '🎱',
+    title: 'Billiard',
+    screen: BilliardExample,
+  },
+  EmojiWaterfallExample: {
+    icon: '💸',
+    title: 'Emoji waterfall',
+    screen: EmojiWaterfallExample,
+  },
+  LightBoxExample: {
+    icon: '📷',
+    title: 'Camera roll',
+    screen: LightBoxExample,
+  },
+  LiquidSwipe: {
+    icon: '♠️',
+    title: 'Liquid swipe',
+    screen: LiquidSwipe,
+  },
+  SwipeableListExample: {
+    icon: '📞',
+    title: 'Swipeable list',
+    screen: SwipeableListExample,
+  },
+  ArticleProgressExample: {
+    icon: '📰',
+    title: 'Article progress',
+    screen: ArticleProgressExample,
+  },
+
+  // Basic examples
+
+  AnimatedTextInputExample: {
+    icon: '🎰',
+    title: 'Counter',
+    screen: AnimatedTextInputExample,
+  },
+  AnimatedTextWidthExample: {
+    icon: '✂️',
+    title: 'Animate text width',
+    screen: AnimatedTextWidthExample,
+  },
   ColorExample: {
     icon: '🌈',
-    title: 'Colors',
+    title: 'Animate colors',
     screen: ColorExample,
   },
   ScreenStackHeaderConfigBackgroundColorExample: {
@@ -423,6 +186,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Bouncing box',
     screen: BouncingBoxExample,
   },
+  AnimatedKeyboardExample: {
+    icon: '⌨️',
+    title: 'useAnimatedKeyboard',
+    screen: AnimatedKeyboardExample,
+  },
   AnimatedSensorExample: {
     icon: '📡',
     title: 'useAnimatedSensor',
@@ -447,11 +215,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '𝌍',
     title: 'useScrollViewOffset',
     screen: ScrollViewOffsetExample,
-  },
-  ArticleProgressExample: {
-    icon: '📰',
-    title: 'Article progress',
-    screen: ArticleProgressExample,
   },
   MeasureExample: {
     icon: '📐',
@@ -493,9 +256,215 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Conditional',
     screen: NewestShadowNodesRegistryRemoveExample,
   },
+  WithoutBabelPluginExample: {
+    icon: '🔌',
+    title: 'Without Babel plugin',
+    screen: WithoutBabelPluginExample,
+  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+
+  // Old examples
+
+  AnimatedStyleUpdateExample: {
+    title: 'Animated style update',
+    screen: AnimatedStyleUpdateExample,
+  },
+  SharedStyleExample: {
+    title: 'Shared style',
+    screen: SharedStyleExample,
+  },
+  AnimatedTabBarExample: {
+    title: 'Tab bar',
+    screen: AnimatedTabBarExample,
+  },
+  ChatHeadsExample: {
+    title: 'Chat heads',
+    screen: ChatHeadsExample,
+  },
+  CubesExample: {
+    title: 'Cubes',
+    screen: CubesExample,
+  },
+  DragAndSnapExample: {
+    title: 'Drag and snap',
+    screen: DragAndSnapExample,
+  },
+  ColorInterpolationExample: {
+    title: 'Color interpolation',
+    screen: ColorInterpolationExample,
+  },
+  ExtrapolationExample: {
+    title: 'Extrapolation example',
+    screen: ExtrapolationExample,
+  },
+  InvertedFlatListExample: {
+    title: 'Inverted FlatList example',
+    screen: InvertedFlatListExample,
+  },
+  OldAnimatedSensorExample: {
+    title: 'Old animated sensor example',
+    screen: OldAnimatedSensorExample,
+  },
+  OldMeasureExample: {
+    title: 'Accordion',
+    screen: OldMeasureExample,
+  },
+  PinExample: {
+    title: 'PIN example',
+    screen: PinExample,
+  },
+  ScrollableViewExample: {
+    title: 'Scrollable view example',
+    screen: ScrollableViewExample,
+  },
+  ScrollEventExample: {
+    title: 'Scroll event example',
+    screen: ScrollEventExample,
+  },
+  WobbleExample: {
+    title: 'Wobble example',
+    screen: WobbleExample,
+  },
+  PagerExample: {
+    title: 'Pager example',
+    screen: PagerExample,
+  },
+
+  // Layout Animations
+
+  DeleteAncestorOfExiting: {
+    title: '[LA] Deleting view with an exiting animation',
+    screen: DeleteAncestorOfExiting,
+  },
+  NestedNativeStacksWithLayout: {
+    title: '[LA] Nested NativeStacks with layout',
+    screen: NestedNativeStacksWithLayout,
+  },
+  BasicLayoutAnimation: {
+    title: '[LA] Basic layout animation',
+    screen: BasicLayoutAnimation,
+  },
+  BasicNestedAnimation: {
+    title: '[LA] Basic nested animation',
+    screen: BasicNestedAnimation,
+  },
+  BasicNestedLayoutAnimation: {
+    title: '[LA] Basic nested layout animation',
+    screen: BasicNestedLayoutAnimation,
+  },
+  NestedLayoutAnimations: {
+    title: '[LA] Nested layout animations',
+    screen: NestedTest,
+  },
+  CombinedLayoutAnimations: {
+    title: '[LA] Entering and Exiting with Layout',
+    screen: CombinedTest,
+  },
+  DefaultAnimations: {
+    title: '[LA] Default layout animations',
+    screen: DefaultAnimations,
+  },
+  DefaultTransitions: {
+    title: '[LA] Default layout transitions',
+    screen: WaterfallGridExample,
+  },
+  KeyframeAnimation: {
+    title: '[LA] Keyframe animation',
+    screen: KeyframeAnimation,
+  },
+  ParticipantList: {
+    title: '[LA] Participant List',
+    screen: AnimatedListExample,
+  },
+  OlympicAnimation: {
+    title: '[LA] Olympic animation',
+    screen: OlympicAnimation,
+  },
+  CustomLayoutAnimation: {
+    title: '[LA] Custom layout animation',
+    screen: CustomLayoutAnimationScreen,
+  },
+  ModalNewAPI: {
+    title: '[LA] ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    title: '[LA] Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    title: '[LA] Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  ReactionsCounterExample: {
+    title: '[LA] Reactions counter',
+    screen: ReactionsCounterExample,
+  },
+  SwipeableList: {
+    title: '[LA] Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    title: '[LA] Modal',
+    screen: Modal,
+  },
+  NativeModals: {
+    title: '[LA] Native modals (RN and Screens)',
+    screen: NativeModals,
+  },
+  Carousel: {
+    title: '[LA] Carousel',
+    screen: Carousel,
+  },
+
+  // Shared Element Transitions
+
+  CardExample: {
+    title: '[SET] Card',
+    screen: CardExample,
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom transition',
+    screen: CustomTransitionExample,
+  },
+  GalleryExample: {
+    title: '[SET] Gallery',
+    screen: GalleryExample,
+  },
+  LayoutAnimationExample: {
+    title: '[SET] Layout Animation',
+    screen: LayoutAnimationExample,
+  },
+  ManyScreensExample: {
+    title: '[SET] Many screens',
+    screen: ManyScreensExample,
+  },
+  ManyTagsExample: {
+    title: '[SET] Many tags',
+    screen: ManyTagsExample,
+  },
+  NestedStacksExample: {
+    title: '[SET] Nested stacks',
+    screen: NestedStacksExample,
+  },
+  ModalsExample: {
+    title: '[SET] Modals',
+    screen: ModalsExample,
+  },
+  FlatListExample: {
+    title: '[SET] FlatList',
+    screen: FlatListExample,
+  },
+  ImageStackExample: {
+    title: '[SET] Image Stack',
+    screen: ImageStackExample,
+  },
+  RestoreStateExample: {
+    title: '[SET] Restore State',
+    screen: RestoreStateExample,
   },
 } as const;
