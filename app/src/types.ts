@@ -9,9 +9,7 @@ import React from 'react';
  * https://github.com/necolas/react-native-web/blob/c47bec7b93d6a3b7c31bbc8bb2e4acd117b79bfc/packages/react-native-web/src/exports/UIManager/index.js#L63
  *  */
 
-/* eslint-disable @typescript-eslint/no-namespace */
 declare module 'react' {
-  // eslint-disable-next-line @typescript-eslint/ban-types
   interface Component {
     measure?(
       callback: (

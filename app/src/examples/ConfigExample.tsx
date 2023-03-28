@@ -7,7 +7,9 @@ function isWeb() {
 }
 
 function getPlatform() {
-  if (isWeb()) return 'web';
+  if (isWeb()) {
+    return 'web';
+  }
   // @ts-ignore it works
   return Platform.constants.systemName || Platform.constants.Brand;
 }

@@ -18,7 +18,6 @@ import React from 'react';
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function Weave({ centerY, progress, isBack, children }: any) {
   const sideWidth = useDerivedValue(() => {
     const p1 = 0.2;

@@ -6,7 +6,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function First({ navigation }: { navigation: any }) {
   return (
     <>

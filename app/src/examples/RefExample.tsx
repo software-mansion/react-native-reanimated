@@ -11,7 +11,6 @@ export type ChildHandle = {
   toggleState: () => void;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 type ChildProps = {};
 
 const Child = React.forwardRef<ChildHandle, ChildProps>((_, ref) => {

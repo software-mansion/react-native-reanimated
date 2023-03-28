@@ -51,7 +51,6 @@ function Emoji({ emoji, progress }: EmojiProps) {
 }
 
 export const EmojiWaterfallContext = React.createContext({
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   startAnimation: () => {},
 });
 

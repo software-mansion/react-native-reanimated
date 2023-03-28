@@ -8,8 +8,8 @@ import {
   GestureDetector,
   enableExperimentalWebImplementation,
 } from 'react-native-gesture-handler';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useEffect, useState } from 'react';
 
 enableExperimentalWebImplementation(true);
 
