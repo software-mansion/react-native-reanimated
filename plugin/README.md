@@ -67,7 +67,10 @@ This might not seem to be a lot but it really helps with development and allows 
 
 It's certainly possible. It's being created ad-hoc from our experience and needs, not pre-planned in general:
 
-_We had a need to transform something -> we looked up how it is structured in AST explorer -> we added certain functionality to Plugin._
+```mermaid
+flowchart LR
+a([we had a need to transform something]) ==> b([we looked up how it's structured in AST explorer]) ==> c([we added certain functionality to the plugin])
+```
 
 Some use cases might've been overlooked and on the other hand - some might work but were not designed (considered) to be transformed. That's why we strongly suggest that before you do something unusual with Reanimated you should check if it's conforming to Plugin. If it's not and you think it would be useful - you are more than welcome to contribute and submit a pull request on our [repo](https://www.github.com/software-mansion/react-native-reanimated).
 
@@ -139,3 +142,36 @@ For more information read [official docs](https://docs.swmansion.com/react-nativ
 ### How to debug Reanimated Babel plugin?
 
 It's simple. After compilation we have generated `.js.map` file. We strongly recommend using **Visual Studio Code** and **JavaScript Debug Terminal**. Just open a new debugging session, type in your terminal (in project's root directory) `npx babel <filename>` and voilà. Add some breakpoints in `plugin/index.ts` or just use step-by-step tools. Some knowledge of JavaScript's AST and babel will be required to understand what exactly is happening during code transformation.
+
+### Reanimated Babel plugin flowchart
+
+```mermaid
+flowchart TB
+node([ASTnode])
+iv([injectVersion<br><i>only once</i>])
+pw([processWorklets])
+pwsbw{{should be workletized?}}
+pwgwa([get workletizable arguments])
+pwn([processIfWorkletNode])
+pwnsbw{{should be workletized?}}
+pgh([processIfGestureHandlerEventCallbackFunctionNode])
+pghsbw{{should be workletized?}}
+pwf([processWorkletFunction])
+pwom([processWorkletObjectMethod])
+pisw([processInlineStylesWarning])
+node-->|isDirectiveLiteral|iv
+node-->|isCallExpression|pw
+node-->|isArrowFunctionExpression|pwn
+node-->|isFunctionDeclaration|pwn
+node-->|isFunctionExpression|pwn
+node-->|isJSXAttribute|pisw
+pwn-->pwnsbw
+pwnsbw-->|yes|pwf
+pwnsbw-->|no|pgh
+pgh-->pghsbw
+pghsbw-->|yes|pwf
+pw-->pwsbw
+pwsbw-->|yes|pwgwa
+pwgwa-->|others|pwf
+pwgwa-->|objectMethods|pwom
+```
