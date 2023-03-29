@@ -9,7 +9,7 @@ import {
   FunctionDeclaration,
 } from '@babel/types';
 
-export function injectVersion(path: NodePath<DirectiveLiteral>): void {
+export function injectVersion(path: NodePath<DirectiveLiteral>) {
   // We want to inject plugin's version only once,
   // hence we have a Directive Literal line in Reanimated code.
   // See src/reanimated2/platform-specific/checkPluginVersion.ts

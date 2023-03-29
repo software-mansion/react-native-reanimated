@@ -49,7 +49,7 @@ import { ReanimatedPluginPass } from './types';
 import { isRelease } from './utils';
 import { globals } from './commonObjects';
 
-function hash(str: string): number {
+function hash(str: string) {
   let i = str.length;
   let hash1 = 5381;
   let hash2 = 52711;
@@ -63,7 +63,7 @@ function hash(str: string): number {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function shouldGenerateSourceMap(): boolean {
+function shouldGenerateSourceMap() {
   if (isRelease()) {
     return false;
   }
@@ -238,7 +238,7 @@ function makeWorkletName(
     | ObjectMethod
     | ArrowFunctionExpression
   >
-): string {
+) {
   if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
