@@ -116,10 +116,16 @@ const has = <K extends string>(
 };
 
 function isInlineStyleTransform(transform: any): boolean {
+  if (!transform) {
+    return false;
+  }
   return transform.some((t: Record<string, any>) => hasInlineStyles(t));
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
+  if (!style) {
+    return false;
+  }
   return Object.keys(style).some((key) => {
     const styleValue = style[key];
     return (
@@ -139,6 +145,9 @@ function extractSharedValuesMapFromProps(
     if (key === 'style') {
       const styles = flattenArray<StyleProps>(props.style ?? []);
       styles.forEach((style) => {
+        if (!style) {
+          return;
+        }
         for (const [key, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
             inlineProps[key] = styleValue;
