@@ -113,8 +113,9 @@ function buildWorkletString(
         return;
       }
 
-      if (!isExpression(path.node.body))
+      if (!isExpression(path.node.body)) {
         path.node.body.body.unshift(closureDeclaration);
+      }
     }
 
     function prependRecursiveDeclaration(
@@ -177,10 +178,11 @@ function buildWorkletString(
     ? draftExpression
     : draftExpression.expression;
 
-  if (!('params' in expression && isBlockStatement(expression.body)))
+  if (!('params' in expression && isBlockStatement(expression.body))) {
     throw new Error(
       "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
     );
+  }
 
   const workletFunction = functionExpression(
     identifier(name),
@@ -418,10 +420,11 @@ export function makeWorklet(
     ])
   );
 
-  if (isFunctionDeclaration(funExpression) || isObjectMethod(funExpression))
+  if (isFunctionDeclaration(funExpression) || isObjectMethod(funExpression)) {
     throw new Error(
       "'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n"
     );
+  }
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement

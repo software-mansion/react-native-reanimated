@@ -44,9 +44,11 @@ export function processWorklets(
     : path.node.callee;
 
   let name = '';
-  if ('name' in callee) name = callee.name;
-  else if ('property' in callee && 'name' in callee.property)
+  if ('name' in callee) {
+    name = callee.name;
+  } else if ('property' in callee && 'name' in callee.property) {
     name = callee.property.name;
+  }
   // else name = 'anonymous'; --- might add it in the future [TO DO]
 
   if (

@@ -179,8 +179,9 @@ var require_makeWorklet = __commonJS({
           if (closureVariables.length === 0 || path.parent.type !== "Program") {
             return;
           }
-          if (!(0, types_1.isExpression)(path.node.body))
+          if (!(0, types_1.isExpression)(path.node.body)) {
             path.node.body.body.unshift(closureDeclaration);
+          }
         }
         function prependRecursiveDeclaration(path) {
           var _a;
@@ -205,8 +206,9 @@ var require_makeWorklet = __commonJS({
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
       (0, asserts_1.assertIsDefined)(draftExpression);
       const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
-      if (!("params" in expression && (0, types_1.isBlockStatement)(expression.body)))
+      if (!("params" in expression && (0, types_1.isBlockStatement)(expression.body))) {
         throw new Error("'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'");
+      }
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, asserts_1.assertIsDefined)(inputMap);
@@ -333,8 +335,9 @@ var require_makeWorklet = __commonJS({
       pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
-      if ((0, types_1.isFunctionDeclaration)(funExpression) || (0, types_1.isObjectMethod)(funExpression))
+      if ((0, types_1.isFunctionDeclaration)(funExpression) || (0, types_1.isObjectMethod)(funExpression)) {
         throw new Error("'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n");
+      }
       const statements = [
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
@@ -433,10 +436,11 @@ var require_processWorklets = __commonJS({
     function processWorklets(path, state) {
       const callee = (0, types_1.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
       let name = "";
-      if ("name" in callee)
+      if ("name" in callee) {
         name = callee.name;
-      else if ("property" in callee && "name" in callee.property)
+      } else if ("property" in callee && "name" in callee.property) {
         name = callee.property.name;
+      }
       if (objectHooks.has(name) && (0, types_1.isObjectExpression)(path.get("arguments.0").node)) {
         const properties = path.get("arguments.0.properties");
         for (const property of properties) {

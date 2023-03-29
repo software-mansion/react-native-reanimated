@@ -15,7 +15,7 @@
     "bundle": "yarn esbuild ./lib/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --external:'../../package.json' --log-level=warning --platform=node --sourcemap=linked --outfile=build/plugin.js",
     "format": "yarn prettier --write --list-different **/*.ts",
     "watch": "yarn tsc-watch --onSuccess \"yarn bundle\"",
-    "lint": "yarn eslint --max-warnings=0 --ext .ts . && yarn prettier --check **/*.ts",
+    "lint": "yarn eslint --max-warnings=0 --rule 'curly: error' --ext .ts . && yarn prettier --check **/*.ts",
     "type:check": "yarn tsc --noEmit"
   }
 }
