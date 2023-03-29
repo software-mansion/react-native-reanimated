@@ -7,10 +7,10 @@ import {
   objectProperty,
   callExpression,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
-function processWorkletObjectMethod(
+export function processWorkletObjectMethod(
   path: NodePath<ObjectMethod>,
   state: ReanimatedPluginPass
 ) {
@@ -27,5 +27,3 @@ function processWorkletObjectMethod(
 
   path.replaceWith(replacement);
 }
-
-export { processWorkletObjectMethod };

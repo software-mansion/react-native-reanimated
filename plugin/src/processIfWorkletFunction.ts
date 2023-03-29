@@ -11,10 +11,10 @@ import {
   isFunctionParent,
   variableDeclarator,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
-function processIfWorkletFunction(
+export function processIfWorkletFunction(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
@@ -46,5 +46,3 @@ function processIfWorkletFunction(
       : replacement
   );
 }
-
-export { processIfWorkletFunction };
