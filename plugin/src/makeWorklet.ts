@@ -1,15 +1,55 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import {
+  BabelFileResult,
+  NodePath,
+  transformSync,
+  traverse,
+  Node as BabelNode,
+} from '@babel/core';
 import generate from '@babel/generator';
-import traverse from '@babel/traverse';
-import { transformSync } from '@babel/core';
+import {
+  ObjectMethod,
+  isObjectMethod,
+  FunctionDeclaration,
+  FunctionExpression,
+  ArrowFunctionExpression,
+  identifier,
+  Identifier,
+  objectProperty,
+  isArrowFunctionExpression,
+  variableDeclaration,
+  variableDeclarator,
+  cloneNode,
+  isBlockStatement,
+  functionExpression,
+  objectExpression,
+  stringLiteral,
+  isFunctionDeclaration,
+  VariableDeclaration,
+  ExpressionStatement,
+  ReturnStatement,
+  expressionStatement,
+  assignmentExpression,
+  memberExpression,
+  numericLiteral,
+  arrayExpression,
+  newExpression,
+  returnStatement,
+  blockStatement,
+  isFunctionExpression,
+  isIdentifier,
+  File as BabelTypesFile,
+  objectPattern,
+  thisExpression,
+  isExpression,
+  isExpressionStatement,
+} from '@babel/types';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
 import { ReanimatedPluginPass } from './types';
 import { isRelease } from './utils';
 import { globals } from './commonObjects';
 
-function hash(str: string): number {
+function hash(str: string) {
   let i = str.length;
   let hash1 = 5381;
   let hash2 = 52711;
@@ -38,57 +78,56 @@ function shouldGenerateSourceMap() {
 }
 
 function buildWorkletString(
-  t: typeof BabelCore.types,
-  fun: BabelCore.types.File,
-  closureVariables: Array<BabelTypes.Identifier>,
+  fun: BabelTypesFile,
+  closureVariables: Array<Identifier>,
   name: string,
-  inputMap: BabelCore.BabelFileResult['map']
+  inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
   function prependClosureVariablesIfNecessary() {
-    const closureDeclaration = t.variableDeclaration('const', [
-      t.variableDeclarator(
-        t.objectPattern(
+    const closureDeclaration = variableDeclaration('const', [
+      variableDeclarator(
+        objectPattern(
           closureVariables.map((variable) =>
-            t.objectProperty(
-              t.identifier(variable.name),
-              t.identifier(variable.name),
+            objectProperty(
+              identifier(variable.name),
+              identifier(variable.name),
               false,
               true
             )
           )
         ),
-        t.memberExpression(t.thisExpression(), t.identifier('_closure'))
+        memberExpression(thisExpression(), identifier('_closure'))
       ),
     ]);
 
     function prependClosure(
-      path: BabelCore.NodePath<
-        | BabelTypes.FunctionDeclaration
-        | BabelTypes.FunctionExpression
-        | BabelTypes.ArrowFunctionExpression
-        | BabelTypes.ObjectMethod
+      path: NodePath<
+        | FunctionDeclaration
+        | FunctionExpression
+        | ArrowFunctionExpression
+        | ObjectMethod
       >
     ) {
       if (closureVariables.length === 0 || path.parent.type !== 'Program') {
         return;
       }
 
-      if (!BabelTypes.isExpression(path.node.body))
+      if (!isExpression(path.node.body))
         path.node.body.body.unshift(closureDeclaration);
     }
 
     function prependRecursiveDeclaration(
-      path: BabelCore.NodePath<
-        | BabelTypes.FunctionDeclaration
-        | BabelTypes.FunctionExpression
-        | BabelTypes.ArrowFunctionExpression
-        | BabelTypes.ObjectMethod
+      path: NodePath<
+        | FunctionDeclaration
+        | FunctionExpression
+        | ArrowFunctionExpression
+        | ObjectMethod
       >
     ) {
       if (
         path.parent.type === 'Program' &&
-        !BabelTypes.isArrowFunctionExpression(path.node) &&
-        !BabelTypes.isObjectMethod(path.node) &&
+        !isArrowFunctionExpression(path.node) &&
+        !isObjectMethod(path.node) &&
         path.node.id &&
         path.scope.parent
       ) {
@@ -96,10 +135,10 @@ function buildWorkletString(
           path.scope.parent.bindings[path.node.id.name]?.references > 0;
         if (hasRecursiveCalls) {
           path.node.body.body.unshift(
-            t.variableDeclaration('const', [
-              t.variableDeclarator(
-                t.identifier(path.node.id.name),
-                t.memberExpression(t.thisExpression(), t.identifier('_recur'))
+            variableDeclaration('const', [
+              variableDeclarator(
+                identifier(path.node.id.name),
+                memberExpression(thisExpression(), identifier('_recur'))
               ),
             ])
           );
@@ -111,11 +150,11 @@ function buildWorkletString(
       visitor: {
         'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
           (
-            path: BabelCore.NodePath<
-              | BabelTypes.FunctionDeclaration
-              | BabelTypes.FunctionExpression
-              | BabelTypes.ArrowFunctionExpression
-              | BabelTypes.ObjectMethod
+            path: NodePath<
+              | FunctionDeclaration
+              | FunctionExpression
+              | ArrowFunctionExpression
+              | ObjectMethod
             >
           ) => {
             prependClosure(path);
@@ -126,27 +165,24 @@ function buildWorkletString(
   }
 
   const draftExpression = (fun.program.body.find((obj) =>
-    BabelTypes.isFunctionDeclaration(obj)
+    isFunctionDeclaration(obj)
   ) ||
-    fun.program.body.find((obj) => BabelTypes.isExpressionStatement(obj)) ||
-    undefined) as
-    | BabelTypes.FunctionDeclaration
-    | BabelTypes.ExpressionStatement
-    | undefined;
+    fun.program.body.find((obj) => isExpressionStatement(obj)) ||
+    undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
   if (!draftExpression) throw new Error("'draftExpression' is not defined\n");
 
-  const expression = BabelTypes.isFunctionDeclaration(draftExpression)
+  const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
     : draftExpression.expression;
 
-  if (!('params' in expression && BabelTypes.isBlockStatement(expression.body)))
+  if (!('params' in expression && isBlockStatement(expression.body)))
     throw new Error(
       "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
     );
 
-  const workletFunction = BabelTypes.functionExpression(
-    BabelTypes.identifier(name),
+  const workletFunction = functionExpression(
+    identifier(name),
     expression.params,
     expression.body
   );
@@ -196,45 +232,40 @@ function buildWorkletString(
 }
 
 function makeWorkletName(
-  t: typeof BabelCore.types,
-  fun: BabelCore.NodePath<
-    | BabelTypes.FunctionDeclaration
-    | BabelTypes.FunctionExpression
-    | BabelTypes.ObjectMethod
-    | BabelTypes.ArrowFunctionExpression
+  fun: NodePath<
+    | FunctionDeclaration
+    | FunctionExpression
+    | ObjectMethod
+    | ArrowFunctionExpression
   >
-): string {
-  if (t.isObjectMethod(fun.node) && 'name' in fun.node.key) {
+) {
+  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
-  if (t.isFunctionDeclaration(fun.node) && fun.node.id) {
+  if (isFunctionDeclaration(fun.node) && fun.node.id) {
     return fun.node.id.name;
   }
-  if (
-    BabelTypes.isFunctionExpression(fun.node) &&
-    BabelTypes.isIdentifier(fun.node.id)
-  ) {
+  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
     return fun.node.id.name;
   }
   return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
 }
 
 export function makeWorklet(
-  t: typeof BabelCore.types,
-  fun: BabelCore.NodePath<
-    | BabelTypes.FunctionDeclaration
-    | BabelTypes.FunctionExpression
-    | BabelTypes.ObjectMethod
-    | BabelTypes.ArrowFunctionExpression
+  fun: NodePath<
+    | FunctionDeclaration
+    | FunctionExpression
+    | ObjectMethod
+    | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
-): BabelTypes.FunctionExpression {
+): FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  const functionName = makeWorkletName(t, fun);
+  const functionName = makeWorkletName(fun);
 
-  const closure = new Map<string, BabelTypes.Identifier>();
+  const closure = new Map<string, Identifier>();
 
   // remove 'worklet'; directive before generating string
   fun.traverse({
@@ -260,7 +291,7 @@ export function makeWorklet(
   // bracket would become part of the comment thus resulting in an error, since
   // there is a missing closing bracket.
   const code =
-    '(' + (t.isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
+    '(' + (isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = transformSync(code, {
     filename: state.file.opts.filename,
@@ -287,8 +318,8 @@ export function makeWorklet(
       const name = path.node.name;
       if (
         globals.has(name) ||
-        (!BabelTypes.isArrowFunctionExpression(fun.node) &&
-          !BabelTypes.isObjectMethod(fun.node) &&
+        (!isArrowFunctionExpression(fun.node) &&
+          !isObjectMethod(fun.node) &&
           fun.node.id &&
           fun.node.id.name === name)
       ) {
@@ -327,14 +358,13 @@ export function makeWorklet(
 
   const variables = Array.from(closure.values());
 
-  const privateFunctionId = t.identifier('_f');
-  const clone = t.cloneNode(fun.node);
-  const funExpression = BabelTypes.isBlockStatement(clone.body)
-    ? BabelTypes.functionExpression(null, clone.params, clone.body)
+  const privateFunctionId = identifier('_f');
+  const clone = cloneNode(fun.node);
+  const funExpression = isBlockStatement(clone.body)
+    ? functionExpression(null, clone.params, clone.body)
     : clone;
 
   const [funString, sourceMapString] = buildWorkletString(
-    t,
     transformed.ast,
     variables,
     functionName,
@@ -363,124 +393,107 @@ export function makeWorklet(
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
     : (fun.findParent(
-        (path) =>
-          (path.parentPath as BabelCore.NodePath<BabelCore.Node>).isProgram() // this causes typescript error on Windows CI build
-      ) as BabelCore.NodePath<BabelCore.Node>); // this causes typescript error on Windows CI build
+        (path) => (path.parentPath as NodePath<BabelNode>).isProgram() // lack of this 'as ...' causes typescript error on Windows CI build
+      ) as NodePath<BabelNode>); // lack of this 'as ...' this causes typescript error on Windows CI build
 
   const initDataId = (
-    pathForStringDefinitions.parentPath as BabelCore.NodePath<BabelCore.Node>
-  ).scope // this causes typescript error on Windows CI build
+    pathForStringDefinitions.parentPath as NodePath<BabelNode>
+  ).scope // lack of this 'as ...' this causes typescript error on Windows CI build
     .generateUidIdentifier(`worklet_${workletHash}_init_data`);
 
-  const initDataObjectExpression = t.objectExpression([
-    t.objectProperty(t.identifier('code'), t.stringLiteral(funString)),
-    t.objectProperty(t.identifier('location'), t.stringLiteral(location)),
+  const initDataObjectExpression = objectExpression([
+    objectProperty(identifier('code'), stringLiteral(funString)),
+    objectProperty(identifier('location'), stringLiteral(location)),
   ]);
 
   if (sourceMapString) {
     initDataObjectExpression.properties.push(
-      t.objectProperty(
-        t.identifier('sourceMap'),
-        t.stringLiteral(sourceMapString)
-      )
+      objectProperty(identifier('sourceMap'), stringLiteral(sourceMapString))
     );
   }
 
   pathForStringDefinitions.insertBefore(
-    t.variableDeclaration('const', [
-      t.variableDeclarator(initDataId, initDataObjectExpression),
+    variableDeclaration('const', [
+      variableDeclarator(initDataId, initDataObjectExpression),
     ])
   );
 
-  if (
-    BabelTypes.isFunctionDeclaration(funExpression) ||
-    BabelTypes.isObjectMethod(funExpression)
-  )
+  if (isFunctionDeclaration(funExpression) || isObjectMethod(funExpression))
     throw new Error(
       "'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n"
     );
 
   const statements: Array<
-    | BabelTypes.VariableDeclaration
-    | BabelTypes.ExpressionStatement
-    | BabelTypes.ReturnStatement
+    VariableDeclaration | ExpressionStatement | ReturnStatement
   > = [
-    t.variableDeclaration('const', [
-      t.variableDeclarator(privateFunctionId, funExpression),
+    variableDeclaration('const', [
+      variableDeclarator(privateFunctionId, funExpression),
     ]),
-    t.expressionStatement(
-      t.assignmentExpression(
+    expressionStatement(
+      assignmentExpression(
         '=',
-        t.memberExpression(privateFunctionId, t.identifier('_closure'), false),
-        t.objectExpression(
+        memberExpression(privateFunctionId, identifier('_closure'), false),
+        objectExpression(
           variables.map((variable) =>
-            t.objectProperty(t.identifier(variable.name), variable, false, true)
+            objectProperty(identifier(variable.name), variable, false, true)
           )
         )
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
+    expressionStatement(
+      assignmentExpression(
         '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('__initData'),
-          false
-        ),
+        memberExpression(privateFunctionId, identifier('__initData'), false),
         initDataId
       )
     ),
-    t.expressionStatement(
-      t.assignmentExpression(
+    expressionStatement(
+      assignmentExpression(
         '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('__workletHash'),
-          false
-        ),
-        t.numericLiteral(workletHash)
+        memberExpression(privateFunctionId, identifier('__workletHash'), false),
+        numericLiteral(workletHash)
       )
     ),
   ];
 
   if (!isRelease()) {
     statements.unshift(
-      t.variableDeclaration('const', [
-        t.variableDeclarator(
-          t.identifier('_e'),
-          t.arrayExpression([
-            t.newExpression(
-              t.memberExpression(t.identifier('global'), t.identifier('Error')),
+      variableDeclaration('const', [
+        variableDeclarator(
+          identifier('_e'),
+          arrayExpression([
+            newExpression(
+              memberExpression(identifier('global'), identifier('Error')),
               []
             ),
-            t.numericLiteral(lineOffset),
-            t.numericLiteral(-27), // the placement of opening bracket after Exception in line that defined '_e' variable
+            numericLiteral(lineOffset),
+            numericLiteral(-27), // the placement of opening bracket after Exception in line that defined '_e' variable
           ])
         ),
       ])
     );
     statements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
+      expressionStatement(
+        assignmentExpression(
           '=',
-          t.memberExpression(
+          memberExpression(
             privateFunctionId,
-            t.identifier('__stackDetails'),
+            identifier('__stackDetails'),
             false
           ),
-          t.identifier('_e')
+          identifier('_e')
         )
       )
     );
   }
 
-  statements.push(t.returnStatement(privateFunctionId));
+  statements.push(returnStatement(privateFunctionId));
 
-  const newFun = t.functionExpression(
-    // !BabelTypes.isArrowFunctionExpression(fun.node) ? fun.node.id : undefined, // [TO DO] --- this never worked
+  const newFun = functionExpression(
+    // !isArrowFunctionExpression(fun.node) ? fun.node.id : undefined, // [TO DO] --- this never worked
     undefined,
     [],
-    t.blockStatement(statements)
+    blockStatement(statements)
   );
 
   return newFun;
