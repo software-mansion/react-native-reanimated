@@ -6,6 +6,9 @@ on:
       - 'android/**'
       - 'Common/**'
       - package.json
+  merge_group:
+    branches:
+      - main
   push:
     branches:
       - main

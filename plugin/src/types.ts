@@ -1,7 +1,7 @@
-import * as BabelCore from '@babel/core';
+import { BabelFile } from '@babel/core';
 
 export interface ReanimatedPluginPass {
-  file: BabelCore.BabelFile;
+  file: BabelFile;
   key: string;
   opts: {
     relativeSourceLocation?: boolean;

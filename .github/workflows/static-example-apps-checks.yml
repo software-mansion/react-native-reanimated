@@ -6,6 +6,9 @@ on:
       - 'Example/**'
       - 'FabricExample/**'
       - '*'
+  merge_group:
+    branches:
+      - main
   push:
     branches:
       - main

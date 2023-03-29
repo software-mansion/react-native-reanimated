@@ -82,7 +82,6 @@
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4",
-    "lodash.isequal": "^4.5.0",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
@@ -113,7 +112,7 @@
     "@typescript-eslint/parser": "^5.11.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^27.5.1",
-    "babel-plugin-module-resolver": "^4.1.0",
+    "babel-plugin-module-resolver": "^5.0.0",
     "clang-format": "^1.6.0",
     "eslint": "^8.8.0",
     "eslint-config-prettier": "^8.3.0",

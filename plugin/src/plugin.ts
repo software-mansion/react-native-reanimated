@@ -1,6 +1,12 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import { PluginItem, NodePath } from '@babel/core';
 import { globals } from './commonObjects';
+import {
+  CallExpression,
+  FunctionDeclaration,
+  FunctionExpression,
+  ArrowFunctionExpression,
+  DirectiveLiteral,
+} from '@babel/types';
 import { ReanimatedPluginPass } from './types';
 import { processWorklets } from './processWorklets';
 import { processIfWorkletNode } from './processIfWorkletNode';
@@ -8,7 +14,7 @@ import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGes
 import { processInlineStylesWarning } from './processInlineStylesWarning';
 import { injectVersion } from './injectVersion';
 
-export default function ({ types: t }: typeof BabelCore): BabelCore.PluginItem {
+module.exports = function (): PluginItem {
   return {
     pre() {
       // allows adding custom globals such as host-functions
@@ -20,36 +26,31 @@ export default function ({ types: t }: typeof BabelCore): BabelCore.PluginItem {
     },
     visitor: {
       DirectiveLiteral: {
-        enter(path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>) {
+        enter(path: NodePath<DirectiveLiteral>) {
           injectVersion(path);
         },
       },
       CallExpression: {
-        enter(
-          path: BabelCore.NodePath<BabelTypes.CallExpression>,
-          state: ReanimatedPluginPass
-        ) {
-          processWorklets(t, path, state);
+        enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
+          processWorklets(path, state);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         enter(
-          path: BabelCore.NodePath<
-            | BabelTypes.FunctionDeclaration
-            | BabelTypes.FunctionExpression
-            | BabelTypes.ArrowFunctionExpression
+          path: NodePath<
+            FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,
           state: ReanimatedPluginPass
         ) {
-          processIfWorkletNode(t, path, state);
-          processIfGestureHandlerEventCallbackFunctionNode(t, path, state);
+          processIfWorkletNode(path, state);
+          processIfGestureHandlerEventCallbackFunctionNode(path, state);
         },
       },
       JSXAttribute: {
         enter(path, state) {
-          processInlineStylesWarning(t, path, state);
+          processInlineStylesWarning(path, state);
         },
       },
     },
   };
-}
+};

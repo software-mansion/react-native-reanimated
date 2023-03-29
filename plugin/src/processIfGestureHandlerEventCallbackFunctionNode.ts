@@ -1,5 +1,14 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import { NodePath } from '@babel/core';
+import {
+  FunctionDeclaration,
+  FunctionExpression,
+  ArrowFunctionExpression,
+  isIdentifier,
+  isCallExpression,
+  Expression,
+  isMemberExpression,
+  isExpression,
+} from '@babel/types';
 import { ReanimatedPluginPass } from './types';
 import { processWorkletFunction } from './processWorkletFunction';
 
@@ -33,11 +42,8 @@ const gestureHandlerBuilderMethods = new Set([
 ]);
 
 export function processIfGestureHandlerEventCallbackFunctionNode(
-  t: typeof BabelCore.types,
-  fun: BabelCore.NodePath<
-    | BabelTypes.FunctionDeclaration
-    | BabelTypes.FunctionExpression
-    | BabelTypes.ArrowFunctionExpression
+  fun: NodePath<
+    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
 ) {
@@ -90,45 +96,39 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
   */
 
   if (
-    t.isCallExpression(fun.parent) &&
-    t.isExpression(fun.parent.callee) &&
-    isGestureObjectEventCallbackMethod(t, fun.parent.callee)
+    isCallExpression(fun.parent) &&
+    isExpression(fun.parent.callee) &&
+    isGestureObjectEventCallbackMethod(fun.parent.callee)
   ) {
-    processWorkletFunction(t, fun, state);
+    processWorkletFunction(fun, state);
   }
 }
 
-function isGestureObjectEventCallbackMethod(
-  t: typeof BabelCore.types,
-  node: BabelTypes.Expression
-) {
+function isGestureObjectEventCallbackMethod(node: Expression) {
   // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
   // where `[*]` represents any number of method calls.
   return (
-    t.isMemberExpression(node) &&
-    t.isIdentifier(node.property) &&
+    isMemberExpression(node) &&
+    isIdentifier(node.property) &&
     gestureHandlerBuilderMethods.has(node.property.name) &&
-    containsGestureObject(t, node.object)
+    containsGestureObject(node.object)
   );
 }
 
-function containsGestureObject(
-  t: typeof BabelCore.types,
-  node: BabelTypes.Expression
-) {
+function containsGestureObject(node: Expression) {
   // Checks if node matches the pattern `Gesture.Foo()[*]`
   // where `[*]` represents any number of chained method calls, like `.something(42)`.
 
   // direct call
-  if (isGestureObject(t, node)) {
+  if (isGestureObject(node)) {
     return true;
   }
 
   // method chaining
   if (
-    t.isCallExpression(node) &&
-    t.isMemberExpression(node.callee) &&
-    containsGestureObject(t, node.callee.object)
+    isCallExpression(node) &&
+    isMemberExpression(node.callee) &&
+    containsGestureObject(node.callee.object)
   ) {
     return true;
   }
@@ -136,10 +136,7 @@ function containsGestureObject(
   return false;
 }
 
-function isGestureObject(
-  t: typeof BabelCore.types,
-  node: BabelTypes.Expression
-) {
+function isGestureObject(node: Expression) {
   // Checks if node matches `Gesture.Tap()` or similar.
   /*
   node: CallExpression(
@@ -150,11 +147,11 @@ function isGestureObject(
   )
   */
   return (
-    t.isCallExpression(node) &&
-    t.isMemberExpression(node.callee) &&
-    t.isIdentifier(node.callee.object) &&
+    isCallExpression(node) &&
+    isMemberExpression(node.callee) &&
+    isIdentifier(node.callee.object) &&
     node.callee.object.name === 'Gesture' &&
-    t.isIdentifier(node.callee.property) &&
+    isIdentifier(node.callee.property) &&
     gestureHandlerGestureObjects.has(node.callee.property.name)
   );
 }
