@@ -1,9 +1,15 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import { NodePath } from '@babel/core';
+import {
+  DirectiveLiteral,
+  expressionStatement,
+  assignmentExpression,
+  memberExpression,
+  identifier,
+  stringLiteral,
+  FunctionDeclaration,
+} from '@babel/types';
 
-export function injectVersion(
-  path: BabelCore.NodePath<BabelTypes.DirectiveLiteral>
-) {
+export function injectVersion(path: NodePath<DirectiveLiteral>) {
   // We want to inject plugin's version only once,
   // hence we have a Directive Literal line in Reanimated code.
   // See src/reanimated2/platform-specific/checkPluginVersion.ts
@@ -14,19 +20,16 @@ export function injectVersion(
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const versionString = require('../../package.json').version;
-  const pluginVersionNode = BabelTypes.expressionStatement(
-    BabelTypes.assignmentExpression(
+  const pluginVersionNode = expressionStatement(
+    assignmentExpression(
       '=',
-      BabelTypes.memberExpression(
-        BabelTypes.identifier('global'),
-        BabelTypes.identifier(injectedName)
-      ),
-      BabelTypes.stringLiteral(versionString)
+      memberExpression(identifier('global'), identifier(injectedName)),
+      stringLiteral(versionString)
     )
   );
 
   const functionParent = (
-    path.getFunctionParent() as BabelCore.NodePath<BabelTypes.FunctionDeclaration>
+    path.getFunctionParent() as NodePath<FunctionDeclaration>
   ).node;
   // DirectiveLiteral is in property of its function parent 'directives' hence we cannot just replace it.
   functionParent.body.directives = [];

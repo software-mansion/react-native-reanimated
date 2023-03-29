@@ -127,10 +127,9 @@ var require_makeWorklet = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorklet = void 0;
-    var BabelTypes = __importStar(require("@babel/types"));
-    var generator_1 = __importDefault(require("@babel/generator"));
-    var traverse_1 = __importDefault(require("@babel/traverse"));
     var core_1 = require("@babel/core");
+    var generator_1 = __importDefault(require("@babel/generator"));
+    var types_1 = require("@babel/types");
     var fs = __importStar(require("fs"));
     var convertSourceMap = __importStar(require("convert-source-map"));
     var utils_1 = require_utils();
@@ -155,25 +154,25 @@ var require_makeWorklet = __commonJS({
       }
       return true;
     }
-    function buildWorkletString(t, fun, closureVariables, name, inputMap) {
+    function buildWorkletString(fun, closureVariables, name, inputMap) {
       function prependClosureVariablesIfNecessary() {
-        const closureDeclaration = t.variableDeclaration("const", [
-          t.variableDeclarator(t.objectPattern(closureVariables.map((variable) => t.objectProperty(t.identifier(variable.name), t.identifier(variable.name), false, true))), t.memberExpression(t.thisExpression(), t.identifier("_closure")))
+        const closureDeclaration = (0, types_1.variableDeclaration)("const", [
+          (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_closure")))
         ]);
         function prependClosure(path) {
           if (closureVariables.length === 0 || path.parent.type !== "Program") {
             return;
           }
-          if (!BabelTypes.isExpression(path.node.body))
+          if (!(0, types_1.isExpression)(path.node.body))
             path.node.body.body.unshift(closureDeclaration);
         }
         function prependRecursiveDeclaration(path) {
           var _a;
-          if (path.parent.type === "Program" && !BabelTypes.isArrowFunctionExpression(path.node) && !BabelTypes.isObjectMethod(path.node) && path.node.id && path.scope.parent) {
+          if (path.parent.type === "Program" && !(0, types_1.isArrowFunctionExpression)(path.node) && !(0, types_1.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
             const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
             if (hasRecursiveCalls) {
-              path.node.body.body.unshift(t.variableDeclaration("const", [
-                t.variableDeclarator(t.identifier(path.node.id.name), t.memberExpression(t.thisExpression(), t.identifier("_recur")))
+              path.node.body.body.unshift((0, types_1.variableDeclaration)("const", [
+                (0, types_1.variableDeclarator)((0, types_1.identifier)(path.node.id.name), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_recur")))
               ]));
             }
           }
@@ -187,13 +186,13 @@ var require_makeWorklet = __commonJS({
           }
         };
       }
-      const draftExpression = fun.program.body.find((obj) => BabelTypes.isFunctionDeclaration(obj)) || fun.program.body.find((obj) => BabelTypes.isExpressionStatement(obj)) || void 0;
+      const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
       if (!draftExpression)
         throw new Error("'draftExpression' is not defined\n");
-      const expression = BabelTypes.isFunctionDeclaration(draftExpression) ? draftExpression : draftExpression.expression;
-      if (!("params" in expression && BabelTypes.isBlockStatement(expression.body)))
+      const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
+      if (!("params" in expression && (0, types_1.isBlockStatement)(expression.body)))
         throw new Error("'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'");
-      const workletFunction = BabelTypes.functionExpression(BabelTypes.identifier(name), expression.params, expression.body);
+      const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       if (!inputMap)
         throw new Error("'inputMap' is not defined");
@@ -223,20 +222,20 @@ var require_makeWorklet = __commonJS({
       }
       return [transformed.code, JSON.stringify(sourceMap)];
     }
-    function makeWorkletName(t, fun) {
-      if (t.isObjectMethod(fun.node) && "name" in fun.node.key) {
+    function makeWorkletName(fun) {
+      if ((0, types_1.isObjectMethod)(fun.node) && "name" in fun.node.key) {
         return fun.node.key.name;
       }
-      if (t.isFunctionDeclaration(fun.node) && fun.node.id) {
+      if ((0, types_1.isFunctionDeclaration)(fun.node) && fun.node.id) {
         return fun.node.id.name;
       }
-      if (BabelTypes.isFunctionExpression(fun.node) && BabelTypes.isIdentifier(fun.node.id)) {
+      if ((0, types_1.isFunctionExpression)(fun.node) && (0, types_1.isIdentifier)(fun.node.id)) {
         return fun.node.id.name;
       }
       return "anonymous";
     }
-    function makeWorklet(t, fun, state) {
-      const functionName = makeWorkletName(t, fun);
+    function makeWorklet(fun, state) {
+      const functionName = makeWorkletName(fun);
       const closure = /* @__PURE__ */ new Map();
       fun.traverse({
         DirectiveLiteral(path) {
@@ -251,7 +250,7 @@ var require_makeWorklet = __commonJS({
         sourceMaps: true,
         sourceFileName: state.file.opts.filename
       });
-      const code = "(" + (t.isObjectMethod(fun) ? "function " : "") + codeObject.code + "\n)";
+      const code = "(" + ((0, types_1.isObjectMethod)(fun) ? "function " : "") + codeObject.code + "\n)";
       const transformed = (0, core_1.transformSync)(code, {
         filename: state.file.opts.filename,
         presets: ["@babel/preset-typescript"],
@@ -269,12 +268,12 @@ var require_makeWorklet = __commonJS({
       });
       if (!transformed || !transformed.ast)
         throw new Error("'transformed' or 'transformed.ast' is undefined\n");
-      (0, traverse_1.default)(transformed.ast, {
+      (0, core_1.traverse)(transformed.ast, {
         Identifier(path) {
           if (!path.isReferencedIdentifier())
             return;
           const name = path.node.name;
-          if (commonObjects_12.globals.has(name) || !BabelTypes.isArrowFunctionExpression(fun.node) && !BabelTypes.isObjectMethod(fun.node) && fun.node.id && fun.node.id.name === name) {
+          if (commonObjects_12.globals.has(name) || !(0, types_1.isArrowFunctionExpression)(fun.node) && !(0, types_1.isObjectMethod)(fun.node) && fun.node.id && fun.node.id.name === name) {
             return;
           }
           const parentNode = path.parent;
@@ -295,10 +294,10 @@ var require_makeWorklet = __commonJS({
         }
       });
       const variables = Array.from(closure.values());
-      const privateFunctionId = t.identifier("_f");
-      const clone = t.cloneNode(fun.node);
-      const funExpression = BabelTypes.isBlockStatement(clone.body) ? BabelTypes.functionExpression(null, clone.params, clone.body) : clone;
-      const [funString, sourceMapString] = buildWorkletString(t, transformed.ast, variables, functionName, transformed.map);
+      const privateFunctionId = (0, types_1.identifier)("_f");
+      const clone = (0, types_1.cloneNode)(fun.node);
+      const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
+      const [funString, sourceMapString] = buildWorkletString(transformed.ast, variables, functionName, transformed.map);
       if (!funString)
         throw new Error("'funString' is not defined\n");
       const workletHash = hash(funString);
@@ -313,38 +312,38 @@ var require_makeWorklet = __commonJS({
       }
       const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => path.parentPath.isProgram());
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
-      const initDataObjectExpression = t.objectExpression([
-        t.objectProperty(t.identifier("code"), t.stringLiteral(funString)),
-        t.objectProperty(t.identifier("location"), t.stringLiteral(location))
+      const initDataObjectExpression = (0, types_1.objectExpression)([
+        (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString)),
+        (0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location))
       ]);
       if (sourceMapString) {
-        initDataObjectExpression.properties.push(t.objectProperty(t.identifier("sourceMap"), t.stringLiteral(sourceMapString)));
+        initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("sourceMap"), (0, types_1.stringLiteral)(sourceMapString)));
       }
-      pathForStringDefinitions.insertBefore(t.variableDeclaration("const", [
-        t.variableDeclarator(initDataId, initDataObjectExpression)
+      pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
-      if (BabelTypes.isFunctionDeclaration(funExpression) || BabelTypes.isObjectMethod(funExpression))
+      if ((0, types_1.isFunctionDeclaration)(funExpression) || (0, types_1.isObjectMethod)(funExpression))
         throw new Error("'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n");
       const statements = [
-        t.variableDeclaration("const", [
-          t.variableDeclarator(privateFunctionId, funExpression)
+        (0, types_1.variableDeclaration)("const", [
+          (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
         ]),
-        t.expressionStatement(t.assignmentExpression("=", t.memberExpression(privateFunctionId, t.identifier("_closure"), false), t.objectExpression(variables.map((variable) => t.objectProperty(t.identifier(variable.name), variable, false, true))))),
-        t.expressionStatement(t.assignmentExpression("=", t.memberExpression(privateFunctionId, t.identifier("__initData"), false), initDataId)),
-        t.expressionStatement(t.assignmentExpression("=", t.memberExpression(privateFunctionId, t.identifier("__workletHash"), false), t.numericLiteral(workletHash)))
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("_closure"), false), (0, types_1.objectExpression)(variables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), variable, false, true))))),
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__initData"), false), initDataId)),
+        (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__workletHash"), false), (0, types_1.numericLiteral)(workletHash)))
       ];
       if (!(0, utils_1.isRelease)()) {
-        statements.unshift(t.variableDeclaration("const", [
-          t.variableDeclarator(t.identifier("_e"), t.arrayExpression([
-            t.newExpression(t.memberExpression(t.identifier("global"), t.identifier("Error")), []),
-            t.numericLiteral(lineOffset),
-            t.numericLiteral(-27)
+        statements.unshift((0, types_1.variableDeclaration)("const", [
+          (0, types_1.variableDeclarator)((0, types_1.identifier)("_e"), (0, types_1.arrayExpression)([
+            (0, types_1.newExpression)((0, types_1.memberExpression)((0, types_1.identifier)("global"), (0, types_1.identifier)("Error")), []),
+            (0, types_1.numericLiteral)(lineOffset),
+            (0, types_1.numericLiteral)(-27)
           ]))
         ]));
-        statements.push(t.expressionStatement(t.assignmentExpression("=", t.memberExpression(privateFunctionId, t.identifier("__stackDetails"), false), t.identifier("_e"))));
+        statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
       }
-      statements.push(t.returnStatement(privateFunctionId));
-      const newFun = t.functionExpression(void 0, [], t.blockStatement(statements));
+      statements.push((0, types_1.returnStatement)(privateFunctionId));
+      const newFun = (0, types_1.functionExpression)(void 0, [], (0, types_1.blockStatement)(statements));
       return newFun;
     }
     exports2.makeWorklet = makeWorklet;
@@ -355,47 +354,15 @@ var require_makeWorklet = __commonJS({
 var require_processWorkletObjectMethod = __commonJS({
   "lib/processWorkletObjectMethod.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || function(mod) {
-      if (mod && mod.__esModule)
-        return mod;
-      var result = {};
-      if (mod != null) {
-        for (var k in mod)
-          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-            __createBinding(result, mod, k);
-      }
-      __setModuleDefault(result, mod);
-      return result;
-    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processWorkletObjectMethod = void 0;
-    var BabelTypes = __importStar(require("@babel/types"));
+    var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
-    function processWorkletObjectMethod(t, path, state) {
-      if (!BabelTypes.isFunctionParent(path))
+    function processWorkletObjectMethod(path, state) {
+      if (!(0, types_1.isFunctionParent)(path))
         return;
-      const newFun = (0, makeWorklet_1.makeWorklet)(t, path, state);
-      const replacement = BabelTypes.objectProperty(BabelTypes.identifier(BabelTypes.isIdentifier(path.node.key) ? path.node.key.name : ""), t.callExpression(newFun, []));
+      const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
+      const replacement = (0, types_1.objectProperty)((0, types_1.identifier)((0, types_1.isIdentifier)(path.node.key) ? path.node.key.name : ""), (0, types_1.callExpression)(newFun, []));
       path.replaceWith(replacement);
     }
     exports2.processWorkletObjectMethod = processWorkletObjectMethod;
@@ -406,51 +373,19 @@ var require_processWorkletObjectMethod = __commonJS({
 var require_processWorkletFunction = __commonJS({
   "lib/processWorkletFunction.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || function(mod) {
-      if (mod && mod.__esModule)
-        return mod;
-      var result = {};
-      if (mod != null) {
-        for (var k in mod)
-          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-            __createBinding(result, mod, k);
-      }
-      __setModuleDefault(result, mod);
-      return result;
-    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processWorkletFunction = void 0;
-    var BabelTypes = __importStar(require("@babel/types"));
+    var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
-    function processWorkletFunction(t, fun, state) {
-      if (!t.isFunctionParent(fun)) {
+    function processWorkletFunction(fun, state) {
+      if (!(0, types_1.isFunctionParent)(fun)) {
         return;
       }
-      const newFun = (0, makeWorklet_1.makeWorklet)(t, fun, state);
-      const replacement = t.callExpression(newFun, []);
-      const needDeclaration = t.isScopable(fun.parent) || t.isExportNamedDeclaration(fun.parent);
-      fun.replaceWith(!BabelTypes.isArrowFunctionExpression(fun.node) && fun.node.id && needDeclaration ? t.variableDeclaration("const", [
-        t.variableDeclarator(fun.node.id, replacement)
+      const newFun = (0, makeWorklet_1.makeWorklet)(fun, state);
+      const replacement = (0, types_1.callExpression)(newFun, []);
+      const needDeclaration = (0, types_1.isScopable)(fun.parent) || (0, types_1.isExportNamedDeclaration)(fun.parent);
+      fun.replaceWith(!(0, types_1.isArrowFunctionExpression)(fun.node) && fun.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)(fun.node.id, replacement)
       ]) : replacement);
     }
     exports2.processWorkletFunction = processWorkletFunction;
@@ -461,41 +396,9 @@ var require_processWorkletFunction = __commonJS({
 var require_processWorklets = __commonJS({
   "lib/processWorklets.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || function(mod) {
-      if (mod && mod.__esModule)
-        return mod;
-      var result = {};
-      if (mod != null) {
-        for (var k in mod)
-          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-            __createBinding(result, mod, k);
-      }
-      __setModuleDefault(result, mod);
-      return result;
-    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processWorklets = void 0;
-    var BabelTypes = __importStar(require("@babel/types"));
+    var types_1 = require("@babel/types");
     var processWorkletObjectMethod_1 = require_processWorkletObjectMethod();
     var processWorkletFunction_1 = require_processWorkletFunction();
     var functionArgsToWorkletize = /* @__PURE__ */ new Map([
@@ -516,28 +419,28 @@ var require_processWorklets = __commonJS({
       "useAnimatedGestureHandler",
       "useAnimatedScrollHandler"
     ]);
-    function processWorklets(t, path, state) {
-      const callee = BabelTypes.isSequenceExpression(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
+    function processWorklets(path, state) {
+      const callee = (0, types_1.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
       let name = "";
       if ("name" in callee)
         name = callee.name;
       else if ("property" in callee && "name" in callee.property)
         name = callee.property.name;
-      if (objectHooks.has(name) && BabelTypes.isObjectExpression(path.get("arguments.0").node)) {
+      if (objectHooks.has(name) && (0, types_1.isObjectExpression)(path.get("arguments.0").node)) {
         const properties = path.get("arguments.0.properties");
         for (const property of properties) {
-          if (t.isObjectMethod(property.node)) {
-            (0, processWorkletObjectMethod_1.processWorkletObjectMethod)(t, property, state);
+          if ((0, types_1.isObjectMethod)(property.node)) {
+            (0, processWorkletObjectMethod_1.processWorkletObjectMethod)(property, state);
           } else {
             const value = property.get("value");
-            (0, processWorkletFunction_1.processWorkletFunction)(t, value, state);
+            (0, processWorkletFunction_1.processWorkletFunction)(value, state);
           }
         }
       } else {
         const indexes = functionArgsToWorkletize.get(name);
         if (Array.isArray(indexes)) {
           indexes.forEach((index) => {
-            (0, processWorkletFunction_1.processWorkletFunction)(t, path.get(`arguments.${index}`), state);
+            (0, processWorkletFunction_1.processWorkletFunction)(path.get(`arguments.${index}`), state);
           });
         }
       }
@@ -550,50 +453,18 @@ var require_processWorklets = __commonJS({
 var require_processIfWorkletNode = __commonJS({
   "lib/processIfWorkletNode.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || function(mod) {
-      if (mod && mod.__esModule)
-        return mod;
-      var result = {};
-      if (mod != null) {
-        for (var k in mod)
-          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-            __createBinding(result, mod, k);
-      }
-      __setModuleDefault(result, mod);
-      return result;
-    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletNode = void 0;
-    var BabelTypes = __importStar(require("@babel/types"));
+    var types_1 = require("@babel/types");
     var processWorkletFunction_1 = require_processWorkletFunction();
-    function processIfWorkletNode(t, fun, state) {
+    function processIfWorkletNode(fun, state) {
       fun.traverse({
         DirectiveLiteral(path) {
           const value = path.node.value;
-          if (value === "worklet" && path.getFunctionParent() === fun && BabelTypes.isBlockStatement(fun.node.body)) {
+          if (value === "worklet" && path.getFunctionParent() === fun && (0, types_1.isBlockStatement)(fun.node.body)) {
             const directives = fun.node.body.directives;
-            if (directives && directives.length > 0 && directives.some((directive) => t.isDirectiveLiteral(directive.value) && directive.value.value === "worklet")) {
-              (0, processWorkletFunction_1.processWorkletFunction)(t, fun, state);
+            if (directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet")) {
+              (0, processWorkletFunction_1.processWorkletFunction)(fun, state);
             }
           }
         }
@@ -609,6 +480,7 @@ var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfGestureHandlerEventCallbackFunctionNode = void 0;
+    var types_1 = require("@babel/types");
     var processWorkletFunction_1 = require_processWorkletFunction();
     var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
       "Tap",
@@ -636,26 +508,26 @@ var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
       "onTouchesUp",
       "onTouchesCancelled"
     ]);
-    function processIfGestureHandlerEventCallbackFunctionNode(t, fun, state) {
-      if (t.isCallExpression(fun.parent) && t.isExpression(fun.parent.callee) && isGestureObjectEventCallbackMethod(t, fun.parent.callee)) {
-        (0, processWorkletFunction_1.processWorkletFunction)(t, fun, state);
+    function processIfGestureHandlerEventCallbackFunctionNode(fun, state) {
+      if ((0, types_1.isCallExpression)(fun.parent) && (0, types_1.isExpression)(fun.parent.callee) && isGestureObjectEventCallbackMethod(fun.parent.callee)) {
+        (0, processWorkletFunction_1.processWorkletFunction)(fun, state);
       }
     }
     exports2.processIfGestureHandlerEventCallbackFunctionNode = processIfGestureHandlerEventCallbackFunctionNode;
-    function isGestureObjectEventCallbackMethod(t, node) {
-      return t.isMemberExpression(node) && t.isIdentifier(node.property) && gestureHandlerBuilderMethods.has(node.property.name) && containsGestureObject(t, node.object);
+    function isGestureObjectEventCallbackMethod(node) {
+      return (0, types_1.isMemberExpression)(node) && (0, types_1.isIdentifier)(node.property) && gestureHandlerBuilderMethods.has(node.property.name) && containsGestureObject(node.object);
     }
-    function containsGestureObject(t, node) {
-      if (isGestureObject(t, node)) {
+    function containsGestureObject(node) {
+      if (isGestureObject(node)) {
         return true;
       }
-      if (t.isCallExpression(node) && t.isMemberExpression(node.callee) && containsGestureObject(t, node.callee.object)) {
+      if ((0, types_1.isCallExpression)(node) && (0, types_1.isMemberExpression)(node.callee) && containsGestureObject(node.callee.object)) {
         return true;
       }
       return false;
     }
-    function isGestureObject(t, node) {
-      return t.isCallExpression(node) && t.isMemberExpression(node.callee) && t.isIdentifier(node.callee.object) && node.callee.object.name === "Gesture" && t.isIdentifier(node.callee.property) && gestureHandlerGestureObjects.has(node.callee.property.name);
+    function isGestureObject(node) {
+      return (0, types_1.isCallExpression)(node) && (0, types_1.isMemberExpression)(node.callee) && (0, types_1.isIdentifier)(node.callee.object) && node.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(node.callee.property) && gestureHandlerGestureObjects.has(node.callee.property.name);
     }
   }
 });
@@ -664,103 +536,71 @@ var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
 var require_processInlineStylesWarning = __commonJS({
   "lib/processInlineStylesWarning.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || function(mod) {
-      if (mod && mod.__esModule)
-        return mod;
-      var result = {};
-      if (mod != null) {
-        for (var k in mod)
-          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-            __createBinding(result, mod, k);
-      }
-      __setModuleDefault(result, mod);
-      return result;
-    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processInlineStylesWarning = void 0;
-    var BabelTypes = __importStar(require("@babel/types"));
+    var types_1 = require("@babel/types");
     var utils_1 = require_utils();
-    function generateInlineStylesWarning(t, memberExpression) {
-      return t.callExpression(t.arrowFunctionExpression([], t.blockStatement([
-        t.expressionStatement(t.callExpression(t.memberExpression(t.identifier("console"), t.identifier("warn")), [
-          t.callExpression(t.memberExpression(t.callExpression(t.identifier("require"), [
-            t.stringLiteral("react-native-reanimated")
-          ]), t.identifier("getUseOfValueInStyleWarning")), [])
+    function generateInlineStylesWarning(path) {
+      return (0, types_1.callExpression)((0, types_1.arrowFunctionExpression)([], (0, types_1.blockStatement)([
+        (0, types_1.expressionStatement)((0, types_1.callExpression)((0, types_1.memberExpression)((0, types_1.identifier)("console"), (0, types_1.identifier)("warn")), [
+          (0, types_1.callExpression)((0, types_1.memberExpression)((0, types_1.callExpression)((0, types_1.identifier)("require"), [
+            (0, types_1.stringLiteral)("react-native-reanimated")
+          ]), (0, types_1.identifier)("getUseOfValueInStyleWarning")), [])
         ])),
-        t.returnStatement(memberExpression.node)
+        (0, types_1.returnStatement)(path.node)
       ])), []);
     }
-    function processPropertyValueForInlineStylesWarning(t, path) {
-      if (t.isMemberExpression(path.node) && t.isIdentifier(path.node.property)) {
+    function processPropertyValueForInlineStylesWarning(path) {
+      if ((0, types_1.isMemberExpression)(path.node) && (0, types_1.isIdentifier)(path.node.property)) {
         if (path.node.property.name === "value") {
-          path.replaceWith(generateInlineStylesWarning(t, path));
+          path.replaceWith(generateInlineStylesWarning(path));
         }
       }
     }
-    function processTransformPropertyForInlineStylesWarning(t, path) {
-      if (t.isArrayExpression(path.node)) {
+    function processTransformPropertyForInlineStylesWarning(path) {
+      if ((0, types_1.isArrayExpression)(path.node)) {
         const elements = path.get("elements");
         for (const element of elements) {
-          if (t.isObjectExpression(element.node)) {
-            processStyleObjectForInlineStylesWarning(t, element);
+          if ((0, types_1.isObjectExpression)(element.node)) {
+            processStyleObjectForInlineStylesWarning(element);
           }
         }
       }
     }
-    function processStyleObjectForInlineStylesWarning(t, path) {
+    function processStyleObjectForInlineStylesWarning(path) {
       const properties = path.get("properties");
       for (const property of properties) {
-        if (!BabelTypes.isObjectProperty(property.node))
+        if (!(0, types_1.isObjectProperty)(property.node))
           continue;
         const value = property.get("value");
-        if (t.isObjectProperty(property)) {
-          if (t.isIdentifier(property.node.key) && property.node.key.name === "transform") {
-            processTransformPropertyForInlineStylesWarning(t, value);
+        if ((0, types_1.isObjectProperty)(property)) {
+          if ((0, types_1.isIdentifier)(property.node.key) && property.node.key.name === "transform") {
+            processTransformPropertyForInlineStylesWarning(value);
           } else {
-            processPropertyValueForInlineStylesWarning(t, value);
+            processPropertyValueForInlineStylesWarning(value);
           }
         }
       }
     }
-    function processInlineStylesWarning(t, path, state) {
+    function processInlineStylesWarning(path, state) {
       if ((0, utils_1.isRelease)())
         return;
       if (state.opts.disableInlineStylesWarning)
         return;
       if (path.node.name.name !== "style")
         return;
-      if (!t.isJSXExpressionContainer(path.node.value))
+      if (!(0, types_1.isJSXExpressionContainer)(path.node.value))
         return;
       const expression = path.get("value").get("expression");
-      if (BabelTypes.isArrayExpression(expression.node)) {
+      if ((0, types_1.isArrayExpression)(expression.node)) {
         const elements = expression.get("elements");
         for (const element of elements) {
-          if (t.isObjectExpression(element.node)) {
-            processStyleObjectForInlineStylesWarning(t, element);
+          if ((0, types_1.isObjectExpression)(element.node)) {
+            processStyleObjectForInlineStylesWarning(element);
           }
         }
-      } else if (t.isObjectExpression(expression.node)) {
-        processStyleObjectForInlineStylesWarning(t, expression);
+      } else if ((0, types_1.isObjectExpression)(expression.node)) {
+        processStyleObjectForInlineStylesWarning(expression);
       }
     }
     exports2.processInlineStylesWarning = processInlineStylesWarning;
@@ -771,48 +611,16 @@ var require_processInlineStylesWarning = __commonJS({
 var require_injectVersion = __commonJS({
   "lib/injectVersion.js"(exports2) {
     "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    } : function(o, m, k, k2) {
-      if (k2 === void 0)
-        k2 = k;
-      o[k2] = m[k];
-    });
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    } : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || function(mod) {
-      if (mod && mod.__esModule)
-        return mod;
-      var result = {};
-      if (mod != null) {
-        for (var k in mod)
-          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
-            __createBinding(result, mod, k);
-      }
-      __setModuleDefault(result, mod);
-      return result;
-    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.injectVersion = void 0;
-    var BabelTypes = __importStar(require("@babel/types"));
+    var types_1 = require("@babel/types");
     function injectVersion(path) {
       if (path.node.value !== "inject Reanimated Babel plugin version") {
         return;
       }
       const injectedName = "_REANIMATED_VERSION_BABEL_PLUGIN";
       const versionString = require("../../package.json").version;
-      const pluginVersionNode = BabelTypes.expressionStatement(BabelTypes.assignmentExpression("=", BabelTypes.memberExpression(BabelTypes.identifier("global"), BabelTypes.identifier(injectedName)), BabelTypes.stringLiteral(versionString)));
+      const pluginVersionNode = (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)((0, types_1.identifier)("global"), (0, types_1.identifier)(injectedName)), (0, types_1.stringLiteral)(versionString)));
       const functionParent = path.getFunctionParent().node;
       functionParent.body.directives = [];
       functionParent.body.body.unshift(pluginVersionNode);
@@ -829,7 +637,7 @@ var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processIfGestureHandlerEventCallbackFunctionNode_1 = require_processIfGestureHandlerEventCallbackFunctionNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
 var injectVersion_1 = require_injectVersion();
-function default_1({ types: t }) {
+module.exports = function() {
   return {
     pre() {
       if (this.opts != null && Array.isArray(this.opts.globals)) {
@@ -846,22 +654,21 @@ function default_1({ types: t }) {
       },
       CallExpression: {
         enter(path, state) {
-          (0, processWorklets_1.processWorklets)(t, path, state);
+          (0, processWorklets_1.processWorklets)(path, state);
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
         enter(path, state) {
-          (0, processIfWorkletNode_1.processIfWorkletNode)(t, path, state);
-          (0, processIfGestureHandlerEventCallbackFunctionNode_1.processIfGestureHandlerEventCallbackFunctionNode)(t, path, state);
+          (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
+          (0, processIfGestureHandlerEventCallbackFunctionNode_1.processIfGestureHandlerEventCallbackFunctionNode)(path, state);
         }
       },
       JSXAttribute: {
         enter(path, state) {
-          (0, processInlineStylesWarning_1.processInlineStylesWarning)(t, path, state);
+          (0, processInlineStylesWarning_1.processInlineStylesWarning)(path, state);
         }
       }
     }
   };
-}
-exports.default = default_1;
+};
 //# sourceMappingURL=plugin.js.map

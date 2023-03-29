@@ -1,14 +1,17 @@
-import * as BabelCore from '@babel/core';
-import * as BabelTypes from '@babel/types';
+import { NodePath } from '@babel/core';
+import {
+  FunctionDeclaration,
+  FunctionExpression,
+  ArrowFunctionExpression,
+  isBlockStatement,
+  isDirectiveLiteral,
+} from '@babel/types';
 import { ReanimatedPluginPass } from './types';
 import { processWorkletFunction } from './processWorkletFunction';
 
 export function processIfWorkletNode(
-  t: typeof BabelCore.types,
-  fun: BabelCore.NodePath<
-    | BabelTypes.FunctionDeclaration
-    | BabelTypes.FunctionExpression
-    | BabelTypes.ArrowFunctionExpression
+  fun: NodePath<
+    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
 ) {
@@ -18,7 +21,7 @@ export function processIfWorkletNode(
       if (
         value === 'worklet' &&
         path.getFunctionParent() === fun &&
-        BabelTypes.isBlockStatement(fun.node.body)
+        isBlockStatement(fun.node.body)
       ) {
         // make sure "worklet" is listed among directives for the fun
         // this is necessary as because of some bug, babel will attempt to
@@ -29,11 +32,11 @@ export function processIfWorkletNode(
           directives.length > 0 &&
           directives.some(
             (directive) =>
-              t.isDirectiveLiteral(directive.value) &&
+              isDirectiveLiteral(directive.value) &&
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(t, fun, state);
+          processWorkletFunction(fun, state);
         }
       }
     },
