@@ -661,6 +661,8 @@ PODS:
     - react-native-box2d/Box2dHeaders (= 0.2.5)
   - react-native-box2d/Box2dHeaders (0.2.5):
     - React-Core
+  - react-native-pager-view (5.4.24):
+    - React-Core
   - react-native-safe-area-context (4.5.0):
     - RCT-Folly
     - RCTRequired
@@ -776,6 +778,10 @@ PODS:
     - React-jsi (= 0.71.3)
     - React-logger (= 0.71.3)
     - React-perflogger (= 0.71.3)
+  - RNCMaskedView (0.2.8):
+    - React-Core
+  - RNCPicker (2.4.9):
+    - React-Core
   - RNGestureHandler (2.9.0):
     - RCT-Folly
     - RCTRequired
@@ -902,6 +908,7 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - react-native-box2d (from `../node_modules/react-native-box2d`)
+  - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -918,6 +925,8 @@ DEPENDENCIES:
   - React-rncore (from `../node_modules/react-native/ReactCommon`)
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
+  - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -989,6 +998,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/logger"
   react-native-box2d:
     :path: "../node_modules/react-native-box2d"
+  react-native-pager-view:
+    :path: "../node_modules/react-native-pager-view"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   React-perflogger:
@@ -1021,6 +1032,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/runtimeexecutor"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNCMaskedView:
+    :path: "../node_modules/@react-native-masked-view/masked-view"
+  RNCPicker:
+    :path: "../node_modules/@react-native-picker/picker"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
@@ -1069,6 +1084,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 9f7c9137605e72ca0343db4cea88006cb94856dd
   React-logger: 957e5dc96d9dbffc6e0f15e0ee4d2b42829ff207
   react-native-box2d: a5126c70227755b79a1b5b8d867e3932041631b3
+  react-native-pager-view: 95d0418c3c74279840abec6926653d32447bafb6
   react-native-safe-area-context: e7e7c502560f89a6a1866af293d1e091f3c7929d
   React-perflogger: af8a3d31546077f42d729b949925cc4549f14def
   React-RCTActionSheet: 57cc5adfefbaaf0aae2cf7e10bccd746f2903673
@@ -1085,6 +1101,8 @@ SPEC CHECKSUMS:
   React-rncore: 319d5fd0fccaf9537ba38d328c68ec75ca3c1e54
   React-runtimeexecutor: 7bf0dafc7b727d93c8cb94eb00a9d3753c446c3e
   ReactCommon: 6f65ea5b7d84deb9e386f670dd11ce499ded7b40
+  RNCMaskedView: bc0170f389056201c82a55e242e5d90070e18e5a
+  RNCPicker: 567de6dc0c6735cf249700d940c80b90b090e4db
   RNGestureHandler: 9d2ebd17a9fef618d9720e3d95ff5e6607acf8d4
   RNReanimated: b38271c7b72560b7f9c3d0bf531faa8feb4da93a
   RNScreens: 4666ca0a74ee229b2332c5d22d2a8b81ba9202be

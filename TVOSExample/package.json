@@ -11,10 +11,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
-    "glob-to-regexp": "^0.4.1",
     "react": "18.0.0",
-    "react-native": "npm:react-native-tvos@0.69.5-2"
+    "react-native": "npm:react-native-tvos@0.69.8-0",
+    "react-native-reanimated": "link:../"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
