@@ -81,7 +81,6 @@
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4",
-    "lodash.isequal": "^4.5.0",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
