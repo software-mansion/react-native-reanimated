@@ -276,10 +276,7 @@ class ShareableHostObject : public Shareable {
 
 class ShareableHostFunction : public Shareable {
  public:
-  ShareableHostFunction(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      jsi::Runtime &rt,
-      jsi::Function function)
+  ShareableHostFunction(jsi::Runtime &rt, jsi::Function function)
       : Shareable(HostFunctionType),
         hostFunction_(
             (assert(function.isHostFunction(rt)),
