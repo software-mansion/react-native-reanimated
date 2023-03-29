@@ -7,7 +7,7 @@ import {
   ValueRotation,
   IOSReferenceFrame,
 } from '../commonTypes';
-import { flushImmediates } from '../threads';
+import { callMicrotasks } from '../threads';
 
 export type SensorConfig = {
   interval: number | 'auto';
@@ -145,7 +145,7 @@ export function useAnimatedSensor(
           }
         }
         sensorData.value = data;
-        flushImmediates();
+        callMicrotasks();
       }
     );
 

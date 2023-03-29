@@ -3,8 +3,8 @@ import NativeReanimatedModule from './NativeReanimated';
 import { isJest } from './PlatformChecker';
 import {
   runOnJS,
-  setupSetImmediate,
-  flushImmediates,
+  setupMicrotasks,
+  callMicrotasks,
   runOnUIImmediately,
 } from './threads';
 
@@ -106,7 +106,7 @@ function setupRequestAnimationFrame() {
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
     currentCallbacks.forEach((f) => f(frameTimestamp));
-    flushImmediates();
+    callMicrotasks();
   };
 
   global.requestAnimationFrame = (
@@ -177,7 +177,7 @@ export function initializeUIRuntime() {
     };
 
     if (!IS_JEST) {
-      setupSetImmediate();
+      setupMicrotasks();
       setupRequestAnimationFrame();
     }
   })();

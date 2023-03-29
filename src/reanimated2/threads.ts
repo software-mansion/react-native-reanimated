@@ -11,40 +11,49 @@ const IS_WEB = shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
-export function setupSetImmediate() {
+export function setupMicrotasks() {
   'worklet';
 
-  let immediateCallbacks: Array<() => void> = [];
+  let microtasksQueue: Array<() => void> = [];
+  let isExecutingMicrotasksQueue = false;
 
   // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.setImmediate = (callback: () => void): number => {
-    immediateCallbacks.push(callback);
+  global.queueMicrotask = (callback: () => void): number => {
+    microtasksQueue.push(callback);
     return -1;
   };
 
-  global.__flushImmediates = () => {
-    for (let index = 0; index < immediateCallbacks.length; index += 1) {
-      // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
-      immediateCallbacks[index]();
+  global.__callMicrotasks = () => {
+    if (isExecutingMicrotasksQueue) {
+      return;
     }
-    immediateCallbacks = [];
+    try {
+      isExecutingMicrotasksQueue = true;
+      for (let index = 0; index < microtasksQueue.length; index += 1) {
+        // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to queueMicrotask calls
+        microtasksQueue[index]();
+      }
+      microtasksQueue = [];
+    } finally {
+      isExecutingMicrotasksQueue = false;
+    }
   };
 }
 
-function flushImmediatesOnUIThread() {
+function callMicrotasksOnUIThread() {
   'worklet';
-  global.__flushImmediates();
+  global.__callMicrotasks();
 }
 
-export const flushImmediates = shouldBeUseWeb()
+export const callMicrotasks = shouldBeUseWeb()
   ? () => {
       // on web flushing is a noop as immediates are handled by the browser
     }
-  : flushImmediatesOnUIThread;
+  : callMicrotasksOnUIThread;
 
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
- * waits for other worklets to be scheduled within the same JS loop. It uses setImmediate to schedule all the worklets
+ * waits for other worklets to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
  * at once making sure they will run within the same frame boundaries on the UI thread.
  */
 export function runOnUI<A extends any[], R>(
@@ -55,7 +64,7 @@ export function runOnUI<A extends any[], R>(
   }
   return (...args) => {
     if (IS_JEST) {
-      // Mocking time in Jest is tricky as both requestAnimationFrame and setImmediate
+      // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
       // callbacks run on the same queue and can be interleaved. There is no way
       // to flush particular queue in Jest and the only control over mocked timers
       // is by using jest.advanceTimersByTime() method which advances all types
@@ -74,7 +83,7 @@ export function runOnUI<A extends any[], R>(
     }
     _runOnUIQueue.push([worklet, args]);
     if (_runOnUIQueue.length === 1) {
-      setImmediate(() => {
+      queueMicrotask(() => {
         const queue = _runOnUIQueue;
         _runOnUIQueue = [];
         NativeReanimatedModule.scheduleOnUI(
@@ -83,7 +92,7 @@ export function runOnUI<A extends any[], R>(
             queue.forEach(([worklet, args]) => {
               worklet(...args);
             });
-            flushImmediates();
+            callMicrotasks();
           })
         );
       });
