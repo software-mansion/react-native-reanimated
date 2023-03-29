@@ -80,7 +80,6 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
-    "@babel/core": "^7.20.0",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0"
