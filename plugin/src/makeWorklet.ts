@@ -45,10 +45,38 @@ import {
 } from '@babel/types';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
-import { ReanimatedPluginPass } from './commonInterfaces';
-import { shouldGenerateSourceMap, hash, isRelease } from './commonFunctions';
+import { ReanimatedPluginPass } from './types';
+import { isRelease } from './utils';
 import { globals } from './commonObjects';
 import { assertIsDefined } from './asserts';
+
+function hash(str: string) {
+  let i = str.length;
+  let hash1 = 5381;
+  let hash2 = 52711;
+
+  while (i--) {
+    const char = str.charCodeAt(i);
+    hash1 = (hash1 * 33) ^ char;
+    hash2 = (hash2 * 33) ^ char;
+  }
+
+  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+}
+
+function shouldGenerateSourceMap() {
+  if (isRelease()) {
+    return false;
+  }
+
+  if (process.env.REANIMATED_PLUGIN_TESTS === 'jest') {
+    // We want to detect this, so we can disable source maps (because they break
+    // snapshot tests with jest).
+    return false;
+  }
+
+  return true;
+}
 
 function buildWorkletString(
   fun: BabelTypesFile,
@@ -211,7 +239,7 @@ function makeWorkletName(
     | ObjectMethod
     | ArrowFunctionExpression
   >
-): string {
+) {
   if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
@@ -224,7 +252,7 @@ function makeWorkletName(
   return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
 }
 
-function makeWorklet(
+export function makeWorklet(
   fun: NodePath<
     | FunctionDeclaration
     | FunctionExpression
@@ -470,5 +498,3 @@ function makeWorklet(
 
   return newFun;
 }
-
-export { makeWorklet };

@@ -21,8 +21,8 @@ import {
   ObjectProperty,
   isIdentifier,
 } from '@babel/types';
-import { isRelease } from './commonFunctions';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { isRelease } from './utils';
+import { ReanimatedPluginPass } from './types';
 
 function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
   // replaces `sharedvalue.value` with `(()=>{console.warn(require('react-native-reanimated').getUseOfValueInStyleWarning());return sharedvalue.value;})()`
@@ -105,7 +105,7 @@ function processStyleObjectForInlineStylesWarning(
   }
 }
 
-function processInlineStylesWarning(
+export function processInlineStylesWarning(
   path: NodePath<JSXAttribute>,
   state: ReanimatedPluginPass
 ) {
@@ -137,5 +137,3 @@ function processInlineStylesWarning(
     ); // why is it not inferred? [TO DO]
   }
 }
-
-export { processInlineStylesWarning };

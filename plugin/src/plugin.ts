@@ -7,7 +7,7 @@ import {
   ArrowFunctionExpression,
   DirectiveLiteral,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { processWorklets } from './processWorklets';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';

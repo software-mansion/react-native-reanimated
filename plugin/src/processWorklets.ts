@@ -10,12 +10,32 @@ import {
   FunctionExpression,
   ArrowFunctionExpression,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
-import { objectHooks, functionArgsToWorkletize } from './commonObjects';
+import { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processWorkletFunction } from './processWorkletFunction';
 
-function processWorklets(
+const functionArgsToWorkletize = new Map([
+  ['useFrameCallback', [0]],
+  ['useAnimatedStyle', [0]],
+  ['useAnimatedProps', [0]],
+  ['createAnimatedPropAdapter', [0]],
+  ['useDerivedValue', [0]],
+  ['useAnimatedScrollHandler', [0]],
+  ['useAnimatedReaction', [0, 1]],
+  ['useWorkletCallback', [0]],
+  // animations' callbacks
+  ['withTiming', [2]],
+  ['withSpring', [2]],
+  ['withDecay', [1]],
+  ['withRepeat', [3]],
+]);
+
+const objectHooks = new Set([
+  'useAnimatedGestureHandler',
+  'useAnimatedScrollHandler',
+]);
+
+export function processWorklets(
   path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
 ) {
@@ -68,5 +88,3 @@ function processWorklets(
     }
   }
 }
-
-export { processWorklets };
