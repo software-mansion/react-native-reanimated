@@ -17,6 +17,9 @@ on:
       - 'Common/cpp/**'
       - 'ios/native/**'
       - 'android/src/main/cpp/**'
+  merge_group:
+    branches:
+      - main
 
 jobs:
   lint:
