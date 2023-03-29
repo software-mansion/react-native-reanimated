@@ -24,12 +24,40 @@ interface HomeScreenProps {
 
 const EXAMPLES_NAMES = Object.keys(EXAMPLES) as (keyof typeof EXAMPLES)[];
 
+function findExamples(search: string) {
+  if (search === '') {
+    return EXAMPLES_NAMES;
+  }
+  return EXAMPLES_NAMES.filter((name) =>
+    EXAMPLES[name].title
+      .toLocaleLowerCase()
+      .includes(search.toLocaleLowerCase())
+  );
+}
+
 function HomeScreen({ navigation }: HomeScreenProps) {
+  const [search, setSearch] = React.useState('');
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerSearchBarOptions: {
+        onChangeText: (event) => {
+          setSearch(event.nativeEvent.text);
+        },
+        onSearchButtonPress: (event) => {
+          const results = findExamples(event.nativeEvent.text);
+          if (results.length >= 1) {
+            navigation.navigate(results[0]);
+          }
+        },
+      },
+      headerTransparent: false,
+    });
+  }, [navigation]);
+
   return (
     <FlatList
-      style={styles.list}
-      data={EXAMPLES_NAMES}
-      ItemSeparatorComponent={ItemSeparator}
+      data={findExamples(search)}
       initialNumToRender={EXAMPLES_NAMES.length}
       renderItem={({ item: name }) => (
         <Item
@@ -39,6 +67,8 @@ function HomeScreen({ navigation }: HomeScreenProps) {
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
+      ItemSeparatorComponent={ItemSeparator}
+      style={styles.list}
     />
   );
 }
