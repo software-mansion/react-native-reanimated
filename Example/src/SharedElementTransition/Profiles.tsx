@@ -95,6 +95,7 @@ function ProfilesScreen({
         {Object.keys(profiles).map((tag) => (
           <Pressable
             onPress={() => goToDetails(tag as Tag)}
+            key={tag}
             style={profilesStyles.profileWrapper}>
             <Animated.Image
               sharedTransitionTag={tag}
