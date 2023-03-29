@@ -5,10 +5,8 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
-  ImageBackground,
   Image,
   FlatList,
-  ScrollView,
   StatusBar,
 } from 'react-native';
 import {
@@ -17,8 +15,6 @@ import {
 } from '@react-navigation/native-stack';
 import Animated, {
   FadeIn,
-  FadeOut,
-  runOnJS,
   SharedTransition,
   useAnimatedGestureHandler,
   useAnimatedStyle,
@@ -30,29 +26,10 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
-// const florence = require('./assets/florence.jpg');
-// const countryside = require('./assets/countryside.jpg');
-// const dawn = require('./assets/dawn.jpg');
-const nature = require('./assets/nature.jpg');
+const leavesBackground = require('./assets/nature/leaves.jpg');
 
-const lake1 = require('./assets/lake-1.jpg');
-const lake2 = require('./assets/lake-2.jpg');
-const lake3 = require('./assets/lake-3.jpg');
-const lake4 = require('./assets/lake-4.jpg');
-const lake5 = require('./assets/lake-5.jpg');
-
-const forrest1 = require('./assets/forrest-1.jpg');
-const forrest2 = require('./assets/forrest-2.jpg');
-const forrest3 = require('./assets/forrest-3.jpg');
-const forrest4 = require('./assets/forrest-4.jpg');
-const forrest5 = require('./assets/forrest-5.jpg');
-
-const dogge = require('./assets/dogge-avatar.png');
-const desert = require('./assets/desert-avatar.png');
-const kitty = require('./assets/kitty-avatar.png');
-const mountains = require('./assets/mountains-avatar.png');
-const parrot = require('./assets/parrot-avatar.png');
-const wolf = require('./assets/wolf-avatar.png');
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 type StackParamList = {
   Profiles: undefined;
@@ -73,28 +50,29 @@ const transition = SharedTransition.custom((values) => {
 const Stack = createNativeStackNavigator<StackParamList>();
 
 const profiles = {
-  dogge: {
-    image: dogge,
+  dog: {
+    image: require('./assets/avatars/dog.png'),
     title: 'Maria',
   },
   desert: {
-    image: desert,
+    image: require('./assets/avatars/desert.png'),
+
     title: 'Alice',
   },
-  kitty: {
-    image: kitty,
+  cat: {
+    image: require('./assets/avatars/cat.png'),
     title: 'James',
   },
   mountains: {
-    image: mountains,
+    image: require('./assets/avatars/mountains.png'),
     title: 'Jennifer',
   },
   parrot: {
-    image: parrot,
+    image: require('./assets/avatars/parrot.png'),
     title: 'Thomas',
   },
   wolf: {
-    image: wolf,
+    image: require('./assets/avatars/wolf.png'),
     title: 'Margaret',
   },
 } as const;
@@ -108,58 +86,26 @@ function ProfilesScreen({
     navigation.navigate('Home', { tag });
   };
 
-  const windowWidth = Dimensions.get('window').width;
-  const windowHeight = Dimensions.get('window').height;
-
   return (
-    <View style={styles.profilesContainer}>
+    <View style={profilesStyles.container}>
       <StatusBar barStyle={'light-content'} />
-      <Image
-        source={nature}
-        style={{
-          width: windowWidth,
-          height: windowHeight,
-          position: 'absolute',
-          opacity: 0.6,
-        }}
-      />
-      <Text
-        style={{
-          fontSize: 35,
-          textAlign: 'center',
-          fontFamily: 'Poppins-Bold',
-          color: '#f0fdf4',
-          marginBottom: 20,
-        }}>
-        Welcome back!
-      </Text>
-      <View style={styles.row}>
+      <Image source={leavesBackground} style={profilesStyles.backgroundImage} />
+      <Text style={profilesStyles.header}>Welcome back!</Text>
+      <View style={commonStyles.row}>
         {Object.keys(profiles).map((tag) => (
           <Pressable
             onPress={() => goToDetails(tag as Tag)}
-            style={{
-              alignItems: 'center',
-              marginHorizontal: 10,
-              marginVertical: 15,
-            }}>
+            style={profilesStyles.profileWrapper}>
             <Animated.Image
               sharedTransitionTag={tag}
               sharedTransitionStyle={transition}
               source={profiles[tag as Tag].image}
-              style={{
-                height: 150,
-                width: 150,
-                marginBottom: 8,
-              }}
+              style={profilesStyles.profile}
             />
             <Animated.Text
               sharedTransitionTag={`${tag}-text`}
               sharedTransitionStyle={transition}
-              style={{
-                fontFamily: 'Poppins-Medium',
-                fontSize: 20,
-                color: '#f0fdf4',
-              }}>
+              style={profilesStyles.profileLabel}>
               {profiles[tag as Tag].title}
             </Animated.Text>
           </Pressable>
@@ -169,31 +115,67 @@ function ProfilesScreen({
   );
 }
 
+const profilesStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 100,
+    backgroundColor: '#000',
+  },
+  backgroundImage: {
+    width: windowWidth,
+    height: windowHeight,
+    position: 'absolute',
+    opacity: 0.6,
+  },
+  header: {
+    fontSize: 35,
+    textAlign: 'center',
+    fontFamily: 'Poppins-Bold',
+    color: '#f0fdf4',
+    marginBottom: 20,
+  },
+  profileWrapper: {
+    alignItems: 'center',
+    marginHorizontal: 10,
+    marginVertical: 15,
+  },
+  profile: {
+    height: 150,
+    width: 150,
+    marginBottom: 8,
+  },
+  profileLabel: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 20,
+    color: '#f0fdf4',
+  },
+});
+
 // I totally made these names up, im sorry
 // French names in the US Top 200 for girls include Annabelle, Charlotte, Claire, Josephine, and Sophie.
 const lakes = [
   {
-    image: lake3,
+    image: require('./assets/nature/lake-1.jpg'),
     title: 'Lake Annabelle',
     id: 'lake-1',
   },
   {
-    image: lake2,
+    image: require('./assets/nature/lake-2.jpg'),
     title: 'Lake Charlotte',
     id: 'lake-2',
   },
   {
-    image: lake1,
+    image: require('./assets/nature/lake-3.jpg'),
     title: 'Lake Claire',
     id: 'lake-3',
   },
   {
-    image: lake4,
+    image: require('./assets/nature/lake-4.jpg'),
     title: 'Lake Claire',
     id: 'lake-4',
   },
   {
-    image: lake5,
+    image: require('./assets/nature/lake-5.jpg'),
     title: 'Lake Sophie',
     id: 'lake-5',
   },
@@ -201,31 +183,31 @@ const lakes = [
 
 // I made that up too
 // https://en.natmus.dk/historical-knowledge/denmark/prehistoric-period-until-1050-ad/the-viking-age/the-people/names/
-const forrests = [
+const forests = [
   {
-    image: forrest2,
-    title: 'Arne Forrest',
-    id: 'forrest-1',
+    image: require('./assets/nature/forest-2.jpg'),
+    title: 'Arne Forest',
+    id: 'forest-1',
   },
   {
-    image: forrest4,
-    title: 'Birger Forrest',
-    id: 'forrest-2',
+    image: require('./assets/nature/forest-4.jpg'),
+    title: 'Birger Forest',
+    id: 'forest-2',
   },
   {
-    image: forrest1,
-    title: 'Bjørn Forrest',
-    id: 'forrest-3',
+    image: require('./assets/nature/forest-1.jpg'),
+    title: 'Bjørn Forest',
+    id: 'forest-3',
   },
   {
-    image: forrest3,
-    title: 'Halfdan Forrest',
-    id: 'forrest-4',
+    image: require('./assets/nature/forest-3.jpg'),
+    title: 'Halfdan Forest',
+    id: 'forest-4',
   },
   {
-    image: forrest5,
-    title: 'Astrid Forrest',
-    id: 'forrest-5',
+    image: require('./assets/nature/forest-5.jpg'),
+    title: 'Astrid Forest',
+    id: 'forest-5',
   },
 ];
 
@@ -236,44 +218,19 @@ function HomeScreen({
   const { tag } = route.params;
 
   return (
-    <View style={styles.homeContainer}>
+    <View style={homeStyles.container}>
       <StatusBar barStyle={'dark-content'} />
 
-      <View
-        style={{
-          height: 120,
-          alignItems: 'flex-end',
-          // alignContent: 'flex-end',
-          justifyContent: 'space-between',
-          flexDirection: 'row',
-          paddingHorizontal: 16,
-          marginBottom: 25,
-        }}>
+      <View style={homeStyles.headerContainer}>
         <Pressable
-          style={{
-            flexDirection: 'row',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-          }}
+          style={homeStyles.pressable}
           onPress={() => navigation.goBack()}>
-          <Text
-            style={{
-              ...styles.header,
-              fontSize: 40,
-              flex: 1,
-              color: '#1e293b',
-              fontFamily: 'Poppins-Medium',
-            }}>
-            Home
-          </Text>
+          <Text style={homeStyles.title}>Home</Text>
           <Animated.Image
             sharedTransitionTag={tag}
             sharedTransitionStyle={transition}
             source={profiles[tag as Tag].image}
-            style={{
-              height: 45,
-              width: 45,
-            }}
+            style={homeStyles.profile}
           />
           <Animated.Text
             sharedTransitionTag={`${tag}-text`}
@@ -281,42 +238,23 @@ function HomeScreen({
           />
         </Pressable>
       </View>
-      <Text
-        style={{
-          fontSize: 24,
-          fontFamily: 'Poppins-Medium',
-          color: '#334155',
-          marginBottom: 15,
-          marginLeft: 20,
-        }}>
-        Lakes
-      </Text>
+      <Text style={homeStyles.subTitle}>Lakes</Text>
       <FlatList
         data={lakes}
-        style={{ marginLeft: 10 }}
+        style={homeStyles.margin}
         renderItem={(item: any) => {
           return (
             <Pressable
-              style={{ marginHorizontal: 10 }}
+              style={homeStyles.marginHorizontal}
               onPress={() => {
                 navigation.navigate('Details', { item: item.item });
               }}>
               <Animated.Image
                 sharedTransitionTag={item.item.id}
                 source={item.item.image}
-                style={{
-                  height: 200,
-                  width: 150,
-                  marginBottom: 8,
-                  borderRadius: 10,
-                }}
+                style={homeStyles.image}
               />
-              <Animated.Text
-                style={{
-                  fontFamily: 'Poppins-Regular',
-                  fontSize: 16,
-                  color: '#1e293b',
-                }}>
+              <Animated.Text style={homeStyles.imageLabel}>
                 {item.item.title}
               </Animated.Text>
             </Pressable>
@@ -326,42 +264,23 @@ function HomeScreen({
         horizontal={true}
       />
 
-      <Text
-        style={{
-          fontSize: 24,
-          fontFamily: 'Poppins-Medium',
-          color: '#334155',
-          marginBottom: 15,
-          marginLeft: 20,
-        }}>
-        Forrests
-      </Text>
+      <Text style={homeStyles.subTitle}>Forests</Text>
       <FlatList
-        data={forrests}
-        style={{ marginLeft: 10 }}
+        data={forests}
+        style={homeStyles.margin}
         renderItem={(item: any) => {
           return (
             <Pressable
-              style={{ marginHorizontal: 10 }}
+              style={homeStyles.marginHorizontal}
               onPress={() => {
                 navigation.navigate('Details', { item: item.item });
               }}>
               <Animated.Image
                 sharedTransitionTag={item.item.id}
                 source={item.item.image}
-                style={{
-                  height: 200,
-                  width: 150,
-                  marginBottom: 8,
-                  borderRadius: 10,
-                }}
+                style={homeStyles.image}
               />
-              <Animated.Text
-                style={{
-                  fontFamily: 'Poppins-Regular',
-                  fontSize: 16,
-                  color: '#1e293b',
-                }}>
+              <Animated.Text style={homeStyles.imageLabel}>
                 {item.item.title}
               </Animated.Text>
             </Pressable>
@@ -373,6 +292,65 @@ function HomeScreen({
     </View>
   );
 }
+
+const homeStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  headerContainer: {
+    height: 120,
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    marginBottom: 25,
+  },
+  header: {
+    fontSize: 40,
+    fontFamily: 'Poppins-Medium',
+    color: '#1e293b',
+  },
+  pressable: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  profile: {
+    height: 45,
+    width: 45,
+  },
+  image: {
+    height: 200,
+    width: 150,
+    marginBottom: 8,
+    borderRadius: 10,
+  },
+  imageLabel: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 16,
+    color: '#1e293b',
+  },
+  title: {
+    fontSize: 40,
+    flex: 1,
+    color: '#1e293b',
+    fontFamily: 'Poppins-Medium',
+  },
+  subTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Medium',
+    color: '#334155',
+    marginBottom: 15,
+    marginLeft: 20,
+  },
+  margin: {
+    marginLeft: 10,
+  },
+  marginHorizontal: {
+    marginHorizontal: 10,
+  },
+});
 
 function DetailsScreen({
   route,
@@ -425,34 +403,23 @@ function DetailsScreen({
     <>
       <StatusBar barStyle={'dark-content'} />
       <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.detailContainer, animatedStyle]}>
+        <Animated.View style={[detailStyles.container, animatedStyle]}>
           <Animated.Image
             sharedTransitionTag={item.id}
             source={item.image}
-            style={{
-              height: 300,
-              width: 500,
-            }}
+            style={detailStyles.image}
           />
           <Animated.View
-            style={{ flex: 1, backgroundColor: '#f8fafc' }}
+            style={detailStyles.background}
             entering={FadeIn.delay(50).duration(600)}>
             <Animated.Text
               entering={FadeIn.delay(200).duration(1000)}
-              style={{
-                ...styles.header,
-                fontSize: 40,
-                color: '#0f172a',
-                fontFamily: 'Poppins-Medium',
-                marginHorizontal: 20,
-                marginTop: 15,
-                marginBottom: 20,
-              }}>
+              style={detailStyles.title}>
               {item.title}
             </Animated.Text>
             <Animated.Text
               entering={FadeIn.delay(400).duration(1000)}
-              style={styles.text}>
+              style={detailStyles.description}>
               Nature is a symphony of sights, sounds, and sensations that awaken
               our senses and nourish our souls. From the gentle rustling of
               leaves in the breeze to the awe-inspiring grandeur of towering
@@ -460,11 +427,11 @@ function DetailsScreen({
             </Animated.Text>
             <Animated.View
               entering={FadeIn.delay(800).duration(1000)}
-              style={styles.callToActionWrapper}>
+              style={detailStyles.callToActionWrapper}>
               <Pressable
-                style={styles.callToAction}
+                style={detailStyles.callToAction}
                 onPress={() => navigation.goBack()}>
-                <Text style={styles.callToActionText}>Looks good!</Text>
+                <Text style={detailStyles.callToActionText}>Looks good!</Text>
               </Pressable>
             </Animated.View>
           </Animated.View>
@@ -474,73 +441,33 @@ function DetailsScreen({
   );
 }
 
-export default function ProfilesExample() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Profiles" component={ProfilesScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen
-        name="Details"
-        component={DetailsScreen}
-        options={{
-          animation: 'fade',
-          presentation: 'transparentModal',
-          headerShown: false,
-        }}
-      />
-    </Stack.Navigator>
-  );
-}
-
-const styles = StyleSheet.create({
-  profilesContainer: {
-    flex: 1,
-    // marginHorizontal: 25,
-    paddingTop: 100,
-    backgroundColor: '#000',
-    // alignItems: 'center',
-  },
-  homeContainer: {
-    flex: 1,
-    backgroundColor: '#fafaf9',
-  },
-  detailContainer: {
+const detailStyles = StyleSheet.create({
+  container: {
     flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
   },
-  wrapper: {
+  background: {
     flex: 1,
-    marginHorizontal: 25,
+    backgroundColor: '#f8fafc',
   },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+  image: {
+    height: 300,
+    width: 500,
   },
-  header: {
-    fontSize: 40,
-    // fontWeight: 'bold',
-    fontFamily: 'Poppins-Bold',
-  },
-  text: {
+  description: {
     fontSize: 16,
     marginTop: 8,
     fontFamily: 'Poppins-Regular',
     marginHorizontal: 20,
   },
-  chip: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 8,
-    width: 90,
-    borderRadius: 5,
-    textAlign: 'center',
-    marginRight: 8,
-  },
-  detailsImage: {
-    width: '100%',
-    height: 400,
+  title: {
+    fontSize: 40,
+    color: '#0f172a',
+    fontFamily: 'Poppins-Medium',
+    marginHorizontal: 20,
+    marginTop: 15,
+    marginBottom: 20,
   },
   callToActionWrapper: {
     flex: 1,
@@ -560,5 +487,35 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+});
+
+export default function ProfilesExample() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Profiles" component={ProfilesScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Details"
+        component={DetailsScreen}
+        options={{
+          animation: 'fade',
+          presentation: 'transparentModal',
+          headerShown: false,
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+const commonStyles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    marginHorizontal: 25,
+  },
+  row: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
 });
