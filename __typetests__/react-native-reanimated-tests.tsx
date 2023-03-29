@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Animated, {
   Animation,
   DecayAnimation,
@@ -28,6 +31,7 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
+  // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 import {
   Button,
@@ -46,10 +50,6 @@ import {
   PinchGestureHandler,
   PinchGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-hooks/rules-of-hooks */
 import React, { forwardRef, useCallback, useState } from 'react';
 
 class Path extends React.Component<{ fill?: string }> {
