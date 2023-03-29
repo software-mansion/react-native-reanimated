@@ -171,7 +171,7 @@ const lakes = [
   },
   {
     image: require('./assets/nature/lake-4.jpg'),
-    title: 'Lake Claire',
+    title: 'Lake Josephine',
     id: 'lake-4',
   },
   {
