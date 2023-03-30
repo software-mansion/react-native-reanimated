@@ -41,11 +41,16 @@ import {
   NestedObjectValues,
   SharedValue,
 } from '../commonTypes';
-export interface AnimatedStyleResult {
+
+export interface AnimatedStyleResult<T> {
   viewDescriptors: ViewDescriptorsSet;
   initial: AnimatedStyle;
   viewsRef: ViewRefSet<any>;
   animatedStyle?: MutableRefObject<AnimatedStyle>;
+  // @internal - this field is not used in the code, but TS does type checking
+  // based on the fields of the interface, so this way we can ensure that
+  // the generic type is correctly preserved during assignments
+  _inner?: T;
 }
 
 interface AnimatedState {
@@ -404,9 +409,9 @@ function checkSharedValueUsage(
 export function useAnimatedStyle<T extends AnimatedStyle>(
   // animated style cannot be an array
   updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
-  dependencies?: DependencyList,
+  dependencies?: DependencyList | null,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
-): AnimatedStyleResult {
+): AnimatedStyleResult<T> {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const viewDescriptors: ViewDescriptorsSet = makeViewDescriptorsSet();
   const initRef = useRef<AnimationRef>();

@@ -39,6 +39,7 @@ import {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
+  NativeEvent,
 } from './reanimated2/commonTypes';
 import {
   ViewDescriptorsSet,
@@ -47,7 +48,8 @@ import {
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 
 import type { useAnimatedScrollHandler } from './reanimated2/hook/useAnimatedScrollHandler';
-import type { useAnimatedProps } from './reanimated2/hook/Hooks';
+import type { useAnimatedProps, useEvent } from './reanimated2/hook/Hooks';
+import { AnimatedStyleResult } from './reanimated2';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -113,7 +115,7 @@ export type AnimatedComponentProps<P> = P & {
   forwardedRef?: any;
   animatedProps?:
     | Partial<AnimatedComponentProps<AnimatedProps>>
-    | ReturnType<typeof useAnimatedProps>;
+    | AnimatedStyleResult<Partial<P>>;
   animatedStyle?: StyleProps;
   layout?:
     | BaseAnimationBuilder
@@ -162,14 +164,26 @@ export type ExtendProps<
   Props,
   ExtendWith,
   I = Diff<Props, ExtendWith> &
-    (Intersection<Props, ExtendWith> | Intersection<ExtendWith, Props>)
-> = Pick<I, keyof I>;
+    (Intersection<Props, ExtendWith> | Intersection<ExtendWith, Props>),
+  Extended = Pick<I, keyof I>
+> = {
+  [Property in keyof Extended]: Property extends `on${string}`
+    ?
+      | Extended[Property]
+      | ReturnType<typeof useEvent<Extended[Property]>>
+      | (Parameters<Extended[Property]>[0] extends NativeEvent<infer R>
+        ? ReturnType<typeof useEvent<R>>
+        : Extended[Property])
+     : Extended[Property];
+};
 
 type PropsExtensions = {
   onScroll?: ReturnType<typeof useAnimatedScrollHandler>;
   style?: NestedArray<StyleProps>;
 };
 
+// TODO: style is only extended when alredy present, if it doesnt exist on the incoming type,
+// it wont be added, although it seems to be expected?
 function createAnimatedComponent<P>(
   Component: FunctionComponent<P & InitialFunctionComponentProps>,
   options?: Options<P & InitialFunctionComponentProps>

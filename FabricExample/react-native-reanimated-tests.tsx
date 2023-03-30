@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState, useCallback, forwardRef } from 'react';
@@ -10,6 +11,7 @@ import {
   FlatListProps,
   ViewProps,
   ImageProps,
+  ScrollView,
 } from 'react-native';
 import {
   PanGestureHandler,
@@ -49,6 +51,7 @@ import Animated, {
   SequenceAnimation,
   StyleLayoutAnimation,
   Animation,
+  // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 
 class Path extends React.Component<{ fill?: string }> {
@@ -93,7 +96,7 @@ function CreateAnimatedComponentTest1() {
 function CreateAnimatedComponentTest2() {
   const animatedProps = useAnimatedProps(() => ({ fill2: 'blue' }));
   return (
-    // @ts-expect-error
+    // @ts-expect-error fill2 prop does not exist on Path
     <AnimatedPath animatedProps={animatedProps} />
   );
 }
@@ -127,7 +130,7 @@ function CreateAnimatedFlatListTest1() {
         renderItem={renderItem}
       />
       <AnimatedFlatList
-        // @ts-expect-error
+        // @ts-expect-error red does not exist on ViewStyle
         style={{ flex: 1, red: false }}
         data={[]}
         renderItem={() => null}
@@ -141,9 +144,9 @@ function CreateAnimatedFlatListTest2() {
   return (
     <>
       <Animated.FlatList<Item>
-        // @ts-expect-error
+        // @ts-expect-error foo does not exist on Item
         data={[{ foo: 1 }]}
-        // @ts-expect-error
+        // @ts-expect-error foo does not exist on Item
         renderItem={({ item, index }) => <View key={item.foo} />}
       />
       <Animated.FlatList<Item>
@@ -290,7 +293,7 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
-  // @ts-expect-error
+  // @ts-expect-error rotate must be a string
   const style2 = useAnimatedStyle(() => {
     return {
       transform: [
@@ -300,7 +303,7 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
-  // @ts-expect-error
+  // @ts-expect-error color cannot be an object
   const style3 = useAnimatedStyle(() => {
     return {
       color: {},

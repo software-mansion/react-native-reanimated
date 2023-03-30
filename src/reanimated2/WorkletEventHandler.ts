@@ -1,23 +1,26 @@
 import { NativeEvent } from './commonTypes';
 import NativeReanimatedModule from './NativeReanimated';
 
-function jsListener<T extends NativeEvent<T>>(
+function jsListener<U, T extends NativeEvent<U> = NativeEvent<U>>(
   eventName: string,
-  handler: (event: T) => void
+  handler: (event: U) => void
 ) {
   return (evt: T) => {
     handler({ ...evt.nativeEvent, eventName });
   };
 }
 
-export default class WorkletEventHandler<T extends NativeEvent<T>> {
-  worklet: (event: T) => void;
+export default class WorkletEventHandler<
+  U,
+  T extends NativeEvent<U> = NativeEvent<U>
+> {
+  worklet: (event: U) => void;
   eventNames: string[];
   reattachNeeded: boolean;
   listeners: Record<string, (event: T) => void>;
   viewTag: number | undefined;
   registrations: string[];
-  constructor(worklet: (event: T) => void, eventNames: string[] = []) {
+  constructor(worklet: (event: U) => void, eventNames: string[] = []) {
     this.worklet = worklet;
     this.eventNames = eventNames;
     this.reattachNeeded = false;
@@ -36,7 +39,7 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
     }
   }
 
-  updateWorklet(newWorklet: (event: T) => void): void {
+  updateWorklet(newWorklet: (event: U) => void): void {
     this.worklet = newWorklet;
     this.reattachNeeded = true;
   }

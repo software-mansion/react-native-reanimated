@@ -154,7 +154,8 @@ function asyncMeasure(
 
 type SectionHeaderProps = {
   title: string;
-  animatedRef: RefObject<React.Component>;
+  // TODO: consider exporting AnimatedRef type from reanimated
+  animatedRef: ReturnType<typeof useAnimatedRef>;
   contentHeight: Animated.SharedValue<number>;
   show: boolean;
 };
@@ -165,10 +166,10 @@ function SectionHeader({
   contentHeight,
   show,
 }: SectionHeaderProps) {
-  const applyMeasure = ({ height }: ReturnType<typeof measure>) => {
+  const applyMeasure = (dimensions: ReturnType<typeof measure>) => {
     'worklet';
     if (contentHeight.value === 0) {
-      contentHeight.value = withTiming(height, {
+      contentHeight.value = withTiming(dimensions!.height, {
         duration: 500,
         easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
       });

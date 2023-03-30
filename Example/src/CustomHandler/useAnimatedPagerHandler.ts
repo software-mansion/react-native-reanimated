@@ -1,4 +1,3 @@
-import { NativeSyntheticEvent } from 'react-native';
 import {
   PagerViewOnPageScrollEventData,
   PagerViewOnPageSelectedEventData,
@@ -30,8 +29,8 @@ export function useAnimatedPagerScrollHandler<
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
-): (e: NativeSyntheticEvent<PagerViewOnPageScrollEventData>) => void {
+  dependencies?: Array<unknown>
+): ReturnType<typeof useEvent<PagerViewOnPageScrollEventData>> {
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageScrollEventData,
     TContext
@@ -48,6 +47,7 @@ export function useAnimatedPagerScrollHandler<
           'onPageScroll'
         )
       ) {
+        console.log(event);
         onPageScroll(event, context);
       }
     },
@@ -65,8 +65,8 @@ export function useAnimatedPagerScrollStateHandler<
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
-): (e: NativeSyntheticEvent<PageScrollStateChangedEvent>) => void {
+  dependencies?: Array<unknown>
+): ReturnType<typeof useEvent<PageScrollStateChangedEvent>> {
   const { context, doDependenciesDiffer } = useHandler<
     PageScrollStateChangedEvent,
     TContext
@@ -100,8 +100,8 @@ export function useAnimatedPagerSelectedPageHandler<
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
-): (e: NativeSyntheticEvent<PagerViewOnPageSelectedEventData>) => void {
+  dependencies?: Array<unknown>
+): ReturnType<typeof useEvent<PagerViewOnPageSelectedEventData>> {
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageSelectedEventData,
     TContext

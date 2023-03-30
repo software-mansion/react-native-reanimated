@@ -1,4 +1,4 @@
-import { RefObject } from 'react';
+import { MutableRefObject } from 'react';
 import { NativeScrollEvent } from 'react-native';
 import { Context, NativeEvent, WorkletFunction } from '../commonTypes';
 import WorkletEventHandler from '../WorkletEventHandler';
@@ -27,7 +27,7 @@ export interface ScrollHandlers<TContext extends Context> {
 export function useAnimatedScrollHandler<TContext extends Context>(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
-): RefObject<WorkletEventHandler<ScrollEvent>> {
+): MutableRefObject<WorkletEventHandler<ScrollEvent> | null> {
   // case when handlers is a function
   const scrollHandlers: ScrollHandlers<TContext> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;

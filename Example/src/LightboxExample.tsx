@@ -115,7 +115,7 @@ function ListItem({ item, index, onPress }: ListItemProps) {
 
       // measure the image
       // width/height and position to animate from it to the full screen one
-      const measurements = measure(ref);
+      const measurements = measure(ref)!;
 
       width.value = measurements.width;
       height.value = measurements.height;
