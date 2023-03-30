@@ -3,9 +3,11 @@ on:
   pull_request:
     paths:
       - '.github/workflows/static-example-apps-checks.yml'
+      - 'app/**'
       - 'Example/**'
       - 'FabricExample/**'
       - 'WebExample/**'
+      - 'TVOSExample/**'
       - '*'
   merge_group:
     branches:
@@ -18,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [Example, FabricExample, WebExample]
+        working-directory: [app, Example, FabricExample, WebExample, TVOSExample]
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true

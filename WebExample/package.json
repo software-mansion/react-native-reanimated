@@ -5,7 +5,7 @@
   "scripts": {
     "start": "expo start --web",
     "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
-    "lint": "eslint .",
+    "lint": "eslint --max-warnings=0 .",
     "build": "expo export:web"
   },
   "dependencies": {
