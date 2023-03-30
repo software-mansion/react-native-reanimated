@@ -487,10 +487,10 @@ const detailStyles = StyleSheet.create({
   },
   callToActionText: {
     color: '#f8fafc',
+    fontFamily: 'Poppins-Bold',
     textAlign: 'center',
     textTransform: 'uppercase',
     fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 
