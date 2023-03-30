@@ -5,7 +5,11 @@
     "module": "commonjs",
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "outDir": "lib/",
+    "rootDir": "src/"
   },
-  "files": ["index.ts"]
+  "files": ["src/plugin.ts"]
 }

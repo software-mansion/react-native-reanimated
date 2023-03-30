@@ -4,7 +4,7 @@ import { AnimatedStyle, StyleProps } from '../commonTypes';
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = (c) => c;
-global._scheduleOnJS = setImmediate;
+global._scheduleOnJS = queueMicrotask;
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
