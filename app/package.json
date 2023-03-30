@@ -1,0 +1,39 @@
+{
+  "private": true,
+  "scripts": {
+    "type:check": "yarn tsc --noEmit",
+    "lint": "yarn lint:eslint && yarn lint:prettier",
+    "lint:eslint": "yarn eslint --max-warnings=0 .",
+    "lint:prettier": "yarn prettier --check ."
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.4.0",
+    "@fortawesome/free-solid-svg-icons": "^6.4.0",
+    "@fortawesome/react-native-fontawesome": "^0.3.0",
+    "@react-native-masked-view/masked-view": "^0.2.8",
+    "@react-native-picker/picker": "^2.4.9",
+    "@react-navigation/native": "^6.1.6",
+    "@react-navigation/native-stack": "^6.9.12",
+    "d3-shape": "^3.2.0",
+    "react-dom": "18.0.0",
+    "react-native-box2d": "^0.2.5",
+    "react-native-gesture-handler": "^2.9.0",
+    "react-native-pager-view": "5.4.24",
+    "react-native-reanimated": "link:../",
+    "react-native-safe-area-context": "^4.5.0",
+    "react-native-screens": "^3.20.0",
+    "react-native-svg": "^13.8.0",
+    "react-native-web": "~0.18.7"
+  },
+  "devDependencies": {
+    "@tsconfig/react-native": "^2.0.3",
+    "@types/d3-shape": "^3.1.1",
+    "eslint": "^8.36.0",
+    "prettier": "^2.8.7",
+    "typescript": "^5.0.2"
+  }
+}
