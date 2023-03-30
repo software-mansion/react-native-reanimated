@@ -15,6 +15,7 @@ declare global {
   const _WORKLET: boolean;
   const _IS_FABRIC: boolean;
   const _REANIMATED_VERSION_CPP: string;
+  const _REANIMATED_VERSION_BABEL_PLUGIN: string;
   const __reanimatedModuleProxy: NativeReanimated;
   const evalWithSourceMap: (
     js: string,
