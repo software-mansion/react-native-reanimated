@@ -18,7 +18,6 @@ export function injectVersion(path: NodePath<DirectiveLiteral>) {
     return;
   }
   const injectedName = '_REANIMATED_VERSION_BABEL_PLUGIN';
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const versionString = require('../../package.json').version;
   const pluginVersionNode = expressionStatement(
     assignmentExpression(

@@ -91,13 +91,34 @@ var require_asserts = __commonJS({
   "lib/asserts.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.assertIsDefined = void 0;
-    function assertIsDefined(value) {
+    exports2.assertHasProperty = exports2.assertIsNotType = exports2.assertIsASTType = exports2.assertIsDefined = void 0;
+    function assertIsDefined(value, name) {
       if (value === void 0 || value === null) {
-        throw new Error(`${value} is not defined`);
+        throw new Error(`${name} is not defined`);
       }
     }
     exports2.assertIsDefined = assertIsDefined;
+    function assertIsASTType(value, name, type, typecheckFunction) {
+      if (!typecheckFunction(value)) {
+        throw new Error(`${name} is not of type ${type}
+`);
+      }
+    }
+    exports2.assertIsASTType = assertIsASTType;
+    function assertIsNotType(value, name, type, typecheckFunction) {
+      if (typecheckFunction(value)) {
+        throw new Error(`${name} is of type ${type}
+`);
+      }
+    }
+    exports2.assertIsNotType = assertIsNotType;
+    function assertHasProperty(condition, name, prop) {
+      if (!condition) {
+        throw new Error(`${name} does not have property ${prop}
+`);
+      }
+    }
+    exports2.assertHasProperty = assertHasProperty;
   }
 });
 
@@ -204,14 +225,13 @@ var require_makeWorklet = __commonJS({
         };
       }
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
-      (0, asserts_1.assertIsDefined)(draftExpression);
+      (0, asserts_1.assertIsDefined)(draftExpression, "draftExpression");
       const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
-      if (!("params" in expression && (0, types_1.isBlockStatement)(expression.body))) {
-        throw new Error("'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'");
-      }
+      (0, asserts_1.assertHasProperty)("params" in expression, "expression", "params");
+      (0, asserts_1.assertIsASTType)(expression.body, "expression.body", "BlockStatement", types_1.isBlockStatement);
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
-      (0, asserts_1.assertIsDefined)(inputMap);
+      (0, asserts_1.assertIsDefined)(inputMap, "inputMap");
       const includeSourceMap = shouldGenerateSourceMap();
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
@@ -229,7 +249,7 @@ var require_makeWorklet = __commonJS({
         configFile: false,
         comments: false
       });
-      (0, asserts_1.assertIsDefined)(transformed);
+      (0, asserts_1.assertIsDefined)(transformed, "transformed");
       let sourceMap;
       if (includeSourceMap) {
         sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
@@ -259,7 +279,7 @@ var require_makeWorklet = __commonJS({
           }
         }
       });
-      (0, asserts_1.assertIsDefined)(state.file.opts.filename);
+      (0, asserts_1.assertIsDefined)(state.file.opts.filename, "state.file.opts.filename");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
         sourceFileName: state.file.opts.filename
@@ -280,12 +300,13 @@ var require_makeWorklet = __commonJS({
         configFile: false,
         inputSourceMap: codeObject.map
       });
-      (0, asserts_1.assertIsDefined)(transformed);
-      (0, asserts_1.assertIsDefined)(transformed.ast);
+      (0, asserts_1.assertIsDefined)(transformed, "transformed");
+      (0, asserts_1.assertIsDefined)(transformed.ast, "transformed.ast");
       (0, core_1.traverse)(transformed.ast, {
         Identifier(path) {
-          if (!path.isReferencedIdentifier())
+          if (!path.isReferencedIdentifier()) {
             return;
+          }
           const name = path.node.name;
           if (commonObjects_12.globals.has(name) || !(0, types_1.isArrowFunctionExpression)(fun.node) && !(0, types_1.isObjectMethod)(fun.node) && fun.node.id && fun.node.id.name === name) {
             return;
@@ -312,7 +333,7 @@ var require_makeWorklet = __commonJS({
       const clone = (0, types_1.cloneNode)(fun.node);
       const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
       const [funString, sourceMapString] = buildWorkletString(transformed.ast, variables, functionName, transformed.map);
-      (0, asserts_1.assertIsDefined)(funString);
+      (0, asserts_1.assertIsDefined)(funString, "funString");
       const workletHash = hash(funString);
       let location = state.file.opts.filename;
       if (state.opts.relativeSourceLocation) {
@@ -335,9 +356,8 @@ var require_makeWorklet = __commonJS({
       pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
-      if ((0, types_1.isFunctionDeclaration)(funExpression) || (0, types_1.isObjectMethod)(funExpression)) {
-        throw new Error("'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n");
-      }
+      (0, asserts_1.assertIsNotType)(funExpression, "funExpression", "FunctionDeclaration", types_1.isFunctionDeclaration);
+      (0, asserts_1.assertIsNotType)(funExpression, "funExpression", "ObjectMethod", types_1.isObjectMethod);
       const statements = [
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
@@ -373,8 +393,9 @@ var require_processWorkletObjectMethod = __commonJS({
     var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
     function processWorkletObjectMethod(path, state) {
-      if (!(0, types_1.isFunctionParent)(path))
+      if (!(0, types_1.isFunctionParent)(path)) {
         return;
+      }
       const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
       const replacement = (0, types_1.objectProperty)((0, types_1.identifier)((0, types_1.isIdentifier)(path.node.key) ? path.node.key.name : ""), (0, types_1.callExpression)(newFun, []));
       path.replaceWith(replacement);
@@ -585,8 +606,9 @@ var require_processInlineStylesWarning = __commonJS({
     function processStyleObjectForInlineStylesWarning(path) {
       const properties = path.get("properties");
       for (const property of properties) {
-        if (!(0, types_1.isObjectProperty)(property.node))
+        if (!(0, types_1.isObjectProperty)(property.node)) {
           continue;
+        }
         const value = property.get("value");
         if ((0, types_1.isObjectProperty)(property)) {
           if ((0, types_1.isIdentifier)(property.node.key) && property.node.key.name === "transform") {
@@ -598,14 +620,18 @@ var require_processInlineStylesWarning = __commonJS({
       }
     }
     function processInlineStylesWarning(path, state) {
-      if ((0, utils_1.isRelease)())
+      if ((0, utils_1.isRelease)()) {
         return;
-      if (state.opts.disableInlineStylesWarning)
+      }
+      if (state.opts.disableInlineStylesWarning) {
         return;
-      if (path.node.name.name !== "style")
+      }
+      if (path.node.name.name !== "style") {
         return;
-      if (!(0, types_1.isJSXExpressionContainer)(path.node.value))
+      }
+      if (!(0, types_1.isJSXExpressionContainer)(path.node.value)) {
         return;
+      }
       const expression = path.get("value").get("expression");
       if ((0, types_1.isArrayExpression)(expression.node)) {
         const elements = expression.get("elements");
