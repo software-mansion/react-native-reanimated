@@ -15,16 +15,13 @@ import {
 } from '@react-navigation/native-stack';
 import Animated, {
   FadeIn,
+  runOnJS,
   SharedTransition,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 const leavesBackground = require('./assets/nature/leaves.jpg');
 
@@ -180,7 +177,7 @@ const lakes = [
     title: 'Lake Sophie',
     id: 'lake-5',
   },
-];
+] as const;
 
 // I made that up too
 // https://en.natmus.dk/historical-knowledge/denmark/prehistoric-period-until-1050-ad/the-viking-age/the-people/names/
@@ -210,7 +207,7 @@ const forests = [
     title: 'Astrid Forest',
     id: 'forest-5',
   },
-];
+] as const;
 
 function HomeScreen({
   route,
@@ -243,20 +240,21 @@ function HomeScreen({
       <FlatList
         data={lakes}
         style={homeStyles.margin}
-        renderItem={(item: any) => {
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => {
           return (
             <Pressable
               style={homeStyles.marginHorizontal}
               onPress={() => {
-                navigation.navigate('Details', { item: item.item });
+                navigation.navigate('Details', { item });
               }}>
               <Animated.Image
-                sharedTransitionTag={item.item.id}
-                source={item.item.image}
+                sharedTransitionTag={item.id}
+                source={item.image}
                 style={homeStyles.image}
               />
               <Animated.Text style={homeStyles.imageLabel}>
-                {item.item.title}
+                {item.title}
               </Animated.Text>
             </Pressable>
           );
@@ -269,20 +267,21 @@ function HomeScreen({
       <FlatList
         data={forests}
         style={homeStyles.margin}
-        renderItem={(item: any) => {
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => {
           return (
             <Pressable
               style={homeStyles.marginHorizontal}
               onPress={() => {
-                navigation.navigate('Details', { item: item.item });
+                navigation.navigate('Details', { item });
               }}>
               <Animated.Image
-                sharedTransitionTag={item.item.id}
-                source={item.item.image}
+                sharedTransitionTag={item.id}
+                source={item.image}
                 style={homeStyles.image}
               />
               <Animated.Text style={homeStyles.imageLabel}>
-                {item.item.title}
+                {item.title}
               </Animated.Text>
             </Pressable>
           );
@@ -353,6 +352,8 @@ const homeStyles = StyleSheet.create({
   },
 });
 
+const FLING_LIMIT = 160;
+
 function DetailsScreen({
   route,
   navigation,
@@ -363,39 +364,41 @@ function DetailsScreen({
     x: useSharedValue(0),
     y: useSharedValue(0),
   };
-  type AnimatedGHContext = {
-    startX: number;
-    startY: number;
+  const runOnlyOnce = useSharedValue(false);
+
+  const goBack = () => {
+    if (!runOnlyOnce.value) {
+      runOnlyOnce.value = true;
+      navigation.goBack();
+    }
   };
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_, ctx) => {
-      ctx.startX = translation.x.value;
-      ctx.startY = translation.y.value;
-    },
-    onActive: (event, ctx) => {
-      translation.x.value = ctx.startX + event.translationX;
-      translation.y.value = ctx.startY + event.translationY;
-    },
-    onEnd: (_) => {
+
+  const pan = Gesture.Pan()
+    .onChange((event) => {
+      translation.x.value += event.changeX;
+      translation.y.value += event.changeY;
+
+      if (
+        event.translationY > FLING_LIMIT ||
+        event.translationY < -FLING_LIMIT ||
+        event.translationX > FLING_LIMIT ||
+        event.translationX < -FLING_LIMIT
+      ) {
+        runOnJS(goBack)();
+      }
+    })
+    .onFinalize(() => {
       translation.x.value = withSpring(0);
       translation.y.value = withSpring(0);
-    },
-  });
+    });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
         { translateX: translation.x.value },
         { translateY: translation.y.value },
-        {
-          scale:
-            1 -
-            (Math.abs(translation.x.value) + Math.abs(translation.y.value)) /
-              500,
-        },
+        // prettier-ignore
+        { scale: 1 - (Math.abs(translation.x.value) + Math.abs(translation.y.value)) / 1000 },
       ],
     };
   });
@@ -403,7 +406,7 @@ function DetailsScreen({
   return (
     <>
       <StatusBar barStyle={'dark-content'} />
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <GestureDetector gesture={pan}>
         <Animated.View style={[detailStyles.container, animatedStyle]}>
           <Animated.Image
             sharedTransitionTag={item.id}
@@ -437,7 +440,7 @@ function DetailsScreen({
             </Animated.View>
           </Animated.View>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </>
   );
 }
