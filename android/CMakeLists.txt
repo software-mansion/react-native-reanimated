@@ -341,5 +341,6 @@ endif()
 # when any of the following variables is not used in some build configuration.
 set (ignoreMe "${CLIENT_SIDE_BUILD}")
 set (ignoreMe "${JS_RUNTIME_DIR}")
+set (ignoreMe "${PLAYGROUND_APP_NAME}")
 set (ignoreMe "${REANIMATED_PACKAGE_BUILD}")
 set (ignoreMe "${BOOST_VERSION}")
