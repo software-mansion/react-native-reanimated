@@ -262,6 +262,16 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
   },
+  GalleryExample: {
+    icon: '🇮🇹',
+    title: 'Gallery',
+    screen: GalleryExample,
+  },
+  ProfilesExample: {
+    icon: '🙆‍♂️',
+    title: 'Profiles',
+    screen: ProfilesExample,
+  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
@@ -432,10 +442,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Custom transition',
     screen: CustomTransitionExample,
   },
-  GalleryExample: {
-    title: '[SET] Gallery',
-    screen: GalleryExample,
-  },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
@@ -467,9 +473,5 @@ export const EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
-  },
-  ProfilesExample: {
-    title: '[SET] Profiles',
-    screen: ProfilesExample,
   },
 } as const;
