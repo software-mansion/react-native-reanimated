@@ -23,7 +23,9 @@ class SingleInstanceChecker {
   void assertWithMessage(bool condition, std::string message) {
     if (!condition) {
       std::cerr << message << std::endl;
-      assert(condition);
+#ifdef IS_REANIMATED_EXAMPLE_APP
+      assert(false);
+#endif
     }
   }
 

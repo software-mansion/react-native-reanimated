@@ -22,6 +22,10 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
     string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
 endif()
 
+if(${IS_REANIMATED_EXAMPLE_APP})
+    string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP")
+endif()
+
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     string(APPEND CMAKE_CXX_FLAGS " -DDEBUG")
 endif()
@@ -337,6 +341,5 @@ endif()
 # when any of the following variables is not used in some build configuration.
 set (ignoreMe "${CLIENT_SIDE_BUILD}")
 set (ignoreMe "${JS_RUNTIME_DIR}")
-set (ignoreMe "${PLAYGROUND_APP_NAME}")
 set (ignoreMe "${REANIMATED_PACKAGE_BUILD}")
 set (ignoreMe "${BOOST_VERSION}")
