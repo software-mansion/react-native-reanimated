@@ -180,7 +180,7 @@ function buildWorkletString(
 
   if (!('params' in expression && isBlockStatement(expression.body))) {
     throw new Error(
-      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
+      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatement\n'"
     );
   }
 
