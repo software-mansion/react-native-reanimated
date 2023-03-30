@@ -34,13 +34,17 @@ type StackParamList = {
   Details: { item: any };
 };
 
+const springOptions = {
+  damping: 15,
+};
+
 const transition = SharedTransition.custom((values) => {
   'worklet';
   return {
-    width: withSpring(values.targetWidth),
-    height: withSpring(values.targetHeight),
-    originX: withSpring(values.targetOriginX),
-    originY: withSpring(values.targetOriginY),
+    width: withSpring(values.targetWidth, springOptions),
+    height: withSpring(values.targetHeight, springOptions),
+    originX: withSpring(values.targetOriginX, springOptions),
+    originY: withSpring(values.targetOriginY, springOptions),
   };
 });
 
@@ -53,7 +57,6 @@ const profiles = {
   },
   desert: {
     image: require('./assets/avatars/desert.png'),
-
     title: 'Alice',
   },
   cat: {
@@ -388,8 +391,8 @@ function DetailsScreen({
       }
     })
     .onFinalize(() => {
-      translation.x.value = withSpring(0);
-      translation.y.value = withSpring(0);
+      translation.x.value = withSpring(0, springOptions);
+      translation.y.value = withSpring(0, springOptions);
     });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -464,6 +467,7 @@ const detailStyles = StyleSheet.create({
     marginTop: 8,
     fontFamily: 'Poppins-Regular',
     marginHorizontal: 20,
+    color: '#1e293b',
   },
   title: {
     fontSize: 40,
