@@ -19,5 +19,13 @@
     "resolveJsonModule": true,
   },
   "include": ["src"],
-  "exclude": ["Example", "FabricExample", "TVOSExample", "WebExample", "docs"]
+  "exclude": [
+    "app",
+    "docs",
+    "Example",
+    "FabricExample",
+    "plugin",
+    "TVOSExample",
+    "WebExample"
+  ]
 }

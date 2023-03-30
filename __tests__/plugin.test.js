@@ -16,6 +16,34 @@ describe('babel plugin', () => {
     process.env.REANIMATED_PLUGIN_TESTS = 'jest';
   });
 
+  it('injects its version', () => {
+    const input = `
+      function foo() {
+        'inject Reanimated Babel plugin version';
+        var foo = 'bar';
+      }
+    `;
+
+    const { code } = runPlugin(input, {});
+    const { version: packageVersion } = require('../package.json');
+    expect(code).toContain(
+      `global._REANIMATED_VERSION_BABEL_PLUGIN = "${packageVersion}"`
+    );
+    expect(code).not.toContain('inject Reanimated Babel plugin version');
+  });
+
+  it("doesn't bother other Directive Literals", () => {
+    const input = `
+      function foo() {
+        'foobar';
+        var foo = 'bar';
+      }
+    `;
+
+    const { code } = runPlugin(input, {});
+    expect(code).toContain('foobar');
+  });
+
   it('transforms', () => {
     const input = `
       import Animated, {
@@ -132,6 +160,20 @@ describe('babel plugin', () => {
       }
     `;
 
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't remove nested 'worklets'", () => {
+    const input = `
+    function foo(x) {
+      'worklet';
+      function bar(x) {
+        'worklet';
+        return x + 2;
+      }
+      return bar(x) + 1;
+    }`;
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
