@@ -8,6 +8,7 @@ import {
   Image,
   FlatList,
   StatusBar,
+  Platform,
 } from 'react-native';
 import {
   createNativeStackNavigator,
@@ -119,7 +120,7 @@ function ProfilesScreen({
 const profilesStyles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 100,
+    paddingTop: Platform.OS === 'ios' ? 100 : 25,
     backgroundColor: '#000',
   },
   backgroundImage: {
@@ -302,7 +303,7 @@ const homeStyles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerContainer: {
-    height: 120,
+    height: Platform.OS === 'ios' ? 120 : 80,
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     flexDirection: 'row',
