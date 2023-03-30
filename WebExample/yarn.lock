@@ -7429,8 +7429,13 @@ react-native-pager-view@5.4.24:
   integrity sha512-dRMB7i3B+mu4NCeIN6gqbR/kC/rr2wzqO0gisXDdJwJr78G24sWoTNpLEDFo3G8TFHY9nTMutVl5CUvkN2dp6g==
 
 "react-native-reanimated@link:..":
-  version "0.0.0"
-  uid ""
+  version "3.0.2"
+  dependencies:
+    "@babel/plugin-transform-object-assign" "^7.16.7"
+    "@babel/preset-typescript" "^7.16.7"
+    convert-source-map "^2.0.0"
+    invariant "^2.2.4"
+    string-hash-64 "^1.0.3"
 
 react-native-web@~0.18.7:
   version "0.18.12"
