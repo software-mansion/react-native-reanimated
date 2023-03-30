@@ -5,6 +5,7 @@ on:
       - '.github/workflows/static-example-apps-checks.yml'
       - 'Example/**'
       - 'FabricExample/**'
+      - 'WebExample/**'
       - '*'
   merge_group:
     branches:
@@ -17,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [Example, FabricExample]
+        working-directory: [Example, FabricExample, WebExample]
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
@@ -40,3 +41,7 @@ jobs:
       - name: Lint
         working-directory: ${{ matrix.working-directory }}
         run: yarn lint
+      - name: Build
+        working-directory: ${{ matrix.working-directory }}
+        if: ${{ matrix.working-directory == 'WebExample' }}
+        run: yarn build
