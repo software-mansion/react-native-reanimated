@@ -46,12 +46,17 @@ export function useScrollViewOffset(
   addListenerToScroll(offsetRef, aref);
   const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
-    offsetRef.triggerScrollListener = false;
-    // @ts-ignore Omit the setter to not override animation
-    offsetRef._value =
+    const newValue =
       event.contentOffset.x === 0
         ? event.contentOffset.y
         : event.contentOffset.x;
+    // @ts-ignore Omit the setter to read current state of animation
+    if (newValue === offsetRef._value) {
+      return;
+    }
+    offsetRef.triggerScrollListener = false;
+    // @ts-ignore Omit the setter to not override animation
+    offsetRef._value = newValue;
     offsetRef.triggerScrollListener = true;
   }, scrollEventNames);
 
