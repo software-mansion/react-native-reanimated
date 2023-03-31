@@ -434,7 +434,10 @@ apply plugin: "de.undercouch.download"
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
-    namespace "com.swmansion.reanimated"
+    def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+    if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
+        namespace "com.swmansion.reanimated"
+    }
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
         buildFeatures {
             prefab true
