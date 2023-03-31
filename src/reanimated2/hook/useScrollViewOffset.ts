@@ -1,13 +1,17 @@
 import { RefObject, useEffect, useRef } from 'react';
 
 import type Animated from 'react-native-reanimated';
+import { scrollTo } from '../NativeMethods';
 import { ScrollEvent } from './useAnimatedScrollHandler';
 import { SharedValue } from '../commonTypes';
 import { findNodeHandle } from 'react-native';
 import { useEvent } from './utils';
-import { makeMutable } from '../core';
-import { cancelAnimation } from '../animation';
-import { scrollValueSetter } from '../scrollValueSetter';
+import { useSharedValue } from './useSharedValue';
+import { runOnUI } from '../threads';
+
+interface ScrollSharedValue<T> extends SharedValue<T> {
+  triggerScrollListener?: boolean;
+}
 
 const scrollEventNames = [
   'onScroll',
@@ -17,18 +21,38 @@ const scrollEventNames = [
   'onMomentumScrollEnd',
 ];
 
+const addListenerToScroll = (
+  offsetRef: ScrollSharedValue<number>,
+  animatedRef: any
+) => {
+  runOnUI(() => {
+    'worklet';
+    offsetRef.triggerScrollListener = true;
+    offsetRef.addListener(animatedRef(), (newValue: any) => {
+      if (offsetRef.triggerScrollListener) {
+        scrollTo(animatedRef, 0, Number(newValue), false);
+      }
+    });
+  })();
+};
+
 export function useScrollViewOffset(
   aref: RefObject<Animated.ScrollView>
 ): SharedValue<number> {
-  const offsetRef = useRef(useScrollToSharedValue(0, false, aref));
+  const offsetRef: ScrollSharedValue<number> = useRef(
+    useSharedValue(0)
+  ).current;
 
+  addListenerToScroll(offsetRef, aref);
   const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
-    // @ts-ignore Omit the setter to prevent unnecessary scroll call
-    offsetRef.current._value =
+    offsetRef.triggerScrollListener = false;
+    // @ts-ignore Omit the setter to not override animation
+    offsetRef._value =
       event.contentOffset.x === 0
         ? event.contentOffset.y
         : event.contentOffset.x;
+    offsetRef.triggerScrollListener = true;
   }, scrollEventNames);
 
   useEffect(() => {
@@ -36,29 +60,5 @@ export function useScrollViewOffset(
     event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
 
-  return offsetRef.current;
-}
-
-function useScrollToSharedValue<T>(
-  init: T,
-  oneWayReadsOnly = false,
-  aref: any
-): SharedValue<T> {
-  const scrollSetter = (sv: any, newValue: any) => {
-    'worklet';
-    scrollValueSetter(sv, newValue, aref);
-  };
-  const ref = useRef<SharedValue<T>>(
-    makeMutable(init, oneWayReadsOnly, scrollSetter)
-  );
-
-  useEffect(() => {
-    return () => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      cancelAnimation(ref.current!);
-    };
-  }, []);
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return ref.current!;
+  return offsetRef;
 }
