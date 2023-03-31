@@ -43,7 +43,6 @@ export function useScrollViewOffset(
     useSharedValue(0)
   ).current;
 
-  addListenerToScroll(offsetRef, aref);
   const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
     const newValue =
@@ -61,6 +60,7 @@ export function useScrollViewOffset(
   }, scrollEventNames);
 
   useEffect(() => {
+    addListenerToScroll(offsetRef, aref);
     const viewTag = findNodeHandle(aref.current);
     event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
