@@ -3,6 +3,8 @@
 
 yarn lint-staged
 yarn type:check
+
+# this automatically builds plugin js files if you forgor
 ! git diff HEAD --name-only | grep plugin
 if [ $? -eq 1 ]; then
   yarn plugin
