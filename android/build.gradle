@@ -1035,7 +1035,7 @@ dependencies {
         if (isPackageBuild()) {
             implementation "com.facebook.react:react-android:" + REACT_NATIVE_VERSION
         } else {
-            implementation "com.facebook.react:react-android:0.71.5" // version substituted by RNGP
+            implementation "com.facebook.react:react-android:" // version substituted by RNGP
         }
         if (JS_RUNTIME == "hermes") {
             if (isPackageBuild()) {
