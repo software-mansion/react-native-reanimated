@@ -12,7 +12,7 @@ import {
 } from '@babel/types';
 import { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
-import { processWorkletFunction } from './processWorkletFunction';
+import { processIfWorkletFunction } from './processIfWorkletFunction';
 
 const functionArgsToWorkletize = new Map([
   ['useFrameCallback', [0]],
@@ -35,7 +35,7 @@ const objectHooks = new Set([
   'useAnimatedScrollHandler',
 ]);
 
-export function processWorklets(
+export function processForCalleesWorklets(
   path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
 ) {
@@ -68,7 +68,7 @@ export function processWorklets(
         const value = property.get('value') as NodePath<
           ObjectProperty['value']
         >;
-        processWorkletFunction(
+        processIfWorkletFunction(
           value as NodePath<
             FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,
@@ -80,7 +80,7 @@ export function processWorklets(
     const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processWorkletFunction(
+        processIfWorkletFunction(
           path.get(`arguments.${index}`) as NodePath<
             FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
           >,

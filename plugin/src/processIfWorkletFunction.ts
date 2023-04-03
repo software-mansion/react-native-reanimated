@@ -14,7 +14,7 @@ import {
 import { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
-export function processWorkletFunction(
+export function processIfWorkletFunction(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,

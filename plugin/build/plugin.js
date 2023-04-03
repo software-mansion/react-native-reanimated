@@ -321,7 +321,7 @@ var require_makeWorklet = __commonJS({
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
       (0, assert_1.strict)(!(0, types_1.isFunctionDeclaration)(funExpression), "'funExpression' is a 'FunctionDeclaration'");
-      (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'BbjectMethod'");
+      (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'ObjectMethod'");
       const statements = [
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
@@ -368,15 +368,15 @@ var require_processWorkletObjectMethod = __commonJS({
   }
 });
 
-// lib/processWorkletFunction.js
-var require_processWorkletFunction = __commonJS({
-  "lib/processWorkletFunction.js"(exports2) {
+// lib/processIfWorkletFunction.js
+var require_processIfWorkletFunction = __commonJS({
+  "lib/processIfWorkletFunction.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processWorkletFunction = void 0;
+    exports2.processIfWorkletFunction = void 0;
     var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
-    function processWorkletFunction(fun, state) {
+    function processIfWorkletFunction(fun, state) {
       if (!(0, types_1.isFunctionParent)(fun)) {
         return;
       }
@@ -387,19 +387,19 @@ var require_processWorkletFunction = __commonJS({
         (0, types_1.variableDeclarator)(fun.node.id, replacement)
       ]) : replacement);
     }
-    exports2.processWorkletFunction = processWorkletFunction;
+    exports2.processIfWorkletFunction = processIfWorkletFunction;
   }
 });
 
-// lib/processWorklets.js
-var require_processWorklets = __commonJS({
-  "lib/processWorklets.js"(exports2) {
+// lib/processForCalleesWorklets.js
+var require_processForCalleesWorklets = __commonJS({
+  "lib/processForCalleesWorklets.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processWorklets = void 0;
+    exports2.processForCalleesWorklets = void 0;
     var types_1 = require("@babel/types");
     var processWorkletObjectMethod_1 = require_processWorkletObjectMethod();
-    var processWorkletFunction_1 = require_processWorkletFunction();
+    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
     var functionArgsToWorkletize = /* @__PURE__ */ new Map([
       ["useFrameCallback", [0]],
       ["useAnimatedStyle", [0]],
@@ -418,7 +418,7 @@ var require_processWorklets = __commonJS({
       "useAnimatedGestureHandler",
       "useAnimatedScrollHandler"
     ]);
-    function processWorklets(path, state) {
+    function processForCalleesWorklets(path, state) {
       const callee = (0, types_1.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
       let name = "";
       if ("name" in callee) {
@@ -433,19 +433,19 @@ var require_processWorklets = __commonJS({
             (0, processWorkletObjectMethod_1.processWorkletObjectMethod)(property, state);
           } else {
             const value = property.get("value");
-            (0, processWorkletFunction_1.processWorkletFunction)(value, state);
+            (0, processIfWorkletFunction_1.processIfWorkletFunction)(value, state);
           }
         }
       } else {
         const indexes = functionArgsToWorkletize.get(name);
         if (Array.isArray(indexes)) {
           indexes.forEach((index) => {
-            (0, processWorkletFunction_1.processWorkletFunction)(path.get(`arguments.${index}`), state);
+            (0, processIfWorkletFunction_1.processIfWorkletFunction)(path.get(`arguments.${index}`), state);
           });
         }
       }
     }
-    exports2.processWorklets = processWorklets;
+    exports2.processForCalleesWorklets = processForCalleesWorklets;
   }
 });
 
@@ -456,7 +456,7 @@ var require_processIfWorkletNode = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletNode = void 0;
     var types_1 = require("@babel/types");
-    var processWorkletFunction_1 = require_processWorkletFunction();
+    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
     function processIfWorkletNode(fun, state) {
       fun.traverse({
         DirectiveLiteral(path) {
@@ -464,7 +464,7 @@ var require_processIfWorkletNode = __commonJS({
           if (value === "worklet" && path.getFunctionParent() === fun && (0, types_1.isBlockStatement)(fun.node.body)) {
             const directives = fun.node.body.directives;
             if (directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet")) {
-              (0, processWorkletFunction_1.processWorkletFunction)(fun, state);
+              (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
             }
           }
         }
@@ -481,7 +481,7 @@ var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfGestureHandlerEventCallbackFunctionNode = void 0;
     var types_1 = require("@babel/types");
-    var processWorkletFunction_1 = require_processWorkletFunction();
+    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
     var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
       "Tap",
       "Pan",
@@ -510,7 +510,7 @@ var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
     ]);
     function processIfGestureHandlerEventCallbackFunctionNode(fun, state) {
       if ((0, types_1.isCallExpression)(fun.parent) && (0, types_1.isExpression)(fun.parent.callee) && isGestureObjectEventCallbackMethod(fun.parent.callee)) {
-        (0, processWorkletFunction_1.processWorkletFunction)(fun, state);
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
       }
     }
     exports2.processIfGestureHandlerEventCallbackFunctionNode = processIfGestureHandlerEventCallbackFunctionNode;
@@ -637,7 +637,7 @@ var require_injectVersion = __commonJS({
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var commonObjects_1 = require_commonObjects();
-var processWorklets_1 = require_processWorklets();
+var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processIfGestureHandlerEventCallbackFunctionNode_1 = require_processIfGestureHandlerEventCallbackFunctionNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
@@ -659,7 +659,7 @@ module.exports = function() {
       },
       CallExpression: {
         enter(path, state) {
-          (0, processWorklets_1.processWorklets)(path, state);
+          (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);
         }
       },
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {

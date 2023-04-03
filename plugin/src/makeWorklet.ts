@@ -433,7 +433,7 @@ export function makeWorklet(
   );
   assert(
     !isObjectMethod(funExpression),
-    "'funExpression' is an 'BbjectMethod'"
+    "'funExpression' is an 'ObjectMethod'"
   );
 
   const statements: Array<

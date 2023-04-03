@@ -6,8 +6,8 @@ import {
   isBlockStatement,
   isDirectiveLiteral,
 } from '@babel/types';
+import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { ReanimatedPluginPass } from './types';
-import { processWorkletFunction } from './processWorkletFunction';
 
 export function processIfWorkletNode(
   fun: NodePath<
@@ -36,7 +36,7 @@ export function processIfWorkletNode(
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(fun, state);
+          processIfWorkletFunction(fun, state);
         }
       }
     },
