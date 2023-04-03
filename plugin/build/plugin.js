@@ -376,18 +376,20 @@ var require_processIfWorkletFunction = __commonJS({
     exports2.processIfWorkletFunction = void 0;
     var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
-    function processIfWorkletFunction(fun, state) {
-      if (!(0, types_1.isFunctionParent)(fun)) {
-        return;
+    function processIfWorkletFunction(path, state) {
+      if ((0, types_1.isFunctionDeclaration)(path) || (0, types_1.isFunctionExpression)(path) || (0, types_1.isArrowFunctionExpression)(path)) {
+        processWorkletFunction(path, state);
       }
-      const newFun = (0, makeWorklet_1.makeWorklet)(fun, state);
-      const replacement = (0, types_1.callExpression)(newFun, []);
-      const needDeclaration = (0, types_1.isScopable)(fun.parent) || (0, types_1.isExportNamedDeclaration)(fun.parent);
-      fun.replaceWith(!(0, types_1.isArrowFunctionExpression)(fun.node) && fun.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)(fun.node.id, replacement)
-      ]) : replacement);
     }
     exports2.processIfWorkletFunction = processIfWorkletFunction;
+    function processWorkletFunction(path, state) {
+      const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
+      const replacement = (0, types_1.callExpression)(newFun, []);
+      const needDeclaration = (0, types_1.isScopable)(path.parent) || (0, types_1.isExportNamedDeclaration)(path.parent);
+      path.replaceWith("id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)(path.node.id, replacement)
+      ]) : replacement);
+    }
   }
 });
 
