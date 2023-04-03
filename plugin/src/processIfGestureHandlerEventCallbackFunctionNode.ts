@@ -41,18 +41,12 @@ const gestureHandlerBuilderMethods = new Set([
   'onTouchesCancelled',
 ]);
 
-export function processIfGestureHandlerEventCallbackFunctionNode(
-  path: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >,
-  state: ReanimatedPluginPass
-) {
-  // Auto-workletizes React Native Gesture Handler callback functions.
-  // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
-  // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
+// Auto-workletizes React Native Gesture Handler callback functions.
+// Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
+// Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
 
-  // Example #1: `Gesture.Tap().onEnd(<fun>)`
-  /*
+// Example #1: `Gesture.Tap().onEnd(<fun>)`
+/*
   CallExpression(
     callee: MemberExpression(
       object: CallExpression(
@@ -67,8 +61,8 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
   )
   */
 
-  // Example #2: `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`
-  /*
+// Example #2: `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`
+/*
   CallExpression(
     callee: MemberExpression(
       object: CallExpression(
@@ -94,7 +88,12 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
     arguments: [fun3]
   )
   */
-
+export function processIfGestureHandlerEventCallbackFunctionNode(
+  path: NodePath<
+    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
+  >,
+  state: ReanimatedPluginPass
+) {
   if (
     isCallExpression(path.parent) &&
     isExpression(path.parent.callee) &&
