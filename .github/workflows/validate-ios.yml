@@ -15,6 +15,9 @@ on:
       - 'ios/**'
       - 'package.json'
       - 'scripts/validate-ios.sh'
+  merge_group:
+    branches:
+      - main
 
 jobs:
   check:
