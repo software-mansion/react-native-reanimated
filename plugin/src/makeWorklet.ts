@@ -3,7 +3,6 @@ import {
   NodePath,
   transformSync,
   traverse,
-  Node as BabelNode,
 } from '@babel/core';
 import generate from '@babel/generator';
 import {
@@ -404,14 +403,17 @@ export function makeWorklet(
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
-    : (fun.findParent(
-        (path) => (path.parentPath as NodePath<BabelNode>).isProgram() // lack of this 'as ...' causes typescript error on Windows CI build
-      ) as NodePath<BabelNode>); // lack of this 'as ...' this causes typescript error on Windows CI build
+    : fun.findParent((path) => isProgram(path.parentPath));
+  assert(pathForStringDefinitions, "'pathForStringDefinitions' is null");
+  assert(
+    pathForStringDefinitions.parentPath,
+    "'pathForStringDefinitions.parentPath' is null"
+  );
 
-  const initDataId = (
-    pathForStringDefinitions.parentPath as NodePath<BabelNode>
-  ).scope // lack of this 'as ...' this causes typescript error on Windows CI build
-    .generateUidIdentifier(`worklet_${workletHash}_init_data`);
+  const initDataId =
+    pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
+      `worklet_${workletHash}_init_data`
+    );
 
   const initDataObjectExpression = objectExpression([
     objectProperty(identifier('code'), stringLiteral(funString)),

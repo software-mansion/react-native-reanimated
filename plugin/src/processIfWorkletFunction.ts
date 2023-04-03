@@ -6,9 +6,6 @@ import {
   callExpression,
   isScopable,
   isExportNamedDeclaration,
-  isArrowFunctionExpression,
-  isFunctionDeclaration,
-  isFunctionExpression,
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
@@ -21,18 +18,13 @@ import { makeWorklet } from './makeWorklet';
 export function processIfWorkletFunction(
   path: NodePath<Node>,
   state: ReanimatedPluginPass
-): void {
+) {
   if (
-    isFunctionDeclaration(path) ||
-    isFunctionExpression(path) ||
-    isArrowFunctionExpression(path)
+    path.isFunctionDeclaration() ||
+    path.isFunctionExpression() ||
+    path.isArrowFunctionExpression()
   ) {
-    processWorkletFunction(
-      path as NodePath<
-        FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-      >,
-      state
-    );
+    processWorkletFunction(path, state);
   }
 }
 

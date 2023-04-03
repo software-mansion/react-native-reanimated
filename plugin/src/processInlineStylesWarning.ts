@@ -3,15 +3,10 @@ import {
   MemberExpression,
   callExpression,
   arrowFunctionExpression,
-  isMemberExpression,
   isArrayExpression,
-  isObjectExpression,
-  ArrayExpression,
   ObjectExpression,
-  isObjectProperty,
   JSXAttribute,
   isJSXExpressionContainer,
-  Expression,
   identifier,
   stringLiteral,
   expressionStatement,
@@ -23,6 +18,7 @@ import {
 } from '@babel/types';
 import { isRelease } from './utils';
 import { ReanimatedPluginPass } from './types';
+import { strict as assert } from 'assert';
 
 function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
   // replaces `sharedvalue.value` with `(()=>{console.warn(require('react-native-reanimated').getUseOfValueInStyleWarning());return sharedvalue.value;})()`
@@ -57,11 +53,9 @@ function processPropertyValueForInlineStylesWarning(
   path: NodePath<ObjectProperty['value']>
 ) {
   // if it's something like object.value then raise a warning
-  if (isMemberExpression(path.node) && isIdentifier(path.node.property)) {
+  if (path.isMemberExpression() && isIdentifier(path.node.property)) {
     if (path.node.property.name === 'value') {
-      path.replaceWith(
-        generateInlineStylesWarning(path as NodePath<MemberExpression>)
-      );
+      path.replaceWith(generateInlineStylesWarning(path));
     }
   }
 }
@@ -70,14 +64,11 @@ function processTransformPropertyForInlineStylesWarning(
   path: NodePath<ObjectProperty['value']>
 ) {
   if (isArrayExpression(path.node)) {
-    const elements = path.get('elements') as Array<
-      NodePath<ArrayExpression['elements'][number]>
-    >;
+    const elements = path.get('elements');
+    assert(Array.isArray(elements), "'elements' should be an array");
     for (const element of elements) {
-      if (isObjectExpression(element.node)) {
-        processStyleObjectForInlineStylesWarning(
-          element as NodePath<ObjectExpression>
-        ); // why is it not inferred? [TO DO]
+      if (element.isObjectExpression()) {
+        processStyleObjectForInlineStylesWarning(element);
       }
     }
   }
@@ -86,15 +77,10 @@ function processTransformPropertyForInlineStylesWarning(
 function processStyleObjectForInlineStylesWarning(
   path: NodePath<ObjectExpression>
 ) {
-  const properties = path.get('properties') as Array<
-    NodePath<ObjectExpression['properties'][number]>
-  >;
+  const properties = path.get('properties');
   for (const property of properties) {
-    if (!isObjectProperty(property.node)) {
-      continue;
-    }
-    const value = property.get('value') as NodePath<ObjectProperty['value']>;
-    if (isObjectProperty(property)) {
+    if (property.isObjectProperty()) {
+      const value = property.get('value');
       if (
         isIdentifier(property.node.key) &&
         property.node.key.name === 'transform'
@@ -124,26 +110,20 @@ export function processInlineStylesWarning(
     return;
   }
 
-  const expression = path
-    .get('value')
-    .get('expression') as NodePath<Expression>;
+  const expression = path.get('value').get('expression');
   // style={[{...}, {...}]}
-  if (isArrayExpression(expression.node)) {
-    const elements = expression.get('elements') as Array<
-      NodePath<ArrayExpression['elements'][number]>
-    >;
+  assert(!Array.isArray(expression), "'expression' should not be an array");
+  if (expression.isArrayExpression()) {
+    const elements = expression.get('elements');
+    assert(Array.isArray(elements), "'elements' should be an array");
     for (const element of elements) {
-      if (isObjectExpression(element.node)) {
-        processStyleObjectForInlineStylesWarning(
-          element as NodePath<ObjectExpression>
-        ); // why is it not inferred? [TO DO]
+      if (element.isObjectExpression()) {
+        processStyleObjectForInlineStylesWarning(element);
       }
     }
   }
   // style={{...}}
-  else if (isObjectExpression(expression.node)) {
-    processStyleObjectForInlineStylesWarning(
-      expression as NodePath<ObjectExpression>
-    ); // why is it not inferred? [TO DO]
+  else if (expression.isObjectExpression()) {
+    processStyleObjectForInlineStylesWarning(expression);
   }
 }

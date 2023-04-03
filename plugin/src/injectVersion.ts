@@ -27,6 +27,7 @@ export function injectVersion(path: NodePath<DirectiveLiteral>) {
     )
   );
 
+  // Function that contains injection directive literal is a FunctionDeclaration.
   const functionParent = (
     path.getFunctionParent() as NodePath<FunctionDeclaration>
   ).node;
