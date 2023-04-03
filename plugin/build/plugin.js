@@ -308,7 +308,9 @@ var require_makeWorklet = __commonJS({
       if (closure.size > 0) {
         lineOffset -= closure.size + 2;
       }
-      const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => path.parentPath.isProgram());
+      const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => (0, types_1.isProgram)(path.parentPath));
+      (0, assert_1.strict)(pathForStringDefinitions, "'pathForStringDefinitions' is null");
+      (0, assert_1.strict)(pathForStringDefinitions.parentPath, "'pathForStringDefinitions.parentPath' is null");
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
       const initDataObjectExpression = (0, types_1.objectExpression)([
         (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString)),
@@ -377,7 +379,7 @@ var require_processIfWorkletFunction = __commonJS({
     var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
     function processIfWorkletFunction(path, state) {
-      if ((0, types_1.isFunctionDeclaration)(path) || (0, types_1.isFunctionExpression)(path) || (0, types_1.isArrowFunctionExpression)(path)) {
+      if (path.isFunctionDeclaration() || path.isFunctionExpression() || path.isArrowFunctionExpression()) {
         processWorkletFunction(path, state);
       }
     }
@@ -557,6 +559,7 @@ var require_processInlineStylesWarning = __commonJS({
     exports2.processInlineStylesWarning = void 0;
     var types_1 = require("@babel/types");
     var utils_1 = require_utils();
+    var assert_1 = require("assert");
     function generateInlineStylesWarning(path) {
       return (0, types_1.callExpression)((0, types_1.arrowFunctionExpression)([], (0, types_1.blockStatement)([
         (0, types_1.expressionStatement)((0, types_1.callExpression)((0, types_1.memberExpression)((0, types_1.identifier)("console"), (0, types_1.identifier)("warn")), [
@@ -568,7 +571,7 @@ var require_processInlineStylesWarning = __commonJS({
       ])), []);
     }
     function processPropertyValueForInlineStylesWarning(path) {
-      if ((0, types_1.isMemberExpression)(path.node) && (0, types_1.isIdentifier)(path.node.property)) {
+      if (path.isMemberExpression() && (0, types_1.isIdentifier)(path.node.property)) {
         if (path.node.property.name === "value") {
           path.replaceWith(generateInlineStylesWarning(path));
         }
@@ -577,8 +580,9 @@ var require_processInlineStylesWarning = __commonJS({
     function processTransformPropertyForInlineStylesWarning(path) {
       if ((0, types_1.isArrayExpression)(path.node)) {
         const elements = path.get("elements");
+        (0, assert_1.strict)(Array.isArray(elements), "'elements' should be an array");
         for (const element of elements) {
-          if ((0, types_1.isObjectExpression)(element.node)) {
+          if (element.isObjectExpression()) {
             processStyleObjectForInlineStylesWarning(element);
           }
         }
@@ -587,11 +591,8 @@ var require_processInlineStylesWarning = __commonJS({
     function processStyleObjectForInlineStylesWarning(path) {
       const properties = path.get("properties");
       for (const property of properties) {
-        if (!(0, types_1.isObjectProperty)(property.node)) {
-          continue;
-        }
-        const value = property.get("value");
-        if ((0, types_1.isObjectProperty)(property)) {
+        if (property.isObjectProperty()) {
+          const value = property.get("value");
           if ((0, types_1.isIdentifier)(property.node.key) && property.node.key.name === "transform") {
             processTransformPropertyForInlineStylesWarning(value);
           } else {
@@ -614,14 +615,16 @@ var require_processInlineStylesWarning = __commonJS({
         return;
       }
       const expression = path.get("value").get("expression");
-      if ((0, types_1.isArrayExpression)(expression.node)) {
+      (0, assert_1.strict)(!Array.isArray(expression), "'expression' should not be an array");
+      if (expression.isArrayExpression()) {
         const elements = expression.get("elements");
+        (0, assert_1.strict)(Array.isArray(elements), "'elements' should be an array");
         for (const element of elements) {
-          if ((0, types_1.isObjectExpression)(element.node)) {
+          if (element.isObjectExpression()) {
             processStyleObjectForInlineStylesWarning(element);
           }
         }
-      } else if ((0, types_1.isObjectExpression)(expression.node)) {
+      } else if (expression.isObjectExpression()) {
         processStyleObjectForInlineStylesWarning(expression);
       }
     }
