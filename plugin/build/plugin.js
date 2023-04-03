@@ -272,7 +272,7 @@ var require_makeWorklet = __commonJS({
             return;
           }
           const name = path.node.name;
-          if (commonObjects_12.globals.has(name) || !(0, types_1.isArrowFunctionExpression)(fun.node) && !(0, types_1.isObjectMethod)(fun.node) && fun.node.id && fun.node.id.name === name) {
+          if (commonObjects_12.globals.has(name) || "id" in fun.node && fun.node.id && fun.node.id.name === name) {
             return;
           }
           const parentNode = path.parent;
