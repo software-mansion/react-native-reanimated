@@ -3,3 +3,12 @@
 
 yarn lint-staged
 yarn type:check
+! git diff HEAD --name-only | grep plugin
+if [ $? -eq 1 ]; then
+  yarn plugin
+  ! git status -u | grep -E 'plugin/build/plugin.js|plugin/build/plugin.js.map'
+  if [ $? -eq 1 ]; then
+    echo "\n[Git hook] You forgot to build plugin and I had to do it for you!!!\n"
+    git add plugin/build/plugin.js plugin/build/plugin.js.map
+  fi
+fi
