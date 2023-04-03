@@ -3,7 +3,6 @@ import {
   CallExpression,
   isSequenceExpression,
   ObjectExpression,
-  isObjectProperty,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
@@ -70,7 +69,7 @@ function processObjectHook(
   for (const property of properties) {
     if (property.isObjectMethod()) {
       processWorkletObjectMethod(property, state);
-    } else if (isObjectProperty(property.node)) {
+    } else if (property.isObjectProperty()) {
       const value = property.get('value');
       assert(!Array.isArray(value), "'value' is an array'");
       processIfWorkletFunction(value, state);

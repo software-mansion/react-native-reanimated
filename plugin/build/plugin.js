@@ -445,7 +445,7 @@ var require_processForCalleesWorklets = __commonJS({
       for (const property of properties) {
         if (property.isObjectMethod()) {
           (0, processWorkletObjectMethod_1.processWorkletObjectMethod)(property, state);
-        } else if ((0, types_1.isObjectProperty)(property.node)) {
+        } else if (property.isObjectProperty()) {
           const value = property.get("value");
           (0, assert_1.strict)(!Array.isArray(value), "'value' is an array'");
           (0, processIfWorkletFunction_1.processIfWorkletFunction)(value, state);
