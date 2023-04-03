@@ -278,6 +278,9 @@ void NativeProxy::installJSIBindings(
   _nativeReanimatedModule = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
 
+//   TODO
+//  module->getJSCallbacksManager();
+
   this->registerEventHandler([weakModule, getCurrentTime](
                                  jni::alias_ref<JString> eventKey,
                                  jni::alias_ref<react::WritableMap> event) {
@@ -440,7 +443,8 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod("initializeDependencies", NativeProxy::initializeDependencies)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
@@ -587,6 +591,11 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   auto method = javaPart_->getClass()->getMethod<void(int)>(
       "unsubscribeFromKeyboardEvents");
   method(javaPart_.get(), listenerId);
+}
+
+void NativeProxy::initializeDependencies(jni::global_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager) {
+  std::shared_ptr<JSCallbacksManager> jsCallbacksManager = _nativeReanimatedModule->getJSCallbacksManager();
+  javaWrapperJSCallbackManager->cthis()->setJSCallbackManager(jsCallbacksManager);
 }
 
 } // namespace reanimated

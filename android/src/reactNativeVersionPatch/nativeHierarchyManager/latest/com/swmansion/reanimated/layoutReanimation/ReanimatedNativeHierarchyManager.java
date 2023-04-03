@@ -275,15 +275,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
           && mReaLayoutAnimator != null) {
         boolean hasHeader = checkIfTopScreenHasHeader((ViewGroup) container);
         if (!hasHeader || !container.isLayoutRequested()) {
-          mReaLayoutAnimator.getAnimationsManager().screenDidLayout();
-//          ReactContext context = mReaLayoutAnimator.getAnimationsManager().getContext();
-//          EventDispatcher eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(context, tag);
-//          eventDispatcher.addListener(new EventDispatcherListener() {
-//            @Override
-//            public void onEventDispatch(Event event) {
-//              Log.v("MLEKO", "eeeeeeeeeee");
-//            }
-//          });
+          mReaLayoutAnimator.getAnimationsManager().screenDidLayout(tag);
         }
       }
       View view = resolveView(tag);

@@ -2,14 +2,11 @@ package com.swmansion.reanimated;
 
 import static com.swmansion.reanimated.Utils.simplifyStringNumbersList;
 
-import android.util.Log;
-
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
-import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
@@ -36,6 +33,9 @@ public class NativeProxy extends NativeProxyCommon {
         prepareLayoutAnimations(LayoutAnimations);
         ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
         installJSIBindings(messageQueueThread);
+        JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager = new JavaWrapperJSCallbacksManager();
+        initializeDependencies(javaWrapperJSCallbacksManager);
+        LayoutAnimations.getAnimationsManager().getSharedTransitionManager().setJavaWrapperJSCallbacksManager(javaWrapperJSCallbacksManager);
     }
 
     private native HybridData initHybrid(
@@ -49,6 +49,8 @@ public class NativeProxy extends NativeProxyCommon {
     public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
     public native void performOperations();
+
+    public native void initializeDependencies(JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager);
 
     @Override
     protected HybridData getHybridData() {

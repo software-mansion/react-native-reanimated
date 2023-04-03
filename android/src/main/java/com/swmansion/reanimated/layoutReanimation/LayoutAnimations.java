@@ -65,7 +65,7 @@ public class LayoutAnimations {
     animationsManager.progressLayoutAnimation(tag, newStyle, isSharedTransition);
   }
 
-  private AnimationsManager getAnimationsManager() {
+  public AnimationsManager getAnimationsManager() {
     AnimationsManager animationsManager = mWeakAnimationsManager.get();
     if (animationsManager != null) {
       return mWeakAnimationsManager.get();

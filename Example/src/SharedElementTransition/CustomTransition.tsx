@@ -4,6 +4,8 @@ import { ParamListBase } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
   SharedTransition,
+  useAnimatedReaction,
+  useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { StackScreenProps } from '@react-navigation/stack';

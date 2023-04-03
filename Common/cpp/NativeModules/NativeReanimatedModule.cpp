@@ -45,7 +45,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      jsCallbacksManager_(std::make_shared<JSCallbacksManager>(runtimeHelper, platformDepMethodsHolder)),
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -54,11 +53,12 @@ NativeReanimatedModule::NativeReanimatedModule(
       animatedSensorModule(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
       configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction)
+          platformDepMethodsHolder.configurePropsFunction),
 #endif
+  jsCallbacksManager_(std::make_shared<JSCallbacksManager>(runtimeHelper, platformDepMethodsHolder))
 {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);

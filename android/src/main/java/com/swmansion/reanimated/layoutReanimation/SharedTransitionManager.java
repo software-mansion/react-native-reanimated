@@ -8,9 +8,15 @@ import android.view.ViewParent;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
+import com.swmansion.reanimated.JavaWrapperJSCallbacksManager;
+import com.swmansion.reanimated.ReanimatedModule;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,9 +41,14 @@ public class SharedTransitionManager {
   private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
+  private final boolean isSharedProgressTransition = true;
+  private final Set<EventDispatcher> eventDispatchersWithListener = new HashSet<>();
+  private JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager;
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
+
+    mAnimationsManager.getContext().getNativeModule(ReanimatedModule.class);
   }
 
   protected void notifyAboutNewView(View view) {
@@ -53,7 +64,28 @@ public class SharedTransitionManager {
     return mCurrentSharedTransitionViews.get(tag);
   }
 
-  protected void screenDidLayout() {
+  protected void screenDidLayout(int screenChildViewTag) {
+    if (isSharedProgressTransition) {
+      ReactContext context = mAnimationsManager.getContext();
+      EventDispatcher eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(context, screenChildViewTag);
+      if (eventDispatcher != null && !eventDispatchersWithListener.contains(eventDispatcher)) {
+        eventDispatchersWithListener.add(eventDispatcher);
+        eventDispatcher.addListener(event -> {
+          try {
+            Field field = event.getClass().getDeclaredField("mClosing");
+            field.setAccessible(true);
+            boolean closing =  field.getBoolean(event);
+            if (!closing) {
+              return;
+            }
+            field = event.getClass().getDeclaredField("mProgress");
+            field.setAccessible(true);
+            double progress =  field.getDouble(event);
+            onTransitionProgress(progress);
+          } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {}
+        });
+      }
+    }
     tryStartSharedTransitionForViews(mAddedSharedViews, true);
     mAddedSharedViews.clear();
   }
@@ -201,7 +233,9 @@ public class SharedTransitionManager {
     }
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
-    startSharedTransition(sharedElements);
+    if (!isSharedProgressTransition) {
+      startSharedTransition(sharedElements);
+    }
     return true;
   }
 
@@ -607,4 +641,31 @@ public class SharedTransitionManager {
       mDisableCleaningForViewTag.put(viewTag, counter - 1);
     }
   }
+
+  private Map<String, Object> computeAnimationFrameWithProgress(double progress, SharedElement sharedElement) {
+    HashMap<String, Object> sourceValues = sharedElement.sourceViewSnapshot.toCurrentMap();
+    HashMap<String, Object> targetValues = sharedElement.targetViewSnapshot.toTargetMap();
+
+    HashMap<String, Object> preparedStartValues =
+            mAnimationsManager.prepareDataForAnimationWorklet(sourceValues, false, true);
+    HashMap<String, Object> preparedTargetValues =
+            mAnimationsManager.prepareDataForAnimationWorklet(targetValues, true, true);
+    HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
+    preparedValues.putAll(preparedStartValues);
+    // call jsCallbackManager
+    return null;
+  }
+
+  private void onTransitionProgress(double progress) {
+    for (SharedElement sharedElement : mSharedElements) {
+      int viewTag = sharedElement.sourceView.getId();
+      Map<String, Object> componentStyle = computeAnimationFrameWithProgress(progress, sharedElement);
+      mAnimationsManager.progressLayoutAnimation(viewTag, componentStyle, true);
+    }
+  }
+
+  public void setJavaWrapperJSCallbacksManager(JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager) {
+    this.javaWrapperJSCallbacksManager = javaWrapperJSCallbacksManager;
+  }
+
 }
