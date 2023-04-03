@@ -18,7 +18,7 @@ import { makeWorklet } from './makeWorklet';
 export function processIfWorkletFunction(
   path: NodePath<Node>,
   state: ReanimatedPluginPass
-): void {
+) {
   if (
     path.isFunctionDeclaration() ||
     path.isFunctionExpression() ||
