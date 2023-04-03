@@ -161,7 +161,7 @@ var require_makeWorklet = __commonJS({
           (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_closure")))
         ]);
         function prependClosure(path) {
-          if (closureVariables.length === 0 || path.parent.type !== "Program") {
+          if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
             return;
           }
           if (!(0, types_1.isExpression)(path.node.body)) {
@@ -170,7 +170,7 @@ var require_makeWorklet = __commonJS({
         }
         function prependRecursiveDeclaration(path) {
           var _a;
-          if (path.parent.type === "Program" && !(0, types_1.isArrowFunctionExpression)(path.node) && !(0, types_1.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
+          if ((0, types_1.isProgram)(path.parent) && !(0, types_1.isArrowFunctionExpression)(path.node) && !(0, types_1.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
             const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
             if (hasRecursiveCalls) {
               path.node.body.body.unshift((0, types_1.variableDeclaration)("const", [
@@ -272,14 +272,14 @@ var require_makeWorklet = __commonJS({
             return;
           }
           const name = path.node.name;
-          if (commonObjects_12.globals.has(name) || !(0, types_1.isArrowFunctionExpression)(fun.node) && !(0, types_1.isObjectMethod)(fun.node) && fun.node.id && fun.node.id.name === name) {
+          if (commonObjects_12.globals.has(name) || "id" in fun.node && fun.node.id && fun.node.id.name === name) {
             return;
           }
           const parentNode = path.parent;
-          if (parentNode.type === "MemberExpression" && parentNode.property === path.node && !parentNode.computed) {
+          if ((0, types_1.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
             return;
           }
-          if (parentNode.type === "ObjectProperty" && path.parentPath.parent.type === "ObjectExpression" && path.node !== parentNode.value) {
+          if ((0, types_1.isObjectProperty)(parentNode) && (0, types_1.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
             return;
           }
           let currentScope = path.scope;

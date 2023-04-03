@@ -27,6 +27,10 @@ import {
   VariableDeclaration,
   ExpressionStatement,
   ReturnStatement,
+  isProgram,
+  isObjectProperty,
+  isMemberExpression,
+  isObjectExpression,
   expressionStatement,
   assignmentExpression,
   memberExpression,
@@ -112,7 +116,7 @@ function buildWorkletString(
         | ObjectMethod
       >
     ) {
-      if (closureVariables.length === 0 || path.parent.type !== 'Program') {
+      if (closureVariables.length === 0 || !isProgram(path.parent)) {
         return;
       }
 
@@ -130,7 +134,7 @@ function buildWorkletString(
       >
     ) {
       if (
-        path.parent.type === 'Program' &&
+        isProgram(path.parent) &&
         !isArrowFunctionExpression(path.node) &&
         !isObjectMethod(path.node) &&
         path.node.id &&
@@ -326,12 +330,11 @@ export function makeWorklet(
         return;
       }
       const name = path.node.name;
+      // if the function is named and was added to globals we don't want to add it to closure
+      // hence we check if identifier has that name
       if (
         globals.has(name) ||
-        (!isArrowFunctionExpression(fun.node) &&
-          !isObjectMethod(fun.node) &&
-          fun.node.id &&
-          fun.node.id.name === name)
+        ('id' in fun.node && fun.node.id && fun.node.id.name === name)
       ) {
         return;
       }
@@ -339,7 +342,7 @@ export function makeWorklet(
       const parentNode = path.parent;
 
       if (
-        parentNode.type === 'MemberExpression' &&
+        isMemberExpression(parentNode) &&
         parentNode.property === path.node &&
         !parentNode.computed
       ) {
@@ -347,8 +350,8 @@ export function makeWorklet(
       }
 
       if (
-        parentNode.type === 'ObjectProperty' &&
-        path.parentPath.parent.type === 'ObjectExpression' &&
+        isObjectProperty(parentNode) &&
+        isObjectExpression(path.parentPath.parent) &&
         path.node !== parentNode.value
       ) {
         return;
