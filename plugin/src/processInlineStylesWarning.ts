@@ -90,7 +90,9 @@ function processStyleObjectForInlineStylesWarning(
     NodePath<ObjectExpression['properties'][number]>
   >;
   for (const property of properties) {
-    if (!isObjectProperty(property.node)) continue;
+    if (!isObjectProperty(property.node)) {
+      continue;
+    }
     const value = property.get('value') as NodePath<ObjectProperty['value']>;
     if (isObjectProperty(property)) {
       if (
@@ -109,10 +111,18 @@ export function processInlineStylesWarning(
   path: NodePath<JSXAttribute>,
   state: ReanimatedPluginPass
 ) {
-  if (isRelease()) return;
-  if (state.opts.disableInlineStylesWarning) return;
-  if (path.node.name.name !== 'style') return;
-  if (!isJSXExpressionContainer(path.node.value)) return;
+  if (isRelease()) {
+    return;
+  }
+  if (state.opts.disableInlineStylesWarning) {
+    return;
+  }
+  if (path.node.name.name !== 'style') {
+    return;
+  }
+  if (!isJSXExpressionContainer(path.node.value)) {
+    return;
+  }
 
   const expression = path
     .get('value')
