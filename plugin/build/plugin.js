@@ -436,7 +436,11 @@ var require_processForCalleesWorklets = __commonJS({
           processObjectHook(workletToProcess, state);
         }
       } else {
-        processArguments(name, path, state);
+        const indices = functionArgsToWorkletize.get(name);
+        if (indices === void 0) {
+          return;
+        }
+        processArguments(path, indices, state);
       }
     }
     exports2.processForCalleesWorklets = processForCalleesWorklets;
@@ -454,15 +458,12 @@ var require_processForCalleesWorklets = __commonJS({
         }
       }
     }
-    function processArguments(name, path, state) {
-      const indexes = functionArgsToWorkletize.get(name);
-      if (Array.isArray(indexes)) {
-        const argumentsArray = path.get("arguments");
-        indexes.forEach((index) => {
-          const argumentToWorkletize = argumentsArray[index];
-          (0, processIfWorkletFunction_1.processIfWorkletFunction)(argumentToWorkletize, state);
-        });
-      }
+    function processArguments(path, indices, state) {
+      const argumentsArray = path.get("arguments");
+      indices.forEach((index) => {
+        const argumentToWorkletize = argumentsArray[index];
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(argumentToWorkletize, state);
+      });
     }
   }
 });

@@ -57,7 +57,11 @@ export function processForCalleesWorklets(
       processObjectHook(workletToProcess, state);
     }
   } else {
-    processArguments(name, path, state);
+    const indices = functionArgsToWorkletize.get(name);
+    if (indices === undefined) {
+      return;
+    }
+    processArguments(path, indices, state);
   }
 }
 
@@ -82,16 +86,13 @@ function processObjectHook(
 }
 
 function processArguments(
-  name: string,
   path: NodePath<CallExpression>,
+  indices: number[],
   state: ReanimatedPluginPass
-): void {
-  const indexes = functionArgsToWorkletize.get(name);
-  if (Array.isArray(indexes)) {
-    const argumentsArray = path.get('arguments');
-    indexes.forEach((index) => {
-      const argumentToWorkletize = argumentsArray[index];
-      processIfWorkletFunction(argumentToWorkletize, state);
-    });
-  }
+) {
+  const argumentsArray = path.get('arguments');
+  indices.forEach((index) => {
+    const argumentToWorkletize = argumentsArray[index];
+    processIfWorkletFunction(argumentToWorkletize, state);
+  });
 }
