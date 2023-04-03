@@ -48,12 +48,7 @@ import * as convertSourceMap from 'convert-source-map';
 import { ReanimatedPluginPass } from './types';
 import { isRelease } from './utils';
 import { globals } from './commonObjects';
-import {
-  assertHasProperty,
-  assertIsASTType,
-  assertIsDefined,
-  assertIsNotType,
-} from './asserts';
+import { strict as assert } from 'assert';
 
 function hash(str: string) {
   let i = str.length;
@@ -180,19 +175,19 @@ function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  assertIsDefined(draftExpression, 'draftExpression');
+  assert(draftExpression, "'draftExpression' is undefined");
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
     : draftExpression.expression;
 
-  assertHasProperty('params' in expression, 'expression', 'params');
-
-  assertIsASTType(
-    expression.body,
-    'expression.body',
-    'BlockStatement',
-    isBlockStatement
+  assert(
+    'params' in expression,
+    "'params' property is missing in 'expression'"
+  );
+  assert(
+    isBlockStatement(expression.body),
+    "'expression.body' is not 'blockStatement'"
   );
 
   const workletFunction = functionExpression(
@@ -203,7 +198,7 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  assertIsDefined(inputMap, 'inputMap');
+  assert(inputMap, 'inputMap is undefined');
 
   const includeSourceMap = shouldGenerateSourceMap();
 
@@ -230,7 +225,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  assertIsDefined(transformed, 'transformed');
+  assert(transformed, 'transformed is not defined');
 
   let sourceMap;
   if (includeSourceMap) {
@@ -292,7 +287,7 @@ export function makeWorklet(
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  assertIsDefined(state.file.opts.filename, 'state.file.opts.filename');
+  assert(state.file.opts.filename, "'state.file.opts.filename' is undefined");
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
@@ -322,8 +317,8 @@ export function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  assertIsDefined(transformed, 'transformed');
-  assertIsDefined(transformed.ast, 'transformed.ast');
+  assert(transformed, "'transformed' is undefined");
+  assert(transformed.ast, "'transformed.ast' is undefined");
 
   traverse(transformed.ast, {
     Identifier(path) {
@@ -385,7 +380,7 @@ export function makeWorklet(
     functionName,
     transformed.map
   );
-  assertIsDefined(funString, 'funString');
+  assert(funString, "'funString is undefined");
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
@@ -432,18 +427,11 @@ export function makeWorklet(
     ])
   );
 
-  assertIsNotType(
-    funExpression,
-    'funExpression',
-    'FunctionDeclaration',
-    isFunctionDeclaration
+  assert(
+    !isFunctionDeclaration(funExpression),
+    "'funExpression' is 'functionDeclaration'"
   );
-  assertIsNotType(
-    funExpression,
-    'funExpression',
-    'ObjectMethod',
-    isObjectMethod
-  );
+  assert(!isObjectMethod(funExpression), "'funExpression' is 'objectMethod'");
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
