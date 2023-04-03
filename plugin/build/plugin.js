@@ -161,7 +161,7 @@ var require_makeWorklet = __commonJS({
           (0, types_1.variableDeclarator)((0, types_1.objectPattern)(closureVariables.map((variable) => (0, types_1.objectProperty)((0, types_1.identifier)(variable.name), (0, types_1.identifier)(variable.name), false, true))), (0, types_1.memberExpression)((0, types_1.thisExpression)(), (0, types_1.identifier)("_closure")))
         ]);
         function prependClosure(path) {
-          if (closureVariables.length === 0 || path.parent.type !== "Program") {
+          if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
             return;
           }
           if (!(0, types_1.isExpression)(path.node.body)) {
@@ -170,7 +170,7 @@ var require_makeWorklet = __commonJS({
         }
         function prependRecursiveDeclaration(path) {
           var _a;
-          if (path.parent.type === "Program" && !(0, types_1.isArrowFunctionExpression)(path.node) && !(0, types_1.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
+          if ((0, types_1.isProgram)(path.parent) && !(0, types_1.isArrowFunctionExpression)(path.node) && !(0, types_1.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
             const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
             if (hasRecursiveCalls) {
               path.node.body.body.unshift((0, types_1.variableDeclaration)("const", [
@@ -276,10 +276,10 @@ var require_makeWorklet = __commonJS({
             return;
           }
           const parentNode = path.parent;
-          if (parentNode.type === "MemberExpression" && parentNode.property === path.node && !parentNode.computed) {
+          if ((0, types_1.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
             return;
           }
-          if (parentNode.type === "ObjectProperty" && path.parentPath.parent.type === "ObjectExpression" && path.node !== parentNode.value) {
+          if ((0, types_1.isObjectProperty)(parentNode) && (0, types_1.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
             return;
           }
           let currentScope = path.scope;
@@ -376,18 +376,20 @@ var require_processIfWorkletFunction = __commonJS({
     exports2.processIfWorkletFunction = void 0;
     var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
-    function processIfWorkletFunction(fun, state) {
-      if (!(0, types_1.isFunctionParent)(fun)) {
-        return;
+    function processIfWorkletFunction(path, state) {
+      if ((0, types_1.isFunctionDeclaration)(path) || (0, types_1.isFunctionExpression)(path) || (0, types_1.isArrowFunctionExpression)(path)) {
+        processWorkletFunction(path, state);
       }
-      const newFun = (0, makeWorklet_1.makeWorklet)(fun, state);
-      const replacement = (0, types_1.callExpression)(newFun, []);
-      const needDeclaration = (0, types_1.isScopable)(fun.parent) || (0, types_1.isExportNamedDeclaration)(fun.parent);
-      fun.replaceWith(!(0, types_1.isArrowFunctionExpression)(fun.node) && fun.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
-        (0, types_1.variableDeclarator)(fun.node.id, replacement)
-      ]) : replacement);
     }
     exports2.processIfWorkletFunction = processIfWorkletFunction;
+    function processWorkletFunction(path, state) {
+      const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
+      const replacement = (0, types_1.callExpression)(newFun, []);
+      const needDeclaration = (0, types_1.isScopable)(path.parent) || (0, types_1.isExportNamedDeclaration)(path.parent);
+      path.replaceWith("id" in path.node && path.node.id && needDeclaration ? (0, types_1.variableDeclaration)("const", [
+        (0, types_1.variableDeclarator)(path.node.id, replacement)
+      ]) : replacement);
+    }
   }
 });
 

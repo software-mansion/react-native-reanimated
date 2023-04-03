@@ -120,8 +120,9 @@ function buildWorkletString(
         return;
       }
 
-      if (!isExpression(path.node.body))
+      if (!isExpression(path.node.body)) {
         path.node.body.body.unshift(closureDeclaration);
+      }
     }
 
     function prependRecursiveDeclaration(

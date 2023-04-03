@@ -1,4 +1,4 @@
-import { NodePath } from '@babel/core';
+import { NodePath, Node } from '@babel/core';
 import {
   FunctionDeclaration,
   FunctionExpression,
@@ -19,20 +19,21 @@ import { makeWorklet } from './makeWorklet';
 // with a workletized version of itself.
 
 export function processIfWorkletFunction(
-  path: NodePath<unknown> | Array<NodePath<unknown>>,
+  path: NodePath<Node> | Array<NodePath<Node>>,
   state: ReanimatedPluginPass
 ): void {
   if (
     isFunctionDeclaration(path) ||
     isFunctionExpression(path) ||
     isArrowFunctionExpression(path)
-  )
+  ) {
     processWorkletFunction(
       path as NodePath<
         FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
       >,
       state
     );
+  }
 }
 
 function processWorkletFunction(
