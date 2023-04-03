@@ -92,10 +92,11 @@ function processArguments(
 ) {
   const argumentsArray = path.get('arguments');
   indices.forEach((index) => {
-    // workletizable argument doesn't always have to be specified
     const argumentToWorkletize = argumentsArray[index];
-    if (argumentToWorkletize) {
-      processIfWorkletFunction(argumentToWorkletize, state);
+    if (!argumentToWorkletize) {
+      // workletizable argument doesn't always have to be specified
+      return;
     }
+    processIfWorkletFunction(argumentToWorkletize, state);
   });
 }
