@@ -124,6 +124,6 @@ export function processInlineStylesWarning(
   }
   // style={{...}}
   else if (expression.isObjectExpression()) {
-    processStyleObjectForInlineStylesWarning(expression); // why is it not inferred? [TO DO]
+    processStyleObjectForInlineStylesWarning(expression);
   }
 }
