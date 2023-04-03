@@ -1,4 +1,4 @@
-import { NodePath } from '@babel/core';
+import { NodePath, Node } from '@babel/core';
 import {
   FunctionDeclaration,
   FunctionExpression,
