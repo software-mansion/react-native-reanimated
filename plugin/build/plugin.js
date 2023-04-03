@@ -333,7 +333,11 @@ var require_makeWorklet = __commonJS({
       (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'objectMethod'");
 =======
       (0, assert_1.strict)(!(0, types_1.isFunctionDeclaration)(funExpression), "'funExpression' is a 'FunctionDeclaration'");
+<<<<<<< HEAD
       (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'BbjectMethod'");
+>>>>>>> origin/main
+=======
+      (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'ObjectMethod'");
 >>>>>>> origin/main
       const statements = [
         (0, types_1.variableDeclaration)("const", [
