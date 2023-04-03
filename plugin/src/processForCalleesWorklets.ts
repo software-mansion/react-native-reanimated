@@ -95,6 +95,8 @@ function processArguments(
     const argumentToWorkletize = argumentsArray[index];
     if (argumentToWorkletize) {
       processIfWorkletFunction(argumentToWorkletize, state);
+    } else {
+      throw new Error(`${path}`);
     }
   });
 }
