@@ -187,7 +187,7 @@ function buildWorkletString(
   );
   assert(
     isBlockStatement(expression.body),
-    "'expression.body' is not a 'blockStatement'"
+    "'expression.body' is not a 'BlockStatement'"
   );
 
   const workletFunction = functionExpression(
@@ -225,7 +225,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  assert(transformed, "'transformed' is undefined");
+  assert(transformed, "'transformed' is null");
 
   let sourceMap;
   if (includeSourceMap) {
@@ -429,11 +429,11 @@ export function makeWorklet(
 
   assert(
     !isFunctionDeclaration(funExpression),
-    "'funExpression' is a 'functionDeclaration'"
+    "'funExpression' is a 'FunctionDeclaration'"
   );
   assert(
     !isObjectMethod(funExpression),
-    "'funExpression' is an 'objectMethod'"
+    "'funExpression' is an 'ObjectMethod'"
   );
 
   const statements: Array<
