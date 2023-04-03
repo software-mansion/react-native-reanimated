@@ -14,10 +14,10 @@
     "prepare": "yarn generate",
     "generate": "yarn tsc && yarn bundle && yarn clean",
     "clean": "rm -f lib/*",
-    "bundle": "yarn esbuild ./lib/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --external:'../../package.json' --log-level=warning --platform=node --sourcemap=linked --outfile=build/plugin.js",
-    "format": "yarn prettier --write --list-different **/*.ts",
-    "watch": "yarn tsc-watch --onSuccess \"yarn bundle\"",
-    "lint": "yarn eslint --max-warnings=0 --ext .ts .",
-    "type:check": "yarn tsc --noEmit"
+    "bundle": "esbuild ./lib/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --external:'../../package.json' --log-level=warning --platform=node --sourcemap=linked --outfile=build/plugin.js",
+    "format": "prettier --write --list-different **/*.ts",
+    "watch": "tsc-watch --onSuccess \"yarn bundle\"",
+    "lint": "eslint --max-warnings=0 --ext .ts .",
+    "type:check": "tsc --noEmit"
   }
 }
