@@ -442,8 +442,7 @@ var require_processForCalleesWorklets = __commonJS({
     exports2.processForCalleesWorklets = processForCalleesWorklets;
     function processObjectHook(path, state) {
       const properties = path.get("properties");
-      for (const p of properties) {
-        const property = p;
+      for (const property of properties) {
         if (property.isObjectMethod()) {
           (0, processWorkletObjectMethod_1.processWorkletObjectMethod)(property, state);
         } else if ((0, types_1.isObjectProperty)(property.node)) {

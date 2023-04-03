@@ -67,8 +67,7 @@ function processObjectHook(
   state: ReanimatedPluginPass
 ) {
   const properties = path.get('properties');
-  for (const p of properties) {
-    const property = p;
+  for (const property of properties) {
     if (property.isObjectMethod()) {
       processWorkletObjectMethod(property, state);
     } else if (isObjectProperty(property.node)) {
