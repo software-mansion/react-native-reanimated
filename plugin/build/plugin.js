@@ -134,6 +134,7 @@ var require_makeWorklet = __commonJS({
     var convertSourceMap = __importStar(require("convert-source-map"));
     var utils_1 = require_utils();
     var commonObjects_12 = require_commonObjects();
+    var assert_1 = require("assert");
     function hash(str) {
       let i = str.length;
       let hash1 = 5381;
@@ -163,8 +164,9 @@ var require_makeWorklet = __commonJS({
           if (closureVariables.length === 0 || path.parent.type !== "Program") {
             return;
           }
-          if (!(0, types_1.isExpression)(path.node.body))
+          if (!(0, types_1.isExpression)(path.node.body)) {
             path.node.body.body.unshift(closureDeclaration);
+          }
         }
         function prependRecursiveDeclaration(path) {
           var _a;
@@ -187,15 +189,13 @@ var require_makeWorklet = __commonJS({
         };
       }
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
-      if (!draftExpression)
-        throw new Error("'draftExpression' is not defined\n");
+      (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
       const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
-      if (!("params" in expression && (0, types_1.isBlockStatement)(expression.body)))
-        throw new Error("'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'");
+      (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
+      (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "'expression.body' is not a 'BlockStatement'");
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
-      if (!inputMap)
-        throw new Error("'inputMap' is not defined");
+      (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
       const includeSourceMap = shouldGenerateSourceMap();
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
@@ -213,8 +213,7 @@ var require_makeWorklet = __commonJS({
         configFile: false,
         comments: false
       });
-      if (!transformed)
-        throw new Error("transformed is null!\n");
+      (0, assert_1.strict)(transformed, "'transformed' is null");
       let sourceMap;
       if (includeSourceMap) {
         sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
@@ -244,8 +243,7 @@ var require_makeWorklet = __commonJS({
           }
         }
       });
-      if (!state.file.opts.filename)
-        throw new Error("'state.file.opts.filename' is undefined\n");
+      (0, assert_1.strict)(state.file.opts.filename, "'state.file.opts.filename' is undefined");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
         sourceFileName: state.file.opts.filename
@@ -266,12 +264,13 @@ var require_makeWorklet = __commonJS({
         configFile: false,
         inputSourceMap: codeObject.map
       });
-      if (!transformed || !transformed.ast)
-        throw new Error("'transformed' or 'transformed.ast' is undefined\n");
+      (0, assert_1.strict)(transformed, "'transformed' is undefined");
+      (0, assert_1.strict)(transformed.ast, "'transformed.ast' is undefined");
       (0, core_1.traverse)(transformed.ast, {
         Identifier(path) {
-          if (!path.isReferencedIdentifier())
+          if (!path.isReferencedIdentifier()) {
             return;
+          }
           const name = path.node.name;
           if (commonObjects_12.globals.has(name) || !(0, types_1.isArrowFunctionExpression)(fun.node) && !(0, types_1.isObjectMethod)(fun.node) && fun.node.id && fun.node.id.name === name) {
             return;
@@ -298,8 +297,7 @@ var require_makeWorklet = __commonJS({
       const clone = (0, types_1.cloneNode)(fun.node);
       const funExpression = (0, types_1.isBlockStatement)(clone.body) ? (0, types_1.functionExpression)(null, clone.params, clone.body) : clone;
       const [funString, sourceMapString] = buildWorkletString(transformed.ast, variables, functionName, transformed.map);
-      if (!funString)
-        throw new Error("'funString' is not defined\n");
+      (0, assert_1.strict)(funString, "'funString' is undefined");
       const workletHash = hash(funString);
       let location = state.file.opts.filename;
       if (state.opts.relativeSourceLocation) {
@@ -322,8 +320,8 @@ var require_makeWorklet = __commonJS({
       pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
-      if ((0, types_1.isFunctionDeclaration)(funExpression) || (0, types_1.isObjectMethod)(funExpression))
-        throw new Error("'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n");
+      (0, assert_1.strict)(!(0, types_1.isFunctionDeclaration)(funExpression), "'funExpression' is a 'FunctionDeclaration'");
+      (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'BbjectMethod'");
       const statements = [
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
@@ -359,8 +357,9 @@ var require_processWorkletObjectMethod = __commonJS({
     var types_1 = require("@babel/types");
     var makeWorklet_1 = require_makeWorklet();
     function processWorkletObjectMethod(path, state) {
-      if (!(0, types_1.isFunctionParent)(path))
+      if (!(0, types_1.isFunctionParent)(path)) {
         return;
+      }
       const newFun = (0, makeWorklet_1.makeWorklet)(path, state);
       const replacement = (0, types_1.objectProperty)((0, types_1.identifier)((0, types_1.isIdentifier)(path.node.key) ? path.node.key.name : ""), (0, types_1.callExpression)(newFun, []));
       path.replaceWith(replacement);
@@ -422,10 +421,11 @@ var require_processWorklets = __commonJS({
     function processWorklets(path, state) {
       const callee = (0, types_1.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
       let name = "";
-      if ("name" in callee)
+      if ("name" in callee) {
         name = callee.name;
-      else if ("property" in callee && "name" in callee.property)
+      } else if ("property" in callee && "name" in callee.property) {
         name = callee.property.name;
+      }
       if (objectHooks.has(name) && (0, types_1.isObjectExpression)(path.get("arguments.0").node)) {
         const properties = path.get("arguments.0.properties");
         for (const property of properties) {
@@ -570,8 +570,9 @@ var require_processInlineStylesWarning = __commonJS({
     function processStyleObjectForInlineStylesWarning(path) {
       const properties = path.get("properties");
       for (const property of properties) {
-        if (!(0, types_1.isObjectProperty)(property.node))
+        if (!(0, types_1.isObjectProperty)(property.node)) {
           continue;
+        }
         const value = property.get("value");
         if ((0, types_1.isObjectProperty)(property)) {
           if ((0, types_1.isIdentifier)(property.node.key) && property.node.key.name === "transform") {
@@ -583,14 +584,18 @@ var require_processInlineStylesWarning = __commonJS({
       }
     }
     function processInlineStylesWarning(path, state) {
-      if ((0, utils_1.isRelease)())
+      if ((0, utils_1.isRelease)()) {
         return;
-      if (state.opts.disableInlineStylesWarning)
+      }
+      if (state.opts.disableInlineStylesWarning) {
         return;
-      if (path.node.name.name !== "style")
+      }
+      if (path.node.name.name !== "style") {
         return;
-      if (!(0, types_1.isJSXExpressionContainer)(path.node.value))
+      }
+      if (!(0, types_1.isJSXExpressionContainer)(path.node.value)) {
         return;
+      }
       const expression = path.get("value").get("expression");
       if ((0, types_1.isArrayExpression)(expression.node)) {
         const elements = expression.get("elements");

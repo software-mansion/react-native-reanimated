@@ -48,6 +48,7 @@ import * as convertSourceMap from 'convert-source-map';
 import { ReanimatedPluginPass } from './types';
 import { isRelease } from './utils';
 import { globals } from './commonObjects';
+import { strict as assert } from 'assert';
 
 function hash(str: string) {
   let i = str.length;
@@ -56,10 +57,13 @@ function hash(str: string) {
 
   while (i--) {
     const char = str.charCodeAt(i);
+    // eslint-disable-next-line no-bitwise
     hash1 = (hash1 * 33) ^ char;
+    // eslint-disable-next-line no-bitwise
     hash2 = (hash2 * 33) ^ char;
   }
 
+  // eslint-disable-next-line no-bitwise
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
@@ -112,8 +116,9 @@ function buildWorkletString(
         return;
       }
 
-      if (!isExpression(path.node.body))
+      if (!isExpression(path.node.body)) {
         path.node.body.body.unshift(closureDeclaration);
+      }
     }
 
     function prependRecursiveDeclaration(
@@ -170,16 +175,20 @@ function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  if (!draftExpression) throw new Error("'draftExpression' is not defined\n");
+  assert(draftExpression, "'draftExpression' is undefined");
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
     : draftExpression.expression;
 
-  if (!('params' in expression && isBlockStatement(expression.body)))
-    throw new Error(
-      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent\n'"
-    );
+  assert(
+    'params' in expression,
+    "'params' property is undefined in 'expression'"
+  );
+  assert(
+    isBlockStatement(expression.body),
+    "'expression.body' is not a 'BlockStatement'"
+  );
 
   const workletFunction = functionExpression(
     identifier(name),
@@ -189,7 +198,7 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  if (!inputMap) throw new Error("'inputMap' is not defined");
+  assert(inputMap, "'inputMap' is undefined");
 
   const includeSourceMap = shouldGenerateSourceMap();
 
@@ -216,7 +225,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  if (!transformed) throw new Error('transformed is null!\n');
+  assert(transformed, "'transformed' is null");
 
   let sourceMap;
   if (includeSourceMap) {
@@ -278,8 +287,7 @@ export function makeWorklet(
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  if (!state.file.opts.filename)
-    throw new Error("'state.file.opts.filename' is undefined\n");
+  assert(state.file.opts.filename, "'state.file.opts.filename' is undefined");
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
@@ -309,12 +317,14 @@ export function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  if (!transformed || !transformed.ast)
-    throw new Error("'transformed' or 'transformed.ast' is undefined\n");
+  assert(transformed, "'transformed' is undefined");
+  assert(transformed.ast, "'transformed.ast' is undefined");
 
   traverse(transformed.ast, {
     Identifier(path) {
-      if (!path.isReferencedIdentifier()) return;
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
       const name = path.node.name;
       if (
         globals.has(name) ||
@@ -370,12 +380,11 @@ export function makeWorklet(
     functionName,
     transformed.map
   );
-  if (!funString) throw new Error("'funString' is not defined\n");
+  assert(funString, "'funString' is undefined");
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
   if (state.opts.relativeSourceLocation) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const path = require('path');
     location = path.relative(state.cwd, location);
   }
@@ -418,10 +427,14 @@ export function makeWorklet(
     ])
   );
 
-  if (isFunctionDeclaration(funExpression) || isObjectMethod(funExpression))
-    throw new Error(
-      "'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n"
-    );
+  assert(
+    !isFunctionDeclaration(funExpression),
+    "'funExpression' is a 'FunctionDeclaration'"
+  );
+  assert(
+    !isObjectMethod(funExpression),
+    "'funExpression' is an 'BbjectMethod'"
+  );
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
