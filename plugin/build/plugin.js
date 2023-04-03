@@ -464,8 +464,6 @@ var require_processForCalleesWorklets = __commonJS({
         const argumentToWorkletize = argumentsArray[index];
         if (argumentToWorkletize) {
           (0, processIfWorkletFunction_1.processIfWorkletFunction)(argumentToWorkletize, state);
-        } else {
-          throw new Error(`${path}`);
         }
       });
     }
