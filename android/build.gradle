@@ -1033,13 +1033,13 @@ dependencies {
 
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
         if (isPackageBuild()) {
-            implementation "com.facebook.react:react-android:+"
+            implementation "com.facebook.react:react-android:" + REACT_NATIVE_VERSION
         } else {
-            implementation "com.facebook.react:react-android:" // version substituted by RNGP
+            implementation "com.facebook.react:react-android:0.71.5" // version substituted by RNGP
         }
         if (JS_RUNTIME == "hermes") {
             if (isPackageBuild()) {
-                implementation "com.facebook.react:hermes-android:+"
+                implementation "com.facebook.react:hermes-android:" + REACT_NATIVE_VERSION
             } else {
                 implementation "com.facebook.react:hermes-android:" // version substituted by RNGP
             }
