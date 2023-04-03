@@ -400,7 +400,7 @@ var foo = function () {
     }, {
       b: 2,
       c: 3
-    }, {}, bar);
+    }, bar);
   };
   _f._closure = {};
   _f.__initData = _worklet_792186851025_init_data;
