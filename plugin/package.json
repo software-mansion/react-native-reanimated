@@ -5,25 +5,13 @@
     "esbuild": "^0.17.11",
     "eslint": "^8.35.0",
     "prettier": "^2.5.1",
-<<<<<<< HEAD
-    "typescript": "^4.1.3",
-    "esbuild": "^0.17.11"
-=======
     "tsc-watch": "^6.0.0",
     "typescript": "^4.1.3"
->>>>>>> origin/main
   },
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
     "prepare": "yarn generate",
-<<<<<<< HEAD
-    "generate": "yarn tsc && yarn bundle",
-    "bundle": "yarn esbuild src/plugin.js --log-level=silent --bundle --external:@babel --external:convert-source-map --external:fs --platform=node --sourcemap=linked --outfile=index.js && rm src/*.js src/*.js.map",
-    "format": "yarn prettier --write --list-different **/*.ts",
-    "lint": "yarn eslint --max-warnings=0 --ext .ts . && yarn prettier --check **/*.ts",
-    "type:check": "yarn tsc --noEmit"
-=======
     "generate": "yarn tsc && yarn bundle && yarn clean",
     "clean": "rm -f lib/*",
     "bundle": "esbuild ./lib/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --external:'../../package.json' --log-level=warning --platform=node --sourcemap=linked --outfile=build/plugin.js",
@@ -31,6 +19,5 @@
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 --ext .ts .",
     "type:check": "tsc --noEmit"
->>>>>>> origin/main
   }
 }
