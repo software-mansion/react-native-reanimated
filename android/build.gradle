@@ -72,9 +72,12 @@ def resolveClientSideBuild() {
     return true
 }
 
+def isReanimatedExampleApp() {
+    return safeAppExtGet("isReanimatedExampleApp", false)
+}
+
 def isDeveloperMode() {
-    // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false) || System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
+    return isReanimatedExampleApp() || System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
 }
 
 def isNewArchitectureEnabled() {
@@ -431,6 +434,10 @@ apply plugin: "de.undercouch.download"
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
+    def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+    if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
+        namespace "com.swmansion.reanimated"
+    }
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
         buildFeatures {
             prefab true
@@ -453,6 +460,7 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
+                        "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
                         "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}"

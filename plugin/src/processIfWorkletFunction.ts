@@ -1,4 +1,4 @@
-import { NodePath } from '@babel/core';
+import { NodePath, Node } from '@babel/core';
 import {
   FunctionDeclaration,
   FunctionExpression,
@@ -12,27 +12,28 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
 // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
 // with a workletized version of itself.
 
-function processIfWorkletFunction(
-  path: NodePath<unknown> | Array<NodePath<unknown>>,
+export function processIfWorkletFunction(
+  path: NodePath<Node>,
   state: ReanimatedPluginPass
 ): void {
   if (
     isFunctionDeclaration(path) ||
     isFunctionExpression(path) ||
     isArrowFunctionExpression(path)
-  )
+  ) {
     processWorkletFunction(
       path as NodePath<
         FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
       >,
       state
     );
+  }
 }
 
 function processWorkletFunction(
@@ -60,5 +61,3 @@ function processWorkletFunction(
       : replacement
   );
 }
-
-export { processIfWorkletFunction };

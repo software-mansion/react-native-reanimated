@@ -9,12 +9,32 @@ import {
   ObjectExpression,
   isObjectProperty,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
-import { objectHooks, functionArgsToWorkletize } from './commonObjects';
+import { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 
-function processForCalleesWorklets(
+const functionArgsToWorkletize = new Map([
+  ['useFrameCallback', [0]],
+  ['useAnimatedStyle', [0]],
+  ['useAnimatedProps', [0]],
+  ['createAnimatedPropAdapter', [0]],
+  ['useDerivedValue', [0]],
+  ['useAnimatedScrollHandler', [0]],
+  ['useAnimatedReaction', [0, 1]],
+  ['useWorkletCallback', [0]],
+  // animations' callbacks
+  ['withTiming', [2]],
+  ['withSpring', [2]],
+  ['withDecay', [1]],
+  ['withRepeat', [3]],
+]);
+
+const objectHooks = new Set([
+  'useAnimatedGestureHandler',
+  'useAnimatedScrollHandler',
+]);
+
+export function processForCalleesWorklets(
   path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
 ): void {
@@ -22,22 +42,30 @@ function processForCalleesWorklets(
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
     : path.node.callee;
 
+  // We are looking for objects we know we should workletize
+  // hence if object is not named, we return.
   let name;
-  if ('name' in callee) name = callee.name;
-  else if ('property' in callee && 'name' in callee.property)
+  if ('name' in callee) {
+    name = callee.name;
+  } else if ('property' in callee && 'name' in callee.property) {
     name = callee.property.name;
-  else return;
+  } else {
+    return;
+  }
 
   if (objectHooks.has(name)) {
     const workletToProcess = path.get('arguments.0') as NodePath<
       CallExpression['arguments'][number]
     >;
-    if (isObjectExpression(workletToProcess))
+    if (isObjectExpression(workletToProcess)) {
       processObjectHookArgument(
         workletToProcess as NodePath<ObjectExpression>,
         state
       );
-  } else processArguments(name, path, state);
+    }
+  } else {
+    processArguments(name, path, state);
+  }
 }
 
 function processObjectHookArgument(
@@ -77,5 +105,3 @@ function processArguments(
     });
   }
 }
-
-export { processForCalleesWorklets };
