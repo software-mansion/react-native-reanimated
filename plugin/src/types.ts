@@ -1,7 +1,7 @@
-import * as BabelCore from '@babel/core';
+import { BabelFile } from '@babel/core';
 
-interface ReanimatedPluginPass {
-  file: BabelCore.BabelFile;
+export interface ReanimatedPluginPass {
+  file: BabelFile;
   key: string;
   opts: {
     relativeSourceLocation?: boolean;
@@ -13,5 +13,3 @@ interface ReanimatedPluginPass {
   set(key: unknown, value: unknown): void;
   [key: string]: unknown;
 }
-
-export { ReanimatedPluginPass };

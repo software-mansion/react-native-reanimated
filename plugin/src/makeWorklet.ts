@@ -49,10 +49,41 @@ import {
 } from '@babel/types';
 import * as fs from 'fs';
 import * as convertSourceMap from 'convert-source-map';
-import { ReanimatedPluginPass } from './commonInterfaces';
-import { shouldGenerateSourceMap, hash, isRelease } from './commonFunctions';
+import { ReanimatedPluginPass } from './types';
+import { isRelease } from './utils';
 import { globals } from './commonObjects';
-import { assertIsDefined } from './asserts';
+import { strict as assert } from 'assert';
+
+function hash(str: string) {
+  let i = str.length;
+  let hash1 = 5381;
+  let hash2 = 52711;
+
+  while (i--) {
+    const char = str.charCodeAt(i);
+    // eslint-disable-next-line no-bitwise
+    hash1 = (hash1 * 33) ^ char;
+    // eslint-disable-next-line no-bitwise
+    hash2 = (hash2 * 33) ^ char;
+  }
+
+  // eslint-disable-next-line no-bitwise
+  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+}
+
+function shouldGenerateSourceMap() {
+  if (isRelease()) {
+    return false;
+  }
+
+  if (process.env.REANIMATED_PLUGIN_TESTS === 'jest') {
+    // We want to detect this, so we can disable source maps (because they break
+    // snapshot tests with jest).
+    return false;
+  }
+
+  return true;
+}
 
 function buildWorkletString(
   fun: BabelTypesFile,
@@ -89,8 +120,9 @@ function buildWorkletString(
         return;
       }
 
-      if (!isExpression(path.node.body))
+      if (!isExpression(path.node.body)) {
         path.node.body.body.unshift(closureDeclaration);
+      }
     }
 
     function prependRecursiveDeclaration(
@@ -147,16 +179,20 @@ function buildWorkletString(
     fun.program.body.find((obj) => isExpressionStatement(obj)) ||
     undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
-  assertIsDefined(draftExpression);
+  assert(draftExpression, "'draftExpression' is undefined");
 
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
     : draftExpression.expression;
 
-  if (!('params' in expression && isBlockStatement(expression.body)))
-    throw new Error(
-      "'expression' doesn't have property 'params' or 'expression.body' is not a BlockStatmenent!\n'"
-    );
+  assert(
+    'params' in expression,
+    "'params' property is undefined in 'expression'"
+  );
+  assert(
+    isBlockStatement(expression.body),
+    "'expression.body' is not a 'blockStatement'"
+  );
 
   const workletFunction = functionExpression(
     identifier(name),
@@ -166,7 +202,7 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  assertIsDefined(inputMap);
+  assert(inputMap, "'inputMap' is undefined");
 
   const includeSourceMap = shouldGenerateSourceMap();
 
@@ -193,7 +229,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  assertIsDefined(transformed);
+  assert(transformed, "'transformed' is undefined");
 
   let sourceMap;
   if (includeSourceMap) {
@@ -215,7 +251,7 @@ function makeWorkletName(
     | ObjectMethod
     | ArrowFunctionExpression
   >
-): string {
+) {
   if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
@@ -228,7 +264,7 @@ function makeWorkletName(
   return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
 }
 
-function makeWorklet(
+export function makeWorklet(
   fun: NodePath<
     | FunctionDeclaration
     | FunctionExpression
@@ -255,7 +291,7 @@ function makeWorklet(
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  assertIsDefined(state.file.opts.filename);
+  assert(state.file.opts.filename, "'state.file.opts.filename' is undefined");
 
   const codeObject = generate(fun.node, {
     sourceMaps: true,
@@ -285,12 +321,14 @@ function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  assertIsDefined(transformed);
-  assertIsDefined(transformed.ast);
+  assert(transformed, "'transformed' is undefined");
+  assert(transformed.ast, "'transformed.ast' is undefined");
 
   traverse(transformed.ast, {
     Identifier(path) {
-      if (!path.isReferencedIdentifier()) return;
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
       const name = path.node.name;
       if (
         globals.has(name) ||
@@ -346,12 +384,11 @@ function makeWorklet(
     functionName,
     transformed.map
   );
-  assertIsDefined(funString);
+  assert(funString, "'funString' is undefined");
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
   if (state.opts.relativeSourceLocation) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const path = require('path');
     location = path.relative(state.cwd, location);
   }
@@ -394,10 +431,14 @@ function makeWorklet(
     ])
   );
 
-  if (isFunctionDeclaration(funExpression) || isObjectMethod(funExpression))
-    throw new Error(
-      "'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n"
-    );
+  assert(
+    !isFunctionDeclaration(funExpression),
+    "'funExpression' is a 'functionDeclaration'"
+  );
+  assert(
+    !isObjectMethod(funExpression),
+    "'funExpression' is an 'objectMethod'"
+  );
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
@@ -474,5 +515,3 @@ function makeWorklet(
 
   return newFun;
 }
-
-export { makeWorklet };
