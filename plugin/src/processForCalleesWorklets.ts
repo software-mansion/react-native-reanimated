@@ -93,6 +93,8 @@ function processArguments(
   const argumentsArray = path.get('arguments');
   indices.forEach((index) => {
     const argumentToWorkletize = argumentsArray[index];
-    processIfWorkletFunction(argumentToWorkletize, state);
+    if (argumentToWorkletize) {
+      processIfWorkletFunction(argumentToWorkletize, state);
+    }
   });
 }

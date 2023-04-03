@@ -462,7 +462,9 @@ var require_processForCalleesWorklets = __commonJS({
       const argumentsArray = path.get("arguments");
       indices.forEach((index) => {
         const argumentToWorkletize = argumentsArray[index];
-        (0, processIfWorkletFunction_1.processIfWorkletFunction)(argumentToWorkletize, state);
+        if (argumentToWorkletize) {
+          (0, processIfWorkletFunction_1.processIfWorkletFunction)(argumentToWorkletize, state);
+        }
       });
     }
   }
