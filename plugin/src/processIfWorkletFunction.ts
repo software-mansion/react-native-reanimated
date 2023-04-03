@@ -18,7 +18,7 @@ import { makeWorklet } from './makeWorklet';
 // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
 // with a workletized version of itself.
 
-function processIfWorkletFunction(
+export function processIfWorkletFunction(
   path: NodePath<unknown> | Array<NodePath<unknown>>,
   state: ReanimatedPluginPass
 ): void {
