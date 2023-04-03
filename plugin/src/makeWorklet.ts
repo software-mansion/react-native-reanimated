@@ -330,12 +330,11 @@ export function makeWorklet(
         return;
       }
       const name = path.node.name;
+      // if the function is named and was added to globals we don't want to add it to closure
+      // hence we check if identifier has that name
       if (
         globals.has(name) ||
-        ('id' in fun.node &&
-          fun.node.id &&
-          'name' in fun.node.id &&
-          fun.node.id.name === name)
+        ('id' in fun.node && fun.node.id && fun.node.id.name === name)
       ) {
         return;
       }
