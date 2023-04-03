@@ -2,16 +2,13 @@ import { NodePath } from '@babel/core';
 import {
   CallExpression,
   isSequenceExpression,
-  isObjectExpression,
-  ObjectMethod,
-  ObjectProperty,
-  isObjectMethod,
   ObjectExpression,
   isObjectProperty,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
+import { strict as assert } from 'assert';
 
 const functionArgsToWorkletize = new Map([
   ['useFrameCallback', [0]],
@@ -44,46 +41,43 @@ export function processForCalleesWorklets(
 
   // We are looking for objects we know we should workletize
   // hence if object is not named, we return.
-  let name;
-  if ('name' in callee) {
-    name = callee.name;
-  } else if ('property' in callee && 'name' in callee.property) {
-    name = callee.property.name;
-  } else {
+  const name =
+    'name' in callee
+      ? callee.name
+      : 'property' in callee && 'name' in callee.property
+      ? callee.property.name
+      : undefined;
+  if (name === undefined) {
     return;
   }
 
   if (objectHooks.has(name)) {
-    const workletToProcess = path.get('arguments.0') as NodePath<
-      CallExpression['arguments'][number]
-    >;
-    if (isObjectExpression(workletToProcess)) {
-      processObjectHookArgument(
-        workletToProcess as NodePath<ObjectExpression>,
-        state
-      );
+    const workletToProcess = path.get('arguments.0');
+    assert(!Array.isArray(workletToProcess), "'workletToProcess' is an array'");
+    if (workletToProcess.isObjectExpression()) {
+      processObjectHook(workletToProcess, state);
     }
   } else {
     processArguments(name, path, state);
   }
 }
 
-function processObjectHookArgument(
+function processObjectHook(
   path: NodePath<ObjectExpression>,
   state: ReanimatedPluginPass
-): void {
-  const properties = path.get('properties') as Array<
-    NodePath<ObjectExpression['properties'][number]>
-  >;
-  for (const property of properties) {
-    if (isObjectMethod(property)) {
-      processWorkletObjectMethod(property as NodePath<ObjectMethod>, state);
-    } else if (isObjectProperty(property)) {
-      const value = property.get('value') as NodePath<ObjectProperty['value']>;
+) {
+  const properties = path.get('properties');
+  for (const p of properties) {
+    const property = p;
+    if (property.isObjectMethod()) {
+      processWorkletObjectMethod(property, state);
+    } else if (isObjectProperty(property.node)) {
+      const value = property.get('value');
+      assert(!Array.isArray(value), "'value' is an array'");
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(
-        `[Reanimated] ${property.type} as to-be workletized arguments is not supported for object hooks!\n`
+        `'${property.type}' as to-be workletized arguments is not supported for object hooks`
       );
     }
   }
@@ -96,9 +90,7 @@ function processArguments(
 ): void {
   const indexes = functionArgsToWorkletize.get(name);
   if (Array.isArray(indexes)) {
-    const argumentsArray = path.get('arguments') as Array<
-      NodePath<CallExpression['arguments'][number]>
-    >;
+    const argumentsArray = path.get('arguments');
     indexes.forEach((index) => {
       const argumentToWorkletize = argumentsArray[index];
       processIfWorkletFunction(argumentToWorkletize, state);
