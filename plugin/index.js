@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -785,3 +786,6 @@ module.exports = function() {
   };
 };
 //# sourceMappingURL=index.js.map
+=======
+module.exports = require('./build/plugin.js');
+>>>>>>> origin/main

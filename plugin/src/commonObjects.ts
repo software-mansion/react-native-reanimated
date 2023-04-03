@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -23,6 +24,9 @@ const objectHooks = new Set([
 ]);
 
 const globals = new Set([
+=======
+export const globals = new Set([
+>>>>>>> origin/main
   'this',
   'console',
   'performance',
@@ -50,6 +54,10 @@ const globals = new Set([
   'UIManager',
   'requestAnimationFrame',
   'setImmediate',
+<<<<<<< HEAD
+=======
+  'queueMicrotask',
+>>>>>>> origin/main
   '_WORKLET',
   'arguments',
   'Boolean',
@@ -81,6 +89,7 @@ const globals = new Set([
   '_notifyAboutProgress',
   '_notifyAboutEnd',
 ]);
+<<<<<<< HEAD
 
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
@@ -118,3 +127,5 @@ export {
   gestureHandlerGestureObjects,
   gestureHandlerBuilderMethods,
 };
+=======
+>>>>>>> origin/main

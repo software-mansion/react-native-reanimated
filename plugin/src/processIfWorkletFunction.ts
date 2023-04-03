@@ -12,7 +12,7 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
 // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
@@ -60,5 +60,3 @@ function processWorkletFunction(
       : replacement
   );
 }
-
-export { processIfWorkletFunction };

@@ -125,7 +125,7 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
       let toAdapt: any;
       if (Array.isArray(value)) {
         toAdapt = value.map((element) => cloneRecursive(element));
-      } else {
+      } else if (value !== undefined) {
         toAdapt = {};
         for (const [key, element] of Object.entries(value)) {
           toAdapt[key] = cloneRecursive(element);
