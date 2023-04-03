@@ -43,108 +43,6 @@ import { globals } from './commonObjects';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
 
-function hash(str: string) {
-  let i = str.length;
-  let hash1 = 5381;
-  let hash2 = 52711;
-
-  while (i--) {
-    const char = str.charCodeAt(i);
-    // eslint-disable-next-line no-bitwise
-    hash1 = (hash1 * 33) ^ char;
-    // eslint-disable-next-line no-bitwise
-    hash2 = (hash2 * 33) ^ char;
-  }
-
-  // eslint-disable-next-line no-bitwise
-  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
-}
-
-function makeWorkletName(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
-) {
-  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
-    return fun.node.key.name;
-  }
-  if (isFunctionDeclaration(fun.node) && fun.node.id) {
-    return fun.node.id.name;
-  }
-  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
-  }
-  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
-}
-
-function makeArrayFromCapturedBindings(
-  ast: BabelFile,
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
-) {
-  const closure = new Map<string, Identifier>();
-
-  // this traversal looks for variables to capture
-  traverse(ast, {
-    Identifier(path) {
-      // we only capture variables that were declared outside of the scope
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const name = path.node.name;
-      // if the function is named and was added to globals we don't want to add it to closure
-      // hence we check if identifier has that name
-      if (globals.has(name)) {
-        return;
-      }
-      if (
-        'id' in fun.node &&
-        fun.node.id &&
-        fun.node.id.name === name // we don't want to capture function's own name
-      ) {
-        return;
-      }
-
-      const parentNode = path.parent;
-
-      if (
-        isMemberExpression(parentNode) &&
-        parentNode.property === path.node &&
-        !parentNode.computed
-      ) {
-        return;
-      }
-
-      if (
-        isObjectProperty(parentNode) &&
-        isObjectExpression(path.parentPath.parent) &&
-        path.node !== parentNode.value
-      ) {
-        return;
-      }
-
-      let currentScope = path.scope;
-
-      while (currentScope != null) {
-        if (currentScope.bindings[name] != null) {
-          return;
-        }
-        currentScope = currentScope.parent;
-      }
-      closure.set(name, path.node);
-    },
-  });
-
-  return Array.from(closure.values());
-}
-
 export function makeWorklet(
   fun: NodePath<
     | FunctionDeclaration
@@ -344,4 +242,106 @@ export function makeWorklet(
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
   return newFun;
+}
+
+function hash(str: string) {
+  let i = str.length;
+  let hash1 = 5381;
+  let hash2 = 52711;
+
+  while (i--) {
+    const char = str.charCodeAt(i);
+    // eslint-disable-next-line no-bitwise
+    hash1 = (hash1 * 33) ^ char;
+    // eslint-disable-next-line no-bitwise
+    hash2 = (hash2 * 33) ^ char;
+  }
+
+  // eslint-disable-next-line no-bitwise
+  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+}
+
+function makeWorkletName(
+  fun: NodePath<
+    | FunctionDeclaration
+    | FunctionExpression
+    | ObjectMethod
+    | ArrowFunctionExpression
+  >
+) {
+  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
+    return fun.node.key.name;
+  }
+  if (isFunctionDeclaration(fun.node) && fun.node.id) {
+    return fun.node.id.name;
+  }
+  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
+    return fun.node.id.name;
+  }
+  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+}
+
+function makeArrayFromCapturedBindings(
+  ast: BabelFile,
+  fun: NodePath<
+    | FunctionDeclaration
+    | FunctionExpression
+    | ObjectMethod
+    | ArrowFunctionExpression
+  >
+) {
+  const closure = new Map<string, Identifier>();
+
+  // this traversal looks for variables to capture
+  traverse(ast, {
+    Identifier(path) {
+      // we only capture variables that were declared outside of the scope
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
+      const name = path.node.name;
+      // if the function is named and was added to globals we don't want to add it to closure
+      // hence we check if identifier has that name
+      if (globals.has(name)) {
+        return;
+      }
+      if (
+        'id' in fun.node &&
+        fun.node.id &&
+        fun.node.id.name === name // we don't want to capture function's own name
+      ) {
+        return;
+      }
+
+      const parentNode = path.parent;
+
+      if (
+        isMemberExpression(parentNode) &&
+        parentNode.property === path.node &&
+        !parentNode.computed
+      ) {
+        return;
+      }
+
+      if (
+        isObjectProperty(parentNode) &&
+        isObjectExpression(path.parentPath.parent) &&
+        path.node !== parentNode.value
+      ) {
+        return;
+      }
+
+      let currentScope = path.scope;
+
+      while (currentScope != null) {
+        if (currentScope.bindings[name] != null) {
+          return;
+        }
+        currentScope = currentScope.parent;
+      }
+      closure.set(name, path.node);
+    },
+  });
+
+  return Array.from(closure.values());
 }

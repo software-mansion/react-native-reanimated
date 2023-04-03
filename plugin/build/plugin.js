@@ -230,62 +230,6 @@ var require_makeWorklet = __commonJS({
     var commonObjects_12 = require_commonObjects();
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
-    function hash(str) {
-      let i = str.length;
-      let hash1 = 5381;
-      let hash2 = 52711;
-      while (i--) {
-        const char = str.charCodeAt(i);
-        hash1 = hash1 * 33 ^ char;
-        hash2 = hash2 * 33 ^ char;
-      }
-      return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
-    }
-    function makeWorkletName(fun) {
-      if ((0, types_1.isObjectMethod)(fun.node) && "name" in fun.node.key) {
-        return fun.node.key.name;
-      }
-      if ((0, types_1.isFunctionDeclaration)(fun.node) && fun.node.id) {
-        return fun.node.id.name;
-      }
-      if ((0, types_1.isFunctionExpression)(fun.node) && (0, types_1.isIdentifier)(fun.node.id)) {
-        return fun.node.id.name;
-      }
-      return "anonymous";
-    }
-    function makeArrayFromCapturedBindings(ast, fun) {
-      const closure = /* @__PURE__ */ new Map();
-      (0, core_1.traverse)(ast, {
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const name = path.node.name;
-          if (commonObjects_12.globals.has(name)) {
-            return;
-          }
-          if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
-            return;
-          }
-          const parentNode = path.parent;
-          if ((0, types_1.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
-            return;
-          }
-          if ((0, types_1.isObjectProperty)(parentNode) && (0, types_1.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
-            return;
-          }
-          let currentScope = path.scope;
-          while (currentScope != null) {
-            if (currentScope.bindings[name] != null) {
-              return;
-            }
-            currentScope = currentScope.parent;
-          }
-          closure.set(name, path.node);
-        }
-      });
-      return Array.from(closure.values());
-    }
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
       fun.traverse({
@@ -372,6 +316,62 @@ var require_makeWorklet = __commonJS({
       return newFun;
     }
     exports2.makeWorklet = makeWorklet;
+    function hash(str) {
+      let i = str.length;
+      let hash1 = 5381;
+      let hash2 = 52711;
+      while (i--) {
+        const char = str.charCodeAt(i);
+        hash1 = hash1 * 33 ^ char;
+        hash2 = hash2 * 33 ^ char;
+      }
+      return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+    }
+    function makeWorkletName(fun) {
+      if ((0, types_1.isObjectMethod)(fun.node) && "name" in fun.node.key) {
+        return fun.node.key.name;
+      }
+      if ((0, types_1.isFunctionDeclaration)(fun.node) && fun.node.id) {
+        return fun.node.id.name;
+      }
+      if ((0, types_1.isFunctionExpression)(fun.node) && (0, types_1.isIdentifier)(fun.node.id)) {
+        return fun.node.id.name;
+      }
+      return "anonymous";
+    }
+    function makeArrayFromCapturedBindings(ast, fun) {
+      const closure = /* @__PURE__ */ new Map();
+      (0, core_1.traverse)(ast, {
+        Identifier(path) {
+          if (!path.isReferencedIdentifier()) {
+            return;
+          }
+          const name = path.node.name;
+          if (commonObjects_12.globals.has(name)) {
+            return;
+          }
+          if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
+            return;
+          }
+          const parentNode = path.parent;
+          if ((0, types_1.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
+            return;
+          }
+          if ((0, types_1.isObjectProperty)(parentNode) && (0, types_1.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
+            return;
+          }
+          let currentScope = path.scope;
+          while (currentScope != null) {
+            if (currentScope.bindings[name] != null) {
+              return;
+            }
+            currentScope = currentScope.parent;
+          }
+          closure.set(name, path.node);
+        }
+      });
+      return Array.from(closure.values());
+    }
   }
 });
 
