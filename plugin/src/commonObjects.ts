@@ -46,7 +46,7 @@ export const globals = new Set([
   '_removeShadowNodeFromRegistry',
   'RegExp',
   'Error',
-  'ErrorUtils',
+  '__ErrorUtils',
   'global',
   '_measure',
   '_scrollTo',

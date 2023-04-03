@@ -14,11 +14,12 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "react-native-reanimated": ["./src"],
+      "react-native-reanimated": ["./src"]
     },
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "include": ["src"],
+  // for some reason this is needed as errors.ts will get compiled first
+  "include": ["src/reanimated2/globals.d.ts", "src"],
   "exclude": [
     "app",
     "docs",

@@ -58,7 +58,7 @@ var require_commonObjects = __commonJS({
       "_removeShadowNodeFromRegistry",
       "RegExp",
       "Error",
-      "ErrorUtils",
+      "__ErrorUtils",
       "global",
       "_measure",
       "_scrollTo",
