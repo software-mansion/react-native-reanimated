@@ -183,11 +183,11 @@ function buildWorkletString(
 
   assert(
     'params' in expression,
-    "'params' property is missing in 'expression'"
+    "'params' property is undefined in 'expression'"
   );
   assert(
     isBlockStatement(expression.body),
-    "'expression.body' is not 'blockStatement'"
+    "'expression.body' is not a 'blockStatement'"
   );
 
   const workletFunction = functionExpression(
@@ -198,7 +198,7 @@ function buildWorkletString(
 
   const code = generate(workletFunction).code;
 
-  assert(inputMap, 'inputMap is undefined');
+  assert(inputMap, "'inputMap' is undefined");
 
   const includeSourceMap = shouldGenerateSourceMap();
 
@@ -225,7 +225,7 @@ function buildWorkletString(
     comments: false,
   });
 
-  assert(transformed, 'transformed is not defined');
+  assert(transformed, "'transformed' is undefined");
 
   let sourceMap;
   if (includeSourceMap) {
@@ -380,7 +380,7 @@ export function makeWorklet(
     functionName,
     transformed.map
   );
-  assert(funString, "'funString is undefined");
+  assert(funString, "'funString' is undefined");
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
@@ -429,9 +429,12 @@ export function makeWorklet(
 
   assert(
     !isFunctionDeclaration(funExpression),
-    "'funExpression' is 'functionDeclaration'"
+    "'funExpression' is a 'functionDeclaration'"
   );
-  assert(!isObjectMethod(funExpression), "'funExpression' is 'objectMethod'");
+  assert(
+    !isObjectMethod(funExpression),
+    "'funExpression' is an 'objectMethod'"
+  );
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
