@@ -192,11 +192,7 @@ var require_makeWorklet = __commonJS({
       (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
       const expression = (0, types_1.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
-<<<<<<< HEAD
-      (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "'expression.body' is not a 'blockStatement'");
-=======
       (0, assert_1.strict)((0, types_1.isBlockStatement)(expression.body), "'expression.body' is not a 'BlockStatement'");
->>>>>>> origin/main
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
@@ -217,11 +213,7 @@ var require_makeWorklet = __commonJS({
         configFile: false,
         comments: false
       });
-<<<<<<< HEAD
-      (0, assert_1.strict)(transformed, "'transformed' is undefined");
-=======
       (0, assert_1.strict)(transformed, "'transformed' is null");
->>>>>>> origin/main
       let sourceMap;
       if (includeSourceMap) {
         sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
@@ -328,17 +320,8 @@ var require_makeWorklet = __commonJS({
       pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
-<<<<<<< HEAD
-      (0, assert_1.strict)(!(0, types_1.isFunctionDeclaration)(funExpression), "'funExpression' is a 'functionDeclaration'");
-      (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'objectMethod'");
-=======
       (0, assert_1.strict)(!(0, types_1.isFunctionDeclaration)(funExpression), "'funExpression' is a 'FunctionDeclaration'");
-<<<<<<< HEAD
-      (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'BbjectMethod'");
->>>>>>> origin/main
-=======
       (0, assert_1.strict)(!(0, types_1.isObjectMethod)(funExpression), "'funExpression' is an 'ObjectMethod'");
->>>>>>> origin/main
       const statements = [
         (0, types_1.variableDeclaration)("const", [
           (0, types_1.variableDeclarator)(privateFunctionId, funExpression)
