@@ -19,7 +19,7 @@ import { makeWorklet } from './makeWorklet';
 // with a workletized version of itself.
 
 export function processIfWorkletFunction(
-  path: NodePath<Node> | Array<NodePath<Node>>,
+  path: NodePath<Node>,
   state: ReanimatedPluginPass
 ): void {
   if (
