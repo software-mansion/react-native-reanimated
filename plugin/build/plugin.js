@@ -530,26 +530,26 @@ var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
       "onTouchesUp",
       "onTouchesCancelled"
     ]);
-    function processIfGestureHandlerEventCallbackFunctionNode(fun, state) {
-      if ((0, types_1.isCallExpression)(fun.parent) && (0, types_1.isExpression)(fun.parent.callee) && isGestureObjectEventCallbackMethod(fun.parent.callee)) {
-        (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
+    function processIfGestureHandlerEventCallbackFunctionNode(path, state) {
+      if ((0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee)) {
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(path, state);
       }
     }
     exports2.processIfGestureHandlerEventCallbackFunctionNode = processIfGestureHandlerEventCallbackFunctionNode;
-    function isGestureObjectEventCallbackMethod(node) {
-      return (0, types_1.isMemberExpression)(node) && (0, types_1.isIdentifier)(node.property) && gestureHandlerBuilderMethods.has(node.property.name) && containsGestureObject(node.object);
+    function isGestureObjectEventCallbackMethod(exp) {
+      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && gestureHandlerBuilderMethods.has(exp.property.name) && containsGestureObject(exp.object);
     }
-    function containsGestureObject(node) {
-      if (isGestureObject(node)) {
+    function containsGestureObject(exp) {
+      if (isGestureObject(exp)) {
         return true;
       }
-      if ((0, types_1.isCallExpression)(node) && (0, types_1.isMemberExpression)(node.callee) && containsGestureObject(node.callee.object)) {
+      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && containsGestureObject(exp.callee.object)) {
         return true;
       }
       return false;
     }
-    function isGestureObject(node) {
-      return (0, types_1.isCallExpression)(node) && (0, types_1.isMemberExpression)(node.callee) && (0, types_1.isIdentifier)(node.callee.object) && node.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(node.callee.property) && gestureHandlerGestureObjects.has(node.callee.property.name);
+    function isGestureObject(exp) {
+      return (0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.object) && exp.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(exp.callee.property) && gestureHandlerGestureObjects.has(exp.callee.property.name);
     }
   }
 });
