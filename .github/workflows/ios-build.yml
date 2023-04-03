@@ -11,6 +11,9 @@ on:
       - Example/ios/**
       - FabricExample/package.json
       - FabricExample/ios/**
+  merge_group:
+    branches:
+      - main
   push:
     branches:
       - main

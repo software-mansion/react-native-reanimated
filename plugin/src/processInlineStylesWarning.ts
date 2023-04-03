@@ -3,15 +3,10 @@ import {
   MemberExpression,
   callExpression,
   arrowFunctionExpression,
-  isMemberExpression,
   isArrayExpression,
-  isObjectExpression,
-  ArrayExpression,
   ObjectExpression,
-  isObjectProperty,
   JSXAttribute,
   isJSXExpressionContainer,
-  Expression,
   identifier,
   stringLiteral,
   expressionStatement,
@@ -20,14 +15,12 @@ import {
   blockStatement,
   ObjectProperty,
   isIdentifier,
-  CallExpression,
 } from '@babel/types';
-import { isRelease } from './commonFunctions';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { isRelease } from './utils';
+import { ReanimatedPluginPass } from './types';
+import { strict as assert } from 'assert';
 
-function generateInlineStylesWarning(
-  path: NodePath<MemberExpression>
-): CallExpression {
+function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
   // replaces `sharedvalue.value` with `(()=>{console.warn(require('react-native-reanimated').getUseOfValueInStyleWarning());return sharedvalue.value;})()`
   return callExpression(
     arrowFunctionExpression(
@@ -58,29 +51,24 @@ function generateInlineStylesWarning(
 
 function processPropertyValueForInlineStylesWarning(
   path: NodePath<ObjectProperty['value']>
-): void {
+) {
   // if it's something like object.value then raise a warning
-  if (isMemberExpression(path.node) && isIdentifier(path.node.property)) {
+  if (path.isMemberExpression() && isIdentifier(path.node.property)) {
     if (path.node.property.name === 'value') {
-      path.replaceWith(
-        generateInlineStylesWarning(path as NodePath<MemberExpression>)
-      );
+      path.replaceWith(generateInlineStylesWarning(path));
     }
   }
 }
 
 function processTransformPropertyForInlineStylesWarning(
   path: NodePath<ObjectProperty['value']>
-): void {
+) {
   if (isArrayExpression(path.node)) {
-    const elements = path.get('elements') as Array<
-      NodePath<ArrayExpression['elements'][number]>
-    >;
+    const elements = path.get('elements');
+    assert(Array.isArray(elements), "'elements' should be an array");
     for (const element of elements) {
-      if (isObjectExpression(element.node)) {
-        processStyleObjectForInlineStylesWarning(
-          element as NodePath<ObjectExpression>
-        );
+      if (element.isObjectExpression()) {
+        processStyleObjectForInlineStylesWarning(element);
       }
     }
   }
@@ -88,14 +76,11 @@ function processTransformPropertyForInlineStylesWarning(
 
 function processStyleObjectForInlineStylesWarning(
   path: NodePath<ObjectExpression>
-): void {
-  const properties = path.get('properties') as Array<
-    NodePath<ObjectExpression['properties'][number]>
-  >;
+) {
+  const properties = path.get('properties');
   for (const property of properties) {
-    if (!isObjectProperty(property.node)) continue;
-    const value = property.get('value') as NodePath<ObjectProperty['value']>;
-    if (isObjectProperty(property)) {
+    if (property.isObjectProperty()) {
+      const value = property.get('value');
       if (
         isIdentifier(property.node.key) &&
         property.node.key.name === 'transform'
@@ -108,37 +93,37 @@ function processStyleObjectForInlineStylesWarning(
   }
 }
 
-function processInlineStylesWarning(
+export function processInlineStylesWarning(
   path: NodePath<JSXAttribute>,
   state: ReanimatedPluginPass
-): void {
-  if (isRelease()) return;
-  if (state.opts.disableInlineStylesWarning) return;
-  if (path.node.name.name !== 'style') return;
-  if (!isJSXExpressionContainer(path.node.value)) return;
+) {
+  if (isRelease()) {
+    return;
+  }
+  if (state.opts.disableInlineStylesWarning) {
+    return;
+  }
+  if (path.node.name.name !== 'style') {
+    return;
+  }
+  if (!isJSXExpressionContainer(path.node.value)) {
+    return;
+  }
 
-  const expression = path
-    .get('value')
-    .get('expression') as NodePath<Expression>;
+  const expression = path.get('value').get('expression');
   // style={[{...}, {...}]}
-  if (isArrayExpression(expression.node)) {
-    const elements = expression.get('elements') as Array<
-      NodePath<ArrayExpression['elements'][number]>
-    >;
+  assert(!Array.isArray(expression), "'expression' should not be an array");
+  if (expression.isArrayExpression()) {
+    const elements = expression.get('elements');
+    assert(Array.isArray(elements), "'elements' should be an array");
     for (const element of elements) {
-      if (isObjectExpression(element.node)) {
-        processStyleObjectForInlineStylesWarning(
-          element as NodePath<ObjectExpression>
-        );
+      if (element.isObjectExpression()) {
+        processStyleObjectForInlineStylesWarning(element);
       }
     }
   }
   // style={{...}}
-  else if (isObjectExpression(expression.node)) {
-    processStyleObjectForInlineStylesWarning(
-      expression as NodePath<ObjectExpression>
-    );
+  else if (expression.isObjectExpression()) {
+    processStyleObjectForInlineStylesWarning(expression);
   }
 }
-
-export { processInlineStylesWarning };

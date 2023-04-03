@@ -6,34 +6,26 @@ import {
   callExpression,
   isScopable,
   isExportNamedDeclaration,
-  isArrowFunctionExpression,
-  isFunctionDeclaration,
-  isFunctionExpression,
   variableDeclaration,
   variableDeclarator,
-  Node as BabelNode,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
+import { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
 // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
 // with a workletized version of itself.
 
-function processIfWorkletFunction(
-  path: NodePath<BabelNode> | Array<NodePath<BabelNode>>,
+export function processIfWorkletFunction(
+  path: NodePath<Node>,
   state: ReanimatedPluginPass
-): void {
+) {
   if (
-    isFunctionDeclaration(path) ||
-    isFunctionExpression(path) ||
-    isArrowFunctionExpression(path)
-  )
-    processWorkletFunction(
-      path as NodePath<
-        FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-      >,
-      state
-    );
+    path.isFunctionDeclaration() ||
+    path.isFunctionExpression() ||
+    path.isArrowFunctionExpression()
+  ) {
+    processWorkletFunction(path, state);
+  }
 }
 
 function processWorkletFunction(
@@ -41,7 +33,7 @@ function processWorkletFunction(
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
-): void {
+) {
   const newFun = makeWorklet(path, state);
 
   const replacement = callExpression(newFun, []);
@@ -61,5 +53,3 @@ function processWorkletFunction(
       : replacement
   );
 }
-
-export { processIfWorkletFunction };

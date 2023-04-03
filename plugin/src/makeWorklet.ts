@@ -20,6 +20,7 @@ import {
   VariableDeclaration,
   ExpressionStatement,
   ReturnStatement,
+  isProgram,
   isObjectProperty,
   isMemberExpression,
   isObjectExpression,
@@ -33,15 +34,31 @@ import {
   blockStatement,
   isFunctionExpression,
   isIdentifier,
-  isProgram,
   File as BabelFile,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
-import { hash, isRelease, shouldGenerateSourceMap } from './commonFunctions';
+import { ReanimatedPluginPass } from './types';
+import { isRelease } from './utils';
+import { strict as assert } from 'assert';
 import { globals } from './commonObjects';
-import { assertIsDefined } from './asserts';
-import { buildWorkletString } from './buildWorkletString';
 import { relative } from 'path';
+import { buildWorkletString } from './buildWorkletString';
+
+function hash(str: string) {
+  let i = str.length;
+  let hash1 = 5381;
+  let hash2 = 52711;
+
+  while (i--) {
+    const char = str.charCodeAt(i);
+    // eslint-disable-next-line no-bitwise
+    hash1 = (hash1 * 33) ^ char;
+    // eslint-disable-next-line no-bitwise
+    hash2 = (hash2 * 33) ^ char;
+  }
+
+  // eslint-disable-next-line no-bitwise
+  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+}
 
 function makeWorkletName(
   fun: NodePath<
@@ -50,7 +67,7 @@ function makeWorkletName(
     | ObjectMethod
     | ArrowFunctionExpression
   >
-): string {
+) {
   if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
@@ -71,19 +88,26 @@ function makeArrayFromCapturedBindings(
     | ObjectMethod
     | ArrowFunctionExpression
   >
-): Array<Identifier> {
+) {
   const closure = new Map<string, Identifier>();
-  // this traverse looks for variables to capture
-  traverse(ast as BabelFile, {
+
+  // this traversal looks for variables to capture
+  traverse(ast, {
     Identifier(path) {
-      if (!path.isReferencedIdentifier()) return; // we only capture variables that were declared outside of the scope
+      // we only capture variables that were declared outside of the scope
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
       const name = path.node.name;
-      if (globals.has(name)) return;
+      // if the function is named and was added to globals we don't want to add it to closure
+      // hence we check if identifier has that name
+      if (globals.has(name)) {
+        return;
+      }
       if (
         'id' in fun.node &&
         fun.node.id &&
-        'name' in fun.node.id &&
-        fun.node.id.name === name // we don't want to capture function's name in closure
+        fun.node.id.name === name // we don't want to capture function's own name
       ) {
         return;
       }
@@ -110,17 +134,18 @@ function makeArrayFromCapturedBindings(
 
       while (currentScope != null) {
         if (currentScope.bindings[name] != null) {
-          return; // this is for the case that we go too far?
+          return;
         }
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
     },
   });
+
   return Array.from(closure.values());
 }
 
-function makeWorklet(
+export function makeWorklet(
   fun: NodePath<
     | FunctionDeclaration
     | FunctionExpression
@@ -145,8 +170,8 @@ function makeWorklet(
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
+  assert(state.file.opts.filename, "'state.file.opts.filename' is undefined");
 
-  assertIsDefined(state.file.opts.filename);
   const codeObject = generate(fun.node, {
     sourceMaps: true,
     sourceFileName: state.file.opts.filename,
@@ -175,13 +200,13 @@ function makeWorklet(
     inputSourceMap: codeObject.map,
   });
 
-  assertIsDefined(transformed);
-  assertIsDefined(transformed.ast);
+  assert(transformed, "'transformed' is undefined");
+  assert(transformed.ast, "'transformed.ast' is undefined");
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
   const privateFunctionId = identifier('_f');
-  const clone = cloneNode(fun.node); // why clone here?
+  const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
     ? functionExpression(null, clone.params, clone.body)
     : clone;
@@ -192,7 +217,7 @@ function makeWorklet(
     functionName,
     transformed.map
   );
-  assertIsDefined(funString);
+  assert(funString, "'funString' is undefined");
   const workletHash = hash(funString);
 
   let location = state.file.opts.filename;
@@ -210,42 +235,45 @@ function makeWorklet(
     lineOffset -= variables.length + 2;
   }
 
-  // more like path for worklet allocation
-  const pathForStringDefinitions = isProgram(fun.parentPath)
+  const pathForStringDefinitions = fun.parentPath.isProgram()
     ? fun
     : fun.findParent((path) => isProgram(path.parentPath));
-
-  assertIsDefined(pathForStringDefinitions);
-  assertIsDefined(pathForStringDefinitions.parentPath);
+  assert(pathForStringDefinitions, "'pathForStringDefinitions' is null");
+  assert(
+    pathForStringDefinitions.parentPath,
+    "'pathForStringDefinitions.parentPath' is null"
+  );
 
   const initDataId =
     pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
-      // is it automatically added to the scope?
       `worklet_${workletHash}_init_data`
     );
 
   const initDataObjectExpression = objectExpression([
     objectProperty(identifier('code'), stringLiteral(funString)),
     objectProperty(identifier('location'), stringLiteral(location)),
-    objectProperty(
-      identifier('sourceMap'),
-      shouldGenerateSourceMap()
-        ? stringLiteral(sourceMapString as string)
-        : identifier('undefined')
-    ),
   ]);
 
-  // to add it before the actual JS function?
+  if (sourceMapString) {
+    initDataObjectExpression.properties.push(
+      objectProperty(identifier('sourceMap'), stringLiteral(sourceMapString))
+    );
+  }
+
   pathForStringDefinitions.insertBefore(
     variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
     ])
   );
 
-  if (isFunctionDeclaration(funExpression) || isObjectMethod(funExpression))
-    throw new Error(
-      "'funExpression' is either FunctionDeclaration or ObjectMethod and cannot be used in variableDeclaration\n"
-    );
+  assert(
+    !isFunctionDeclaration(funExpression),
+    "'funExpression' is a 'FunctionDeclaration'"
+  );
+  assert(
+    !isObjectMethod(funExpression),
+    "'funExpression' is an 'ObjectMethod'"
+  );
 
   const statements: Array<
     VariableDeclaration | ExpressionStatement | ReturnStatement
@@ -290,7 +318,7 @@ function makeWorklet(
               memberExpression(identifier('global'), identifier('Error')),
               []
             ),
-            numericLiteral(lineOffset), // [kmagiera]
+            numericLiteral(lineOffset),
             numericLiteral(-27), // the placement of opening bracket after Exception in line that defined '_e' variable
           ])
         ),
@@ -317,5 +345,3 @@ function makeWorklet(
 
   return newFun;
 }
-
-export { makeWorklet };

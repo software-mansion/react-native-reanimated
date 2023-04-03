@@ -6,15 +6,15 @@ import {
   isBlockStatement,
   isDirectiveLiteral,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './commonInterfaces';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
+import { ReanimatedPluginPass } from './types';
 
-function processIfWorkletNode(
+export function processIfWorkletNode(
   fun: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
-): void {
+) {
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;
@@ -42,5 +42,3 @@ function processIfWorkletNode(
     },
   });
 }
-
-export { processIfWorkletNode };
