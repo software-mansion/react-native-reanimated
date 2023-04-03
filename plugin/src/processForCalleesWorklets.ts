@@ -37,7 +37,7 @@ const objectHooks = new Set([
 export function processForCalleesWorklets(
   path: NodePath<CallExpression>,
   state: ReanimatedPluginPass
-): void {
+) {
   const callee = isSequenceExpression(path.node.callee)
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
     : path.node.callee;
@@ -83,7 +83,7 @@ function processObjectHookArgument(
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(
-        '[Reanimated] Spread syntax (Babel SpreadElement type) as to-be workletized arguments is not supported for object hooks!\n'
+        `[Reanimated] ${property.type} as to-be workletized arguments is not supported for object hooks!\n`
       );
     }
   }

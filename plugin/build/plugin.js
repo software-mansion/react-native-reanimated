@@ -449,7 +449,8 @@ var require_processForCalleesWorklets = __commonJS({
           const value = property.get("value");
           (0, processIfWorkletFunction_1.processIfWorkletFunction)(value, state);
         } else {
-          throw new Error("[Reanimated] Spread syntax (Babel SpreadElement type) as to-be workletized arguments is not supported for object hooks!\n");
+          throw new Error(`[Reanimated] ${property.type} as to-be workletized arguments is not supported for object hooks!
+`);
         }
       }
     }
