@@ -153,7 +153,9 @@ export function initializeUIRuntime() {
     };
   }
 
-  const capturableConsole = console;
+  // We really have to create a copy of console here. Function runOnJS we use on elements inside
+  // this object makes it not configurable
+  const capturableConsole = { ...console };
   runOnUIImmediately(() => {
     'worklet';
     // setup error handler
