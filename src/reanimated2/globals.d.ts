@@ -1,3 +1,4 @@
+/* eslint-disable no-var, @typescript-eslint/no-explicit-any */
 import type {
   AnimatedStyle,
   StyleProps,
@@ -5,139 +6,91 @@ import type {
   MapperRegistry,
   ShareableRef,
   ShareableSyncDataHolderRef,
+  ShadowNodeWrapper,
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { ShadowNodeWrapper } from './hook/commonTypes';
-import { LayoutAnimationStartFunction } from './layoutReanimation';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+  LayoutAnimationsValues,
+} from './layoutReanimation/animationBuilder';
 
 declare global {
-  const _WORKLET: boolean;
-  const _IS_FABRIC: boolean;
-  const _REANIMATED_VERSION_CPP: string;
-  const _REANIMATED_VERSION_BABEL_PLUGIN: string;
-  const __reanimatedModuleProxy: NativeReanimated;
-  const evalWithSourceMap: (
+  var _WORKLET: boolean;
+  var _IS_FABRIC: boolean;
+  var _REANIMATED_VERSION_CPP: string;
+  var _REANIMATED_VERSION_BABEL_PLUGIN: string;
+  var __reanimatedModuleProxy: NativeReanimated;
+  var evalWithSourceMap: (
     js: string,
     sourceURL: string,
     sourceMap: string
   ) => any;
-  const evalWithSourceUrl: (js: string, sourceURL: string) => any;
-  const _log: (s: string) => void;
-  const _getCurrentTime: () => number;
-  const _notifyAboutProgress: (
+  var evalWithSourceUrl: (js: string, sourceURL: string) => any;
+  var _log: (s: string) => void;
+  var _getCurrentTime: () => number;
+  var _notifyAboutProgress: (
     tag: number,
     value: number,
     isSharedTransition: boolean
   ) => void;
-  const _notifyAboutEnd: (
+  var _notifyAboutEnd: (
     tag: number,
     finished: boolean,
     removeView: boolean
   ) => void;
-  const _setGestureState: (handlerTag: number, newState: number) => void;
-  const _makeShareableClone: (value: any) => any;
-  const _updateDataSynchronously: (
+  var _setGestureState: (handlerTag: number, newState: number) => void;
+  var _makeShareableClone: (value: any) => any;
+  var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef,
     data: ShareableRef
   ) => void;
-  const _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
-  const _updatePropsPaper: (
+  var _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
+  var _updatePropsPaper: (
     tag: number,
     name: string,
     updates: StyleProps | AnimatedStyle
   ) => void;
-  const _updatePropsFabric: (
+  var _updatePropsFabric: (
     shadowNodeWrapper: ShadowNodeWrapper,
     props: StyleProps | AnimatedStyle
   ) => void;
-  const _removeShadowNodeFromRegistry: (viewTag: number) => void;
-  const _measure: (viewTag: number) => MeasuredDimensions;
-  const _scrollTo: (
+  var _removeShadowNodeFromRegistry: (viewTag: number) => void;
+  var _measure: (viewTag: number) => MeasuredDimensions;
+  var _scrollTo: (
     viewTag: number,
     x: number,
     y: number,
     animated: boolean
   ) => void;
-  const _dispatchCommand: (
-    shadowNodeWrapper: ShadowNodeWrapper,
+  var _dispatchCommand: (
+    nodeRef: ShadowNodeWrapper | number,
     commandName: string,
     args: Array<unknown>
   ) => void;
-  const performance: { now: () => number };
-  const ReanimatedDataMock: {
+  var performance: { now: () => number };
+  var ReanimatedDataMock: {
     now: () => number;
   };
-  const ErrorUtils: {
+  var __ErrorUtils: {
     reportFatalError: (error: Error) => void;
   };
-  const _frameCallbackRegistry: FrameCallbackRegistryUI;
-  const requestAnimationFrame: (callback: (time: number) => void) => number;
-  const console: Console;
-
-  namespace NodeJS {
-    interface Global {
-      _WORKLET: boolean;
-      _IS_FABRIC: boolean;
-      _REANIMATED_VERSION_CPP: string;
-      _REANIMATED_VERSION_BABEL_PLUGIN: string;
-      __reanimatedModuleProxy: NativeReanimated;
-      __frameTimestamp?: number;
-      evalWithSourceMap: (
-        js: string,
-        sourceURL: string,
-        sourceMap: string
-      ) => any;
-      evalWithSourceUrl: (js: string, sourceURL: string) => any;
-      _log: (s: string) => void;
-      _getCurrentTime: () => number;
-      _setGestureState: (handlerTag: number, newState: number) => void;
-      _makeShareableClone: (value: any) => any;
-      _updateDataSynchronously: (
-        ShareableSyncDataHolderRef,
-        ShareableRef
-      ) => void;
-      _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
-      _updatePropsPaper: (
-        tag: number,
-        name: string,
-        updates: StyleProps | AnimatedStyle
-      ) => void;
-      _updatePropsFabric: (
-        shadowNodeWrapper: ShadowNodeWrapper,
-        props: StyleProps | AnimatedStyle
-      ) => void;
-      _removeShadowNodeFromRegistry: (viewTag: number) => void;
-      _measure: (viewTag: number) => MeasuredDimensions;
-      _scrollTo: (
-        viewTag: number,
-        x: number,
-        y: number,
-        animated: boolean
-      ) => void;
-      _dispatchCommand: (
-        shadowNodeWrapper: ShadowNodeWrapper,
-        commandName: string,
-        args: Array<unknown>
-      ) => void;
-      performance: { now: () => number };
-      LayoutAnimationsManager: {
-        start: LayoutAnimationStartFunction;
-      };
-      ReanimatedDataMock: {
-        now: () => number;
-      };
-      ErrorUtils: {
-        reportFatalError: (error: Error) => void;
-      };
-      _frameCallbackRegistry: FrameCallbackRegistryUI;
-      __workletsCache?: Map<string, (...args: any[]) => any>;
-      __handleCache?: WeakMap<any, any>;
-      __mapperRegistry?: MapperRegistry;
-      __callMicrotasks: () => void;
-      __flushAnimationFrame: (frameTimestamp: number) => void;
-      requestAnimationFrame: (callback: (time: number) => void) => number;
-      console: Console;
-    }
-  }
+  var _frameCallbackRegistry: FrameCallbackRegistryUI;
+  var requestAnimationFrame: (callback: (time: number) => void) => number;
+  var console: Console;
+  var __frameTimestamp: number | undefined;
+  var __flushAnimationFrame: (timestamp: number) => void;
+  var __workletsCache: Map<string, any>;
+  var __handleCache: WeakMap<object, any>;
+  var __callMicrotasks: () => void;
+  var __mapperRegistry: MapperRegistry;
+  var LayoutAnimationsManager: {
+    start(
+      tag: number,
+      type: LayoutAnimationType,
+      yogaValues: LayoutAnimationsValues,
+      config: LayoutAnimationFunction
+    );
+  };
 }

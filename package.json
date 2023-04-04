@@ -106,7 +106,7 @@
     "@types/convert-source-map": "^2.0.0",
     "@types/invariant": "^2.2.35",
     "@types/jest": "^27.4.0",
-    "@types/node": "12.7.12",
+    "@types/node": "^18.0.0",
     "@types/react": "^18.0.26",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
