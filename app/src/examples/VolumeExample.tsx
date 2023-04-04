@@ -70,8 +70,13 @@ export default function VolumeExample() {
 
   const animatedProps = useAnimatedProps(() => {
     return {
-      text: String(Math.floor(x.value)),
       value: x.value,
+    };
+  });
+
+  const animatedTextProps = useAnimatedProps(() => {
+    return {
+      text: String(Math.floor(x.value)),
       // Here we use any because the text prop is not available in the type
     } as any;
   });
@@ -97,7 +102,7 @@ export default function VolumeExample() {
           style={styles.value}
           value={String(Math.round(sv.value))}
           editable={false}
-          {...{ animatedProps }}
+          animatedProps={animatedTextProps}
         />
       </View>
       <Animated.View
@@ -110,7 +115,7 @@ export default function VolumeExample() {
           minimumTrackTintColor={primaryColor}
           maximumTrackTintColor={secondaryColor}
           thumbImage={require('./assets/doge.png')}
-          {...{ animatedProps }}
+          animatedProps={animatedProps}
         />
         <Text style={styles.text}>100</Text>
       </Animated.View>
