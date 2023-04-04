@@ -1,24 +1,22 @@
 /* eslint-disable no-var, @typescript-eslint/no-explicit-any */
-export {};
+import type {
+  AnimatedStyle,
+  StyleProps,
+  MeasuredDimensions,
+  MapperRegistry,
+  ShareableRef,
+  ShareableSyncDataHolderRef,
+  ShadowNodeWrapper,
+} from './commonTypes';
+import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
+import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type {
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+  LayoutAnimationsValues,
+} from './layoutReanimation/animationBuilder';
 
 declare global {
-  import type {
-    AnimatedStyle,
-    StyleProps,
-    MeasuredDimensions,
-    MapperRegistry,
-    ShareableRef,
-    ShareableSyncDataHolderRef,
-    ShadowNodeWrapper,
-  } from './commonTypes';
-  import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-  import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
-  import type {
-    LayoutAnimationFunction,
-    LayoutAnimationType,
-    LayoutAnimationsValues,
-  } from './layoutReanimation/animationBuilder';
-
   var _WORKLET: boolean;
   var _IS_FABRIC: boolean;
   var _REANIMATED_VERSION_CPP: string;
