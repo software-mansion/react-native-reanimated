@@ -112,6 +112,22 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       ReanimatedRuntime::make(runtime_, jsQueue);
 
+  animatedRuntime->global().setProperty(
+      *animatedRuntime,
+      "_maybeFlushUiUpdatesQueue",
+      jsi::Function::createFromHostFunction(
+          *animatedRuntime,
+          jsi::PropNameID::forAscii(
+              *animatedRuntime, "_maybeFlushUiUpdatesQueue"),
+          0,
+          [&](jsi::Runtime &rt,
+              const facebook::jsi::Value &thisVal,
+              const facebook::jsi::Value *args,
+              size_t count) -> jsi::Value {
+            maybeFlushUiUpdatesQueue();
+            return jsi::Value::undefined();
+          }));
+
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
 
@@ -194,6 +210,11 @@ void NativeProxy::registerEventHandler() {
   method(
       javaPart_.get(),
       EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
+}
+
+void NativeProxy::maybeFlushUiUpdatesQueue() {
+  static const auto method = getJniMethod<void()>("maybeFlushUiUpdatesQueue");
+  method(javaPart_.get());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
