@@ -11,6 +11,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
     "@fortawesome/free-solid-svg-icons": "^6.4.0",
     "@fortawesome/react-native-fontawesome": "^0.3.0",
+    "@react-native-community/slider": "^4.4.2",
     "@react-native-masked-view/masked-view": "^0.2.8",
     "@react-native-picker/picker": "^2.4.9",
     "@react-navigation/native": "^6.1.6",

@@ -81,6 +81,7 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
+import VolumeExample from './VolumeExample';
 
 interface Example {
   icon?: string;
@@ -271,6 +272,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🙆‍♂️',
     title: 'Profiles',
     screen: ProfilesExample,
+  },
+  VolumeExample: {
+    icon: '🎧',
+    title: 'Volume slider & sensor',
+    screen: VolumeExample,
   },
   EmptyExample: {
     icon: '👻',
