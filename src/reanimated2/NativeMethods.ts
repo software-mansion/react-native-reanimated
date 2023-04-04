@@ -89,7 +89,9 @@ export function dispatchCommand(
   if (!_WORKLET || !isNative) {
     return;
   }
-  const shadowNodeWrapper = animatedRef();
+  const shadowNodeWrapper = animatedRef;
+  // _dispatchCommand doesn't seem to be actually of any use
+  // in regard to its type
   _dispatchCommand(shadowNodeWrapper, commandName, args);
 }
 
