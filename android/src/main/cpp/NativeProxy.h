@@ -199,7 +199,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void performOperations();
   void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
   void registerEventHandler();
-  void maybeFlushUiUpdatesQueue();
+  void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
   int registerSensor(
       int sensorType,

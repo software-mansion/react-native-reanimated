@@ -69,7 +69,6 @@ var require_commonObjects = __commonJS({
       "LayoutAnimationRepository",
       "_notifyAboutProgress",
       "_notifyAboutEnd",
-      '__maybeFlushUiUpdatesQueue',
     ]);
   }
 });

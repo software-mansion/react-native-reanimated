@@ -151,19 +151,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto nodesManager = reanimatedModule.nodesManager;
 
-  animatedRuntime->global().setProperty(
-      *animatedRuntime,
-      "_maybeFlushUiUpdatesQueue",
-      jsi::Function::createFromHostFunction(
-          *animatedRuntime,
-          jsi::PropNameID::forAscii(*animatedRuntime, "_maybeFlushUiUpdatesQueue"),
-          0,
-          [nodesManager](
-              jsi::Runtime &rt, const facebook::jsi::Value &thisVal, const facebook::jsi::Value *args, size_t count)
-              -> jsi::Value {
-            [nodesManager maybeFlushUiUpdatesQueue];
-            return jsi::Value::undefined();
-          }));
+  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
 
   auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
@@ -277,6 +265,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
+      maybeFlushUIUpdatesQueueFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(

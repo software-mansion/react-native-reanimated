@@ -513,9 +513,9 @@ using namespace facebook::react;
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-- (void)maybeFlushUiUpdatesQueue
+- (void)maybeFlushUIUpdatesQueue
 {
-  if (!_displayLink) {
+  if ([_displayLink isPaused]) {
     [self performOperations];
   }
 }
