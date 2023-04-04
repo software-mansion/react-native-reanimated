@@ -3,7 +3,8 @@ import Animated, {
   useAnimatedProps,
   useAnimatedSensor,
   SensorType,
-  withTiming,
+  useFrameCallback,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
 import {
   View,
@@ -48,18 +49,37 @@ export default function VolumeExample() {
 
   const sv = useSharedValue(50);
 
+  const x = useSharedValue(50);
+  const vx = useSharedValue(0);
+
   const animatedSensor = useAnimatedSensor(SensorType.GRAVITY);
 
+  useFrameCallback(({ timeSincePreviousFrame: dt }) => {
+    if (dt == null) {
+      return;
+    }
+    const ax = animatedSensor.sensor.value.x * 0.0001;
+    vx.value += ax * dt;
+    x.value += vx.value * dt;
+    x.value = Math.min(100, Math.max(0, x.value));
+
+    if (x.value === 0 || x.value === 100) {
+      vx.value = 0;
+    }
+  });
+
   const animatedProps = useAnimatedProps(() => {
-    const sensor = animatedSensor.sensor.value.x * 8 + 50;
-
-    sv.value = sensor < 0 ? 0 : sensor > 100 ? 100 : sensor;
-
     return {
-      text: String(Math.floor(sv.value)),
-      value: withTiming(sensor, { duration: 100 }),
+      text: String(Math.floor(x.value)),
+      value: x.value,
       // Here we use any because the text prop is not available in the type
     } as any;
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${animatedSensor.sensor.value.x * 2}deg` }],
+    };
   });
 
   return (
@@ -80,7 +100,8 @@ export default function VolumeExample() {
           {...{ animatedProps }}
         />
       </View>
-      <View style={[styles.row, styles.center, styles.margin]}>
+      <Animated.View
+        style={[styles.row, styles.center, styles.margin, animatedStyle]}>
         <Text style={styles.text}>0</Text>
         <AnimatedSlider
           style={styles.slider}
@@ -92,7 +113,7 @@ export default function VolumeExample() {
           {...{ animatedProps }}
         />
         <Text style={styles.text}>100</Text>
-      </View>
+      </Animated.View>
       <View style={[styles.row, styles.between, styles.margin]}>
         <Text style={styles.text}>Change with buttons</Text>
         <Switch
