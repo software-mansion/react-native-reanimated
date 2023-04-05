@@ -13,6 +13,7 @@ using namespace facebook::jni;
 using namespace facebook;
 
 class JavaWrapperJSCallbacksManager : public jni::HybridClass<JavaWrapperJSCallbacksManager> {
+
 public:
   static auto constexpr kJavaDescriptor =
   "Lcom/swmansion/reanimated/JavaWrapperJSCallbacksManager;";
@@ -20,6 +21,12 @@ public:
     jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
   void setJSCallbackManager(std::shared_ptr<JSCallbacksManager> jsCallbacksManager);
+  jni::local_ref<JMap<JString, JObject>> executeSharedAnimationProgressCallback(
+    const int viewTag,
+    const double progress,
+    const jni::alias_ref<JMap<JString, JObject>> sharedAnimationWorkletData
+  );
+
 private:
   friend HybridBase;
   jni::global_ref<JavaWrapperJSCallbacksManager::javaobject> javaPart_;
@@ -27,6 +34,7 @@ private:
 
 explicit JavaWrapperJSCallbacksManager(
   jni::alias_ref<JavaWrapperJSCallbacksManager::jhybridobject> jThis);
+
 };
 
 } // namespace reanimated

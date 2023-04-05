@@ -22,9 +22,14 @@ struct JNIHelper {
     void put(const std::string &key, jni::local_ref<JObject> object);
   };
 
-  static jni::local_ref<PropsMap> ConvertToPropsMap(
+  static jni::local_ref<PropsMap> convertJSIObjectToJNIMap(
       jsi::Runtime &rt,
-      const jsi::Object &props);
+      const jsi::Object &jsiObject);
+
+  static jsi::Object convertJNIMapToJSIObject(
+    jsi::Runtime &rt,
+    const jni::alias_ref<JMap<JString, JObject>> jniMap);
+
 };
 
 }; // namespace reanimated

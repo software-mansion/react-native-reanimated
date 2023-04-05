@@ -652,7 +652,11 @@ public class SharedTransitionManager {
             mAnimationsManager.prepareDataForAnimationWorklet(targetValues, true, true);
     HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
-    // call jsCallbackManager
+    Map<String, Object> tmp = javaWrapperJSCallbacksManager.executeSharedAnimationProgressCallback(
+      sharedElement.sourceView.getId(),
+      progress,
+      preparedValues
+    );
     return null;
   }
 

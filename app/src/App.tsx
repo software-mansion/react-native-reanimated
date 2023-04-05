@@ -1,150 +1,97 @@
-import './types';
-
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as React from 'react';
+import { View, Button } from 'react-native';
+import { NavigationContainer, ParamListBase } from '@react-navigation/native';
 import {
-  GestureHandlerRootView,
-  RectButton,
-} from 'react-native-gesture-handler';
-import {
-  NativeStackNavigationProp,
   createNativeStackNavigator,
+  NativeStackScreenProps,
 } from '@react-navigation/native-stack';
+import Animated, {
+  SharedTransition,
+  useAnimatedReaction,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
-import { EXAMPLES } from './examples';
-import { NavigationContainer } from '@react-navigation/native';
-import React from 'react';
+const Stack = createNativeStackNavigator();
 
-type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
-  Home: undefined;
-};
+const transition = SharedTransition
+  .setTransitionDuration(1000)
+  .custom((values) => {
+    'worklet';
+    return {
+      width: withSpring(values.targetWidth),
+      height: withSpring(values.targetHeight),
+      originX: withSpring(values.targetOriginX),
+      originY: withSpring(values.targetOriginY),
+    };
+  })
+  .progressAnimation((values, progress) => {
+    'worklet';
+    return {
+      width: progress * (values.targetWidth - values.currentWidth) + values.currentWidth,
+      height: progress * (values.targetHeight - values.currentHeight) + values.currentHeight,
+      originX: progress * (values.targetOriginX - values.currentOriginX) + values.currentOriginX,
+      originY: progress * (values.targetOriginY - values.currentOriginY) + values.currentOriginY,
+    };
+  });
 
-interface HomeScreenProps {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
-}
-
-const EXAMPLES_NAMES = Object.keys(EXAMPLES) as (keyof typeof EXAMPLES)[];
-
-function findExamples(search: string) {
-  if (search === '') {
-    return EXAMPLES_NAMES;
-  }
-  return EXAMPLES_NAMES.filter((name) =>
-    EXAMPLES[name].title
-      .toLocaleLowerCase()
-      .includes(search.toLocaleLowerCase())
-  );
-}
-
-function HomeScreen({ navigation }: HomeScreenProps) {
-  const [search, setSearch] = React.useState('');
-
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerSearchBarOptions: {
-        onChangeText: (event) => {
-          setSearch(event.nativeEvent.text);
-        },
-        onSearchButtonPress: (event) => {
-          const results = findExamples(event.nativeEvent.text);
-          if (results.length >= 1) {
-            navigation.navigate(results[0]);
-          }
-        },
-      },
-      headerTransparent: false,
-    });
-  }, [navigation]);
-
+function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <FlatList
-      data={findExamples(search)}
-      initialNumToRender={EXAMPLES_NAMES.length}
-      renderItem={({ item: name }) => (
-        <Item
-          icon={EXAMPLES[name].icon}
-          title={EXAMPLES[name].title}
-          onPress={() => navigation.navigate(name)}
-        />
-      )}
-      renderScrollComponent={(props) => <ScrollView {...props} />}
-      ItemSeparatorComponent={ItemSeparator}
-      style={styles.list}
-    />
+    <Animated.ScrollView style={{ flex: 1 }}>
+      <Animated.View
+        style={{
+          width: 150,
+          height: 150,
+          marginLeft: 20,
+          marginTop: 50,
+          backgroundColor: 'green',
+        }}
+        sharedTransitionTag="tag"
+        sharedTransitionType='progress'
+        sharedTransitionStyle={transition}
+      />
+      <Button
+        onPress={() => navigation.navigate('Screen2')}
+        title="go to screen2"
+      />
+    </Animated.ScrollView>
   );
 }
 
-interface ItemProps {
-  icon?: string;
-  title: string;
-  onPress: () => void;
-}
-
-function Item({ icon, title, onPress }: ItemProps) {
+function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <RectButton style={styles.button} onPress={onPress}>
-      {icon && <Text style={styles.title}>{icon + '  '}</Text>}
-      <Text style={styles.title}>{title}</Text>
-    </RectButton>
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{
+          width: 200,
+          height: 300,
+          marginLeft: 60,
+          marginTop: 100,
+          backgroundColor: 'green',
+        }}
+        sharedTransitionTag="tag"
+        sharedTransitionStyle={transition}
+      />
+      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
+    </View>
   );
 }
 
-function ItemSeparator() {
-  return <View style={styles.separator} />;
-}
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
-export default function App() {
+export default function CustomTransitionExample() {
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              headerTitle: '🐎 Reanimated examples',
-              title: 'Reanimated examples',
-            }}
-          />
-          {EXAMPLES_NAMES.map((name) => (
-            <Stack.Screen
-              key={name}
-              name={name}
-              component={EXAMPLES[name].screen}
-              options={{
-                headerTitle: EXAMPLES[name].title,
-                title: EXAMPLES[name].title,
-              }}
-            />
-          ))}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <NavigationContainer>
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Screen1"
+        component={Screen1}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Screen2"
+        component={Screen2}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  list: {
-    backgroundColor: '#EFEFF4',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#DBDBE0',
-  },
-  button: {
-    flex: 1,
-    height: 60,
-    padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-  },
-  title: {
-    fontSize: 16,
-    color: 'black',
-  },
-});

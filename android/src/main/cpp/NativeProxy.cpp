@@ -250,7 +250,7 @@ void NativeProxy::updateProps(
       getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
           "updateProps");
   method(
-      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+      javaPart_.get(), viewTag, JNIHelper::convertJSIObjectToJNIMap(rt, props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
@@ -390,7 +390,7 @@ void NativeProxy::progressLayoutAnimation(
     const jsi::Object &newProps,
     bool isSharedTransition) {
   auto &rt = *nativeReanimatedModule_->runtime;
-  auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
+  auto newPropsJNI = JNIHelper::convertJSIObjectToJNIMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
 }

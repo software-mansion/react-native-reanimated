@@ -20,15 +20,15 @@ void JNIHelper::PropsMap::put(
   method(self(), jni::make_jstring(key), object);
 }
 
-jni::local_ref<JNIHelper::PropsMap> JNIHelper::ConvertToPropsMap(
+jni::local_ref<JNIHelper::PropsMap> JNIHelper::convertJSIObjectToJNIMap(
     jsi::Runtime &rt,
-    const jsi::Object &props) {
+    const jsi::Object &jsiObject) {
   auto map = PropsMap::create();
 
-  auto propNames = props.getPropertyNames(rt);
+  auto propNames = jsiObject.getPropertyNames(rt);
   for (size_t i = 0, size = propNames.size(rt); i < size; i++) {
     auto jsiKey = propNames.getValueAtIndex(rt, i).asString(rt);
-    auto value = props.getProperty(rt, jsiKey);
+    auto value = jsiObject.getProperty(rt, jsiKey);
     auto key = jsiKey.utf8(rt);
     if (value.isUndefined() || value.isNull()) {
       map->put(key, nullptr);
@@ -52,8 +52,15 @@ jni::local_ref<JNIHelper::PropsMap> JNIHelper::ConvertToPropsMap(
       }
     }
   }
-
   return map;
+}
+
+jsi::Object JNIHelper::convertJNIMapToJSIObject(
+  jsi::Runtime &rt,
+  const jni::alias_ref<JMap<JString, JObject>> jniMap) {
+  jsi::Object jsiObject(rt);
+
+  return jsiObject;
 }
 
 }; // namespace reanimated
