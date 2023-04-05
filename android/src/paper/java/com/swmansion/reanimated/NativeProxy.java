@@ -116,11 +116,4 @@ public class NativeProxy extends NativeProxyCommon {
             }
         };
     }
-
-    @DoNotStrip
-    void maybeFlushUIUpdatesQueue() {
-        if (!mNodesManager.isAnimationRunning()) {
-            mNodesManager.performOperations();
-        }
-    }
 }
