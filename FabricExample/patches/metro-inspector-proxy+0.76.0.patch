@@ -1,5 +1,5 @@
 diff --git a/node_modules/metro-inspector-proxy/src/Device.js b/node_modules/metro-inspector-proxy/src/Device.js
-index 719117a..f95a099 100644
+index 7b82b40..e397782 100644
 --- a/node_modules/metro-inspector-proxy/src/Device.js
 +++ b/node_modules/metro-inspector-proxy/src/Device.js
 @@ -67,7 +67,7 @@ const EMULATOR_LOCALHOST_ADDRESSES = ["10.0.2.2", "10.0.3.2"];
@@ -83,19 +83,12 @@ index 719117a..f95a099 100644
  
        // Check if device have new React Native page.
        // There is usually no more than 2-3 pages per device so this operation
-@@ -227,18 +235,14 @@ class Device {
+@@ -227,11 +235,14 @@ class Device {
        // TODO(hypuk): It is better for VM to send update event when new page is
        // created instead of manually checking this on every getPages result.
        for (let i = 0; i < this._pages.length; ++i) {
 -        if (this._pages[i].title.indexOf("React") >= 0) {
--          var _this$_lastConnectedR;
--          if (
--            this._pages[i].id !=
--            ((_this$_lastConnectedR = this._lastConnectedReactNativePage) ===
--              null || _this$_lastConnectedR === void 0
--              ? void 0
--              : _this$_lastConnectedR.id)
--          ) {
+-          if (this._pages[i].id != this._lastConnectedReactNativePage?.id) {
 -            this._newReactNativePage(this._pages[i]);
 -            break;
 -          }
@@ -110,7 +103,7 @@ index 719117a..f95a099 100644
          }
        }
      } else if (message.event === "disconnect") {
-@@ -251,7 +255,7 @@ class Device {
+@@ -244,7 +255,7 @@ class Device {
        if (debuggerSocket && debuggerSocket.readyState === _ws.default.OPEN) {
          if (
            this._debuggerConnection != null &&
@@ -119,13 +112,12 @@ index 719117a..f95a099 100644
          ) {
            debug(`Page ${pageId} is reloading.`);
            debuggerSocket.send(
-@@ -312,26 +316,50 @@ class Device {
+@@ -305,21 +316,50 @@ class Device {
      );
    }
  
 -  // We received new React Native Page ID.
 -  _newReactNativePage(page) {
--    var _this$_lastConnectedR2;
 -    debug(`React Native page updated to ${page.id}`);
 +  // We received a new page ID.
 +  _handleNewReloadablePage(page) {
@@ -173,18 +165,14 @@ index 719117a..f95a099 100644
 +
        return;
      }
--    const oldPageId =
--      (_this$_lastConnectedR2 = this._lastConnectedReactNativePage) === null ||
--      _this$_lastConnectedR2 === void 0
--        ? void 0
--        : _this$_lastConnectedR2.id;
+-    const oldPageId = this._lastConnectedReactNativePage?.id;
 -    this._lastConnectedReactNativePage = page;
 +    const oldPageId = reloadablePage._lastConnectedPage.id;
 +    reloadablePage._lastConnectedPage = page;
      this._isReloading = true;
  
      // We already had a debugger connected to React Native page and a
-@@ -568,10 +596,10 @@ class Device {
+@@ -556,10 +596,10 @@ class Device {
    }
    _mapToDevicePageId(pageId) {
      if (
