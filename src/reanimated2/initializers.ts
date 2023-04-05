@@ -3,8 +3,8 @@ import NativeReanimatedModule from './NativeReanimated';
 import { isJest } from './PlatformChecker';
 import {
   runOnJS,
-  setupSetImmediate,
-  flushImmediates,
+  setupMicrotasks,
+  callMicrotasks,
   runOnUIImmediately,
 } from './threads';
 
@@ -106,7 +106,7 @@ function setupRequestAnimationFrame() {
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
     currentCallbacks.forEach((f) => f(frameTimestamp));
-    flushImmediates();
+    callMicrotasks();
   };
 
   global.requestAnimationFrame = (
@@ -153,7 +153,9 @@ export function initializeUIRuntime() {
     };
   }
 
-  const capturableConsole = console;
+  // We really have to create a copy of console here. Function runOnJS we use on elements inside
+  // this object makes it not configurable
+  const capturableConsole = { ...console };
   runOnUIImmediately(() => {
     'worklet';
     // setup error handler
@@ -177,7 +179,7 @@ export function initializeUIRuntime() {
     };
 
     if (!IS_JEST) {
-      setupSetImmediate();
+      setupMicrotasks();
       setupRequestAnimationFrame();
     }
   })();

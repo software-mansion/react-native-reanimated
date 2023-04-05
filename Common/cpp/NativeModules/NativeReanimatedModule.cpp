@@ -158,7 +158,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
-      platformDepMethodsHolder.endLayoutAnimation);
+      platformDepMethodsHolder.endLayoutAnimation,
+      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
@@ -257,8 +258,14 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       shareable = std::make_shared<ShareableHandle>(runtimeHelper, rt, object);
     } else if (object.isFunction(rt)) {
-      shareable = std::make_shared<ShareableRemoteFunction>(
-          runtimeHelper, rt, object.asFunction(rt));
+      auto function = object.asFunction(rt);
+      if (function.isHostFunction(rt)) {
+        shareable =
+            std::make_shared<ShareableHostFunction>(rt, std::move(function));
+      } else {
+        shareable = std::make_shared<ShareableRemoteFunction>(
+            runtimeHelper, rt, std::move(function));
+      }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableArray>>(

@@ -1,0 +1,85 @@
+diff --git a/node_modules/react-native-box2d/android/CMakeLists.txt b/node_modules/react-native-box2d/android/CMakeLists.txt
+index c346c4e..6bde55f 100644
+--- a/node_modules/react-native-box2d/android/CMakeLists.txt
++++ b/node_modules/react-native-box2d/android/CMakeLists.txt
+@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.9.0)
+ set(PACKAGE_NAME "react-native-box2d")
+ set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
+ 
++find_package(ReactAndroid REQUIRED CONFIG)
++
+ include_directories(
+         ../cpp
+         "${NODE_MODULES_DIR}/react-native/React"
+@@ -38,25 +40,6 @@ find_library(
+         log-lib
+         log
+ )
+-find_library(
+-        REACT_NATIVE_JNI_LIB
+-        reactnativejni
+-        PATHS ${LIBRN_DIR}
+-        NO_CMAKE_FIND_ROOT_PATH
+-)
+-
+-if(${REACT_NATIVE_VERSION} LESS 66)
+-        # JSI lib didn't exist on RN 0.65 and before. Simply omit it.
+-        set(JSI_LIB "")
+-else()
+-        # RN 0.66 distributes libjsi.so, can be used instead of compiling jsi.cpp manually.
+-        find_library(
+-                JSI_LIB
+-                jsi
+-                PATHS ${LIBRN_DIR}
+-                NO_CMAKE_FIND_ROOT_PATH
+-        )
+-endif()
+ 
+ # ### region: add box2d
+ target_include_directories(
+@@ -78,8 +61,8 @@ set_property(TARGET box2d PROPERTY IMPORTED_LOCATION "${LIBS_PATH}/libbox2d.a")
+ target_link_libraries(
+         reactnativebox2d
+         ${log-lib}
+-        ${JSI_LIB}
+-        ${REACT_NATIVE_JNI_LIB}
++        ReactAndroid::jsi
++        ReactAndroid::reactnativejni
+         android
+         ${BOX2D_LIB}
+ )
+diff --git a/node_modules/react-native-box2d/android/build.gradle b/node_modules/react-native-box2d/android/build.gradle
+index 41726f4..0580d5d 100644
+--- a/node_modules/react-native-box2d/android/build.gradle
++++ b/node_modules/react-native-box2d/android/build.gradle
+@@ -51,7 +51,7 @@ def reactNativeArchitectures() {
+     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+ }
+ 
+-def sourceBuild = false
++def sourceBuild = true
+ def defaultDir = null
+ def androidSourcesDir = null
+ def androidSourcesName = 'React Native sources'
+@@ -87,7 +87,9 @@ android {
+   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
+   buildToolsVersion getExtOrDefault('buildToolsVersion')
+   ndkVersion getExtOrDefault('ndkVersion')
+-
++  buildFeatures {
++    prefab true
++  }
+   defaultConfig {
+     minSdkVersion 21
+     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
+@@ -342,8 +344,8 @@ def nativeBuildDependsOn(dependsOnTask, variant) {
+ 
+ afterEvaluate {
+   if (sourceBuild) {
+-    nativeBuildDependsOn(":ReactAndroid:packageReactNdkDebugLibsForBuck", "Debug")
+-    nativeBuildDependsOn(":ReactAndroid:packageReactNdkReleaseLibsForBuck", "Rel")
++    // nativeBuildDependsOn(":ReactAndroid:packageReactNdkDebugLibsForBuck", "Debug")
++    // nativeBuildDependsOn(":ReactAndroid:packageReactNdkReleaseLibsForBuck", "Rel")
+   } else {
+     nativeBuildDependsOn(extractAARHeaders, null)
+     nativeBuildDependsOn(extractJNIFiles, null)

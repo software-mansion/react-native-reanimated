@@ -852,6 +852,7 @@ declare module 'react-native-reanimated' {
       x2: number,
       y2: number
     ): Animated.EasingFunction;
+    steps(n?: number, roundToNextStep?: boolean): Animated.EasingFunction;
     in(easing: Animated.EasingFunction): Animated.EasingFunction;
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
