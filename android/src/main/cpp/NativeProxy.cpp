@@ -180,7 +180,8 @@ void NativeProxy::registerNatives() {
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("initializeDependencies", NativeProxy::initializeDependencies)});
+       makeNativeMethod("initializeDependencies", NativeProxy::initializeDependencies)
+       });
 }
 
 void NativeProxy::requestRender(
@@ -570,8 +571,8 @@ void NativeProxy::setupLayoutAnimations() {
       });
 }
 
-void NativeProxy::initializeDependencies(jni::global_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager) {
-  std::shared_ptr<JSCallbacksManager> jsCallbacksManager = _nativeReanimatedModule->getJSCallbacksManager();
+void NativeProxy::initializeDependencies(jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager) {
+  std::shared_ptr<JSCallbacksManager> jsCallbacksManager = nativeReanimatedModule_->getJSCallbacksManager();
   javaWrapperJSCallbackManager->cthis()->setJSCallbackManager(jsCallbacksManager);
 }
 

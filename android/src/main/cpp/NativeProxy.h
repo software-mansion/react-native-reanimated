@@ -271,7 +271,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager
 #endif
       /**/);
-  void initializeDependencies(jni::global_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager);
+  void initializeDependencies(jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager);
 };
 
 } // namespace reanimated
