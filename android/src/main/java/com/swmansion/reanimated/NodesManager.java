@@ -164,6 +164,10 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
+  public boolean isAnimationRunning() {
+    return mCallbackPosted.get();
+  }
+
   public void onHostResume() {
     if (mCallbackPosted.getAndSet(false)) {
       startUpdatingOnAnimationFrame();
@@ -184,7 +188,7 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  private void performOperations() {
+  public void performOperations() {
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       mNativeProxy.performOperations();
     } else if (!mOperationsInBatch.isEmpty()) {

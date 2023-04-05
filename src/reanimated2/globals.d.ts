@@ -74,7 +74,7 @@ declare global {
   const _frameCallbackRegistry: FrameCallbackRegistryUI;
   const requestAnimationFrame: (callback: (time: number) => void) => number;
   const console: Console;
-
+  const _maybeFlushUIUpdatesQueue: () => void;
   namespace NodeJS {
     interface Global {
       _WORKLET: boolean;
@@ -138,6 +138,7 @@ declare global {
       __flushAnimationFrame: (frameTimestamp: number) => void;
       requestAnimationFrame: (callback: (time: number) => void) => number;
       console: Console;
+      _maybeFlushUIUpdatesQueue: () => void;
     }
   }
 }
