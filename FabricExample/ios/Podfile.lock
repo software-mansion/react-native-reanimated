@@ -686,6 +686,14 @@ PODS:
     - react-native-safe-area-context/common
     - React-RCTFabric
     - ReactCommon/turbomodule/core
+  - react-native-slider (4.4.2):
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - React-RCTFabric
+    - ReactCommon/turbomodule/core
   - React-perflogger (0.71.3)
   - React-RCTActionSheet (0.71.3):
     - React-Core/RCTActionSheetHeaders (= 0.71.3)
@@ -910,6 +918,7 @@ DEPENDENCIES:
   - react-native-box2d (from `../node_modules/react-native-box2d`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -1002,6 +1011,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-pager-view"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-slider:
+    :path: "../node_modules/@react-native-community/slider"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -1086,6 +1097,7 @@ SPEC CHECKSUMS:
   react-native-box2d: a5126c70227755b79a1b5b8d867e3932041631b3
   react-native-pager-view: 95d0418c3c74279840abec6926653d32447bafb6
   react-native-safe-area-context: e7e7c502560f89a6a1866af293d1e091f3c7929d
+  react-native-slider: 5469a8940a754f73c26ea4bb97c0faace6170f01
   React-perflogger: af8a3d31546077f42d729b949925cc4549f14def
   React-RCTActionSheet: 57cc5adfefbaaf0aae2cf7e10bccd746f2903673
   React-RCTAnimation: 11c61e94da700c4dc915cf134513764d87fc5e2b
@@ -1104,7 +1116,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: bc0170f389056201c82a55e242e5d90070e18e5a
   RNCPicker: 567de6dc0c6735cf249700d940c80b90b090e4db
   RNGestureHandler: 9d2ebd17a9fef618d9720e3d95ff5e6607acf8d4
-  RNReanimated: b38271c7b72560b7f9c3d0bf531faa8feb4da93a
+  RNReanimated: f717e7adee5efb3405d5841734176876a7cc7785
   RNScreens: 4666ca0a74ee229b2332c5d22d2a8b81ba9202be
   RNSVG: 6b96501d7df80ed8b4fe55d903b4f1476a57e8a5
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
