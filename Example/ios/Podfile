@@ -47,8 +47,6 @@ target 'ReanimatedExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  pod 'RNReanimated', :path => '../../'
-
   target 'ReanimatedExampleTests' do
     inherit! :complete
     # Pods for testing
