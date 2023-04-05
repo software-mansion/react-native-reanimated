@@ -1,4 +1,4 @@
-/* eslint-disable no-var, @typescript-eslint/no-explicit-any */
+/* eslint-disable no-var */
 import type {
   AnimatedStyle,
   StyleProps,
@@ -26,7 +26,9 @@ declare global {
     js: string,
     sourceURL: string,
     sourceMap: string
+    // eslint-ignore-next-line @typescript-eslint/no-explicit-any
   ) => any;
+  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
   var evalWithSourceUrl: (js: string, sourceURL: string) => any;
   var _log: (s: string) => void;
   var _getCurrentTime: () => number;
@@ -41,6 +43,7 @@ declare global {
     removeView: boolean
   ) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
+  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef,
@@ -81,7 +84,9 @@ declare global {
   var console: Console;
   var __frameTimestamp: number | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
+  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
   var __workletsCache: Map<string, any>;
+  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
   var __handleCache: WeakMap<object, any>;
   var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;
