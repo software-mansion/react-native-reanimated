@@ -1,9 +1,4 @@
-import {
-  BabelFileResult,
-  NodePath,
-  transformSync,
-  traverse,
-} from '@babel/core';
+import { NodePath, transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import {
   ObjectMethod,
@@ -14,7 +9,6 @@ import {
   identifier,
   Identifier,
   objectProperty,
-  isArrowFunctionExpression,
   variableDeclaration,
   variableDeclarator,
   cloneNode,
@@ -40,228 +34,14 @@ import {
   blockStatement,
   isFunctionExpression,
   isIdentifier,
-  File as BabelTypesFile,
-  objectPattern,
-  thisExpression,
-  isExpression,
-  isExpressionStatement,
+  File as BabelFile,
 } from '@babel/types';
-import * as fs from 'fs';
-import * as convertSourceMap from 'convert-source-map';
 import { ReanimatedPluginPass } from './types';
 import { isRelease } from './utils';
-import { globals } from './commonObjects';
 import { strict as assert } from 'assert';
-
-function hash(str: string) {
-  let i = str.length;
-  let hash1 = 5381;
-  let hash2 = 52711;
-
-  while (i--) {
-    const char = str.charCodeAt(i);
-    // eslint-disable-next-line no-bitwise
-    hash1 = (hash1 * 33) ^ char;
-    // eslint-disable-next-line no-bitwise
-    hash2 = (hash2 * 33) ^ char;
-  }
-
-  // eslint-disable-next-line no-bitwise
-  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
-}
-
-function shouldGenerateSourceMap() {
-  if (isRelease()) {
-    return false;
-  }
-
-  if (process.env.REANIMATED_PLUGIN_TESTS === 'jest') {
-    // We want to detect this, so we can disable source maps (because they break
-    // snapshot tests with jest).
-    return false;
-  }
-
-  return true;
-}
-
-function buildWorkletString(
-  fun: BabelTypesFile,
-  closureVariables: Array<Identifier>,
-  name: string,
-  inputMap: BabelFileResult['map']
-): Array<string | null | undefined> {
-  function prependClosureVariablesIfNecessary() {
-    const closureDeclaration = variableDeclaration('const', [
-      variableDeclarator(
-        objectPattern(
-          closureVariables.map((variable) =>
-            objectProperty(
-              identifier(variable.name),
-              identifier(variable.name),
-              false,
-              true
-            )
-          )
-        ),
-        memberExpression(thisExpression(), identifier('_closure'))
-      ),
-    ]);
-
-    function prependClosure(
-      path: NodePath<
-        | FunctionDeclaration
-        | FunctionExpression
-        | ArrowFunctionExpression
-        | ObjectMethod
-      >
-    ) {
-      if (closureVariables.length === 0 || !isProgram(path.parent)) {
-        return;
-      }
-
-      if (!isExpression(path.node.body)) {
-        path.node.body.body.unshift(closureDeclaration);
-      }
-    }
-
-    function prependRecursiveDeclaration(
-      path: NodePath<
-        | FunctionDeclaration
-        | FunctionExpression
-        | ArrowFunctionExpression
-        | ObjectMethod
-      >
-    ) {
-      if (
-        isProgram(path.parent) &&
-        !isArrowFunctionExpression(path.node) &&
-        !isObjectMethod(path.node) &&
-        path.node.id &&
-        path.scope.parent
-      ) {
-        const hasRecursiveCalls =
-          path.scope.parent.bindings[path.node.id.name]?.references > 0;
-        if (hasRecursiveCalls) {
-          path.node.body.body.unshift(
-            variableDeclaration('const', [
-              variableDeclarator(
-                identifier(path.node.id.name),
-                memberExpression(thisExpression(), identifier('_recur'))
-              ),
-            ])
-          );
-        }
-      }
-    }
-
-    return {
-      visitor: {
-        'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
-          (
-            path: NodePath<
-              | FunctionDeclaration
-              | FunctionExpression
-              | ArrowFunctionExpression
-              | ObjectMethod
-            >
-          ) => {
-            prependClosure(path);
-            prependRecursiveDeclaration(path);
-          },
-      },
-    };
-  }
-
-  const draftExpression = (fun.program.body.find((obj) =>
-    isFunctionDeclaration(obj)
-  ) ||
-    fun.program.body.find((obj) => isExpressionStatement(obj)) ||
-    undefined) as FunctionDeclaration | ExpressionStatement | undefined;
-
-  assert(draftExpression, "'draftExpression' is undefined");
-
-  const expression = isFunctionDeclaration(draftExpression)
-    ? draftExpression
-    : draftExpression.expression;
-
-  assert(
-    'params' in expression,
-    "'params' property is undefined in 'expression'"
-  );
-  assert(
-    isBlockStatement(expression.body),
-    "'expression.body' is not a 'BlockStatement'"
-  );
-
-  const workletFunction = functionExpression(
-    identifier(name),
-    expression.params,
-    expression.body
-  );
-
-  const code = generate(workletFunction).code;
-
-  assert(inputMap, "'inputMap' is undefined");
-
-  const includeSourceMap = shouldGenerateSourceMap();
-
-  if (includeSourceMap) {
-    // Clear contents array (should be empty anyways)
-    inputMap.sourcesContent = [];
-    // Include source contents in source map, because Flipper/iframe is not
-    // allowed to read files from disk.
-    for (const sourceFile of inputMap.sources) {
-      inputMap.sourcesContent.push(
-        fs.readFileSync(sourceFile).toString('utf-8')
-      );
-    }
-  }
-
-  const transformed = transformSync(code, {
-    plugins: [prependClosureVariablesIfNecessary()],
-    compact: !includeSourceMap,
-    sourceMaps: includeSourceMap,
-    inputSourceMap: inputMap,
-    ast: false,
-    babelrc: false,
-    configFile: false,
-    comments: false,
-  });
-
-  assert(transformed, "'transformed' is null");
-
-  let sourceMap;
-  if (includeSourceMap) {
-    sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-    // sourcesContent field contains a full source code of the file which contains the worklet
-    // and is not needed by the source map interpreter in order to symbolicate a stack trace.
-    // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
-    // in files that contain multiple worklets. Along with sourcesContent.
-    delete sourceMap.sourcesContent;
-  }
-
-  return [transformed.code, JSON.stringify(sourceMap)];
-}
-
-function makeWorkletName(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
-) {
-  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
-    return fun.node.key.name;
-  }
-  if (isFunctionDeclaration(fun.node) && fun.node.id) {
-    return fun.node.id.name;
-  }
-  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
-  }
-  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
-}
+import { globals } from './commonObjects';
+import { relative } from 'path';
+import { buildWorkletString } from './buildWorkletString';
 
 export function makeWorklet(
   fun: NodePath<
@@ -276,8 +56,6 @@ export function makeWorklet(
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
   const functionName = makeWorkletName(fun);
-
-  const closure = new Map<string, Identifier>();
 
   // remove 'worklet'; directive before generating string
   fun.traverse({
@@ -301,10 +79,10 @@ export function makeWorklet(
   // comment after the function that gets included here, and then the closing
   // bracket would become part of the comment thus resulting in an error, since
   // there is a missing closing bracket.
-  const code =
+  codeObject.code =
     '(' + (isObjectMethod(fun) ? 'function ' : '') + codeObject.code + '\n)';
 
-  const transformed = transformSync(code, {
+  const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
     plugins: [
@@ -323,52 +101,7 @@ export function makeWorklet(
   assert(transformed, "'transformed' is undefined");
   assert(transformed.ast, "'transformed.ast' is undefined");
 
-  traverse(transformed.ast, {
-    Identifier(path) {
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const name = path.node.name;
-      // if the function is named and was added to globals we don't want to add it to closure
-      // hence we check if identifier has that name
-      if (
-        globals.has(name) ||
-        ('id' in fun.node && fun.node.id && fun.node.id.name === name)
-      ) {
-        return;
-      }
-
-      const parentNode = path.parent;
-
-      if (
-        isMemberExpression(parentNode) &&
-        parentNode.property === path.node &&
-        !parentNode.computed
-      ) {
-        return;
-      }
-
-      if (
-        isObjectProperty(parentNode) &&
-        isObjectExpression(path.parentPath.parent) &&
-        path.node !== parentNode.value
-      ) {
-        return;
-      }
-
-      let currentScope = path.scope;
-
-      while (currentScope != null) {
-        if (currentScope.bindings[name] != null) {
-          return;
-        }
-        currentScope = currentScope.parent;
-      }
-      closure.set(name, path.node);
-    },
-  });
-
-  const variables = Array.from(closure.values());
+  const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
   const privateFunctionId = identifier('_f');
   const clone = cloneNode(fun.node);
@@ -387,18 +120,17 @@ export function makeWorklet(
 
   let location = state.file.opts.filename;
   if (state.opts.relativeSourceLocation) {
-    const path = require('path');
-    location = path.relative(state.cwd, location);
+    location = relative(state.cwd, location);
   }
 
   let lineOffset = 1;
-  if (closure.size > 0) {
+  if (variables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
     // the beginning of the function body. This effectively results in line
     // numbers shifting by the number of captured variables (size of the
     // closure) + 2 (for the opening and closing brackets of the destruct
     // statement)
-    lineOffset -= closure.size + 2;
+    lineOffset -= variables.length + 2;
   }
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
@@ -507,12 +239,109 @@ export function makeWorklet(
 
   statements.push(returnStatement(privateFunctionId));
 
-  const newFun = functionExpression(
-    // !isArrowFunctionExpression(fun.node) ? fun.node.id : undefined, // [TO DO] --- this never worked
-    undefined,
-    [],
-    blockStatement(statements)
-  );
+  const newFun = functionExpression(undefined, [], blockStatement(statements));
 
   return newFun;
+}
+
+function hash(str: string) {
+  let i = str.length;
+  let hash1 = 5381;
+  let hash2 = 52711;
+
+  while (i--) {
+    const char = str.charCodeAt(i);
+    // eslint-disable-next-line no-bitwise
+    hash1 = (hash1 * 33) ^ char;
+    // eslint-disable-next-line no-bitwise
+    hash2 = (hash2 * 33) ^ char;
+  }
+
+  // eslint-disable-next-line no-bitwise
+  return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+}
+
+function makeWorkletName(
+  fun: NodePath<
+    | FunctionDeclaration
+    | FunctionExpression
+    | ObjectMethod
+    | ArrowFunctionExpression
+  >
+) {
+  if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
+    return fun.node.key.name;
+  }
+  if (isFunctionDeclaration(fun.node) && fun.node.id) {
+    return fun.node.id.name;
+  }
+  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
+    return fun.node.id.name;
+  }
+  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+}
+
+function makeArrayFromCapturedBindings(
+  ast: BabelFile,
+  fun: NodePath<
+    | FunctionDeclaration
+    | FunctionExpression
+    | ObjectMethod
+    | ArrowFunctionExpression
+  >
+) {
+  const closure = new Map<string, Identifier>();
+
+  // this traversal looks for variables to capture
+  traverse(ast, {
+    Identifier(path) {
+      // we only capture variables that were declared outside of the scope
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
+      const name = path.node.name;
+      // if the function is named and was added to globals we don't want to add it to closure
+      // hence we check if identifier has that name
+      if (globals.has(name)) {
+        return;
+      }
+      if (
+        'id' in fun.node &&
+        fun.node.id &&
+        fun.node.id.name === name // we don't want to capture function's own name
+      ) {
+        return;
+      }
+
+      const parentNode = path.parent;
+
+      if (
+        isMemberExpression(parentNode) &&
+        parentNode.property === path.node &&
+        !parentNode.computed
+      ) {
+        return;
+      }
+
+      if (
+        isObjectProperty(parentNode) &&
+        isObjectExpression(path.parentPath.parent) &&
+        path.node !== parentNode.value
+      ) {
+        return;
+      }
+
+      let currentScope = path.scope;
+
+      while (currentScope != null) {
+        if (currentScope.bindings[name] != null) {
+          return;
+        }
+        currentScope = currentScope.parent;
+      }
+      closure.set(name, path.node);
+    },
+  });
+
+  return Array.from(closure.values());
 }
