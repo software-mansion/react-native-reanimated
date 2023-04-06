@@ -7,22 +7,28 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import {
-  FlatList, Modal,
+  FlatList,
+  Modal,
   Pressable,
   ScrollView,
   ScrollViewProps,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
-  View
+  View,
+  KeyboardAvoidingView as RNKeyboardAvoidingView,
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
-function ListItem({ title, onLongPress }: {
-  title: string,
-  onLongPress: () => void,
+function ListItem({
+  title,
+  onLongPress,
+}: {
+  title: string;
+  onLongPress: () => void;
 }) {
   return (
     <TouchableOpacity onLongPress={onLongPress}>
@@ -33,92 +39,119 @@ function ListItem({ title, onLongPress }: {
   );
 }
 
-function KeyboardSpace({ modalVisible, children, ...props }: ScrollViewProps & {
-  modalVisible: Animated.SharedValue<boolean>,
-  children: React.ReactNode,
+function KeyboardSpace({
+  modalVisible,
+  children,
+  ...props
+}: ScrollViewProps & {
+  modalVisible: Animated.SharedValue<boolean>;
+  children: React.ReactNode;
 }) {
-    const keyboard = useAnimatedKeyboard();
+  const keyboard = useAnimatedKeyboard();
 
-    const [ctx] = useState({
-      lastHeight: 0,
-      keyboardWasOpen: false,
-    });
+  const [ctx] = useState({
+    lastHeight: 0,
+    keyboardWasOpen: false,
+  });
 
-    const translateY = useDerivedValue(() => {
-      const { height, state } = keyboard;
-      console.log('height', height.value, 'ctx.lastHeight', ctx.lastHeight, 'state.value', state.value, 'modalVisible.value', modalVisible.value);
+  const translateY = useDerivedValue(() => {
+    const { height, state } = keyboard;
+    console.log(
+      'height',
+      height.value,
+      'ctx.lastHeight',
+      ctx.lastHeight,
+      'state.value',
+      state.value,
+      'modalVisible.value',
+      modalVisible.value
+    );
 
-      if (state.value === KeyboardState.OPEN && !modalVisible.value) {
-        ctx.lastHeight = height.value;
-      }
+    if (state.value === KeyboardState.OPEN && !modalVisible.value) {
+      ctx.lastHeight = height.value;
+    }
 
-      if (state.value === KeyboardState.CLOSING) {
-        ctx.lastHeight = 0;
-      }
+    if (state.value === KeyboardState.CLOSING) {
+      ctx.lastHeight = 0;
+    }
 
-      if (modalVisible.value || state.value === KeyboardState.CLOSED) {
+    if (modalVisible.value || state.value === KeyboardState.CLOSED) {
+      return Math.max(ctx.lastHeight - 17, 0);
+    }
 
-        return ctx.lastHeight - 17;
-      }
+    return 0;
+  });
 
-      return 0;
-    });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: translateY.value,
+        },
+      ],
+    };
+  });
 
-    const animatedStyle = useAnimatedStyle(() => {
-      return {
-        transform: [
-          {
-            translateY: translateY.value,
-          },
-        ],
-      };
-    });
-
-    return (
-      <ScrollView {...props}>
-        <Animated.View style={[{flex: 1}, animatedStyle]}>
-          {children}
-        </Animated.View>
-      </ScrollView>
-    )
+  return (
+    <ScrollView {...props}>
+      <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+        {children}
+      </Animated.View>
+    </ScrollView>
+  );
 }
 
 export default function KeyboardAvoidingViewExample(): React.ReactElement {
   const insets = useSafeAreaInsets();
+
+  const [useReanimated, setUseReanimated] = useState(false);
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const modalVisible = useSharedValue(false);
 
   const showModal = useCallback(() => {
     runOnUI(() => {
-      "worklet";
+      'worklet';
 
       modalVisible.value = true;
     })();
 
     setIsModalVisible(true);
-  }, []);
+  }, [modalVisible, setIsModalVisible]);
 
   const hideModal = useCallback(() => {
     runOnUI(() => {
-      "worklet";
+      'worklet';
 
       modalVisible.value = false;
     })();
 
     setIsModalVisible(false);
-  }, []);
-
-
+  }, [modalVisible, setIsModalVisible]);
 
   const renderScrollComponent = useCallback(
     (props: ScrollViewProps) => {
+      // @ts-expect-error
       return <KeyboardSpace {...props} modalVisible={modalVisible} />;
     },
     [modalVisible]
   );
 
+  const KeyboardAvoidingView = useReanimated
+    ? // @ts-expect-error
+      Animated.KeyboardAvoidingView
+    : RNKeyboardAvoidingView;
+
   return (
     <View style={[styles.container]}>
+      <View style={styles.header}>
+        <Text>Use Reanimated KeyboardAvoidingView</Text>
+        <Switch
+          value={useReanimated}
+          onChange={(evt) => setUseReanimated(evt.nativeEvent.value)}
+        />
+      </View>
+
       <FlatList
         inverted
         renderScrollComponent={renderScrollComponent}
@@ -130,7 +163,7 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
         )}
       />
 
-      <Animated.KeyboardAvoidingView
+      <KeyboardAvoidingView
         behavior="padding"
         keyboardVerticalOffset={40 + insets.bottom}>
         <View
@@ -143,7 +176,7 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
             autoCorrect
           />
         </View>
-      </Animated.KeyboardAvoidingView>
+      </KeyboardAvoidingView>
 
       <Modal
         style={styles.sheetContainer}
@@ -166,6 +199,14 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    height: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(29, 28, 29, 0.13)',
   },
   item: {
     paddingHorizontal: 20,

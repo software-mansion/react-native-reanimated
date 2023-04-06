@@ -94,7 +94,14 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
       // we use `enabled === true` to be 100% compatible with original implementation
       const bottomHeight = enabled === true ? bottom : 0;
 
-      console.log('bottomHeight', bottomHeight, 'keyboardHeight', keyboardHeight, 'frame', frame)
+      console.log(
+        'bottomHeight',
+        bottomHeight,
+        'keyboardHeight',
+        keyboardHeight,
+        'frame',
+        frame
+      );
 
       switch (behavior) {
         case 'height':
