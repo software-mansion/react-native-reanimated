@@ -196,6 +196,11 @@ void NativeProxy::registerEventHandler() {
       EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
 }
 
+void NativeProxy::maybeFlushUIUpdatesQueue() {
+  static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
+  method(javaPart_.get());
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -424,6 +429,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
         tag, isCancelled, removeView);
   };
 
+  auto maybeFlushUiUpdatesQueueFunction =
+      bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
+
   return {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -442,6 +450,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
+      maybeFlushUiUpdatesQueueFunction,
   };
 }
 
