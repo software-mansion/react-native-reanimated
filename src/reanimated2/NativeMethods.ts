@@ -50,7 +50,7 @@ if (isWeb()) {
       return null;
     }
 
-    const viewTag = animatedRef();
+    const viewTag = animatedRef() as number;
     if (viewTag === -1) {
       console.warn(
         `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -89,8 +89,12 @@ export function dispatchCommand(
   if (!_WORKLET || !isNative) {
     return;
   }
-  const shadowNodeWrapper = animatedRef();
-  _dispatchCommand(shadowNodeWrapper, commandName, args);
+  const shadowNodeWrapper = animatedRef() as object;
+  (_dispatchCommand as Exclude<typeof _dispatchCommand, undefined>)(
+    shadowNodeWrapper,
+    commandName,
+    args
+  );
 }
 
 export let scrollTo: (
@@ -133,7 +137,7 @@ if (isWeb()) {
     if (!_WORKLET) {
       return;
     }
-    const viewTag = animatedRef();
+    const viewTag = animatedRef() as number;
     _scrollTo(viewTag, x, y, animated);
   };
 } else {

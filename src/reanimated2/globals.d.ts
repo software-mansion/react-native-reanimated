@@ -22,16 +22,17 @@ declare global {
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
-  var evalWithSourceMap: (
-    js: string,
-    sourceURL: string,
-    sourceMap: string
-    // eslint-ignore-next-line @typescript-eslint/no-explicit-any
-  ) => any;
+  var evalWithSourceMap:
+    | ((
+        js: string,
+        sourceURL: string,
+        sourceMap: string
+        // eslint-ignore-next-line @typescript-eslint/no-explicit-any
+      ) => any)
+    | undefined;
   // eslint-ignore-next-line @typescript-eslint/no-explicit-any
-  var evalWithSourceUrl: (js: string, sourceURL: string) => any;
+  var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
   var _log: (s: string) => void;
-  var _getCurrentTime: () => number;
   var _notifyAboutProgress: (
     tag: number,
     value: number,
@@ -50,16 +51,16 @@ declare global {
     data: ShareableRef
   ) => void;
   var _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
-  var _updatePropsPaper: (
-    tag: number,
-    name: string,
-    updates: StyleProps | AnimatedStyle
-  ) => void;
-  var _updatePropsFabric: (
-    shadowNodeWrapper: ShadowNodeWrapper,
-    props: StyleProps | AnimatedStyle
-  ) => void;
-  var _removeShadowNodeFromRegistry: (viewTag: number) => void;
+  var _updatePropsPaper:
+    | ((tag: number, name: string, updates: StyleProps | AnimatedStyle) => void)
+    | undefined;
+  var _updatePropsFabric:
+    | ((
+        shadowNodeWrapper: ShadowNodeWrapper,
+        props: StyleProps | AnimatedStyle
+      ) => void)
+    | undefined;
+  var _removeShadowNodeFromRegistry: ((viewTag: number) => void) | undefined;
   var _measure: (viewTag: number) => MeasuredDimensions;
   var _scrollTo: (
     viewTag: number,
@@ -67,15 +68,14 @@ declare global {
     y: number,
     animated: boolean
   ) => void;
-  var _dispatchCommand: (
-    nodeRef: ShadowNodeWrapper | number,
-    commandName: string,
-    args: Array<unknown>
-  ) => void;
+  var _dispatchCommand:
+    | ((
+        nodeRef: ShadowNodeWrapper,
+        commandName: string,
+        args: Array<unknown>
+      ) => void)
+    | undefined;
   var performance: { now: () => number };
-  var ReanimatedDataMock: {
-    now: () => number;
-  };
   var __ErrorUtils: {
     reportFatalError: (error: Error) => void;
   };

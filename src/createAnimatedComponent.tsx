@@ -337,7 +337,12 @@ export default function createAnimatedComponent(
           const viewTag = this._viewTag;
           runOnUI(() => {
             'worklet';
-            _removeShadowNodeFromRegistry(viewTag);
+            (
+              _removeShadowNodeFromRegistry as Exclude<
+                typeof _removeShadowNodeFromRegistry,
+                undefined
+              >
+            )(viewTag);
           })();
         }
       }
