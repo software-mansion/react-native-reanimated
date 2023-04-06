@@ -159,6 +159,19 @@ export enum IOSReferenceFrame {
   Auto,
 }
 
+export type SensorConfig = {
+  interval: number | 'auto';
+  adjustToInterfaceOrientation: boolean;
+  iosReferenceFrame: IOSReferenceFrame;
+};
+
+export type AnimatedSensor = {
+  sensor: SharedValue<Value3D | ValueRotation>;
+  unregister: () => void;
+  isAvailable: boolean;
+  config: SensorConfig;
+};
+
 export interface NumericAnimation {
   current?: number;
 }

@@ -1,9 +1,8 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import {
+  SensorConfig,
   SensorType,
   ShareableRef,
-  Value3D,
-  ValueRotation,
 } from '../commonTypes';
 import { WebSensor } from './WebSensor';
 
@@ -58,15 +57,18 @@ export default class JSReanimated extends NativeReanimated {
 
   registerSensor(
     sensorType: SensorType,
-    interval: number,
-    iosReferenceFrame: number,
-    eventHandler: (data: Value3D | ValueRotation) => void
+    sensorRef: React.MutableRefObject<any>
   ): number {
     if (!(this.getSensorName(sensorType) in window)) {
       return -1;
     }
 
-    const sensor: WebSensor = this.initializeSensor(sensorType, interval);
+    const config = sensorRef.current.config;
+    const sensor: WebSensor = this.initializeSensor(sensorType, config.interval);
+    const eventHandler = (data: any) => {
+        sensorRef.current.value = data;
+    };
+
     let callback;
     if (sensorType === SensorType.ROTATION) {
       callback = () => {
@@ -106,11 +108,11 @@ export default class JSReanimated extends NativeReanimated {
     return this.nextSensorId++;
   }
 
-  unregisterSensor(id: number): void {
-    const sensor: WebSensor | undefined = this.sensors.get(id);
+  unregisterSensor(sensorType: SensorType, config: SensorConfig, sensorId: number): void {
+    const sensor: WebSensor | undefined = this.sensors.get(sensorId);
     if (sensor !== undefined) {
       sensor.stop();
-      this.sensors.delete(id);
+      this.sensors.delete(sensorId);
     }
   }
 

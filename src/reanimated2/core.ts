@@ -2,9 +2,10 @@ import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   AnimatedKeyboardOptions,
+  AnimatedSensor,
   BasicWorkletFunction,
-  Value3D,
-  ValueRotation,
+  SensorConfig,
+  SensorType,
 } from './commonTypes';
 import {
   makeShareableCloneRecursive,
@@ -159,24 +160,17 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 }
 
 export function registerSensor(
-  sensorType: number,
-  interval: number,
-  iosReferenceFrame: number,
-  eventHandler: (
-    data: Value3D | ValueRotation,
-    orientationDegrees: number
-  ) => void
+  sensorType: SensorType,
+  sensorRef: React.MutableRefObject<AnimatedSensor>
 ): number {
   return NativeReanimatedModule.registerSensor(
     sensorType,
-    interval,
-    iosReferenceFrame,
-    makeShareableCloneRecursive(eventHandler)
+    sensorRef,
   );
 }
 
-export function unregisterSensor(listenerId: number): void {
-  return NativeReanimatedModule.unregisterSensor(listenerId);
+export function unregisterSensor(SensorType: SensorType, config: SensorConfig, listenerId: number): void {
+  return NativeReanimatedModule.unregisterSensor(SensorType, config, listenerId);
 }
 
 // initialize UI runtime if applicable

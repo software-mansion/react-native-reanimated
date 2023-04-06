@@ -1,19 +1,21 @@
 import { NativeModules } from 'react-native';
 import {
+  SensorConfig,
+  SensorType,
   ShareableRef,
   ShareableSyncDataHolderRef,
-  Value3D,
-  ValueRotation,
 } from '../commonTypes';
 import {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
+import { NativeSensor } from '../NativeSensor';
 import { checkVersion } from '../platform-specific/checkVersion';
 
 export class NativeReanimated {
   native: boolean;
   private InnerNativeModule: any;
+  private nativeSensors: Map<string, NativeSensor> = new Map()
 
   constructor(native = true) {
     if (global.__reanimatedModuleProxy === undefined && native) {
@@ -80,22 +82,44 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  registerSensor<T>(
-    sensorType: number,
-    interval: number,
-    iosReferenceFrame: number,
-    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
-  ) {
-    return this.InnerNativeModule.registerSensor(
-      sensorType,
-      interval,
-      iosReferenceFrame,
-      handler
-    );
+  getSensorKey(sensorType: SensorType, config: SensorConfig) {
+    return sensorType.toString() + JSON.stringify(config);
   }
 
-  unregisterSensor(sensorId: number) {
-    return this.InnerNativeModule.unregisterSensor(sensorId);
+  registerSensor(
+    sensorType: SensorType,
+    sensorRef: React.MutableRefObject<any>,
+  ) {
+    const config = sensorRef.current.config;
+    const configKey = this.getSensorKey(sensorType, config);
+
+    if (!this.nativeSensors.has(configKey)) {
+      const newSensor = new NativeSensor(sensorType, this.InnerNativeModule, config);
+      this.nativeSensors.set(configKey, newSensor)
+    }
+
+    const sensor = this.nativeSensors?.get(configKey);
+    if (!sensor?.isRunning()) {
+      if (!sensor?.initialize()) {
+        return -1;
+      }
+    }
+    sensorRef.current.sensor = sensor.getSharedValue();
+    sensor.addListener();
+    return sensor.getId();
+  }
+
+  unregisterSensor(sensorType: SensorType, config: SensorConfig, sensorId: number) {
+    const configKey = this.getSensorKey(sensorType, config); 
+
+    if (this.nativeSensors.has(configKey)) {
+      const sensor = this.nativeSensors.get(configKey);
+      sensor?.removeListener();
+
+      if (!sensor?.hasActiveListeners()) {
+        sensor?.unregister();
+      }
+    }
   }
 
   registerEventHandler<T>(
