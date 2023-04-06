@@ -80,6 +80,7 @@ import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
+import ProfilesExample from './SharedElementTransitions/Profiles';
 
 interface Example {
   icon?: string;
@@ -261,6 +262,16 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
   },
+  GalleryExample: {
+    icon: '🇮🇹',
+    title: 'Gallery',
+    screen: GalleryExample,
+  },
+  ProfilesExample: {
+    icon: '🙆‍♂️',
+    title: 'Profiles',
+    screen: ProfilesExample,
+  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
@@ -430,10 +441,6 @@ export const EXAMPLES: Record<string, Example> = {
   CustomTransitionExample: {
     title: '[SET] Custom transition',
     screen: CustomTransitionExample,
-  },
-  GalleryExample: {
-    title: '[SET] Gallery',
-    screen: GalleryExample,
   },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',

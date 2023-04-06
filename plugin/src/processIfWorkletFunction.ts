@@ -1,4 +1,4 @@
-import { NodePath } from '@babel/core';
+import { NodePath, Node } from '@babel/core';
 import {
   FunctionDeclaration,
   FunctionExpression,
@@ -6,28 +6,35 @@ import {
   callExpression,
   isScopable,
   isExportNamedDeclaration,
-  isArrowFunctionExpression,
   variableDeclaration,
-  isFunctionParent,
   variableDeclarator,
 } from '@babel/types';
 import { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
-export function processWorkletFunction(
-  fun: NodePath<
+// Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
+// with a workletized version of itself.
+
+export function processIfWorkletFunction(
+  path: NodePath<Node>,
+  state: ReanimatedPluginPass
+) {
+  if (
+    path.isFunctionDeclaration() ||
+    path.isFunctionExpression() ||
+    path.isArrowFunctionExpression()
+  ) {
+    processWorkletFunction(path, state);
+  }
+}
+
+function processWorkletFunction(
+  path: NodePath<
     FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
   >,
   state: ReanimatedPluginPass
 ) {
-  // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
-  // with a workletized version of itself.
-
-  if (!isFunctionParent(fun)) {
-    return;
-  }
-
-  const newFun = makeWorklet(fun, state);
+  const newFun = makeWorklet(path, state);
 
   const replacement = callExpression(newFun, []);
 
@@ -37,11 +44,11 @@ export function processWorkletFunction(
   // const ggg = function foo() { }
   // ^ in such a case we don't need to define variable for the function
   const needDeclaration =
-    isScopable(fun.parent) || isExportNamedDeclaration(fun.parent);
-  fun.replaceWith(
-    !isArrowFunctionExpression(fun.node) && fun.node.id && needDeclaration
+    isScopable(path.parent) || isExportNamedDeclaration(path.parent);
+  path.replaceWith(
+    'id' in path.node && path.node.id && needDeclaration
       ? variableDeclaration('const', [
-          variableDeclarator(fun.node.id, replacement),
+          variableDeclarator(path.node.id, replacement),
         ])
       : replacement
   );

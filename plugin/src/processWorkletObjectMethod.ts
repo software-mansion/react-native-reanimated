@@ -16,7 +16,9 @@ export function processWorkletObjectMethod(
 ) {
   // Replaces ObjectMethod with a workletized version of itself.
 
-  if (!isFunctionParent(path)) return;
+  if (!isFunctionParent(path)) {
+    return;
+  }
 
   const newFun = makeWorklet(path, state);
 

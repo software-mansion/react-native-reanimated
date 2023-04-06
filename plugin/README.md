@@ -180,14 +180,14 @@ This flowchart represents the high-level logic of our plugin's control flow. It'
 flowchart TB
 node([ASTnode])
 iv([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/injectVersion.ts'>injectVersion</a><br><i>only once</i>])
-pw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processWorklets.ts'>processWorklets</a>])
+pw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processForCalleesWorklets.ts'>processForCalleesWorklets</a>])
 pwsbw{{should be workletized?}}
 pwgwa([get workletizable arguments])
 pwn([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfWorkletNode.ts'>processIfWorkletNode</a>])
 pwnsbw{{should be workletized?}}
 pgh([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfGestureHandlerEventCallbackFunctionNode.ts'>processIfGestureHandlerEventCallbackFunctionNode</a>])
 pghsbw{{should be workletized?}}
-pwf([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processWorkletFunction.ts'>processWorkletFunction</a>])
+pwf([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processIfWorkletFunction.ts'>processIfWorkletFunction</a>])
 pwom([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processWorkletObjectMethod.ts'>processWorkletObjectMethod</a>])
 pisw([<a href='https://github.com/software-mansion/react-native-reanimated/tree/main/plugin/src/processInlineStylesWarning.ts'>processInlineStylesWarning</a>])
 node-->|isDirectiveLiteral|iv

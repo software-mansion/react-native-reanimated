@@ -13,10 +13,16 @@ import { StyleSheet, Text, View } from 'react-native';
 
 enableExperimentalWebImplementation(true);
 
+function isBabelPluginEnabled() {
+  'inject Reanimated Babel plugin version';
+  // @ts-ignore
+  return global._REANIMATED_VERSION_BABEL_PLUGIN !== undefined;
+}
+
 export default function WithoutBabelPluginExample() {
   return (
     <View style={styles.container}>
-      <WithBabel />
+      {isBabelPluginEnabled() && <WithBabel />}
       <WithoutBabel />
     </View>
   );

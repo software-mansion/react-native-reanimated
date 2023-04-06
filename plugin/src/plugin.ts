@@ -7,8 +7,8 @@ import {
   ArrowFunctionExpression,
   DirectiveLiteral,
 } from '@babel/types';
+import { processForCalleesWorklets } from './processForCalleesWorklets';
 import { ReanimatedPluginPass } from './types';
-import { processWorklets } from './processWorklets';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
@@ -32,7 +32,7 @@ module.exports = function (): PluginItem {
       },
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
-          processWorklets(path, state);
+          processForCalleesWorklets(path, state);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {

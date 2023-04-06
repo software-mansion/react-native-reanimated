@@ -9,8 +9,8 @@ import {
   isMemberExpression,
   isExpression,
 } from '@babel/types';
+import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { ReanimatedPluginPass } from './types';
-import { processWorkletFunction } from './processWorkletFunction';
 
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
@@ -41,18 +41,12 @@ const gestureHandlerBuilderMethods = new Set([
   'onTouchesCancelled',
 ]);
 
-export function processIfGestureHandlerEventCallbackFunctionNode(
-  fun: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >,
-  state: ReanimatedPluginPass
-) {
-  // Auto-workletizes React Native Gesture Handler callback functions.
-  // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
-  // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
+// Auto-workletizes React Native Gesture Handler callback functions.
+// Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
+// Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
 
-  // Example #1: `Gesture.Tap().onEnd(<fun>)`
-  /*
+// Example #1: `Gesture.Tap().onEnd(<fun>)`
+/*
   CallExpression(
     callee: MemberExpression(
       object: CallExpression(
@@ -67,8 +61,8 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
   )
   */
 
-  // Example #2: `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`
-  /*
+// Example #2: `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`
+/*
   CallExpression(
     callee: MemberExpression(
       object: CallExpression(
@@ -94,41 +88,46 @@ export function processIfGestureHandlerEventCallbackFunctionNode(
     arguments: [fun3]
   )
   */
-
+export function processIfGestureHandlerEventCallbackFunctionNode(
+  path: NodePath<
+    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
+  >,
+  state: ReanimatedPluginPass
+) {
   if (
-    isCallExpression(fun.parent) &&
-    isExpression(fun.parent.callee) &&
-    isGestureObjectEventCallbackMethod(fun.parent.callee)
+    isCallExpression(path.parent) &&
+    isExpression(path.parent.callee) &&
+    isGestureObjectEventCallbackMethod(path.parent.callee)
   ) {
-    processWorkletFunction(fun, state);
+    processIfWorkletFunction(path, state);
   }
 }
 
-function isGestureObjectEventCallbackMethod(node: Expression) {
+function isGestureObjectEventCallbackMethod(exp: Expression) {
   // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
   // where `[*]` represents any number of method calls.
   return (
-    isMemberExpression(node) &&
-    isIdentifier(node.property) &&
-    gestureHandlerBuilderMethods.has(node.property.name) &&
-    containsGestureObject(node.object)
+    isMemberExpression(exp) &&
+    isIdentifier(exp.property) &&
+    gestureHandlerBuilderMethods.has(exp.property.name) &&
+    containsGestureObject(exp.object)
   );
 }
 
-function containsGestureObject(node: Expression) {
+function containsGestureObject(exp: Expression) {
   // Checks if node matches the pattern `Gesture.Foo()[*]`
   // where `[*]` represents any number of chained method calls, like `.something(42)`.
 
   // direct call
-  if (isGestureObject(node)) {
+  if (isGestureObject(exp)) {
     return true;
   }
 
   // method chaining
   if (
-    isCallExpression(node) &&
-    isMemberExpression(node.callee) &&
-    containsGestureObject(node.callee.object)
+    isCallExpression(exp) &&
+    isMemberExpression(exp.callee) &&
+    containsGestureObject(exp.callee.object)
   ) {
     return true;
   }
@@ -136,7 +135,7 @@ function containsGestureObject(node: Expression) {
   return false;
 }
 
-function isGestureObject(node: Expression) {
+function isGestureObject(exp: Expression) {
   // Checks if node matches `Gesture.Tap()` or similar.
   /*
   node: CallExpression(
@@ -147,11 +146,11 @@ function isGestureObject(node: Expression) {
   )
   */
   return (
-    isCallExpression(node) &&
-    isMemberExpression(node.callee) &&
-    isIdentifier(node.callee.object) &&
-    node.callee.object.name === 'Gesture' &&
-    isIdentifier(node.callee.property) &&
-    gestureHandlerGestureObjects.has(node.callee.property.name)
+    isCallExpression(exp) &&
+    isMemberExpression(exp.callee) &&
+    isIdentifier(exp.callee.object) &&
+    exp.callee.object.name === 'Gesture' &&
+    isIdentifier(exp.callee.property) &&
+    gestureHandlerGestureObjects.has(exp.callee.property.name)
   );
 }
