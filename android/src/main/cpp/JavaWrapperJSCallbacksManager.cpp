@@ -30,13 +30,11 @@ jni::local_ref<JMap<JString, JObject>> JavaWrapperJSCallbacksManager::executeSha
   const jni::alias_ref<JMap<JString, JObject>> sharedAnimationWorkletData
 ) {
   jsi::Runtime &runtime = *jsCallbacksManager_->getRuntimeHelper()->uiRuntime();
-  jsi::Object convertedValues = JNIHelper::convertJNIMapToJSIObject(
+  jsi::Value convertedValues = JNIHelper::convertJNIMapToJSIObject(
     runtime, sharedAnimationWorkletData);
-//  jsi::Value values = jsCallbacksManager_->executeSharedAnimationProgressCallback(
-//    viewTag, progress, sharedAnimationWorkletData);
-  auto wrapper = JHashMap<JString, JObject>::create();
-  wrapper->put(jni::make_jstring("mleko"), jni::make_jstring("mleko"));
-  return wrapper;
+  jsi::Value values = jsCallbacksManager_->executeSharedAnimationProgressCallback(
+    viewTag, progress, convertedValues);
+  return JNIHelper::convertJSIObjectToJNIMap(runtime, values.asObject(runtime));
 }
 
 } // namespace reanimated

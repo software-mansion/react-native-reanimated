@@ -652,19 +652,21 @@ public class SharedTransitionManager {
             mAnimationsManager.prepareDataForAnimationWorklet(targetValues, true, true);
     HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
-    Map<String, Object> tmp = javaWrapperJSCallbacksManager.executeSharedAnimationProgressCallback(
+    Map<String, Object> computedStyle = javaWrapperJSCallbacksManager.executeSharedAnimationProgressCallback(
       sharedElement.sourceView.getId(),
       progress,
       preparedValues
     );
-    return null;
+    return computedStyle;
   }
 
   private void onTransitionProgress(double progress) {
     for (SharedElement sharedElement : mSharedElements) {
-      int viewTag = sharedElement.sourceView.getId();
+      int sourceViewTag = sharedElement.sourceView.getId();
+      int targetViewTag = sharedElement.targetView.getId();
       Map<String, Object> componentStyle = computeAnimationFrameWithProgress(progress, sharedElement);
-      mAnimationsManager.progressLayoutAnimation(viewTag, componentStyle, true);
+      mAnimationsManager.progressLayoutAnimation(sourceViewTag, componentStyle, true);
+      mAnimationsManager.progressLayoutAnimation(targetViewTag, componentStyle, true);
     }
   }
 

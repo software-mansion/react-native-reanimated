@@ -3,9 +3,11 @@
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#include <jni.h>
 #include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/WritableNativeMap.h>
+#include <react/jni/ReadableNativeArray.h>
 #include <string>
 
 namespace reanimated {
