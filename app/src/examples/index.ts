@@ -38,6 +38,7 @@ import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
+import KeyboardAvoidingViewExample from './KeyboardAvoidingViewExample';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import LightBoxExample from './LightBoxExample';
 import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
@@ -186,6 +187,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📦',
     title: 'Bouncing box',
     screen: BouncingBoxExample,
+  },
+  KeyboardAvoidingViewExample: {
+    icon: '⌨️',
+    title: 'KeyboardAvoidingView',
+    screen: KeyboardAvoidingViewExample,
   },
   AnimatedKeyboardExample: {
     icon: '⌨️',
