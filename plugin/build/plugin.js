@@ -64,7 +64,6 @@ var require_commonObjects = __commonJS({
       "_scrollTo",
       "_dispatchCommand",
       "_setGestureState",
-      "_getCurrentTime",
       "isNaN",
       "LayoutAnimationRepository",
       "_notifyAboutProgress",

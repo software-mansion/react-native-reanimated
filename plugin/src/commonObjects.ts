@@ -52,7 +52,6 @@ export const globals = new Set([
   '_scrollTo',
   '_dispatchCommand',
   '_setGestureState',
-  '_getCurrentTime',
   'isNaN',
   'LayoutAnimationRepository',
   '_notifyAboutProgress',
