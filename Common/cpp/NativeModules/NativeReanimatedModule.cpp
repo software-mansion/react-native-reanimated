@@ -156,7 +156,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
-      platformDepMethodsHolder.endLayoutAnimation);
+      platformDepMethodsHolder.endLayoutAnimation,
+      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);

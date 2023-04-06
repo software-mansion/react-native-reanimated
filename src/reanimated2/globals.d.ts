@@ -90,6 +90,7 @@ declare global {
   var __handleCache: WeakMap<object, any>;
   var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;
+  var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: {
     start(
       tag: number,
