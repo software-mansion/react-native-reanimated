@@ -17,11 +17,11 @@ import type {
 } from './layoutReanimation/animationBuilder';
 
 declare global {
-  var _WORKLET: boolean;
-  var _IS_FABRIC: boolean;
-  var _REANIMATED_VERSION_CPP: string;
-  var _REANIMATED_VERSION_BABEL_PLUGIN: string;
-  var __reanimatedModuleProxy: NativeReanimated;
+  var _WORKLET: boolean | undefined;
+  var _IS_FABRIC: boolean | undefined;
+  var _REANIMATED_VERSION_CPP: string | undefined;
+  var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
+  var __reanimatedModuleProxy: NativeReanimated | undefined;
   var evalWithSourceMap: (
     js: string,
     sourceURL: string,
