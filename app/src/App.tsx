@@ -25,15 +25,15 @@ const transition = SharedTransition
       originY: withSpring(values.targetOriginY),
     };
   })
-  .progressAnimation((values, progress) => {
-    'worklet';
-    return {
-      width: progress * (values.targetWidth - values.currentWidth) + values.currentWidth,
-      height: progress * (values.targetHeight - values.currentHeight) + values.currentHeight,
-      originX: progress * (values.targetOriginX - values.currentOriginX) + values.currentOriginX,
-      originY: progress * (values.targetOriginY - values.currentOriginY) + values.currentOriginY,
-    };
-  });
+  // .progressAnimation((values, progress) => {
+  //   'worklet';
+  //   return {
+  //     width: progress * (values.targetWidth - values.currentWidth) + values.currentWidth,
+  //     height: progress * (values.targetHeight - values.currentHeight) + values.currentHeight,
+  //     originX: progress * (values.targetOriginX - values.currentOriginX) + values.currentOriginX,
+  //     originY: progress * (values.targetOriginY - values.currentOriginY) + values.currentOriginY,
+  //   };
+  // });
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
@@ -47,7 +47,6 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
           backgroundColor: 'green',
         }}
         sharedTransitionTag="tag"
-        sharedTransitionType='progress'
         sharedTransitionStyle={transition}
       />
       <Button
@@ -67,7 +66,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
           height: 300,
           marginLeft: 60,
           marginTop: 100,
-          backgroundColor: 'green',
+          backgroundColor: 'red',
         }}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}

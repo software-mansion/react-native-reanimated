@@ -113,7 +113,6 @@ declare module 'react-native-reanimated' {
         | EntryExitAnimationFunction
         | Keyframe;
       sharedTransitionTag?: string;
-      sharedTransitionType?: 'animation' | 'progress';
       sharedTransitionStyle?: SharedTransition;
     };
 

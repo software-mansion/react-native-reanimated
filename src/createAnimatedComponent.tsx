@@ -224,7 +224,6 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionType?: 'animation' | 'progress';
   sharedTransitionStyle?: SharedTransition;
 };
 
@@ -623,10 +622,6 @@ export default function createAnimatedComponent(
             );
           }
           if (sharedTransitionTag) {
-            if (this.props.sharedTransitionType === 'progress') {
-              // TODO 
-            }
-
             const sharedElementTransitionStyle =
               this.props.sharedTransitionStyle ?? SharedTransition;
             if (!SharedTransition.isValidObject(sharedElementTransitionStyle)) {

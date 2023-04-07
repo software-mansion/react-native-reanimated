@@ -71,18 +71,22 @@ public class SharedTransitionManager {
       if (eventDispatcher != null && !eventDispatchersWithListener.contains(eventDispatcher)) {
         eventDispatchersWithListener.add(eventDispatcher);
         eventDispatcher.addListener(event -> {
-          try {
-            Field field = event.getClass().getDeclaredField("mClosing");
-            field.setAccessible(true);
-            boolean closing =  field.getBoolean(event);
-            if (!closing) {
-              return;
-            }
-            field = event.getClass().getDeclaredField("mProgress");
-            field.setAccessible(true);
-            double progress =  field.getDouble(event);
-            onTransitionProgress(progress);
-          } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {}
+          if (event.getEventName().equals("topTransitionProgress")) {
+            try {
+              Field field = event.getClass().getDeclaredField("mClosing");
+              field.setAccessible(true);
+              boolean closing =  field.getBoolean(event);
+              if (!closing) {
+                return;
+              }
+              field = event.getClass().getDeclaredField("mProgress");
+              field.setAccessible(true);
+              double progress =  field.getDouble(event);
+              onTransitionProgress(progress);
+            } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {}
+          } else if (event.getEventName().equals("topFinishTransitioning")) {
+            screenTransitionFinished();
+          }
         });
       }
     }
@@ -665,8 +669,19 @@ public class SharedTransitionManager {
       int sourceViewTag = sharedElement.sourceView.getId();
       int targetViewTag = sharedElement.targetView.getId();
       Map<String, Object> componentStyle = computeAnimationFrameWithProgress(progress, sharedElement);
+      Map<String, Object> componentStyleCopy = new HashMap<>(componentStyle);
       mAnimationsManager.progressLayoutAnimation(sourceViewTag, componentStyle, true);
-      mAnimationsManager.progressLayoutAnimation(targetViewTag, componentStyle, true);
+      mAnimationsManager.progressLayoutAnimation(targetViewTag, componentStyleCopy, true);
+    }
+  }
+
+  private void screenTransitionFinished() {
+    if (mCurrentSharedTransitionViews.isEmpty()) {
+      return;
+    }
+    for (SharedElement sharedElement : mSharedElements) {
+      finishSharedAnimation(sharedElement.sourceView.getId());
+      finishSharedAnimation(sharedElement.targetView.getId());
     }
   }
 
