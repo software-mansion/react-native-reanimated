@@ -1,5 +1,5 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
-import { SensorType, ShareableRef } from '../commonTypes';
+import { AnimatedSensor, SensorType, ShareableRef } from '../commonTypes';
 import { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
@@ -53,7 +53,7 @@ export default class JSReanimated extends NativeReanimated {
 
   registerSensor(
     sensorType: SensorType,
-    sensorRef: React.MutableRefObject<any>
+    sensorRef: React.MutableRefObject<AnimatedSensor>
   ): number {
     if (!(this.getSensorName(sensorType) in window)) {
       return -1;
@@ -62,10 +62,10 @@ export default class JSReanimated extends NativeReanimated {
     const config = sensorRef.current.config;
     const sensor: WebSensor = this.initializeSensor(
       sensorType,
-      config.interval
+      config.interval === 'auto' ? -1 : config.interval
     );
     const eventHandler = (data: any) => {
-      sensorRef.current.value = data;
+      sensorRef.current.sensor.value = data;
     };
 
     let callback;

@@ -39,9 +39,9 @@ export class NativeSensor {
 
     this.sensorId = this.InnerNativeModule.registerSensor(
       sensorType,
-      config.interval,
+      config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
-      makeShareableCloneRecursive((data: any) => {
+      makeShareableCloneRecursive((data: Value3D | ValueRotation) => {
         'worklet';
         if (config.adjustToInterfaceOrientation) {
           if (sensorType === SensorType.ROTATION) {

@@ -1,5 +1,6 @@
 import { NativeModules } from 'react-native';
 import {
+  AnimatedSensor,
   SensorConfig,
   SensorType,
   ShareableRef,
@@ -88,7 +89,7 @@ export class NativeReanimated {
 
   registerSensor(
     sensorType: SensorType,
-    sensorRef: React.MutableRefObject<any>
+    sensorRef: React.MutableRefObject<AnimatedSensor>
   ): number | string {
     const config = sensorRef.current.config;
     const configKey = this.getSensorKey(sensorType, config);
