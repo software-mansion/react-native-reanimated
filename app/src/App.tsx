@@ -9,9 +9,9 @@ import {
   NativeStackNavigationProp,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
+import { NavigationContainer, PathConfigMap } from '@react-navigation/native';
 
 import { EXAMPLES } from './examples';
-import { NavigationContainer } from '@react-navigation/native';
 import React from 'react';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
@@ -94,10 +94,23 @@ function ItemSeparator() {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const linking = {
+  prefixes: [],
+  config: {
+    screens: EXAMPLES_NAMES.reduce<PathConfigMap<RootStackParamList>>(
+      (acc, name) => {
+        acc[name] = name;
+        return acc;
+      },
+      { Home: '' }
+    ),
+  },
+};
+
 export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
-      <NavigationContainer>
+      <NavigationContainer linking={linking}>
         <Stack.Navigator>
           <Stack.Screen
             name="Home"
