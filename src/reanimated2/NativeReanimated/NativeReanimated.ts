@@ -15,7 +15,7 @@ import { checkVersion } from '../platform-specific/checkVersion';
 export class NativeReanimated {
   native: boolean;
   private InnerNativeModule: any;
-  private nativeSensors: Map<string, NativeSensor> = new Map()
+  private nativeSensors: Map<string, NativeSensor> = new Map();
 
   constructor(native = true) {
     if (global.__reanimatedModuleProxy === undefined && native) {
@@ -88,14 +88,18 @@ export class NativeReanimated {
 
   registerSensor(
     sensorType: SensorType,
-    sensorRef: React.MutableRefObject<any>,
-  ) {
+    sensorRef: React.MutableRefObject<any>
+  ): number | string {
     const config = sensorRef.current.config;
     const configKey = this.getSensorKey(sensorType, config);
 
     if (!this.nativeSensors.has(configKey)) {
-      const newSensor = new NativeSensor(sensorType, this.InnerNativeModule, config);
-      this.nativeSensors.set(configKey, newSensor)
+      const newSensor = new NativeSensor(
+        sensorType,
+        this.InnerNativeModule,
+        config
+      );
+      this.nativeSensors.set(configKey, newSensor);
     }
 
     const sensor = this.nativeSensors?.get(configKey);
@@ -106,12 +110,11 @@ export class NativeReanimated {
     }
     sensorRef.current.sensor = sensor.getSharedValue();
     sensor.addListener();
-    return sensor.getId();
+    return configKey;
   }
 
-  unregisterSensor(sensorType: SensorType, config: SensorConfig, sensorId: number) {
-    const configKey = this.getSensorKey(sensorType, config); 
-
+  unregisterSensor(sensorId: number | string) {
+    const configKey = sensorId.toString();
     if (this.nativeSensors.has(configKey)) {
       const sensor = this.nativeSensors.get(configKey);
       sensor?.removeListener();

@@ -1,74 +1,84 @@
-import { SensorType, SensorConfig, SharedValue, Value3D, ValueRotation } from "./commonTypes";
-import { adjustRotationToInterfaceOrientation, adjustVectorToInterfaceOrientation, initSensorData } from "./sensorUtils";
-import { makeShareableCloneRecursive } from "./shareables";
-import { callMicrotasks } from "./threads";
+import {
+  SensorType,
+  SensorConfig,
+  SharedValue,
+  Value3D,
+  ValueRotation,
+} from './commonTypes';
+import {
+  adjustRotationToInterfaceOrientation,
+  adjustVectorToInterfaceOrientation,
+  initSensorData,
+} from './sensorUtils';
+import { makeShareableCloneRecursive } from './shareables';
+import { callMicrotasks } from './threads';
 
 export class NativeSensor {
-    private listenersNumber = 0;
-    private sensorId = -1;
-    private sensorType: SensorType;
-    private InnerNativeModule: any;
-    private data: SharedValue<Value3D | ValueRotation>;
-    private config: SensorConfig;
-    
-    constructor(sensorType: SensorType, InnerNativeModule: any, config: SensorConfig) {
-      this.sensorType = sensorType;
-      this.InnerNativeModule = InnerNativeModule
-      this.config = config;
-      this.data = initSensorData(sensorType);
-    }
+  private listenersNumber = 0;
+  private sensorId = -1;
+  private sensorType: SensorType;
+  private InnerNativeModule: any;
+  private data: SharedValue<Value3D | ValueRotation>;
+  private config: SensorConfig;
 
-    initialize() {
-      const sensorData = this.data;
-      const config = this.config;
-      const sensorType = this.sensorType
+  constructor(
+    sensorType: SensorType,
+    InnerNativeModule: any,
+    config: SensorConfig
+  ) {
+    this.sensorType = sensorType;
+    this.InnerNativeModule = InnerNativeModule;
+    this.config = config;
+    this.data = initSensorData(sensorType);
+  }
 
-      this.sensorId = this.InnerNativeModule.registerSensor(
-        sensorType,
-        config.interval,
-        config.iosReferenceFrame,
-        makeShareableCloneRecursive((data: any) => {
-          'worklet';
-          if (config.adjustToInterfaceOrientation) {
-            if (sensorType === SensorType.ROTATION) {
-              data = adjustRotationToInterfaceOrientation(data as ValueRotation);
-            } else {
-              data = adjustVectorToInterfaceOrientation(data as Value3D);
-            }
+  initialize() {
+    const sensorData = this.data;
+    const config = this.config;
+    const sensorType = this.sensorType;
+
+    this.sensorId = this.InnerNativeModule.registerSensor(
+      sensorType,
+      config.interval,
+      config.iosReferenceFrame,
+      makeShareableCloneRecursive((data: any) => {
+        'worklet';
+        if (config.adjustToInterfaceOrientation) {
+          if (sensorType === SensorType.ROTATION) {
+            data = adjustRotationToInterfaceOrientation(data as ValueRotation);
+          } else {
+            data = adjustVectorToInterfaceOrientation(data as Value3D);
           }
-          sensorData.value = data;
-          callMicrotasks();
-        })
-      );
-      return this.sensorId !== -1;
-    }
+        }
+        sensorData.value = data;
+        callMicrotasks();
+      })
+    );
+    return this.sensorId !== -1;
+  }
 
-    hasActiveListeners() {
-      return this.listenersNumber !== 0;
-    }
+  hasActiveListeners() {
+    return this.listenersNumber !== 0;
+  }
 
-    getId() {
-      return this.sensorId;
-    }
+  isRunning() {
+    return this.sensorId !== -1;
+  }
 
-    isRunning() {
-      return this.sensorId !== -1;
-    }
+  getSharedValue() {
+    return this.data;
+  }
 
-    getSharedValue() {
-      return this.data;
-    }
+  unregister() {
+    this.InnerNativeModule.unregisterSensor(this.sensorId);
+    this.sensorId = -1;
+  }
 
-    unregister() {
-      this.InnerNativeModule.unregisterSensor(this.sensorId);
-      this.sensorId = -1;
-    }
+  addListener() {
+    this.listenersNumber++;
+  }
 
-    addListener() {
-      this.listenersNumber++;
-    }
-
-    removeListener() {
-      this.listenersNumber--;
-    }
+  removeListener() {
+    this.listenersNumber--;
+  }
 }

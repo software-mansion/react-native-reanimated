@@ -4,7 +4,6 @@ import {
   AnimatedKeyboardOptions,
   AnimatedSensor,
   BasicWorkletFunction,
-  SensorConfig,
   SensorType,
 } from './commonTypes';
 import {
@@ -162,15 +161,12 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 export function registerSensor(
   sensorType: SensorType,
   sensorRef: React.MutableRefObject<AnimatedSensor>
-): number {
-  return NativeReanimatedModule.registerSensor(
-    sensorType,
-    sensorRef,
-  );
+): number | string {
+  return NativeReanimatedModule.registerSensor(sensorType, sensorRef);
 }
 
-export function unregisterSensor(SensorType: SensorType, config: SensorConfig, listenerId: number): void {
-  return NativeReanimatedModule.unregisterSensor(SensorType, config, listenerId);
+export function unregisterSensor(sensorId: number | string): void {
+  return NativeReanimatedModule.unregisterSensor(sensorId);
 }
 
 // initialize UI runtime if applicable

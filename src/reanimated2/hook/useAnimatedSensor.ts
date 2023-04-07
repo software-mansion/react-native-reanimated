@@ -36,7 +36,7 @@ export function useAnimatedSensor(
 
     if (id !== -1) {
       // if sensor is available
-      ref.current.unregister = () => unregisterSensor(sensorType, ref.current.config, id);
+      ref.current.unregister = () => unregisterSensor(id);
       ref.current.isAvailable = true;
     } else {
       // if sensor is unavailable
