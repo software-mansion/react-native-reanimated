@@ -1,29 +1,29 @@
-import { SensorType, SharedValue, Value3D, ValueRotation } from "./commonTypes";
-import { makeMutable } from "./mutables";
+import { SensorType, SharedValue, Value3D, ValueRotation } from './commonTypes';
+import { makeMutable } from './mutables';
 
 export function initSensorData(
-    sensorType: SensorType
-  ): SharedValue<Value3D | ValueRotation> {
-    if (sensorType === SensorType.ROTATION) {
-      return makeMutable<Value3D | ValueRotation>({
-        qw: 0,
-        qx: 0,
-        qy: 0,
-        qz: 0,
-        yaw: 0,
-        pitch: 0,
-        roll: 0,
-        interfaceOrientation: 0,
-      });
-    } else {
-      return makeMutable<Value3D | ValueRotation>({
-        x: 0,
-        y: 0,
-        z: 0,
-        interfaceOrientation: 0,
-      });
-    }
+  sensorType: SensorType
+): SharedValue<Value3D | ValueRotation> {
+  if (sensorType === SensorType.ROTATION) {
+    return makeMutable<Value3D | ValueRotation>({
+      qw: 0,
+      qx: 0,
+      qy: 0,
+      qz: 0,
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+      interfaceOrientation: 0,
+    });
+  } else {
+    return makeMutable<Value3D | ValueRotation>({
+      x: 0,
+      y: 0,
+      z: 0,
+      interfaceOrientation: 0,
+    });
   }
+}
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
