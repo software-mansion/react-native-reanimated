@@ -1,6 +1,7 @@
 #include "NativeReanimatedModule.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/core/TraitCast.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #endif
@@ -155,7 +156,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.setGestureStateFunction,
       platformDepMethodsHolder.progressLayoutAnimation,
-      platformDepMethodsHolder.endLayoutAnimation);
+      platformDepMethodsHolder.endLayoutAnimation,
+      platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
@@ -253,8 +255,14 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       shareable = std::make_shared<ShareableHandle>(runtimeHelper, rt, object);
     } else if (object.isFunction(rt)) {
-      shareable = std::make_shared<ShareableRemoteFunction>(
-          runtimeHelper, rt, object.asFunction(rt));
+      auto function = object.asFunction(rt);
+      if (function.isHostFunction(rt)) {
+        shareable =
+            std::make_shared<ShareableHostFunction>(rt, std::move(function));
+      } else {
+        shareable = std::make_shared<ShareableRemoteFunction>(
+            runtimeHelper, rt, std::move(function));
+      }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableArray>>(
@@ -556,40 +564,43 @@ void NativeReanimatedModule::performOperations() {
   jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
-      auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
+    shadowTree.commit(
+        [&](RootShadowNode const &oldRootShadowNode) {
+          auto rootNode =
+              oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-      ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
+          ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
 
-      {
-        auto lock = propsRegistry_->createLock();
+          {
+            auto lock = propsRegistry_->createLock();
 
-        for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-          const ShadowNodeFamily &family = shadowNode->getFamily();
-          react_native_assert(family.getSurfaceId() == surfaceId_);
+            for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+              const ShadowNodeFamily &family = shadowNode->getFamily();
+              react_native_assert(family.getSurfaceId() == surfaceId_);
 
-          auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-              rootNode, family, RawProps(rt, *props));
+              auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+                  rootNode, family, RawProps(rt, *props));
 
-          if (newRootNode == nullptr) {
-            // this happens when React removed the component but Reanimated
-            // still tries to animate it, let's skip update for this specific
-            // component
-            continue;
+              if (newRootNode == nullptr) {
+                // this happens when React removed the component but Reanimated
+                // still tries to animate it, let's skip update for this
+                // specific component
+                continue;
+              }
+              rootNode = newRootNode;
+            }
           }
-          rootNode = newRootNode;
-        }
-      }
 
-      shadowTreeCloner.updateYogaChildren();
+          shadowTreeCloner.updateYogaChildren();
 
-      auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
+          auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
 
-      // skip ReanimatedCommitHook for this ShadowTree
-      propsRegistry_->setLastReanimatedRoot(newRoot);
+          // skip ReanimatedCommitHook for this ShadowTree
+          propsRegistry_->setLastReanimatedRoot(newRoot);
 
-      return newRoot;
-    });
+          return newRoot;
+        },
+        {/* default commit options */});
   });
 }
 

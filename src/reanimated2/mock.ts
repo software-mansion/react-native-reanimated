@@ -99,6 +99,7 @@ const ReanimatedV2 = {
     bounce: ID,
     bezier: () => ({ factory: ID }),
     bezierFn: ID,
+    steps: ID,
     in: ID,
     out: ID,
     inOut: ID,

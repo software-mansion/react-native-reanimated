@@ -150,6 +150,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto nodesManager = reanimatedModule.nodesManager;
 
+  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
+
   auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
@@ -262,6 +264,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
+      maybeFlushUIUpdatesQueueFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(
