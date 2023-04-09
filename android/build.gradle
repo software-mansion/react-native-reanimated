@@ -104,6 +104,11 @@ def resolveReactNativeDirectory() {
     if (reactNativeFromProjectNodeModules.exists()) {
         return reactNativeFromProjectNodeModules
     }
+
+    def reactNativeFromWorkspaceNodeModules = file("${rootProject.projectDir}/../../node_modules/react-native")
+    if (reactNativeFromWorkspaceNodeModules.exists()) {
+        return reactNativeFromWorkspaceNodeModules
+    }
     
     def reactNativeFromNodeModulesWithReanimated = file("${projectDir}/../../react-native")
     if (reactNativeFromNodeModulesWithReanimated.exists()) {
