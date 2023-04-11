@@ -9,7 +9,7 @@ global._scheduleOnJS = queueMicrotask;
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
-  style: StyleProps;
+  style?: StyleProps;
   props: Record<string, string | number>;
   _touchableNode: {
     setAttribute: (key: string, props: unknown) => void;
@@ -32,9 +32,8 @@ export const _updatePropsJS = (
       [{}, {}]
     );
 
-    // eslint-disable-next-line no-constant-condition
-    if (true) {
-      setNativeProps(component, rawStyles);
+    if (component.style !== undefined) {
+      updatePropsDOM(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -49,7 +48,7 @@ export const _updatePropsJS = (
   }
 };
 
-const setNativeProps = (
+const updatePropsDOM = (
   component: JSReanimatedComponent,
   style: StyleProps
 ): void => {
@@ -59,7 +58,7 @@ const setNativeProps = (
 
   const domStyle = createReactDOMStyle(currentStyle);
   for (const key in domStyle) {
-    component.style[key] = domStyle[key];
+    (component.style as StyleProps)[key] = domStyle[key];
   }
 };
 
