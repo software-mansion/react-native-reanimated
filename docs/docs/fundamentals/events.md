@@ -14,6 +14,15 @@ To show how event handling is done in Reanimated we are going to lead you step b
 
 Reanimated integrates tightly with the [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/) package for the ability to define performant gesture-based interactions. We explain the library's APIs whenever we use bits of it in our examples, however, if you'd like to learn more about the gesture-handler outside of the context of reanimated, please visit the documentation website [here](https://docs.swmansion.com/react-native-gesture-handler/).
 
+
+For **android devices**, be sure to wrap your App entry point with *GestureHandlerRootView* component from *react-native-gesture-handler* library to wrap your entire app.
+
+```js
+export default function App() {
+  return <GestureHandlerRootView style={{ flex: 1 }}>{/* content */}</GestureHandlerRootView>;
+}
+```
+
 Going back to the interaction example, we start by focusing on tap events only.
 
 ![](/docs/events/touch-final.gif)
