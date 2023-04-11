@@ -18,7 +18,7 @@
     "react-native-gesture-handler": "software-mansion/react-native-gesture-handler#8fd36224de64278401214ae3442fb089b261d6f5",
     "react-native-pager-view": "5.4.24",
     "react-native-reanimated": "link:../",
-    "react-native-web": "~0.18.7"
+    "react-native-web": "~0.19.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

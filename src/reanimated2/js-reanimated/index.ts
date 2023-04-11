@@ -1,5 +1,6 @@
 import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
+import createReactDOMStyle from 'react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle';
 
 const reanimatedJS = new JSReanimated();
 
@@ -8,7 +9,7 @@ global._scheduleOnJS = queueMicrotask;
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
-  setNativeProps: (style: StyleProps) => void;
+  style: StyleProps;
   props: Record<string, string | number>;
   _touchableNode: {
     setAttribute: (key: string, props: unknown) => void;
@@ -31,7 +32,8 @@ export const _updatePropsJS = (
       [{}, {}]
     );
 
-    if (typeof component.setNativeProps === 'function') {
+    // eslint-disable-next-line no-constant-condition
+    if (true) {
       setNativeProps(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
@@ -54,7 +56,11 @@ const setNativeProps = (
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
   component.previousStyle = currentStyle;
-  component.setNativeProps({ style: currentStyle });
+
+  const domStyle = createReactDOMStyle(currentStyle);
+  for (const key in domStyle) {
+    component.style[key] = domStyle[key];
+  }
 };
 
 export default reanimatedJS;
