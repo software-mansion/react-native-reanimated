@@ -3,6 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
 
+import javax.inject.Inject
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -552,17 +553,14 @@ android {
 }
 
 abstract class NoMultipleInstancesAssertionTask extends DefaultTask {
-    @Input
-    abstract Property<File> getProjectDirFile()
-    @Input
-    abstract Property<File> getRootDirFile()
-    @Input
-    abstract Property<Boolean> getShouldCheck()
-    @Input
-    abstract Property<ObjectFactory> getObjectFactory()
+    @Inject abstract ObjectFactory getObjectFactory()
+
+    @Input abstract Property<File> getProjectDirFile()
+    @Input abstract Property<File> getRootDirFile()
+    @Input abstract Property<Boolean> getShouldCheck()
 
     def findReanimatedInstancesForPath(String path) {
-        return objectFactory.get().fileTree().from(path)
+        return objectFactory.fileTree().from(path)
                 .include("**/react-native-reanimated/package.json")
                 .exclude("**/.yarn/**")
                 .exclude({ Files.isSymbolicLink(it.getFile().toPath()) })
@@ -606,7 +604,6 @@ tasks.register('assertNoMultipleInstances', NoMultipleInstancesAssertionTask) {
     shouldCheck = shouldAssertNoMultipleInstances()
     rootDirFile = rootDir
     projectDirFile = projectDir
-    objectFactory = objects
 }
 
 def NEW_ARCH_ENABLED = isNewArchitectureEnabled()
