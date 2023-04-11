@@ -5,6 +5,8 @@ import {
   AnimatedSensor,
   BasicWorkletFunction,
   SensorType,
+  Value3D,
+  ValueRotation,
 } from './commonTypes';
 import {
   makeShareableCloneRecursive,
@@ -160,9 +162,17 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 
 export function registerSensor(
   sensorType: SensorType,
-  sensorRef: React.MutableRefObject<AnimatedSensor>
+  sensorRef: React.MutableRefObject<AnimatedSensor>,
+  eventHandler: (
+    data: Value3D | ValueRotation,
+    orientationDegrees: number
+  ) => void
 ): number | string {
-  return NativeReanimatedModule.registerSensor(sensorType, sensorRef);
+  return NativeReanimatedModule.registerSensor(
+    sensorType,
+    sensorRef,
+    makeShareableCloneRecursive(eventHandler)
+  );
 }
 
 export function unregisterSensor(sensorId: number | string): void {

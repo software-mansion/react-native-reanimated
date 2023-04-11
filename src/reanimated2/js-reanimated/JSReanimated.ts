@@ -1,5 +1,11 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
-import { AnimatedSensor, SensorType, ShareableRef } from '../commonTypes';
+import {
+  AnimatedSensor,
+  SensorType,
+  ShareableRef,
+  Value3D,
+  ValueRotation,
+} from '../commonTypes';
 import { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
@@ -53,7 +59,8 @@ export default class JSReanimated extends NativeReanimated {
 
   registerSensor(
     sensorType: SensorType,
-    sensorRef: React.MutableRefObject<AnimatedSensor>
+    sensorRef: React.MutableRefObject<AnimatedSensor>,
+    eventHandler: (data: Value3D | ValueRotation) => void
   ): number {
     if (!(this.getSensorName(sensorType) in window)) {
       return -1;
@@ -64,9 +71,6 @@ export default class JSReanimated extends NativeReanimated {
       sensorType,
       config.interval === 'auto' ? -1 : config.interval
     );
-    const eventHandler = (data: any) => {
-      sensorRef.current.sensor.value = data;
-    };
 
     let callback;
     if (sensorType === SensorType.ROTATION) {

@@ -5,6 +5,8 @@ import {
   SensorType,
   ShareableRef,
   ShareableSyncDataHolderRef,
+  Value3D,
+  ValueRotation,
 } from '../commonTypes';
 import {
   LayoutAnimationFunction,
@@ -16,7 +18,7 @@ import { checkVersion } from '../platform-specific/checkVersion';
 export class NativeReanimated {
   native: boolean;
   private InnerNativeModule: any;
-  private nativeSensors: Map<string, NativeSensor> = new Map();
+  private nativeSensors: Map<string, NativeSensor<any>> = new Map();
 
   constructor(native = true) {
     if (global.__reanimatedModuleProxy === undefined && native) {
@@ -87,9 +89,10 @@ export class NativeReanimated {
     return sensorType.toString() + JSON.stringify(config);
   }
 
-  registerSensor(
+  registerSensor<T>(
     sensorType: SensorType,
-    sensorRef: React.MutableRefObject<AnimatedSensor>
+    sensorRef: React.MutableRefObject<AnimatedSensor>,
+    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ): number | string {
     const config = sensorRef.current.config;
     const configKey = this.getSensorKey(sensorType, config);
@@ -98,7 +101,9 @@ export class NativeReanimated {
       const newSensor = new NativeSensor(
         sensorType,
         this.InnerNativeModule,
-        config
+        config,
+        sensorRef.current.sensor,
+        handler
       );
       this.nativeSensors.set(configKey, newSensor);
     }

@@ -4,36 +4,35 @@ import {
   SharedValue,
   Value3D,
   ValueRotation,
+  ShareableRef,
 } from './commonTypes';
-import {
-  adjustRotationToInterfaceOrientation,
-  adjustVectorToInterfaceOrientation,
-  initSensorData,
-} from './sensorUtils';
-import { makeShareableCloneRecursive } from './shareables';
-import { callMicrotasks } from './threads';
 
-export class NativeSensor {
+export class NativeSensor<T> {
   private listenersNumber = 0;
   private sensorId = -1;
   private sensorType: SensorType;
   private InnerNativeModule: any;
   private data: SharedValue<Value3D | ValueRotation>;
   private config: SensorConfig;
+  private eventHandler:
+    | ShareableRef<T>
+    | ((data: Value3D | ValueRotation) => void);
 
   constructor(
     sensorType: SensorType,
     InnerNativeModule: any,
-    config: SensorConfig
+    config: SensorConfig,
+    initData: SharedValue<Value3D | ValueRotation>,
+    eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
     this.sensorType = sensorType;
     this.InnerNativeModule = InnerNativeModule;
     this.config = config;
-    this.data = initSensorData(sensorType);
+    this.data = initData;
+    this.eventHandler = eventHandler;
   }
 
   initialize() {
-    const sensorData = this.data;
     const config = this.config;
     const sensorType = this.sensorType;
 
@@ -41,18 +40,7 @@ export class NativeSensor {
       sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
-      makeShareableCloneRecursive((data: Value3D | ValueRotation) => {
-        'worklet';
-        if (config.adjustToInterfaceOrientation) {
-          if (sensorType === SensorType.ROTATION) {
-            data = adjustRotationToInterfaceOrientation(data as ValueRotation);
-          } else {
-            data = adjustVectorToInterfaceOrientation(data as Value3D);
-          }
-        }
-        sensorData.value = data;
-        callMicrotasks();
-      })
+      this.eventHandler
     );
     return this.sensorId !== -1;
   }
