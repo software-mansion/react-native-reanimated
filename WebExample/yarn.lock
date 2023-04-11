@@ -8210,9 +8210,10 @@ react-native-codegen@^0.71.5:
     jscodeshift "^0.13.1"
     nullthrows "^1.1.1"
 
-react-native-gesture-handler@software-mansion/react-native-gesture-handler#8fd36224de64278401214ae3442fb089b261d6f5:
+react-native-gesture-handler@^2.9.0:
   version "2.9.0"
-  resolved "https://codeload.github.com/software-mansion/react-native-gesture-handler/tar.gz/8fd36224de64278401214ae3442fb089b261d6f5"
+  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.9.0.tgz#2f63812e523c646f25b9ad660fc6f75948e51241"
+  integrity sha512-a0BcH3Qb1tgVqUutc6d3VuWQkI1AM3+fJx8dkxzZs9t06qA27QgURYFoklpabuWpsUTzuKRpxleykp25E8m7tg==
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"

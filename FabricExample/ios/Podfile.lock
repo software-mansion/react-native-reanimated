@@ -796,6 +796,8 @@ PODS:
     - React-jsi (= 0.72.0-rc.1)
     - React-logger (= 0.72.0-rc.1)
     - React-perflogger (= 0.72.0-rc.1)
+  - RNCAsyncStorage (1.18.1):
+    - React-Core
   - RNCMaskedView (0.2.8):
     - React-Core
   - RNCPicker (2.4.9):
@@ -942,6 +944,7 @@ DEPENDENCIES:
   - React-rncore (from `../node_modules/react-native/ReactCommon`)
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -1050,6 +1053,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/runtimeexecutor"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNCAsyncStorage:
+    :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCMaskedView:
     :path: "../node_modules/@react-native-masked-view/masked-view"
   RNCPicker:
@@ -1119,6 +1124,7 @@ SPEC CHECKSUMS:
   React-rncore: e471471b97f6cfb9deeb6cb4492c92ad7958a015
   React-runtimeexecutor: 7024fd5cb9245856e8ea7aaa51c8cbf015573d17
   ReactCommon: 828a0dd88e28f3d2e09e24d4d3e37465d48ab317
+  RNCAsyncStorage: b90b71f45b8b97be43bc4284e71a6af48ac9f547
   RNCMaskedView: bc0170f389056201c82a55e242e5d90070e18e5a
   RNCPicker: 567de6dc0c6735cf249700d940c80b90b090e4db
   RNGestureHandler: 9d2ebd17a9fef618d9720e3d95ff5e6607acf8d4
