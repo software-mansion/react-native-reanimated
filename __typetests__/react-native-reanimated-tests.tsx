@@ -404,7 +404,7 @@ function WithTimingTest() {
 function WithTimingToValueAsColorTest() {
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(
+      backgroundColor: withTiming(
         'rgba(255,105,180,0)',
         {
           duration: 500,
@@ -454,7 +454,7 @@ function WithSpringTest() {
 function WithSpringToValueAsColorTest() {
   const style = useAnimatedStyle(() => {
     return {
-      width: withSpring('rgba(255,105,180,0)', {}, (_finished) => {}),
+      backgroundColor: withSpring('rgba(255,105,180,0)', {}, (_finished) => {}),
     };
   });
   return (

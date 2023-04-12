@@ -32,8 +32,8 @@ export function useAnimatedReaction<T>(
 
   if (dependencies === undefined) {
     dependencies = [
-      Object.values(prepare._closure ?? {}),
-      Object.values(react._closure ?? {}),
+      ...Object.values(prepare._closure ?? {}),
+      ...Object.values(react._closure ?? {}),
       prepare.__workletHash,
       react.__workletHash,
     ];

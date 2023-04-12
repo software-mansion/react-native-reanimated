@@ -41,3 +41,5 @@ jobs:
       - name: Show diff
         if: failure() && steps.diff.outcome == 'failure'
         run: git diff
+      - name: Test
+        run: yarn jest
