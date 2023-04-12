@@ -67,7 +67,6 @@ export default class JSReanimated extends NativeReanimated {
     }
 
     const sensor: WebSensor = this.initializeSensor(sensorType, interval);
-
     let callback;
     if (sensorType === SensorType.ROTATION) {
       callback = () => {
@@ -107,11 +106,11 @@ export default class JSReanimated extends NativeReanimated {
     return this.nextSensorId++;
   }
 
-  unregisterSensor(sensorId: number): void {
-    const sensor: WebSensor | undefined = this.sensors.get(sensorId);
+  unregisterSensor(id: number): void {
+    const sensor: WebSensor | undefined = this.sensors.get(id);
     if (sensor !== undefined) {
       sensor.stop();
-      this.sensors.delete(sensorId);
+      this.sensors.delete(id);
     }
   }
 
