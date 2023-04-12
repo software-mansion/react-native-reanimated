@@ -2,10 +2,8 @@
 
 namespace reanimated {
 
-JSCallbacksManager::JSCallbacksManager(
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper, 
-  PlatformDepMethodsHolder platformDepMethodsHolder
-) : runtimeHelper_(runtimeHelper) {}
+JSCallbacksManager::JSCallbacksManager(std::shared_ptr<JSRuntimeHelper> runtimeHelper) 
+  : runtimeHelper_(runtimeHelper) {}
 
 jsi::Value JSCallbacksManager::registerJSCallback(
     jsi::Runtime &rt,

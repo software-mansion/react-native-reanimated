@@ -185,6 +185,16 @@ static jsi::Value SPEC_PREFIX(unregisterJSCallback)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(setJSConfig)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->setJSConfig(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -221,6 +231,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{3, SPEC_PREFIX(registerJSCallback)};
   methodMap_["unregisterJSCallback"] =
       MethodMetadata{2, SPEC_PREFIX(unregisterJSCallback)};
+  methodMap_["setJSConfig"] =
+      MethodMetadata{2, SPEC_PREFIX(setJSConfig)};
 
   methodMap_["configureLayoutAnimation"] =
       MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};

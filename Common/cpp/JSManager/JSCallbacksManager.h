@@ -11,12 +11,8 @@ using namespace facebook;
 namespace reanimated {
 
 class JSCallbacksManager {
-
-  std::map<int, std::function<jsi::Value(const jsi::Value &, const double)>> sharedAnimationProgressCallback_;
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
-  
 public:
-  JSCallbacksManager(std::shared_ptr<JSRuntimeHelper> runtimeHelper, PlatformDepMethodsHolder platformDepMethodsHolder);
+  JSCallbacksManager(std::shared_ptr<JSRuntimeHelper> runtimeHelper);
   jsi::Value registerJSCallback(
     jsi::Runtime &rt,
     const jsi::Value &type,
@@ -36,6 +32,8 @@ public:
   );
 
 private:
+  std::map<int, std::function<jsi::Value(const jsi::Value &, const double)>> sharedAnimationProgressCallback_;
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   void addSharedAnimationProgressCallback(
     const std::shared_ptr<Shareable> shareableCallback,
     const jsi::Value &configuration
