@@ -55,6 +55,10 @@ export function processForCalleesWorklets(
     assert(!Array.isArray(workletToProcess), "'workletToProcess' is an array'");
     if (workletToProcess.isObjectExpression()) {
       processObjectHook(workletToProcess, state);
+      // useAnimatedScrollHandler can take a function as an argument instead of an ObjectExpression
+      // but useAnimatedGestureHandler can't
+    } else if (name === 'useAnimatedScrollHandler') {
+      processIfWorkletFunction(workletToProcess, state);
     }
   } else {
     const indices = functionArgsToWorkletize.get(name);
