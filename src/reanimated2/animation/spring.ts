@@ -61,6 +61,38 @@ export function withSpring(
       config.velocity = 0;
     }
 
+    function initialCalculations(
+      animation: InnerSpringAnimation,
+      now: Timestamp
+    ): {
+      t: number;
+      v0: number;
+      x0: number;
+      zeta: number;
+      omega0: number;
+      omega1: number;
+    } {
+      const { toValue, lastTimestamp, current, velocity } = animation;
+
+      const deltaTime = Math.min(now - lastTimestamp, 64);
+      animation.lastTimestamp = now;
+
+      const c = config.damping;
+      const m = config.mass;
+      const k = config.stiffness;
+
+      const v0 = -velocity;
+      const x0 = toValue - current;
+
+      const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
+      const omega0 = Math.sqrt(k / m); // undamped angular frequency of the oscillator (rad/ms)
+      const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
+
+      const t = deltaTime / 1000;
+
+      return { t, v0, x0, zeta, omega0, omega1 };
+    }
+
     function criticallyDampedSpringCalculations(
       animation: InnerSpringAnimation,
       precalculatedValues: {
@@ -125,9 +157,37 @@ export function withSpring(
       return { position: underDampedPosition, velocity: underDampedVelocity };
     }
 
+    function isAnimationTerminatingCalculation(
+      animation: InnerSpringAnimation,
+      config: Partial<SpringConfig> &
+        Required<
+          Pick<SpringConfig, 'restSpeedThreshold' | 'restDisplacementThreshold'>
+        >,
+      current: number
+    ): {
+      isOvershooting: boolean;
+      isVelocity: boolean;
+      isDisplacement: boolean;
+    } {
+      const { toValue, velocity } = animation;
+
+      const isOvershooting =
+        config.overshootClamping && config.stiffness !== 0
+          ? current < toValue
+            ? animation.current > toValue
+            : animation.current < toValue
+          : false;
+
+      const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
+      const isDisplacement =
+        config.stiffness === 0 ||
+        Math.abs(toValue - current) < config.restDisplacementThreshold;
+
+      return { isOvershooting, isVelocity, isDisplacement };
+    }
+
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
-      const { toValue, startTimestamp, lastTimestamp, current, velocity } =
-        animation;
+      const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
       if (userConfig?.duration && timeFromStart > userConfig.duration) {
@@ -139,21 +199,11 @@ export function withSpring(
         return true;
       }
 
-      const deltaTime = Math.min(now - lastTimestamp, 64);
+      const { t, v0, x0, zeta, omega0, omega1 } = initialCalculations(
+        animation,
+        now
+      );
       animation.lastTimestamp = now;
-
-      const c = config.damping;
-      const m = config.mass;
-      const k = config.stiffness;
-
-      const v0 = -velocity;
-      const x0 = toValue - current;
-
-      const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
-      const omega0 = Math.sqrt(k / m); // undamped angular frequency of the oscillator (rad/ms)
-      const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
-
-      const t = deltaTime / 1000;
 
       const { position: newPosition, velocity: newVelocity } =
         // always use underDamped motion if duration was provided
@@ -173,25 +223,13 @@ export function withSpring(
               t,
             });
 
-      const isOvershooting = () => {
-        if (config.overshootClamping && config.stiffness !== 0) {
-          return current < toValue
-            ? animation.current > toValue
-            : animation.current < toValue;
-        } else {
-          return false;
-        }
-      };
-
-      const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
-      const isDisplacement =
-        config.stiffness === 0 ||
-        Math.abs(toValue - current) < config.restDisplacementThreshold;
+      const { isOvershooting, isVelocity, isDisplacement } =
+        isAnimationTerminatingCalculation(animation, config, current);
 
       animation.current = newPosition;
       animation.velocity = newVelocity;
 
-      if (isOvershooting() || (isVelocity && isDisplacement)) {
+      if (isOvershooting || (isVelocity && isDisplacement)) {
         if (config.stiffness !== 0) {
           animation.velocity = 0;
           animation.current = toValue;
