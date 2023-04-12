@@ -581,7 +581,7 @@ describe('babel plugin', () => {
     const input = `
       useAnimatedScrollHandler(function foo(event) {
         console.log(event);
-    });
+      });
     `;
 
     const { code } = runPlugin(input);
