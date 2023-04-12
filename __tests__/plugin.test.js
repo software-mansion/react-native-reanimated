@@ -532,49 +532,58 @@ describe('babel plugin', () => {
     const input = `
       useAnimatedGestureHandler(() => {});
     `;
+
     const { code } = runPlugin(input);
     expect(code).not.toContain('_f.__workletHash');
   });
 
   it("doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler", () => {
     const input = `
-      useAnimatedGestureHandler(function (){});
+      useAnimatedGestureHandler(function () {});
     `;
+
     const { code } = runPlugin(input);
     expect(code).not.toContain('_f.__workletHash');
   });
 
   it("doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler", () => {
     const input = `
-      useAnimatedGestureHandler(function foo(){});
+      useAnimatedGestureHandler(function foo() {});
     `;
+
     const { code } = runPlugin(input);
     expect(code).not.toContain('_f.__workletHash');
   });
 
-  it('transforms ArrowFunctionExpression as argument of useAnimatedScrolleHandler', () => {
+  it('transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler', () => {
     const input = `
-      useAnimatedScrollHandler(
-        (event) => { console.log(event); });
+      useAnimatedScrollHandler((event) => {
+        console.log(event);
+      });
     `;
+
     const { code } = runPlugin(input);
     expect(code).toContain('_f.__workletHash');
   });
 
-  it('transforms unnamed FunctionExpression as argument of useAnimatedScrolleHandler', () => {
+  it('transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler', () => {
     const input = `
-      useAnimatedScrollHandler(function (event)
-        { console.log(event); });
+      useAnimatedScrollHandler(function (event) {
+        console.log(event);
+      });
     `;
+
     const { code } = runPlugin(input);
     expect(code).toContain('_f.__workletHash');
   });
 
-  it('transforms named FunctionExpression as argument of useAnimatedScrolleHandler', () => {
+  it('transforms named FunctionExpression as argument of useAnimatedScrollHandler', () => {
     const input = `
-      useAnimatedScrollHandler(function foo(event)
-        { console.log(event); });
+    useAnimatedScrollHandler(function foo(event) {
+      console.log(event);
+    });
     `;
+
     const { code } = runPlugin(input);
     expect(code).toContain('_f.__workletHash');
   });
