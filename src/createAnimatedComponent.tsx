@@ -9,7 +9,6 @@ import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
-  registerJSCallback,
   runOnUI,
   startMapper,
   stopMapper,
@@ -32,7 +31,6 @@ import {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
-  JSCallbackType,
 } from './reanimated2/commonTypes';
 import {
   makeViewDescriptorsSet,
@@ -622,25 +620,9 @@ export default function createAnimatedComponent(
             );
           }
           if (sharedTransitionTag) {
-            const sharedElementTransitionStyle =
-              this.props.sharedTransitionStyle ?? SharedTransition;
-            if (!SharedTransition.isValidObject(sharedElementTransitionStyle)) {
-              throw new Error("[Reanimated] Invalid value of property `sharedTransitionStyle`");
-            }
-            sharedElementTransitionStyle.build();
-            const transitionAnimation = sharedElementTransitionStyle.getTransitionAnimation();
-            const progressAnimation = sharedElementTransitionStyle.getProgressAnimation();
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-              transitionAnimation,
-              sharedTransitionTag
-            );
-            registerJSCallback(
-              JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK, 
-              { viewTag: tag }, 
-              progressAnimation
-            );
+            const sharedElementTransition =
+              this.props.sharedTransitionStyle ?? new SharedTransition();
+            sharedElementTransition.registerTransition(tag, sharedTransitionTag);
           }
         }
 

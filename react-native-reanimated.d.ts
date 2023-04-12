@@ -867,13 +867,8 @@ declare module 'react-native-reanimated' {
   type ProgressAnimationFactoryType = (values: LayoutAnimationsValues, progress: number) => StyleProps;
 
   export class SharedTransition implements ILayoutAnimationBuilder {
-    animationFactory: AnimationFactoryType | null = null;
-    static createInstance(): SharedTransition;
-    static custom(animationFactory: AnimationFactoryType): SharedTransition;
-    custom(animationFactory: AnimationFactoryType): SharedTransition;
-    static progressAnimation(progressAnimationFactory: ProgressAnimationFactoryType): SharedTransition;
+    animation(animationFactory: AnimationFactoryType): SharedTransition;
     progressAnimation(progressAnimationFactory: ProgressAnimationFactoryType): SharedTransition;
-    static setTransitionDuration(duration: number): SharedTransition;
-    setTransitionDuration(duration: number): SharedTransition;
+    transitionDuration(duration: number): SharedTransition;
   }
 }

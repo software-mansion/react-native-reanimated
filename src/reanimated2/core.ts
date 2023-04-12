@@ -4,6 +4,7 @@ import {
   AnimatedKeyboardOptions,
   BasicWorkletFunction,
   JSCallbackType,
+  JSConfigType,
   Value3D,
   ValueRotation,
 } from './commonTypes';
@@ -255,4 +256,8 @@ export function unregisterJSCallback(
   callbackId: number
 ): void {
   return NativeReanimatedModule.unregisterJSCallback(type, callbackId);
+}
+
+export function setJSConfig(type: JSConfigType, config: Record<string, any>): void {
+  NativeReanimatedModule.setJSConfig(type, config);
 }

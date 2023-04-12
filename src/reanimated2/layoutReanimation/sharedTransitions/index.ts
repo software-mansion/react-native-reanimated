@@ -1,46 +1,96 @@
 import { withTiming } from '../../animation';
 import {
-  ISharedTransitionAnimationBuilder,
   SharedTransitionAnimationsFunction,
   SharedTransitionAnimationsValues,
 } from '../animationBuilder/commonTypes';
-import { StyleProps } from '../../commonTypes';
+import { StyleProps, JSCallbackType, JSConfigType, SharedTransitionType } from '../../commonTypes';
+import {
+  configureLayoutAnimations,
+  registerJSCallback,
+  setJSConfig,
+} from '../../core';
+import {
+  LayoutAnimationType,
+} from '../../layoutReanimation';
+
 
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
-type AnimationFactoryType = (
+type AnimationFactory = (
   values: SharedTransitionAnimationsValues
 ) => StyleProps;
-type ProgressAnimationCallbackType = (
+type ProgressAnimationCallback = (
   values: SharedTransitionAnimationsValues,
   progress: number
 ) => StyleProps;
 
-export class SharedTransition implements ISharedTransitionAnimationBuilder {
-  private customAnimationFactory: AnimationFactoryType | null = null;
-  private transitionAnimation: SharedTransitionAnimationsFunction | null = null;
-  private transitionDuration = 500;
+export class SharedTransition {
+  private _defaultAnimationType = SharedTransitionType.PROGRESS;
+  private _animationFactory: AnimationFactory | null = null;
+  private _animation: SharedTransitionAnimationsFunction | null = null;
+  private _transitionDuration = 500;
+  private _customProgressAnimation?: ProgressAnimationCallback = undefined;
+  private _progressAnimation?: ProgressAnimationCallback = undefined;
 
-  private customProgressAnimationCallback: ProgressAnimationCallbackType | null =
-    null;
-
-  private progressAnimationCallback: ProgressAnimationCallbackType | null =
-    null;
-
-  custom(animationFactory: AnimationFactoryType): SharedTransition {
-    this.customAnimationFactory = animationFactory;
+  public animation(animationFactory: AnimationFactory): SharedTransition {
+    this._animationFactory = animationFactory;
     return this;
   }
 
-  build(): void {
-    this.buildTransitionAnimation();
-    this.buildProgressAnimation();
+  public progressAnimation(
+    progressAnimationCallback: ProgressAnimationCallback
+  ): SharedTransition {
+    this._customProgressAnimation = progressAnimationCallback;
+    return this;
   }
 
-  buildTransitionAnimation() {
-    const animationFactory = this.customAnimationFactory;
-    const animationDuration = this.transitionDuration;
-    this.transitionAnimation = (values: SharedTransitionAnimationsValues) => {
+  public transitionDuration(duration: number): SharedTransition {
+    this._transitionDuration = duration;
+    return this;
+  }
+
+  public registerTransition(viewTag: number, sharedTransitionTag: string): void {
+    const transitionAnimation = this.getTransitionAnimation();
+    const progressAnimation = this.getProgressAnimation();
+    let animationType = this._defaultAnimationType;
+    if (this._animationFactory) {
+      animationType = SharedTransitionType.ANIMATION;
+    }
+    configureLayoutAnimations(
+      viewTag,
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      transitionAnimation,
+      sharedTransitionTag
+    );
+    registerJSCallback(
+      JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK, 
+      { viewTag }, 
+      progressAnimation
+    );
+    setJSConfig(
+      JSConfigType.SHARED_TRANSITION_ANIMATION_TYPE, 
+      { viewTag, animationType }
+    );
+  }
+
+  private getTransitionAnimation(): SharedTransitionAnimationsFunction {
+    if (!this._animation) {
+      this.buildAnimation();
+    }
+    return this._animation!;
+  }
+
+  private getProgressAnimation(): ProgressAnimationCallback {
+    if (!this._progressAnimation) {
+      this.buildProgressAnimation();
+    }
+    return this._progressAnimation!;
+  }
+
+  private buildAnimation() {
+    const animationFactory = this._animationFactory;
+    const transitionDuration = this._transitionDuration;
+    this._animation = (values: SharedTransitionAnimationsValues) => {
       'worklet';
       let animations: {
         [key: string]: any;
@@ -61,15 +111,13 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
           if (propName === 'transform') {
             const matrix = values.targetTransformMatrix;
             animations.transformMatrix = withTiming(matrix, {
-              // native screen transition takes around 500ms
-              duration: animationDuration,
+              duration: transitionDuration,
             });
           } else {
             const keyToTargetValue =
               'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
             animations[propName] = withTiming(values[keyToTargetValue], {
-              // native screen transition takes around 500ms
-              duration: animationDuration,
+              duration: transitionDuration,
             });
           }
         }
@@ -89,12 +137,12 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
     };
   }
 
-  buildProgressAnimation() {
-    if (this.customProgressAnimationCallback) {
-      this.progressAnimationCallback = this.customProgressAnimationCallback;
+  private buildProgressAnimation() {
+    if (this._customProgressAnimation) {
+      this._progressAnimation = this._customProgressAnimation;
       return;
     }
-    this.progressAnimationCallback = (values, progress) => {
+    this._progressAnimation = (values, progress) => {
       'worklet';
       const output: { [key: string]: number | number[] } = {};
       for (const propertyName of supportedProps) {
@@ -122,65 +170,5 @@ export class SharedTransition implements ISharedTransitionAnimationBuilder {
       }
       return output;
     };
-  }
-
-  getTransitionAnimation(): SharedTransitionAnimationsFunction {
-    if (!this.transitionAnimation) {
-      this.build();
-    }
-    return this.transitionAnimation!;
-  }
-
-  progressAnimation(
-    progressAnimationCallback: ProgressAnimationCallbackType
-  ): SharedTransition {
-    this.customProgressAnimationCallback = progressAnimationCallback;
-    return this;
-  }
-
-  getProgressAnimation(): ProgressAnimationCallbackType {
-    if (!this.progressAnimationCallback) {
-      this.build();
-    }
-    return this.progressAnimationCallback!;
-  }
-
-  setTransitionDuration(duration: number): SharedTransition {
-    this.transitionDuration = duration;
-    return this;
-  }
-
-  static createInstance(): SharedTransition {
-    return new SharedTransition();
-  }
-
-  static custom(animationFactory: AnimationFactoryType): SharedTransition {
-    return this.createInstance().custom(animationFactory);
-  }
-
-  static build(): void {
-    this.createInstance().build();
-  }
-
-  static getTransitionAnimation(): SharedTransitionAnimationsFunction {
-    return this.createInstance().getTransitionAnimation();
-  }
-
-  static progressAnimation(
-    progressAnimationFactory: ProgressAnimationCallbackType
-  ): SharedTransition {
-    return this.createInstance().progressAnimation(progressAnimationFactory);
-  }
-
-  static getProgressAnimation(): ProgressAnimationCallbackType {
-    return this.createInstance().getProgressAnimation();
-  }
-
-  static setTransitionDuration(duration: number): SharedTransition {
-    return this.createInstance().setTransitionDuration(duration);
-  }
-
-  static isValidObject(object: any): boolean {
-    return 'build' in object && typeof object.build === 'function';
   }
 }

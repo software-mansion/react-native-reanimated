@@ -125,7 +125,3 @@ export interface IEntryAnimationBuilder {
 export interface IExitAnimationBuilder {
   build: () => AnimationConfigFunction<ExitAnimationsValues>;
 }
-
-export interface ISharedTransitionAnimationBuilder {
-  build: () => void;
-}

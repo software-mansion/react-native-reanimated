@@ -232,3 +232,8 @@ export enum JSCallbackType {
 export enum JSConfigType {
   SHARED_TRANSITION_ANIMATION_TYPE = 0,
 }
+
+export enum SharedTransitionType {
+  PROGRESS = 0,
+  ANIMATION = 1,
+};
