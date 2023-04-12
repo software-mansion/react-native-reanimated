@@ -10,6 +10,7 @@ import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegis
 import type { ShadowNodeWrapper } from './hook/commonTypes';
 import { LayoutAnimationStartFunction } from './layoutReanimation';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import { SensorContainer } from './SensorContainer';
 
 declare global {
   const _WORKLET: boolean;
@@ -134,6 +135,7 @@ declare global {
       __workletsCache?: Map<string, (...args: any[]) => any>;
       __handleCache?: WeakMap<any, any>;
       __mapperRegistry?: MapperRegistry;
+      __sensorContainer?: SensorContainer;
       __callMicrotasks: () => void;
       __flushAnimationFrame: (frameTimestamp: number) => void;
       requestAnimationFrame: (callback: (time: number) => void) => number;

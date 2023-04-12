@@ -22,6 +22,7 @@ import {
   LayoutAnimationType,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
+import { SensorContainer } from './SensorContainer';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
@@ -115,6 +116,14 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
+export function getSensorContainer(): SensorContainer {
+  let sensorContainer = global.__sensorContainer;
+  if (sensorContainer === undefined) {
+    sensorContainer = global.__sensorContainer = new SensorContainer();
+  }
+  return sensorContainer;
+}
+
 export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
@@ -167,16 +176,18 @@ export function registerSensor(
     data: Value3D | ValueRotation,
     orientationDegrees: number
   ) => void
-): number | string {
-  return NativeReanimatedModule.registerSensor(
+): number {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.registerSensor(
     sensorType,
     sensorRef,
     makeShareableCloneRecursive(eventHandler)
   );
 }
 
-export function unregisterSensor(sensorId: number | string): void {
-  return NativeReanimatedModule.unregisterSensor(sensorId);
+export function unregisterSensor(sensorId: number): void {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.unregisterSensor(sensorId);
 }
 
 // initialize UI runtime if applicable

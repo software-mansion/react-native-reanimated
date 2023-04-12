@@ -1,3 +1,4 @@
+import NativeReanimatedModule from './NativeReanimated';
 import {
   SensorType,
   SensorConfig,
@@ -7,12 +8,11 @@ import {
   ShareableRef,
 } from './commonTypes';
 
-export class NativeSensor<T> {
+export default class Sensor<T> {
   private listenersNumber = 0;
   private sensorId = -1;
   private sensorType: SensorType;
-  private InnerNativeModule: any;
-  private data: SharedValue<Value3D | ValueRotation>;
+  public data: SharedValue<Value3D | ValueRotation>;
   private config: SensorConfig;
   private eventHandler:
     | ShareableRef<T>
@@ -20,13 +20,11 @@ export class NativeSensor<T> {
 
   constructor(
     sensorType: SensorType,
-    InnerNativeModule: any,
     config: SensorConfig,
     initData: SharedValue<Value3D | ValueRotation>,
     eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
     this.sensorType = sensorType;
-    this.InnerNativeModule = InnerNativeModule;
     this.config = config;
     this.data = initData;
     this.eventHandler = eventHandler;
@@ -35,8 +33,7 @@ export class NativeSensor<T> {
   initialize() {
     const config = this.config;
     const sensorType = this.sensorType;
-
-    this.sensorId = this.InnerNativeModule.registerSensor(
+    this.sensorId = NativeReanimatedModule.registerSensor(
       sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
@@ -58,7 +55,7 @@ export class NativeSensor<T> {
   }
 
   unregister() {
-    this.InnerNativeModule.unregisterSensor(this.sensorId);
+    NativeReanimatedModule.unregisterSensor(this.sensorId);
     this.sensorId = -1;
   }
 
