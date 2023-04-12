@@ -196,6 +196,11 @@ void NativeProxy::registerEventHandler() {
       EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
 }
 
+void NativeProxy::maybeFlushUIUpdatesQueue() {
+  static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
+  method(javaPart_.get());
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -353,8 +358,12 @@ void NativeProxy::handleEvent(
     // for details.
     return;
   }
-  std::string eventJSON = eventAsString.substr(
-      13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
+#if REACT_NATIVE_MINOR_VERSION >= 72
+  std::string eventJSON = eventAsString;
+#else
+  // remove "{ NativeMap: " and " }"
+  std::string eventJSON = eventAsString.substr(13, eventAsString.length() - 15);
+#endif
   if (eventJSON == "null") {
     return;
   }
@@ -424,6 +433,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
         tag, isCancelled, removeView);
   };
 
+  auto maybeFlushUiUpdatesQueueFunction =
+      bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
+
   return {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -442,6 +454,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       setGestureStateFunction,
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
+      maybeFlushUiUpdatesQueueFunction,
   };
 }
 

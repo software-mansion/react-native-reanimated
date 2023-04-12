@@ -34,6 +34,7 @@ export function setupMicrotasks() {
         microtasksQueue[index]();
       }
       microtasksQueue = [];
+      global._maybeFlushUIUpdatesQueue();
     } finally {
       isExecutingMicrotasksQueue = false;
     }
