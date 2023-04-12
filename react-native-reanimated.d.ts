@@ -57,23 +57,6 @@ declare module 'react-native-reanimated' {
     import('./lib/types/lib/reanimated2/commonTypes').MeasuredDimensions;
 
   namespace Animated {
-    export enum Extrapolate {
-      EXTEND = 'extend',
-      CLAMP = 'clamp',
-      IDENTITY = 'identity',
-    }
-
-    type ExtrapolateParameter =
-      | Extrapolate
-      | { extrapolateLeft?: Extrapolate; extrapolateRight?: Extrapolate };
-
-    interface InterpolationConfig {
-      inputRange: ReadonlyArray<Adaptable<number>>;
-      outputRange: ReadonlyArray<Adaptable<number | string>>;
-      extrapolate?: ExtrapolateParameter;
-      extrapolateLeft?: Extrapolate;
-      extrapolateRight?: Extrapolate;
-    }
     type Value = string | number | boolean;
 
     export type SharedValue<T> = { value: T };
@@ -132,6 +115,8 @@ declare module 'react-native-reanimated' {
       sharedTransitionTag?: string;
       sharedTransitionStyle?: ILayoutAnimationBuilder;
     };
+
+    export type EasingFunction = (value: number) => number;
 
     // components
     export class View extends Component<AnimateProps<ViewProps>> {
@@ -239,6 +224,13 @@ declare module 'react-native-reanimated' {
   };
 
   export type SensorValue3D = SharedValue<Value3D>;
+
+  export enum InterfaceOrientation {
+    ROTATION_0 = 0,
+    ROTATION_90 = 90,
+    ROTATION_180 = 180,
+    ROTATION_270 = 270,
+  }
 
   export type ValueRotation = {
     qw: number;
@@ -867,7 +859,7 @@ declare module 'react-native-reanimated' {
 
   export function enableLayoutAnimations(flag: boolean): void;
 
-  export const Extrapolate: typeof Animated.Extrapolate;
+  export const Extrapolate: typeof Extrapolation;
 
   type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
 
