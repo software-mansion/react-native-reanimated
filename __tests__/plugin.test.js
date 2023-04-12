@@ -579,8 +579,8 @@ describe('babel plugin', () => {
 
   it('transforms named FunctionExpression as argument of useAnimatedScrollHandler', () => {
     const input = `
-    useAnimatedScrollHandler(function foo(event) {
-      console.log(event);
+      useAnimatedScrollHandler(function foo(event) {
+        console.log(event);
     });
     `;
 
