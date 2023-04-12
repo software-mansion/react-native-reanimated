@@ -18,7 +18,7 @@ describe('babel plugin', () => {
   });
 
   it('injects its version', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo() {
         'inject Reanimated Babel plugin version';
         var foo = 'bar';
@@ -34,7 +34,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't bother other Directive Literals", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo() {
         'foobar';
         var foo = 'bar';
@@ -46,7 +46,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       import Animated, {
         useAnimatedStyle,
         useSharedValue,
@@ -78,7 +78,7 @@ describe('babel plugin', () => {
   });
 
   it('supports default ES6 style imports', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       import * as Reanimated from 'react-native-reanimated';
 
       function Box() {
@@ -107,7 +107,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't transform functions without 'worklet' directive", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function f(x) {
         return x + 2;
       }
@@ -118,7 +118,7 @@ describe('babel plugin', () => {
   });
 
   it('removes comments from worklets', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const f = () => {
         'worklet';
         // some comment
@@ -135,7 +135,7 @@ describe('babel plugin', () => {
   });
 
   it('removes "worklet"; directive from worklets', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo(x) {
         "worklet"; // prettier-ignore
         return x + 2;
@@ -147,7 +147,7 @@ describe('babel plugin', () => {
   });
 
   it("removes 'worklet'; directive from worklets", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo(x) {
         'worklet'; // prettier-ignore
         return x + 2;
@@ -159,7 +159,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't transform string literals", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo(x) {
         'worklet';
         const bar = 'worklet'; // prettier-ignore
@@ -172,7 +172,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't remove nested 'worklets'", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo(x) {
         'worklet';
         function bar(x) {
@@ -187,7 +187,7 @@ describe('babel plugin', () => {
   });
 
   it('captures worklets environment', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const x = 5;
 
       const objX = { x };
@@ -203,7 +203,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't capture globals", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function f() {
         'worklet';
         console.log('test');
@@ -229,7 +229,7 @@ describe('babel plugin', () => {
   // functions
 
   it('workletizes FunctionDeclaration', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo(x) {
         'worklet';
         return x + 2;
@@ -243,7 +243,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes ArrowFunctionExpression', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const foo = (x) => {
         'worklet';
         return x + 2;
@@ -257,7 +257,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes unnamed FunctionExpression', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const foo = function (x) {
         'worklet';
         return x + 2;
@@ -271,7 +271,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes named FunctionExpression', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const foo = function foo(x) {
         'worklet';
         return x + 2;
@@ -287,7 +287,7 @@ describe('babel plugin', () => {
   // class methods
 
   it('workletizes instance method', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       class Foo {
         bar(x) {
           'worklet';
@@ -303,7 +303,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes static method', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       class Foo {
         static bar(x) {
           'worklet';
@@ -319,7 +319,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes getter', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       class Foo {
         get bar() {
           'worklet';
@@ -337,7 +337,7 @@ describe('babel plugin', () => {
   // function hooks
 
   it('workletizes hook wrapped ArrowFunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const animatedStyle = useAnimatedStyle(() => ({
         width: 50,
       }));
@@ -349,7 +349,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes hook wrapped unnamed FunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const animatedStyle = useAnimatedStyle(function () {
         return {
           width: 50,
@@ -363,7 +363,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes hook wrapped named FunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const animatedStyle = useAnimatedStyle(function foo() {
         return {
           width: 50,
@@ -379,7 +379,7 @@ describe('babel plugin', () => {
   // object hooks
 
   it('workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler({
         onStart: (event) => {
           console.log(event);
@@ -393,7 +393,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler({
         onScroll: (event) => {
           console.log(event);
@@ -407,7 +407,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler({
         onStart: function (event) {
           console.log(event);
@@ -421,7 +421,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler({
         onScroll: function (event) {
           console.log(event);
@@ -435,7 +435,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler({
         onStart: function onStart(event) {
           console.log(event);
@@ -449,7 +449,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler({
         onScroll: function onScroll(event) {
           console.log(event);
@@ -463,7 +463,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler({
         onStart(event) {
           console.log(event);
@@ -477,7 +477,7 @@ describe('babel plugin', () => {
   });
 
   it('workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler({
         onScroll(event) {
           console.log(event);
@@ -491,7 +491,7 @@ describe('babel plugin', () => {
   });
 
   it('supports empty object in useAnimatedGestureHandler', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler({});
     </script>`;
 
@@ -500,7 +500,7 @@ describe('babel plugin', () => {
   });
 
   it('supports empty object in useAnimatedScrollHandler', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler({});
     </script>`;
 
@@ -509,7 +509,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms each object property in useAnimatedGestureHandler', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler({
         onStart: () => {},
         onUpdate: () => {},
@@ -522,7 +522,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms each object property in useAnimatedScrollHandler', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler({
         onScroll: () => {},
         onBeginDrag: () => {},
@@ -537,7 +537,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler(() => {});
     </script>`;
 
@@ -546,7 +546,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler(function () {});
     </script>`;
 
@@ -555,7 +555,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedGestureHandler(function foo() {});
     </script>`;
 
@@ -564,7 +564,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler((event) => {
         console.log(event);
       });
@@ -575,7 +575,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler(function (event) {
         console.log(event);
       });
@@ -586,7 +586,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms named FunctionExpression as argument of useAnimatedScrollHandler', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       useAnimatedScrollHandler(function foo(event) {
         console.log(event);
       });
@@ -599,7 +599,7 @@ describe('babel plugin', () => {
   // React Native Gesture Handler
 
   it('workletizes possibly chained gesture object callback functions automatically', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       import { Gesture } from 'react-native-gesture-handler';
 
       const foo = Gesture.Tap()
@@ -620,7 +620,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't transform standard callback functions", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const foo = Something.Tap().onEnd((_event, _success) => {
         console.log('onEnd');
       });
@@ -631,7 +631,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms spread operator in worklets for arrays', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo() {
         'worklet';
         const bar = [4, 5];
@@ -644,7 +644,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms spread operator in worklets for objects', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo() {
         'worklet';
         const bar = { d: 4, e: 5 };
@@ -657,7 +657,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms spread operator in worklets for function arguments', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo(...args) {
         'worklet';
         console.log(args);
@@ -669,7 +669,7 @@ describe('babel plugin', () => {
   });
 
   it('transforms spread operator in worklets for function calls', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function foo(arg) {
         'worklet';
         console.log(...arg);
@@ -681,7 +681,7 @@ describe('babel plugin', () => {
   });
 
   it('supports recursive calls', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       const a = 1;
       function foo(t) {
         'worklet';
@@ -696,7 +696,7 @@ describe('babel plugin', () => {
   });
 
   it('supports SequenceExpression', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         (0, fun)({ onStart() {} }, []);
       }
@@ -707,7 +707,7 @@ describe('babel plugin', () => {
   });
 
   it('supports SequenceExpression, with objectHook', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         (0, useAnimatedGestureHandler)({ onStart() {} }, []);
       }
@@ -718,7 +718,7 @@ describe('babel plugin', () => {
   });
 
   it('supports SequenceExpression, with worklet', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         (0, fun)(
           {
@@ -736,7 +736,7 @@ describe('babel plugin', () => {
   });
 
   it('supports SequenceExpression, many arguments', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         (0, 3, fun)(
           {
@@ -754,7 +754,7 @@ describe('babel plugin', () => {
   });
 
   it('supports SequenceExpression, with worklet closure', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         const obj = { a: 1, b: 2 };
         (0, fun)(
@@ -774,7 +774,7 @@ describe('babel plugin', () => {
   });
 
   it('shows a warning if user uses .value inside inline style', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         return <Animated.View style={{ width: sharedValue.value }} />;
       }
@@ -785,7 +785,7 @@ describe('babel plugin', () => {
   });
 
   it('shows a warning if user uses .value inside inline style, style array', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         return <Animated.View style={[style, { width: sharedValue.value }]} />;
       }
@@ -796,7 +796,7 @@ describe('babel plugin', () => {
   });
 
   it('shows a warning if user uses .value inside inline style, transforms', () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         return (
           <Animated.View
@@ -811,7 +811,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't show a warning if user writes something like style={styles.value}", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         return <Animated.View style={styles.value} />;
       }
@@ -822,7 +822,7 @@ describe('babel plugin', () => {
   });
 
   it("doesn't break if there is a spread syntax", () => {
-    const input = html`<script lang="ts">
+    const input = html`<script>
       function App() {
         return (
           <Animated.View
