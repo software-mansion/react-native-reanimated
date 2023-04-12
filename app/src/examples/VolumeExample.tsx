@@ -18,10 +18,14 @@ import React, { useLayoutEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 
+const dogeThumbImage = require('./assets/doge.png');
+
 const primaryColor = '#FFD61E';
-const secondaryColor = '#f5f5f5';
+const secondaryColor = '#F5F5F5';
 const backgroundColor = '#232736';
 const secondaryBackgroundColor = '#1B2445';
+
+const streamingQuality = ['Automatic', 'Low', 'Normal', 'High', 'Very High'];
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 Animated.addWhitelistedNativeProps({ text: true });
@@ -46,8 +50,6 @@ export default function VolumeExample() {
       },
     });
   }, [navigation]);
-
-  const sv = useSharedValue(50);
 
   const x = useSharedValue(50);
   const vx = useSharedValue(0);
@@ -76,7 +78,7 @@ export default function VolumeExample() {
 
   const animatedTextProps = useAnimatedProps(() => {
     return {
-      text: String(Math.floor(x.value)),
+      text: String(Math.round(x.value)),
       // Here we use any because the text prop is not available in the type
     } as any;
   });
@@ -88,19 +90,13 @@ export default function VolumeExample() {
   });
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-        backgroundColor,
-        padding: 20,
-      }}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <View style={[styles.valueContainer, styles.margin]}>
         {/* Thanks William, this is brilliant ✨ https://github.com/wcandillon/react-native-redash/blob/master/src/ReText.tsx ✨ */}
         <AnimatedTextInput
           style={styles.value}
-          value={String(Math.round(sv.value))}
+          value={String(Math.round(x.value))}
           editable={false}
           animatedProps={animatedTextProps}
         />
@@ -114,7 +110,7 @@ export default function VolumeExample() {
           maximumValue={100}
           minimumTrackTintColor={primaryColor}
           maximumTrackTintColor={secondaryColor}
-          thumbImage={require('./assets/doge.png')}
+          thumbImage={dogeThumbImage}
           animatedProps={animatedProps}
         />
         <Text style={styles.text}>100</Text>
@@ -130,11 +126,11 @@ export default function VolumeExample() {
       </View>
       <View style={styles.divider} />
       <Text style={[styles.header, styles.margin]}>Streaming quality</Text>
-      <Text style={styles.text}>Automatic</Text>
-      <Text style={styles.text}>Low</Text>
-      <Text style={styles.text}>Normal</Text>
-      <Text style={styles.text}>High</Text>
-      <Text style={styles.text}>Very high</Text>
+      {streamingQuality.map((quality) => (
+        <Text key={quality} style={styles.text}>
+          {quality}
+        </Text>
+      ))}
       <View style={styles.margin} />
       <View style={[styles.row, styles.between, styles.margin]}>
         <Text style={styles.text}>Adjust audio quality</Text>
@@ -151,6 +147,12 @@ export default function VolumeExample() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor,
+    padding: 20,
+  },
   text: {
     color: secondaryColor,
     fontSize: 16,
@@ -186,7 +188,6 @@ const styles = StyleSheet.create({
   },
   value: {
     textAlign: 'center',
-    // fontFamily: 'Poppins-Bold',
     fontWeight: 'bold',
     fontVariant: ['tabular-nums'],
     fontSize: 70,
