@@ -10,5 +10,5 @@ typedef enum JSConfigType {
 
 typedef enum SharedTransitionType {
   PROGRESS = 0,
-  ASYNC = 1
-} JSConfigType;
+  ANIMATION = 1,
+} SharedTransitionType;

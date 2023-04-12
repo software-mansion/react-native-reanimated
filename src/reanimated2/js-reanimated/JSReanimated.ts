@@ -4,6 +4,8 @@ import {
   ShareableRef,
   Value3D,
   ValueRotation,
+  JSCallbackType,
+  JSConfigType,
 } from '../commonTypes';
 import { WebSensor } from './WebSensor';
 
@@ -157,5 +159,17 @@ export default class JSReanimated extends NativeReanimated {
       case SensorType.ROTATION:
         return 'AbsoluteOrientationSensor';
     }
+  }
+
+  registerJSCallback(type: JSCallbackType, configuration: Record<string, unknown>, callback: ShareableRef<(...args: any) => any>): number {
+    return -1;
+  }
+
+  unregisterJSCallback(type: JSCallbackType, callbackId: number): void {
+    // noop
+  }
+
+  setJSConfig(type: JSConfigType, config: Record<string, unknown>): void {
+    // noop
   }
 }
