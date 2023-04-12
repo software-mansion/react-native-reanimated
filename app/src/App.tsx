@@ -1,6 +1,15 @@
 import './types';
 
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Linking,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   GestureHandlerRootView,
   RectButton,
@@ -11,6 +20,7 @@ import {
 } from '@react-navigation/native-stack';
 import { NavigationContainer, PathConfigMap } from '@react-navigation/native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
 import React from 'react';
 
@@ -107,10 +117,55 @@ const linking = {
   },
 };
 
+// copied from https://reactnavigation.org/docs/state-persistence/
+const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
+
 export default function App() {
+  const [isReady, setIsReady] = React.useState(__DEV__ ? false : true);
+  const [initialState, setInitialState] = React.useState();
+
+  React.useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const initialUrl = await Linking.getInitialURL();
+
+        if (Platform.OS !== 'web' && initialUrl == null) {
+          // Only restore state if there's no deep link and we're not on web
+          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+          const state = savedStateString
+            ? JSON.parse(savedStateString)
+            : undefined;
+
+          if (state !== undefined) {
+            setInitialState(state);
+          }
+        }
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    if (!isReady) {
+      restoreState();
+    }
+  }, [isReady]);
+
+  if (!isReady) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={styles.container}>
-      <NavigationContainer linking={linking}>
+      <NavigationContainer
+        linking={linking}
+        initialState={initialState}
+        onStateChange={(state) =>
+          AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
+        }>
         <Stack.Navigator>
           <Stack.Screen
             name="Home"
@@ -140,6 +195,10 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  center: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   list: {
     backgroundColor: '#EFEFF4',

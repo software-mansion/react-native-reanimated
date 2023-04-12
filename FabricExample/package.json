@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.17.12",
+    "@react-native-async-storage/async-storage": "^1.18.1",
     "@react-native-masked-view/masked-view": "^0.2.8",
     "@react-native-picker/picker": "^2.4.9",
     "@react-navigation/native": "^6.0.13",
@@ -33,8 +34,8 @@
     "@react-native/eslint-config": "^0.72.1",
     "@react-native/metro-config": "^0.72.1",
     "@tsconfig/react-native": "^2.0.2",
-    "@types/metro-config": "^0.76.1",
     "@types/jest": "^29.2.1",
+    "@types/metro-config": "^0.76.1",
     "@types/react": "^18.0.24",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.2.1",
