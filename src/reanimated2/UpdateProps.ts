@@ -58,10 +58,7 @@ if (shouldBeUseWeb()) {
       }
 
       viewDescriptors.value.forEach((viewDescriptor) => {
-        (_updatePropsFabric as Exclude<typeof _updatePropsFabric, undefined>)(
-          viewDescriptor.shadowNodeWrapper,
-          updates
-        );
+        _updatePropsFabric!(viewDescriptor.shadowNodeWrapper, updates);
       });
     };
   } else {
@@ -78,7 +75,7 @@ if (shouldBeUseWeb()) {
         }
       }
       viewDescriptors.value.forEach((viewDescriptor) => {
-        (_updatePropsPaper as Exclude<typeof _updatePropsPaper, undefined>)(
+        _updatePropsPaper!(
           viewDescriptor.tag,
           viewDescriptor.name || 'RCTView',
           updates

@@ -15,5 +15,5 @@ export interface Descriptor {
 
 export interface RefObjectFunction<T> {
   current: T | null;
-  (component?: T): number | object;
+  (component?: T): number | ShadowNodeWrapper;
 }
