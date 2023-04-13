@@ -18,6 +18,8 @@ Reanimated integrates tightly with the [react-native-gesture-handler](https://do
 For Android devices, be sure to wrap your app entry point with `<GestureHandlerRootView>` component from `react-native-gesture-handler` library to capture events properly.
 
 ```js
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
