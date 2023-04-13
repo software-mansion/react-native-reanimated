@@ -3,16 +3,18 @@ import {
   SharedTransitionAnimationsFunction,
   SharedTransitionAnimationsValues,
 } from '../animationBuilder/commonTypes';
-import { StyleProps, JSCallbackType, JSConfigType, SharedTransitionType } from '../../commonTypes';
+import {
+  StyleProps,
+  JSCallbackType,
+  JSConfigType,
+  SharedTransitionType,
+} from '../../commonTypes';
 import {
   configureLayoutAnimations,
   registerJSCallback,
   setJSConfig,
 } from '../../core';
-import {
-  LayoutAnimationType,
-} from '../../layoutReanimation';
-
+import { LayoutAnimationType } from '../../layoutReanimation';
 
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
@@ -49,7 +51,10 @@ export class SharedTransition {
     return this;
   }
 
-  public registerTransition(viewTag: number, sharedTransitionTag: string): void {
+  public registerTransition(
+    viewTag: number,
+    sharedTransitionTag: string
+  ): void {
     const transitionAnimation = this.getTransitionAnimation();
     const progressAnimation = this.getProgressAnimation();
     let animationType = this._defaultAnimationType;
@@ -63,14 +68,14 @@ export class SharedTransition {
       sharedTransitionTag
     );
     registerJSCallback(
-      JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK, 
-      { viewTag }, 
+      JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK,
+      { viewTag },
       progressAnimation
     );
-    setJSConfig(
-      JSConfigType.SHARED_TRANSITION_ANIMATION_TYPE, 
-      { viewTag, animationType }
-    );
+    setJSConfig(JSConfigType.SHARED_TRANSITION_ANIMATION_TYPE, {
+      viewTag,
+      animationType,
+    });
   }
 
   private getTransitionAnimation(): SharedTransitionAnimationsFunction {

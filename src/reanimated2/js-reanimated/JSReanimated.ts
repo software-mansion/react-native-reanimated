@@ -161,15 +161,19 @@ export default class JSReanimated extends NativeReanimated {
     }
   }
 
-  registerJSCallback(type: JSCallbackType, configuration: Record<string, unknown>, callback: ShareableRef<(...args: any) => any>): number {
+  registerJSCallback(
+    _type: JSCallbackType,
+    _configuration: Record<string, unknown>,
+    _callback: ShareableRef<(...args: any) => any>
+  ): number {
     return -1;
   }
 
-  unregisterJSCallback(type: JSCallbackType, callbackId: number): void {
+  unregisterJSCallback(_type: JSCallbackType, _callbackId: number): void {
     // noop
   }
 
-  setJSConfig(type: JSConfigType, config: Record<string, unknown>): void {
+  setJSConfig(_type: JSConfigType, _config: Record<string, unknown>): void {
     // noop
   }
 }

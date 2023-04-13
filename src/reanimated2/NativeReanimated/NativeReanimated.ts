@@ -5,7 +5,7 @@ import {
   ShareableSyncDataHolderRef,
   Value3D,
   ValueRotation,
-  JSConfigType
+  JSConfigType,
 } from '../commonTypes';
 import {
   LayoutAnimationFunction,
@@ -155,8 +155,16 @@ export class NativeReanimated {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 
-  registerJSCallback(type: JSCallbackType, configuration: Record<string, unknown>, callback: ShareableRef<(...args: any) => any>): number {
-    return this.InnerNativeModule.registerJSCallback(type, configuration, callback);
+  registerJSCallback(
+    type: JSCallbackType,
+    configuration: Record<string, unknown>,
+    callback: ShareableRef<(...args: any) => any>
+  ): number {
+    return this.InnerNativeModule.registerJSCallback(
+      type,
+      configuration,
+      callback
+    );
   }
 
   unregisterJSCallback(type: JSCallbackType, callbackId: number): void {

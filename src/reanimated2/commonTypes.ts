@@ -236,4 +236,4 @@ export enum JSConfigType {
 export enum SharedTransitionType {
   PROGRESS = 0,
   ANIMATION = 1,
-};
+}

@@ -88,9 +88,11 @@ class JSRuntimeHelper {
     function.asObject(rt).asFunction(rt).call(rt, args...);
 #endif
   }
-  
+
   template <typename... Args>
-  inline jsi::Value runOnUIGuardedWithResult(const jsi::Value &function, Args &&...args) {
+  inline jsi::Value runOnUIGuardedWithResult(
+      const jsi::Value &function,
+      Args &&...args) {
     // We only use callGuard in debug mode, otherwise we call the provided
     // function directly. CallGuard provides a way of capturing exceptions in
     // JavaScript and propagating them to the main React Native thread such that

@@ -622,7 +622,10 @@ export default function createAnimatedComponent(
           if (sharedTransitionTag) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle ?? new SharedTransition();
-            sharedElementTransition.registerTransition(tag, sharedTransitionTag);
+            sharedElementTransition.registerTransition(
+              tag,
+              sharedTransitionTag
+            );
           }
         }
 

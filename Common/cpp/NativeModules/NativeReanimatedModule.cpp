@@ -17,13 +17,13 @@
 #include "ShadowTreeCloner.h"
 #endif
 
+#include "Consts.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
-#include "Consts.h"
 
 using namespace facebook;
 
@@ -58,9 +58,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction),
 #endif
-    jsCallbacksManager_(std::make_shared<JSCallbacksManager>()),
-    jsConfigManager_(std::make_shared<JSConfigManager>())
-{
+      jsCallbacksManager_(std::make_shared<JSCallbacksManager>()),
+      jsConfigManager_(std::make_shared<JSConfigManager>()) {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=](double timestamp) {
@@ -691,7 +690,8 @@ jsi::Value NativeReanimatedModule::registerJSCallback(
     const jsi::Value &type,
     const jsi::Value &configuration,
     const jsi::Value &callback) {
-  return jsCallbacksManager_->registerJSCallback(rt, type, configuration, callback);
+  return jsCallbacksManager_->registerJSCallback(
+      rt, type, configuration, callback);
 }
 
 void NativeReanimatedModule::unregisterJSCallback(
@@ -701,7 +701,8 @@ void NativeReanimatedModule::unregisterJSCallback(
   jsCallbacksManager_->unregisterJSCallback(rt, type, callbackId);
 }
 
-std::shared_ptr<JSCallbacksManager> NativeReanimatedModule::getJSCallbacksManager() {
+std::shared_ptr<JSCallbacksManager>
+NativeReanimatedModule::getJSCallbacksManager() {
   return jsCallbacksManager_;
 }
 
@@ -712,7 +713,7 @@ void NativeReanimatedModule::setJSConfig(
   auto jsConfigType = static_cast<JSConfigType>(type.asNumber());
   jsConfigManager_->setConfigValue(jsConfigType, config);
 }
-    
+
 std::shared_ptr<JSConfigManager> NativeReanimatedModule::getJSConfigManager() {
   return jsConfigManager_;
 }

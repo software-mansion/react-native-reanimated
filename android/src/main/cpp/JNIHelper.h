@@ -1,13 +1,13 @@
 #pragma once
 
 #include <fbjni/fbjni.h>
+#include <jni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
-#include <jni.h>
 #include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JMessageQueueThread.h>
-#include <react/jni/WritableNativeMap.h>
 #include <react/jni/ReadableNativeArray.h>
+#include <react/jni/WritableNativeMap.h>
 #include <string>
 
 namespace reanimated {
@@ -29,9 +29,8 @@ struct JNIHelper {
       const jsi::Object &jsiObject);
 
   static jsi::Object convertJNIMapToJSIObject(
-    jsi::Runtime &rt,
-    const jni::alias_ref<JMap<JString, JObject>> jniMap);
-
+      jsi::Runtime &rt,
+      const jni::alias_ref<JMap<JString, JObject>> jniMap);
 };
 
 }; // namespace reanimated

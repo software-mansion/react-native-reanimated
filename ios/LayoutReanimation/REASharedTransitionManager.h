@@ -1,5 +1,5 @@
-#import <RNReanimated/REASharedTransitionManagerPublic.h>
 #import <RNReanimated/REAAnimationsManager.h>
+#import <RNReanimated/REASharedTransitionManagerPublic.h>
 #import <RNReanimated/REASnapshot.h>
 
 @interface REASharedTransitionManager : REASharedTransitionManagerPublic

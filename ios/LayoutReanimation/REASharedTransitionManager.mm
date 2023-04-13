@@ -1,8 +1,8 @@
 #import <RNReanimated/REAFrame.h>
+#import <RNReanimated/REAJSIUtils.h>
 #import <RNReanimated/REAScreensHelper.h>
 #import <RNReanimated/REASharedElement.h>
 #import <RNReanimated/REASharedTransitionManager.h>
-#import <RNReanimated/REAJSIUtils.h>
 #import <objc/runtime.h>
 
 BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
@@ -349,9 +349,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [self swizzleMethod:@selector(viewDidLayoutSubviews)
                    with:@selector(swizzled_viewDidLayoutSubviews)
                forClass:[RNSScreen class]];
-   [self swizzleMethod:@selector(viewDidAppear:)
-                   with:@selector(swizzled_viewDidAppear:)
-               forClass:[RNSScreen class]];
+    [self swizzleMethod:@selector(viewDidAppear:) with:@selector(swizzled_viewDidAppear:) forClass:[RNSScreen class]];
     [self swizzleMethod:@selector(notifyWillDisappear)
                    with:@selector(swizzled_notifyWillDisappear)
                forClass:[RNSScreenView class]];
@@ -422,7 +420,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     bool isScreenRemovedFromReactTree = [self isScreen:screen outsideStack:stack];
     // click on button goBack on native header
     bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
-    bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) && !(isInteractive && [_currentSharedTransitionViews count] > 0);
+    bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) &&
+        !(isInteractive && [_currentSharedTransitionViews count] > 0);
     _isSharedProgressTransition = isInteractive && shouldRunTransition ? YES : NO;
     if (shouldRunTransition) {
       [self runSharedTransitionForSharedViewsOnScreen:screen];
@@ -450,26 +449,24 @@ static REASharedTransitionManager *_sharedTransitionManager;
   jsi::Runtime &runtime = *jsCallbacksManager->getRuntimeHelper()->uiRuntime();
   jsi::Value componentStyleJsValue = convertNSDictionaryToJSIObject(runtime, componentStyle);
   jsi::Value animationFrameData = jsCallbacksManager->executeSharedAnimationProgressCallback(
-    [sharedElement.sourceView.reactTag intValue], 
-    progress, 
-    componentStyleJsValue
-  );
+      [sharedElement.sourceView.reactTag intValue], progress, componentStyleJsValue);
   return convertJSIObjectToNSDictionary(runtime, animationFrameData.asObject(runtime));
 }
 
 - (void)onScreenTransitionProgress:(double)progress
 {
   _lastTransitionProgressValue = progress;
-  NSArray<REASharedElement *> *sharedElements = _isSharedProgressTransition ? _sharedElements : _sharedElementsWithProgress;
+  NSArray<REASharedElement *> *sharedElements =
+      _isSharedProgressTransition ? _sharedElements : _sharedElementsWithProgress;
   if (!_isSharedTransitionActive) {
     return;
   }
   for (REASharedElement *sharedElement in sharedElements) {
-    NSDictionary *values =  [self computeAnimationFrameWithProgress:progress forSharedElement:sharedElement];
+    NSDictionary *values = [self computeAnimationFrameWithProgress:progress forSharedElement:sharedElement];
     [_animationManager progressLayoutAnimationWithStyle:values
                                                  forTag:sharedElement.sourceView.reactTag
                                      isSharedTransition:YES];
-     [_animationManager progressLayoutAnimationWithStyle:values
+    [_animationManager progressLayoutAnimationWithStyle:values
                                                  forTag:sharedElement.targetView.reactTag
                                      isSharedTransition:YES];
   }
@@ -745,7 +742,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)screenTransitionFinished
 {
   if (_isSharedProgressTransition || [_sharedElementsWithProgress count] > 0) {
-    NSArray<REASharedElement *> *sharedElements = _isSharedProgressTransition ? _sharedElements : _sharedElementsWithProgress;
+    NSArray<REASharedElement *> *sharedElements =
+        _isSharedProgressTransition ? _sharedElements : _sharedElementsWithProgress;
     if ([self isSwipeBackDismissed]) {
       [_removedViews removeAllObjects];
     }
@@ -765,11 +763,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
   _droppedStack = nil;
 }
 
-/* 
+/*
   The transition progress should change from 0 to 1, but if it ends up
-  being 0, it means that the user dismissed the swipe back and stayed 
-  on the same screen. Since '_lastTransitionProgressValue' is a type 
-  of double, comparing it to 0 using '==' might not always work. 
+  being 0, it means that the user dismissed the swipe back and stayed
+  on the same screen. Since '_lastTransitionProgressValue' is a type
+  of double, comparing it to 0 using '==' might not always work.
 */
 - (bool)isSwipeBackDismissed
 {

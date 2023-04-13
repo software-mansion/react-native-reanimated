@@ -13,6 +13,8 @@
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
+#include "JSCallbacksManager.h"
+#include "JSConfigManager.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
@@ -20,8 +22,6 @@
 #include "RuntimeManager.h"
 #include "Scheduler.h"
 #include "SingleInstanceChecker.h"
-#include "JSCallbacksManager.h"
-#include "JSConfigManager.h"
 
 namespace reanimated {
 
@@ -159,21 +159,21 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
-      
+
   jsi::Value registerJSCallback(
-    jsi::Runtime &rt,
-    const jsi::Value &type,
-    const jsi::Value &configuration,
-    const jsi::Value &callback) override;
+      jsi::Runtime &rt,
+      const jsi::Value &type,
+      const jsi::Value &configuration,
+      const jsi::Value &callback) override;
   void unregisterJSCallback(
-    jsi::Runtime &rt,
-    const jsi::Value &type,
-    const jsi::Value &callbackId) override;
-    
+      jsi::Runtime &rt,
+      const jsi::Value &type,
+      const jsi::Value &callbackId) override;
+
   void setJSConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &type,
-    const jsi::Value &config) override;
+      jsi::Runtime &rt,
+      const jsi::Value &type,
+      const jsi::Value &config) override;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return layoutAnimationsManager_;

@@ -20,11 +20,11 @@
 
 #include "AndroidScheduler.h"
 #include "JNIHelper.h"
+#include "JavaWrapperJSCallbacksManager.h"
+#include "JavaWrapperJSConfigManager.h"
 #include "LayoutAnimations.h"
 #include "NativeReanimatedModule.h"
 #include "Scheduler.h"
-#include "JavaWrapperJSCallbacksManager.h"
-#include "JavaWrapperJSConfigManager.h"
 
 namespace reanimated {
 
@@ -273,9 +273,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #endif
       /**/);
   void initializeDependencies(
-    jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager,
-    jni::alias_ref<JavaWrapperJSConfigManager::javaobject> javaWrapperJSConfigManager
-  );
+      jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject>
+          javaWrapperJSCallbackManager,
+      jni::alias_ref<JavaWrapperJSConfigManager::javaobject>
+          javaWrapperJSConfigManager);
 };
 
 } // namespace reanimated

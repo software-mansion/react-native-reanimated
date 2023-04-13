@@ -6,7 +6,7 @@
 
 @interface REASharedTransitionManagerPublic : NSObject {
 #ifdef __cplusplus
-  @public
+ @public
   std::shared_ptr<reanimated::JSCallbacksManager> jsCallbacksManager;
   std::shared_ptr<reanimated::JSConfigManager> jsConfigManager;
 #endif

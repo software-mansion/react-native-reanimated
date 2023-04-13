@@ -132,9 +132,6 @@ void NativeProxy::installJSIBindings(
   nativeReanimatedModule_ = module;
   std::weak_ptr<NativeReanimatedModule> weakModule = module;
 
-//   TODO
-//  module->getJSCallbacksManager();
-
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   std::shared_ptr<UIManager> uiManager =
@@ -180,8 +177,8 @@ void NativeProxy::registerNatives() {
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod("initializeDependencies", NativeProxy::initializeDependencies)
-       });
+       makeNativeMethod(
+           "initializeDependencies", NativeProxy::initializeDependencies)});
 }
 
 void NativeProxy::requestRender(
@@ -250,7 +247,9 @@ void NativeProxy::updateProps(
       getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
           "updateProps");
   method(
-      javaPart_.get(), viewTag, JNIHelper::convertJSIObjectToJNIMap(rt, props).get());
+      javaPart_.get(),
+      viewTag,
+      JNIHelper::convertJSIObjectToJNIMap(rt, props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
@@ -572,12 +571,16 @@ void NativeProxy::setupLayoutAnimations() {
 }
 
 void NativeProxy::initializeDependencies(
-  jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager,
-  jni::alias_ref<JavaWrapperJSConfigManager::javaobject> javaWrapperJSConfigManager
-) {
-  std::shared_ptr<JSCallbacksManager> jsCallbacksManager = nativeReanimatedModule_->getJSCallbacksManager();
-  javaWrapperJSCallbackManager->cthis()->setJSCallbackManager(jsCallbacksManager);
-  std::shared_ptr<JSConfigManager> jsConfigManager = nativeReanimatedModule_->getJSConfigManager();
+    jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject>
+        javaWrapperJSCallbackManager,
+    jni::alias_ref<JavaWrapperJSConfigManager::javaobject>
+        javaWrapperJSConfigManager) {
+  std::shared_ptr<JSCallbacksManager> jsCallbacksManager =
+      nativeReanimatedModule_->getJSCallbacksManager();
+  javaWrapperJSCallbackManager->cthis()->setJSCallbackManager(
+      jsCallbacksManager);
+  std::shared_ptr<JSConfigManager> jsConfigManager =
+      nativeReanimatedModule_->getJSConfigManager();
   javaWrapperJSConfigManager->cthis()->setJSConfigManager(jsConfigManager);
 }
 

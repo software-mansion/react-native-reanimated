@@ -56,8 +56,8 @@ jni::local_ref<JNIHelper::PropsMap> JNIHelper::convertJSIObjectToJNIMap(
 }
 
 jsi::Object JNIHelper::convertJNIMapToJSIObject(
-  jsi::Runtime &rt,
-  const jni::alias_ref<JMap<JString, JObject>> jniMap) {
+    jsi::Runtime &rt,
+    const jni::alias_ref<JMap<JString, JObject>> jniMap) {
   static const auto booleanClass = jni::JBoolean::javaClassStatic();
   static const auto integerClass = jni::JInteger::javaClassStatic();
   static const auto doubleClass = jni::JDouble::javaClassStatic();
@@ -66,26 +66,37 @@ jsi::Object JNIHelper::convertJNIMapToJSIObject(
   static const auto arrayFloatClass = jni::JList<JFloat>::javaClassStatic();
 
   auto object = jsi::Object(rt);
-  for (const auto& entry : *jniMap) {
+  for (const auto &entry : *jniMap) {
     auto key = entry.first->toStdString();
-    if (entry.second->isInstanceOf(booleanClass)){
-      object.setProperty(rt, key.c_str(), jni::static_ref_cast<JBoolean>(entry.second)->value() == true);
-    } else if (entry.second->isInstanceOf(integerClass)){
-      object.setProperty(rt, key.c_str(), jni::static_ref_cast<JInteger>(entry.second)->value());
-    } else if (entry.second->isInstanceOf(doubleClass)){
-      object.setProperty(rt, key.c_str(), jni::static_ref_cast<JDouble>(entry.second)->value());
-    } else if (entry.second->isInstanceOf(floatClass)){
-      object.setProperty(rt, key.c_str(), jni::static_ref_cast<JFloat>(entry.second)->value());
-    } else if (entry.second->isInstanceOf(stringClass)){
-      auto jsiValue = jsi::String::createFromUtf8(rt, jni::static_ref_cast<JString>(entry.second)->toStdString());
+    if (entry.second->isInstanceOf(booleanClass)) {
+      object.setProperty(
+          rt,
+          key.c_str(),
+          jni::static_ref_cast<JBoolean>(entry.second)->value() == true);
+    } else if (entry.second->isInstanceOf(integerClass)) {
+      object.setProperty(
+          rt,
+          key.c_str(),
+          jni::static_ref_cast<JInteger>(entry.second)->value());
+    } else if (entry.second->isInstanceOf(doubleClass)) {
+      object.setProperty(
+          rt,
+          key.c_str(),
+          jni::static_ref_cast<JDouble>(entry.second)->value());
+    } else if (entry.second->isInstanceOf(floatClass)) {
+      object.setProperty(
+          rt, key.c_str(), jni::static_ref_cast<JFloat>(entry.second)->value());
+    } else if (entry.second->isInstanceOf(stringClass)) {
+      auto jsiValue = jsi::String::createFromUtf8(
+          rt, jni::static_ref_cast<JString>(entry.second)->toStdString());
       object.setProperty(rt, key.c_str(), jsiValue);
     }
-    if (entry.second->isInstanceOf(arrayFloatClass)){
+    if (entry.second->isInstanceOf(arrayFloatClass)) {
       auto floatArray = jni::static_ref_cast<JList<JFloat>>(entry.second);
       unsigned int arraySize = floatArray->size();
       jsi::Array jsiArray(rt, arraySize);
       int i = 0;
-      for (const auto& item : *floatArray) {
+      for (const auto &item : *floatArray) {
         jsiArray.setValueAtIndex(rt, i++, item->value());
       }
       object.setProperty(rt, key.c_str(), jsiArray);
