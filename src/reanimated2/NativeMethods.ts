@@ -174,6 +174,7 @@ if (isWeb()) {
 }
 
 export let setGestureState: (handlerTag: number, newState: number) => void;
+
 if (isWeb()) {
   setGestureState = () => {
     console.warn('[Reanimated] setGestureState is not available on web.');
@@ -188,7 +189,7 @@ if (isWeb()) {
   setGestureState = () => {
     console.warn('[Reanimated] setGestureState() cannot be used with Jest.');
   };
-} else {
+} else if (isNative) {
   setGestureState = (handlerTag, newState) => {
     if (!_WORKLET) {
       console.warn(
@@ -197,5 +198,12 @@ if (isWeb()) {
       return;
     }
     _setGestureState(handlerTag, newState);
+  };
+} else {
+  measure = () => {
+    console.warn(
+      '[Reanimated] setGestureState() is not supported on this configuration.'
+    );
+    return null;
   };
 }
