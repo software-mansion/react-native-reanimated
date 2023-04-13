@@ -100,21 +100,55 @@ if (isWeb()) {
   };
 }
 
-export function dispatchCommand(
+export let dispatchCommand: (
   animatedRef: RefObjectFunction<Component>,
   commandName: string,
   args: Array<unknown>
-): void {
-  'worklet';
-  if (!_WORKLET || !isNative || !global._IS_FABRIC) {
-    return;
-  }
+) => void;
 
-  // dispatchCommand works only on Fabric where animatedRef returns
-  // an object (ShadowNodeWrapper) and not a number
-  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
+if (isNative && global._IS_FABRIC) {
+  dispatchCommand = (animatedRef, commandName, args) => {
+    'worklet';
+    if (!_WORKLET) {
+      return;
+    }
+
+    // dispatchCommand works only on Fabric where animatedRef returns
+    // an object (ShadowNodeWrapper) and not a number
+    const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
+  };
+} else if (isNative) {
+  dispatchCommand = () => {
+    'worklet';
+    console.warn('[Reanimated] dispatchCommand() is not supported on Paper.');
+    return null;
+  };
+} else if (isWeb()) {
+  dispatchCommand = () => {
+    console.warn('[Reanimated] dispatchCommand() is not supported on Web.');
+    return null;
+  };
+} else if (isChromeDebugger()) {
+  dispatchCommand = () => {
+    console.warn(
+      '[Reanimated] dispatchCommand() is not supported with Chrome Debugger.'
+    );
+    return null;
+  };
+} else if (isJest()) {
+  dispatchCommand = () => {
+    console.warn('[Reanimated] dispatchCommand() is not supported with Jest.');
+    return null;
+  };
+} else {
+  dispatchCommand = () => {
+    console.warn(
+      '[Reanimated] dispatchCommand() is not supported on this configuration.'
+    );
+    return null;
+  };
 }
 
 export let scrollTo: (
@@ -163,19 +197,41 @@ if (isWeb()) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _scrollToPaper!(viewTag, x, y, animated);
   };
+} else if (isChromeDebugger()) {
+  scrollTo = () => {
+    console.warn(
+      '[Reanimated] scrollTo() is not supported with Chrome Debugger.'
+    );
+    return null;
+  };
+} else if (isJest()) {
+  scrollTo = () => {
+    console.warn('[Reanimated] scrollTo() is not supported with Jest.');
+    return null;
+  };
 } else {
-  scrollTo = (
-    _animatedRef: RefObjectFunction<Component>,
-    _x: number,
-    _y: number
-  ) => {
-    // no-op
+  scrollTo = () => {
+    console.warn(
+      '[Reanimated] scrollTo() is not supported on this configuration.'
+    );
+    return null;
   };
 }
 
 export let setGestureState: (handlerTag: number, newState: number) => void;
 
-if (isWeb()) {
+if (isNative) {
+  setGestureState = (handlerTag, newState) => {
+    'worklet';
+    if (!_WORKLET) {
+      console.warn(
+        '[Reanimated] You can not use setGestureState in non-worklet function.'
+      );
+      return;
+    }
+    _setGestureState(handlerTag, newState);
+  };
+} else if (isWeb()) {
   setGestureState = () => {
     console.warn('[Reanimated] setGestureState is not available on web.');
   };
@@ -188,16 +244,6 @@ if (isWeb()) {
 } else if (isJest()) {
   setGestureState = () => {
     console.warn('[Reanimated] setGestureState() cannot be used with Jest.');
-  };
-} else if (isNative) {
-  setGestureState = (handlerTag, newState) => {
-    if (!_WORKLET) {
-      console.warn(
-        '[Reanimated] You can not use setGestureState in non-worklet function.'
-      );
-      return;
-    }
-    _setGestureState(handlerTag, newState);
   };
 } else {
   measure = () => {
