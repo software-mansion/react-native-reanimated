@@ -41,8 +41,9 @@ public class SharedTransitionManager {
   private final Set<Integer> mViewTagsToHide = new HashSet<>();
   private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
+  private List<SharedElement> mSharedElementsWithProgress = new ArrayList<>();
+  private List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
-  private final boolean isSharedProgressTransition = true;
   private final Set<EventDispatcher> eventDispatchersWithListener = new HashSet<>();
   private JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager;
   private JavaWrapperJSConfigManager javaWrapperJSConfigManager;
@@ -67,30 +68,28 @@ public class SharedTransitionManager {
   }
 
   protected void screenDidLayout(int screenChildViewTag) {
-    if (isSharedProgressTransition) {
-      ReactContext context = mAnimationsManager.getContext();
-      EventDispatcher eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(context, screenChildViewTag);
-      if (eventDispatcher != null && !eventDispatchersWithListener.contains(eventDispatcher)) {
-        eventDispatchersWithListener.add(eventDispatcher);
-        eventDispatcher.addListener(event -> {
-          if (event.getEventName().equals("topTransitionProgress")) {
-            try {
-              Field field = event.getClass().getDeclaredField("mClosing");
-              field.setAccessible(true);
-              boolean closing =  field.getBoolean(event);
-              if (!closing) {
-                return;
-              }
-              field = event.getClass().getDeclaredField("mProgress");
-              field.setAccessible(true);
-              double progress =  field.getDouble(event);
-              onTransitionProgress(progress);
-            } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {}
-          } else if (event.getEventName().equals("topFinishTransitioning")) {
-            screenTransitionFinished();
-          }
-        });
-      }
+    ReactContext context = mAnimationsManager.getContext();
+    EventDispatcher eventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(context, screenChildViewTag);
+    if (eventDispatcher != null && !eventDispatchersWithListener.contains(eventDispatcher)) {
+      eventDispatchersWithListener.add(eventDispatcher);
+      eventDispatcher.addListener(event -> {
+        if (event.getEventName().equals("topTransitionProgress")) {
+          try {
+            Field field = event.getClass().getDeclaredField("mClosing");
+            field.setAccessible(true);
+            boolean closing =  field.getBoolean(event);
+            if (!closing) {
+              return;
+            }
+            field = event.getClass().getDeclaredField("mProgress");
+            field.setAccessible(true);
+            double progress =  field.getDouble(event);
+            onTransitionProgress(progress);
+          } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {}
+        } else if (event.getEventName().equals("topFinishTransitioning")) {
+          screenTransitionFinished();
+        }
+      });
     }
     tryStartSharedTransitionForViews(mAddedSharedViews, true);
     mAddedSharedViews.clear();
@@ -239,9 +238,8 @@ public class SharedTransitionManager {
     }
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
-    if (!isSharedProgressTransition) {
-      startSharedTransition(sharedElements);
-    }
+    orderByAnimationTypes(sharedElements);
+    startSharedTransition(mSharedElementsWithAnimation);
     return true;
   }
 
@@ -503,6 +501,8 @@ public class SharedTransitionManager {
         }
       }
       mSharedElements.clear();
+      mSharedElementsWithProgress.clear();
+      mSharedElementsWithAnimation.clear();
       mIsSharedTransitionActive = false;
     }
   }
@@ -667,7 +667,7 @@ public class SharedTransitionManager {
   }
 
   private void onTransitionProgress(double progress) {
-    for (SharedElement sharedElement : mSharedElements) {
+    for (SharedElement sharedElement : mSharedElementsWithProgress) {
       int sourceViewTag = sharedElement.sourceView.getId();
       int targetViewTag = sharedElement.targetView.getId();
       Map<String, Object> componentStyle = computeAnimationFrameWithProgress(progress, sharedElement);
@@ -693,6 +693,19 @@ public class SharedTransitionManager {
 
   public void setJavaWrapperJSConfigManager(JavaWrapperJSConfigManager javaWrapperJSConfigManager) {
     this.javaWrapperJSConfigManager = javaWrapperJSConfigManager;
+  }
+
+  void orderByAnimationTypes(List<SharedElement> sharedElements)
+  {
+    for (SharedElement sharedElement : sharedElements) {
+      int viewTag = sharedElement.sourceView.getId();
+      int transitionType = javaWrapperJSConfigManager.getSharedTransitionConfig(viewTag);
+      if (transitionType == 0) {
+        mSharedElementsWithProgress.add(sharedElement);
+      } else {
+        mSharedElementsWithAnimation.add(sharedElement);
+      }
+    }
   }
 
 }

@@ -25,13 +25,8 @@ namespace reanimated {
   }
 
   int JavaWrapperJSConfigManager::getSharedTransitionConfig(const int viewTag) {
-//    jsi::Runtime &runtime = *jsCallbacksManager_->getRuntimeHelper()->uiRuntime();
-//    jsi::Value convertedValues = JNIHelper::convertJNIMapToJSIObject(
-//      runtime, sharedAnimationWorkletData);
-//    jsi::Value values = jsCallbacksManager_->executeSharedAnimationProgressCallback(
-//      viewTag, progress, convertedValues);
-//    return JNIHelper::convertJSIObjectToJNIMap(runtime, values.asObject(runtime));
-    return 0;
+    int transitionType = static_cast<int>(jsConfigManager_->getSharedTansitionConfig(viewTag));
+    return transitionType;
   }
 
 } // namespace reanimated
