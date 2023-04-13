@@ -44,7 +44,7 @@ if (isWeb()) {
     console.warn('[Reanimated] measure() cannot be used with Jest.');
     return null;
   };
-} else {
+} else if (isNative) {
   measure = (animatedRef: RefObjectFunction<Component>) => {
     'worklet';
     if (!_WORKLET) {
@@ -90,6 +90,13 @@ if (isWeb()) {
     } else {
       return measured;
     }
+  };
+} else {
+  measure = () => {
+    console.warn(
+      '[Reanimated] measure() is not supported on this configuration.'
+    );
+    return null;
   };
 }
 
