@@ -458,6 +458,8 @@ var require_processForCalleesWorklets = __commonJS({
         (0, assert_1.strict)(!Array.isArray(workletToProcess), "'workletToProcess' is an array'");
         if (workletToProcess.isObjectExpression()) {
           processObjectHook(workletToProcess, state);
+        } else if (name === "useAnimatedScrollHandler") {
+          (0, processIfWorkletFunction_1.processIfWorkletFunction)(workletToProcess, state);
         }
       } else {
         const indices = functionArgsToWorkletize.get(name);

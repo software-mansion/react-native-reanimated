@@ -370,7 +370,7 @@ describe('babel plugin', () => {
 
   // object hooks
 
-  it('workletizes object hook wrapped ArrowFunctionExpression automatically', () => {
+  it('workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically', () => {
     const input = `
       useAnimatedGestureHandler({
         onStart: (event) => {
@@ -384,7 +384,21 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
-  it('workletizes object hook wrapped unnamed FunctionExpression automatically', () => {
+  it('workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically', () => {
+    const input = `
+      useAnimatedScrollHandler({
+        onScroll: (event) => {
+          console.log(event);
+        },
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically', () => {
     const input = `
       useAnimatedGestureHandler({
         onStart: function (event) {
@@ -398,7 +412,21 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
-  it('workletizes object hook wrapped named FunctionExpression automatically', () => {
+  it('workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically', () => {
+    const input = `
+      useAnimatedScrollHandler({
+        onScroll: function (event) {
+          console.log(event);
+        },
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically', () => {
     const input = `
       useAnimatedGestureHandler({
         onStart: function onStart(event) {
@@ -412,7 +440,21 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
-  it('workletizes object hook wrapped ObjectMethod automatically', () => {
+  it('workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically', () => {
+    const input = `
+      useAnimatedScrollHandler({
+        onScroll: function onScroll(event) {
+          console.log(event);
+        },
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically', () => {
     const input = `
       useAnimatedGestureHandler({
         onStart(event) {
@@ -426,15 +468,39 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
-  it('supports empty object in hooks', () => {
+  it('workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically', () => {
+    const input = `
+      useAnimatedGestureHandler({
+        onScroll(event) {
+          console.log(event);
+        },
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports empty object in useAnimatedGestureHandler', () => {
     const input = `
       useAnimatedGestureHandler({});
     `;
 
-    runPlugin(input);
+    const { code } = runPlugin(input);
+    expect(code).not.toContain('_f.__workletHash');
   });
 
-  it('transforms each object property in hooks', () => {
+  it('supports empty object in useAnimatedScrollHandler', () => {
+    const input = `
+      useAnimatedScrollHandler({});
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).not.toContain('_f.__workletHash');
+  });
+
+  it('transforms each object property in useAnimatedGestureHandler', () => {
     const input = `
       useAnimatedGestureHandler({
         onStart: () => {},
@@ -445,6 +511,81 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toMatch(/^(.*)(_f\.__workletHash(.*)){3}$/s);
+  });
+
+  it('transforms each object property in useAnimatedScrollHandler', () => {
+    const input = `
+      useAnimatedScrollHandler({
+        onScroll: () => {},
+        onBeginDrag: () => {},
+        onEndDrag: () => {},
+        onMomentumBegin: () => {},
+        onMomentumEnd: () => {},
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatch(/^(.*)(_f\.__workletHash(.*)){5}$/s);
+  });
+
+  it("doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler", () => {
+    const input = `
+      useAnimatedGestureHandler(() => {});
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).not.toContain('_f.__workletHash');
+  });
+
+  it("doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler", () => {
+    const input = `
+      useAnimatedGestureHandler(function () {});
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).not.toContain('_f.__workletHash');
+  });
+
+  it("doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler", () => {
+    const input = `
+      useAnimatedGestureHandler(function foo() {});
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).not.toContain('_f.__workletHash');
+  });
+
+  it('transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler', () => {
+    const input = `
+      useAnimatedScrollHandler((event) => {
+        console.log(event);
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+  });
+
+  it('transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler', () => {
+    const input = `
+      useAnimatedScrollHandler(function (event) {
+        console.log(event);
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+  });
+
+  it('transforms named FunctionExpression as argument of useAnimatedScrollHandler', () => {
+    const input = `
+      useAnimatedScrollHandler(function foo(event) {
+        console.log(event);
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
   });
 
   // React Native Gesture Handler
