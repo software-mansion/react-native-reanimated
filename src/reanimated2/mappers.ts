@@ -104,16 +104,16 @@ export function createMapperRegistry() {
       mapperRun();
     } else if (!runRequested) {
       if (processingMappers) {
-        // in general we should avoid having mappers trigger updates as this may
-        // result in upredictable behavior. Specifically, the updated value can
-        // be read by mapeprs that run later in the same frame but previous mappers
-        // would access the old value. Updaing mappers during the mapper-run phase
+        // In general, we should avoid having mappers trigger updates as this may
+        // result in unpredictable behavior. Specifically, the updated value can
+        // be read by mappers that run later in the same frame but previous mappers
+        // would access the old value. Updating mappers during the mapper-run phase
         // breaks the order in which we should execute the mappers. However, doing
         // that is still a possibility and there are some instances where people use
         // the API in that way, hence we need to prevent mapper-run phase falling into
         // an infinite loop. We do that by detecting when mapper-run is requested while
-        // we are alreadt in mapper-run phase, and in that case we use requestAnimationFrame
-        // instead of queueMicrotask which will schedule mapper run for the next
+        // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
+        // instead of `queueMicrotask` which will schedule mapper run for the next
         // frame instead of queuing another set of updates in the same frame.
         requestAnimationFrame(mapperRun);
       } else {
