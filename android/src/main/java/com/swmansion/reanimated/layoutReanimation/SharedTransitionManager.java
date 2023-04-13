@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.JavaWrapperJSCallbacksManager;
+import com.swmansion.reanimated.JavaWrapperJSConfigManager;
 import com.swmansion.reanimated.ReanimatedModule;
 
 import java.lang.reflect.Field;
@@ -44,6 +45,7 @@ public class SharedTransitionManager {
   private final boolean isSharedProgressTransition = true;
   private final Set<EventDispatcher> eventDispatchersWithListener = new HashSet<>();
   private JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager;
+  private JavaWrapperJSConfigManager javaWrapperJSConfigManager;
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
@@ -687,6 +689,10 @@ public class SharedTransitionManager {
 
   public void setJavaWrapperJSCallbacksManager(JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager) {
     this.javaWrapperJSCallbacksManager = javaWrapperJSCallbacksManager;
+  }
+
+  public void setJavaWrapperJSConfigManager(JavaWrapperJSConfigManager javaWrapperJSConfigManager) {
+    this.javaWrapperJSConfigManager = javaWrapperJSConfigManager;
   }
 
 }

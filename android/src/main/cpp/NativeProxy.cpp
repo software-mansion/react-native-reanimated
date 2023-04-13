@@ -571,9 +571,14 @@ void NativeProxy::setupLayoutAnimations() {
       });
 }
 
-void NativeProxy::initializeDependencies(jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager) {
+void NativeProxy::initializeDependencies(
+  jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager,
+  jni::alias_ref<JavaWrapperJSConfigManager::javaobject> javaWrapperJSConfigManager
+) {
   std::shared_ptr<JSCallbacksManager> jsCallbacksManager = nativeReanimatedModule_->getJSCallbacksManager();
   javaWrapperJSCallbackManager->cthis()->setJSCallbackManager(jsCallbacksManager);
+  std::shared_ptr<JSConfigManager> jsConfigManager = nativeReanimatedModule_->getJSConfigManager();
+  javaWrapperJSConfigManager->cthis()->setJSConfigManager(jsConfigManager);
 }
 
 } // namespace reanimated

@@ -24,6 +24,7 @@
 #include "NativeReanimatedModule.h"
 #include "Scheduler.h"
 #include "JavaWrapperJSCallbacksManager.h"
+#include "JavaWrapperJSConfigManager.h"
 
 namespace reanimated {
 
@@ -271,7 +272,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager
 #endif
       /**/);
-  void initializeDependencies(jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager);
+  void initializeDependencies(
+    jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject> javaWrapperJSCallbackManager,
+    jni::alias_ref<JavaWrapperJSConfigManager::javaobject> javaWrapperJSConfigManager
+  );
 };
 
 } // namespace reanimated

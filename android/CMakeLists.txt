@@ -94,6 +94,7 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/AnimatedSensor"
         "${COMMON_SRC_DIR}/cpp/Fabric"
+        "${COMMON_SRC_DIR}/cpp/JSManager"
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${SRC_DIR}/main/cpp"
 )

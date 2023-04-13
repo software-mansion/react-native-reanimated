@@ -9,6 +9,7 @@ import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
+import com.swmansion.reanimated.layoutReanimation.SharedTransitionManager;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 
 import java.lang.ref.WeakReference;
@@ -34,8 +35,11 @@ public class NativeProxy extends NativeProxyCommon {
         ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
         installJSIBindings(messageQueueThread);
         JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager = new JavaWrapperJSCallbacksManager();
-        initializeDependencies(javaWrapperJSCallbacksManager);
-        LayoutAnimations.getAnimationsManager().getSharedTransitionManager().setJavaWrapperJSCallbacksManager(javaWrapperJSCallbacksManager);
+        JavaWrapperJSConfigManager javaWrapperJSConfigManager = new JavaWrapperJSConfigManager();
+        initializeDependencies(javaWrapperJSCallbacksManager, javaWrapperJSConfigManager);
+        SharedTransitionManager sharedTransitionManager = LayoutAnimations.getAnimationsManager().getSharedTransitionManager();
+        sharedTransitionManager.setJavaWrapperJSCallbacksManager(javaWrapperJSCallbacksManager);
+        sharedTransitionManager.setJavaWrapperJSConfigManager(javaWrapperJSConfigManager);
     }
 
     private native HybridData initHybrid(
@@ -50,7 +54,10 @@ public class NativeProxy extends NativeProxyCommon {
 
     public native void performOperations();
 
-    public native void initializeDependencies(JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager);
+    public native void initializeDependencies(
+        JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager,
+        JavaWrapperJSConfigManager javaWrapperJSConfigManager
+    );
 
     @Override
     protected HybridData getHybridData() {
