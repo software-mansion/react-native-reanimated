@@ -1,4 +1,3 @@
-/* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
 import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
 import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
@@ -58,7 +57,11 @@ if (isWeb()) {
       return null;
     }
 
-    const measured = _measure(viewTag);
+    const measured = global._IS_FABRIC
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        _measureFabric!(viewTag as ShadowNodeWrapper)
+      : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        _measurePaper!(viewTag as number);
     if (measured === null) {
       console.warn(
         `[Reanimated] The view with tag ${viewTag} has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -93,7 +96,8 @@ export function dispatchCommand(
   // dispatchCommand works only on Fabric where animatedRef returns
   // an object (ShadowNodeWrapper) and not a number
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  _dispatchCommand!(shadowNodeWrapper, commandName, args);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
 }
 
 export let scrollTo: (
@@ -139,7 +143,8 @@ if (isWeb()) {
 
     // Calling animatedRef on Paper returns a number (nativeTag)
     const viewTag = animatedRef() as number;
-    _scrollTo(viewTag, x, y, animated);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _scrollToPaper!(viewTag, x, y, animated);
   };
 } else {
   scrollTo = (
