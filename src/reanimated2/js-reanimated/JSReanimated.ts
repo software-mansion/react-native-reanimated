@@ -130,9 +130,23 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   subscribeForKeyboardEvents(_: ShareableRef<number>): number {
-    console.warn(
-      '[Reanimated] useAnimatedKeyboard is not available on web yet.'
-    );
+    if (isWeb()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available on web yet.'
+      );
+    } else if (isChromeDebugger()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available when using Chrome Debugger.'
+      );
+    } else if (isJest()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available when using Jest.'
+      );
+    } else {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available on this configuration.'
+      );
+    }
     return -1;
   }
 
