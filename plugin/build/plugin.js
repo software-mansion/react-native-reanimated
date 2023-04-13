@@ -58,13 +58,12 @@ var require_commonObjects = __commonJS({
       "_removeShadowNodeFromRegistry",
       "RegExp",
       "Error",
-      "ErrorUtils",
+      "__ErrorUtils",
       "global",
       "_measure",
       "_scrollTo",
       "_dispatchCommand",
       "_setGestureState",
-      "_getCurrentTime",
       "isNaN",
       "LayoutAnimationRepository",
       "_notifyAboutProgress",
@@ -459,6 +458,8 @@ var require_processForCalleesWorklets = __commonJS({
         (0, assert_1.strict)(!Array.isArray(workletToProcess), "'workletToProcess' is an array'");
         if (workletToProcess.isObjectExpression()) {
           processObjectHook(workletToProcess, state);
+        } else if (name === "useAnimatedScrollHandler") {
+          (0, processIfWorkletFunction_1.processIfWorkletFunction)(workletToProcess, state);
         }
       } else {
         const indices = functionArgsToWorkletize.get(name);

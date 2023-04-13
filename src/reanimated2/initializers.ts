@@ -17,8 +17,8 @@ function callGuardDEV<T extends Array<any>, U>(
   try {
     fn(...args);
   } catch (e) {
-    if (global.ErrorUtils) {
-      global.ErrorUtils.reportFatalError(e as Error);
+    if (global.__ErrorUtils) {
+      global.__ErrorUtils.reportFatalError(e as Error);
     } else {
       throw e;
     }
@@ -159,7 +159,7 @@ export function initializeUIRuntime() {
   runOnUIImmediately(() => {
     'worklet';
     // setup error handler
-    global.ErrorUtils = {
+    global.__ErrorUtils = {
       reportFatalError: (error: Error) => {
         runOnJS(reportFatalErrorOnJS)({
           message: error.message,
