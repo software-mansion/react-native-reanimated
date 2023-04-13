@@ -18,7 +18,7 @@ export let measure: (
 
 if (isWeb()) {
   measure = (animatedRef: RefObjectFunction<Component>) => {
-    const element = animatedRef() as unknown as HTMLElement; // TODO: fix typing of animated refs on web
+    const element = animatedRef() as HTMLElement; // TODO: fix typing of animated refs on web
     const viewportOffset = element.getBoundingClientRect();
     return {
       width: element.offsetWidth,
@@ -115,7 +115,7 @@ if (isWeb()) {
     animated: boolean
   ) => {
     'worklet';
-    const element = animatedRef() as unknown as HTMLElement;
+    const element = animatedRef() as HTMLElement; // TODO: fix typing of animated refs on web
     // @ts-ignore same call as in react-native-web
     element.scrollTo({ x, y, animated });
   };
