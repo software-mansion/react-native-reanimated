@@ -61,7 +61,7 @@ declare global {
       ) => void)
     | undefined;
   var _removeShadowNodeFromRegistry: ((viewTag: number) => void) | undefined;
-  var _measure: (viewTag: number) => MeasuredDimensions;
+  var _measure: (viewTag: number | ShadowNodeWrapper) => MeasuredDimensions;
   var _scrollTo: (
     viewTag: number,
     x: number,
