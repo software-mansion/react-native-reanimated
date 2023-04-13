@@ -2,8 +2,9 @@
 
 namespace reanimated {
 
-JSCallbacksManager::JSCallbacksManager(std::shared_ptr<JSRuntimeHelper> runtimeHelper) 
-  : runtimeHelper_(runtimeHelper) {}
+void JSCallbacksManager::setRuntimeHelper(const std::shared_ptr<JSRuntimeHelper> runtimeHelper) {
+  runtimeHelper_ = runtimeHelper;
+}
 
 jsi::Value JSCallbacksManager::registerJSCallback(
     jsi::Runtime &rt,
@@ -31,10 +32,6 @@ void JSCallbacksManager::unregisterJSCallback(const JSCallbackType type, const i
   if (type == JSCallbackType::SHARED_TRANSITION_PROGRESS_CALLBACK) {
     sharedAnimationProgressCallback_.erase(callbackId);
   }
-}
-
-void JSCallbacksManager::setRuntimeHelper(const std::shared_ptr<JSRuntimeHelper> runtimeHelper) {
-  runtimeHelper_ = runtimeHelper;
 }
 
 std::shared_ptr<JSRuntimeHelper> JSCallbacksManager::getRuntimeHelper() {

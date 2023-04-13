@@ -293,6 +293,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
   REASharedTransitionManagerPublic *sharedTransitionManager = [weakAnimationsManager getSharedTransitionManager];
   sharedTransitionManager->jsCallbacksManager = module->getJSCallbacksManager();
+  sharedTransitionManager->jsConfigManager = module->getJSConfigManager();
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
 #ifdef RCT_NEW_ARCH_ENABLED

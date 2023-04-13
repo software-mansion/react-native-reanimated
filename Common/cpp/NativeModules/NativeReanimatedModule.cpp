@@ -56,8 +56,10 @@ NativeReanimatedModule::NativeReanimatedModule(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
       configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction)
+          platformDepMethodsHolder.configurePropsFunction),
 #endif
+    jsCallbacksManager_(std::make_shared<JSCallbacksManager>()),
+    jsConfigManager_(std::make_shared<JSConfigManager>())
 {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
@@ -184,8 +186,8 @@ void NativeReanimatedModule::installCoreFunctions(
     // instace of the helper to exists.
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
-    jsCallbacksManager_ = std::make_shared<JSCallbacksManager>(runtimeHelper);
-    jsConfigManager_ = std::make_shared<JSConfigManager>(runtimeHelper);
+    jsCallbacksManager_->setRuntimeHelper(runtimeHelper);
+    jsConfigManager_->setRuntimeHelper(runtimeHelper);
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);

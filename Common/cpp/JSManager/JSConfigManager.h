@@ -12,10 +12,11 @@ namespace reanimated {
 
 class JSConfigManager {
 public:
-  JSConfigManager(std::shared_ptr<JSRuntimeHelper> runtimeHelper);
+  void setRuntimeHelper(const std::shared_ptr<JSRuntimeHelper> runtimeHelper);
   void setConfigValue(const JSConfigType type, const jsi::Value &config);
   jsi::Value getConfigValue(const JSConfigType type, const int key);
   SharedTransitionType getSharedTansitionConfig(const int key);
+  void clearSharedTansitionConfig(const int key);
 
 private:
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
