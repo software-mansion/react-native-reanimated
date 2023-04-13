@@ -603,11 +603,11 @@ def assertNoReanimated2WithNewArchitecture = task assertNoReanimated2WithNewArch
 }
 
 def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
-    onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 71 }
+    onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
     doFirst {
         throw new GradleException(
             "\n[react-native-reanimated] Reanimated " + REANIMATED_VERSION + " supports the New Architecture " +
-            "only on the latest minor release of React Native. Please upgrade to React Native 0.71.0+ " +
+            "only on the latest minor release of React Native. Please upgrade to React Native 0.72.0+ " +
             "or downgrade to an older version of Reanimated v3."
         )
     }
@@ -1074,13 +1074,13 @@ afterEvaluate {
         nativeBuildDependsOn(prepareThirdPartyNdkHeaders)
         nativeBuildDependsOn(extractAARHeaders)
         nativeBuildDependsOn(extractSOFiles)
-
-        tasks.forEach({ task ->
-            if (task.name.contains("JniLibFolders")) {
-                task.dependsOn(packageNdkLibs)
-            }
-        })
     }
+
+    tasks.forEach({ task ->
+        if (task.name.contains("JniLibFolders")) {
+            task.dependsOn(packageNdkLibs)
+        }
+    })
 
     if (JS_RUNTIME == "hermes") {
         if (REACT_NATIVE_MINOR_VERSION < 71) {

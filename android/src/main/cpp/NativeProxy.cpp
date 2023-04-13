@@ -364,8 +364,12 @@ void NativeProxy::handleEvent(
     // for details.
     return;
   }
-  std::string eventJSON = eventAsString.substr(
-      13, eventAsString.length() - 15); // removes "{ NativeMap: " and " }"
+#if REACT_NATIVE_MINOR_VERSION >= 72
+  std::string eventJSON = eventAsString;
+#else
+  // remove "{ NativeMap: " and " }"
+  std::string eventJSON = eventAsString.substr(13, eventAsString.length() - 15);
+#endif
   if (eventJSON == "null") {
     return;
   }

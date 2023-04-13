@@ -1,6 +1,7 @@
 #include "NativeReanimatedModule.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/core/TraitCast.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #endif
@@ -558,37 +559,40 @@ void NativeReanimatedModule::performOperations() {
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     auto lock = newestShadowNodesRegistry_->createLock();
 
-    shadowTree.commit([&](RootShadowNode const &oldRootShadowNode) {
-      auto rootNode = oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
+    shadowTree.commit(
+        [&](RootShadowNode const &oldRootShadowNode) {
+          auto rootNode =
+              oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-      ShadowTreeCloner shadowTreeCloner{
-          newestShadowNodesRegistry_, uiManager_, surfaceId_};
+          ShadowTreeCloner shadowTreeCloner{
+              newestShadowNodesRegistry_, uiManager_, surfaceId_};
 
-      for (const auto &pair : copiedOperationsQueue) {
-        const ShadowNodeFamily &family = pair.first->getFamily();
-        react_native_assert(family.getSurfaceId() == surfaceId_);
+          for (const auto &pair : copiedOperationsQueue) {
+            const ShadowNodeFamily &family = pair.first->getFamily();
+            react_native_assert(family.getSurfaceId() == surfaceId_);
 
-        auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-            rootNode, family, RawProps(rt, *pair.second));
+            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+                rootNode, family, RawProps(rt, *pair.second));
 
-        if (newRootNode == nullptr) {
-          // this happens when React removed the component but Reanimated
-          // still tries to animate it, let's skip update for this specific
-          // component
-          continue;
-        }
-        rootNode = newRootNode;
-      }
+            if (newRootNode == nullptr) {
+              // this happens when React removed the component but Reanimated
+              // still tries to animate it, let's skip update for this specific
+              // component
+              continue;
+            }
+            rootNode = newRootNode;
+          }
 
-      // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-      for (auto tag : copiedTagsToRemove) {
-        newestShadowNodesRegistry_->remove(tag);
-      }
+          // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
+          for (auto tag : copiedTagsToRemove) {
+            newestShadowNodesRegistry_->remove(tag);
+          }
 
-      shadowTreeCloner.updateYogaChildren();
+          shadowTreeCloner.updateYogaChildren();
 
-      return std::static_pointer_cast<RootShadowNode>(rootNode);
-    });
+          return std::static_pointer_cast<RootShadowNode>(rootNode);
+        },
+        {/* default commit options */});
   });
 }
 
