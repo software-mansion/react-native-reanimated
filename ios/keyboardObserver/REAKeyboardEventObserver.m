@@ -17,7 +17,6 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   NSMutableDictionary *_listeners;
   CADisplayLink *_displayLink;
   KeyboardState _state;
-  CGFloat _lastKeyboardHeight;
 }
 
 - (instancetype)init
@@ -26,7 +25,6 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _listeners = [[NSMutableDictionary alloc] init];
   _nextListenerId = @0;
   _state = UNKNOWN;
-  _lastKeyboardHeight = -1;
 
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
@@ -77,7 +75,6 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     _displayLink.paused = YES;
   }
 
-  _lastKeyboardHeight = keyboardHeight;
   for (NSString *key in _listeners.allKeys) {
     ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
   }
