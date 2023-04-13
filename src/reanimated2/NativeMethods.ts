@@ -22,7 +22,7 @@ export let measure: (
 ) => MeasuredDimensions | null;
 
 if (isWeb()) {
-  measure = (animatedRef: RefObjectFunction<Component>) => {
+  measure = (animatedRef) => {
     const element = animatedRef() as HTMLElement; // TODO: fix typing of animated refs on web
     const viewportOffset = element.getBoundingClientRect();
     return {
@@ -35,17 +35,17 @@ if (isWeb()) {
     };
   };
 } else if (isChromeDebugger()) {
-  measure = (_animatedRef: RefObjectFunction<Component>) => {
+  measure = () => {
     console.warn('[Reanimated] measure() cannot be used with Chrome Debugger.');
     return null;
   };
 } else if (isJest()) {
-  measure = (_animatedRef: RefObjectFunction<Component>) => {
+  measure = () => {
     console.warn('[Reanimated] measure() cannot be used with Jest.');
     return null;
   };
 } else if (isNative) {
-  measure = (animatedRef: RefObjectFunction<Component>) => {
+  measure = (animatedRef) => {
     'worklet';
     if (!_WORKLET) {
       console.warn(
@@ -159,34 +159,19 @@ export let scrollTo: (
 ) => void;
 
 if (isWeb()) {
-  scrollTo = (
-    animatedRef: RefObjectFunction<Component>,
-    x: number,
-    y: number,
-    animated: boolean
-  ) => {
+  scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
     const element = animatedRef() as HTMLElement; // TODO: fix typing of animated refs on web
     // @ts-ignore same call as in react-native-web
     element.scrollTo({ x, y, animated });
   };
 } else if (isNative && global._IS_FABRIC) {
-  scrollTo = (
-    animatedRef: RefObjectFunction<Component>,
-    x: number,
-    y: number,
-    animated: boolean
-  ) => {
+  scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
     dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
   };
 } else if (isNative) {
-  scrollTo = (
-    animatedRef: RefObjectFunction<Component>,
-    x: number,
-    y: number,
-    animated: boolean
-  ) => {
+  scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
     if (!_WORKLET) {
       return;
