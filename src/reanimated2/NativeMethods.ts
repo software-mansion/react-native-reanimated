@@ -2,7 +2,12 @@ import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
 import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import { RefObjectFunction } from './hook/commonTypes';
-import { isChromeDebugger, isWeb, shouldBeUseWeb } from './PlatformChecker';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from './PlatformChecker';
 
 export function getTag(
   view: null | number | React.Component<any, any> | React.ComponentClass<any>
@@ -32,6 +37,11 @@ if (isWeb()) {
 } else if (isChromeDebugger()) {
   measure = (_animatedRef: RefObjectFunction<Component>) => {
     console.warn('[Reanimated] measure() cannot be used with Chrome Debugger.');
+    return null;
+  };
+} else if (isJest()) {
+  measure = (_animatedRef: RefObjectFunction<Component>) => {
+    console.warn('[Reanimated] measure() cannot be used with Jest.');
     return null;
   };
 } else {
@@ -156,13 +166,29 @@ if (isWeb()) {
   };
 }
 
-export function setGestureState(handlerTag: number, newState: number): void {
-  'worklet';
-  if (!_WORKLET || !isNative) {
+export let setGestureState: (handlerTag: number, newState: number) => void;
+if (isWeb()) {
+  setGestureState = () => {
+    console.warn('[Reanimated] setGestureState is not available on web.');
+  };
+} else if (isChromeDebugger()) {
+  setGestureState = () => {
     console.warn(
-      '[Reanimated] You can not use setGestureState in non-worklet function.'
+      '[Reanimated] setGestureState() cannot be used with Chrome Debugger.'
     );
-    return;
-  }
-  _setGestureState(handlerTag, newState);
+  };
+} else if (isJest()) {
+  setGestureState = () => {
+    console.warn('[Reanimated] setGestureState() cannot be used with Jest.');
+  };
+} else {
+  setGestureState = (handlerTag, newState) => {
+    if (!_WORKLET) {
+      console.warn(
+        '[Reanimated] You can not use setGestureState in non-worklet function.'
+      );
+      return;
+    }
+    _setGestureState(handlerTag, newState);
+  };
 }

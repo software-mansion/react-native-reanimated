@@ -3,32 +3,7 @@
 import { shouldBeUseWeb } from '../PlatformChecker';
 const initializeGlobalsForWeb = () => {
   if (shouldBeUseWeb()) {
-    global._measurePaper = global._measureFabric = () => {
-      console.warn("[Reanimated] You can't use `measure` with Chrome Debugger");
-      return {
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        pageX: 0,
-        pageY: 0,
-      };
-    };
-    global._scrollToPaper = () => {
-      console.warn(
-        "[Reanimated] You can't use `scrollTo` with Chrome Debugger"
-      );
-    };
-    global._dispatchCommandFabric = () => {
-      console.warn(
-        "[Reanimated] You can't use `scrollTo` or `dispatchCommand` methods with Chrome Debugger"
-      );
-    };
-    global._setGestureState = () => {
-      console.warn(
-        "[Reanimated] You can't use `setGestureState` with Chrome Debugger or with web version"
-      );
-    };
+    // do nothing
   }
   return true;
 };
