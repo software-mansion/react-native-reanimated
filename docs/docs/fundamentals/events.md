@@ -19,7 +19,11 @@ For Android devices, be sure to wrap your app entry point with `<GestureHandlerR
 
 ```js
 export default function App() {
-  return <GestureHandlerRootView style={{ flex: 1 }}>{/* content */}</GestureHandlerRootView>;
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* content */}
+    </GestureHandlerRootView>
+  );
 }
 ```
 
