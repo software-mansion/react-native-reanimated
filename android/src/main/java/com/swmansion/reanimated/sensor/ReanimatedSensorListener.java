@@ -70,11 +70,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
       setter.sensorSetter(data, orientationDegrees);
     } else {
       // Set the opposite values to be consistent with iOS
-      float[] data = new float [] {
-        -event.values[0],
-        -event.values[1],
-        -event.values[2]
-      };
+      float[] data = new float[] {-event.values[0], -event.values[1], -event.values[2]};
       setter.sensorSetter(data, orientationDegrees);
     }
   }
