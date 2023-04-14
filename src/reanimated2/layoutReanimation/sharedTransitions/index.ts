@@ -2,6 +2,7 @@ import { withTiming } from '../../animation';
 import {
   SharedTransitionAnimationsFunction,
   SharedTransitionAnimationsValues,
+  LayoutAnimationType,
 } from '../animationBuilder/commonTypes';
 import {
   StyleProps,
@@ -14,7 +15,6 @@ import {
   registerJSCallback,
   setJSConfig,
 } from '../../core';
-import { LayoutAnimationType } from '../../layoutReanimation';
 
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
