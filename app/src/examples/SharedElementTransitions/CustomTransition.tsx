@@ -7,16 +7,14 @@ import {
 } from '@react-navigation/native-stack';
 import Animated, {
   SharedTransition,
-  useAnimatedReaction,
-  useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 
-const transition = SharedTransition
-  .setTransitionDuration(1000)
-  .custom((values) => {
+const transition = new SharedTransition()
+  .transitionDuration(1000)
+  .animation((values) => {
     'worklet';
     return {
       width: withSpring(values.targetWidth),
@@ -28,10 +26,18 @@ const transition = SharedTransition
   .progressAnimation((values, progress) => {
     'worklet';
     return {
-      width: progress * (values.targetWidth - values.currentWidth) + values.currentWidth,
-      height: progress * (values.targetHeight - values.currentHeight) + values.currentHeight,
-      originX: progress * (values.targetOriginX - values.currentOriginX) + values.currentOriginX,
-      originY: progress * (values.targetOriginY - values.currentOriginY) + values.currentOriginY,
+      width:
+        progress * (values.targetWidth - values.currentWidth) +
+        values.currentWidth,
+      height:
+        progress * (values.targetHeight - values.currentHeight) +
+        values.currentHeight,
+      originX:
+        progress * (values.targetOriginX - values.currentOriginX) +
+        values.currentOriginX,
+      originY:
+        progress * (values.targetOriginY - values.currentOriginY) +
+        values.currentOriginY,
     };
   });
 
@@ -47,7 +53,6 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
           backgroundColor: 'green',
         }}
         sharedTransitionTag="tag"
-        sharedTransitionType='progress'
         sharedTransitionStyle={transition}
       />
       <Button
