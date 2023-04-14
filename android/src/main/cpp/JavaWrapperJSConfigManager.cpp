@@ -26,7 +26,7 @@ void JavaWrapperJSConfigManager::setJSConfigManager(
 }
 
 int JavaWrapperJSConfigManager::getSharedTransitionConfig(const int viewTag) {
-  return jsConfigManager_->getSharedTansitionConfig(viewTag);
+  return jsConfigManager_->getSharedTransitionConfig(viewTag);
 }
 
 } // namespace reanimated

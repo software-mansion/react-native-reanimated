@@ -12,7 +12,7 @@ void JSConfigManager::setConfigValue(
     const jsi::Value &config) {
   auto &runtime = *runtimeHelper_->rnRuntime();
   if (type == JSConfigType::SHARED_TRANSITION_ANIMATION_TYPE) {
-    setSharedTansitionConfig(runtime, config);
+    setSharedTransitionConfig(runtime, config);
   }
 }
 
@@ -20,12 +20,12 @@ jsi::Value JSConfigManager::getConfigValue(
     const JSConfigType type,
     const int key) {
   if (type == JSConfigType::SHARED_TRANSITION_ANIMATION_TYPE) {
-    return jsi::Value(static_cast<int>(getSharedTansitionConfig(key)));
+    return jsi::Value(static_cast<int>(getSharedTransitionConfig(key)));
   }
   return jsi::Value::undefined();
 }
 
-void JSConfigManager::setSharedTansitionConfig(
+void JSConfigManager::setSharedTransitionConfig(
     jsi::Runtime &rt,
     const jsi::Value &config) {
   jsi::Object configObject = config.asObject(rt);
@@ -35,7 +35,7 @@ void JSConfigManager::setSharedTansitionConfig(
       static_cast<SharedTransitionType>(animationType);
 }
 
-SharedTransitionType JSConfigManager::getSharedTansitionConfig(const int key) {
+SharedTransitionType JSConfigManager::getSharedTransitionConfig(const int key) {
   return sharedTransitionConfig_[key];
 }
 

@@ -1,3 +1,4 @@
+#pragma once
 #import <Foundation/Foundation.h>
 #import <RNReanimated/LayoutAnimationType.h>
 #import <RNReanimated/REANodesManager.h>
@@ -26,8 +27,6 @@ typedef void (
     ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView);
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
-
-BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 
 @interface REAAnimationsManager : NSObject
 
@@ -64,6 +63,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
 - (REASharedTransitionManagerPublic *)getSharedTransitionManager;
+- (BOOL)nodeFind:(id<RCTComponent>)view block:(int (^)(id<RCTComponent>))block;
 
 @end
 

@@ -9,25 +9,6 @@
 
 typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
-BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
-{
-  if (!view.reactTag) {
-    return NO;
-  }
-
-  if (block(view)) {
-    return YES;
-  }
-
-  for (id<RCTComponent> subview in view.reactSubviews) {
-    if (REANodeFind(subview, block)) {
-      return YES;
-    }
-  }
-
-  return NO;
-}
-
 @implementation REAAnimationsManager {
   RCTUIManager *_uiManager;
   REAUIManager *_reaUiManager;
@@ -293,10 +274,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (BOOL)wantsHandleRemovalOfView:(UIView *)view
 {
-  return REANodeFind(view, ^(id<RCTComponent> view) {
-    return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
-        self->_hasAnimationForTag(view.reactTag, EXITING);
-  });
+  return [self nodeFind:view
+                  block:^(id<RCTComponent> view) {
+                    return [self->_exitingSubviewsCountMap objectForKey:view.reactTag] != nil ||
+                        self->_hasAnimationForTag(view.reactTag, EXITING);
+                  }];
 }
 
 - (void)registerExitingAncestors:(UIView *)child
@@ -509,12 +491,13 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 - (void)removeAnimationsFromSubtree:(UIView *)view
 {
-  REANodeFind(view, ^int(id<RCTComponent> view) {
-    if (!self->_hasAnimationForTag(view.reactTag, SHARED_ELEMENT_TRANSITION)) {
-      self->_clearAnimationConfigForTag(view.reactTag);
-    }
-    return false;
-  });
+  [self nodeFind:view
+           block:^int(id<RCTComponent> view) {
+             if (!self->_hasAnimationForTag(view.reactTag, SHARED_ELEMENT_TRANSITION)) {
+               self->_clearAnimationConfigForTag(view.reactTag);
+             }
+             return false;
+           }];
 }
 
 - (void)viewDidMount:(UIView *)view withBeforeSnapshot:(nonnull REASnapshot *)before withNewFrame:(CGRect)frame
@@ -583,6 +566,25 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (REASharedTransitionManagerPublic *)getSharedTransitionManager
 {
   return _sharedTransitionManager;
+}
+
+- (BOOL)nodeFind:(id<RCTComponent>)view block:(int (^)(id<RCTComponent>))block
+{
+  if (!view.reactTag) {
+    return NO;
+  }
+
+  if (block(view)) {
+    return YES;
+  }
+
+  for (id<RCTComponent> subview in view.reactSubviews) {
+    if ([self nodeFind:subview block:block]) {
+      return YES;
+    }
+  }
+
+  return NO;
 }
 
 @end
