@@ -2800,6 +2800,11 @@ co@^4.6.0:
   resolved "https://registry.yarnpkg.com/co/-/co-4.6.0.tgz#6ea6bdf3d853ae54ccb8e47bfa0bf3f9031fb184"
   integrity sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==
 
+code-tag@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/code-tag/-/code-tag-1.1.0.tgz#8dc979c2bd2e2ac44d5a799abd07953e39cadf3d"
+  integrity sha512-qqvyRC9Fmnqy/1nK2Jz6FIk6F24nliVIVtQFg0r7PuZCZHfWO/c7eZHVlPxFKRSnOSIUUf/jrF1FG8j67FinPg==
+
 collect-v8-coverage@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/collect-v8-coverage/-/collect-v8-coverage-1.0.1.tgz#cc2c8e94fc18bbdffe64d6534570c8a673b27f59"
