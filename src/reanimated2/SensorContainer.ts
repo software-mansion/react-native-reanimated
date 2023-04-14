@@ -26,7 +26,6 @@ export class SensorContainer {
   ): number {
     const config = sensorRef.current.config;
     const sensorId = this.getSensorId(sensorType, config);
-    console.log(this.nativeSensors.size);
 
     if (!this.nativeSensors.has(sensorId)) {
       const newSensor = new Sensor(
@@ -38,26 +37,27 @@ export class SensorContainer {
       this.nativeSensors.set(sensorId, newSensor);
     }
 
-    const sensor = this.nativeSensors?.get(sensorId);
-
-    if (!sensor?.isRunning()) {
-      if (!sensor?.initialize()) {
+    const sensor = this.nativeSensors.get(sensorId);
+    if (sensor) {
+      if (!sensor.isRunning() && !sensor.initialize()) {
         return -1;
       }
+      sensorRef.current.sensor = sensor.getSharedValue();
+      sensor.listenersNumber++;
+      return sensorId;
     }
-    sensorRef.current.sensor = sensor?.getSharedValue();
-    sensor?.addListener();
-    return sensorId;
+    return -1;
   }
 
   unregisterSensor(sensorId: number) {
     if (this.nativeSensors.has(sensorId)) {
       const sensor = this.nativeSensors.get(sensorId);
-      sensor?.removeListener();
-
-      if (!sensor?.hasActiveListeners()) {
-        sensor?.unregister();
-        this.nativeSensors.delete(sensorId);
+      if (sensor) {
+        sensor.listenersNumber--;
+        if (sensor.listenersNumber === 0) {
+          sensor.unregister();
+          this.nativeSensors.delete(sensorId);
+        }
       }
     }
   }

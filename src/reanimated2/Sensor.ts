@@ -9,10 +9,10 @@ import {
 } from './commonTypes';
 
 export default class Sensor<T> {
-  private listenersNumber = 0;
+  public listenersNumber = 0;
   private sensorId = -1;
   private sensorType: SensorType;
-  public data: SharedValue<Value3D | ValueRotation>;
+  private data: SharedValue<Value3D | ValueRotation>;
   private config: SensorConfig;
   private eventHandler:
     | ShareableRef<T>
@@ -42,10 +42,6 @@ export default class Sensor<T> {
     return this.sensorId !== -1;
   }
 
-  hasActiveListeners() {
-    return this.listenersNumber !== 0;
-  }
-
   isRunning() {
     return this.sensorId !== -1;
   }
@@ -57,13 +53,5 @@ export default class Sensor<T> {
   unregister() {
     NativeReanimatedModule.unregisterSensor(this.sensorId);
     this.sensorId = -1;
-  }
-
-  addListener() {
-    this.listenersNumber++;
-  }
-
-  removeListener() {
-    this.listenersNumber--;
   }
 }

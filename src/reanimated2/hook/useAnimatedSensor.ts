@@ -54,7 +54,7 @@ function eulerToQuaternion(pitch: number, roll: number, yaw: number) {
   ];
 }
 
-export function adjustRotationToInterfaceOrientation(data: ValueRotation) {
+function adjustRotationToInterfaceOrientation(data: ValueRotation) {
   'worklet';
   const { interfaceOrientation, pitch, roll, yaw } = data;
   if (interfaceOrientation === 90) {
@@ -79,7 +79,7 @@ export function adjustRotationToInterfaceOrientation(data: ValueRotation) {
   return data;
 }
 
-export function adjustVectorToInterfaceOrientation(data: Value3D) {
+function adjustVectorToInterfaceOrientation(data: Value3D) {
   'worklet';
   const { interfaceOrientation, x, y } = data;
   if (interfaceOrientation === 90) {

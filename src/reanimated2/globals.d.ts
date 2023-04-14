@@ -10,7 +10,7 @@ import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegis
 import type { ShadowNodeWrapper } from './hook/commonTypes';
 import { LayoutAnimationStartFunction } from './layoutReanimation';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
-import { SensorContainer } from './SensorContainer';
+import type { SensorContainer } from './SensorContainer';
 
 declare global {
   const _WORKLET: boolean;

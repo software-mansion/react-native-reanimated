@@ -117,11 +117,10 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
 }
 
 export function getSensorContainer(): SensorContainer {
-  let sensorContainer = global.__sensorContainer;
-  if (sensorContainer === undefined) {
-    sensorContainer = global.__sensorContainer = new SensorContainer();
+  if (!global.__sensorContainer) {
+    global.__sensorContainer = new SensorContainer();
   }
-  return sensorContainer;
+  return global.__sensorContainer;
 }
 
 export function registerEventHandler<T>(
