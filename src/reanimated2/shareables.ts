@@ -37,16 +37,74 @@ export function registerShareableMapping(
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
+// The below object is used as a replacement for objects that cannot be transferred
+// as shareable values. In makeShareableCloneRecursive we detect if an object is of
+// a plain Object.prototype and only allow such objects to be transferred. This lets
+// us avoid all sorts of react internals from leaking into the UI runtime. To make it
+// possible to catch errors when someone actually tries to access such object on the UI
+// runtime, we use the below Proxy object which is instantiated on the UI runtime and
+// throws whenever someone tries to access its fields.
+const INACCESSIBLE_OBJECT = {
+  __init: () => {
+    'worklet';
+    return new global.Proxy(
+      {},
+      {
+        get: (_: any, prop: string) => {
+          if (prop === '_isReanimatedSharedValue') {
+            // not very happy about this check here, but we need to allow for
+            // "inaccessible" objects to be tested with isSharedValue check
+            // as it is being used in the mappers when extracing inputs recursively.
+            // Apparently we can't check if a key exists there as HostObjects always
+            // return true for such tests, so the only possibility for us is to
+            // actually access that key and see if it is set to true. We therefore
+            // need to allow for this key to be accessed here.
+            return false;
+          }
+          throw new Error(
+            'Trying to access properties of an object which cannot be sent to the UI runtime.'
+          );
+        },
+        set: () => {
+          throw new Error(
+            'Trying to write to an object which cannot be sent to the UI runtime.'
+          );
+        },
+      }
+    );
+  },
+};
+
+const ANALYZE_CYCLIC_OBJECT_AT_DEPTH = 30;
+let CYCLIC_OBJECT_TEST: any;
+
 export function makeShareableCloneRecursive<T>(
   value: any,
-  shouldPersistRemote = false
+  shouldPersistRemote = false,
+  depth = 0
 ): ShareableRef<T> {
   if (USE_STUB_IMPLEMENTATION) {
     return value;
   }
+  if (depth >= ANALYZE_CYCLIC_OBJECT_AT_DEPTH) {
+    // if we reach certain recursion depth we suspect that we are dealing with a cyclic object.
+    // this type of objects is not supported and cannot be trasferred as shareable so we
+    // implement a simple detection mechanism that remembers the value at a given depth and
+    // tests whether we try re-enter this method later on with the same value. If that happens
+    // we throw an appropriate error.
+    if (depth === ANALYZE_CYCLIC_OBJECT_AT_DEPTH) {
+      CYCLIC_OBJECT_TEST = value;
+    } else if (value === CYCLIC_OBJECT_TEST) {
+      throw new Error(
+        'Trying to convert a cyclic object to a shareable. This is not supported.'
+      );
+    }
+  }
   // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
-  if ((type === 'object' || type === 'function') && value !== null) {
+  const isTypeObject = type === 'object';
+  const isTypeFunction = type === 'function';
+  if ((isTypeObject || isTypeFunction) && value !== null) {
     const cached = _shareableCache.get(value);
     if (cached === _shareableFlag) {
       return value;
@@ -55,8 +113,10 @@ export function makeShareableCloneRecursive<T>(
     } else {
       let toAdapt: any;
       if (Array.isArray(value)) {
-        toAdapt = value.map((element) => makeShareableCloneRecursive(element));
-      } else if (type === 'function' && value.__workletHash === undefined) {
+        toAdapt = value.map((element) =>
+          makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
+        );
+      } else if (isTypeFunction && value.__workletHash === undefined) {
         // this is a remote function
         toAdapt = value;
       } else if (isHostObject(value)) {
@@ -64,7 +124,10 @@ export function makeShareableCloneRecursive<T>(
         // then recreate new host object wrapping the same instance on the UI thread.
         // there is no point of iterating over keys as we do for regular objects.
         toAdapt = value;
-      } else {
+      } else if (
+        Object.getPrototypeOf(value) === Object.prototype ||
+        isTypeFunction
+      ) {
         toAdapt = {};
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
@@ -88,8 +151,25 @@ export function makeShareableCloneRecursive<T>(
         }
 
         for (const [key, element] of Object.entries(value)) {
-          toAdapt[key] = makeShareableCloneRecursive(element);
+          toAdapt[key] = makeShareableCloneRecursive(
+            element,
+            shouldPersistRemote,
+            depth + 1
+          );
         }
+      } else {
+        // This is reached for object types that are not of plain Object.prototype.
+        // We don't support such objects from being transferred as shareables to
+        // the UI runtime and hence we replace them with "inaccessible object"
+        // which is implemented as a Proxy object that throws on any attempt
+        // of accessing its fields. We argue that such objects can sometimes leak
+        // as attributes of objects being captured by worklets but should never
+        // be used on the UI runtime regardless. If they are being accessed, the user
+        // will get an appropriate error message.
+        const inaccessibleObject =
+          makeShareableCloneRecursive<T>(INACCESSIBLE_OBJECT);
+        _shareableCache.set(value, inaccessibleObject);
+        return inaccessibleObject;
       }
       if (__DEV__) {
         // we freeze objects that are transformed to shareable. This should help
