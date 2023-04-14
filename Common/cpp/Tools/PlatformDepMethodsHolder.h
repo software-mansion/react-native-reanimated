@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "Consts.h"
-
 using namespace facebook;
 
 #ifdef RCT_NEW_ARCH_ENABLED

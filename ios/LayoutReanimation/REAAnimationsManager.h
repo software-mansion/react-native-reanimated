@@ -1,4 +1,3 @@
-#pragma once
 #import <Foundation/Foundation.h>
 #import <RNReanimated/LayoutAnimationType.h>
 #import <RNReanimated/REANodesManager.h>

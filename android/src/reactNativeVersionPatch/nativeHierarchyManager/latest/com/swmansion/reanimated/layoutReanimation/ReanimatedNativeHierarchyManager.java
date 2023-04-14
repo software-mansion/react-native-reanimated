@@ -8,18 +8,13 @@ import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
-import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewAtIndex;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.facebook.react.uimanager.events.Event;
-import com.facebook.react.uimanager.events.EventDispatcher;
-import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;

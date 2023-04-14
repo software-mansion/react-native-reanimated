@@ -58,7 +58,6 @@ jni::local_ref<JNIHelper::PropsMap> JNIHelper::convertJSIObjectToJNIMap(
 jsi::Object JNIHelper::convertJNIMapToJSIObject(
     jsi::Runtime &rt,
     const jni::alias_ref<JMap<JString, JObject>> jniMap) {
-  static const auto booleanClass = jni::JBoolean::javaClassStatic();
   static const auto integerClass = jni::JInteger::javaClassStatic();
   static const auto doubleClass = jni::JDouble::javaClassStatic();
   static const auto floatClass = jni::JFloat::javaClassStatic();
@@ -68,12 +67,7 @@ jsi::Object JNIHelper::convertJNIMapToJSIObject(
   auto object = jsi::Object(rt);
   for (const auto &entry : *jniMap) {
     auto key = entry.first->toStdString();
-    if (entry.second->isInstanceOf(booleanClass)) {
-      object.setProperty(
-          rt,
-          key.c_str(),
-          jni::static_ref_cast<JBoolean>(entry.second)->value() == true);
-    } else if (entry.second->isInstanceOf(integerClass)) {
+    if (entry.second->isInstanceOf(integerClass)) {
       object.setProperty(
           rt,
           key.c_str(),

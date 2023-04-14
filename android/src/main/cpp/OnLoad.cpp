@@ -1,7 +1,6 @@
 #include <fbjni/fbjni.h>
 
 #include "AndroidScheduler.h"
-#include "JavaWrapperJSCallbacksManager.h"
 #include "LayoutAnimations.h"
 #include "Logger.h"
 #include "NativeProxy.h"

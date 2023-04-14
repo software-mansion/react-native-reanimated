@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 
+#include "Consts.h"
 #include "Shareables.h"
 
 using namespace facebook;

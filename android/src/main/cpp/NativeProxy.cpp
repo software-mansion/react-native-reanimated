@@ -128,9 +128,7 @@ void NativeProxy::installJSIBindings(
       getPlatformDependentMethods());
 
   scheduler_->setRuntimeManager(module);
-
   nativeReanimatedModule_ = module;
-  std::weak_ptr<NativeReanimatedModule> weakModule = module;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
