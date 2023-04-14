@@ -291,9 +291,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     double currentTime = CACurrentMediaTime() * 1000;
     module->handleEvent(eventName, payload, currentTime);
   }];
-  REASharedTransitionManagerPublic *sharedTransitionManager = [weakAnimationsManager getSharedTransitionManager];
-  sharedTransitionManager->jsCallbacksManager = module->getJSCallbacksManager();
-  sharedTransitionManager->jsConfigManager = module->getJSConfigManager();
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -303,6 +300,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   }];
 #else
+  REASharedTransitionManagerPublic *sharedTransitionManager = [weakAnimationsManager getSharedTransitionManager];
+  sharedTransitionManager->jsCallbacksManager = module->getJSCallbacksManager();
+  sharedTransitionManager->jsConfigManager = module->getJSConfigManager();
+
   // Layout Animation callbacks setup
   [animationsManager
       setAnimationStartingBlock:^(
