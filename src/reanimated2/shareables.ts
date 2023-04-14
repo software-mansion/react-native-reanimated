@@ -47,7 +47,7 @@ export function registerShareableMapping(
 const INACCESSIBLE_OBJECT = {
   __init: () => {
     'worklet';
-    return new global.Proxy(
+    return new Proxy(
       {},
       {
         get: (_: any, prop: string) => {
