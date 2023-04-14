@@ -40,7 +40,7 @@ const springOptions = {
   damping: 15,
 };
 
-const transition = SharedTransition.custom((values) => {
+const transition = new SharedTransition().animation((values) => {
   'worklet';
   return {
     width: withSpring(values.targetWidth, springOptions),
