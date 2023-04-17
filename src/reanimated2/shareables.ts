@@ -37,6 +37,10 @@ export function registerShareableMapping(
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
+function isPlainJSObject(object: object) {
+  return Object.getPrototypeOf(object) === Object.prototype;
+}
+
 // The below object is used as a replacement for objects that cannot be transferred
 // as shareable values. In makeShareableCloneRecursive we detect if an object is of
 // a plain Object.prototype and only allow such objects to be transferred. This lets
@@ -75,8 +79,10 @@ const INACCESSIBLE_OBJECT = {
   },
 };
 
-const ANALYZE_CYCLIC_OBJECT_AT_DEPTH = 30;
-let CYCLIC_OBJECT_TEST: any;
+const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
+// Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
+// We use it to check if later on the function reenters with the same object
+let procesedObjectAtThresholdDepth: any;
 
 export function makeShareableCloneRecursive<T>(
   value: any,
@@ -86,19 +92,21 @@ export function makeShareableCloneRecursive<T>(
   if (USE_STUB_IMPLEMENTATION) {
     return value;
   }
-  if (depth >= ANALYZE_CYCLIC_OBJECT_AT_DEPTH) {
+  if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
     // if we reach certain recursion depth we suspect that we are dealing with a cyclic object.
-    // this type of objects is not supported and cannot be trasferred as shareable so we
+    // this type of objects are not supported and cannot be trasferred as shareable, so we
     // implement a simple detection mechanism that remembers the value at a given depth and
-    // tests whether we try re-enter this method later on with the same value. If that happens
+    // tests whether we try reenter this method later on with the same value. If that happens
     // we throw an appropriate error.
-    if (depth === ANALYZE_CYCLIC_OBJECT_AT_DEPTH) {
-      CYCLIC_OBJECT_TEST = value;
-    } else if (value === CYCLIC_OBJECT_TEST) {
+    if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
+      procesedObjectAtThresholdDepth = value;
+    } else if (value === procesedObjectAtThresholdDepth) {
       throw new Error(
         'Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
+  } else {
+    procesedObjectAtThresholdDepth = undefined;
   }
   // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
@@ -124,10 +132,7 @@ export function makeShareableCloneRecursive<T>(
         // then recreate new host object wrapping the same instance on the UI thread.
         // there is no point of iterating over keys as we do for regular objects.
         toAdapt = value;
-      } else if (
-        Object.getPrototypeOf(value) === Object.prototype ||
-        isTypeFunction
-      ) {
+      } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
@@ -142,7 +147,8 @@ export function makeShareableCloneRecursive<T>(
           // we request shareable value to persist its UI counterpart. This means
           // that the __initData field that contains long strings represeting the
           // worklet code, source map, and location, will always be
-          // serialized/deserialized once.
+          // serialized/deserialized once. We don't increase depth when calling
+          // this method as these objects have one level anyways.
           toAdapt.__initData = makeShareableCloneRecursive(
             value.__initData,
             true
