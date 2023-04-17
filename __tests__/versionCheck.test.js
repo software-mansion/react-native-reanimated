@@ -14,7 +14,7 @@ describe('desc', () => {
     console.error.mockRestore();
   });
 
-  it('checks all versions successfully', () => {
+  it('checks version successfully', () => {
     checkVersion();
     expect(console.error).not.toHaveBeenCalled();
   });
