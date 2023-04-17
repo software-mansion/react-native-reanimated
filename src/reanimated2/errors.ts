@@ -53,5 +53,5 @@ export function reportFatalErrorOnJS({
   error.name = 'ReanimatedError';
   // @ts-ignore React Native's ErrorUtils implementation extends the Error type with jsEngine field
   error.jsEngine = 'reanimated';
-  global.ErrorUtils.reportFatalError(error);
+  global.__ErrorUtils.reportFatalError(error);
 }

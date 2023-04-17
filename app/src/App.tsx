@@ -18,10 +18,10 @@ import {
   NativeStackNavigationProp,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
+import { NavigationContainer, PathConfigMap } from '@react-navigation/native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
-import { NavigationContainer } from '@react-navigation/native';
 import React from 'react';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
@@ -104,6 +104,19 @@ function ItemSeparator() {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const linking = {
+  prefixes: [],
+  config: {
+    screens: EXAMPLES_NAMES.reduce<PathConfigMap<RootStackParamList>>(
+      (acc, name) => {
+        acc[name] = name;
+        return acc;
+      },
+      { Home: '' }
+    ),
+  },
+};
+
 // copied from https://reactnavigation.org/docs/state-persistence/
 const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
 
@@ -148,6 +161,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <NavigationContainer
+        linking={linking}
         initialState={initialState}
         onStateChange={(state) =>
           AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
