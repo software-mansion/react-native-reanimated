@@ -237,7 +237,7 @@ export function makeWorklet(
         )
       )
     );
-    if (!isRelease() && process.env.REANIMATED_PLUGIN_TESTS !== 'jest') {
+    if (shouldInjectVersion()) {
       statements.push(
         expressionStatement(
           assignmentExpression(
@@ -255,6 +255,16 @@ export function makeWorklet(
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
   return newFun;
+}
+
+function shouldInjectVersion() {
+  // We don't inject version in release since cache is reset there anyway
+  // We don't want to pollute tests with current version number so we disable it
+  // for all tests (except one)
+  if (isRelease() || process.env.REANIMATED_JEST_DISABLE_VERSION === 'jest') {
+    return false;
+  }
+  return true;
 }
 
 function hash(str: string) {

@@ -172,7 +172,7 @@ var require_buildWorkletString = __commonJS({
       if ((0, utils_1.isRelease)()) {
         return false;
       }
-      if (process.env.REANIMATED_PLUGIN_TESTS !== void 0) {
+      if (process.env.REANIMATED_JEST_DISABLE_SOURCEMAP === "jest") {
         return false;
       }
       return true;
@@ -310,7 +310,7 @@ var require_makeWorklet = __commonJS({
           ]))
         ]));
         statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
-        if (!(0, utils_1.isRelease)() && process.env.REANIMATED_PLUGIN_TESTS !== "jest") {
+        if (shouldInjectVersion()) {
           statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__version"), false), (0, types_1.stringLiteral)(version))));
         }
       }
@@ -319,6 +319,12 @@ var require_makeWorklet = __commonJS({
       return newFun;
     }
     exports2.makeWorklet = makeWorklet;
+    function shouldInjectVersion() {
+      if ((0, utils_1.isRelease)() || process.env.REANIMATED_JEST_DISABLE_VERSION === "jest") {
+        return false;
+      }
+      return true;
+    }
     function hash(str) {
       let i = str.length;
       let hash1 = 5381;

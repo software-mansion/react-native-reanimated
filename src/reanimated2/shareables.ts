@@ -38,6 +38,8 @@ export function registerShareableMapping(
   _shareableCache.set(shareable, shareableRef || _shareableFlag);
 }
 
+let pluginVersionMismatch = false;
+
 export function makeShareableCloneRecursive<T>(
   value: any,
   shouldPersistRemote = false
@@ -72,10 +74,10 @@ export function makeShareableCloneRecursive<T>(
           if (__DEV__) {
             if (
               // We don't want this error to be logged more than once.
-              global.__versionMismatch === undefined &&
+              pluginVersionMismatch === false &&
               value.__version !== jsVersion
             ) {
-              global.__versionMismatch = true;
+              pluginVersionMismatch = true;
               console.error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${value.__version}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
               \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.`);
             }

@@ -119,7 +119,7 @@ function shouldGenerateSourceMap() {
 
   // We want to detect this, so we can disable source maps (because they break
   // snapshot tests with jest).
-  if (process.env.REANIMATED_PLUGIN_TESTS !== undefined) {
+  if (process.env.REANIMATED_JEST_DISABLE_SOURCEMAP === 'jest') {
     return false;
   }
 
