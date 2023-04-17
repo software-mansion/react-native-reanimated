@@ -761,6 +761,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)orderByAnimationTypes:(NSArray<REASharedElement *> *)sharedElements
 {
+  [_sharedElementsWithProgress removeAllObjects];
+  [_sharedElementsWithAnimation removeAllObjects];
   for (REASharedElement *sharedElement : sharedElements) {
     int viewTag = [sharedElement.sourceView.reactTag intValue];
     SharedTransitionType transitionType = jsConfigManager->getSharedTransitionConfig(viewTag);
