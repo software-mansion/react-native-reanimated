@@ -82,7 +82,7 @@ const INACCESSIBLE_OBJECT = {
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
-let procesedObjectAtThresholdDepth: any;
+let processedObjectAtThresholdDepth: any;
 
 export function makeShareableCloneRecursive<T>(
   value: any,
@@ -99,14 +99,14 @@ export function makeShareableCloneRecursive<T>(
     // tests whether we try reenter this method later on with the same value. If that happens
     // we throw an appropriate error.
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
-      procesedObjectAtThresholdDepth = value;
-    } else if (value === procesedObjectAtThresholdDepth) {
+      processedObjectAtThresholdDepth = value;
+    } else if (value === processedObjectAtThresholdDepth) {
       throw new Error(
         'Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
   } else {
-    procesedObjectAtThresholdDepth = undefined;
+    processedObjectAtThresholdDepth = undefined;
   }
   // This one actually may be worth to be moved to c++, we also need similar logic to run on the UI thread
   const type = typeof value;
