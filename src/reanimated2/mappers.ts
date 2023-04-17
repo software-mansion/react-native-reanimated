@@ -1,6 +1,7 @@
 import { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
+import { isSharedValue } from './utils';
 
 const IS_JEST = isJest();
 
@@ -113,7 +114,7 @@ export function createMapperRegistry() {
       for (const input of inputs) {
         input && extractInputs(input, resultArray);
       }
-    } else if (inputs.addListener) {
+    } else if (isSharedValue(inputs)) {
       resultArray.push(inputs);
     } else if (Object.getPrototypeOf(inputs) === Object.prototype) {
       // we only extract inputs recursively from "plain" objects here, if object
