@@ -62,7 +62,7 @@ const INACCESSIBLE_OBJECT = {
             return false;
           }
           throw new Error(
-            'Trying to access properties of an object which cannot be sent to the UI runtime.'
+            `Trying to access property \`${prop}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
