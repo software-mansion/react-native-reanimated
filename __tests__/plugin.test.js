@@ -18,19 +18,20 @@ describe('babel plugin', () => {
   });
 
   it('injects its version', () => {
+    process.env.REANIMATED_PLUGIN_TESTS = 'jest version check';
+
     const input = html`<script>
       function foo() {
-        'inject Reanimated Babel plugin version';
+        'worklet';
         var foo = 'bar';
       }
     </script>`;
 
     const { code } = runPlugin(input, {});
     const { version: packageVersion } = require('../package.json');
-    expect(code).toContain(
-      `global._REANIMATED_VERSION_BABEL_PLUGIN = "${packageVersion}"`
-    );
-    expect(code).not.toContain('inject Reanimated Babel plugin version');
+    expect(code).toContain(`f.__version = "${packageVersion}"`);
+
+    process.env.REANIMATED_PLUGIN_TESTS = 'jest';
   });
 
   it("doesn't bother other Directive Literals", () => {

@@ -172,7 +172,7 @@ var require_buildWorkletString = __commonJS({
       if ((0, utils_1.isRelease)()) {
         return false;
       }
-      if (process.env.REANIMATED_PLUGIN_TESTS === "jest") {
+      if (process.env.REANIMATED_PLUGIN_TESTS !== void 0) {
         return false;
       }
       return true;
@@ -229,6 +229,7 @@ var require_makeWorklet = __commonJS({
     var commonObjects_12 = require_commonObjects();
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
+    var version = require("../../package.json").version;
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
       fun.traverse({
@@ -309,6 +310,9 @@ var require_makeWorklet = __commonJS({
           ]))
         ]));
         statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
+        if (!(0, utils_1.isRelease)() && process.env.REANIMATED_PLUGIN_TESTS !== "jest") {
+          statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__version"), false), (0, types_1.stringLiteral)(version))));
+        }
       }
       statements.push((0, types_1.returnStatement)(privateFunctionId));
       const newFun = (0, types_1.functionExpression)(void 0, [], (0, types_1.blockStatement)(statements));
@@ -661,28 +665,6 @@ var require_processInlineStylesWarning = __commonJS({
   }
 });
 
-// lib/injectVersion.js
-var require_injectVersion = __commonJS({
-  "lib/injectVersion.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.injectVersion = void 0;
-    var types_1 = require("@babel/types");
-    function injectVersion(path) {
-      if (path.node.value !== "inject Reanimated Babel plugin version") {
-        return;
-      }
-      const injectedName = "_REANIMATED_VERSION_BABEL_PLUGIN";
-      const versionString = require("../../package.json").version;
-      const pluginVersionNode = (0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)((0, types_1.identifier)("global"), (0, types_1.identifier)(injectedName)), (0, types_1.stringLiteral)(versionString)));
-      const functionParent = path.getFunctionParent().node;
-      functionParent.body.directives = [];
-      functionParent.body.body.unshift(pluginVersionNode);
-    }
-    exports2.injectVersion = injectVersion;
-  }
-});
-
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var commonObjects_1 = require_commonObjects();
@@ -690,7 +672,6 @@ var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processIfGestureHandlerEventCallbackFunctionNode_1 = require_processIfGestureHandlerEventCallbackFunctionNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
-var injectVersion_1 = require_injectVersion();
 module.exports = function() {
   return {
     pre() {
@@ -701,11 +682,6 @@ module.exports = function() {
       }
     },
     visitor: {
-      DirectiveLiteral: {
-        enter(path) {
-          (0, injectVersion_1.injectVersion)(path);
-        }
-      },
       CallExpression: {
         enter(path, state) {
           (0, processForCalleesWorklets_1.processForCalleesWorklets)(path, state);

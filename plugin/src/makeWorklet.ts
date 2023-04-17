@@ -43,6 +43,8 @@ import { globals } from './commonObjects';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
 
+const version = require('../../package.json').version;
+
 export function makeWorklet(
   fun: NodePath<
     | FunctionDeclaration
@@ -235,6 +237,17 @@ export function makeWorklet(
         )
       )
     );
+    if (!isRelease() && process.env.REANIMATED_PLUGIN_TESTS !== 'jest') {
+      statements.push(
+        expressionStatement(
+          assignmentExpression(
+            '=',
+            memberExpression(privateFunctionId, identifier('__version'), false),
+            stringLiteral(version)
+          )
+        )
+      );
+    }
   }
 
   statements.push(returnStatement(privateFunctionId));

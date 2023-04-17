@@ -22,6 +22,7 @@ declare global {
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
+  var __versionMismatch: boolean | undefined;
   var evalWithSourceMap:
     | ((
         js: string,
