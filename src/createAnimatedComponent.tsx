@@ -338,7 +338,7 @@ export default function createAnimatedComponent(
           // TODO: batching
           runOnUI(() => {
             'worklet';
-            _removeFromPropsRegistry(viewTag);
+            _removeFromPropsRegistry!(viewTag);
           })();
         }
       }
