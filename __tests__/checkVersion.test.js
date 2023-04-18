@@ -45,7 +45,7 @@ describe('matchVersion', () => {
     expect(matchVersion('1.2.3', '2.2.3')).toBe(false);
   });
 
-  it('validates versions with post string', () => {
-    expect(matchVersion('1.2.3-post', '1.2.3-post')).toBe(true);
+  it('validates rc versions', () => {
+    expect(matchVersion('1.2.3-rc.10', '1.2.3-rc.10')).toBe(true);
   });
 });
