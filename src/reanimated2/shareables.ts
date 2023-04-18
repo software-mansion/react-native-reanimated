@@ -2,6 +2,7 @@ import NativeReanimatedModule from './NativeReanimated';
 import { ShareableRef } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
+import { jsVersion } from './platform-specific/jsVersion';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -84,6 +85,9 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: any;
 
+// We only want to show mismatch error once so we use this flag to track it
+let didShowPluginVersionMismatchError = false;
+
 export function makeShareableCloneRecursive<T>(
   value: any,
   shouldPersistRemote = false,
@@ -137,6 +141,15 @@ export function makeShareableCloneRecursive<T>(
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
           if (__DEV__) {
+            if (
+              // We don't want this error to be logged more than once.
+              !didShowPluginVersionMismatchError &&
+              value.__version !== jsVersion
+            ) {
+              didShowPluginVersionMismatchError = true;
+              console.error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${value.__version}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
+              \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.`);
+            }
             registerWorkletStackDetails(
               value.__workletHash,
               value.__stackDetails
