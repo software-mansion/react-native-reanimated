@@ -10,8 +10,9 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
   const randomWidth = useSharedValue(10);
 
   const config = {
-    duration: 2000,
+    duration: 3000,
     damping: 10,
+    velocity: 5,
   };
 
   const style1 = useAnimatedStyle(() => {

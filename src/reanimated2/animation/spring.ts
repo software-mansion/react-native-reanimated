@@ -57,9 +57,6 @@ export function withSpring(
     } as const;
 
     const config = { ...defaultConfig, ...userConfig };
-    if (userConfig?.duration) {
-      config.velocity = 0;
-    }
 
     function initialCalculations(
       animation: InnerSpringAnimation,
@@ -252,6 +249,7 @@ export function withSpring(
 
       let newDamping = config.duration;
       let newMass = config.mass;
+      console.log(newMass);
 
       if (userConfig?.duration && userConfig?.damping && userConfig?.mass) {
         console.warn(
@@ -265,15 +263,27 @@ export function withSpring(
           // It makes our animation a bit smoother, especially if sb triggered same animation twice
           x0 = Number(animation.toValue) - Number(previousAnimation.startValue);
         }
-        const v0 = config.velocity;
-        const k = config.stiffness;
-        const m = config.mass;
+        const { velocity: v0, stiffness: k, mass: m, duration: d } = config;
 
         if (!userConfig?.damping) {
           // If damping is not provided calculate new damping
 
           /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
-           * to find the asympotote and esitmate the damping that gives us the expected duration */
+           * to find the asympotote and esitmate the damping that gives us the expected duration 
+
+                ⎛ ⎛ c⎞           ⎞           
+                ⎜-⎜──⎟ ⋅ duration⎟           
+                ⎝ ⎝2m⎠           ⎠           
+            A ⋅ e                   = treshold
+
+     
+          Amplitude calculated using "Conservation of energy"
+                           _________________
+                          ╱      2         2
+                         ╱ m ⋅ v0  + k ⋅ x0 
+          amplitude =   ╱  ─────────────────
+                      ╲╱           k        
+          */
           const amplitude = Math.sqrt((m * v0 * v0 + k * x0 * x0) / k);
 
           newDamping =
@@ -282,29 +292,61 @@ export function withSpring(
 
           config.damping = newDamping;
         } else {
-          /** As you can notice our formula for amplitude contains mass
-           * Still we can calculate mass solving this equation (https://www.wolframalpha.com/input?i=solve%28ln%28t+*+sqrt%28x0*x0+%2B+v0*v0*m%29%29+%3D+%28m*c%29%2F%282000*d%29%2Cm%29)
-           * However the solution contain Lambert W function (https://en.wikipedia.org/wiki/Lambert_W_function)
-           * And this function is difficult to implement.
-           *
-           * However if initial velocity is zero the kinetic energy is zero too and all the calculations get much simpler
-           */
-          if (config.velocity !== 0) {
-            console.warn(
-              "You've specified damping, velocity and duration in your spring config. This combination of parameters is not supported, your velocity will be overwritten with value 0."
-            );
-            config.velocity = 0;
-          }
-          const amplitude = x0;
+          // If damping provided calculate new mass
 
-          // calculate new mass
-          const d = config.damping;
-          newMass =
-            (-0.002 * (d * config.duration)) /
-            Math.log(
-              (0.01 * config.restDisplacementThreshold) / Math.abs(amplitude)
-            );
-          config.mass = newMass;
+          // We have to solve dofferent equations for v0 = 0 to avoid division by 0
+          if (config.velocity === 0) {
+            const amplitude = x0;
+
+            // calculate new mass
+            const c = config.damping;
+            newMass =
+              (-0.002 * (c * d)) /
+              Math.log(
+                (0.01 * config.restDisplacementThreshold) / Math.abs(amplitude)
+              );
+            config.mass = newMass;
+          } else {
+            /* Mass satisfies the following formula:
+
+              ⎛                   _    ⎞               
+              ⎜     threshold ⋅ ╲╱k    ⎟     c ⋅ d     
+           ln ⎜────────────────────────⎟ + ──────── = 0
+              ⎜       _________________⎟   2000 ⋅ m    
+              ⎜      ╱      2         2⎟               
+              ⎝2 ⋅ ╲╱ m ⋅ v0  + k ⋅ x0 ⎠               
+
+          */
+
+            const c = config.damping;
+
+            const massFunction = (newMass: number) => {
+              return (
+                Math.log(
+                  (config.restDisplacementThreshold * Math.sqrt(k)) /
+                    (2000 * Math.sqrt(newMass * v0 * v0 + k * x0 * x0))
+                ) +
+                (c * d) / (2000 * newMass)
+              );
+            };
+
+            let minMass = 0;
+            let maxMass = 1000;
+            const epsilon = 0.00005;
+            let newMass = 7;
+            let current = massFunction(newMass);
+            while (Math.abs(current) > epsilon) {
+              current = massFunction(newMass);
+
+              if (current > 0) {
+                minMass = newMass;
+              } else maxMass = newMass;
+
+              newMass = (minMass + maxMass) / 2;
+            }
+
+            config.mass = newMass;
+          }
         }
       }
 
