@@ -259,11 +259,16 @@ export function makeWorklet(
 
 function shouldInjectVersion() {
   // We don't inject version in release since cache is reset there anyway
-  // We don't want to pollute tests with current version number so we disable it
-  // for all tests (except one)
-  if (isRelease() || process.env.REANIMATED_JEST_DISABLE_VERSION === 'jest') {
+  if (isRelease()) {
     return false;
   }
+
+  // We don't want to pollute tests with current version number so we disable it
+  // for all tests (except one)
+  if (process.env.REANIMATED_JEST_DISABLE_VERSION === 'jest') {
+    return false;
+  }
+
   return true;
 }
 

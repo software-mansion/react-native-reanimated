@@ -1,10 +1,6 @@
 import { jsVersion } from './jsVersion';
 
-export function checkVersion() {
-  checkCppVersion();
-}
-
-function checkCppVersion() {
+export function checkCppVersion() {
   const cppVersion = global._REANIMATED_VERSION_CPP;
   if (cppVersion === undefined) {
     console.error(

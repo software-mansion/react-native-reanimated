@@ -320,7 +320,10 @@ var require_makeWorklet = __commonJS({
     }
     exports2.makeWorklet = makeWorklet;
     function shouldInjectVersion() {
-      if ((0, utils_1.isRelease)() || process.env.REANIMATED_JEST_DISABLE_VERSION === "jest") {
+      if ((0, utils_1.isRelease)()) {
+        return false;
+      }
+      if (process.env.REANIMATED_JEST_DISABLE_VERSION === "jest") {
         return false;
       }
       return true;

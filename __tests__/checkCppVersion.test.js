@@ -1,9 +1,9 @@
 const {
-  checkVersion,
-} = require('../src/reanimated2/platform-specific/checkVersion');
+  checkCppVersion,
+} = require('../src/reanimated2/platform-specific/checkCppVersion');
 const { version: packageVersion } = require('../package.json');
 
-describe('desc', () => {
+describe('checkCppVersion', () => {
   beforeEach(() => {
     global._REANIMATED_VERSION_CPP = packageVersion;
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -16,13 +16,13 @@ describe('desc', () => {
   });
 
   it('checks version successfully', () => {
-    checkVersion();
+    checkCppVersion();
     expect(console.error).not.toHaveBeenCalled();
   });
 
   it('throws error when version is undefined', () => {
     delete global._REANIMATED_VERSION_CPP;
-    checkVersion();
+    checkCppVersion();
     expect(console.error).toHaveBeenCalled();
   });
 
@@ -30,11 +30,10 @@ describe('desc', () => {
     global._REANIMATED_VERSION_CPP = packageVersion.replace(
       /^(\d+).(\d+).(\d+)$/,
       (match, major, minor, patch) => {
-        console.log(match);
         return `${major + 1}.${minor}.${patch}`;
       }
     );
-    checkVersion(global._REANIMATED_VERSION_CPP);
+    checkCppVersion(global._REANIMATED_VERSION_CPP);
     expect(console.error).toHaveBeenCalled();
   });
 
@@ -45,7 +44,7 @@ describe('desc', () => {
         return `${major}.${minor + 1}.${patch}`;
       }
     );
-    checkVersion();
+    checkCppVersion();
     expect(console.error).toHaveBeenCalled();
   });
 
@@ -56,13 +55,13 @@ describe('desc', () => {
         return `${major}.${minor}.${patch + 1}`;
       }
     );
-    checkVersion();
+    checkCppVersion();
     expect(console.error).not.toHaveBeenCalled();
   });
 
   it('invalidates version post-string', () => {
     global._REANIMATED_VERSION_CPP = packageVersion + '-post';
-    checkVersion();
+    checkCppVersion();
     expect(console.error).toHaveBeenCalled();
   });
 });
