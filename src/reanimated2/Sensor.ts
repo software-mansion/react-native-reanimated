@@ -7,6 +7,31 @@ import {
   ValueRotation,
   ShareableRef,
 } from './commonTypes';
+import { makeMutable } from './mutables';
+
+function initSensorData(
+  sensorType: SensorType
+): SharedValue<Value3D | ValueRotation> {
+  if (sensorType === SensorType.ROTATION) {
+    return makeMutable<Value3D | ValueRotation>({
+      qw: 0,
+      qx: 0,
+      qy: 0,
+      qz: 0,
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+      interfaceOrientation: 0,
+    });
+  } else {
+    return makeMutable<Value3D | ValueRotation>({
+      x: 0,
+      y: 0,
+      z: 0,
+      interfaceOrientation: 0,
+    });
+  }
+}
 
 export default class Sensor<T> {
   public listenersNumber = 0;
@@ -14,30 +39,23 @@ export default class Sensor<T> {
   private sensorType: SensorType;
   private data: SharedValue<Value3D | ValueRotation>;
   private config: SensorConfig;
-  private eventHandler:
-    | ShareableRef<T>
-    | ((data: Value3D | ValueRotation) => void);
 
-  constructor(
-    sensorType: SensorType,
-    config: SensorConfig,
-    initData: SharedValue<Value3D | ValueRotation>,
-    eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
-  ) {
+  constructor(sensorType: SensorType, config: SensorConfig) {
     this.sensorType = sensorType;
     this.config = config;
-    this.data = initData;
-    this.eventHandler = eventHandler;
+    this.data = initSensorData(sensorType);
   }
 
-  initialize() {
+  register(
+    eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+  ) {
     const config = this.config;
     const sensorType = this.sensorType;
     this.sensorId = NativeReanimatedModule.registerSensor(
       sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
-      this.eventHandler
+      eventHandler
     );
     return this.sensorId !== -1;
   }

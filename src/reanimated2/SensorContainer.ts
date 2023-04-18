@@ -4,7 +4,7 @@ import {
   Value3D,
   ValueRotation,
   ShareableRef,
-  AnimatedSensor,
+  SharedValue,
 } from './commonTypes';
 import Sensor from './Sensor';
 
@@ -19,30 +19,34 @@ export class SensorContainer {
     );
   }
 
-  registerSensor<T>(
+  initializeSensor(
     sensorType: SensorType,
-    sensorRef: React.MutableRefObject<AnimatedSensor>,
-    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
-  ): number {
-    const config = sensorRef.current.config;
+    config: SensorConfig
+  ): SharedValue<Value3D | ValueRotation> {
     const sensorId = this.getSensorId(sensorType, config);
 
     if (!this.nativeSensors.has(sensorId)) {
-      const newSensor = new Sensor(
-        sensorType,
-        config,
-        sensorRef.current.sensor,
-        handler
-      );
+      const newSensor = new Sensor(sensorType, config);
       this.nativeSensors.set(sensorId, newSensor);
     }
 
     const sensor = this.nativeSensors.get(sensorId);
-    if (sensor) {
-      if (!sensor.isRunning() && !sensor.initialize()) {
-        return -1;
-      }
-      sensorRef.current.sensor = sensor.getSharedValue();
+    return sensor!.getSharedValue();
+  }
+
+  registerSensor<T>(
+    sensorType: SensorType,
+    config: SensorConfig,
+    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+  ): number {
+    const sensorId = this.getSensorId(sensorType, config);
+
+    if (!this.nativeSensors.has(sensorId)) {
+      return -1;
+    }
+
+    const sensor = this.nativeSensors.get(sensorId);
+    if (sensor && (sensor.isRunning() || sensor.register(handler))) {
       sensor.listenersNumber++;
       return sensorId;
     }
@@ -56,7 +60,6 @@ export class SensorContainer {
         sensor.listenersNumber--;
         if (sensor.listenersNumber === 0) {
           sensor.unregister();
-          this.nativeSensors.delete(sensorId);
         }
       }
     }

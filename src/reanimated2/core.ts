@@ -2,9 +2,10 @@ import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   AnimatedKeyboardOptions,
-  AnimatedSensor,
   BasicWorkletFunction,
+  SensorConfig,
   SensorType,
+  SharedValue,
   Value3D,
   ValueRotation,
 } from './commonTypes';
@@ -170,7 +171,7 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 
 export function registerSensor(
   sensorType: SensorType,
-  sensorRef: React.MutableRefObject<AnimatedSensor>,
+  config: SensorConfig,
   eventHandler: (
     data: Value3D | ValueRotation,
     orientationDegrees: number
@@ -179,9 +180,17 @@ export function registerSensor(
   const sensorContainer = getSensorContainer();
   return sensorContainer.registerSensor(
     sensorType,
-    sensorRef,
+    config,
     makeShareableCloneRecursive(eventHandler)
   );
+}
+
+export function initializeSensor(
+  sensorType: SensorType,
+  config: SensorConfig
+): SharedValue<Value3D | ValueRotation> {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.initializeSensor(sensorType, config);
 }
 
 export function unregisterSensor(sensorId: number): void {
