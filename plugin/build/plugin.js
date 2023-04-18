@@ -46,6 +46,7 @@ var require_commonObjects = __commonJS({
       "parseFloat",
       "Map",
       "WeakMap",
+      "Proxy",
       "WeakRef",
       "Set",
       "_log",
