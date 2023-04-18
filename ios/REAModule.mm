@@ -21,6 +21,7 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
+#import <RNReanimated/REAKeyboardEventObserver.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -51,6 +52,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #ifdef DEBUG
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif
+  REAKeyboardEventObserver *_keyboardObserver;
   bool hasListeners;
 }
 

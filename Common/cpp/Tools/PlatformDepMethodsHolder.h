@@ -86,8 +86,6 @@ struct PlatformDepMethodsHolder {
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
-  KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
-  KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
 };
 

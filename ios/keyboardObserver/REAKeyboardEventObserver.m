@@ -13,40 +13,48 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 @implementation REAKeyboardEventObserver {
   UIView *_measuringView;
-  NSNumber *_nextListenerId;
-  NSMutableDictionary *_listeners;
   CADisplayLink *_displayLink;
   KeyboardState _state;
+  KeyboardEventListenerBlock _listener;
 }
 
-- (instancetype)init
+@synthesize enabled = _enabled;
+
+- (instancetype)initWithEventListenerBlock:(KeyboardEventListenerBlock)listener
 {
   self = [super init];
-  _listeners = [[NSMutableDictionary alloc] init];
-  _nextListenerId = @0;
-  _state = UNKNOWN;
-
-  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-
-  [notificationCenter addObserver:self
-                         selector:@selector(cleanupListeners)
-                             name:RCTBridgeDidInvalidateModulesNotification
-                           object:nil];
+  if (self) {
+    _state = UNKNOWN;
+    _listener = listener;
+  }
   return self;
 }
 
+- (void)setEnabled:(BOOL)enabled
+{
 #if TARGET_OS_TV
-- (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
-{
   NSLog(@"Keyboard handling is not supported on tvOS");
-  return 0;
-}
-
-- (void)unsubscribeFromKeyboardEvents:(int)listenerId
-{
-  NSLog(@"Keyboard handling is not supported on tvOS");
-}
 #else
+  if (enabled != _enabled) {
+    RCTExecuteOnMainQueue(^() {
+      if (enabled) {
+        if (!self->_measuringView) {
+          self->_measuringView = [[UIView alloc] initWithFrame:CGRectMake(0, -1, 0, 0)];
+          UIWindow *keyWindow = [[[UIApplication sharedApplication] delegate] window];
+          [keyWindow addSubview:self->_measuringView];
+        }
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(keyboardWillChangeFrame:)
+                                                     name:UIKeyboardWillChangeFrameNotification
+                                                   object:nil];
+      } else {
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
+      }
+    });
+  }
+#endif
+  _enabled = enabled;
+}
 
 - (void)runUpdater
 {
@@ -75,8 +83,8 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     _displayLink.paused = YES;
   }
 
-  for (NSString *key in _listeners.allKeys) {
-    ((KeyboardEventListenerBlock)_listeners[key])(_state, keyboardHeight);
+  if (_enabled) {
+    _listener(_state, keyboardHeight);
   }
 }
 
@@ -105,51 +113,11 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   [self runUpdater];
 }
 
-- (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
+- (void)dealloc
 {
-  NSNumber *listenerId = [_nextListenerId copy];
-  _nextListenerId = [NSNumber numberWithInt:[_nextListenerId intValue] + 1];
-  RCTExecuteOnMainQueue(^() {
-    if (!self->_measuringView) {
-      self->_measuringView = [[UIView alloc] initWithFrame:CGRectMake(0, -1, 0, 0)];
-      UIWindow *keyWindow = [[[UIApplication sharedApplication] delegate] window];
-      [keyWindow addSubview:self->_measuringView];
-    }
-    if ([self->_listeners count] == 0) {
-      NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-
-      [notificationCenter addObserver:self
-                             selector:@selector(keyboardWillChangeFrame:)
-                                 name:UIKeyboardWillChangeFrameNotification
-                               object:nil];
-    }
-
-    [self->_listeners setObject:listener forKey:listenerId];
-  });
-  return [listenerId intValue];
+  [self->_displayLink invalidate];
+  self->_displayLink = nil;
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
-
-- (void)unsubscribeFromKeyboardEvents:(int)listenerId
-{
-  RCTExecuteOnMainQueue(^() {
-    NSNumber *_listenerId = [NSNumber numberWithInt:listenerId];
-    [self->_listeners removeObjectForKey:_listenerId];
-    if ([self->_listeners count] == 0) {
-      [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
-    }
-  });
-}
-
-- (void)cleanupListeners
-{
-  RCTUnsafeExecuteOnMainQueueSync(^() {
-    [self->_listeners removeAllObjects];
-    [self->_displayLink invalidate];
-    self->_displayLink = nil;
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-  });
-}
-
-#endif
 
 @end

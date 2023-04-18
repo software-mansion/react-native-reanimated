@@ -231,22 +231,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
   // end sensors
 
-  // keyboard events
-
-  REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
-  auto subscribeForKeyboardEventsFunction =
-      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater, bool isStatusBarTranslucent) {
-        // ignore isStatusBarTranslucent - it's Android only
-        return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
-          keyboardEventDataUpdater(keyboardState, height);
-        }];
-      };
-
-  auto unsubscribeFromKeyboardEventsFunction = [=](int listenerId) {
-    [keyboardObserver unsubscribeFromKeyboardEvents:listenerId];
-  };
-  // end keyboard events
-
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -263,8 +247,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
-      subscribeForKeyboardEventsFunction,
-      unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
   };
 
@@ -280,6 +262,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       platformDepMethodsHolder);
 
+  // keyboard events
+  REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] initWithEventListenerBlock:^(int keyboardState, int height) {
+    jsi::Runtime &rt = *module->runtime;
+    jsi::Object payload(rt);
+    payload.setProperty(rt, "state", jsi::Value(rt, keyboardState));
+    payload.setProperty(rt, "height", jsi::Value(rt, height));
+    double currentTime = CACurrentMediaTime() * 1000;
+    jsi::Value eventData(rt, payload);
+    module->handleEvent("REAKeyboard", eventData, currentTime);
+  }];
+  keyboardObserver.enabled = YES;
+  // end keyboard events
+
   scheduler->setRuntimeManager(module);
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
@@ -290,6 +285,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
     module->handleEvent(eventName, payload, currentTime);
+    keyboardObserver.enabled;
   }];
 
   std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle

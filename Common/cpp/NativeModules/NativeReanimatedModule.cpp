@@ -24,6 +24,7 @@
 #include "RuntimeDecorator.h"
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
+#include "Logger.h"
 
 using namespace facebook;
 
@@ -169,10 +170,6 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
   updatePropsFunction = platformDepMethodsHolder.updatePropsFunction;
 #endif
-  subscribeForKeyboardEventsFunction =
-      platformDepMethodsHolder.subscribeForKeyboardEvents;
-  unsubscribeFromKeyboardEventsFunction =
-      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -671,6 +668,9 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
+        if (runtimeHelper->uiRuntimeDestroyed) {
+          return;
+        }
         jsi::Runtime &rt = *runtimeHelper->uiRuntime();
         auto handler = shareableHandler->getJSValue(rt);
         runtimeHelper->runOnUIGuarded(
