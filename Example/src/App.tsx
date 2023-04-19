@@ -85,6 +85,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  AnimatedStyleUpdate: {
+    screen: AnimatedStyleUpdateExample,
+    title: 'Animated Style Update',
+  },
   CardExample: {
     screen: CardExample,
     title: '[SET] Card',
@@ -237,10 +241,7 @@ const SCREENS: Screens = {
     screen: PagerExample,
     title: 'Custom Handler Example - Pager',
   },
-  AnimatedStyleUpdate: {
-    screen: AnimatedStyleUpdateExample,
-    title: 'Animated Style Update',
-  },
+
   AnimatedSharedStyle: {
     screen: AnimatedSharedStyleExample,
     title: 'Animated Shared Style',

@@ -5,6 +5,7 @@ import {
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
+import { bisectRoot, newtonRoot } from './springUtils';
 
 type SpringConfig = {
   stiffness?: number;
@@ -12,11 +13,19 @@ type SpringConfig = {
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
-} & /** When duration is provided damping is set to some calculated value unless damping value is specified in config. If damping is specified mass is calculated. If both mass and damping are provided typescript error is thrown.
-Also initial velocity must be zero if duration is specified. */ (
-  | { mass?: never; damping?: number; duration?: number }
-  | { mass?: number; damping?: never; duration?: number }
-  | { mass?: number; damping?: number; duration?: never }
+} & (
+  | {
+      mass?: number;
+      damping?: number;
+      duration?: never;
+      dampingRatio?: never;
+    }
+  | {
+      mass?: never;
+      damping?: never;
+      duration?: number;
+      dampingRatio?: number;
+    }
 );
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
@@ -26,7 +35,6 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   lastTimestamp: Timestamp;
   startTimestamp: Timestamp;
   startValue: number;
-  newDamping: number;
   newMass: number;
 }
 
@@ -53,41 +61,37 @@ export function withSpring(
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
       velocity: 0,
-      duration: undefined,
+      duration: 2000,
+      dampingRatio: 0.5,
     } as const;
 
     const config = { ...defaultConfig, ...userConfig };
 
-    function initialCalculations(
-      animation: InnerSpringAnimation,
-      now: Timestamp
-    ): {
-      t: number;
-      v0: number;
-      x0: number;
+    //TODO this could be done only once
+    function initialCalculations(newMass = 0): {
       zeta: number;
       omega0: number;
       omega1: number;
     } {
-      const { toValue, lastTimestamp, current, velocity } = animation;
+      const useConfigWithDuration =
+        userConfig?.duration || userConfig?.dampingRatio;
 
-      const deltaTime = Math.min(now - lastTimestamp, 64);
-      animation.lastTimestamp = now;
+      if (useConfigWithDuration) {
+        const { damping: c, mass: m, stiffness: k } = config;
 
-      const c = config.damping;
-      const m = config.mass;
-      const k = config.stiffness;
+        const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
+        const omega0 = Math.sqrt(k / m); // undamped angular frequency of the oscillator (rad/ms)
+        const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
 
-      const v0 = -velocity;
-      const x0 = toValue - current;
+        return { zeta, omega0, omega1 };
+      } else {
+        const { stiffness: k, dampingRatio: zeta } = config;
 
-      const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
-      const omega0 = Math.sqrt(k / m); // undamped angular frequency of the oscillator (rad/ms)
-      const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
+        const omega0 = Math.sqrt(k / newMass);
+        const omega1 = omega0 * Math.sqrt(1 - zeta ** 2);
 
-      const t = deltaTime / 1000;
-
-      return { t, v0, x0, zeta, omega0, omega1 };
+        return { zeta, omega0, omega1 };
+      }
     }
 
     function criticallyDampedSpringCalculations(
@@ -183,6 +187,83 @@ export function withSpring(
       return { isOvershooting, isVelocity, isDisplacement };
     }
 
+    function calcuateNewMassToMatchDuration(x0: number) {
+      /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
+           * to find the asympotote and esitmate the damping that gives us the expected duration 
+
+                ⎛ ⎛ c⎞           ⎞           
+                ⎜-⎜──⎟ ⋅ duration⎟           
+                ⎝ ⎝2m⎠           ⎠           
+            A ⋅ e                   = treshold
+
+     
+          Amplitude calculated using "Conservation of energy"
+                           _________________
+                          ╱      2         2
+                         ╱ m ⋅ v0  + k ⋅ x0 
+          amplitude =   ╱  ─────────────────
+                      ╲╱           k        
+
+          And replace mass with damping ratio which is provided: m = (c^2)/(4 * k * zeta^2)   
+          */
+      const {
+        duration,
+        velocity: v0,
+        stiffness: k,
+        dampingRatio: zeta,
+        restSpeedThreshold: threshold,
+      } = config;
+
+      const durationForMass = (mass: number) => {
+        const amplitude = Math.sqrt((mass * v0 * v0 + k * x0 * x0) / k);
+        const c = zeta * 2 * Math.sqrt(k * mass);
+        return (
+          1000 * ((-2 * mass) / c) * Math.log((threshold * 0.01) / amplitude) -
+          duration
+        );
+      };
+
+      /**
+       * I've calculated derivative with Wolfram Alpha https://www.wolframalpha.com/input?i=D%5B%282000*m%2Fzeta+*+2+*+Sqrt%5Bk*m%5D*+ln%280.01*T*Sqrt%5Bk%5D%2FSqrt%5Bm*v_0%5E2%2B+k*x_0%5E2%5D%29+-d%29%2Cm%5D
+       * 
+
+                     ⎛         _            ⎞                     ⎛         _            ⎞                             
+          _____      ⎜0.01 ⋅ ╲╱k ⋅ threshold⎟                     ⎜0.01 ⋅ ╲╱k ⋅ threshold⎟                             
+-2000 ⋅ ╲╱k ⋅ m ⋅ ln ⎜──────────────────────⎟   1000 ⋅ k ⋅ m ⋅ ln ⎜──────────────────────⎟                             
+                     ⎜    _________________ ⎟                     ⎜    _________________ ⎟                             
+                     ⎜   ╱      2         2 ⎟                     ⎜   ╱      2         2 ⎟                 2     _____ 
+                     ⎝ ╲╱ k ⋅ x0  + m ⋅ v0  ⎠                     ⎝ ╲╱ k ⋅ x0  + m ⋅ v0  ⎠    1000 ⋅ m ⋅ v0  ⋅ ╲╱k ⋅ m 
+───────────────────────────────────────────── - ────────────────────────────────────────── + ──────────────────────────
+                    zeta                                               _____                        ⎛      2         2⎞
+                                                              zeta ⋅ ╲╱k ⋅ m                 zeta ⋅ ⎝k ⋅ x0  + m ⋅ v0 ⎠
+
+       */
+
+      const derivative = (m: number) => {
+        const alpha = k * x0 * x0 + m * v0 * v0;
+        const beta = Math.log(
+          (0.01 * Math.sqrt(k) * threshold) / Math.sqrt(alpha)
+        );
+
+        const component1 = (-2000 * Math.sqrt(k * m) * beta) / zeta;
+        const component2 = (-1000 * k * m * beta) / (zeta * Math.sqrt(k * m));
+        const component3 =
+          (1000 * m * v0 * v0 * Math.sqrt(k * m)) / (zeta * alpha);
+
+        return component1 + component2 + component3;
+      };
+
+      console.log(
+        'OUTPUT',
+        'bisection, 20 iterations',
+        bisectRoot({ min: 0, max: 50, func: durationForMass }),
+        'newton, 50000 iterations',
+        newtonRoot({ min: 0, max: 50, func: durationForMass, derivative })
+      );
+
+      return bisectRoot({ min: 0, max: 50, func: durationForMass });
+    }
+
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
       const { toValue, startTimestamp, current } = animation;
 
@@ -193,18 +274,30 @@ export function withSpring(
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
 
+        console.log(
+          'STOP, expected time:',
+          userConfig.duration,
+          'actual time:',
+          timeFromStart
+        );
+
         return true;
       }
 
-      const { t, v0, x0, zeta, omega0, omega1 } = initialCalculations(
-        animation,
-        now
-      );
+      const { lastTimestamp, velocity } = animation;
+
+      const deltaTime = Math.min(now - lastTimestamp, 64);
+      animation.lastTimestamp = now;
+
+      const t = deltaTime / 1000;
+      const v0 = -velocity;
+      const x0 = toValue - current;
+
+      const { zeta, omega0, omega1 } = initialCalculations(animation.newMass);
       animation.lastTimestamp = now;
 
       const { position: newPosition, velocity: newVelocity } =
-        // always use underDamped motion if duration was provided
-        zeta < 1 || userConfig?.duration
+        zeta < 1
           ? underDampedSpringCalculations(animation, {
               zeta,
               v0,
@@ -247,15 +340,7 @@ export function withSpring(
       animation.current = value;
       animation.startValue = value;
 
-      let newDamping = config.duration;
       let newMass = config.mass;
-      console.log(newMass);
-
-      if (userConfig?.duration && userConfig?.damping && userConfig?.mass) {
-        console.warn(
-          "You've specified all the parameters: damping, mass and duration. At least one of them must be calculated depending on the two others"
-        );
-      }
 
       if (userConfig?.duration) {
         let x0 = Number(animation.toValue) - value;
@@ -263,91 +348,8 @@ export function withSpring(
           // It makes our animation a bit smoother, especially if sb triggered same animation twice
           x0 = Number(animation.toValue) - Number(previousAnimation.startValue);
         }
-        const { velocity: v0, stiffness: k, mass: m, duration: d } = config;
 
-        if (!userConfig?.damping) {
-          // If damping is not provided calculate new damping
-
-          /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
-           * to find the asympotote and esitmate the damping that gives us the expected duration 
-
-                ⎛ ⎛ c⎞           ⎞           
-                ⎜-⎜──⎟ ⋅ duration⎟           
-                ⎝ ⎝2m⎠           ⎠           
-            A ⋅ e                   = treshold
-
-     
-          Amplitude calculated using "Conservation of energy"
-                           _________________
-                          ╱      2         2
-                         ╱ m ⋅ v0  + k ⋅ x0 
-          amplitude =   ╱  ─────────────────
-                      ╲╱           k        
-          */
-          const amplitude = Math.sqrt((m * v0 * v0 + k * x0 * x0) / k);
-
-          newDamping =
-            -((2 * m) / (0.001 * config.duration)) *
-            Math.log(config.restDisplacementThreshold / Math.abs(amplitude));
-
-          config.damping = newDamping;
-        } else {
-          // If damping provided calculate new mass
-
-          // We have to solve dofferent equations for v0 = 0 to avoid division by 0
-          if (config.velocity === 0) {
-            const amplitude = x0;
-
-            // calculate new mass
-            const c = config.damping;
-            newMass =
-              (-0.002 * (c * d)) /
-              Math.log(
-                (0.01 * config.restDisplacementThreshold) / Math.abs(amplitude)
-              );
-            config.mass = newMass;
-          } else {
-            /* Mass satisfies the following formula:
-
-              ⎛                   _    ⎞               
-              ⎜     threshold ⋅ ╲╱k    ⎟     c ⋅ d     
-           ln ⎜────────────────────────⎟ + ──────── = 0
-              ⎜       _________________⎟   2000 ⋅ m    
-              ⎜      ╱      2         2⎟               
-              ⎝2 ⋅ ╲╱ m ⋅ v0  + k ⋅ x0 ⎠               
-
-          */
-
-            const c = config.damping;
-
-            const massFunction = (newMass: number) => {
-              return (
-                Math.log(
-                  (config.restDisplacementThreshold * Math.sqrt(k)) /
-                    (2000 * Math.sqrt(newMass * v0 * v0 + k * x0 * x0))
-                ) +
-                (c * d) / (2000 * newMass)
-              );
-            };
-
-            let minMass = 0;
-            let maxMass = 1000;
-            const epsilon = 0.00005;
-            let newMass = 7;
-            let current = massFunction(newMass);
-            while (Math.abs(current) > epsilon) {
-              current = massFunction(newMass);
-
-              if (current > 0) {
-                minMass = newMass;
-              } else maxMass = newMass;
-
-              newMass = (minMass + maxMass) / 2;
-            }
-
-            config.mass = newMass;
-          }
-        }
+        newMass = calcuateNewMassToMatchDuration(x0);
       }
 
       if (previousAnimation) {
@@ -363,10 +365,11 @@ export function withSpring(
         animation.startTimestamp = triggeredTwice
           ? previousAnimation.startTimestamp || now
           : now;
+
+        animation.newMass = newMass;
       } else {
         animation.lastTimestamp = now;
         animation.startTimestamp = now;
-        animation.newDamping = newDamping;
         animation.newMass = newMass;
       }
 
@@ -384,7 +387,6 @@ export function withSpring(
       callback,
       lastTimestamp: 0,
       startTimestamp: 0,
-      newDamping: 0,
       newMass: 0,
     } as SpringAnimation;
   });

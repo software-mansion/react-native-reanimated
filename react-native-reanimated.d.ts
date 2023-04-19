@@ -399,11 +399,19 @@ declare module 'react-native-reanimated' {
     restDisplacementThreshold?: number;
     restSpeedThreshold?: number;
     velocity?: number;
-  } & /** When duration is provided damping is set to some calculated value unless damping value is specified in config. If damping is specified mass is calculated. If both mass and damping are provided typescript error is thrown.
-  Also initial velocity must be zero if duration is specified. */ (
-    | { mass?: never; damping?: number; duration?: number }
-    | { mass?: number; damping?: never; duration?: number }
-    | { mass?: number; damping?: number; duration?: never }
+  } & (
+    | {
+        mass?: number;
+        damping?: number;
+        duration?: never;
+        dampingRatio?: never;
+      }
+    | {
+        mass?: never;
+        damping?: never;
+        duration?: number;
+        dampingRatio?: number;
+      }
   );
   export function withTiming<T extends AnimatableValue>(
     toValue: T,
