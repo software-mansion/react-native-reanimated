@@ -373,12 +373,15 @@ using namespace facebook::react;
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
   UIView *view = _viewRegistry[viewTag];
+  if (view.superview != nil) {
+    return YES;
+  }
 #if __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
   if ([view isKindOfClass:[RNSScreenStackHeaderConfig class]]) {
     return ((RNSScreenStackHeaderConfig *)view).screenView != nil;
   }
 #endif
-  return view.superview != nil;
+  return NO;
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
