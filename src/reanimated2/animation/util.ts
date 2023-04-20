@@ -215,10 +215,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp
   ): boolean => {
     let finished = true;
-    (animation.current as Array<number>).forEach((v, i) => {
+    animation.current = (animation.current as Array<number>).map((v, i) => {
       // @ts-ignore: disable-next-line
       finished &= animation[i].onFrame(animation[i], timestamp);
-      (animation.current as Array<number>)[i] = animation[i].current;
+      return animation[i].current;
     });
 
     return finished;
