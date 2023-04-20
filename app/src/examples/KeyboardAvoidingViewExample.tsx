@@ -1,6 +1,7 @@
 import Animated, {
   KeyboardState,
-  runOnUI,
+  // runOnJS,
+  // runOnUI,
   useAnimatedKeyboard,
   useAnimatedStyle,
   useDerivedValue,
@@ -40,11 +41,11 @@ function ListItem({
 }
 
 function KeyboardSpace({
-  modalVisible,
+  // modalVisible,
   children,
   ...props
 }: ScrollViewProps & {
-  modalVisible: Animated.SharedValue<boolean>;
+  modalVisible?: Animated.SharedValue<boolean>;
   children: React.ReactNode;
 }) {
   const keyboard = useAnimatedKeyboard();
@@ -56,26 +57,21 @@ function KeyboardSpace({
 
   const translateY = useDerivedValue(() => {
     const { height, state } = keyboard;
+
+    if (state.value === KeyboardState.OPEN) {
+      ctx.lastHeight = height.value;
+    }
+
     console.log(
       'height',
       height.value,
       'ctx.lastHeight',
       ctx.lastHeight,
       'state.value',
-      state.value,
-      'modalVisible.value',
-      modalVisible.value
+      state.value
     );
 
-    if (state.value === KeyboardState.OPEN && !modalVisible.value) {
-      ctx.lastHeight = height.value;
-    }
-
-    if (state.value === KeyboardState.CLOSING) {
-      ctx.lastHeight = 0;
-    }
-
-    if (modalVisible.value || state.value === KeyboardState.CLOSED) {
+    if (state.value === KeyboardState.CLOSED) {
       return Math.max(ctx.lastHeight - 17, 0);
     }
 
@@ -104,30 +100,34 @@ function KeyboardSpace({
 export default function KeyboardAvoidingViewExample(): React.ReactElement {
   const insets = useSafeAreaInsets();
 
-  const [useReanimated, setUseReanimated] = useState(false);
+  const [useReanimated, setUseReanimated] = useState(true);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const modalVisible = useSharedValue(false);
 
   const showModal = useCallback(() => {
-    runOnUI(() => {
-      'worklet';
+    // runOnUI(() => {
+    //   'worklet';
 
-      modalVisible.value = true;
-    })();
+    //   modalVisible.value = true;
+
+    //   runOnJS(setIsModalVisible)(true);
+    // })();
 
     setIsModalVisible(true);
-  }, [modalVisible, setIsModalVisible]);
+  }, [setIsModalVisible]);
 
   const hideModal = useCallback(() => {
-    runOnUI(() => {
-      'worklet';
+    // runOnUI(() => {
+    //   'worklet';
 
-      modalVisible.value = false;
-    })();
+    //   modalVisible.value = false;
+
+    //   runOnJS(setIsModalVisible)(false);
+    // })();
 
     setIsModalVisible(false);
-  }, [modalVisible, setIsModalVisible]);
+  }, [setIsModalVisible]);
 
   const renderScrollComponent = useCallback(
     (props: ScrollViewProps) => {
@@ -183,7 +183,7 @@ export default function KeyboardAvoidingViewExample(): React.ReactElement {
         visible={isModalVisible}
         transparent
         animationType="none">
-        <Pressable style={styles.sheetBackdrop} onPress={hideModal}></Pressable>
+        <Pressable style={styles.sheetBackdrop} onPress={hideModal} />
 
         <View style={styles.sheet}>
           <Text style={styles.sheetText}>
