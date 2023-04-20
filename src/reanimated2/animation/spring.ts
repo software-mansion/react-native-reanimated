@@ -5,7 +5,7 @@ import {
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import { bisectRoot, newtonRoot } from './springUtils';
+import { bisectRoot } from './springUtils';
 
 type SpringConfig = {
   stiffness?: number;
@@ -67,7 +67,7 @@ export function withSpring(
 
     const config = { ...defaultConfig, ...userConfig };
 
-    //TODO this could be done only once
+    // TODO this could be done only once
     function initialCalculations(newMass = 0): {
       zeta: number;
       omega0: number;
@@ -223,44 +223,6 @@ export function withSpring(
         );
       };
 
-      /**
-       * I've calculated derivative with Wolfram Alpha https://www.wolframalpha.com/input?i=D%5B%282000*m%2Fzeta+*+2+*+Sqrt%5Bk*m%5D*+ln%280.01*T*Sqrt%5Bk%5D%2FSqrt%5Bm*v_0%5E2%2B+k*x_0%5E2%5D%29+-d%29%2Cm%5D
-       * 
-
-                     ⎛         _            ⎞                     ⎛         _            ⎞                             
-          _____      ⎜0.01 ⋅ ╲╱k ⋅ threshold⎟                     ⎜0.01 ⋅ ╲╱k ⋅ threshold⎟                             
--2000 ⋅ ╲╱k ⋅ m ⋅ ln ⎜──────────────────────⎟   1000 ⋅ k ⋅ m ⋅ ln ⎜──────────────────────⎟                             
-                     ⎜    _________________ ⎟                     ⎜    _________________ ⎟                             
-                     ⎜   ╱      2         2 ⎟                     ⎜   ╱      2         2 ⎟                 2     _____ 
-                     ⎝ ╲╱ k ⋅ x0  + m ⋅ v0  ⎠                     ⎝ ╲╱ k ⋅ x0  + m ⋅ v0  ⎠    1000 ⋅ m ⋅ v0  ⋅ ╲╱k ⋅ m 
-───────────────────────────────────────────── - ────────────────────────────────────────── + ──────────────────────────
-                    zeta                                               _____                        ⎛      2         2⎞
-                                                              zeta ⋅ ╲╱k ⋅ m                 zeta ⋅ ⎝k ⋅ x0  + m ⋅ v0 ⎠
-
-       */
-
-      const derivative = (m: number) => {
-        const alpha = k * x0 * x0 + m * v0 * v0;
-        const beta = Math.log(
-          (0.01 * Math.sqrt(k) * threshold) / Math.sqrt(alpha)
-        );
-
-        const component1 = (-2000 * Math.sqrt(k * m) * beta) / zeta;
-        const component2 = (-1000 * k * m * beta) / (zeta * Math.sqrt(k * m));
-        const component3 =
-          (1000 * m * v0 * v0 * Math.sqrt(k * m)) / (zeta * alpha);
-
-        return component1 + component2 + component3;
-      };
-
-      console.log(
-        'OUTPUT',
-        'bisection, 20 iterations',
-        bisectRoot({ min: 0, max: 50, func: durationForMass }),
-        'newton, 50000 iterations',
-        newtonRoot({ min: 0, max: 50, func: durationForMass, derivative })
-      );
-
       return bisectRoot({ min: 0, max: 50, func: durationForMass });
     }
 
@@ -273,14 +235,6 @@ export function withSpring(
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
-
-        console.log(
-          'STOP, expected time:',
-          userConfig.duration,
-          'actual time:',
-          timeFromStart
-        );
-
         return true;
       }
 
