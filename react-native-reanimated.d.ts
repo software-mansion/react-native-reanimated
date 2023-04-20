@@ -396,8 +396,8 @@ declare module 'react-native-reanimated' {
   export type WithSpringConfig = {
     stiffness?: number;
     overshootClamping?: boolean;
-    restDisplacementThreshold?: number;
     restSpeedThreshold?: number;
+    restDisplacementThreshold?: number;
     velocity?: number;
   } & (
     | {
