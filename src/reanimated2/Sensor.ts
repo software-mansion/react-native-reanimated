@@ -49,6 +49,8 @@ export default class Sensor<T> {
   register(
     eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
+    // prevent another sensor registration at the same time
+    this.sensorId = -2;
     const config = this.config;
     const sensorType = this.sensorType;
     this.sensorId = NativeReanimatedModule.registerSensor(
