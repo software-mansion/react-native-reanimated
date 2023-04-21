@@ -13,24 +13,24 @@ function runPlugin(input, opts = {}) {
 }
 
 describe('babel plugin', () => {
-  beforeAll(() => {
-    process.env.REANIMATED_PLUGIN_TESTS = 'jest';
+  beforeEach(() => {
+    process.env.REANIMATED_JEST_DISABLE_SOURCEMAP = 'jest';
+    process.env.REANIMATED_JEST_DISABLE_VERSION = 'jest';
   });
 
   it('injects its version', () => {
+    delete process.env.REANIMATED_JEST_DISABLE_VERSION;
+
     const input = html`<script>
       function foo() {
-        'inject Reanimated Babel plugin version';
+        'worklet';
         var foo = 'bar';
       }
     </script>`;
 
     const { code } = runPlugin(input, {});
     const { version: packageVersion } = require('../package.json');
-    expect(code).toContain(
-      `global._REANIMATED_VERSION_BABEL_PLUGIN = "${packageVersion}"`
-    );
-    expect(code).not.toContain('inject Reanimated Babel plugin version');
+    expect(code).toContain(`f.__version = "${packageVersion}";`);
   });
 
   it("doesn't bother other Directive Literals", () => {
