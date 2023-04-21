@@ -9,7 +9,7 @@ import {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
-import { checkVersion } from '../platform-specific/checkVersion';
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
 
 export class NativeReanimated {
   native: boolean;
@@ -32,7 +32,7 @@ export class NativeReanimated {
         );
         return;
       }
-      checkVersion();
+      checkCppVersion();
     }
   }
 
