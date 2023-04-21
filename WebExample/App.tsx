@@ -11,6 +11,8 @@ import {
 import { StyleSheet, View, Text } from 'react-native';
 import { WithoutBabelTest } from './WithoutBabel';
 
+//Change 
+
 enableExperimentalWebImplementation(true);
 
 export default function App() {
