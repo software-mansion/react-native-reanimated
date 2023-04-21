@@ -346,7 +346,7 @@ declare module 'react-native-reanimated' {
     build: () => EntryExitAnimationFunction;
   }
 
-  export type AnimatableValue = number | string | Array<number>;
+  export type AnimatableValue = AnimatableSingeValue | AnimatableValueObject;
 
   // reanimated2 derived operations
   export enum Extrapolation {
