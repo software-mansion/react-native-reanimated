@@ -23,6 +23,7 @@ import {
   Animation,
   AnimationObject,
   Timestamp,
+  AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 
@@ -224,6 +225,43 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return finished;
   };
 
+  const objectOnStart = (
+    animation: Animation<AnimationObject>,
+    value: AnimatableValueObject,
+    timestamp: Timestamp,
+    previousAnimation: Animation<AnimationObject>
+  ): void => {
+    for (const key in value) {
+      animation[key] = Object.assign({}, animationCopy);
+      animation[key].current = value[key];
+      animation[key].toValue = (animation.toValue as AnimatableValueObject)[
+        key
+      ];
+      animation[key].onStart(
+        animation[key],
+        value[key],
+        timestamp,
+        previousAnimation ? previousAnimation[key] : undefined
+      );
+    }
+    animation.current = value;
+  };
+
+  const objectOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: Timestamp
+  ): boolean => {
+    let finished = true;
+    const newObject: AnimatableValueObject = {};
+    for (const key in animation.current as AnimatableValueObject) {
+      // @ts-ignore: disable-next-line
+      finished &= animation[key].onFrame(animation[key], timestamp);
+      newObject[key] = animation[key].current;
+    }
+    animation.current = newObject;
+    return finished;
+  };
+
   animation.onStart = (
     animation: Animation<AnimationObject>,
     value: number,
@@ -241,6 +279,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     } else if (typeof value === 'string') {
       prefNumberSuffOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = prefNumberSuffOnFrame;
+      return;
+    } else if (typeof value === 'object' && value !== null) {
+      objectOnStart(animation, value, timestamp, previousAnimation);
+      animation.onFrame = objectOnFrame;
       return;
     }
     baseOnStart(animation, value, timestamp, previousAnimation);
