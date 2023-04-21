@@ -3,8 +3,8 @@ import NativeReanimatedModule from './NativeReanimated';
 import { isJest } from './PlatformChecker';
 import {
   runOnJS,
-  setupSetImmediate,
-  flushImmediates,
+  setupMicrotasks,
+  callMicrotasks,
   runOnUIImmediately,
 } from './threads';
 
@@ -17,8 +17,8 @@ function callGuardDEV<T extends Array<any>, U>(
   try {
     fn(...args);
   } catch (e) {
-    if (global.ErrorUtils) {
-      global.ErrorUtils.reportFatalError(e as Error);
+    if (global.__ErrorUtils) {
+      global.__ErrorUtils.reportFatalError(e as Error);
     } else {
       throw e;
     }
@@ -106,7 +106,7 @@ function setupRequestAnimationFrame() {
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
     currentCallbacks.forEach((f) => f(frameTimestamp));
-    flushImmediates();
+    callMicrotasks();
   };
 
   global.requestAnimationFrame = (
@@ -153,11 +153,13 @@ export function initializeUIRuntime() {
     };
   }
 
-  const capturableConsole = console;
+  // We really have to create a copy of console here. Function runOnJS we use on elements inside
+  // this object makes it not configurable
+  const capturableConsole = { ...console };
   runOnUIImmediately(() => {
     'worklet';
     // setup error handler
-    global.ErrorUtils = {
+    global.__ErrorUtils = {
       reportFatalError: (error: Error) => {
         runOnJS(reportFatalErrorOnJS)({
           message: error.message,
@@ -169,6 +171,7 @@ export function initializeUIRuntime() {
     // setup console
     // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
     global.console = {
+      assert: runOnJS(capturableConsole.assert),
       debug: runOnJS(capturableConsole.debug),
       log: runOnJS(capturableConsole.log),
       warn: runOnJS(capturableConsole.warn),
@@ -177,7 +180,7 @@ export function initializeUIRuntime() {
     };
 
     if (!IS_JEST) {
-      setupSetImmediate();
+      setupMicrotasks();
       setupRequestAnimationFrame();
     }
   })();
