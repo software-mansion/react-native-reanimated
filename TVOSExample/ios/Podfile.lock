@@ -322,7 +322,7 @@ PODS:
     - React-jsi (= 0.69.5-2)
     - React-logger (= 0.69.5-2)
     - React-perflogger (= 0.69.5-2)
-  - RNReanimated (2.15.0):
+  - RNReanimated (2.16.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -498,7 +498,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  DoubleConversion: 1d2f3470dfd56717030d0855f8332361bbd85236
+  DoubleConversion: 234abba95e31cc2aada0cf3b97cdb11bc5b90575
   FBLazyVector: 3f2d9d9ca104e6837732fcde307869f4495668f6
   FBReactNativeSpec: cdb62951f332a7e8e38ae470b483669492dd37b1
   Flipper: 26fc4b7382499f1281eb8cb921e5c3ad6de91fe0
@@ -511,10 +511,10 @@ SPEC CHECKSUMS:
   Flipper-RSocket: d9d9ade67cbecf6ac10730304bf5607266dd2541
   FlipperKit: cbdee19bdd4e7f05472a66ce290f1b729ba3cb86
   fmt: 135c0c55547979f715b56dfa54037ececa96d07a
-  glog: 5b768715ae7bf8149e9d269089c22585cee27eb7
+  glog: bac6d5aa2990176cc22d0432fb3e28805d580aeb
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  RCT-Folly: 5b616707d7d51519bd8d59b3e11f15df58f54df7
+  RCT-Folly: 6955e7728b76277c5df5a5aba37ee1ff1dd99976
   RCTRequired: 0ce44b80b7973c2c12016a992af0545f9faa725f
   RCTTypeSafety: b3e4f7422fff0523deed2cd73e525c2195662435
   React: fbabf3b37d111a98062868b856ce79874328de72
@@ -538,11 +538,11 @@ SPEC CHECKSUMS:
   React-RCTText: 16122ecd9be53be613b2206a13e5cf987835c8cf
   React-runtimeexecutor: 44fe73dca7d31245dfc031971a2ce14085c8d5fe
   ReactCommon: 3f6173ad12133f7e032f4c8d061dba181115c1c0
-  RNReanimated: 5920d1e3d280c7682e3324ba741408516856741c
+  RNReanimated: db5ce608c44c0b242bf6b808f034bbdfb4ca3137
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 5f6b76dc63952163378af6afc502d8bab96643a1
   YogaKit: 1e22bf2228b3a5ac8cc88965153061ae92c494b5
 
 PODFILE CHECKSUM: de7e6cf7b67dd7ee60bdf63b21197d5d115cd179
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.12.0
