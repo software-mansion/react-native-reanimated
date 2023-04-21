@@ -233,6 +233,8 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   ): void => {
     for (const key in value) {
       animation[key] = Object.assign({}, animationCopy);
+      animation[key].onStart = animation.onStart;
+
       animation[key].current = value[key];
       animation[key].toValue = (animation.toValue as AnimatableValueObject)[
         key
