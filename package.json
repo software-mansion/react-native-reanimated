@@ -115,7 +115,7 @@
     "@types/invariant": "^2.2.35",
     "@types/jest": "^29.0.0",
     "@types/node": "^18.0.0",
-    "@types/react": "17.0.2",
+    "@types/react": "^18.0.0",
     "@types/react-test-renderer": "17.0.2",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
