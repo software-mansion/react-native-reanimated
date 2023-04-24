@@ -153,21 +153,28 @@ describe('colors interpolation', () => {
     const view = getByTestId('view');
     const button = getByTestId('button');
 
-    expect(view).toHaveAnimatedStyle({ backgroundColor: '#105060' }, true);
+    expect(view).toHaveAnimatedStyle(
+      { backgroundColor: '#105060' },
+      { shouldMatchAllProps: true }
+    );
 
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
 
     expect(view).toHaveAnimatedStyle(
-      { backgroundColor: 'rgba(71, 117, 73, 1)' },
-      true
+      {
+        backgroundColor: 'rgba(71, 117, 73, 1)',
+      },
+      { shouldMatchAllProps: true }
     );
 
     jest.advanceTimersByTime(250);
 
     expect(view).toHaveAnimatedStyle(
-      { backgroundColor: 'rgba(96, 144, 32, 1)' },
-      true
+      {
+        backgroundColor: 'rgba(96, 144, 32, 1)',
+      },
+      { shouldMatchAllProps: true }
     );
 
     jest.runOnlyPendingTimers();

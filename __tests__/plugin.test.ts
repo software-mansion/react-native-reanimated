@@ -3,13 +3,13 @@ import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 
-function runPlugin(input, opts = {}) {
-  return transform(input.replace(/<\/?script>/g, ''), {
+function runPlugin(input: string, opts = {}) {
+  return transform(input.replace(/<\/?script[^>]*>/g, ''), {
     filename: 'jest tests fixture',
     compact: false,
     plugins: [plugin],
     ...opts,
-  });
+  })!; // this exclamation mark means that we know that the result is not null
 }
 
 describe('babel plugin', () => {
@@ -216,6 +216,9 @@ describe('babel plugin', () => {
       enter(path) {
         if (
           path.isAssignmentExpression() &&
+          'property' in path.node.left &&
+          'name' in path.node.left.property &&
+          'properties' in path.node.right &&
           path.node.left.property.name === '_closure'
         ) {
           closureBindings = path.node.right.properties;
