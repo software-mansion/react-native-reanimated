@@ -10,8 +10,6 @@ on:
       - FabricExample/package.json
       - FabricExample/android/**
   merge_group:
-    branches:
-      - main
   push:
     branches:
       - main

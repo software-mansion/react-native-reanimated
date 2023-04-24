@@ -8,14 +8,12 @@ on:
       - 'FabricExample/package.json'
       - 'Example/package.json'
   merge_group:
-    branches:
-      - main
   push:
     branches:
       - main
 
 env:
-  REACT_NATIVE_VERSION: "0.71.6"
+  REACT_NATIVE_VERSION: '0.71.6'
 
 jobs:
   build:

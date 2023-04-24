@@ -10,8 +10,6 @@ on:
       - 'TVOSExample/**'
       - '*'
   merge_group:
-    branches:
-      - main
   push:
     branches:
       - main
@@ -20,7 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [app, Example, FabricExample, WebExample, TVOSExample]
+        working-directory:
+          [app, Example, FabricExample, WebExample, TVOSExample]
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true

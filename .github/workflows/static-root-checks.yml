@@ -6,8 +6,6 @@ on:
       - 'src/**'
       - '*'
   merge_group:
-    branches:
-      - main
   push:
     branches:
       - main

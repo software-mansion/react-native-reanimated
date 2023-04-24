@@ -9,8 +9,6 @@ on:
       - 'TVOSExample/package.json'
       - 'TVOSExample/ios/**'
   merge_group:
-    branches:
-      - main
   push:
     branches:
       - main

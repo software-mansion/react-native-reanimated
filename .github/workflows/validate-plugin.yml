@@ -5,8 +5,6 @@ on:
       - '.github/workflows/validate-plugin.yml'
       - 'plugin/**'
   merge_group:
-    branches:
-      - main
   push:
     branches:
       - main
