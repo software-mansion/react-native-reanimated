@@ -12,6 +12,10 @@
 #import <stdatomic.h>
 #endif
 
+#if __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
+#import <RNScreens/RNSScreenStackHeaderConfig.h>
+#endif
+
 #ifdef RCT_NEW_ARCH_ENABLED
 using namespace facebook::react;
 #endif
@@ -368,7 +372,16 @@ using namespace facebook::react;
 
 - (BOOL)isNativeViewMounted:(NSNumber *)viewTag
 {
-  return _viewRegistry[viewTag].superview != nil;
+  UIView *view = _viewRegistry[viewTag];
+  if (view.superview != nil) {
+    return YES;
+  }
+#if __has_include(<RNScreens/RNSScreenStackHeaderConfig.h>)
+  if ([view isKindOfClass:[RNSScreenStackHeaderConfig class]]) {
+    return ((RNSScreenStackHeaderConfig *)view).screenView != nil;
+  }
+#endif
+  return NO;
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
