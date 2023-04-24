@@ -223,6 +223,7 @@ export function withSpring(
         );
       };
 
+      // Bisection turns out to be much faster than Newton's method in our case
       return bisectRoot({ min: 0, max: 50, func: durationForMass });
     }
 
@@ -331,7 +332,6 @@ export function withSpring(
     }
 
     return {
-      type: 'spring',
       onFrame: spring,
       onStart,
       toValue,

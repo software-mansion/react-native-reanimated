@@ -48,7 +48,7 @@ export function withDecay(
     'worklet';
     const config: DefaultDecayConfig = {
       deceleration: 0.998,
-      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
+      velocityFactor: 1,
       velocity: 0,
       rubberBandFactor: 0.6,
     };
@@ -61,6 +61,12 @@ export function withDecay(
 
     const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
+
+    // @piaskowyk: Velocity is expressed in pixels per second
+    // but pixels on Web are handled differently than on native
+    if (Platform.OS === 'web') {
+      config.velocity *= 1000;
+    }
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 

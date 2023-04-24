@@ -85,7 +85,7 @@ def assert_latest_react_native_with_new_architecture(config, reanimated_package_
   reanimated_major_version = reanimated_version.split('.')[0].to_i
   react_native_minor_version = config[:react_native_minor_version]
   fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-  if fabric_enabled && reanimated_major_version == 3 && react_native_minor_version < 71
-    raise "[react-native-reanimated] Reanimated " + reanimated_version + " supports the New Architecture only on the latest minor release of React Native. Please upgrade to React Native 0.71.0+ or downgrade to an older version of Reanimated v3"
+  if fabric_enabled && reanimated_major_version == 3 && react_native_minor_version < 72
+    raise "[react-native-reanimated] Reanimated " + reanimated_version + " supports the New Architecture only on the latest minor release of React Native. Please upgrade to React Native 0.72.0+ or downgrade to an older version of Reanimated v3"
   end
 end
