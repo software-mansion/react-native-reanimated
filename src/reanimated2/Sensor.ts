@@ -35,7 +35,7 @@ function initSensorData(
 
 export default class Sensor<T> {
   public listenersNumber = 0;
-  private sensorId = -1;
+  private sensorId: number | null = null;
   private sensorType: SensorType;
   private data: SharedValue<Value3D | ValueRotation>;
   private config: SensorConfig;
@@ -49,8 +49,6 @@ export default class Sensor<T> {
   register(
     eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
   ) {
-    // prevent another sensor registration at the same time
-    this.sensorId = -2;
     const config = this.config;
     const sensorType = this.sensorType;
     this.sensorId = NativeReanimatedModule.registerSensor(
@@ -63,6 +61,10 @@ export default class Sensor<T> {
   }
 
   isRunning() {
+    return this.sensorId !== -1 && this.sensorId !== null;
+  }
+
+  isAvailable() {
     return this.sensorId !== -1;
   }
 
@@ -71,7 +73,9 @@ export default class Sensor<T> {
   }
 
   unregister() {
-    NativeReanimatedModule.unregisterSensor(this.sensorId);
-    this.sensorId = -1;
+    if (this.sensorId !== null && this.sensorId !== -1) {
+      NativeReanimatedModule.unregisterSensor(this.sensorId);
+    }
+    this.sensorId = null;
   }
 }

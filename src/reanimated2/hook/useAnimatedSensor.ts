@@ -95,10 +95,14 @@ export function useAnimatedSensor(
       ...userConfig,
     };
     ref.current.sensor = initializeSensor(sensorType, newConfig);
+
     const sensorData = ref.current.sensor;
+    const adjustToInterfaceOrientation =
+      ref.current.config.adjustToInterfaceOrientation;
+
     const id = registerSensor(sensorType, config, (data) => {
       'worklet';
-      if (ref.current.config.adjustToInterfaceOrientation) {
+      if (adjustToInterfaceOrientation) {
         if (sensorType === SensorType.ROTATION) {
           data = adjustRotationToInterfaceOrientation(data as ValueRotation);
         } else {

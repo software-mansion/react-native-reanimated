@@ -46,7 +46,11 @@ export class SensorContainer {
     }
 
     const sensor = this.nativeSensors.get(sensorId);
-    if (sensor && (sensor.isRunning() || sensor.register(handler))) {
+    if (
+      sensor &&
+      sensor.isAvailable() &&
+      (sensor.isRunning() || sensor.register(handler))
+    ) {
       sensor.listenersNumber++;
       return sensorId;
     }
@@ -56,7 +60,7 @@ export class SensorContainer {
   unregisterSensor(sensorId: number) {
     if (this.nativeSensors.has(sensorId)) {
       const sensor = this.nativeSensors.get(sensorId);
-      if (sensor) {
+      if (sensor && sensor.isRunning()) {
         sensor.listenersNumber--;
         if (sensor.listenersNumber === 0) {
           sensor.unregister();
