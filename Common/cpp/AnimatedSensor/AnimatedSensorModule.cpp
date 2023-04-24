@@ -15,6 +15,7 @@ AnimatedSensorModule::AnimatedSensorModule(
 
 AnimatedSensorModule::~AnimatedSensorModule() {
   assert(sensorsIds_.empty());
+  assert(sensorsIds_.empty());
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
