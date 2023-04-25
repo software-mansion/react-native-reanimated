@@ -2,14 +2,17 @@ import { html } from 'code-tag';
 import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
+import { strict as assert } from 'assert';
 
 function runPlugin(input: string, opts = {}) {
-  return transform(input.replace(/<\/?script[^>]*>/g, ''), {
+  const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
     filename: 'jest tests fixture',
     compact: false,
     plugins: [plugin],
     ...opts,
-  })!; // this exclamation mark means that we know that the result is not null
+  });
+  assert(transformed);
+  return transformed;
 }
 
 describe('babel plugin', () => {

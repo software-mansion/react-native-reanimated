@@ -162,18 +162,14 @@ describe('colors interpolation', () => {
     jest.advanceTimersByTime(250);
 
     expect(view).toHaveAnimatedStyle(
-      {
-        backgroundColor: 'rgba(71, 117, 73, 1)',
-      },
+      { backgroundColor: 'rgba(71, 117, 73, 1)' },
       { shouldMatchAllProps: true }
     );
 
     jest.advanceTimersByTime(250);
 
     expect(view).toHaveAnimatedStyle(
-      {
-        backgroundColor: 'rgba(96, 144, 32, 1)',
-      },
+      { backgroundColor: 'rgba(96, 144, 32, 1)' },
       { shouldMatchAllProps: true }
     );
 

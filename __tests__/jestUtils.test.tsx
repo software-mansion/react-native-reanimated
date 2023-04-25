@@ -13,7 +13,7 @@ describe('jestUtils', () => {
       });
 
       return (
-        <View style={{ flex: 1, flexDirection: 'column' }}>
+        <View>
           <Animated.View
             testID="view"
             style={[{ backgroundColor: 'black' }, style]}
@@ -37,6 +37,11 @@ describe('jestUtils', () => {
     expect(view).toHaveAnimatedStyle(
       { flex: 1, backgroundColor: 'black' },
       { shouldMatchAllProps: false }
+    );
+
+    expect(view).toHaveAnimatedStyle(
+      { flex: 1, backgroundColor: 'black' },
+      { shouldMatchAllProps: true }
     );
 
     expect(view).not.toHaveAnimatedStyle(
