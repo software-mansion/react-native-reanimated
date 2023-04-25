@@ -2,8 +2,16 @@ name: Test TypeScript and Lint
 on:
   pull_request:
     paths:
+      - '.github/workflows/static-example-apps-checks.yml'
+      - 'app/**'
       - 'Example/**'
       - 'FabricExample/**'
+      - 'WebExample/**'
+      - 'TVOSExample/**'
+      - '*'
+  merge_group:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -12,17 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [Example, FabricExample]
+        working-directory: [app, Example, FabricExample, WebExample, TVOSExample]
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout
-        uses: actions/checkout@v2
-      - name: Use Node.js 14
-        uses: actions/setup-node@v2
+        uses: actions/checkout@v3
+      - name: Use Node.js 16
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
           cache: 'yarn'
       - name: Install root node dependencies
         run: yarn
@@ -34,4 +42,8 @@ jobs:
         run: yarn tsc --noEmit
       - name: Lint
         working-directory: ${{ matrix.working-directory }}
-        run: yarn lint:js
+        run: yarn lint
+      - name: Build
+        working-directory: ${{ matrix.working-directory }}
+        if: ${{ matrix.working-directory == 'WebExample' }}
+        run: yarn build

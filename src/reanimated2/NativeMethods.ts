@@ -1,7 +1,7 @@
 /* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
 import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
-import { MeasuredDimensions } from './commonTypes';
+import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import { RefObjectFunction } from './hook/commonTypes';
 import { isChromeDebugger, isWeb, shouldBeUseWeb } from './PlatformChecker';
 
@@ -89,8 +89,11 @@ export function dispatchCommand<T extends Component>(
   if (!_WORKLET || !isNative) {
     return;
   }
-  const shadowNodeWrapper = animatedRef();
-  _dispatchCommand(shadowNodeWrapper, commandName, args);
+
+  // dispatchCommand works only on Fabric where animatedRef returns
+  // an object (ShadowNodeWrapper) and not a number
+  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
+  _dispatchCommand!(shadowNodeWrapper, commandName, args);
 }
 
 export let scrollTo: <T extends Component>(
@@ -133,7 +136,9 @@ if (isWeb()) {
     if (!_WORKLET) {
       return;
     }
-    const viewTag = animatedRef();
+
+    // Calling animatedRef on Paper returns a number (nativeTag)
+    const viewTag = animatedRef() as number;
     _scrollTo(viewTag, x, y, animated);
   };
 } else {
