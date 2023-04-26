@@ -85,6 +85,8 @@ using namespace facebook::react;
 
 @end
 
+#ifndef RCT_NEW_ARCH_ENABLED
+
 @interface REASyncUpdateObserver : NSObject <RCTUIManagerObserver>
 @end
 
@@ -145,6 +147,8 @@ using namespace facebook::react;
 }
 
 @end
+
+#endif
 
 @implementation REANodesManager {
   CADisplayLink *_displayLink;
