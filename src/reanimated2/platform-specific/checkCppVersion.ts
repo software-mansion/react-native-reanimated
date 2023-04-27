@@ -1,10 +1,6 @@
-/**
- * Checks that native and js versions of reanimated match.
- */
 import { jsVersion } from './jsVersion';
-import { matchVersion } from './utils';
 
-function checkCppVersion(): void {
+export function checkCppVersion() {
   const cppVersion = global._REANIMATED_VERSION_CPP;
   if (cppVersion === undefined) {
     console.error(
@@ -20,4 +16,14 @@ function checkCppVersion(): void {
   }
 }
 
-export { checkCppVersion };
+export function matchVersion(version1: string, version2: string) {
+  if (version1.match(/^\d+\.\d+\.\d+$/) && version2.match(/^\d+\.\d+\.\d+$/)) {
+    // x.y.z, compare only major and minor, skip patch
+    const [major1, minor1] = version1.split('.');
+    const [major2, minor2] = version2.split('.');
+    return major1 === major2 && minor1 === minor2;
+  } else {
+    // alpha, beta or rc, compare everything
+    return version1 === version2;
+  }
+}
