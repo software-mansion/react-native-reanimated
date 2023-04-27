@@ -232,10 +232,6 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
           toAdapt[key] = cloneRecursive(element);
         }
       }
-      if (__DEV__) {
-        // See the reasoning behind freezing in the other comment above.
-        Object.freeze(value);
-      }
       return _makeShareableClone(toAdapt);
     }
     return _makeShareableClone(value);
