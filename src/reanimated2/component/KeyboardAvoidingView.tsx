@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 import {
   LayoutRectangle,
   StyleSheet,
@@ -7,7 +7,13 @@ import {
   ViewProps,
 } from 'react-native';
 import ReanimatedView from './View';
-import { useAnimatedKeyboard, useAnimatedStyle, useWorkletCallback } from '../';
+import {
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+  useWorkletCallback,
+  runOnUI,
+  useSharedValue,
+} from '../';
 
 type Props = ViewProps & {
   /**
@@ -51,13 +57,24 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     },
     ref
   ) => {
-    const [frame, setFrame] = useState<LayoutRectangle | null>(null);
+    const initialFrame = useSharedValue<LayoutRectangle | null>(null);
+
+    const currentFrame = useSharedValue<LayoutRectangle | null>(null);
+
     const keyboard = useAnimatedKeyboard();
     const { height: screenHeight } = useWindowDimensions();
 
+    const onLayoutWorklet = useWorkletCallback((layout: LayoutRectangle) => {
+      if (initialFrame.value == null) {
+        initialFrame.value = layout;
+      }
+
+      currentFrame.value = layout;
+    });
+
     const handleOnLayout = useCallback<NonNullable<ViewProps['onLayout']>>(
       (event) => {
-        setFrame(event.nativeEvent.layout);
+        runOnUI(onLayoutWorklet)(event.nativeEvent.layout);
 
         if (onLayout) {
           onLayout(event);
@@ -67,8 +84,8 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
     );
 
     const getBackwardCompatibleHeight = useWorkletCallback(
-      (keyboardHeight: number, frame: null | LayoutRectangle) => {
-        if (frame == null) {
+      (keyboardHeight: number) => {
+        if (currentFrame.value == null || initialFrame.value == null) {
           return 0;
         }
 
@@ -77,31 +94,29 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
 
         if (behavior === 'height') {
           return Math.max(
-            keyboardHeight + frame.y + frame.height - keyboardY,
+            keyboardHeight +
+              currentFrame.value.y +
+              currentFrame.value.height -
+              keyboardY -
+              initialFrame.value.height,
             0
           );
         }
 
-        return Math.max(frame.y + frame.height - keyboardY, 0);
+        return Math.max(
+          currentFrame.value.y + currentFrame.value.height - keyboardY,
+          0
+        );
       }
     );
 
     const animatedStyle = useAnimatedStyle(() => {
       const keyboardHeight = keyboard.height.value;
 
-      const bottom = getBackwardCompatibleHeight(keyboardHeight, frame);
+      const bottom = getBackwardCompatibleHeight(keyboardHeight);
 
       // we use `enabled === true` to be 100% compatible with original implementation
       const bottomHeight = enabled === true ? bottom : 0;
-
-      console.log(
-        'bottomHeight',
-        bottomHeight,
-        'keyboardHeight',
-        keyboardHeight,
-        'frame',
-        frame
-      );
 
       switch (behavior) {
         case 'height':
@@ -112,7 +127,9 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
             };
           }
 
-          return {};
+          return {
+            flex: 0,
+          };
 
         case 'position':
           return {
@@ -125,7 +142,7 @@ const KeyboardAvoidingView = forwardRef<View, React.PropsWithChildren<Props>>(
         default:
           return {};
       }
-    }, [frame]);
+    });
 
     if (behavior === 'position') {
       return (
