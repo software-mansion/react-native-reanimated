@@ -17,7 +17,7 @@ def find_config()
     :react_native_common_dir => nil,
   }
 
-  react_native_node_modules_dir = File.join(File.dirname(`cd "#{Dir.pwd}" && node --print "require.resolve('react-native/package.json')"`), '..')
+  react_native_node_modules_dir = File.join(File.dirname(`cd "#{__dir__}" && node --print "require.resolve('react-native/package.json')"`), '..')
   react_native_json = try_to_parse_react_native_package_json(react_native_node_modules_dir)
 
   if react_native_json == nil
