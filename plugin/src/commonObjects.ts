@@ -34,6 +34,7 @@ export const globals = new Set([
   'parseFloat',
   'Map',
   'WeakMap',
+  'Proxy',
   'WeakRef',
   'Set',
   '_log',

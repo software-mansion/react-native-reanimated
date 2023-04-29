@@ -465,6 +465,9 @@ declare module 'react-native-reanimated' {
     colorSpace?: 'RGB' | 'HSV',
     options?: InterpolationOptions
   ): T;
+  
+  export type ParsedColorArray = [number, number, number, number];
+  export function convertToRGBA(color: unknown): ParsedColorArray;
 
   export enum ColorSpace {
     RGB = 0,

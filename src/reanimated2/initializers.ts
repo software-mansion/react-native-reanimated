@@ -171,6 +171,7 @@ export function initializeUIRuntime() {
     // setup console
     // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
     global.console = {
+      assert: runOnJS(capturableConsole.assert),
       debug: runOnJS(capturableConsole.debug),
       log: runOnJS(capturableConsole.log),
       warn: runOnJS(capturableConsole.warn),

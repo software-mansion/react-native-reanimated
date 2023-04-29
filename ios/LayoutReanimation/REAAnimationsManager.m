@@ -378,7 +378,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     return NO;
   }
 
-  BOOL hasExitAnimation = _hasAnimationForTag(view.reactTag, EXITING) || [_exitingViews objectForKey:view.reactTag];
+  BOOL hasExitAnimation =
+      [self hasAnimationForTag:view.reactTag type:EXITING] || [_exitingViews objectForKey:view.reactTag];
   BOOL hasAnimatedChildren = NO;
   shouldRemoveSubviewsWithoutAnimations = shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
   NSMutableArray *toBeRemoved = [[NSMutableArray alloc] init];

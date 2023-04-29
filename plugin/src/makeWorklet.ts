@@ -43,6 +43,8 @@ import { globals } from './commonObjects';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
 
+const version = require('../../package.json').version;
+
 export function makeWorklet(
   fun: NodePath<
     | FunctionDeclaration
@@ -235,6 +237,17 @@ export function makeWorklet(
         )
       )
     );
+    if (shouldInjectVersion()) {
+      statements.push(
+        expressionStatement(
+          assignmentExpression(
+            '=',
+            memberExpression(privateFunctionId, identifier('__version'), false),
+            stringLiteral(version)
+          )
+        )
+      );
+    }
   }
 
   statements.push(returnStatement(privateFunctionId));
@@ -242,6 +255,21 @@ export function makeWorklet(
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
   return newFun;
+}
+
+function shouldInjectVersion() {
+  // We don't inject version in release since cache is reset there anyway
+  if (isRelease()) {
+    return false;
+  }
+
+  // We don't want to pollute tests with current version number so we disable it
+  // for all tests (except one)
+  if (process.env.REANIMATED_JEST_DISABLE_VERSION === 'jest') {
+    return false;
+  }
+
+  return true;
 }
 
 function hash(str: string) {
