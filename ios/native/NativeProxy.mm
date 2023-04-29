@@ -367,6 +367,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
+  
+  [animationsManager setHasSharedTransitionProgressAnimationForTagBlock:^(NSNumber * _Nonnull tag) {
+    // TODO
+  }];
+  
+  [animationsManager setComputeSharedTransitionProgressAnimationForTagBlock:^(NSNumber * _Nonnull tag) {
+    // TODO
+  }];
 #endif
 
   return module;

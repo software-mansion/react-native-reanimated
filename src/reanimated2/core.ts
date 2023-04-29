@@ -241,7 +241,8 @@ export function configureLayoutAnimations(
   config:
     | LayoutAnimationFunction
     | Keyframe
-    | SharedTransitionAnimationsFunction,
+    | SharedTransitionAnimationsFunction
+    | any,
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(

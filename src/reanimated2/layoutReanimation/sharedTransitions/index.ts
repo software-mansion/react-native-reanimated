@@ -67,15 +67,22 @@ export class SharedTransition {
       transitionAnimation,
       sharedTransitionTag
     );
-    registerJSCallback(
-      JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK,
-      { viewTag },
-      progressAnimation
-    );
-    setJSConfig(JSConfigType.SHARED_TRANSITION_ANIMATION_TYPE, {
+    configureLayoutAnimations(
       viewTag,
-      animationType,
-    });
+      LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+      progressAnimation,
+      sharedTransitionTag
+    );
+    // registerJSCallback(
+    //   JSCallbackType.SHARED_TRANSITION_PROGRESS_CALLBACK,
+    //   { viewTag },
+    //   progressAnimation
+    // );
+    // registerSharedTransitionProgressAnimation(viewTag, progressAnimation);
+    // setJSConfig(JSConfigType.SHARED_TRANSITION_ANIMATION_TYPE, {
+    //   viewTag,
+    //   animationType,
+    // });
   }
 
   private getTransitionAnimation(): SharedTransitionAnimationsFunction {

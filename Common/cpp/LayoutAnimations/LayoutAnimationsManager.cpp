@@ -16,6 +16,8 @@ void LayoutAnimationsManager::configureAnimation(
   if (type == SHARED_ELEMENT_TRANSITION) {
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
+  } else if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    // TODO
   }
 }
 
@@ -126,6 +128,14 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
     default:
       assert(false);
   }
+}
+
+void hasSharedTransitionProgressAnimationForTag(int tag) {
+
+}
+
+void computeSharedTransitionProgressAnimationForTag(jsi::Runtime &rt, int tag) {
+
 }
 
 } // namespace reanimated
