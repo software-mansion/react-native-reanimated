@@ -24,8 +24,6 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   REAHasAnimationBlock _hasAnimationForTag;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
-  REAHasSharedTransitionProgressAnimationForTagBlock _hasSharedTransitionProgressAnimationForTag;
-  REAComputeSharedTransitionProgressAnimationForTagBlock _computeSharedTransitionProgressAnimationForTag;
 }
 
 + (NSArray *)layoutKeys
@@ -590,24 +588,9 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   return NO;
 }
 
-- (void)setHasSharedTransitionProgressAnimationForTagBlock:(REAHasSharedTransitionProgressAnimationForTagBlock)block
-{
-  _hasSharedTransitionProgressAnimationForTag = block;
-}
-
 - (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAComputeSharedTransitionProgressAnimationForTagBlock)block
 {
-  _computeSharedTransitionProgressAnimationForTag = block;
-}
-
-- (void)hasSharedTransitionProgressAnimationForTag:(NSNumber *)tag 
-{
-  _hasSharedTransitionProgressAnimationForTag(tag);
-}
-
-- (void)computeSharedTransitionProgressAnimationForTag:(NSNumber *)tag
-{
-  _computeSharedTransitionProgressAnimationForTag(tag);
+  [_sharedTransitionManager setComputeSharedTransitionProgressAnimationForTagBlock:block];
 }
 
 @end

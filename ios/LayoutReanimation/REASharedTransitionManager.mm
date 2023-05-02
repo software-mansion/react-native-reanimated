@@ -32,6 +32,7 @@
   BOOL _isAsyncSharedTransitionConfigured;
   double _lastTransitionProgressValue;
   UIView *_droppedStack;
+  REAComputeSharedTransitionProgressAnimationForTagBlock _computeSharedTransitionProgressAnimationForTag;
 }
 
 /*
@@ -764,14 +765,24 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [_sharedElementsWithProgress removeAllObjects];
   [_sharedElementsWithAnimation removeAllObjects];
   for (REASharedElement *sharedElement : sharedElements) {
-    int viewTag = [sharedElement.sourceView.reactTag intValue];
-    SharedTransitionType transitionType = jsConfigManager->getSharedTransitionConfig(viewTag);
-    if (transitionType == SharedTransitionType::PROGRESS || _isSharedProgressTransition) {
+    NSNumber *viewTag = sharedElement.sourceView.reactTag;
+    bool viewHasProgressAnimation = [self->_animationManager hasAnimationForTag:viewTag type:SHARED_ELEMENT_TRANSITION_PROGRESS];
+    if (viewHasProgressAnimation || _isSharedProgressTransition) {
       [_sharedElementsWithProgress addObject:sharedElement];
     } else {
       [_sharedElementsWithAnimation addObject:sharedElement];
     }
   }
+}
+
+- (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAComputeSharedTransitionProgressAnimationForTagBlock)block
+{
+  _computeSharedTransitionProgressAnimationForTag = block;
+}
+
+- (void)computeSharedTransitionProgressAnimationForTag:(int)viewTag
+{
+  _computeSharedTransitionProgressAnimationForTag(viewTag);
 }
 
 @end

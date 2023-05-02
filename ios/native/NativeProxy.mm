@@ -368,12 +368,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return nil;
   }];
   
-  [animationsManager setHasSharedTransitionProgressAnimationForTagBlock:^(NSNumber * _Nonnull tag) {
-    // TODO
-  }];
-  
-  [animationsManager setComputeSharedTransitionProgressAnimationForTagBlock:^(NSNumber * _Nonnull tag) {
-    // TODO
+  [animationsManager setComputeSharedTransitionProgressAnimationForTagBlock:^(int viewTag) {
+    if (auto reaModule = weakModule.lock()) {
+      if (auto runtime = wrt.lock()) {
+        jsi::Runtime &rt = *runtime;
+        reaModule->layoutAnimationsManager().computeSharedTransitionProgressAnimationForTag(rt, viewTag);
+      }
+    }
+    return [NSDictionary new];
   }];
 #endif
 
