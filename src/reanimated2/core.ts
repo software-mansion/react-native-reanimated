@@ -23,7 +23,10 @@ import {
   LayoutAnimationType,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
-import { SharedTransitionAnimationsFunction } from './layoutReanimation/animationBuilder/commonTypes';
+import {
+  ProgressAnimationCallback,
+  SharedTransitionAnimationsFunction,
+} from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
 export { stopMapper } from './mappers';
@@ -240,7 +243,7 @@ export function configureLayoutAnimations(
     | LayoutAnimationFunction
     | Keyframe
     | SharedTransitionAnimationsFunction
-    | any,
+    | ProgressAnimationCallback,
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(

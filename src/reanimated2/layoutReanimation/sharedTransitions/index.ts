@@ -2,6 +2,7 @@ import { withTiming } from '../../animation';
 import {
   SharedTransitionAnimationsFunction,
   SharedTransitionAnimationsValues,
+  ProgressAnimationCallback,
   LayoutAnimationType,
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
@@ -12,10 +13,6 @@ const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
 type AnimationFactory = (
   values: SharedTransitionAnimationsValues
-) => StyleProps;
-type ProgressAnimationCallback = (
-  values: SharedTransitionAnimationsValues,
-  progress: number
 ) => StyleProps;
 
 export class SharedTransition {

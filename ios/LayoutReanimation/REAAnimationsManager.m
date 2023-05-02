@@ -583,7 +583,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   return NO;
 }
 
-- (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAComputeSharedTransitionProgressAnimationForTagBlock)block
+- (void)setComputeSharedTransitionProgressAnimationForTagBlock:
+    (REAComputeSharedTransitionProgressAnimationForTagBlock)block
 {
   [_sharedTransitionManager setComputeSharedTransitionProgressAnimationForTagBlock:block];
 }

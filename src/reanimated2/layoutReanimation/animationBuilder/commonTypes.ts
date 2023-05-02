@@ -43,7 +43,7 @@ export type EntryExitAnimationFunction = (
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
 export interface LayoutAnimationsValues {
-  [key: string]: number | unknown;
+  [key: string]: number | number[];
   currentOriginX: number;
   currentOriginY: number;
   currentWidth: number;
@@ -62,7 +62,6 @@ export interface LayoutAnimationsValues {
 
 export interface SharedTransitionAnimationsValues
   extends LayoutAnimationsValues {
-  [key: string]: number | number[];
   currentTransformMatrix: number[];
   targetTransformMatrix: number[];
 }
@@ -126,3 +125,8 @@ export interface IEntryAnimationBuilder {
 export interface IExitAnimationBuilder {
   build: () => AnimationConfigFunction<ExitAnimationsValues>;
 }
+
+export type ProgressAnimationCallback = (
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => StyleProps;
