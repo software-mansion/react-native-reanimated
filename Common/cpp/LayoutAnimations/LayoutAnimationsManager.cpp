@@ -130,8 +130,19 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
   }
 }
 
-jsi::Value LayoutAnimationsManager::computeSharedTransitionProgressAnimationForTag(jsi::Runtime &rt, int viewTag) {
-  return jsi::Object(rt);
+jsi::Value LayoutAnimationsManager::computeSharedTransitionProgressAnimationForTag(
+  jsi::Runtime &rt, 
+  const int viewTag,
+  const double progress,
+  const jsi::Value &snapshotValues
+) {
+  std::shared_ptr<Shareable> config;
+  {
+    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+    config = getConfigsForType(SHARED_ELEMENT_TRANSITION_PROGRESS)[viewTag];
+  }
+  auto progressAnimation = config->getJSValue(rt).asObject(rt).asFunction(rt);
+  return progressAnimation.call(rt, snapshotValues, progress);
 }
 
 } // namespace reanimated

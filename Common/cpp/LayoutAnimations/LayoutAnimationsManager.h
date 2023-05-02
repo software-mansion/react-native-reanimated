@@ -38,7 +38,12 @@ class LayoutAnimationsManager {
       bool cancelled /* = true */,
       bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
-  jsi::Value computeSharedTransitionProgressAnimationForTag(jsi::Runtime &rt, int viewTag);
+  jsi::Value computeSharedTransitionProgressAnimationForTag(
+    jsi::Runtime &rt, 
+    const int viewTag,
+    const double progress,
+    const jsi::Value &snapshotValues
+  );
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(

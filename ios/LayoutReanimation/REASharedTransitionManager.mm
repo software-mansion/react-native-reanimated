@@ -428,11 +428,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
   NSMutableDictionary *targetViewSnapshotValues = sharedElement.targetViewSnapshot.values;
   NSDictionary *componentStyle = [_animationManager prepareDataForLayoutAnimatingWorklet:sourceViewSnapshotValues
                                                                             targetValues:targetViewSnapshotValues];
-  jsi::Runtime &runtime = *jsCallbacksManager->getRuntimeHelper()->uiRuntime();
-  jsi::Value componentStyleJsValue = convertNSDictionaryToJSIObject(runtime, componentStyle);
-  jsi::Value animationFrameData = jsCallbacksManager->executeSharedAnimationProgressCallback(
-      [sharedElement.sourceView.reactTag intValue], progress, componentStyleJsValue);
-  return convertJSIObjectToNSDictionary(runtime, animationFrameData.asObject(runtime));
+  return _computeSharedTransitionProgressAnimationForTag(
+    [sharedElement.sourceView.reactTag intValue],
+    progress,
+    componentStyle
+  );
 }
 
 - (void)onScreenTransitionProgress:(double)progress
@@ -778,11 +778,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAComputeSharedTransitionProgressAnimationForTagBlock)block
 {
   _computeSharedTransitionProgressAnimationForTag = block;
-}
-
-- (void)computeSharedTransitionProgressAnimationForTag:(int)viewTag
-{
-  _computeSharedTransitionProgressAnimationForTag(viewTag);
 }
 
 @end

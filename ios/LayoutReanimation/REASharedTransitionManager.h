@@ -14,6 +14,5 @@
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
 - (UIView *)getTransitioningView:(NSNumber *)tag;
 - (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAComputeSharedTransitionProgressAnimationForTagBlock)block;
-- (void)computeSharedTransitionProgressAnimationForTag:(int)viewTag;
 
 @end

@@ -367,11 +367,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return nil;
   }];
   
-  [animationsManager setComputeSharedTransitionProgressAnimationForTagBlock:^(int viewTag) {
+  [animationsManager setComputeSharedTransitionProgressAnimationForTagBlock:^(
+    int viewTag,
+    double progress, 
+    NSDictionary *snapshotValues
+  ) {
     if (auto reaModule = weakModule.lock()) {
       if (auto runtime = wrt.lock()) {
         jsi::Runtime &rt = *runtime;
-        reaModule->layoutAnimationsManager().computeSharedTransitionProgressAnimationForTag(rt, viewTag);
+        jsi::Value snapshotJSValues = convertNSDictionaryToJSIObject(rt, snapshotValues);
+        jsi::Value animationFrameData = reaModule->layoutAnimationsManager()
+          .computeSharedTransitionProgressAnimationForTag(rt, viewTag, progress, snapshotJSValues);
+        return convertJSIObjectToNSDictionary(rt, animationFrameData.asObject(rt));
       }
     }
     return [NSDictionary new];
