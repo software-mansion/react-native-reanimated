@@ -18,7 +18,6 @@
 #include "ShadowTreeCloner.h"
 #endif
 
-#include "Consts.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
 #include "ReanimatedHiddenHeaders.h"
@@ -54,12 +53,12 @@ NativeReanimatedModule::NativeReanimatedModule(
       animatedSensorModule(platformDepMethodsHolder),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction)
 #else
       configurePropsPlatformFunction(
-          platformDepMethodsHolder.configurePropsFunction),
-#endif
-      jsCallbacksManager_(std::make_shared<JSCallbacksManager>()) {
+          platformDepMethodsHolder.configurePropsFunction)
+#endif 
+{
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=](double timestamp) {
@@ -185,7 +184,6 @@ void NativeReanimatedModule::installCoreFunctions(
     // instace of the helper to exists.
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
-    jsCallbacksManager_->setRuntimeHelper(runtimeHelper);
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
@@ -685,27 +683,6 @@ void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
-}
-
-jsi::Value NativeReanimatedModule::registerJSCallback(
-    jsi::Runtime &rt,
-    const jsi::Value &type,
-    const jsi::Value &configuration,
-    const jsi::Value &callback) {
-  return jsCallbacksManager_->registerJSCallback(
-      rt, type, configuration, callback);
-}
-
-void NativeReanimatedModule::unregisterJSCallback(
-    jsi::Runtime &rt,
-    const jsi::Value &type,
-    const jsi::Value &callbackId) {
-  jsCallbacksManager_->unregisterJSCallback(rt, type, callbackId);
-}
-
-std::shared_ptr<JSCallbacksManager>
-NativeReanimatedModule::getJSCallbacksManager() {
-  return jsCallbacksManager_;
 }
 
 } // namespace reanimated

@@ -160,16 +160,4 @@ export default class JSReanimated extends NativeReanimated {
         return 'AbsoluteOrientationSensor';
     }
   }
-
-  registerJSCallback(
-    _type: JSCallbackType,
-    _configuration: Record<string, unknown>,
-    _callback: ShareableRef<(...args: any) => any>
-  ): number {
-    return -1;
-  }
-
-  unregisterJSCallback(_type: JSCallbackType, _callbackId: number): void {
-    // noop
-  }
 }

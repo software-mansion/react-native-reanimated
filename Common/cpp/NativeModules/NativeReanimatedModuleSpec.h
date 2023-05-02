@@ -96,17 +96,6 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &type,
       const jsi::Value &sharedTransitionTag,
       const jsi::Value &config) = 0;
-
-  // js callbacks
-  virtual jsi::Value registerJSCallback(
-      jsi::Runtime &rt,
-      const jsi::Value &type,
-      const jsi::Value &configuration,
-      const jsi::Value &callback) = 0;
-  virtual void unregisterJSCallback(
-      jsi::Runtime &rt,
-      const jsi::Value &type,
-      const jsi::Value &callbackId) = 0;
 };
 
 } // namespace reanimated

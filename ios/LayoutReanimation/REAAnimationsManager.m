@@ -564,11 +564,6 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _startAnimationForTag(tag, type, yogaValues, depth);
 }
 
-- (REASharedTransitionManagerPublic *)getSharedTransitionManager
-{
-  return _sharedTransitionManager;
-}
-
 - (BOOL)nodeFind:(id<RCTComponent>)view block:(int (^)(id<RCTComponent>))block
 {
   if (!view.reactTag) {

@@ -166,26 +166,6 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
           std::move(args[3]));
 }
 
-static jsi::Value SPEC_PREFIX(registerJSCallback)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->registerJSCallback(
-          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
-}
-
-static jsi::Value SPEC_PREFIX(unregisterJSCallback)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t count) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->unregisterJSCallback(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -218,10 +198,6 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{2, SPEC_PREFIX(subscribeForKeyboardEvents)};
   methodMap_["unsubscribeFromKeyboardEvents"] =
       MethodMetadata{1, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
-  methodMap_["registerJSCallback"] =
-      MethodMetadata{3, SPEC_PREFIX(registerJSCallback)};
-  methodMap_["unregisterJSCallback"] =
-      MethodMetadata{2, SPEC_PREFIX(unregisterJSCallback)};
 
   methodMap_["configureLayoutAnimation"] =
       MethodMetadata{4, SPEC_PREFIX(configureLayoutAnimation)};

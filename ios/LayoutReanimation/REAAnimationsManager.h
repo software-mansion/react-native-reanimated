@@ -1,7 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <RNReanimated/LayoutAnimationType.h>
 #import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/REASharedTransitionManagerPublic.h>
 #import <RNReanimated/REASnapshot.h>
 #import <React/RCTUIManager.h>
 
@@ -67,7 +66,6 @@ typedef NSDictionary* _Nonnull (^REAComputeSharedTransitionProgressAnimationForT
                         type:(LayoutAnimationType)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
-- (REASharedTransitionManagerPublic *)getSharedTransitionManager;
 - (BOOL)nodeFind:(id<RCTComponent>)view block:(int (^)(id<RCTComponent>))block;
 - (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAComputeSharedTransitionProgressAnimationForTagBlock)block;
 @end
