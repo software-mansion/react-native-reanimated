@@ -59,8 +59,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction),
 #endif
-      jsCallbacksManager_(std::make_shared<JSCallbacksManager>()),
-      jsConfigManager_(std::make_shared<JSConfigManager>()) {
+      jsCallbacksManager_(std::make_shared<JSCallbacksManager>()) {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=](double timestamp) {
@@ -187,7 +186,6 @@ void NativeReanimatedModule::installCoreFunctions(
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
     jsCallbacksManager_->setRuntimeHelper(runtimeHelper);
-    jsConfigManager_->setRuntimeHelper(runtimeHelper);
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
@@ -708,18 +706,6 @@ void NativeReanimatedModule::unregisterJSCallback(
 std::shared_ptr<JSCallbacksManager>
 NativeReanimatedModule::getJSCallbacksManager() {
   return jsCallbacksManager_;
-}
-
-void NativeReanimatedModule::setJSConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &type,
-    const jsi::Value &config) {
-  auto jsConfigType = static_cast<JSConfigType>(type.asNumber());
-  jsConfigManager_->setConfigValue(jsConfigType, config);
-}
-
-std::shared_ptr<JSConfigManager> NativeReanimatedModule::getJSConfigManager() {
-  return jsConfigManager_;
 }
 
 } // namespace reanimated

@@ -172,8 +172,4 @@ export default class JSReanimated extends NativeReanimated {
   unregisterJSCallback(_type: JSCallbackType, _callbackId: number): void {
     // noop
   }
-
-  setJSConfig(_type: JSConfigType, _config: Record<string, unknown>): void {
-    // noop
-  }
 }

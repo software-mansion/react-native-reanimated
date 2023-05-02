@@ -302,7 +302,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
   REASharedTransitionManagerPublic *sharedTransitionManager = [weakAnimationsManager getSharedTransitionManager];
   sharedTransitionManager->jsCallbacksManager = module->getJSCallbacksManager();
-  sharedTransitionManager->jsConfigManager = module->getJSConfigManager();
 
   // Layout Animation callbacks setup
   [animationsManager

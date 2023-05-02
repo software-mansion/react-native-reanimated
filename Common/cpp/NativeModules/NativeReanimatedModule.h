@@ -14,7 +14,6 @@
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
 #include "JSCallbacksManager.h"
-#include "JSConfigManager.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
@@ -170,16 +169,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &type,
       const jsi::Value &callbackId) override;
 
-  void setJSConfig(
-      jsi::Runtime &rt,
-      const jsi::Value &type,
-      const jsi::Value &config) override;
-
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return layoutAnimationsManager_;
   }
   std::shared_ptr<JSCallbacksManager> getJSCallbacksManager();
-  std::shared_ptr<JSConfigManager> getJSConfigManager();
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -219,7 +212,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
   std::shared_ptr<JSCallbacksManager> jsCallbacksManager_;
-  std::shared_ptr<JSConfigManager> jsConfigManager_;
 
 #ifdef DEBUG
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;

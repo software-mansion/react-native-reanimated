@@ -277,10 +277,3 @@ export function unregisterJSCallback(
 ): void {
   return NativeReanimatedModule.unregisterJSCallback(type, callbackId);
 }
-
-export function setJSConfig(
-  type: JSConfigType,
-  config: Record<string, any>
-): void {
-  NativeReanimatedModule.setJSConfig(type, config);
-}

@@ -170,8 +170,4 @@ export class NativeReanimated {
   unregisterJSCallback(type: JSCallbackType, callbackId: number): void {
     this.InnerNativeModule.unregisterJSCallback(type, callbackId);
   }
-
-  setJSConfig(type: JSConfigType, config: Record<string, unknown>): void {
-    this.InnerNativeModule.setJSConfig(type, config);
-  }
 }

@@ -13,7 +13,6 @@ import {
 import {
   configureLayoutAnimations,
   registerJSCallback,
-  setJSConfig,
 } from '../../core';
 
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
