@@ -12,10 +12,10 @@ import {
 function callGuardDEV<T extends Array<any>, U>(
   fn: (...args: T) => U,
   ...args: T
-): any {
+): void {
   'worklet';
   try {
-    return fn(...args);
+    fn(...args);
   } catch (e) {
     if (global.__ErrorUtils) {
       global.__ErrorUtils.reportFatalError(e as Error);

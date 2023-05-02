@@ -689,10 +689,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.doSnapshotForTopScreenViews(stack);
   }
 
-  public SharedTransitionManager getSharedTransitionManager() {
-    return mSharedTransitionManager;
-  }
-
   protected ReactContext getContext() {
     return mContext;
   }
