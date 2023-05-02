@@ -4,8 +4,6 @@ import {
   ShareableRef,
   Value3D,
   ValueRotation,
-  JSCallbackType,
-  JSConfigType,
 } from '../commonTypes';
 import { WebSensor } from './WebSensor';
 

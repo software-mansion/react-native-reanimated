@@ -4,16 +4,9 @@ import {
   SharedTransitionAnimationsValues,
   LayoutAnimationType,
 } from '../animationBuilder/commonTypes';
-import {
-  StyleProps,
-  JSCallbackType,
-  JSConfigType,
-  SharedTransitionType,
-} from '../../commonTypes';
-import {
-  configureLayoutAnimations,
-  registerJSCallback,
-} from '../../core';
+import { StyleProps } from '../../commonTypes';
+import { configureLayoutAnimations } from '../../core';
+import { Platform } from 'react-native';
 
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
@@ -26,7 +19,6 @@ type ProgressAnimationCallback = (
 ) => StyleProps;
 
 export class SharedTransition {
-  private _defaultAnimationType = SharedTransitionType.PROGRESS;
   private _animationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
@@ -56,9 +48,11 @@ export class SharedTransition {
   ): void {
     const transitionAnimation = this.getTransitionAnimation();
     const progressAnimation = this.getProgressAnimation();
-    let animationType = this._defaultAnimationType;
+    let progressAnimationPriority = 'primary';
     if (this._animationFactory) {
-      animationType = SharedTransitionType.ANIMATION;
+      if (Platform.OS === 'ios') {
+        progressAnimationPriority = 'secondary';
+      }
     }
     configureLayoutAnimations(
       viewTag,
@@ -70,7 +64,7 @@ export class SharedTransition {
       viewTag,
       LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
       progressAnimation,
-      sharedTransitionTag
+      progressAnimationPriority
     );
   }
 

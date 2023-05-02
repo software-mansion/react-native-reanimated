@@ -13,8 +13,6 @@ import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
-import com.swmansion.reanimated.JavaWrapperJSCallbacksManager;
-import com.swmansion.reanimated.JavaWrapperJSConfigManager;
 import com.swmansion.reanimated.ReanimatedModule;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -44,8 +42,6 @@ public class SharedTransitionManager {
   private List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
   private final Set<EventDispatcher> eventDispatchersWithListener = new HashSet<>();
-  private JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager;
-  private JavaWrapperJSConfigManager javaWrapperJSConfigManager;
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
@@ -666,10 +662,11 @@ public class SharedTransitionManager {
         mAnimationsManager.prepareDataForAnimationWorklet(targetValues, true, true);
     HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
-    Map<String, Object> computedStyle =
-        javaWrapperJSCallbacksManager.executeSharedAnimationProgressCallback(
-            sharedElement.sourceView.getId(), progress, preparedValues);
-    return computedStyle;
+    return mNativeMethodsHolder.computeSharedTransitionProgressAnimationForTag(
+      sharedElement.sourceView.getId(),
+      progress,
+      preparedValues
+    );
   }
 
   private void onTransitionProgress(double progress) {
@@ -694,21 +691,14 @@ public class SharedTransitionManager {
     }
   }
 
-  public void setJavaWrapperJSCallbacksManager(
-      JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager) {
-    this.javaWrapperJSCallbacksManager = javaWrapperJSCallbacksManager;
-  }
-
-  public void setJavaWrapperJSConfigManager(JavaWrapperJSConfigManager javaWrapperJSConfigManager) {
-    this.javaWrapperJSConfigManager = javaWrapperJSConfigManager;
-  }
-
   void orderByAnimationTypes(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
       int viewTag = sharedElement.sourceView.getId();
-      SharedTransitionType transitionType =
-          javaWrapperJSConfigManager.getSharedTransitionConfigEnum(viewTag);
-      if (transitionType == SharedTransitionType.PROGRESS) {
+      boolean viewHasProgressAnimation = mAnimationsManager.hasAnimationForTag(
+        viewTag,
+        LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_WITH_PROGRESS
+      );
+      if (viewHasProgressAnimation) {
         mSharedElementsWithProgress.add(sharedElement);
       } else {
         mSharedElementsWithAnimation.add(sharedElement);

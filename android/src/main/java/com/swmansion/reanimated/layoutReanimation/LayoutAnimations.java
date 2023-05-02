@@ -14,6 +14,7 @@ public class LayoutAnimations {
     static final int EXITING = 2;
     static final int LAYOUT = 3;
     static final int SHARED_ELEMENT_TRANSITION = 4;
+    static final int SHARED_ELEMENT_TRANSITION_WITH_PROGRESS = 5;
   }
 
   static {
@@ -47,6 +48,12 @@ public class LayoutAnimations {
   public native boolean isLayoutAnimationEnabled();
 
   public native int findPrecedingViewTagForTransition(int tag);
+
+  public native Map<String, Object> computeSharedTransitionProgressAnimationForTag(
+    int viewTag,
+    double progress,
+    Map<String, Object> snapshotValues
+  );
 
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     AnimationsManager animationsManager = getAnimationsManager();

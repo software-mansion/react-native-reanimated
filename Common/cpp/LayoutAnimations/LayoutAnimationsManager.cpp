@@ -16,6 +16,10 @@ void LayoutAnimationsManager::configureAnimation(
   if (type == SHARED_ELEMENT_TRANSITION) {
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
+  } else if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    if (sharedTransitionTag == "secondary") {
+      sharedTransitioinProgressAnimationsLowPriotity_.insert(tag);
+    }
   }
 }
 
@@ -23,6 +27,10 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     int tag,
     LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    auto end = sharedTransitioinProgressAnimationsLowPriotity_.end();
+    return sharedTransitioinProgressAnimationsLowPriotity_.find(tag) != end;
+  }
   return collection::contains(getConfigsForType(type), tag);
 }
 
@@ -43,6 +51,8 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
     sharedTransitionGroups_.erase(groupName);
   }
   viewTagToSharedTag_.erase(tag);
+  sharedTransitioinProgressAnimations_.erase(tag);
+  sharedTransitioinProgressAnimationsLowPriotity_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
@@ -130,12 +140,12 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
   }
 }
 
-jsi::Value LayoutAnimationsManager::computeSharedTransitionProgressAnimationForTag(
-  jsi::Runtime &rt, 
-  const int viewTag,
-  const double progress,
-  const jsi::Value &snapshotValues
-) {
+jsi::Value
+LayoutAnimationsManager::computeSharedTransitionProgressAnimationForTag(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const double progress,
+    const jsi::Value &snapshotValues) {
   std::shared_ptr<Shareable> config;
   {
     auto lock = std::unique_lock<std::mutex>(animationsMutex_);

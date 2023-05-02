@@ -14,7 +14,5 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
     reanimated::LayoutAnimations::registerNatives();
     reanimated::SensorSetter::registerNatives();
     reanimated::KeyboardEventDataUpdater::registerNatives();
-    reanimated::JavaWrapperJSCallbacksManager::registerNatives();
-    reanimated::JavaWrapperJSConfigManager::registerNatives();
   });
 }

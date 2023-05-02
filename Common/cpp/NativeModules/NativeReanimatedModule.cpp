@@ -57,7 +57,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #else
       configurePropsPlatformFunction(
           platformDepMethodsHolder.configurePropsFunction)
-#endif 
+#endif
 {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);

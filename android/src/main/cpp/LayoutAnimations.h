@@ -19,6 +19,11 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using CancelAnimationBlock =
       std::function<void(int, int, jboolean, jboolean)>;
   using FindPrecedingViewTagForTransitionBlock = std::function<int(int)>;
+  using ComputeSharedTransitionProgressAnimationForTagBlock =
+      std::function<jni::local_ref<JMap<JString, JObject>>(
+          const int,
+          const double,
+          const jni::alias_ref<JMap<JString, JObject>>)>;
 
  public:
   static auto constexpr kJavaDescriptor =
@@ -42,6 +47,9 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setFindPrecedingViewTagForTransition(
       FindPrecedingViewTagForTransitionBlock
           findPrecedingViewTagForTransitionBlock);
+  void setComputeSharedTransitionProgressAnimationForTag(
+      ComputeSharedTransitionProgressAnimationForTagBlock
+          computeSharedTransitionProgressAnimationForTagBlock);
 
   void progressLayoutAnimation(
       int tag,
@@ -55,6 +63,11 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       jboolean cancelled,
       jboolean removeView);
   int findPrecedingViewTagForTransition(int tag);
+  jni::local_ref<JMap<JString, JObject>>
+  computeSharedTransitionProgressAnimationForTag(
+      const int viewTag,
+      const double progress,
+      const jni::alias_ref<JMap<JString, JObject>> snapshotValues);
 
  private:
   friend HybridBase;
@@ -65,6 +78,8 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   CancelAnimationBlock cancelAnimationBlock_;
   FindPrecedingViewTagForTransitionBlock
       findPrecedingViewTagForTransitionBlock_;
+  ComputeSharedTransitionProgressAnimationForTagBlock
+      computeSharedTransitionProgressAnimationForTagBlock_;
 
   explicit LayoutAnimations(
       jni::alias_ref<LayoutAnimations::jhybridobject> jThis);

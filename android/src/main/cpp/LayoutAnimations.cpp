@@ -92,6 +92,22 @@ int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
   return findPrecedingViewTagForTransitionBlock_(tag);
 }
 
+void LayoutAnimations::setComputeSharedTransitionProgressAnimationForTag(
+    ComputeSharedTransitionProgressAnimationForTagBlock
+        computeSharedTransitionProgressAnimationForTagBlock) {
+  computeSharedTransitionProgressAnimationForTagBlock_ =
+      computeSharedTransitionProgressAnimationForTagBlock;
+}
+
+jni::local_ref<JMap<JString, JObject>>
+LayoutAnimations::computeSharedTransitionProgressAnimationForTag(
+    const int viewTag,
+    const double progress,
+    const jni::alias_ref<JMap<JString, JObject>> snapshotValues) {
+  return computeSharedTransitionProgressAnimationForTagBlock_(
+      viewTag, progress, snapshotValues);
+}
+
 void LayoutAnimations::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
@@ -110,6 +126,9 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
+      makeNativeMethod(
+          "computeSharedTransitionProgressAnimationForTag",
+          LayoutAnimations::computeSharedTransitionProgressAnimationForTag),
   });
 }
 }; // namespace reanimated

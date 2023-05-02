@@ -1,11 +1,9 @@
 import { NativeModules } from 'react-native';
 import {
-  JSCallbackType,
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
   ValueRotation,
-  JSConfigType,
 } from '../commonTypes';
 import {
   LayoutAnimationFunction,

@@ -174,9 +174,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod(
-           "initializeDependencies", NativeProxy::initializeDependencies)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations)});
 }
 
 void NativeProxy::requestRender(
@@ -570,20 +568,26 @@ void NativeProxy::setupLayoutAnimations() {
           return -1;
         }
       });
-}
 
-void NativeProxy::initializeDependencies(
-    jni::alias_ref<JavaWrapperJSCallbacksManager::javaobject>
-        javaWrapperJSCallbackManager,
-    jni::alias_ref<JavaWrapperJSConfigManager::javaobject>
-        javaWrapperJSConfigManager) {
-  std::shared_ptr<JSCallbacksManager> jsCallbacksManager =
-      nativeReanimatedModule_->getJSCallbacksManager();
-  javaWrapperJSCallbackManager->cthis()->setJSCallbackManager(
-      jsCallbacksManager);
-  std::shared_ptr<JSConfigManager> jsConfigManager =
-      nativeReanimatedModule_->getJSConfigManager();
-  javaWrapperJSConfigManager->cthis()->setJSConfigManager(jsConfigManager);
+  layoutAnimations_->cthis()->setComputeSharedTransitionProgressAnimationForTag(
+      [weakModule](
+          const int viewTag,
+          const double progress,
+          const jni::alias_ref<JMap<JString, JObject>> snapshotValues)
+          -> jni::local_ref<JMap<JString, JObject>> {
+        if (auto module = weakModule.lock()) {
+          jsi::Runtime &rt = *module->runtime;
+          jsi::Value convertedValues =
+              JNIHelper::convertJNIMapToJSIObject(rt, snapshotValues);
+          jsi::Value animationFrameData =
+              module->layoutAnimationsManager()
+                  .computeSharedTransitionProgressAnimationForTag(
+                      rt, viewTag, progress, convertedValues);
+          return JNIHelper::convertJSIObjectToJNIMap(
+              rt, animationFrameData.asObject(rt));
+        }
+        return nullptr;
+      });
 }
 
 } // namespace reanimated

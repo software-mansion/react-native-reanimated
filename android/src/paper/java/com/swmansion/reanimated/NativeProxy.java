@@ -14,6 +14,7 @@ import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Map;
 
 public class NativeProxy extends NativeProxyCommon {
     @DoNotStrip
@@ -34,12 +35,6 @@ public class NativeProxy extends NativeProxyCommon {
         prepareLayoutAnimations(LayoutAnimations);
         ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
         installJSIBindings(messageQueueThread);
-        JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager = new JavaWrapperJSCallbacksManager();
-        JavaWrapperJSConfigManager javaWrapperJSConfigManager = new JavaWrapperJSConfigManager();
-        initializeDependencies(javaWrapperJSCallbacksManager, javaWrapperJSConfigManager);
-        SharedTransitionManager sharedTransitionManager = LayoutAnimations.getAnimationsManager().getSharedTransitionManager();
-        sharedTransitionManager.setJavaWrapperJSCallbacksManager(javaWrapperJSCallbacksManager);
-        sharedTransitionManager.setJavaWrapperJSConfigManager(javaWrapperJSConfigManager);
     }
 
     private native HybridData initHybrid(
@@ -53,11 +48,6 @@ public class NativeProxy extends NativeProxyCommon {
     public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
     public native void performOperations();
-
-    public native void initializeDependencies(
-        JavaWrapperJSCallbacksManager javaWrapperJSCallbacksManager,
-        JavaWrapperJSConfigManager javaWrapperJSConfigManager
-    );
 
     @Override
     protected HybridData getHybridData() {
@@ -125,6 +115,19 @@ public class NativeProxy extends NativeProxyCommon {
                     return layoutAnimations.findPrecedingViewTagForTransition(tag);
                 }
                 return -1;
+            }
+
+            @Override
+            public Map<String, Object> computeSharedTransitionProgressAnimationForTag(int viewTag, double progress, Map<String, Object> snapshotValues) {
+                LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+                if (layoutAnimations != null) {
+                    return layoutAnimations.computeSharedTransitionProgressAnimationForTag(
+                        viewTag,
+                        progress,
+                        snapshotValues
+                    );
+                }
+                return null;
             }
         };
     }

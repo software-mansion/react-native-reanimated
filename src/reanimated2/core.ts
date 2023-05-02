@@ -3,8 +3,6 @@ import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   AnimatedKeyboardOptions,
   BasicWorkletFunction,
-  JSCallbackType,
-  JSConfigType,
   SensorConfig,
   SensorType,
   SharedValue,

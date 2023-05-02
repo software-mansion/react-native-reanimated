@@ -91,6 +91,15 @@ public class NativeProxy extends NativeProxyCommon {
 
             @Override
             public void cancelAnimation(int tag, int type, boolean cancelled, boolean removeView) {}
+
+            @Override
+            public Map<String, Object> computeSharedTransitionProgressAnimationForTag(
+                int viewTag,
+                double progress,
+                Map<String, Object> snapshotValues
+            ) {
+                return null;
+            }
         };
     }
 }

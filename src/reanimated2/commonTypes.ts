@@ -235,18 +235,3 @@ export interface MeasuredDimensions {
 export interface AnimatedKeyboardOptions {
   isStatusBarTranslucentAndroid?: boolean;
 }
-
-export enum JSCallbackType {
-  SHARED_TRANSITION_PROGRESS_CALLBACK = 0,
-  // KEYBOARD_CALLBACK = 1,
-  // SENSOR_CALLBACK = 2,
-}
-
-export enum JSConfigType {
-  SHARED_TRANSITION_ANIMATION_TYPE = 0,
-}
-
-export enum SharedTransitionType {
-  PROGRESS = 0,
-  ANIMATION = 1,
-}

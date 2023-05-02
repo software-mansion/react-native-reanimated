@@ -11,6 +11,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -39,11 +40,10 @@ class LayoutAnimationsManager {
       bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
   jsi::Value computeSharedTransitionProgressAnimationForTag(
-    jsi::Runtime &rt, 
-    const int viewTag,
-    const double progress,
-    const jsi::Value &snapshotValues
-  );
+      jsi::Runtime &rt,
+      const int viewTag,
+      const double progress,
+      const jsi::Value &snapshotValues);
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
@@ -52,8 +52,11 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>> sharedTransitionAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>> sharedTransitioinProgressAnimations_;
+  std::unordered_map<int, std::shared_ptr<Shareable>>
+      sharedTransitionAnimations_;
+  std::unordered_map<int, std::shared_ptr<Shareable>>
+      sharedTransitioinProgressAnimations_;
+  std::unordered_set<int> sharedTransitioinProgressAnimationsLowPriotity_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
   mutable std::mutex
