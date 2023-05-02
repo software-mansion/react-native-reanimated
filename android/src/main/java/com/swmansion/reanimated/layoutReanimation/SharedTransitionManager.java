@@ -663,10 +663,7 @@ public class SharedTransitionManager {
     HashMap<String, Object> preparedValues = new HashMap<>(preparedTargetValues);
     preparedValues.putAll(preparedStartValues);
     return mNativeMethodsHolder.computeSharedTransitionProgressAnimationForTag(
-      sharedElement.sourceView.getId(),
-      progress,
-      preparedValues
-    );
+        sharedElement.sourceView.getId(), progress, preparedValues);
   }
 
   private void onTransitionProgress(double progress) {
@@ -694,10 +691,9 @@ public class SharedTransitionManager {
   void orderByAnimationTypes(List<SharedElement> sharedElements) {
     for (SharedElement sharedElement : sharedElements) {
       int viewTag = sharedElement.sourceView.getId();
-      boolean viewHasProgressAnimation = mAnimationsManager.hasAnimationForTag(
-        viewTag,
-        LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_WITH_PROGRESS
-      );
+      boolean viewHasProgressAnimation =
+          mAnimationsManager.hasAnimationForTag(
+              viewTag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_WITH_PROGRESS);
       if (viewHasProgressAnimation) {
         mSharedElementsWithProgress.add(sharedElement);
       } else {
