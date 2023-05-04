@@ -35,7 +35,9 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   lastTimestamp: Timestamp;
   startTimestamp: Timestamp;
   startValue: number;
-  newMass: number;
+  zeta: number;
+  omega0: number;
+  omega1: number;
 }
 
 export interface InnerSpringAnimation
@@ -67,8 +69,7 @@ export function withSpring(
 
     const config = { ...defaultConfig, ...userConfig };
 
-    // TODO this could be done only once
-    function initialCalculations(newMass = 0): {
+    function initialCalculations(mass = 0): {
       zeta: number;
       omega0: number;
       omega1: number;
@@ -79,7 +80,7 @@ export function withSpring(
       if (useConfigWithDuration) {
         const { stiffness: k, dampingRatio: zeta } = config;
 
-        const omega0 = Math.sqrt(k / newMass);
+        const omega0 = Math.sqrt(k / mass);
         const omega1 = omega0 * Math.sqrt(1 - zeta ** 2);
 
         return { zeta, omega0, omega1 };
@@ -163,20 +164,18 @@ export function withSpring(
       config: Partial<SpringConfig> &
         Required<
           Pick<SpringConfig, 'restSpeedThreshold' | 'restDisplacementThreshold'>
-        >,
-      current: number
+        >
     ): {
       isOvershooting: boolean;
       isVelocity: boolean;
       isDisplacement: boolean;
     } {
-      const { toValue, velocity } = animation;
+      const { toValue, velocity, startValue, current } = animation;
 
       const isOvershooting =
         config.overshootClamping && config.stiffness !== 0
-          ? current < toValue
-            ? animation.current > toValue
-            : animation.current < toValue
+          ? (current > toValue && startValue < toValue) ||
+            (current < toValue && startValue > toValue)
           : false;
 
       const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
@@ -231,7 +230,7 @@ export function withSpring(
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
-      if (userConfig?.duration && timeFromStart > userConfig.duration) {
+      if (userConfig?.duration && timeFromStart >= userConfig.duration) {
         animation.current = toValue;
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -248,8 +247,7 @@ export function withSpring(
       const v0 = -velocity;
       const x0 = toValue - current;
 
-      const { zeta, omega0, omega1 } = initialCalculations(animation.newMass);
-      animation.lastTimestamp = now;
+      const { zeta, omega0, omega1 } = animation;
 
       const { position: newPosition, velocity: newVelocity } =
         zeta < 1
@@ -269,7 +267,7 @@ export function withSpring(
             });
 
       const { isOvershooting, isVelocity, isDisplacement } =
-        isAnimationTerminatingCalculation(animation, config, current);
+        isAnimationTerminatingCalculation(animation, config);
 
       animation.current = newPosition;
       animation.velocity = newVelocity;
@@ -295,38 +293,37 @@ export function withSpring(
       animation.current = value;
       animation.startValue = value;
 
-      let newMass = config.mass;
+      let mass = config.mass;
+      const triggeredTwice =
+        previousAnimation?.type === 'spring' &&
+        previousAnimation?.toValue === animation.toValue;
 
       if (userConfig?.duration) {
-        let x0 = Number(animation.toValue) - value;
-        if (Number(previousAnimation?.startValue)) {
-          // It makes our animation a bit smoother, especially if sb triggered same animation twice
-          x0 = Number(animation.toValue) - Number(previousAnimation.startValue);
-        }
+        const x0 = triggeredTwice
+          ? previousAnimation.startValue
+          : Number(animation.toValue) - value;
 
-        newMass = calcuateNewMassToMatchDuration(x0);
+        mass = calcuateNewMassToMatchDuration(x0);
       }
 
+      const { zeta, omega0, omega1 } = initialCalculations(mass);
       if (previousAnimation) {
         // Check if we could have triggered the same animation twice.
         // In such a case we don't want to extend its duration and we will copy previous start timestamp
-        const triggeredTwice =
-          previousAnimation.type === 'spring' &&
-          previousAnimation.toValue === animation.toValue;
 
-        animation.velocity =
-          previousAnimation.velocity || animation.velocity || 0;
+        animation.velocity = animation.velocity || 0;
         animation.lastTimestamp = previousAnimation.lastTimestamp || now;
         animation.startTimestamp = triggeredTwice
           ? previousAnimation.startTimestamp || now
           : now;
-
-        animation.newMass = newMass;
       } else {
         animation.lastTimestamp = now;
         animation.startTimestamp = now;
-        animation.newMass = newMass;
       }
+
+      animation.zeta = zeta;
+      animation.omega0 = omega0;
+      animation.omega1 = omega1;
 
       animation.startTimestamp = now;
     }
@@ -341,7 +338,9 @@ export function withSpring(
       callback,
       lastTimestamp: 0,
       startTimestamp: 0,
-      newMass: 0,
+      zeta: 0,
+      omega0: 0,
+      omega1: 0,
     } as SpringAnimation;
   });
 }
