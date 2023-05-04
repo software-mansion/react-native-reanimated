@@ -29,7 +29,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     auto end = sharedTransitioinProgressAnimationsLowPriotity_.end();
-    return sharedTransitioinProgressAnimationsLowPriotity_.find(tag) != end;
+    return sharedTransitioinProgressAnimationsLowPriotity_.find(tag) == end;
   }
   return collection::contains(getConfigsForType(type), tag);
 }

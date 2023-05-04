@@ -1,12 +1,10 @@
 #pragma once
 
 #include <fbjni/fbjni.h>
-#include <jni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JMessageQueueThread.h>
-#include <react/jni/ReadableNativeArray.h>
 #include <react/jni/WritableNativeMap.h>
 #include <string>
 
