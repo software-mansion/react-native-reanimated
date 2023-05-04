@@ -111,11 +111,11 @@ export interface AdapterWorkletFunction extends WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;
 }
 
-type AnimatableSingeValue = number | string | Array<number>;
+type Animatable = number | string | Array<number>;
 
-export type AnimatableValueObject = { [key: string]: AnimatableSingeValue };
+export type AnimatableValueObject = { [key: string]: Animatable };
 
-export type AnimatableValue = AnimatableSingeValue | AnimatableValueObject;
+export type AnimatableValue = Animatable | AnimatableValueObject;
 
 export interface AnimationObject {
   [key: string]: any;
