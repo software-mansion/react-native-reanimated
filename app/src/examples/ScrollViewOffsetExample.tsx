@@ -34,6 +34,7 @@ export default function ScrollViewOffsetCallScrollToExample() {
 
   useAnimatedStyle(() => {
     console.log(scrollHandler.value);
+    console.log(scrollHandler2.value);
     return {};
   });
 

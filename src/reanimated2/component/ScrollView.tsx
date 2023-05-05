@@ -8,7 +8,7 @@ import { scrollTo } from '../NativeMethods';
 import { SharedValue as NativeSharedValue } from '../commonTypes';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import { useAnimatedRef, useEvent, useSharedValue } from '../hook';
+import { useAnimatedRef, useEvent } from '../hook';
 import { ScrollEvent } from '../hook/useAnimatedScrollHandler';
 import { runOnUI } from '../threads';
 
@@ -30,28 +30,27 @@ export interface AnimatedScrollViewProps extends ScrollViewProps {
 
 interface ScrollSharedValue<T> extends NativeSharedValue<T> {
   triggerScrollListener?: boolean;
+  triggerOffsetEvent?: boolean;
 }
 
 type AnimatedScrollViewFC = React.FC<AnimatedScrollViewProps>;
 
 const addListenerToScroll = (
   offsetRef: ScrollSharedValue<number>,
-  listenerCalls: SharedValue<number>,
-  shouldTriggerScrollListener: SharedValue<boolean>,
   animatedRef: any,
   horizontal: boolean
 ) => {
   runOnUI(() => {
     'worklet';
     offsetRef.triggerScrollListener = true;
+    offsetRef.triggerOffsetEvent = true;
     offsetRef.addListener(animatedRef(), (newValue: any) => {
       if (offsetRef.triggerScrollListener) {
         const x = horizontal ? Number(newValue) : 0;
         const y = horizontal ? 0 : Number(newValue);
-        listenerCalls.value += 1;
+        offsetRef.triggerOffsetEvent = false;
         scrollTo(animatedRef, x, y, false);
       }
-      shouldTriggerScrollListener.value = true;
     });
   })();
 };
@@ -61,18 +60,13 @@ const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
     const { scrollViewOffset, horizontal, ...restProps } = props;
     const aref = ref === null ? useAnimatedRef<ScrollView>() : ref;
 
-    const listenerCalls = useSharedValue(0);
-    const shouldTriggerScrollListener = useSharedValue(true);
-
     if (scrollViewOffset !== undefined) {
       const scrollPosition = scrollViewOffset as ScrollSharedValue<number>;
-      scrollPosition.triggerScrollListener = false;
 
       const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
         'worklet';
-
-        if (listenerCalls.value > 0) {
-          listenerCalls.value -= 1;
+        if (!scrollPosition.triggerOffsetEvent) {
+          scrollPosition.triggerOffsetEvent = true;
           return;
         }
         const newValue =
@@ -80,21 +74,18 @@ const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
             ? event.contentOffset.y
             : event.contentOffset.x;
 
-        shouldTriggerScrollListener.value = false;
         scrollPosition.triggerScrollListener = false;
         // @ts-ignore Omit the setter to not override animation
         scrollPosition._value = newValue;
+        scrollPosition.triggerScrollListener = true;
       }, scrollEventNames);
 
       useEffect(() => {
+        scrollPosition.triggerOffsetEvent = true;
+        scrollPosition.triggerScrollListener = true;
+
         if (aref !== null) {
-          addListenerToScroll(
-            scrollPosition,
-            listenerCalls,
-            shouldTriggerScrollListener,
-            aref,
-            horizontal ?? false
-          );
+          addListenerToScroll(scrollPosition, aref, horizontal ?? false);
 
           const viewTag = findNodeHandle(
             (aref as RefObject<Animated.ScrollView>).current
