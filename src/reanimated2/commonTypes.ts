@@ -111,7 +111,11 @@ export interface AdapterWorkletFunction extends WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;
 }
 
-export type AnimatableValue = number | string | Array<number>;
+type Animatable = number | string | Array<number>;
+
+export type AnimatableValueObject = { [key: string]: Animatable };
+
+export type AnimatableValue = Animatable | AnimatableValueObject;
 
 export interface AnimationObject {
   [key: string]: any;
@@ -158,6 +162,19 @@ export enum IOSReferenceFrame {
   XTrueNorthZVertical,
   Auto,
 }
+
+export type SensorConfig = {
+  interval: number | 'auto';
+  adjustToInterfaceOrientation: boolean;
+  iosReferenceFrame: IOSReferenceFrame;
+};
+
+export type AnimatedSensor = {
+  sensor: SharedValue<Value3D | ValueRotation>;
+  unregister: () => void;
+  isAvailable: boolean;
+  config: SensorConfig;
+};
 
 export interface NumericAnimation {
   current?: number;

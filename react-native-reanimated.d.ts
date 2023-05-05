@@ -351,7 +351,9 @@ declare module 'react-native-reanimated' {
     build: () => EntryExitAnimationFunction;
   }
 
-  export type AnimatableValue = number | string | Array<number>;
+  type Animatable = number | string | Array<number>;
+  type AnimatableValueObject = { [key: string]: Animatable };
+  export type AnimatableValue = Animatable | AnimatableValueObject;
 
   // reanimated2 derived operations
   export enum Extrapolation {
@@ -466,6 +468,9 @@ declare module 'react-native-reanimated' {
     colorSpace?: 'RGB' | 'HSV',
     options?: InterpolationOptions
   ): T;
+  
+  export type ParsedColorArray = [number, number, number, number];
+  export function convertToRGBA(color: unknown): ParsedColorArray;
 
   export enum ColorSpace {
     RGB = 0,
