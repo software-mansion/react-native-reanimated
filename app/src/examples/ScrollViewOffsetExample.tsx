@@ -5,12 +5,11 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import type { SharedValue } from 'react-native-reanimated';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
 export default function ScrollViewOffsetExample() {
   const aref = useAnimatedRef<Animated.ScrollView>();
-  const scrollHandler: SharedValue<number> = useSharedValue<number>(0);
+  const scrollHandler = useSharedValue(0);
 
   useAnimatedStyle(() => {
     console.log(scrollHandler.value);
