@@ -5,14 +5,12 @@ import {
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
-  DirectiveLiteral,
 } from '@babel/types';
 import { processForCalleesWorklets } from './processForCalleesWorklets';
 import { ReanimatedPluginPass } from './types';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
-import { injectVersion } from './injectVersion';
 
 module.exports = function (): PluginItem {
   return {
@@ -25,11 +23,6 @@ module.exports = function (): PluginItem {
       }
     },
     visitor: {
-      DirectiveLiteral: {
-        enter(path: NodePath<DirectiveLiteral>) {
-          injectVersion(path);
-        },
-      },
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
           processForCalleesWorklets(path, state);
