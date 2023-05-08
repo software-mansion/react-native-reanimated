@@ -1,6 +1,7 @@
 import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
 import createReactDOMStyle from 'react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle';
+import { createTransformValue } from 'react-native-web/dist/exports/StyleSheet/preprocess';
 
 const reanimatedJS = new JSReanimated();
 
@@ -57,6 +58,9 @@ const updatePropsDOM = (
   component.previousStyle = currentStyle;
 
   const domStyle = createReactDOMStyle(currentStyle);
+  if (domStyle.transform) {
+    domStyle.transform = createTransformValue(domStyle.transform);
+  }
   for (const key in domStyle) {
     (component.style as StyleProps)[key] = domStyle[key];
   }
