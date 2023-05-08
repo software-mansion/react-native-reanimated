@@ -49,7 +49,7 @@
     "scripts/reanimated_utils.rb",
     "mock.js",
     "plugin/index.js",
-    "plugin/build",
+    "plugin/build/",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
