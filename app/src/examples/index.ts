@@ -39,6 +39,7 @@ import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import LettersExample from './LettersExample';
 import LightBoxExample from './LightBoxExample';
 import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
@@ -144,6 +145,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📰',
     title: 'Article progress',
     screen: ArticleProgressExample,
+  },
+  LettersExample: {
+    icon: '📖',
+    title: 'Letters',
+    screen: LettersExample,
   },
 
   // Basic examples
