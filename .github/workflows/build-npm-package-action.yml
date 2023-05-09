@@ -90,14 +90,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
+          registry-url: https://registry.npmjs.org/
 
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
 
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
-        run: |
-          npm config list
-          npm publish $PACKAGE_NAME --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish $PACKAGE_NAME
