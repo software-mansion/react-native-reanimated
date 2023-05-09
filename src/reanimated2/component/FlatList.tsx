@@ -69,7 +69,7 @@ export const ReanimatedFlatList = forwardRef(
   props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
 ) => React.ReactElement;
 
-export type RaenimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
+export type ReanimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },
   horizontallyInverted: { transform: [{ scaleX: -1 }] },
