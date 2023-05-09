@@ -89,10 +89,11 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org/
 
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
-        run: |
-          npm adduser
-          npm publish $PACKAGE_NAME --registry https://registry.npmjs.org/
+        run: npm publish $PACKAGE_NAME
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
