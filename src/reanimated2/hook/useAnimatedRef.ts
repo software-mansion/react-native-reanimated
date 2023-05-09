@@ -1,6 +1,6 @@
 import { Component, useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import { RefObjectFunction } from './commonTypes';
+import { AnimatedRef, RefObjectFunction } from './commonTypes';
 import { ShadowNodeWrapper } from '../commonTypes';
 import { getTag } from '../NativeMethods';
 import { getShadowNodeWrapperFromHostInstance } from '../fabricUtils';
@@ -23,7 +23,7 @@ const getTagValueFunction = global._IS_FABRIC
   ? getShareableShadowNodeFromComponent
   : getTag;
 
-export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
+export function useAnimatedRef<T extends ComponentRef>(): AnimatedRef<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const ref = useRef<RefObjectFunction<T>>();
 

@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useCallback, forwardRef } from 'react';
+import React, {
+  useState,
+  useCallback,
+  forwardRef,
+  Component,
+  useRef,
+} from 'react';
 import {
   Text,
   StyleSheet,
@@ -52,6 +58,13 @@ import Animated, {
   Animation,
   // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
+import {
+  dispatchCommand,
+  getTag,
+  measure,
+  scrollTo,
+  setGestureState,
+} from '../src/reanimated2/NativeMethods';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {
@@ -739,4 +752,68 @@ function testPartialAnimatedProps() {
   const test5 = (
     <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
   );
+
+  // NativeMethods:
+  // test getTag
+  function testGetTag() {
+    // @ts-expect-error string is not a valid view
+    const test1 = getTag('whatever');
+    // number is a valid view (shadowNodeRef?)
+    const test2 = getTag(1);
+    // @ts-expect-error by TypeScript standards null is not an object
+    const test4: object = getTag(0);
+    class TestClass extends React.Component {
+      render() {
+        return <View />;
+      }
+    }
+
+    const variable = new TestClass({});
+    // this is valid argument
+    const test5 = getTag(variable);
+    // I don't know how to implement this case
+    // class test6class extends React.Component<any> implements React.ComponentClass {
+    //   constructor(props: any, context?: any) {
+    //     super(props);
+    //   }
+    // }
+  }
+
+  // test measure
+  function testMeasure() {
+    const animatedRef = useAnimatedRef<Animated.View>();
+    measure(animatedRef);
+    const plainRef = useRef<Animated.View>();
+    // @ts-expect-error should only work for Animated refs?
+    measure(plainRef);
+  }
+
+  // test dispatchCommand
+  function testDispatchCommand() {
+    const animatedRef = useAnimatedRef<Animated.View>();
+    dispatchCommand(animatedRef, 'command', [1, 2, 3]);
+    const plainRef = useRef<Animated.View>();
+    // @ts-expect-error should only work for Animated refs?
+    dispatchCommand(plainRef, 'command', [1, 2, 3]);
+    // @ts-expect-error args are not optional
+    dispatchCommand(animatedRef, 'command');
+  }
+
+  // test scrollTo
+  function testScrollTo() {
+    const animatedRef = useAnimatedRef<Animated.ScrollView>();
+    scrollTo(animatedRef, 0, 0, true);
+    const plainRef = useRef<Animated.ScrollView>();
+    // @ts-expect-error should only work for Animated refs
+    scrollTo(plainRef, 0, 0, true);
+    const animatedViewRef = useAnimatedRef<Animated.View>();
+    // @ts-expect-error should only get a scrollable object?
+    scrollTo(animatedViewRef, 0, 0, true);
+  }
+
+  // test setGestureState
+  function testSetGestureState() {
+    setGestureState(1, 2);
+    // not sure what more I can test here
+  }
 }
