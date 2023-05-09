@@ -91,7 +91,8 @@ jobs:
         with:
           node-version: 16.x
           registry-url: https://registry.npmjs.org/
-          token: ${{ secrets.NODE_AUTH_TOKEN }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
