@@ -90,10 +90,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://registry.npmjs.org/'
 
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
-        run: |
-          npm login
-          npm publish $PACKAGE_NAME
+        run: npm publish $PACKAGE_NAME
