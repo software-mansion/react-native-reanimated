@@ -2,7 +2,7 @@ name: Build nightly npm package
 
 on:
   schedule:
-    - cron: '0 12 */1 * *'
+    - cron: '27 23 * * *' # at 23:27 every day
   workflow_dispatch:
 
 jobs:
@@ -10,8 +10,4 @@ jobs:
     uses: ./.github/workflows/build-npm-package-action.yml
     with:
       version: nightly
-  call-build-workflow-rea-v2:
-    uses: ./.github/workflows/build-npm-package-action.yml
-    with:
-      version: nightly
-      ref: Reanimated2
+      publish_on_npm: true
