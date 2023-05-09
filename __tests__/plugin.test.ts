@@ -841,4 +841,109 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
+
+  it('is indempotent for common cases', () => {
+    function resultIsIdempotent(input: string) {
+      const firstResult = runPlugin(input).code;
+      const secondResult = runPlugin(firstResult!).code;
+      return firstResult === secondResult;
+    }
+
+    const input1 = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const x = 1;
+      });
+    </script>`;
+    expect(resultIsIdempotent(input1)).toBe(true);
+
+    const input2 = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const bar = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      });
+    </script>`;
+    expect(resultIsIdempotent(input2)).toBe(true);
+
+    const input3 = html`<script>
+      const foo = useAnimatedStyle(function named() {
+        const bar = useAnimatedStyle(function named() {
+          const x = 1;
+        });
+      });
+    </script>`;
+    expect(resultIsIdempotent(input3)).toBe(true);
+
+    const input4 = html`<script>
+      const foo = (x) => {
+        return () => {
+          'worklet';
+          return x;
+        };
+      };
+    </script>`;
+    expect(resultIsIdempotent(input4)).toBe(true);
+
+    const input5 = html`<script>
+      const foo = useAnimatedStyle({
+        method() {
+          'worklet';
+          const x = 1;
+        },
+      });
+    </script>`;
+    expect(resultIsIdempotent(input5)).toBe(true);
+
+    const input6 = html`<script>
+      const foo = () => {
+        'worklet';
+        return useAnimatedStyle(() => {
+          return () => {
+            'worklet';
+            return 1;
+          };
+        });
+      };
+    </script>`;
+    expect(resultIsIdempotent(input6)).toBe(true);
+
+    const input7 = html`<script>
+      const x = useAnimatedGestureHandler({
+        onStart: () => {
+          return useAnimatedStyle(() => {
+            return 1;
+          });
+        },
+      });
+    </script>`;
+    expect(resultIsIdempotent(input7)).toBe(true);
+
+    const input8 = html`<script>
+      const x = useAnimatedGestureHandler({
+        onStart: () => {
+          return useAnimatedGestureHandler({
+            onStart: () => {
+              return 1;
+            },
+          });
+        },
+      });
+    </script>`;
+    expect(resultIsIdempotent(input8)).toBe(true);
+
+    const input9 = html`<script>
+      Gesture.Pan.onStart(
+        useAnimatedStyle(() => {
+          return () => {
+            'worklet';
+            Gesture.Pan.onStart(() => {
+              'worklet';
+              return 1;
+            });
+          };
+        })
+      );
+    </script>`;
+    expect(resultIsIdempotent(input9)).toBe(true);
+  });
 });
