@@ -91,6 +91,9 @@ jobs:
         with:
           node-version: 16.x
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
         run: |
