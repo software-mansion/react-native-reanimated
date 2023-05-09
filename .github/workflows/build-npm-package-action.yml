@@ -97,4 +97,6 @@ jobs:
 
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
-        run: npm publish $PACKAGE_NAME
+        run: npm publish $PACKAGE_NAME --tag nightly
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
