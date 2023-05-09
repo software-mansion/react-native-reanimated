@@ -843,14 +843,18 @@ describe('babel plugin', () => {
   });
 
   it('is indempotent for common cases', () => {
+    function resultIsIdempotent(input: string) {
+      const firstResult = runPlugin(input).code;
+      const secondResult = runPlugin(firstResult!).code;
+      return firstResult === secondResult;
+    }
+
     const input1 = html`<script>
       const foo = useAnimatedStyle(() => {
         const x = 1;
       });
     </script>`;
-    expect(runPlugin(input1).code).toBe(
-      runPlugin(runPlugin(input1).code!).code
-    );
+    expect(resultIsIdempotent(input1)).toBe(true);
 
     const input2 = html`<script>
       const foo = useAnimatedStyle(() => {
@@ -859,9 +863,7 @@ describe('babel plugin', () => {
         });
       });
     </script>`;
-    expect(runPlugin(input2).code).toBe(
-      runPlugin(runPlugin(input2).code!).code
-    );
+    expect(resultIsIdempotent(input2)).toBe(true);
 
     const input3 = html`<script>
       const foo = useAnimatedStyle(function named() {
@@ -870,9 +872,7 @@ describe('babel plugin', () => {
         });
       });
     </script>`;
-    expect(runPlugin(input3).code).toBe(
-      runPlugin(runPlugin(input3).code!).code
-    );
+    expect(resultIsIdempotent(input3)).toBe(true);
 
     const input4 = html`<script>
       const foo = (x) => {
@@ -882,9 +882,7 @@ describe('babel plugin', () => {
         };
       };
     </script>`;
-    expect(runPlugin(input4).code).toBe(
-      runPlugin(runPlugin(input4).code!).code
-    );
+    expect(resultIsIdempotent(input4)).toBe(true);
 
     const input5 = html`<script>
       const foo = useAnimatedStyle({
@@ -894,9 +892,7 @@ describe('babel plugin', () => {
         },
       });
     </script>`;
-    expect(runPlugin(input5).code).toBe(
-      runPlugin(runPlugin(input5).code!).code
-    );
+    expect(resultIsIdempotent(input5)).toBe(true);
 
     const input6 = html`<script>
       const foo = () => {
@@ -909,9 +905,7 @@ describe('babel plugin', () => {
         });
       };
     </script>`;
-    expect(runPlugin(input6).code).toBe(
-      runPlugin(runPlugin(input6).code!).code
-    );
+    expect(resultIsIdempotent(input6)).toBe(true);
 
     const input7 = html`<script>
       const x = useAnimatedGestureHandler({
@@ -922,9 +916,7 @@ describe('babel plugin', () => {
         },
       });
     </script>`;
-    expect(runPlugin(input7).code).toBe(
-      runPlugin(runPlugin(input7).code!).code
-    );
+    expect(resultIsIdempotent(input7)).toBe(true);
 
     const input8 = html`<script>
       const x = useAnimatedGestureHandler({
@@ -937,9 +929,7 @@ describe('babel plugin', () => {
         },
       });
     </script>`;
-    expect(runPlugin(input8).code).toBe(
-      runPlugin(runPlugin(input8).code!).code
-    );
+    expect(resultIsIdempotent(input8)).toBe(true);
 
     const input9 = html`<script>
       Gesture.Pan.onStart(
@@ -954,8 +944,6 @@ describe('babel plugin', () => {
         })
       );
     </script>`;
-    expect(runPlugin(input9).code).toBe(
-      runPlugin(runPlugin(input9).code!).code
-    );
+    expect(resultIsIdempotent(input9)).toBe(true);
   });
 });
