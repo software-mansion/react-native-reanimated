@@ -96,3 +96,5 @@ jobs:
         run: |
           npm config list
           npm publish $PACKAGE_NAME --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
