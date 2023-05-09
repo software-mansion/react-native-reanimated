@@ -329,45 +329,47 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void updateProps(int viewTag, Map<String, Object> props) {
-    // TODO: update PropsNode to use this method instead of its own way of updating props
-    boolean hasUIProps = false;
-    boolean hasNativeProps = false;
-    boolean hasJSProps = false;
-    JavaOnlyMap newUIProps = new JavaOnlyMap();
-    WritableMap newJSProps = Arguments.createMap();
-    WritableMap newNativeProps = Arguments.createMap();
+    if (mUIManager != null && mUIManager.resolveView(viewTag) != null) {
+          // TODO: update PropsNode to use this method instead of its own way of updating props
+        boolean hasUIProps = false;
+        boolean hasNativeProps = false;
+        boolean hasJSProps = false;
+        JavaOnlyMap newUIProps = new JavaOnlyMap();
+        WritableMap newJSProps = Arguments.createMap();
+        WritableMap newNativeProps = Arguments.createMap();
 
-    for (Map.Entry<String, Object> entry : props.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      if (uiProps.contains(key)) {
-        hasUIProps = true;
-        addProp(newUIProps, key, value);
-      } else if (nativeProps.contains(key)) {
-        hasNativeProps = true;
-        addProp(newNativeProps, key, value);
-      } else {
-        hasJSProps = true;
-        addProp(newJSProps, key, value);
+        for (Map.Entry<String, Object> entry : props.entrySet()) {
+          String key = entry.getKey();
+          Object value = entry.getValue();
+          if (uiProps.contains(key)) {
+            hasUIProps = true;
+            addProp(newUIProps, key, value);
+          } else if (nativeProps.contains(key)) {
+            hasNativeProps = true;
+            addProp(newNativeProps, key, value);
+          } else {
+            hasJSProps = true;
+            addProp(newJSProps, key, value);
+          }
+        }
+
+        if (viewTag != View.NO_ID) {
+          if (hasUIProps) {
+            mUIImplementation.synchronouslyUpdateViewOnUIThread(
+                viewTag, new ReactStylesDiffMap(newUIProps));
+          }
+          if (hasNativeProps) {
+            enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
+          }
+          if (hasJSProps) {
+            WritableMap evt = Arguments.createMap();
+            evt.putInt("viewTag", viewTag);
+            evt.putMap("props", newJSProps);
+            sendEvent("onReanimatedPropsChange", evt);
+          }
+        }
       }
     }
-
-    if (viewTag != View.NO_ID) {
-      if (hasUIProps) {
-        mUIImplementation.synchronouslyUpdateViewOnUIThread(
-            viewTag, new ReactStylesDiffMap(newUIProps));
-      }
-      if (hasNativeProps) {
-        enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
-      }
-      if (hasJSProps) {
-        WritableMap evt = Arguments.createMap();
-        evt.putInt("viewTag", viewTag);
-        evt.putMap("props", newJSProps);
-        sendEvent("onReanimatedPropsChange", evt);
-      }
-    }
-  }
 
   public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
     compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
