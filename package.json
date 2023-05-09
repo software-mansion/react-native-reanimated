@@ -67,6 +67,9 @@
     "type": "git",
     "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "author": {
     "email": "krzys.magiera@gmail.com",
     "name": "Krzysztof Magiera"
