@@ -10,6 +10,7 @@ import {
 } from '../shareables';
 
 interface ComponentRef extends Component {
+  getNativeScrollRef?: () => ComponentRef;
   getScrollableNode?: () => ComponentRef;
 }
 
@@ -31,11 +32,13 @@ export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
     const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(
-          component.getScrollableNode
-            ? component.getScrollableNode()
-            : component
-        );
+        let ref: ComponentRef = component;
+        if (component.getNativeScrollRef) {
+          ref = component.getNativeScrollRef();
+        } else if (component.getScrollableNode && !global._IS_FABRIC) {
+          ref = component.getScrollableNode();
+        }
+        tag.value = getTagValueFunction(ref);
         fun.current = component;
       }
       return tag.value;
@@ -50,7 +53,6 @@ export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
       },
     });
     registerShareableMapping(fun, remoteRef);
-
     ref.current = fun;
   }
 
