@@ -92,9 +92,6 @@ jobs:
           node-version: 16.x
           registry-url: https://registry.npmjs.org/
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
         run: npm publish $PACKAGE_NAME --tag nightly
