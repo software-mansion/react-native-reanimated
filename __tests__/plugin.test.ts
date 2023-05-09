@@ -841,4 +841,121 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
+
+  it('is indempotent for common cases', () => {
+    const input1 = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const x = 1;
+      });
+    </script>`;
+    expect(runPlugin(input1).code).toBe(
+      runPlugin(runPlugin(input1).code!).code
+    );
+
+    const input2 = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const bar = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      });
+    </script>`;
+    expect(runPlugin(input2).code).toBe(
+      runPlugin(runPlugin(input2).code!).code
+    );
+
+    const input3 = html`<script>
+      const foo = useAnimatedStyle(function named() {
+        const bar = useAnimatedStyle(function named() {
+          const x = 1;
+        });
+      });
+    </script>`;
+    expect(runPlugin(input3).code).toBe(
+      runPlugin(runPlugin(input3).code!).code
+    );
+
+    const input4 = html`<script>
+      const foo = (x) => {
+        return () => {
+          'worklet';
+          return x;
+        };
+      };
+    </script>`;
+    expect(runPlugin(input4).code).toBe(
+      runPlugin(runPlugin(input4).code!).code
+    );
+
+    const input5 = html`<script>
+      const foo = useAnimatedStyle({
+        method() {
+          'worklet';
+          const x = 1;
+        },
+      });
+    </script>`;
+    expect(runPlugin(input5).code).toBe(
+      runPlugin(runPlugin(input5).code!).code
+    );
+
+    const input6 = html`<script>
+      const foo = () => {
+        'worklet';
+        return useAnimatedStyle(() => {
+          return () => {
+            'worklet';
+            return 1;
+          };
+        });
+      };
+    </script>`;
+    expect(runPlugin(input6).code).toBe(
+      runPlugin(runPlugin(input6).code!).code
+    );
+
+    const input7 = html`<script>
+      const x = useAnimatedGestureHandler({
+        onStart: () => {
+          return useAnimatedStyle(() => {
+            return 1;
+          });
+        },
+      });
+    </script>`;
+    expect(runPlugin(input7).code).toBe(
+      runPlugin(runPlugin(input7).code!).code
+    );
+
+    const input8 = html`<script>
+      const x = useAnimatedGestureHandler({
+        onStart: () => {
+          return useAnimatedGestureHandler({
+            onStart: () => {
+              return 1;
+            },
+          });
+        },
+      });
+    </script>`;
+    expect(runPlugin(input8).code).toBe(
+      runPlugin(runPlugin(input8).code!).code
+    );
+
+    const input9 = html`<script>
+      Gesture.Pan.onStart(
+        useAnimatedStyle(() => {
+          return () => {
+            'worklet';
+            Gesture.Pan.onStart(() => {
+              'worklet';
+              return 1;
+            });
+          };
+        })
+      );
+    </script>`;
+    expect(runPlugin(input9).code).toBe(
+      runPlugin(runPlugin(input9).code!).code
+    );
+  });
 });
