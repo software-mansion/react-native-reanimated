@@ -31,11 +31,7 @@ export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
     const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(
-          component.getScrollableNode
-            ? component.getScrollableNode()
-            : component
-        );
+        tag.value = getTagValueFunction(component);
         fun.current = component;
       }
       return tag.value;
