@@ -89,6 +89,8 @@ jobs:
 
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
-        run: npm publish $PACKAGE_NAME
+        run: |
+          npm ci
+          npm publish $PACKAGE_NAME
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
