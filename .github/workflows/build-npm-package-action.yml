@@ -89,17 +89,9 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-          registry-url: https://registry.npmjs.org/
-          token: ${{ secrets.NODE_AUTH_TOKEN }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-
-      - name: Publish package on npm
-        if: ${{ inputs.publish_on_npm }}
-        run: npm publish $PACKAGE_NAME --tag nightly
+      - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
