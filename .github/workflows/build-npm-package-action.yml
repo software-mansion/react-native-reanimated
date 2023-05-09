@@ -94,4 +94,6 @@ jobs:
 
       - name: Publish package on npm
         if: ${{ inputs.publish_on_npm }}
-        run: npm publish $PACKAGE_NAME
+        run: |
+          npm login
+          npm publish $PACKAGE_NAME
