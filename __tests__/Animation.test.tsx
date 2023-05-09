@@ -6,10 +6,15 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-} from '../src/';
+  SharedValue,
+} from '../src';
 import { getAnimatedStyle } from '../src/reanimated2/jestUtils';
 
-const AnimatedSharedValueComponent = (props) => {
+interface Props {
+  sharedValue: SharedValue<number>;
+}
+
+const AnimatedSharedValueComponent = (props: Props) => {
   const widthSV = props.sharedValue;
 
   const style = useAnimatedStyle(() => {
@@ -110,16 +115,17 @@ describe('Tests of animations', () => {
     fireEvent.press(button);
     jest.advanceTimersByTime(250);
     style.width = 50; // value of component width after 250ms of animation
-    expect(view).toHaveAnimatedStyle(style, true);
+    expect(view).toHaveAnimatedStyle(style, { shouldMatchAllProps: true });
   });
 
   test('withTiming animation, define shared value outside component', () => {
-    let sharedValue;
+    let sharedValue: SharedValue<number>;
     renderHook(() => {
       sharedValue = useSharedValue(0);
     });
     const { getByTestId } = render(
-      <AnimatedComponent sharedValue={sharedValue} />
+      // @ts-expect-error TypeScript doesn't understand that renderHook defined sharedValue;
+      <AnimatedSharedValueComponent sharedValue={sharedValue} />
     );
     const view = getByTestId('view');
     const button = getByTestId('button');
@@ -130,14 +136,16 @@ describe('Tests of animations', () => {
   });
 
   test('withTiming animation, change shared value outside component', () => {
-    let sharedValue;
+    let sharedValue: SharedValue<number>;
     renderHook(() => {
       sharedValue = useSharedValue(0);
     });
     const { getByTestId } = render(
+      // @ts-expect-error TypeScript doesn't understand that renderHook defined sharedValue;
       <AnimatedSharedValueComponent sharedValue={sharedValue} />
     );
     const view = getByTestId('view');
+    // @ts-expect-error TypeScript doesn't understand that renderHook defined sharedValue;
     sharedValue.value = 50;
     jest.advanceTimersByTime(600);
     expect(view).toHaveAnimatedStyle({ width: 50 });
