@@ -1,13 +1,13 @@
 import { RefObject } from 'react';
 import { NativeScrollEvent } from 'react-native';
-import { Context, NativeEvent, WorkletFunction } from '../commonTypes';
+import { WorkletClosure, NativeEvent, WorkletFunction } from '../commonTypes';
 import WorkletEventHandler from '../WorkletEventHandler';
 import { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-export interface ScrollHandler<TContext extends Context>
+export interface ScrollHandler<Context extends WorkletClosure>
   extends WorkletFunction {
-  (event: NativeScrollEvent, context?: TContext): void;
+  (event: NativeScrollEvent, context?: Context): void;
 }
 
 export interface ScrollEvent
@@ -15,23 +15,23 @@ export interface ScrollEvent
     NativeEvent<ScrollEvent> {
   eventName: string;
 }
-export interface ScrollHandlers<TContext extends Context> {
-  [key: string]: ScrollHandler<TContext> | undefined;
-  onScroll?: ScrollHandler<TContext>;
-  onBeginDrag?: ScrollHandler<TContext>;
-  onEndDrag?: ScrollHandler<TContext>;
-  onMomentumBegin?: ScrollHandler<TContext>;
-  onMomentumEnd?: ScrollHandler<TContext>;
+export interface ScrollHandlers<Context extends WorkletClosure> {
+  [key: string]: ScrollHandler<Context> | undefined;
+  onScroll?: ScrollHandler<Context>;
+  onBeginDrag?: ScrollHandler<Context>;
+  onEndDrag?: ScrollHandler<Context>;
+  onMomentumBegin?: ScrollHandler<Context>;
+  onMomentumEnd?: ScrollHandler<Context>;
 }
 
-export function useAnimatedScrollHandler<TContext extends Context>(
-  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
+export function useAnimatedScrollHandler<Context extends WorkletClosure>(
+  handlers: ScrollHandlers<Context> | ScrollHandler<Context>,
   dependencies?: DependencyList
 ): RefObject<WorkletEventHandler<ScrollEvent>> {
   // case when handlers is a function
-  const scrollHandlers: ScrollHandlers<TContext> =
+  const scrollHandlers: ScrollHandlers<Context> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const { context, doDependenciesDiffer } = useHandler<ScrollEvent, TContext>(
+  const { context, doDependenciesDiffer } = useHandler<ScrollEvent, Context>(
     scrollHandlers,
     dependencies
   );

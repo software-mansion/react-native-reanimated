@@ -2,7 +2,7 @@ import { MutableRefObject, useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
 import {
   AnimatedStyle,
-  Context,
+  WorkletClosure,
   NativeEvent,
   NestedObjectValues,
   WorkletFunction,
@@ -14,16 +14,16 @@ import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import { ContextWithDependencies, DependencyList } from './commonTypes';
 
-interface Handler<T, TContext extends Context> extends WorkletFunction {
-  (event: T, context: TContext): void;
+interface Handler<T, Context extends WorkletClosure> extends WorkletFunction {
+  (event: T, context: Context): void;
 }
 
-interface Handlers<T, TContext extends Context> {
-  [key: string]: Handler<T, TContext> | undefined;
+interface Handlers<T, Context extends WorkletClosure> {
+  [key: string]: Handler<T, Context> | undefined;
 }
 
-export interface UseHandlerContext<TContext extends Context> {
-  context: TContext;
+export interface UseHandlerContext<Context extends WorkletClosure> {
+  context: Context;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
 }
@@ -43,14 +43,14 @@ export function useEvent<T extends NativeEvent<T>>(
   return initRef;
 }
 
-export function useHandler<T, TContext extends Context>(
-  handlers: Handlers<T, TContext>,
+export function useHandler<T, Context extends WorkletClosure>(
+  handlers: Handlers<T, Context>,
   dependencies?: DependencyList
-): UseHandlerContext<TContext> {
-  const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
+): UseHandlerContext<Context> {
+  const initRef = useRef<ContextWithDependencies<Context> | null>(null);
   if (initRef.current === null) {
     initRef.current = {
-      context: makeRemote<TContext>({} as TContext),
+      context: makeRemote<Context>({} as Context),
       savedDependencies: [],
     };
   }

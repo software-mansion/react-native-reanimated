@@ -1,19 +1,19 @@
-import { Context, WorkletFunction, NativeEvent } from '../commonTypes';
+import { WorkletClosure, WorkletFunction, NativeEvent } from '../commonTypes';
 import { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-interface Handler<T, TContext extends Context> extends WorkletFunction {
-  (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
+interface Handler<T, Context extends WorkletClosure> extends WorkletFunction {
+  (event: T, context: Context, isCanceledOrFailed?: boolean): void;
 }
 
-export interface GestureHandlers<T, TContext extends Context> {
-  [key: string]: Handler<T, TContext> | undefined;
-  onStart?: Handler<T, TContext>;
-  onActive?: Handler<T, TContext>;
-  onEnd?: Handler<T, TContext>;
-  onFail?: Handler<T, TContext>;
-  onCancel?: Handler<T, TContext>;
-  onFinish?: Handler<T, TContext>;
+export interface GestureHandlers<T, Context extends WorkletClosure> {
+  [key: string]: Handler<T, Context> | undefined;
+  onStart?: Handler<T, Context>;
+  onActive?: Handler<T, Context>;
+  onEnd?: Handler<T, Context>;
+  onFail?: Handler<T, Context>;
+  onCancel?: Handler<T, Context>;
+  onFinish?: Handler<T, Context>;
 }
 
 export const EventType = {
@@ -28,35 +28,41 @@ export const EventType = {
 export interface GestureHandlerNativeEvent {
   handlerTag: number;
   numberOfPointers: number;
-  state: typeof EventType[keyof typeof EventType];
+  state: (typeof EventType)[keyof typeof EventType];
 }
 
-export interface GestureHandlerEvent<T> extends NativeEvent<T> {
-  nativeEvent: T;
-}
+export type GestureHandlerEvent<T> = NativeEvent<T>;
 
-type InferArgument<T> = T extends GestureHandlerEvent<infer E>
+// We want to make sure that useAnimatedGestureHandler's Payload generic type is
+// within acceptable bounds. That's what this utility type is for.
+type InferAnimatedGestureHandlerArgument<T> = T extends GestureHandlerEvent<
+  infer E
+>
   ? E extends GestureHandlerNativeEvent
     ? E
     : never
   : never;
 
 export function useAnimatedGestureHandler<
-  T extends GestureHandlerEvent<any>,
-  TContext extends Context = Context,
-  Payload = InferArgument<T>
+  T extends GestureHandlerEvent<T>,
+  Context extends WorkletClosure = WorkletClosure,
+  Payload = InferAnimatedGestureHandlerArgument<T>
 >(
-  handlers: GestureHandlers<Payload, TContext>,
+  handlers: GestureHandlers<Payload, Context>,
   dependencies?: DependencyList
 ): (e: T) => void {
   const { context, doDependenciesDiffer, useWeb } = useHandler<
     Payload,
-    TContext
+    Context
   >(handlers, dependencies);
 
   const handler = (e: T) => {
     'worklet';
-    const event = useWeb ? e.nativeEvent : e;
+    // It's surprisingly difficult to properly type 'event' here through generic arguments
+    // of the function. However, since Payload is already doing that we decided
+    // to drop the double check and just cast 'event' to any here.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const event = (useWeb ? e.nativeEvent : e) as any;
 
     if (event.state === EventType.BEGAN && handlers.onStart) {
       handlers.onStart(event, context);
@@ -108,5 +114,5 @@ export function useAnimatedGestureHandler<
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
-  ) as unknown as (e: T) => void; // this is not correct but we want to make GH think it receives a function
+  ) as unknown as (e: T) => void; // This is not correct but we want to make GH think it receives a function.
 }

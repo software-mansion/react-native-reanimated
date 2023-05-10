@@ -74,10 +74,10 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-export type Context = Record<string, unknown>;
+export type WorkletClosure = Record<string, unknown>;
 
 export interface WorkletFunction {
-  _closure?: Context;
+  _closure?: WorkletClosure;
   __workletHash?: number;
 }
 

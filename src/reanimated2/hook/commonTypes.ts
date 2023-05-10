@@ -1,9 +1,9 @@
-import { Context, ShadowNodeWrapper } from '../commonTypes';
+import { WorkletClosure, ShadowNodeWrapper } from '../commonTypes';
 
 export type DependencyList = Array<unknown> | undefined;
 
-export interface ContextWithDependencies<TContext extends Context> {
-  context: TContext;
+export interface ContextWithDependencies<Context extends WorkletClosure> {
+  context: Context;
   savedDependencies: DependencyList;
 }
 
