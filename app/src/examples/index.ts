@@ -82,6 +82,7 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
+import { CameraRollExample } from './SharedElementTransitions/CameraRoll';
 
 interface Example {
   icon?: string;
@@ -129,6 +130,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📷',
     title: 'Camera roll',
     screen: LightBoxExample,
+  },
+  LightBoxSETExample: {
+    icon: '📷',
+    title: 'Camera roll SET',
+    screen: CameraRollExample,
   },
   LiquidSwipe: {
     icon: '♠️',
