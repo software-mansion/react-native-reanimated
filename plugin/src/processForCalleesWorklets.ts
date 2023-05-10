@@ -79,7 +79,6 @@ function processObjectHook(
       processWorkletObjectMethod(property, state);
     } else if (property.isObjectProperty()) {
       const value = property.get('value');
-      assert(!Array.isArray(value), "'value' is an array'");
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(
