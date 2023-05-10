@@ -1,19 +1,23 @@
-const {
+import {
   checkCppVersion,
   matchVersion,
-} = require('../src/reanimated2/platform-specific/checkCppVersion');
+} from '../src/reanimated2/platform-specific/checkCppVersion';
 const { version: packageVersion } = require('../package.json');
 
 describe('checkCppVersion', () => {
+  let spyOnConsoleError: jest.SpyInstance;
+
   beforeEach(() => {
     global._REANIMATED_VERSION_CPP = packageVersion;
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    spyOnConsoleError = jest
+      .spyOn(console, 'error')
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      .mockImplementation(() => {});
   });
 
   afterEach(() => {
     delete global._REANIMATED_VERSION_CPP;
-    console.error.mockRestore();
+    spyOnConsoleError.mockRestore();
   });
 
   it('checks version successfully', () => {

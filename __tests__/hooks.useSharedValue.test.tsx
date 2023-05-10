@@ -10,7 +10,12 @@ describe('useSharedValue', () => {
     const initialValue = 0;
     const updatedValue = 1;
 
-    function TestComponent(props) {
+    interface Props {
+      key: string;
+      value: number;
+    }
+
+    function TestComponent(props: Props) {
       const opacity = useSharedValue(props.value);
       return <Animated.View style={{ opacity: opacity.value }} />;
     }
@@ -20,11 +25,19 @@ describe('useSharedValue', () => {
       <TestComponent key="box" value={initialValue} />
     );
 
-    expect(wrapper.root.children[0].props.style.opacity).toBe(initialValue);
+    expect(
+      typeof wrapper.root.children[0] !== 'string'
+        ? wrapper.root.children[0].props.style.opacity
+        : false
+    ).toBe(initialValue);
 
     // When rendering with updated value
     wrapper.update(<TestComponent key="box" value={updatedValue} />);
 
-    expect(wrapper.root.children[0].props.style.opacity).toBe(initialValue);
+    expect(
+      typeof wrapper.root.children[0] !== 'string'
+        ? wrapper.root.children[0].props.style.opacity
+        : false
+    ).toBe(initialValue);
   });
 });
