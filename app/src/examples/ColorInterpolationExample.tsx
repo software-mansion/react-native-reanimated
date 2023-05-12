@@ -107,37 +107,37 @@ function ColorInterpolation({
   );
 }
 
-function rgbInterpolation(color1: string, color2: string, progress: number) {
+const rgbInterpolation = (color1: string, color2: string, progress: number) => {
   'worklet';
   return interpolateColor(progress, [0, 1], [color1, color2], 'RGB', {
     gamma: 1,
   });
-}
+};
 
-function rgbGammaInterpolation(
+const rgbGammaInterpolation = (
   color1: string,
   color2: string,
   progress: number
-) {
+) => {
   'worklet';
   return interpolateColor(progress, [0, 1], [color1, color2]);
-}
+};
 
-function hsvInterpolation(color1: string, color2: string, progress: number) {
+const hsvInterpolation = (color1: string, color2: string, progress: number) => {
   'worklet';
   return interpolateColor(progress, [0, 1], [color1, color2], 'HSV', {
     useCorrectedHSVInterpolation: false,
   });
-}
+};
 
-function hsvStarInterpolation(
+const hsvStarInterpolation = (
   color1: string,
   color2: string,
   progress: number
-) {
+) => {
   'worklet';
   return interpolateColor(progress, [0, 1], [color1, color2], 'HSV');
-}
+};
 
 export default function ColorInterpolationExample() {
   const [color1, setColor1] = useState('#ff0000');

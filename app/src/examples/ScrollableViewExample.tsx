@@ -35,7 +35,7 @@ const colors = [
 
 const boxHeight = 120;
 
-function friction(value: number) {
+const friction = (value: number) => {
   'worklet';
 
   const MAX_FRICTION = 200;
@@ -54,7 +54,7 @@ function friction(value: number) {
   }
 
   return res;
-}
+};
 
 function ScrollableView({
   children,

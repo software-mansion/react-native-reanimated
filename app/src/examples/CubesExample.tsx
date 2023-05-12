@@ -9,7 +9,7 @@ import { View, Button, StyleSheet, Text } from 'react-native';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix (ZXY Tait–Bryan angles)
-function eulerToMatrix(pitch: number, roll: number, yaw: number) {
+const eulerToMatrix = (pitch: number, roll: number, yaw: number) => {
   'worklet';
   const s1 = Math.sin(yaw);
   const c1 = Math.cos(yaw);
@@ -39,27 +39,27 @@ function eulerToMatrix(pitch: number, roll: number, yaw: number) {
     0,
     1,
   ];
-}
+};
 
 // copied from https://github.com/facebook/react-native/blob/main/Libraries/Utilities/MatrixMath.js
-function createIdentityMatrix() {
+const createIdentityMatrix = () => {
   'worklet';
   return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-}
+};
 
-function reuseTranslate3dCommand(
+const reuseTranslate3dCommand = (
   matrixCommand: number[],
   x: number,
   y: number,
   z: number
-) {
+) => {
   'worklet';
   matrixCommand[12] = x;
   matrixCommand[13] = y;
   matrixCommand[14] = z;
-}
+};
 
-function multiplyInto(out: number[], a: number[], b: number[]) {
+const multiplyInto = (out: number[], a: number[], b: number[]) => {
   'worklet';
   const [
     a00,
@@ -112,12 +112,12 @@ function multiplyInto(out: number[], a: number[], b: number[]) {
   out[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
   out[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
   out[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-}
+};
 
-function transformOrigin(
+const transformOrigin = (
   matrix: number[],
   origin: { x: number; y: number; z: number }
-) {
+) => {
   'worklet';
   const { x, y, z } = origin;
 
@@ -128,10 +128,10 @@ function transformOrigin(
   const untranslate = createIdentityMatrix();
   reuseTranslate3dCommand(untranslate, -x, -y, -z);
   multiplyInto(matrix, matrix, untranslate);
-}
+};
 
 // http://www.songho.ca/opengl/gl_quaternion.html
-function quaternionToMatrix(q: number[]) {
+const quaternionToMatrix = (q: number[]) => {
   'worklet';
   const [x, y, z, s] = q;
   return [
@@ -152,11 +152,11 @@ function quaternionToMatrix(q: number[]) {
     0,
     1,
   ];
-}
+};
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
-function eulerToQuaternion(pitch: number, roll: number, yaw: number) {
+const eulerToQuaternion = (pitch: number, roll: number, yaw: number) => {
   'worklet';
   const c1 = Math.cos(pitch / 2);
   const s1 = Math.sin(pitch / 2);
@@ -171,9 +171,9 @@ function eulerToQuaternion(pitch: number, roll: number, yaw: number) {
     c1 * c2 * s3 + s1 * s2 * c3,
     c1 * c2 * c3 - s1 * s2 * s3,
   ];
-}
+};
 
-function multiplyQuaternions(a: number[], b: number[]) {
+const multiplyQuaternions = (a: number[], b: number[]) => {
   'worklet';
   return [
     a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
@@ -181,7 +181,7 @@ function multiplyQuaternions(a: number[], b: number[]) {
     a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
     a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
   ];
-}
+};
 
 const sidesRotations = [
   [0, 0, 0],

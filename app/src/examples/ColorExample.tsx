@@ -7,10 +7,10 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
-function makeColor(x: number) {
+const makeColor = (x: number) => {
   'worklet';
   return `hsl(${Math.round(x * 240)}, 100%, 50%)`;
-}
+};
 
 export default function ColorExample() {
   const ref = React.useRef(0);

@@ -14,22 +14,22 @@ import {
 } from 'react-native-gesture-handler';
 import { StyleSheet, Text, View } from 'react-native';
 
-function deg2rad(deg: number) {
+const deg2rad = (deg: number) => {
   'worklet';
   return (deg * Math.PI) / 180;
 }
 
-function rad2deg(rad: number) {
+const rad2deg = (rad: number) => {
   'worklet';
   return (rad / Math.PI) * 180;
 }
 
-function mm2px(mm: number) {
+const mm2px = (mm: number) => {
   'worklet';
   return mm * 35;
 }
 
-function px2mm(px: number) {
+const px2mm = (px: number) => {
   'worklet';
   return px / mm2px(1);
 }
