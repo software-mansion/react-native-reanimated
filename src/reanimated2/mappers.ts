@@ -80,8 +80,11 @@ export const createMapperRegistry = () => {
   }
 
   function mapperRun() {
-    processingMappers = true;
     runRequested = false;
+    if (processingMappers) {
+      return;
+    }
+    processingMappers = true;
     if (mappers.size !== sortedMappers.length) {
       updateMappersOrder();
     }

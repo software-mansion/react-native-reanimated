@@ -82,6 +82,15 @@ export function runOnUI<A extends any[], R>(
       );
       return;
     }
+    if (__DEV__) {
+      // in DEV mode we call shareable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      makeShareableCloneRecursive(worklet);
+      makeShareableCloneRecursive(args);
+    }
     _runOnUIQueue.push([worklet, args]);
     if (_runOnUIQueue.length === 1) {
       queueMicrotask(() => {

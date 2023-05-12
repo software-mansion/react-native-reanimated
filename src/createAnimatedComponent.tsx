@@ -246,8 +246,7 @@ export default function createAnimatedComponent(
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
-    '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
   );
 
   class AnimatedComponent extends React.Component<

@@ -2,35 +2,38 @@ import { html } from 'code-tag';
 import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
+import { strict as assert } from 'assert';
 
-function runPlugin(input, opts = {}) {
-  return transform(input.replace(/<\/?script>/g, ''), {
+function runPlugin(input: string, opts = {}) {
+  const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
     filename: 'jest tests fixture',
     compact: false,
     plugins: [plugin],
     ...opts,
   });
+  assert(transformed);
+  return transformed;
 }
 
 describe('babel plugin', () => {
-  beforeAll(() => {
-    process.env.REANIMATED_PLUGIN_TESTS = 'jest';
+  beforeEach(() => {
+    process.env.REANIMATED_JEST_DISABLE_SOURCEMAP = 'jest';
+    process.env.REANIMATED_JEST_DISABLE_VERSION = 'jest';
   });
 
   it('injects its version', () => {
+    delete process.env.REANIMATED_JEST_DISABLE_VERSION;
+
     const input = html`<script>
       function foo() {
-        'inject Reanimated Babel plugin version';
+        'worklet';
         var foo = 'bar';
       }
     </script>`;
 
     const { code } = runPlugin(input, {});
     const { version: packageVersion } = require('../package.json');
-    expect(code).toContain(
-      `global._REANIMATED_VERSION_BABEL_PLUGIN = "${packageVersion}"`
-    );
-    expect(code).not.toContain('inject Reanimated Babel plugin version');
+    expect(code).toContain(`f.__version = "${packageVersion}";`);
   });
 
   it("doesn't bother other Directive Literals", () => {
@@ -216,6 +219,9 @@ describe('babel plugin', () => {
       enter(path) {
         if (
           path.isAssignmentExpression() &&
+          'property' in path.node.left &&
+          'name' in path.node.left.property &&
+          'properties' in path.node.right &&
           path.node.left.property.name === '_closure'
         ) {
           closureBindings = path.node.right.properties;
@@ -834,5 +840,110 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
+  });
+
+  it('is indempotent for common cases', () => {
+    function resultIsIdempotent(input: string) {
+      const firstResult = runPlugin(input).code;
+      const secondResult = runPlugin(firstResult!).code;
+      return firstResult === secondResult;
+    }
+
+    const input1 = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const x = 1;
+      });
+    </script>`;
+    expect(resultIsIdempotent(input1)).toBe(true);
+
+    const input2 = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const bar = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      });
+    </script>`;
+    expect(resultIsIdempotent(input2)).toBe(true);
+
+    const input3 = html`<script>
+      const foo = useAnimatedStyle(function named() {
+        const bar = useAnimatedStyle(function named() {
+          const x = 1;
+        });
+      });
+    </script>`;
+    expect(resultIsIdempotent(input3)).toBe(true);
+
+    const input4 = html`<script>
+      const foo = (x) => {
+        return () => {
+          'worklet';
+          return x;
+        };
+      };
+    </script>`;
+    expect(resultIsIdempotent(input4)).toBe(true);
+
+    const input5 = html`<script>
+      const foo = useAnimatedStyle({
+        method() {
+          'worklet';
+          const x = 1;
+        },
+      });
+    </script>`;
+    expect(resultIsIdempotent(input5)).toBe(true);
+
+    const input6 = html`<script>
+      const foo = () => {
+        'worklet';
+        return useAnimatedStyle(() => {
+          return () => {
+            'worklet';
+            return 1;
+          };
+        });
+      };
+    </script>`;
+    expect(resultIsIdempotent(input6)).toBe(true);
+
+    const input7 = html`<script>
+      const x = useAnimatedGestureHandler({
+        onStart: () => {
+          return useAnimatedStyle(() => {
+            return 1;
+          });
+        },
+      });
+    </script>`;
+    expect(resultIsIdempotent(input7)).toBe(true);
+
+    const input8 = html`<script>
+      const x = useAnimatedGestureHandler({
+        onStart: () => {
+          return useAnimatedGestureHandler({
+            onStart: () => {
+              return 1;
+            },
+          });
+        },
+      });
+    </script>`;
+    expect(resultIsIdempotent(input8)).toBe(true);
+
+    const input9 = html`<script>
+      Gesture.Pan.onStart(
+        useAnimatedStyle(() => {
+          return () => {
+            'worklet';
+            Gesture.Pan.onStart(() => {
+              'worklet';
+              return 1;
+            });
+          };
+        })
+      );
+    </script>`;
+    expect(resultIsIdempotent(input9)).toBe(true);
   });
 });
