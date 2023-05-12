@@ -149,7 +149,7 @@ export function hasColorProps(updates: AnimatedStyle): boolean {
   return false;
 }
 
-export function parseColors(updates: AnimatedStyle): void {
+export const parseColors = (updates: AnimatedStyle): void => {
   'worklet';
   for (const key in updates) {
     if (colorProps.indexOf(key) !== -1) {
@@ -161,9 +161,11 @@ export function parseColors(updates: AnimatedStyle): void {
       }
     }
   }
-}
+};
 
-export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
+export const isAnimated = (
+  prop: NestedObjectValues<AnimationObject>
+): boolean => {
   'worklet';
   if (Array.isArray(prop)) {
     return prop.some(isAnimated);
@@ -175,9 +177,9 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
     }
   }
   return false;
-}
+};
 
-export function shallowEqual(a: any, b: any) {
+export const shallowEqual = (a: any, b: any) => {
   'worklet';
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
@@ -190,7 +192,7 @@ export function shallowEqual(a: any, b: any) {
     }
   }
   return true;
-}
+};
 
 export const validateAnimatedStyles = (styles: AnimatedStyle): void => {
   'worklet';

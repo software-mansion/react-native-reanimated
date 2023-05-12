@@ -2,7 +2,7 @@ import { AnimationObject, AnimatableValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 export { stopMapper } from './mappers';
 
-export function valueSetter(sv: any, value: any): void {
+export const valueSetter = (sv: any, value: any): void => {
   'worklet';
   const previousAnimation = sv._animation;
   if (previousAnimation) {
@@ -60,4 +60,4 @@ export function valueSetter(sv: any, value: any): void {
     }
     sv._value = value as Descriptor | AnimatableValue;
   }
-}
+};

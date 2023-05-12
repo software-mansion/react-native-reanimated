@@ -43,7 +43,9 @@ interface RecognizedPrefixSuffix {
   strippedValue: number;
 }
 
-function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
+const recognizePrefixSuffix = (
+  value: string | number
+): RecognizedPrefixSuffix => {
   'worklet';
   if (typeof value === 'string') {
     const match = value.match(
@@ -62,11 +64,11 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   } else {
     return { strippedValue: value };
   }
-}
+};
 
-function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
+const decorateAnimation = <T extends AnimationObject | StyleLayoutAnimation>(
   animation: T
-): void {
+): void => {
   'worklet';
   if ((animation as HigherOrderAnimation).isHigherOrder) {
     return;
@@ -245,7 +247,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     }
     baseOnStart(animation, value, timestamp, previousAnimation);
   };
-}
+};
 
 type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
   T extends StyleLayoutAnimation
@@ -260,9 +262,12 @@ type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
 
 const IS_NATIVE = NativeReanimatedModule.native;
 
-export function defineAnimation<
+export const defineAnimation = <
   T extends AnimationObject | StyleLayoutAnimation
->(starting: AnimationToDecoration<T>, factory: () => T): T {
+>(
+  starting: AnimationToDecoration<T>,
+  factory: () => T
+): T => {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting as T;
@@ -279,19 +284,19 @@ export function defineAnimation<
   }
   // @ts-ignore: eslint-disable-line
   return create;
-}
+};
 
-export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
+export const cancelAnimation = <T>(sharedValue: SharedValue<T>): void => {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-}
+};
 
 // TODO it should work only if there was no animation before.
-export function withStartValue(
+export const withStartValue = (
   startValue: AnimatableValue,
   animation: NextAnimation<AnimationObject>
-): Animation<AnimationObject> {
+): Animation<AnimationObject> => {
   'worklet';
   return defineAnimation(startValue, () => {
     'worklet';
@@ -301,4 +306,4 @@ export function withStartValue(
     (animation as Animation<AnimationObject>).current = startValue;
     return animation as Animation<AnimationObject>;
   });
-}
+};

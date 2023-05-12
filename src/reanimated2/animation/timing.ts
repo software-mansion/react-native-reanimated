@@ -28,11 +28,11 @@ export interface InnerTimingAnimation
   current: number;
 }
 
-export function withTiming(
+export const withTiming = (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
-): Animation<TimingAnimation> {
+): Animation<TimingAnimation> => {
   'worklet';
 
   return defineAnimation<TimingAnimation>(toValue, () => {
@@ -108,4 +108,4 @@ export function withTiming(
       callback,
     } as TimingAnimation;
   });
-}
+};

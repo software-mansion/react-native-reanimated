@@ -13,7 +13,7 @@ export type Mapper = {
   outputs?: SharedValue<any>[];
 };
 
-export function createMapperRegistry() {
+export const createMapperRegistry = () => {
   'worklet';
   const mappers = new Map();
   let sortedMappers: Mapper[] = [];
@@ -180,7 +180,7 @@ export function createMapperRegistry() {
       }
     },
   };
-}
+};
 
 let MAPPER_ID = 9999;
 

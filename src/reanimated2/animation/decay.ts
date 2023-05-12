@@ -38,10 +38,10 @@ export interface InnerDecayAnimation
   current: number;
 }
 
-export function withDecay(
+export const withDecay = (
   userConfig: DecayConfig,
   callback?: AnimationCallback
-): Animation<DecayAnimation> {
+): Animation<DecayAnimation> => {
   'worklet';
 
   return defineAnimation<DecayAnimation>(0, () => {
@@ -193,4 +193,4 @@ export function withDecay(
       startTimestamp: 0,
     } as DecayAnimation;
   });
-}
+};

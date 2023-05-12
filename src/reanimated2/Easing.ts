@@ -55,10 +55,10 @@ export type EasingFactoryFn = { factory: () => EasingFn };
  *
  * http://cubic-bezier.com/#0,0,1,1
  */
-function linear(t: number): number {
+const linear = (t: number): number => {
   'worklet';
   return t;
-}
+};
 
 /**
  * A simple inertial interaction, similar to an object slowly accelerating to
@@ -66,10 +66,10 @@ function linear(t: number): number {
  *
  * http://cubic-bezier.com/#.42,0,1,1
  */
-function ease(t: number): number {
+const ease = (t: number): number => {
   'worklet';
   return Bezier(0.42, 0, 1, 1)(t);
-}
+};
 
 /**
  * A quadratic function, `f(t) = t * t`. Position equals the square of elapsed
@@ -77,10 +77,10 @@ function ease(t: number): number {
  *
  * http://easings.net/#easeInQuad
  */
-function quad(t: number): number {
+const quad = (t: number): number => {
   'worklet';
   return t * t;
-}
+};
 
 /**
  * A cubic function, `f(t) = t * t * t`. Position equals the cube of elapsed
@@ -88,10 +88,10 @@ function quad(t: number): number {
  *
  * http://easings.net/#easeInCubic
  */
-function cubic(t: number): number {
+const cubic = (t: number): number => {
   'worklet';
   return t * t * t;
-}
+};
 
 /**
  * A power function. Position is equal to the Nth power of elapsed time.
@@ -99,43 +99,43 @@ function cubic(t: number): number {
  * n = 4: http://easings.net/#easeInQuart
  * n = 5: http://easings.net/#easeInQuint
  */
-function poly(n: number): EasingFn {
+const poly = (n: number): EasingFn => {
   'worklet';
   return (t) => {
     'worklet';
     return Math.pow(t, n);
   };
-}
+};
 
 /**
  * A sinusoidal function.
  *
  * http://easings.net/#easeInSine
  */
-function sin(t: number): number {
+const sin = (t: number): number => {
   'worklet';
   return 1 - Math.cos((t * Math.PI) / 2);
-}
+};
 
 /**
  * A circular function.
  *
  * http://easings.net/#easeInCirc
  */
-function circle(t: number): number {
+const circle = (t: number): number => {
   'worklet';
   return 1 - Math.sqrt(1 - t * t);
-}
+};
 
 /**
  * An exponential function.
  *
  * http://easings.net/#easeInExpo
  */
-function exp(t: number): number {
+const exp = (t: number): number => {
   'worklet';
   return Math.pow(2, 10 * (t - 1));
-}
+};
 
 /**
  * A simple elastic interaction, similar to a spring oscillating back and
@@ -147,14 +147,14 @@ function exp(t: number): number {
  *
  * http://easings.net/#easeInElastic
  */
-function elastic(bounciness = 1): EasingFn {
+const elastic = (bounciness = 1): EasingFn => {
   'worklet';
   const p = bounciness * Math.PI;
-  return (t) => {
+  return (t: number) => {
     'worklet';
     return 1 - Math.pow(Math.cos((t * Math.PI) / 2), 3) * Math.cos(t * p);
   };
-}
+};
 
 /**
  * Use with `Animated.parallel()` to create a simple effect where the object
@@ -164,20 +164,20 @@ function elastic(bounciness = 1): EasingFn {
  *
  * - http://tiny.cc/back_default (s = 1.70158, default)
  */
-function back(s = 1.70158): (t: number) => number {
+const back = (s = 1.70158): ((t: number) => number) => {
   'worklet';
   return (t) => {
     'worklet';
     return t * t * ((s + 1) * t - s);
   };
-}
+};
 
 /**
  * Provides a simple bouncing effect.
  *
  * http://easings.net/#easeInBounce
  */
-function bounce(t: number): number {
+const bounce = (t: number): number => {
   'worklet';
   if (t < 1 / 2.75) {
     return 7.5625 * t * t;
@@ -195,7 +195,7 @@ function bounce(t: number): number {
 
   const t2 = t - 2.625 / 2.75;
   return 7.5625 * t2 * t2 + 0.984375;
-}
+};
 
 /**
  * Provides a cubic bezier curve, equivalent to CSS Transitions'
@@ -204,12 +204,12 @@ function bounce(t: number): number {
  * A useful tool to visualize cubic bezier curves can be found at
  * http://cubic-bezier.com/
  */
-function bezier(
+const bezier = (
   x1: number,
   y1: number,
   x2: number,
   y2: number
-): { factory: () => (x: number) => number } {
+): { factory: () => (x: number) => number } => {
   'worklet';
   return {
     factory: () => {
@@ -217,43 +217,43 @@ function bezier(
       return Bezier(x1, y1, x2, y2);
     },
   };
-}
+};
 
-function bezierFn(
+const bezierFn = (
   x1: number,
   y1: number,
   x2: number,
   y2: number
-): (x: number) => number {
+): ((x: number) => number) => {
   'worklet';
   return Bezier(x1, y1, x2, y2);
-}
+};
 
 /**
  * Runs an easing function forwards.
  */
-function in_(easing: EasingFn): EasingFn {
+const in_ = (easing: EasingFn): EasingFn => {
   'worklet';
   return easing;
-}
+};
 
 /**
  * Runs an easing function backwards.
  */
-function out(easing: EasingFn): EasingFn {
+const out = (easing: EasingFn): EasingFn => {
   'worklet';
   return (t) => {
     'worklet';
     return 1 - easing(1 - t);
   };
-}
+};
 
 /**
  * Makes any easing function symmetrical. The easing function will run
  * forwards for half of the duration, then backwards for the rest of the
  * duration.
  */
-function inOut(easing: EasingFn): EasingFn {
+const inOut = (easing: EasingFn): EasingFn => {
   'worklet';
   return (t) => {
     'worklet';
@@ -262,7 +262,7 @@ function inOut(easing: EasingFn): EasingFn {
     }
     return 1 - easing((1 - t) * 2) / 2;
   };
-}
+};
 
 /**
  * The `steps` easing function jumps between discrete values at regular intervals,
@@ -270,7 +270,7 @@ function inOut(easing: EasingFn): EasingFn {
  * steps in the animation, and the `roundToNextStep` parameter determines whether the animation
  * should start at the beginning or end of each step.
  */
-function steps(n = 10, roundToNextStep = true): EasingFn {
+const steps = (n = 10, roundToNextStep = true): EasingFn => {
   'worklet';
   return (t) => {
     'worklet';
@@ -280,7 +280,7 @@ function steps(n = 10, roundToNextStep = true): EasingFn {
     }
     return Math.floor(value) / n;
   };
-}
+};
 
 const EasingObject = {
   linear,

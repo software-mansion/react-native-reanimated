@@ -13,12 +13,12 @@ export interface InnerRepeatAnimation
   startValue: number;
 }
 
-export function withRepeat(
+export const withRepeat = (
   _nextAnimation: NextAnimation<RepeatAnimation>,
   numberOfReps = 2,
   reverse = false,
   callback?: AnimationCallback
-): Animation<RepeatAnimation> {
+): Animation<RepeatAnimation> => {
   'worklet';
 
   return defineAnimation<RepeatAnimation>(_nextAnimation, () => {
@@ -90,4 +90,4 @@ export function withRepeat(
       startValue: 0,
     } as RepeatAnimation;
   });
-}
+};

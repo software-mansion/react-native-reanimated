@@ -117,13 +117,13 @@ export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
 ): string {
-  function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
+  const handleAndFlushAnimationFrame = (eventTimestamp: number, event: T) => {
     'worklet';
     global.__frameTimestamp = eventTimestamp;
     eventHandler(event);
     global.__flushAnimationFrame(eventTimestamp);
     global.__frameTimestamp = undefined;
-  }
+  };
   return NativeReanimatedModule.registerEventHandler(
     eventHash,
     makeShareableCloneRecursive(handleAndFlushAnimationFrame)
@@ -140,14 +140,14 @@ export function subscribeForKeyboardEvents(
 ): number {
   // TODO: this should really go with the same code path as other events, that is
   // via registerEventHandler. For now we are copying the code from there.
-  function handleAndFlushAnimationFrame(state: number, height: number) {
+  const handleAndFlushAnimationFrame = (state: number, height: number) => {
     'worklet';
     const now = performance.now();
     global.__frameTimestamp = now;
     eventHandler(state, height);
     global.__flushAnimationFrame(now);
     global.__frameTimestamp = undefined;
-  }
+  };
   return NativeReanimatedModule.subscribeForKeyboardEvents(
     makeShareableCloneRecursive(handleAndFlushAnimationFrame),
     options.isStatusBarTranslucentAndroid ?? false

@@ -9,10 +9,10 @@ import { runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 export { stopMapper } from './mappers';
 
-export function makeUIMutable<T>(
+export const makeUIMutable = <T>(
   initial: T,
   syncDataHolder?: ShareableSyncDataHolderRef<T>
-) {
+) => {
   'worklet';
 
   const listeners = new Map();
@@ -56,7 +56,7 @@ export function makeUIMutable<T>(
     _isReanimatedSharedValue: true,
   };
   return self;
-}
+};
 
 export function makeMutable<T>(
   initial: T,

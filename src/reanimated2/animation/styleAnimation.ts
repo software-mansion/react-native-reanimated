@@ -15,10 +15,10 @@ import { processColor } from '../Colors';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
-export function resolvePath<T>(
+export const resolvePath = <T>(
   obj: NestedObject<T>,
   path: AnimatableValue[] | AnimatableValue
-): NestedObjectValues<T> | undefined {
+): NestedObjectValues<T> | undefined => {
   'worklet';
   const keys: AnimatableValue[] = Array.isArray(path) ? path : [path];
   return keys.reduce<NestedObjectValues<T> | undefined>((acc, current) => {
@@ -35,15 +35,15 @@ export function resolvePath<T>(
     }
     return undefined;
   }, obj);
-}
+};
 
 // set value at given path
 type Path = Array<string | number> | string | number;
-export function setPath<T>(
+export const setPath = <T>(
   obj: NestedObject<T>,
   path: Path,
   value: NestedObjectValues<T>
-): void {
+): void => {
   'worklet';
   const keys: Path = Array.isArray(path) ? path : [path];
   let currObj: NestedObjectValues<T> = obj;
@@ -63,16 +63,16 @@ export function setPath<T>(
 
   (currObj as { [key: string]: NestedObjectValues<T> })[keys[keys.length - 1]] =
     value;
-}
+};
 
 interface NestedObjectEntry<T> {
   value: NestedObjectValues<T>;
   path: (string | number)[];
 }
 
-export function withStyleAnimation(
+export const withStyleAnimation = (
   styleAnimations: AnimatedStyle
-): StyleLayoutAnimation {
+): StyleLayoutAnimation => {
   'worklet';
   return defineAnimation<StyleLayoutAnimation>({}, () => {
     'worklet';
@@ -259,4 +259,4 @@ export function withStyleAnimation(
       callback,
     } as StyleLayoutAnimation;
   });
-}
+};

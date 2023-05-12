@@ -11,7 +11,7 @@ const IS_WEB = shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
-export function setupMicrotasks() {
+export const setupMicrotasks = () => {
   'worklet';
 
   let microtasksQueue: Array<() => void> = [];
@@ -39,12 +39,12 @@ export function setupMicrotasks() {
       isExecutingMicrotasksQueue = false;
     }
   };
-}
+};
 
-function callMicrotasksOnUIThread() {
+const callMicrotasksOnUIThread = () => {
   'worklet';
   global.__callMicrotasks();
-}
+};
 
 export const callMicrotasks = shouldBeUseWeb()
   ? () => {
@@ -132,9 +132,9 @@ if (__DEV__) {
   }
 }
 
-export function runOnJS<A extends any[], R>(
+export const runOnJS = <A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
+): ((...args: A) => void) => {
   'worklet';
   if (fun.__remoteFunction) {
     // in development mode the function provided as `fun` throws an error message
@@ -152,4 +152,4 @@ export function runOnJS<A extends any[], R>(
       args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };
-}
+};

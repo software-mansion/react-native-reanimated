@@ -2,10 +2,10 @@ import { defineAnimation } from './util';
 import { Animation, Timestamp, AnimatableValue } from '../commonTypes';
 import { NextAnimation, DelayAnimation } from './commonTypes';
 
-export function withDelay(
+export const withDelay = (
   delayMs: number,
   _nextAnimation: NextAnimation<DelayAnimation>
-): Animation<DelayAnimation> {
+): Animation<DelayAnimation> => {
   'worklet';
   return defineAnimation<DelayAnimation>(_nextAnimation, () => {
     'worklet';
@@ -74,4 +74,4 @@ export function withDelay(
       started: false,
     };
   });
-}
+};

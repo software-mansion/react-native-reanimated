@@ -29,11 +29,11 @@ export interface InnerSpringAnimation
   current: number;
 }
 
-export function withSpring(
+export const withSpring = (
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
-): Animation<SpringAnimation> {
+): Animation<SpringAnimation> => {
   'worklet';
 
   return defineAnimation<SpringAnimation>(toValue, () => {
@@ -163,4 +163,4 @@ export function withSpring(
       lastTimestamp: 0,
     } as SpringAnimation;
   });
-}
+};

@@ -198,7 +198,9 @@ export function makeShareableCloneRecursive<T>(
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
 }
 
-export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
+export const makeShareableCloneOnUIRecursive = <T>(
+  value: T
+): ShareableRef<T> => {
   'worklet';
   if (USE_STUB_IMPLEMENTATION) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
@@ -226,7 +228,7 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
     return _makeShareableClone(value);
   }
   return cloneRecursive(value);
-}
+};
 
 export function makeShareable<T>(value: T): T {
   if (USE_STUB_IMPLEMENTATION) {

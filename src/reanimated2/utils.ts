@@ -12,11 +12,11 @@ export interface ComponentCoords {
  * Given an absolute position and a component ref, returns the relative
  * position in the component's local coordinate space.
  */
-export function getRelativeCoords(
+export const getRelativeCoords = (
   parentRef: RefObjectFunction<Component>,
   absoluteX: number,
   absoluteY: number
-): ComponentCoords | null {
+): ComponentCoords | null => {
   'worklet';
   const parentCoords = measure(parentRef);
   if (parentCoords === null) {
@@ -26,9 +26,9 @@ export function getRelativeCoords(
     x: absoluteX - parentCoords.x,
     y: absoluteY - parentCoords.y,
   };
-}
+};
 
-export function isSharedValue<T>(value: any): value is SharedValue<T> {
+export const isSharedValue = <T>(value: any): value is SharedValue<T> => {
   'worklet';
   return value?._isReanimatedSharedValue === true;
-}
+};

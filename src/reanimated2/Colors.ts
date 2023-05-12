@@ -26,10 +26,10 @@ interface HSV {
 const NUMBER = '[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)';
 const PERCENTAGE = NUMBER + '%';
 
-function call(...args: unknown[]): string {
+const call = (...args: unknown[]): string => {
   'worklet';
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
-}
+};
 
 // matchers use RegExp objects which needs to be created separately on JS and on
 // the UI thread. We keep separate cache of Regexes for UI and JS using the below
@@ -47,7 +47,7 @@ type Matchers = {
   hex6?: RegExp;
   hex8?: RegExp;
 };
-function getMatchers(): Matchers {
+const getMatchers = (): Matchers => {
   'worklet';
   const cachedMatchers: Matchers = _WORKLET
     ? uiCachedMatchers
@@ -70,13 +70,13 @@ function getMatchers(): Matchers {
     cachedMatchers.hex8 = /^#([0-9a-fA-F]{8})$/;
   }
   return cachedMatchers;
-}
+};
 // cachedMatchers is lazy loaded and it is frozen when worklet is being created,
 // it is possible to call getMatchers() when the object is frozen, then cachedMatchers
 // has no assigned regexes
 getMatchers();
 
-function hue2rgb(p: number, q: number, t: number): number {
+const hue2rgb = (p: number, q: number, t: number): number => {
   'worklet';
   if (t < 0) {
     t += 1;
@@ -94,9 +94,9 @@ function hue2rgb(p: number, q: number, t: number): number {
     return p + (q - p) * (2 / 3 - t) * 6;
   }
   return p;
-}
+};
 
-function hslToRgb(h: number, s: number, l: number): number {
+const hslToRgb = (h: number, s: number, l: number): number => {
   'worklet';
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
   const p = 2 * l - q;
@@ -109,9 +109,9 @@ function hslToRgb(h: number, s: number, l: number): number {
     (Math.round(g * 255) << 16) |
     (Math.round(b * 255) << 8)
   );
-}
+};
 
-function parse255(str: string): number {
+const parse255 = (str: string): number => {
   'worklet';
   const int = Number.parseInt(str, 10);
   if (int < 0) {
@@ -121,15 +121,15 @@ function parse255(str: string): number {
     return 255;
   }
   return int;
-}
+};
 
-function parse360(str: string): number {
+const parse360 = (str: string): number => {
   'worklet';
   const int = Number.parseFloat(str);
   return (((int % 360) + 360) % 360) / 360;
-}
+};
 
-function parse1(str: string): number {
+const parse1 = (str: string): number => {
   'worklet';
   const num = Number.parseFloat(str);
   if (num < 0) {
@@ -139,9 +139,9 @@ function parse1(str: string): number {
     return 255;
   }
   return Math.round(num * 255);
-}
+};
 
-function parsePercentage(str: string): number {
+const parsePercentage = (str: string): number => {
   'worklet';
   // parseFloat conveniently ignores the final %
   const int = Number.parseFloat(str);
@@ -152,7 +152,7 @@ function parsePercentage(str: string): number {
     return 1;
   }
   return int / 100;
-}
+};
 
 const names: any = !isConfigured()
   ? null
@@ -311,7 +311,7 @@ const names: any = !isConfigured()
       yellowgreen: 0x9acd32ff,
     });
 
-function normalizeColor(color: unknown): number | null {
+const normalizeColor = (color: unknown): number | null => {
   'worklet';
 
   if (typeof color === 'number') {
@@ -421,7 +421,7 @@ function normalizeColor(color: unknown): number | null {
   }
 
   return null;
-}
+};
 
 export const opacity = (c: number): number => {
   'worklet';
@@ -473,12 +473,14 @@ export const rgbaColor = (
  * 0 <= r, g, b <= 255
  * returns 0 <= h, s, v <= 1
  */
-export function RGBtoHSV(rgb: RGB): HSV;
-export function RGBtoHSV(r: number, g: number, b: number): HSV;
-export function RGBtoHSV(r: any, g?: any, b?: any): HSV {
+type RGBtoHSVtype = {
+  (r: number, g: number, b: number): HSV;
+  (r: RGB, g: never, b: never): HSV;
+};
+export const RGBtoHSV: RGBtoHSVtype = (r: any, g?: any, b?: any): HSV => {
   'worklet';
   /* eslint-disable */
-  if (arguments.length === 1) {
+  if (g === undefined) {
     g = r.g;
     b = r.b;
     r = r.r;
@@ -517,7 +519,7 @@ export function RGBtoHSV(r: any, g?: any, b?: any): HSV {
     v: v,
   };
   /* eslint-enable */
-}
+};
 
 /* accepts parameters
  * h  Object = {h:x, s:y, v:z}
@@ -526,13 +528,15 @@ export function RGBtoHSV(r: any, g?: any, b?: any): HSV {
  * 0 <= h, s, v <= 1
  * returns 0 <= r, g, b <= 255
  */
-function HSVtoRGB(hsv: HSV): RGB;
-function HSVtoRGB(h: number, s: number, v: number): RGB;
-function HSVtoRGB(h: any, s?: any, v?: any) {
+type HSVtoRGBtype = {
+  (h: HSV): RGB;
+  (h: number, s: number, v: number): RGB;
+};
+const HSVtoRGB: HSVtoRGBtype = (h: any, s?: any, v?: any): RGB => {
   'worklet';
   /* eslint-disable */
   var r, g, b, i, f, p, q, t;
-  if (arguments.length === 1) {
+  if (s === undefined) {
     s = h.s;
     v = h.v;
     h = h.h;
@@ -568,7 +572,7 @@ function HSVtoRGB(h: any, s?: any, v?: any) {
     b: Math.round(b * 255),
   };
   /* eslint-enable */
-}
+};
 
 export const hsvToColor = (
   h: number,
@@ -581,9 +585,9 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(
+export const processColorInitially = (
   color: unknown
-): number | null | undefined {
+): number | null | undefined => {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -601,17 +605,17 @@ export function processColorInitially(
 
   normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; // argb
   return normalizedColor;
-}
+};
 
-export function isColor(value: unknown): boolean {
+export const isColor = (value: unknown): boolean => {
   'worklet';
   if (typeof value !== 'string') {
     return false;
   }
   return processColorInitially(value) != null;
-}
+};
 
-export function processColor(color: unknown): number | null | undefined {
+export const processColor = (color: unknown): number | null | undefined => {
   'worklet';
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
@@ -631,11 +635,11 @@ export function processColor(color: unknown): number | null | undefined {
   }
 
   return normalizedColor;
-}
+};
 
 export type ParsedColorArray = [number, number, number, number];
 
-export function convertToRGBA(color: unknown): ParsedColorArray {
+export const convertToRGBA = (color: unknown): ParsedColorArray => {
   'worklet';
   const processedColor = processColorInitially(color)!; // argb;
   const a = (processedColor >>> 24) / 255;
@@ -643,19 +647,19 @@ export function convertToRGBA(color: unknown): ParsedColorArray {
   const g = ((processedColor << 16) >>> 24) / 255;
   const b = ((processedColor << 24) >>> 24) / 255;
   return [r, g, b, a];
-}
+};
 
-export function rgbaArrayToRGBAColor(RGBA: ParsedColorArray): string {
+export const rgbaArrayToRGBAColor = (RGBA: ParsedColorArray): string => {
   'worklet';
   return `rgba(${Math.round(RGBA[0] * 255)}, ${Math.round(
     RGBA[1] * 255
   )}, ${Math.round(RGBA[2] * 255)}, ${RGBA[3]})`;
-}
+};
 
-export function toLinearSpace(
+export const toLinearSpace = (
   RGBA: ParsedColorArray,
   gamma = 2.2
-): ParsedColorArray {
+): ParsedColorArray => {
   'worklet';
   const res = [];
   for (let i = 0; i < 3; ++i) {
@@ -663,12 +667,12 @@ export function toLinearSpace(
   }
   res.push(RGBA[3]);
   return res as ParsedColorArray;
-}
+};
 
-export function toGammaSpace(
+export const toGammaSpace = (
   RGBA: ParsedColorArray,
   gamma = 2.2
-): ParsedColorArray {
+): ParsedColorArray => {
   'worklet';
   const res = [];
   for (let i = 0; i < 3; ++i) {
@@ -676,4 +680,4 @@ export function toGammaSpace(
   }
   res.push(RGBA[3]);
   return res as ParsedColorArray;
-}
+};

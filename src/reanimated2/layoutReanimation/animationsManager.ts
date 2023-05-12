@@ -10,31 +10,31 @@ import { runOnUIImmediately } from '../threads';
 
 const TAG_OFFSET = 1e9;
 
-function startObservingProgress(
+const startObservingProgress = (
   tag: number,
   sharedValue: SharedValue<number>,
   animationType: LayoutAnimationType
-): void {
+): void => {
   'worklet';
   const isSharedTransition =
     animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
     _notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
   });
-}
+};
 
-function stopObservingProgress(
+const stopObservingProgress = (
   tag: number,
   sharedValue: SharedValue<number>,
   cancelled: boolean,
   removeView: boolean
-): void {
+): void => {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
   _notifyAboutEnd(tag, cancelled, removeView);
-}
+};
 
-function createLayoutAnimationManager() {
+const createLayoutAnimationManager = () => {
   'worklet';
   const enteringAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
@@ -94,7 +94,7 @@ function createLayoutAnimationManager() {
       stopObservingProgress(tag, value, true, true);
     },
   };
-}
+};
 
 runOnUIImmediately(() => {
   'worklet';

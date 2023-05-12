@@ -53,12 +53,12 @@ interface AnimationRef {
   viewDescriptors: ViewDescriptorsSet;
 }
 
-function prepareAnimation(
+const prepareAnimation = (
   frameTimestamp: number,
   animatedProp: AnimatedStyle,
   lastAnimation: AnimatedStyle,
   lastValue: AnimatedStyle
-): void {
+): void => {
   'worklet';
   if (Array.isArray(animatedProp)) {
     animatedProp.forEach((prop, index) => {
@@ -111,15 +111,15 @@ function prepareAnimation(
       )
     );
   }
-}
+};
 
-function runAnimations(
+const runAnimations = (
   animation: AnimatedStyle,
   timestamp: Timestamp,
   key: number | string,
   result: AnimatedStyle,
   animationsActive: SharedValue<boolean>
-): boolean {
+): boolean => {
   'worklet';
   if (!animationsActive.value) {
     return true;
@@ -172,15 +172,15 @@ function runAnimations(
     result[key] = animation;
     return true;
   }
-}
+};
 
-function styleUpdater(
+const styleUpdater = (
   viewDescriptors: SharedValue<Descriptor[]>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>
-): void {
+): void => {
   'worklet';
   const animations = state.animations ?? {};
   const newValues = updater() ?? {};
@@ -260,9 +260,9 @@ function styleUpdater(
     }
   }
   state.last = newValues;
-}
+};
 
-function jestStyleUpdater(
+const jestStyleUpdater = (
   viewDescriptors: SharedValue<Descriptor[]>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
@@ -270,7 +270,7 @@ function jestStyleUpdater(
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle>,
   adapters: AdapterWorkletFunction[] = []
-): void {
+): void => {
   'worklet';
   const animations: AnimatedStyle = state.animations ?? {};
   const newValues = updater() ?? {};
@@ -361,7 +361,7 @@ function jestStyleUpdater(
       adapters
     );
   }
-}
+};
 
 // check for invalid usage of shared values in returned object
 function checkSharedValueUsage(

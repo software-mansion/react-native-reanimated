@@ -80,11 +80,11 @@ if (isWeb()) {
   };
 }
 
-export function dispatchCommand(
+export const dispatchCommand = (
   animatedRef: RefObjectFunction<Component>,
   commandName: string,
   args: Array<unknown>
-): void {
+): void => {
   'worklet';
   if (!_WORKLET || !isNative || !global._IS_FABRIC) {
     return;
@@ -94,7 +94,7 @@ export function dispatchCommand(
   // an object (ShadowNodeWrapper) and not a number
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   _dispatchCommand!(shadowNodeWrapper, commandName, args);
-}
+};
 
 export let scrollTo: (
   animatedRef: RefObjectFunction<Component>,
@@ -151,7 +151,7 @@ if (isWeb()) {
   };
 }
 
-export function setGestureState(handlerTag: number, newState: number): void {
+export const setGestureState = (handlerTag: number, newState: number): void => {
   'worklet';
   if (!_WORKLET || !isNative) {
     console.warn(
@@ -160,4 +160,4 @@ export function setGestureState(handlerTag: number, newState: number): void {
     return;
   }
   _setGestureState(handlerTag, newState);
-}
+};

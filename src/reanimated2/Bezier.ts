@@ -6,12 +6,12 @@
 
 // These values are established by empiricism with tests (tradeoff: performance VS precision)
 
-export function Bezier(
+export const Bezier = (
   mX1: number,
   mY1: number,
   mX2: number,
   mY2: number
-): (x: number) => number {
+): ((x: number) => number) => {
   'worklet';
 
   const NEWTON_ITERATIONS = 4;
@@ -22,38 +22,38 @@ export function Bezier(
   const kSplineTableSize = 11;
   const kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
 
-  function A(aA1: number, aA2: number): number {
+  const A = (aA1: number, aA2: number): number => {
     'worklet';
     return 1.0 - 3.0 * aA2 + 3.0 * aA1;
-  }
-  function B(aA1: number, aA2: number): number {
+  };
+  const B = (aA1: number, aA2: number): number => {
     'worklet';
     return 3.0 * aA2 - 6.0 * aA1;
-  }
-  function C(aA1: number) {
+  };
+  const C = (aA1: number) => {
     'worklet';
     return 3.0 * aA1;
-  }
+  };
 
   // Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
-  function calcBezier(aT: number, aA1: number, aA2: number): number {
+  const calcBezier = (aT: number, aA1: number, aA2: number): number => {
     'worklet';
     return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
-  }
+  };
 
   // Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
-  function getSlope(aT: number, aA1: number, aA2: number): number {
+  const getSlope = (aT: number, aA1: number, aA2: number): number => {
     'worklet';
     return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
-  }
+  };
 
-  function binarySubdivide(
+  const binarySubdivide = (
     aX: number,
     aA: number,
     aB: number,
     mX1: number,
     mX2: number
-  ): number {
+  ): number => {
     'worklet';
     let currentX;
     let currentT;
@@ -71,14 +71,14 @@ export function Bezier(
       ++i < SUBDIVISION_MAX_ITERATIONS
     );
     return currentT;
-  }
+  };
 
-  function newtonRaphsonIterate(
+  const newtonRaphsonIterate = (
     aX: number,
     aGuessT: number,
     mX1: number,
     mX2: number
-  ): number {
+  ): number => {
     'worklet';
     for (let i = 0; i < NEWTON_ITERATIONS; ++i) {
       const currentSlope = getSlope(aGuessT, mX1, mX2);
@@ -89,12 +89,12 @@ export function Bezier(
       aGuessT -= currentX / currentSlope;
     }
     return aGuessT;
-  }
+  };
 
-  function LinearEasing(x: number): number {
+  const LinearEasing = (x: number): number => {
     'worklet';
     return x;
-  }
+  };
 
   if (!(mX1 >= 0 && mX1 <= 1 && mX2 >= 0 && mX2 <= 1)) {
     throw new Error('bezier x values must be in [0, 1] range');
@@ -118,7 +118,7 @@ export function Bezier(
     sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
   }
 
-  function getTForX(aX: number): number {
+  const getTForX = (aX: number): number => {
     'worklet';
     let intervalStart = 0.0;
     let currentSample = 1;
@@ -153,9 +153,9 @@ export function Bezier(
         mX2
       );
     }
-  }
+  };
 
-  return function BezierEasing(x) {
+  const BezierEasing = (x: number) => {
     'worklet';
     if (mX1 === mY1 && mX2 === mY2) {
       return x; // linear
@@ -169,4 +169,6 @@ export function Bezier(
     }
     return calcBezier(getTForX(x), mY1, mY2);
   };
-}
+
+  return BezierEasing;
+};

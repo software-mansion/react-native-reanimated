@@ -27,14 +27,14 @@ export type ExtrapolationType =
   | string
   | undefined;
 
-function getVal(
+const getVal = (
   type: Extrapolation,
   coef: number,
   val: number,
   leftEdgeOutput: number,
   rightEdgeOutput: number,
   x: number
-): number {
+): number => {
   'worklet';
 
   switch (type) {
@@ -49,9 +49,9 @@ function getVal(
     default:
       return val;
   }
-}
+};
 
-function isExtrapolate(value: string): value is Extrapolation {
+const isExtrapolate = (value: string): value is Extrapolation => {
   'worklet';
 
   return (
@@ -59,11 +59,11 @@ function isExtrapolate(value: string): value is Extrapolation {
     value === Extrapolation.CLAMP ||
     value === Extrapolation.IDENTITY
   );
-}
+};
 
 // validates extrapolations type
 // if type is correct, converts it to ExtrapolationConfig
-function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
+const validateType = (type: ExtrapolationType): RequiredExtrapolationConfig => {
   'worklet';
   // initialize extrapolationConfig with default extrapolation
   const extrapolationConfig: RequiredExtrapolationConfig = {
@@ -103,13 +103,13 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
 
   Object.assign(extrapolationConfig, type);
   return extrapolationConfig;
-}
+};
 
-function internalInterpolate(
+const internalInterpolate = (
   x: number,
   narrowedInput: InterpolationNarrowedInput,
   extrapolationConfig: RequiredExtrapolationConfig
-) {
+) => {
   'worklet';
   const { leftEdgeInput, rightEdgeInput, leftEdgeOutput, rightEdgeOutput } =
     narrowedInput;
@@ -139,11 +139,11 @@ function internalInterpolate(
   }
 
   return val;
-}
+};
 
 // TODO: support default values in worklets:
 // e.g. function interpolate(x, input, output, type = Extrapolatation.CLAMP)
-export function interpolate(
+export const interpolate = function (
   x: number,
   input: readonly number[],
   output: readonly number[],
@@ -184,4 +184,4 @@ export function interpolate(
   }
 
   return internalInterpolate(x, narrowedInput, extrapolationConfig);
-}
+};

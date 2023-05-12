@@ -179,7 +179,7 @@ function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
   return false;
 }
 
-function getInlinePropsUpdate(inlineProps: Record<string, any>) {
+const getInlinePropsUpdate = (inlineProps: Record<string, any>) => {
   'worklet';
   const update: Record<string, any> = {};
   for (const [key, styleValue] of Object.entries(inlineProps)) {
@@ -194,7 +194,7 @@ function getInlinePropsUpdate(inlineProps: Record<string, any>) {
     }
   }
   return update;
-}
+};
 
 interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;

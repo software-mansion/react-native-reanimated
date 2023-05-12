@@ -9,10 +9,10 @@ import {
 } from './threads';
 
 // callGuard is only used with debug builds
-function callGuardDEV<T extends Array<any>, U>(
+const callGuardDEV = <T extends Array<any>, U>(
   fn: (...args: T) => U,
   ...args: T
-): void {
+): void => {
   'worklet';
   try {
     fn(...args);
@@ -23,9 +23,9 @@ function callGuardDEV<T extends Array<any>, U>(
       throw e;
     }
   }
-}
+};
 
-function valueUnpacker(objectToUnpack: any, category?: string): any {
+const valueUnpacker = (objectToUnpack: any, category?: string): any => {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -90,9 +90,9 @@ Possible solutions are:
   } else {
     throw new Error('data type not recognized by unpack method');
   }
-}
+};
 
-function setupRequestAnimationFrame() {
+const setupRequestAnimationFrame = () => {
   'worklet';
 
   // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
@@ -134,7 +134,7 @@ function setupRequestAnimationFrame() {
     // attempt to store the value returned from rAF and use it for cancelling.
     return -1;
   };
-}
+};
 
 export function initializeUIRuntime() {
   NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);

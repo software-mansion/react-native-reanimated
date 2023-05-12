@@ -7,9 +7,9 @@ import {
   Timestamp,
 } from '../commonTypes';
 
-export function withSequence(
+export const withSequence = (
   ..._animations: NextAnimation<AnimationObject>[]
-): Animation<SequenceAnimation> {
+): Animation<SequenceAnimation> => {
   'worklet';
   return defineAnimation<SequenceAnimation>(
     _animations[0] as SequenceAnimation,
@@ -82,4 +82,4 @@ export function withSequence(
       } as SequenceAnimation;
     }
   );
-}
+};
