@@ -10,6 +10,8 @@ import {
 } from '../shareables';
 
 interface ComponentRef extends Component {
+  displayName?: string;
+  name?: string;
   getNativeScrollRef?: () => ComponentRef;
   getScrollableNode?: () => ComponentRef;
 }
@@ -26,7 +28,9 @@ function getScrollableRef(component: ComponentRef): ComponentRef {
       return component.getNativeScrollRef();
     } else {
       console.warn(
-        '[Reanimated] ${Component.displayName || Component.name || 'Component'} has no implemented `getNativeScrollRef` method. Please report this issue to the library maintainers.'
+        `[Reanimated] ${
+          component.displayName || component.name || 'Component'
+        } has no implemented 'getNativeScrollRef' method. Please report this issue to the library maintainers.`
       );
     }
   } else {
