@@ -5,6 +5,7 @@
 #include "NewestShadowNodesRegistry.h"
 
 #include <react/renderer/debug/SystraceSection.h>
+#include <react/renderer/core/CoreFeatures.h>
 
 #include <utility>
 
@@ -36,6 +37,10 @@ void ReanimatedUIManagerBinding::createAndInstallIfNeeded(
         reinterpret_cast<UIManagerBindingPublic *>(&*uiManagerBinding);
     return std::move(uiManagerBindingPublic->eventHandler_);
   }();
+
+  // We can not cache text measurements, because we need to calculate it on each animation frame.
+  CoreFeatures::cacheNSTextStorage = false;
+  CoreFeatures::cacheLastTextMeasurement = false
 
   auto reanimatedUiManagerBinding =
       std::make_shared<ReanimatedUIManagerBinding>(
