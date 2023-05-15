@@ -28,11 +28,6 @@ import { SensorContainer } from './SensorContainer';
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
 
-if (isWeb()) {
-  // @ts-ignore because of react-native-gesture-handler
-  global.setImmediate = global.queueMicrotask;
-}
-
 export type ReanimatedConsole = Pick<
   Console,
   'debug' | 'log' | 'warn' | 'info' | 'error'

@@ -810,7 +810,7 @@ PODS:
     - React-Core
   - RNCPicker (2.4.10):
     - React-Core
-  - RNGestureHandler (2.9.0):
+  - RNGestureHandler (2.10.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1124,7 +1124,7 @@ SPEC CHECKSUMS:
   React-perflogger: 0c4141a3eba3fe922d53b98900cfeeefe9d78de0
   React-RCTActionSheet: bde19fb7124b692941e772a7c83925bbeddfa0cb
   React-RCTAnimation: 660297e4bfe277d26018518b86eed48adcde649e
-  React-RCTAppDelegate: e90d5a71a664ca5edb625a8decf3d0fe59ec7955
+  React-RCTAppDelegate: 56e183db3eb1daef07ae80ff61ce3dbe29c6a39d
   React-RCTBlob: f81feafaf9dd1ba5f684d3df9346ac0ddd27417c
   React-RCTFabric: 059f86ed6e263538062b4f9777df755e66ac0cbe
   React-RCTImage: 83edc4014ee8c3087349116da9698dc44fb8564b
@@ -1139,7 +1139,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: b90b71f45b8b97be43bc4284e71a6af48ac9f547
   RNCMaskedView: 949696f25ec596bfc697fc88e6f95cf0c79669b6
   RNCPicker: 0bc2f0a29abcca7b7ed44a2d036aac9ab6d25700
-  RNGestureHandler: 9d2ebd17a9fef618d9720e3d95ff5e6607acf8d4
+  RNGestureHandler: 8c8ccd3eb5a8d7b79b79c35635095687845c5534
   RNReanimated: b41e747bc0305d1900d0726b8ec205840a38303a
   RNScreens: 4666ca0a74ee229b2332c5d22d2a8b81ba9202be
   RNSVG: a9204714b832d82b483b0cbaee9e675646426b8d

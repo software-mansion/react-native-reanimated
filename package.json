@@ -142,7 +142,7 @@
     "react": "17.0.2",
     "react-native": "0.72.0-rc.1",
     "react-native-builder-bob": "^0.18.3",
-    "react-native-gesture-handler": "^2.9.0",
+    "react-native-gesture-handler": "^2.10.0",
     "react-native-web": "^0.19.2",
     "react-test-renderer": "17.0.2",
     "typescript": "^4.1.3"
