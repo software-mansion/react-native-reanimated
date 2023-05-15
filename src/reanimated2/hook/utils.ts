@@ -165,13 +165,33 @@ export function parseColors(updates: AnimatedStyle): void {
 
 export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   'worklet';
-  if (Array.isArray(prop)) {
-    return prop.some(isAnimated);
-  } else if (typeof prop === 'object') {
-    if (prop.onFrame !== undefined) {
-      return true;
-    } else {
-      return Object.values(prop).some(isAnimated);
+  const maxStackSize = 1024;
+  const stack = new Array<typeof prop>(maxStackSize);
+  let stackSize = 0;
+  stack[stackSize++] = prop;
+  function checkStackSize() {
+    if (stackSize >= maxStackSize) {
+      throw new Error(
+        'Maximum stack size exceeded when checking if object contains animated values.'
+      );
+    }
+  }
+
+  while (stackSize > 0) {
+    const current = stack[--stackSize];
+    if (Array.isArray(current)) {
+      current.forEach((item) => {
+        stack[stackSize++] = item;
+        checkStackSize();
+      });
+    } else if (typeof current === 'object') {
+      if (current.onFrame !== undefined) {
+        return true;
+      }
+      Object.values(current).forEach((item) => {
+        stack[stackSize++] = item;
+        checkStackSize();
+      });
     }
   }
   return false;
