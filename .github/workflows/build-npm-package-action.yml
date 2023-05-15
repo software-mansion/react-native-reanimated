@@ -95,6 +95,9 @@ jobs:
         
       - run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - run: yarn publish $PACKAGE_NAME --tag nightly
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
