@@ -15,10 +15,19 @@ import {
   RectButton,
 } from 'react-native-gesture-handler';
 import {
+  HeaderBackButton,
+  HeaderBackButtonProps,
+} from '@react-navigation/elements';
+import {
   NativeStackNavigationProp,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
-import { NavigationContainer, PathConfigMap } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  NavigationProp,
+  PathConfigMap,
+  useNavigation,
+} from '@react-navigation/native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
@@ -117,6 +126,14 @@ const linking = {
   },
 };
 
+function BackButton(props: HeaderBackButtonProps) {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  return (
+    <HeaderBackButton {...props} onPress={() => navigation.navigate('Home')} />
+  );
+}
+
 // copied from https://reactnavigation.org/docs/state-persistence/
 const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
 
@@ -173,6 +190,7 @@ export default function App() {
             options={{
               headerTitle: '🐎 Reanimated examples',
               title: 'Reanimated examples',
+              headerLeft: Platform.OS === 'web' ? () => null : undefined,
             }}
           />
           {EXAMPLES_NAMES.map((name) => (
@@ -183,6 +201,7 @@ export default function App() {
               options={{
                 headerTitle: EXAMPLES[name].title,
                 title: EXAMPLES[name].title,
+                headerLeft: Platform.OS === 'web' ? BackButton : undefined,
               }}
             />
           ))}
