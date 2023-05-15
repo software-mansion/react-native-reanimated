@@ -1,7 +1,13 @@
 import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
 import createReactDOMStyle from 'react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle';
-import { createTransformValue } from 'react-native-web/dist/exports/StyleSheet/preprocess';
+
+let createTransformValue: (transform: any) => any;
+try {
+  // React Native Web 0.19+
+  createTransformValue =
+    require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+} catch (e) {}
 
 const reanimatedJS = new JSReanimated();
 
@@ -36,7 +42,10 @@ export const _updatePropsJS = (
 
     if (typeof component.setNativeProps === 'function') {
       setNativeProps(component, rawStyles);
-    } else if (component.style !== undefined) {
+    } else if (
+      component.style !== undefined &&
+      createTransformValue !== undefined
+    ) {
       updatePropsDOM(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
