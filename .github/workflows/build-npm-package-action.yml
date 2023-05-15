@@ -92,6 +92,8 @@ jobs:
           name: android-build-output
           path: android-build-output.zip
           retention-days: 5
+        
+      - run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - run: yarn publish $PACKAGE_NAME --tag nightly
         env:
