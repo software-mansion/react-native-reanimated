@@ -5,7 +5,10 @@ declare global {
   namespace jest {
     interface Matchers<R> {
       toHaveAnimatedStyle(
-        style: Record<string, unknown>[] | Record<string, unknown>
+        style: Record<string, unknown>[] | Record<string, unknown>,
+        config?: {
+          shouldMatchAllProps?: boolean;
+        }
       ): R;
     }
   }
@@ -23,7 +26,7 @@ const getAnimatedStyleFromObject = (style) => {
   return style.animatedStyle.current.value;
 };
 
-const getCurrentStyle = (received) => {
+const getCurrentStyle = (received): Record<string, any> => {
   const styleObject = received.props.style;
   let currentStyle = {};
   if (Array.isArray(styleObject)) {
@@ -73,7 +76,7 @@ const checkEqual = (currentStyle, expectStyle) => {
   return true;
 };
 
-const findStyleDiff = (current, expect, requireAllMatch) => {
+const findStyleDiff = (current, expect, shouldMatchAllProps) => {
   const diffs = [];
   let isEqual = true;
   for (const property in expect) {
@@ -88,7 +91,7 @@ const findStyleDiff = (current, expect, requireAllMatch) => {
   }
 
   if (
-    requireAllMatch &&
+    shouldMatchAllProps &&
     Object.keys(current).length !== Object.keys(expect).length
   ) {
     isEqual = false;
@@ -110,9 +113,13 @@ const compareStyle = (received, expectedStyle, config) => {
   if (!received.props.style) {
     return { message: () => message, pass: false };
   }
-  const { exact } = config;
+  const { shouldMatchAllProps } = config;
   const currentStyle = getCurrentStyle(received);
-  const { isEqual, diffs } = findStyleDiff(currentStyle, expectedStyle, exact);
+  const { isEqual, diffs } = findStyleDiff(
+    currentStyle,
+    expectedStyle,
+    shouldMatchAllProps
+  );
 
   if (isEqual) {
     return { message: () => 'ok', pass: true };
@@ -196,7 +203,6 @@ export const setUpTests = (userConfig = {}) => {
     ...config,
     ...userConfig,
   };
-
   expect.extend({
     toHaveAnimatedStyle(received, expectedStyle, config = {}) {
       return compareStyle(received, expectedStyle, config);

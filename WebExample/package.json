@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/webpack-config": "^18.0.0",
+    "@react-native-community/slider": "^4.4.2",
     "expo": "~48.0.10",
     "expo-status-bar": "~1.4.0",
     "react": "18.2.0",
