@@ -60,58 +60,87 @@ function prepareAnimation(
   lastValue: AnimatedStyle
 ): void {
   'worklet';
-  if (Array.isArray(animatedProp)) {
-    animatedProp.forEach((prop, index) => {
-      prepareAnimation(
-        frameTimestamp,
-        prop,
-        lastAnimation && lastAnimation[index],
-        lastValue && lastValue[index]
-      );
-    });
-    // return animatedProp;
+
+  const maxStackSize = 1024;
+  interface stackElement {
+    animatedProp: AnimatedStyle;
+    lastAnimation: AnimatedStyle;
+    lastValue: AnimatedStyle;
   }
-  if (typeof animatedProp === 'object' && animatedProp.onFrame) {
-    const animation = animatedProp;
+  const stack = new Array<stackElement>(maxStackSize);
+  let stackSize = 0;
+  stack[stackSize++] = { animatedProp, lastAnimation, lastValue };
 
-    let value = animation.current;
-    if (lastValue !== undefined) {
-      if (typeof lastValue === 'object') {
-        if (lastValue.value !== undefined) {
-          // previously it was a shared value
-          value = lastValue.value;
-        } else if (lastValue.onFrame !== undefined) {
-          if (lastAnimation?.current !== undefined) {
-            // it was an animation before, copy its state
-            value = lastAnimation.current;
-          } else if (lastValue?.current !== undefined) {
-            // it was initialized
-            value = lastValue.current;
-          }
-        }
-      } else {
-        // previously it was a plain value, just set it as starting point
-        value = lastValue;
-      }
+  function checkStackSize() {
+    if (stackSize >= maxStackSize) {
+      throw new Error('Maximum stack size exceeded while preparing animation.');
     }
+  }
 
-    animation.callStart = (timestamp: Timestamp) => {
-      animation.onStart(animation, value, timestamp, lastAnimation);
-    };
-    animation.callStart(frameTimestamp);
-    animation.callStart = null;
-  } else if (typeof animatedProp === 'object') {
-    // it is an object
-    Object.keys(animatedProp).forEach((key) =>
-      prepareAnimation(
+  while (stackSize > 0) {
+    const current = stack[--stackSize];
+    if (
+      typeof current.animatedProp === 'object' &&
+      current.animatedProp.onFrame
+    ) {
+      prepareTheThing(
         frameTimestamp,
-        animatedProp[key],
-        lastAnimation && lastAnimation[key],
-        lastValue && lastValue[key]
-      )
-    );
+        current.animatedProp,
+        current.lastAnimation,
+        current.lastValue
+      );
+    } else if (Array.isArray(current.animatedProp)) {
+      current.animatedProp.forEach((prop, index) => {
+        stack[stackSize++] = {
+          animatedProp: prop,
+          lastAnimation: current.lastAnimation && current.lastAnimation[index],
+          lastValue: current.lastValue && current.lastValue[index],
+        };
+        checkStackSize();
+      });
+    } else if (typeof current.animatedProp === 'object') {
+      Object.keys(current.animatedProp).forEach((key) => {
+        stack[stackSize++] = {
+          animatedProp: current.animatedProp[key],
+          lastAnimation: lastAnimation && lastAnimation[key],
+          lastValue: lastValue && lastValue[key],
+        };
+        checkStackSize();
+      });
+    }
   }
 }
+
+const prepareTheThing = (
+  frameTimestamp: number,
+  animatedProp: AnimatedStyle,
+  lastAnimation: AnimatedStyle,
+  lastValue: AnimatedStyle
+) => {
+  const animation = animatedProp;
+
+  let value = animation.current;
+  if (lastValue !== undefined) {
+    if (typeof lastValue === 'object') {
+      if (lastValue.value !== undefined) {
+        // previously it was a shared value
+        value = lastValue.value;
+      } else if (lastValue.onFrame !== undefined) {
+        if (lastAnimation?.current !== undefined) {
+          // it was an animation before, copy its state
+          value = lastAnimation.current;
+        } else if (lastValue?.current !== undefined) {
+          // it was initialized
+          value = lastValue.current;
+        }
+      }
+    } else {
+      // previously it was a plain value, just set it as starting point
+      value = lastValue;
+    }
+  }
+  animation.onStart(animation, value, frameTimestamp, lastAnimation);
+};
 
 function runAnimations(
   animation: AnimatedStyle,
