@@ -10,6 +10,7 @@ global._scheduleOnJS = queueMicrotask;
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
+  setNativeProps?: (style: StyleProps) => void;
   style?: StyleProps;
   props: Record<string, string | number>;
   _touchableNode: {
@@ -33,7 +34,9 @@ export const _updatePropsJS = (
       [{}, {}]
     );
 
-    if (component.style !== undefined) {
+    if (typeof component.setNativeProps === 'function') {
+      setNativeProps(component, rawStyles);
+    } else if (component.style !== undefined) {
       updatePropsDOM(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
@@ -47,6 +50,16 @@ export const _updatePropsJS = (
       console.warn('It is not possible to manipulate component');
     }
   }
+};
+
+const setNativeProps = (
+  component: JSReanimatedComponent,
+  style: StyleProps
+): void => {
+  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const currentStyle = { ...previousStyle, ...style };
+  component.previousStyle = currentStyle;
+  component.setNativeProps?.({ style: currentStyle });
 };
 
 const updatePropsDOM = (
