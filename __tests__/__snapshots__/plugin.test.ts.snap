@@ -35,19 +35,6 @@ exports[`babel plugin doesn't bother other Directive Literals 1`] = `
 }"
 `;
 
-exports[`babel plugin doesn't break if there is a spread syntax 1`] = `
-"function App() {
-  return React.createElement(Animated.View, {
-    style: [style, Object.assign({}, styles.container, {
-      width: function () {
-        console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
-        return sharedValue.value;
-      }()
-    })]
-  });
-}"
-`;
-
 exports[`babel plugin doesn't capture globals 1`] = `
 "var _worklet_13298016111221_init_data = {
   code: "function f(){console.log('test');}",
@@ -66,7 +53,7 @@ var f = function () {
 }();"
 `;
 
-exports[`babel plugin doesn't nest worklets for UI thread 1`] = `
+exports[`babel plugin doesn't nest worklets for other threads 1`] = `
 "var _worklet_1678749606628_init_data = {
   code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
   location: "/dev/null"
@@ -556,6 +543,52 @@ useAnimatedScrollHandler(function () {
   _f.__stackDetails = _e;
   return _f;
 }());"
+`;
+
+exports[`babel plugin transforms nested worklets for JS thread 1`] = `
+"var _worklet_1678749606628_init_data = {
+  code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
+  location: "/dev/null"
+};
+var _worklet_16974800582491_init_data = {
+  code: "function bar(x){return x+2;}",
+  location: "/dev/null"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f(x) {
+    var bar = function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f(x) {
+        return x + 2;
+      };
+      _f._closure = {};
+      _f.__initData = _worklet_16974800582491_init_data;
+      _f.__workletHash = 16974800582491;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    return bar(x) + 1;
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1678749606628_init_data;
+  _f.__workletHash = 1678749606628;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin transforms spread operator in Animated component 1`] = `
+"function App() {
+  return React.createElement(Animated.View, {
+    style: [style, Object.assign({}, styles.container, {
+      width: function () {
+        console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
+        return sharedValue.value;
+      }()
+    })]
+  });
+}"
 `;
 
 exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `

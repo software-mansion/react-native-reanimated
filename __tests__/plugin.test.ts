@@ -3,14 +3,11 @@ import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
-
-const UIworkletRegExp = /var _worklet_[0-9]+_init_data/g;
-
-const inlineStyleWarningRegExp =
-  /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
+import '../plugin/jestUtils';
 
 function runPlugin(input: string, opts = {}) {
   const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
+    // We are dumping unused error output.
     filename: '/dev/null',
     compact: false,
     plugins: [plugin],
@@ -56,7 +53,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -131,7 +128,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -178,7 +175,7 @@ describe('babel plugin', () => {
 
   // Worklet nesting
 
-  it("doesn't nest worklets for UI thread", () => {
+  it("doesn't nest worklets for other threads", () => {
     const input = html`<script>
       function foo(x) {
         'worklet';
@@ -205,9 +202,10 @@ describe('babel plugin', () => {
         return bar(x) + 1;
       }
     </script>`;
+
     const { code } = runPlugin(input);
-    const workletCount = code?.toString().match(UIworkletRegExp)?.length;
-    expect(workletCount).toBe(2);
+    expect(code).toHaveWorkletData(2);
+    expect(code).toMatchSnapshot();
   });
 
   // Closure capturing
@@ -266,7 +264,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -280,7 +278,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -294,7 +292,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -308,7 +306,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -326,7 +324,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -342,7 +340,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -358,7 +356,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -374,7 +372,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -390,7 +388,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -406,7 +404,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -422,7 +420,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -437,7 +435,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -451,7 +449,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -465,7 +463,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -481,7 +479,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -495,7 +493,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -509,7 +507,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -523,7 +521,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -537,7 +535,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -551,7 +549,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -565,7 +563,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -579,7 +577,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -589,7 +587,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -599,7 +597,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -613,7 +611,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code?.match(UIworkletRegExp)?.length).toBe(3);
+    expect(code).toHaveWorkletData(3);
     expect(code).toMatchSnapshot();
   });
 
@@ -629,7 +627,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code?.match(UIworkletRegExp)?.length).toBe(5);
+    expect(code).toHaveWorkletData(5);
     expect(code).toMatchSnapshot();
   });
 
@@ -639,7 +637,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -649,7 +647,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -659,7 +657,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -671,7 +669,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -683,7 +681,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -695,7 +693,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -717,8 +715,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    const workletCount = code?.toString().match(UIworkletRegExp)?.length;
-    expect(workletCount).toBe(3);
+    expect(code).toHaveWorkletData(3);
     expect(code).toMatchSnapshot();
   });
 
@@ -728,7 +725,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -740,7 +737,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -752,11 +749,10 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(UIworkletRegExp);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
-  // Spread operator TODO they seem to be broken
   it('transforms spread operator in worklets for arrays', () => {
     const input = html`<script>
       function foo() {
@@ -767,6 +763,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toMatch(/\.\.\.\[2,3\]/);
+    expect(code).toMatch(/\.\.\.bar/);
     expect(code).toMatchSnapshot();
   });
 
@@ -780,6 +778,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toMatch(/\.\.\.\{b:2,c:3\}/);
+    expect(code).toMatch(/\.\.\.bar/);
     expect(code).toMatchSnapshot();
   });
 
@@ -792,6 +792,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toMatch(/\.\.\.args/);
     expect(code).toMatchSnapshot();
   });
 
@@ -804,10 +805,11 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toMatch(/\.\.\.arg/);
     expect(code).toMatchSnapshot();
   });
 
-  it("doesn't break if there is a spread syntax", () => {
+  it('transforms spread operator in Animated component', () => {
     const input = html`<script>
       function App() {
         return (
@@ -819,7 +821,6 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    // TODO isn't it already tested?
     expect(code).toMatchSnapshot();
   });
 
@@ -843,7 +844,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -862,7 +863,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -882,7 +883,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(UIworkletRegExp);
+    expect(code).toHaveWorkletData();
     expect(code).not.toMatch(/'worklet';/);
     expect(code).toMatchSnapshot();
   });
@@ -934,7 +935,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(inlineStyleWarningRegExp);
+    expect(code).toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
@@ -946,7 +947,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(inlineStyleWarningRegExp);
+    expect(code).toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
@@ -962,7 +963,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(inlineStyleWarningRegExp);
+    expect(code).toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
@@ -974,7 +975,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(inlineStyleWarningRegExp);
+    expect(code).not.toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
