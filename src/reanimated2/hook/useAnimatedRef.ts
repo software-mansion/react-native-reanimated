@@ -26,7 +26,7 @@ function getScrollableRef(component: ComponentRef): ComponentRef {
       return component.getNativeScrollRef();
     } else {
       console.warn(
-        'this component has no implemented `getScrollableNode` method. Please report this issue to the library maintainers.'
+        '[Reanimated] ${Component.displayName || Component.name || 'Component'} has no implemented `getNativeScrollRef` method. Please report this issue to the library maintainers.'
       );
     }
   } else {
