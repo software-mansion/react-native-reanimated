@@ -184,17 +184,30 @@ function getInlinePropsUpdate(inlineProps: Record<string, any>) {
   const update: Record<string, any> = {};
   for (const [key, styleValue] of Object.entries(inlineProps)) {
     if (key === 'transform') {
-      update[key] = styleValue.map((transform: Record<string, any>) => {
-        return getInlinePropsUpdate(transform);
-      });
-    } else if (isSharedValue(styleValue)) {
-      update[key] = styleValue.value;
+      update[key] = getInlineTransformPropsUpdate(update[key]);
     } else {
-      update[key] = styleValue;
+      update[key] = updateProp(styleValue);
     }
   }
   return update;
 }
+
+const getInlineTransformPropsUpdate = (inlineProps: Record<string, any>) => {
+  'worklet';
+  const update: Record<string, any> = {};
+  for (const [key, styleValue] of Object.entries(inlineProps)) {
+    update[key] = updateProp(styleValue);
+  }
+  return update;
+};
+
+const updateProp = (styleValue: any) => {
+  'worklet';
+  if (isSharedValue(styleValue)) {
+    return styleValue.value;
+  }
+  return styleValue;
+};
 
 interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
