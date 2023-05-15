@@ -17,22 +17,22 @@ import { StyleSheet, Text, View } from 'react-native';
 const deg2rad = (deg: number) => {
   'worklet';
   return (deg * Math.PI) / 180;
-}
+};
 
 const rad2deg = (rad: number) => {
   'worklet';
   return (rad / Math.PI) * 180;
-}
+};
 
 const mm2px = (mm: number) => {
   'worklet';
   return mm * 35;
-}
+};
 
 const px2mm = (px: number) => {
   'worklet';
   return px / mm2px(1);
-}
+};
 
 const BALL_RADIUS_MM = 0.5;
 
