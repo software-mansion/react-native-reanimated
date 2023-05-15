@@ -17,7 +17,7 @@ on:
         type: boolean
     secrets:
       NODE_AUTH_TOKEN:
-        required: true
+        required: false
 
 jobs:
   build:

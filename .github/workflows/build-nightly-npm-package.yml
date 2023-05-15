@@ -11,3 +11,5 @@ jobs:
     with:
       version: nightly
       publish_on_npm: true
+    secrets:
+      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
