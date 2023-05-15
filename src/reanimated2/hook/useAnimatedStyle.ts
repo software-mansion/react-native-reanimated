@@ -121,58 +121,94 @@ function runAnimations(
   animationsActive: SharedValue<boolean>
 ): boolean {
   'worklet';
+
   if (!animationsActive.value) {
+    // for some reason we can do that early
     return true;
   }
-  if (Array.isArray(animation)) {
-    result[key] = [];
-    let allFinished = true;
-    animation.forEach((entry, index) => {
-      if (
-        !runAnimations(entry, timestamp, index, result[key], animationsActive)
-      ) {
-        allFinished = false;
-      }
-    });
-    return allFinished;
-  } else if (typeof animation === 'object' && animation.onFrame) {
-    let finished = true;
-    if (!animation.finished) {
-      if (animation.callStart) {
-        animation.callStart(timestamp);
-        animation.callStart = null;
-      }
-      finished = animation.onFrame(animation, timestamp);
-      animation.timestamp = timestamp;
-      if (finished) {
-        animation.finished = true;
-        animation.callback && animation.callback(true /* finished */);
-      }
+
+  const maxStackSize = 1024;
+  interface stackElement {
+    animation: AnimatedStyle;
+    key: number | string;
+    result: AnimatedStyle;
+  }
+  const stack = new Array<stackElement>(maxStackSize);
+  let stackSize = 0;
+  stack[stackSize++] = {
+    animation,
+    key,
+    result,
+  };
+
+  function checkStackSize() {
+    if (stackSize >= maxStackSize) {
+      throw new Error('Maximum stack size exceeded while preparing animation.');
     }
-    result[key] = animation.current;
-    return finished;
-  } else if (typeof animation === 'object') {
-    result[key] = {};
-    let allFinished = true;
-    Object.keys(animation).forEach((k) => {
-      if (
-        !runAnimations(
-          animation[k],
-          timestamp,
-          k,
-          result[key],
-          animationsActive
-        )
-      ) {
-        allFinished = false;
-      }
-    });
-    return allFinished;
-  } else {
-    result[key] = animation;
-    return true;
   }
+
+  while (stackSize > 0) {
+    const current = stack[--stackSize];
+
+    if (typeof current.animation === 'object' && current.animation.onFrame) {
+      return runThisThing(
+        current.animation,
+        timestamp,
+        current.key,
+        current.result
+      );
+    } else if (Array.isArray(current.animation)) {
+      current.result[current.key] = [];
+      current.animation.forEach((entry, index) => {
+        stack[stackSize++] = {
+          animation: entry,
+          key: index,
+          result: current.result[key],
+        };
+        checkStackSize();
+      });
+    } else if (typeof current.animation === 'object') {
+      current.result[key] = {};
+      Object.keys(current.animation).forEach((k) => {
+        stack[stackSize++] = {
+          animation: current.animation[k],
+          key: k,
+          result: current.result[key],
+        };
+        checkStackSize();
+      });
+    } else {
+      // when do we need this fallback?
+      current.result[key] = current.animation;
+      return true;
+    }
+  }
+  throw new Error('Unable to reach the end of iteration');
 }
+
+const runThisThing = (
+  animation: AnimatedStyle,
+  timestamp: Timestamp,
+  key: number | string,
+  result: AnimatedStyle
+) => {
+  'worklet';
+  let finished = true;
+  if (!animation.finished) {
+    if (animation.callStart) {
+      animation.callStart(timestamp);
+      animation.callStart = null;
+    }
+    finished = animation.onFrame(animation, timestamp);
+    animation.timestamp = timestamp;
+    if (finished) {
+      animation.finished = true;
+      animation.callback && animation.callback(true /* finished */);
+    }
+  }
+  result[key] = animation.current;
+  return finished;
+};
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
