@@ -6507,7 +6507,7 @@ react-native-gesture-handler@^2.10.0:
     lodash "^4.17.21"
     prop-types "^15.7.2"
 
-react-native-web@^0.19.2:
+react-native-web@~0.19.4:
   version "0.19.4"
   resolved "https://registry.yarnpkg.com/react-native-web/-/react-native-web-0.19.4.tgz#3d99f268ff5567df8b11a2150905a7c262e22dcc"
   integrity sha512-laZjyzpTmsuuifAKTujp+VQRBA2ZcWga6MpxIw72QmeR/3spILNy4m/fdnCyO4E9UKH3d6vNMWbatZK3Nr6F+w==

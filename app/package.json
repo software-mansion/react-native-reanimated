@@ -27,7 +27,7 @@
     "react-native-safe-area-context": "^4.5.0",
     "react-native-screens": "^3.20.0",
     "react-native-svg": "^13.8.0",
-    "react-native-web": "~0.18.7"
+    "react-native-web": "~0.19.4"
   },
   "devDependencies": {
     "@tsconfig/react-native": "^2.0.3",
