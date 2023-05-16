@@ -395,6 +395,13 @@ declare module 'react-native-reanimated' {
     rubberBandEffect?: boolean;
     rubberBandFactor?: number;
   }
+
+  type ExactDurationMode =
+    | 'MAYBE_TERMINATE_EARLIER'
+    | 'MAYBE_TERMINATE_LATER'
+    | 'ALWAYS'
+    | 'NEVER';
+
   export type WithSpringConfig = {
     stiffness?: number;
     overshootClamping?: boolean;
@@ -406,12 +413,14 @@ declare module 'react-native-reanimated' {
         mass?: number;
         damping?: number;
         duration?: never;
+        exactDuration?: never;
         dampingRatio?: never;
       }
     | {
         mass?: never;
         damping?: never;
         duration?: number;
+        exactDuration?: ExactDurationMode;
         dampingRatio?: number;
       }
   );
