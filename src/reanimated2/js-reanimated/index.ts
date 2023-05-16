@@ -82,7 +82,7 @@ const updatePropsDOM = (
   component.previousStyle = currentStyle;
 
   const domStyle = createReactDOMStyle(currentStyle);
-  if (domStyle.transform !== undefined && createTransformValue !== undefined) {
+  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
     domStyle.transform = createTransformValue(domStyle.transform);
   }
   for (const key in domStyle) {
