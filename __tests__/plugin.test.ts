@@ -382,6 +382,44 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  // runOnUI
+
+  it('workletizes ArrowFunctionExpression inside runOnUI automatically', () => {
+    const input = html`<script>
+      runOnUI(() => {
+        console.log('Hello from the UI thread!');
+      })();
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes unnamed FunctionExpression inside runOnUI automatically', () => {
+    const input = html`<script>
+      runOnUI(function () {
+        console.log('Hello from the UI thread!');
+      })();
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes named FunctionExpression inside runOnUI automatically', () => {
+    const input = html`<script>
+      runOnUI(function hello() {
+        console.log('Hello from the UI thread!');
+      })();
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_f.__workletHash');
+    expect(code).toMatchSnapshot();
+  });
+
   // object hooks
 
   it('workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically', () => {
