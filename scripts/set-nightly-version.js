@@ -11,10 +11,19 @@ const currentCommit = exec('git rev-parse HEAD', {
 }).stdout.trim();
 const shortCommit = currentCommit.slice(0, 9);
 
-const version = `0.0.0-${dateIdentifier}-${shortCommit}`;
-
 const packageJsonPath = 'package.json';
 const packageJson = JSON.parse(cat(packageJsonPath));
+
+const currentVersion = packageJson.version;
+if (currentVersion.includes('nightly')) {
+  throw new Error('Cannot set nightly version on nightly version');
+}
+
+const [major, minor, patch] = currentVersion.split('.');
+const version = `${major}.${
+  Number(minor) + 1
+}.${patch}-nightly-${dateIdentifier}-${shortCommit}`;
+
 packageJson.version = version;
 fs.writeFileSync(
   packageJsonPath,
