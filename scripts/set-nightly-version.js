@@ -13,7 +13,19 @@ const shortCommit = currentCommit.slice(0, 9);
 
 const version = `0.0.0-${dateIdentifier}-${shortCommit}`;
 
-const packageJson = JSON.parse(cat('package.json'));
+const packageJsonPath = 'package.json';
+const packageJson = JSON.parse(cat(packageJsonPath));
 packageJson.version = version;
+fs.writeFileSync(
+  packageJsonPath,
+  JSON.stringify(packageJson, null, 2) + '\n',
+  'utf-8'
+);
 
-fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2), 'utf-8');
+const jsVersionPath = 'src/reanimated2/platform-specific/jsVersion.ts';
+const before = cat(jsVersionPath);
+const after = before.replace(
+  /jsVersion = '(.*)';/g,
+  `jsVersion = '${version}';`
+);
+fs.writeFileSync(jsVersionPath, after, 'utf-8');

@@ -491,7 +491,6 @@ var require_processForCalleesWorklets = __commonJS({
           (0, processWorkletObjectMethod_1.processWorkletObjectMethod)(property, state);
         } else if (property.isObjectProperty()) {
           const value = property.get("value");
-          (0, assert_1.strict)(!Array.isArray(value), "'value' is an array'");
           (0, processIfWorkletFunction_1.processIfWorkletFunction)(value, state);
         } else {
           throw new Error(`'${property.type}' as to-be workletized arguments is not supported for object hooks`);

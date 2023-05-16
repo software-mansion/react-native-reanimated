@@ -8,8 +8,10 @@
     "strict": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "outDir": "lib/",
-    "rootDir": "src/"
+    "outDir": "lib",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationDir": "types"
   },
   "files": ["src/plugin.ts"]
 }
