@@ -10,9 +10,10 @@ export function bisectRoot({
   maxIterations?: number;
 }) {
   'worklet';
+  const ACCURACY = 0.005;
   let idx = maxIterations;
   let current = (max + min) / 2;
-  while (Math.abs(func(current)) > 0.005 && idx > 0) {
+  while (Math.abs(func(current)) > ACCURACY && idx > 0) {
     idx -= 1;
 
     if (func(current) < 0) {
