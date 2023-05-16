@@ -20,9 +20,8 @@ if (currentVersion.includes('nightly')) {
 }
 
 const [major, minor, patch] = currentVersion.split('.');
-const version = `${major}.${
-  Number(minor) + 1
-}.${patch}-nightly-${dateIdentifier}-${shortCommit}`;
+const nextMinor = Number(minor) + 1;
+const version = `${major}.${nextMinor}.${patch}-nightly-${dateIdentifier}-${shortCommit}`;
 
 packageJson.version = version;
 fs.writeFileSync(
