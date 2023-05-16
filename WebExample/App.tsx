@@ -1,3 +1,3 @@
-import App from '../app/src/examples/AnimatedStyleUpdateExample';
+import App from '../app/src/App';
 
 export default App;
