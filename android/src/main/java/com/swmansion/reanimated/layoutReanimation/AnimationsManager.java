@@ -601,7 +601,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private void removeView(View view, @Nullable ViewGroup parent) {
     int tag = view.getId();
     if (tag == -1) {
-      return;
+      mReanimatedNativeHierarchyManager.publicDropView(view);
+      parent.removeView(view);
     }
     if (mCallbacks.containsKey(tag)) {
       Runnable callback = mCallbacks.get(tag);
