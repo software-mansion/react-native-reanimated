@@ -41,11 +41,16 @@ export const _updatePropsJS = (
     );
 
     if (typeof component.setNativeProps === 'function') {
+      // This is the legacy way to update props on React Native Web <= 0.18.
+      // Also, some components (e.g. from react-native-svg) don't have styles
+      // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles);
     } else if (
       component.style !== undefined &&
       createTransformValue !== undefined
     ) {
+      // React Native Web 0.19+ no longer provides setNativeProps function,
+      // so we need to update DOM nodes directly.
       updatePropsDOM(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
