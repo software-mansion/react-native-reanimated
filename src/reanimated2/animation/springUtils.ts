@@ -1,11 +1,5 @@
 import { Animation, AnimatableValue, Timestamp } from '../commonTypes';
 
-type ExactDurationMode =
-  | 'MAYBE_TERMINATE_EARLIER'
-  | 'MAYBE_TERMINATE_LATER'
-  | 'ALWAYS'
-  | 'NEVER';
-
 export type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;
@@ -17,14 +11,12 @@ export type SpringConfig = {
       mass?: number;
       damping?: number;
       duration?: never;
-      exactDuration?: never;
       dampingRatio?: never;
     }
   | {
       mass?: never;
       damping?: never;
       duration?: number;
-      exactDuration?: ExactDurationMode;
       dampingRatio?: number;
     }
 );

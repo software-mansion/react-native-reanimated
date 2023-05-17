@@ -1,7 +1,8 @@
 import Animated, {
   useSharedValue,
-  useAnimatedStyle,
   withTiming,
+  useAnimatedStyle,
+  Easing,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
@@ -9,9 +10,14 @@ import React from 'react';
 export default function AnimatedStyleUpdateExample(): React.ReactElement {
   const randomWidth = useSharedValue(10);
 
-  const style1 = useAnimatedStyle(() => {
+  const config = {
+    duration: 500,
+    easing: Easing.bezierFn(0.5, 0.01, 0, 1),
+  };
+
+  const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(randomWidth.value),
+      width: withTiming(randomWidth.value, config),
     };
   });
 
@@ -23,13 +29,8 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
       }}>
       <Animated.View
         style={[
-          {
-            width: 100,
-            height: 80,
-            backgroundColor: 'black',
-            margin: 30,
-          },
-          style1,
+          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
+          style,
         ]}
       />
       <Button

@@ -35,7 +35,6 @@ export function withSpring(
       velocity: 0,
       duration: 2000,
       dampingRatio: 0.5,
-      exactDuration: 'NEVER',
     } as const;
 
     const config = { ...defaultConfig, ...userConfig };
@@ -47,12 +46,7 @@ export function withSpring(
 
       const expectedDurationReached =
         userConfig?.duration && timeFromStart >= userConfig.duration;
-      if (
-        expectedDurationReached &&
-        ['ALWAYS', 'MAYBE_TERMINATE_EARLIER', 'MAYBE_TERMINATE_LATER'].includes(
-          config.exactDuration
-        )
-      ) {
+      if (expectedDurationReached) {
         animation.current = toValue;
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -94,12 +88,9 @@ export function withSpring(
       animation.current = newPosition;
       animation.velocity = newVelocity;
 
-      const animateStaticSpring = ['ALWAYS', 'MAYBE_TERMINATE_LATER'].includes(
-        config.exactDuration
-      );
       const springIsNotInMove =
         isOvershooting || (isVelocity && isDisplacement);
-      if (springIsNotInMove && !animateStaticSpring) {
+      if (springIsNotInMove && !userConfig?.duration) {
         if (config.stiffness !== 0) {
           animation.velocity = 0;
           animation.current = toValue;
