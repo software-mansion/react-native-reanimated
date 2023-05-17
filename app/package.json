@@ -1,7 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "lint": "eslint --max-warnings=0 ."
+    "lint": "eslint --max-warnings=0 .",
+    "postinstall": "patch-package"
   },
   "peerDependencies": {
     "react": "*",
@@ -27,12 +28,13 @@
     "react-native-safe-area-context": "^4.5.0",
     "react-native-screens": "^3.20.0",
     "react-native-svg": "^13.8.0",
-    "react-native-web": "~0.18.7"
+    "react-native-web": "~0.18.12"
   },
   "devDependencies": {
     "@tsconfig/react-native": "^2.0.3",
     "@types/d3-shape": "^3.1.1",
     "eslint": "^8.36.0",
+    "patch-package": "^7.0.0",
     "prettier": "^2.8.7",
     "typescript": "^5.0.2"
   }

@@ -31,7 +31,6 @@ export default function MeasureExample() {
 
   const handleMeasureFromUI = () => {
     runOnUI(() => {
-      'worklet';
       console.log(_WORKLET, '', measure(aref));
     })();
   };
