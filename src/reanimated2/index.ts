@@ -11,4 +11,3 @@ export * from './layoutReanimation';
 export * from './utils';
 export * from './commonTypes';
 export * from './pluginUtils';
-export * from './jestUtils';
