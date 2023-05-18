@@ -5971,10 +5971,10 @@ react-native-box2d@^0.2.5:
   resolved "https://registry.yarnpkg.com/react-native-box2d/-/react-native-box2d-0.2.5.tgz#4baa407d28c3feb956d9a9bc31e8f24eefe5fb79"
   integrity sha512-+Qaf/LMDsodJn3BAIk5hohOb76gXV2krMrWtfENGD+YjRMhO2Du0ylwj1Qu2a8YUTyfd6YB5jmgeU4N27eX3MQ==
 
-react-native-gesture-handler@^2.9.0:
-  version "2.9.0"
-  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.9.0.tgz#2f63812e523c646f25b9ad660fc6f75948e51241"
-  integrity sha512-a0BcH3Qb1tgVqUutc6d3VuWQkI1AM3+fJx8dkxzZs9t06qA27QgURYFoklpabuWpsUTzuKRpxleykp25E8m7tg==
+react-native-gesture-handler@^2.10.0:
+  version "2.10.0"
+  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.10.0.tgz#54a1840cccac1dc4d5a48b8dc703eac30f077b3d"
+  integrity sha512-vuNupfa8+6MAUMgbZMk5jSxrmqWyNnR/gR77/iuhdx6cPg1z2MJeeJNmqEtKQcF0InvHp45dOoyRK62peqTJ3Q==
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"
