@@ -1,13 +1,22 @@
 import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
-import createReactDOMStyle from 'react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle';
+import { isWeb } from '../PlatformChecker';
 
+let createReactDOMStyle: (style: any) => any;
 let createTransformValue: (transform: any) => any;
-try {
-  // React Native Web 0.19+
-  createTransformValue =
-    require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
-} catch (e) {}
+
+if (isWeb()) {
+  try {
+    createReactDOMStyle =
+      require('react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle').default;
+  } catch (e) {}
+
+  try {
+    // React Native Web 0.19+
+    createTransformValue =
+      require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+  } catch (e) {}
+}
 
 const reanimatedJS = new JSReanimated();
 
@@ -45,7 +54,10 @@ export const _updatePropsJS = (
       // Also, some components (e.g. from react-native-svg) don't have styles
       // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles);
-    } else if (component.style !== undefined) {
+    } else if (
+      createReactDOMStyle !== undefined &&
+      component.style !== undefined
+    ) {
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
       updatePropsDOM(component, rawStyles);
