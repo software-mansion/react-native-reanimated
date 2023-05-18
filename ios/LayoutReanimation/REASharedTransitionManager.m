@@ -279,6 +279,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
       _snapshotRegistry[viewTarget.reactTag] = targetViewSnapshot;
     } else {
       targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
+      if (targetViewSnapshot == nil) {
+        targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
+        NSLog(@"[Reanimated] Unable to find view style snapshot. It looks like you try to animate no-mounted view.");
+      }
     }
 
     [newTransitionViews addObject:viewSource];
