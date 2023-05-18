@@ -182,19 +182,21 @@ export const advanceAnimationByFrame = (count) => {
 export const setUpTests = (userConfig = {}) => {
   let expect = global.expect;
   if (expect === undefined) {
-    const expectModule = import('expect');
-    expect = expectModule;
-    // Starting from Jest 28, "expect" package uses named exports instead of default export.
-    // So, requiring "expect" package doesn't give direct access to "expect" function anymore.
-    // It gives access to the module object instead.
-    // We use this info to detect if the project uses Jest 28 or higher.
-    if (typeof expect === 'object') {
-      const jestGlobals = import('@jest/globals');
-      expect = jestGlobals.expect;
-    }
-    if (expect === undefined || expect.extend === undefined) {
-      expect = expectModule.default;
-    }
+    try {
+      const expectModule = import('expect');
+      expect = expectModule;
+      // Starting from Jest 28, "expect" package uses named exports instead of default export.
+      // So, requiring "expect" package doesn't give direct access to "expect" function anymore.
+      // It gives access to the module object instead.
+      // We use this info to detect if the project uses Jest 28 or higher.
+      if (typeof expect === 'object') {
+        const jestGlobals = import('@jest/globals');
+        expect = jestGlobals.expect;
+      }
+      if (expect === undefined || expect.extend === undefined) {
+        expect = expectModule.default;
+      }
+    } catch (e) {}
   }
 
   frameTime = Math.round(1000 / config.fps);
