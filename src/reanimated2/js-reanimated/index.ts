@@ -1,20 +1,22 @@
 import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
-import { Platform } from 'react-native';
+import { isWeb } from '../PlatformChecker';
 
 let createReactDOMStyle: (style: any) => any;
-try {
-  // React Native Web
-  createReactDOMStyle =
-    require('react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle').default;
-} catch (e) {}
-
 let createTransformValue: (transform: any) => any;
-try {
-  // React Native Web 0.19+
-  createTransformValue =
-    require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
-} catch (e) {}
+
+if (isWeb()) {
+  try {
+    createReactDOMStyle =
+      require('react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle').default;
+  } catch (e) {}
+
+  try {
+    // React Native Web 0.19+
+    createTransformValue =
+      require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+  } catch (e) {}
+}
 
 const reanimatedJS = new JSReanimated();
 
@@ -53,7 +55,6 @@ export const _updatePropsJS = (
       // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles);
     } else if (
-      Platform.OS === 'web' &&
       createReactDOMStyle !== undefined &&
       component.style !== undefined
     ) {
