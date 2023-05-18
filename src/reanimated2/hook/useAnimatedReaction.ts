@@ -19,7 +19,7 @@ export function useAnimatedReaction<T>(
   react: AnimatedReactionWorkletFunction<T>,
   dependencies: DependencyList
 ): void {
-  const previous = useSharedValue<T | null>(null, true);
+  const previous = useRef({ value: null as T | null }).current;
 
   let inputs = Object.values(prepare._closure ?? {});
 
