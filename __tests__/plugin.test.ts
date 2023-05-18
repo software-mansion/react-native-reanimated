@@ -7,7 +7,9 @@ import '../plugin/jestUtils';
 
 function runPlugin(input: string, opts = {}) {
   const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
-    // We are dumping unused error output.
+    // Our babel presets require us to specify a filename here
+    // but it is never used so we put in '/dev/null'
+    // as a safe fallback.
     filename: '/dev/null',
     compact: false,
     plugins: [plugin],

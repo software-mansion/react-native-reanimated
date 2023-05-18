@@ -9,65 +9,41 @@ declare global {
 }
 
 expect.extend({
-  toHaveWorkletData(received: string, times?: number) {
+  toHaveWorkletData(received: string, times: number = 1) {
     const UIworkletRegExp = /var _worklet_[0-9]+_init_data/g;
-    const match = received.match(UIworkletRegExp)?.length;
+    const actualTimes = received.match(UIworkletRegExp)?.length;
 
-    if (times !== undefined) {
-      if (match === times) {
-        return {
-          message: () =>
-            `Reanimated: expected code to have worklet data ${times} times`,
-          pass: true,
-        };
-      }
+    if (actualTimes === times) {
       return {
         message: () =>
-          `Reanimated: expected code to have worklet data ${times} times, but found ${match}`,
-        pass: false,
-      };
-    }
-    if (match) {
-      return {
-        message: () => 'Reanimated: expected code to have worklet data',
+          `Reanimated: expected code to have worklet data ${times} times`,
         pass: true,
       };
     }
     return {
-      message: () => 'Reanimated: expected code not to have worklet data',
+      message: () =>
+        `Reanimated: expected code to have worklet data ${times} times, but found ${actualTimes}`,
       pass: false,
     };
   },
 });
 
 expect.extend({
-  toHaveInlineStyleWarning(received: string, times?: number) {
+  toHaveInlineStyleWarning(received: string, times: number = 1) {
     const inlineStyleWarningRegExp =
       /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
     const match = received.match(inlineStyleWarningRegExp)?.length;
 
-    if (times !== undefined) {
-      if (match === times) {
-        return {
-          message: () =>
-            `Reanimated: expected to have inline style warning ${times} times`,
-          pass: true,
-        };
-      }
+    if (match === times) {
       return {
         message: () =>
-          `Reanimated: expected to have inline style warning ${times} times, but found ${match}`,
-        pass: false,
-      };
-    }
-    if (match) {
-      return {
-        message: () => 'Reanimated: expected to have inline style warning',
+          `Reanimated: expected to have inline style warning ${times} times`,
         pass: true,
       };
     }
     return {
-      message: () => 'Reanimated: expected not to have inline style warning',
+      message: () =>
+        `Reanimated: expected to have inline style warning ${times} times, but found ${match}`,
       pass: false,
     };
   },
