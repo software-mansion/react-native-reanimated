@@ -18,7 +18,7 @@ void LayoutAnimationsManager::configureAnimation(
     viewTagToSharedTag_[tag] = sharedTransitionTag;
   } else if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     if (sharedTransitionTag == "secondary") {
-      sharedTransitioinProgressAnimationsLowPriotity_.insert(tag);
+      sharedTransitionProgressAnimationsLowPriority_.insert(tag);
     }
   }
 }
@@ -28,8 +28,8 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
-    auto end = sharedTransitioinProgressAnimationsLowPriotity_.end();
-    return sharedTransitioinProgressAnimationsLowPriotity_.find(tag) == end;
+    auto end = sharedTransitionProgressAnimationsLowPriority_.end();
+    return sharedTransitionProgressAnimationsLowPriority_.find(tag) == end;
   }
   return collection::contains(getConfigsForType(type), tag);
 }
@@ -52,7 +52,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   }
   viewTagToSharedTag_.erase(tag);
   sharedTransitioinProgressAnimations_.erase(tag);
-  sharedTransitioinProgressAnimationsLowPriotity_.erase(tag);
+  sharedTransitionProgressAnimationsLowPriority_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(

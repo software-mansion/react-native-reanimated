@@ -17,7 +17,7 @@ import {
 import Animated, {
   FadeIn,
   runOnJS,
-  SharedTransition,
+  SharedElementTransition,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -40,7 +40,7 @@ const springOptions = {
   damping: 15,
 };
 
-const transition = new SharedTransition().animation((values) => {
+const transition = new SharedElementTransition().animation((values) => {
   'worklet';
   return {
     width: withSpring(values.targetWidth, springOptions),

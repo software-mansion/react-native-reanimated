@@ -113,7 +113,7 @@ declare module 'react-native-reanimated' {
         | EntryExitAnimationFunction
         | Keyframe;
       sharedTransitionTag?: string;
-      sharedTransitionStyle?: SharedTransition;
+      sharedTransitionStyle?: SharedElementTransition;
     };
 
     export type EasingFunction = (value: number) => number;
@@ -874,11 +874,11 @@ declare module 'react-native-reanimated' {
     progress: number
   ) => StyleProps;
 
-  export class SharedTransition implements ILayoutAnimationBuilder {
-    animation(animationFactory: AnimationFactoryType): SharedTransition;
+  export class SharedElementTransition implements ILayoutAnimationBuilder {
+    animation(animationFactory: AnimationFactoryType): SharedElementTransition;
     progressAnimation(
       progressAnimationFactory: ProgressAnimationFactoryType
-    ): SharedTransition;
-    transitionDuration(duration: number): SharedTransition;
+    ): SharedElementTransition;
+    duration(duration: number): SharedElementTransition;
   }
 }

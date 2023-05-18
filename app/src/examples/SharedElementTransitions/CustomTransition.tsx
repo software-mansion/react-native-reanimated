@@ -6,14 +6,15 @@ import {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import Animated, {
-  SharedTransition,
+  SharedElementTransition,
   withSpring,
+  interpolate,
 } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 
-const transition = new SharedTransition()
-  .transitionDuration(1000)
+const transition = new SharedElementTransition()
+  .duration(1000)
   .animation((values) => {
     'worklet';
     return {
@@ -26,18 +27,26 @@ const transition = new SharedTransition()
   .progressAnimation((values, progress) => {
     'worklet';
     return {
-      width:
-        progress * (values.targetWidth - values.currentWidth) +
-        values.currentWidth,
-      height:
-        progress * (values.targetHeight - values.currentHeight) +
-        values.currentHeight,
-      originX:
-        progress * (values.targetOriginX - values.currentOriginX) +
-        values.currentOriginX,
-      originY:
-        progress * (values.targetOriginY - values.currentOriginY) +
-        values.currentOriginY,
+      width: interpolate(
+        progress,
+        [0, 1],
+        [values.currentWidth, values.targetWidth]
+      ),
+      height: interpolate(
+        progress,
+        [0, 1],
+        [values.currentHeight, values.targetHeight]
+      ),
+      originX: interpolate(
+        progress,
+        [0, 1],
+        [values.currentOriginX, values.targetOriginX]
+      ),
+      originY: interpolate(
+        progress,
+        [0, 1],
+        [values.currentOriginY, values.targetOriginY]
+      ),
     };
   });
 

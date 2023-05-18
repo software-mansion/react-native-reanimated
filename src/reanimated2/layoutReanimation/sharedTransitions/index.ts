@@ -15,26 +15,28 @@ type AnimationFactory = (
   values: SharedTransitionAnimationsValues
 ) => StyleProps;
 
-export class SharedTransition {
+export class SharedElementTransition {
   private _animationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
   private _customProgressAnimation?: ProgressAnimationCallback = undefined;
   private _progressAnimation?: ProgressAnimationCallback = undefined;
 
-  public animation(animationFactory: AnimationFactory): SharedTransition {
+  public animation(
+    animationFactory: AnimationFactory
+  ): SharedElementTransition {
     this._animationFactory = animationFactory;
     return this;
   }
 
   public progressAnimation(
     progressAnimationCallback: ProgressAnimationCallback
-  ): SharedTransition {
+  ): SharedElementTransition {
     this._customProgressAnimation = progressAnimationCallback;
     return this;
   }
 
-  public transitionDuration(duration: number): SharedTransition {
+  public duration(duration: number): SharedElementTransition {
     this._transitionDuration = duration;
     return this;
   }

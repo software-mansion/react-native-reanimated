@@ -21,7 +21,7 @@ import {
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
-  SharedTransition,
+  SharedElementTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -222,7 +222,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
+  sharedTransitionStyle?: SharedElementTransition;
 };
 
 type Options<P> = {
@@ -619,7 +619,7 @@ export default function createAnimatedComponent(
           }
           if (sharedTransitionTag) {
             const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? new SharedTransition();
+              this.props.sharedTransitionStyle ?? new SharedElementTransition();
             sharedElementTransition.registerTransition(
               tag,
               sharedTransitionTag
