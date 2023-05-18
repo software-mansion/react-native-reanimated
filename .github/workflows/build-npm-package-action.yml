@@ -97,5 +97,6 @@ jobs:
           retention-days: 5
 
       - run: npm publish $PACKAGE_NAME --tag nightly
+        if: ${{ inputs.publish_on_npm }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
