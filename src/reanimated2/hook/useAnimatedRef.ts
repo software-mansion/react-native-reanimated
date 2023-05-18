@@ -22,21 +22,11 @@ function getShareableShadowNodeFromComponent(
   return getShadowNodeWrapperFromHostInstance(component);
 }
 
-function getScrollableRef(component: ComponentRef): ComponentRef {
-  if (global._IS_FABRIC) {
-    if (component.getNativeScrollRef) {
-      return component.getNativeScrollRef();
-    } else {
-      console.warn(
-        `[Reanimated] ${
-          component.displayName || component.name || 'Component'
-        } has no implemented 'getNativeScrollRef' method. Please report this issue to the library maintainers.`
-      );
-    }
-  } else {
-    if (component.getScrollableNode) {
-      return component.getScrollableNode();
-    }
+function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
+  if (global._IS_FABRIC && component.getNativeScrollRef) {
+    return component.getNativeScrollRef();
+  } else if (!global._IS_FABRIC && component.getScrollableNode) {
+    return component.getScrollableNode();
   }
   return component;
 }
@@ -53,7 +43,7 @@ export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
     const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(getScrollableRef(component));
+        tag.value = getTagValueFunction(getComponentOrScrollableRef(component));
         fun.current = component;
       }
       return tag.value;
