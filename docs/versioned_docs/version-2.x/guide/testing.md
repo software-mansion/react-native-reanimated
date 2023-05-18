@@ -10,7 +10,7 @@ Reanimated test mocks use web implementation of Reanimated2. Before you begin us
 
 Add the following line to your `jest-setup.js` file:
 ```js
-require('react-native-reanimated/src/reanimated2/jestUtils').setUpTests();
+require('react-native-reanimated').setUpTests();
 ```
 `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps.
 

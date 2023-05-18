@@ -13,7 +13,7 @@ First, make sure that your tests run with Node version 16 or newer.
 Add the following line to your `jest-setup.js` file:
 
 ```js
-require('react-native-reanimated/src/reanimated2/jestUtils').setUpTests();
+require('react-native-reanimated').setUpTests();
 ```
 
 `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps.
