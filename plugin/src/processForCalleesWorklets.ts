@@ -23,6 +23,8 @@ const functionArgsToWorkletize = new Map([
   ['withSpring', [2]],
   ['withDecay', [1]],
   ['withRepeat', [3]],
+  // scheduling functions
+  ['runOnUI', [0]],
 ]);
 
 const objectHooks = new Set([
@@ -79,7 +81,6 @@ function processObjectHook(
       processWorkletObjectMethod(property, state);
     } else if (property.isObjectProperty()) {
       const value = property.get('value');
-      assert(!Array.isArray(value), "'value' is an array'");
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(
