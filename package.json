@@ -30,7 +30,7 @@
     "plugin": "cd plugin && yarn && cd ..",
     "app": "cd app && yarn && cd .."
   },
-  "main": "lib/commonjs/index",
+  "main": "lib/module/index",
   "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
@@ -165,7 +165,6 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "commonjs",
       "module",
       [
         "typescript",
