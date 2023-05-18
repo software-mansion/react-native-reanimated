@@ -23,6 +23,8 @@ const functionArgsToWorkletize = new Map([
   ['withSpring', [2]],
   ['withDecay', [1]],
   ['withRepeat', [3]],
+  // scheduling functions
+  ['runOnUI', [0]],
 ]);
 
 const objectHooks = new Set([
