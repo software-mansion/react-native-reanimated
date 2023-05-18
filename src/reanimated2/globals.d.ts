@@ -101,4 +101,5 @@ declare global {
       config: LayoutAnimationFunction
     );
   };
+  var runOnUI: () => void;
 }

@@ -68,7 +68,8 @@ var require_commonObjects = __commonJS({
       "isNaN",
       "LayoutAnimationRepository",
       "_notifyAboutProgress",
-      "_notifyAboutEnd"
+      "_notifyAboutEnd",
+      "runOnUI"
     ]);
   }
 });

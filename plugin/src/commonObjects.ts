@@ -57,4 +57,5 @@ export const globals = new Set([
   'LayoutAnimationRepository',
   '_notifyAboutProgress',
   '_notifyAboutEnd',
+  'runOnUI',
 ]);
