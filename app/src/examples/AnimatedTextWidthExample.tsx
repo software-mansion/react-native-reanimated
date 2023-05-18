@@ -23,7 +23,7 @@ export default function AnimatedTextWidthExample() {
   });
 
   const animatedStyle = useAnimatedStyle(() => {
-    return { width: (1.4 + Math.sin(sv.value)) * 150 };
+    return { width: (1.4 + Math.sin(sv.value)) * 150, fontSize: 16 };
   }, [sv]);
 
   return (
