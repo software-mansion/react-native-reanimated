@@ -179,12 +179,6 @@ export function initializeUIRuntime() {
       info: runOnJS(capturableConsole.info),
     };
 
-    global.runOnUI = () => {
-      throw new Error(
-        'runOnUI() is not available on the UI runtime. Please use `queueMicrotask` or `requestAnimationFrame` instead.'
-      );
-    };
-
     if (!IS_JEST) {
       setupMicrotasks();
       setupRequestAnimationFrame();
