@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import { DependencyList } from './commonTypes';
@@ -18,8 +18,6 @@ export function useAnimatedReaction<T>(
   react: AnimatedReactionWorkletFunction<T>,
   dependencies: DependencyList
 ): void {
-  const previous = useRef({ value: null as T | null }).current;
-
   let inputs = Object.values(prepare._closure ?? {});
 
   if (shouldBeUseWeb()) {
@@ -41,6 +39,7 @@ export function useAnimatedReaction<T>(
   }
 
   useEffect(() => {
+    const previous = { value: null as T | null };
     const fun = () => {
       'worklet';
       const input = prepare();
