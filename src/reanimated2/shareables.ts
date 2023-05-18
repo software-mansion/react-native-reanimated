@@ -152,11 +152,11 @@ export function makeShareableCloneRecursive<T>(
           // we request shareable value to persist its UI counterpart. This means
           // that the __initData field that contains long strings represeting the
           // worklet code, source map, and location, will always be
-          // serialized/deserialized once. We don't increase depth when calling
-          // this method as these objects have one level anyways.
+          // serialized/deserialized once.
           toAdapt.__initData = makeShareableCloneRecursive(
             value.__initData,
-            true
+            true,
+            depth + 1
           );
           delete value.__initData;
         }
