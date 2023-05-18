@@ -718,7 +718,7 @@ var foo = function () {
 exports[`babel plugin workletizes ArrowFunctionExpression inside runOnUI automatically 1`] = `
 "var _worklet_15854903236968_init_data = {
   code: "function anonymous(){console.log('Hello from the UI thread!');}",
-  location: "${ process.cwd() }/jest tests fixture"
+  location: "/dev/null"
 };
 runOnUI(function () {
   var _e = [new global.Error(), 1, -27];
@@ -943,7 +943,7 @@ var foo = function () {
 exports[`babel plugin workletizes named FunctionExpression inside runOnUI automatically 1`] = `
 "var _worklet_5662051517689_init_data = {
   code: "function hello(){console.log('Hello from the UI thread!');}",
-  location: "${ process.cwd() }/jest tests fixture"
+  location: "/dev/null"
 };
 runOnUI(function () {
   var _e = [new global.Error(), 1, -27];
@@ -1110,7 +1110,7 @@ var foo = function () {
 exports[`babel plugin workletizes unnamed FunctionExpression inside runOnUI automatically 1`] = `
 "var _worklet_15854903236968_init_data = {
   code: "function anonymous(){console.log('Hello from the UI thread!');}",
-  location: "${ process.cwd() }/jest tests fixture"
+  location: "/dev/null"
 };
 runOnUI(function () {
   var _e = [new global.Error(), 1, -27];
