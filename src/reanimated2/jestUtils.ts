@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
-import { isJest } from "./PlatformChecker";
+import { isJest } from './PlatformChecker';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -182,7 +182,13 @@ export const advanceAnimationByFrame = (count) => {
   jest.runOnlyPendingTimers();
 };
 
-const requireFunction = isJest() ? require : () => {};
+const requireFunction = isJest()
+  ? require
+  : () => {
+      throw new Error(
+        '[Reanimated] setUpTests() is available only in Jest environment'
+      );
+    };
 
 export const setUpTests = (userConfig = {}) => {
   let expect = global.expect;
