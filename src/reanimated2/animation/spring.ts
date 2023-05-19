@@ -102,26 +102,54 @@ export function withSpring(
       return false;
     }
 
+    function isTriggeredTwice(
+      previousAnimation: SpringAnimation | undefined,
+      animation: SpringAnimation
+    ) {
+      return (
+        previousAnimation?.type === 'spring' &&
+        previousAnimation?.toValue === animation.toValue &&
+        previousAnimation?.duration === animation.duration
+      );
+    }
+
     function onStart(
       animation: SpringAnimation,
       value: number,
       now: Timestamp,
-      previousAnimation: SpringAnimation
+      previousAnimation: SpringAnimation | undefined
     ): void {
       animation.current = value;
       animation.startValue = value;
 
       let mass = config.mass;
-      const triggeredTwice =
-        previousAnimation?.type === 'spring' &&
-        previousAnimation?.toValue === animation.toValue;
+      const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
 
-      if (userConfig?.duration) {
-        const x0 = triggeredTwice
-          ? previousAnimation.startValue
-          : Number(animation.toValue) - value;
+      const duration = userConfig?.duration;
 
-        mass = calcuateNewMassToMatchDuration(x0, config);
+      const x0 = triggeredTwice
+        ? // If animation is triggered twice we want to continue the previous animation
+          // form the previous starting point
+          (previousAnimation?.startValue as number)
+        : Number(animation.toValue) - value;
+
+      animation.velocity = previousAnimation
+        ? triggeredTwice
+          ? previousAnimation.velocity
+          : previousAnimation.velocity + config.velocity
+        : config.velocity;
+
+      if (duration) {
+        const acutalDuration = triggeredTwice
+          ? // If animation is triggered twice we want to continue the previous animation
+            // so we need to include the time that already elapsed
+            duration -
+            ((previousAnimation?.lastTimestamp || 0) -
+              (previousAnimation?.startTimestamp || 0))
+          : duration;
+
+        config.duration = acutalDuration;
+        mass = calcuateNewMassToMatchDuration(x0, config, animation.velocity);
       }
 
       const { zeta, omega0, omega1 } = initialCalculations(
@@ -129,25 +157,16 @@ export function withSpring(
         config,
         userConfig
       );
-      if (previousAnimation) {
-        // Check if we could have triggered the same animation twice.
-        // In such a case we don't want to extend its duration and we will copy previous start timestamp
 
-        animation.velocity = animation.velocity || 0;
-        animation.lastTimestamp = previousAnimation.lastTimestamp || now;
-        animation.startTimestamp = triggeredTwice
-          ? previousAnimation.startTimestamp || now
-          : now;
-      } else {
-        animation.lastTimestamp = now;
-        animation.startTimestamp = now;
-      }
+      animation.lastTimestamp = now;
+
+      animation.startTimestamp = triggeredTwice
+        ? previousAnimation?.startTimestamp || now
+        : now;
 
       animation.zeta = zeta;
       animation.omega0 = omega0;
       animation.omega1 = omega1;
-
-      animation.startTimestamp = now;
     }
 
     return {
@@ -163,6 +182,7 @@ export function withSpring(
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      type: 'spring',
     } as SpringAnimation;
   });
 }

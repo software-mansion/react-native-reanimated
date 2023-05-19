@@ -31,6 +31,7 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   zeta: number;
   omega0: number;
   omega1: number;
+  type: 'spring';
 }
 
 export interface InnerSpringAnimation
@@ -51,7 +52,7 @@ function bisectRoot({
   maxIterations?: number;
 }) {
   'worklet';
-  const ACCURACY = 0.005;
+  const ACCURACY = 0.00005;
   let idx = maxIterations;
   let current = (max + min) / 2;
   while (Math.abs(func(current)) > ACCURACY && idx > 0) {
@@ -100,7 +101,8 @@ export function initialCalculations(
 
 export function calcuateNewMassToMatchDuration(
   x0: number,
-  config: Record<keyof SpringConfig, any>
+  config: Record<keyof SpringConfig, any>,
+  v0: number
 ) {
   'worklet';
   /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
@@ -109,7 +111,7 @@ export function calcuateNewMassToMatchDuration(
             ⎛ ⎛ c⎞           ⎞           
             ⎜-⎜──⎟ ⋅ duration⎟           
             ⎝ ⎝2m⎠           ⎠           
-        A ⋅ e                   = treshold
+       A ⋅ e                   = treshold
 
  
       Amplitude calculated using "Conservation of energy"
@@ -122,16 +124,16 @@ export function calcuateNewMassToMatchDuration(
       And replace mass with damping ratio which is provided: m = (c^2)/(4 * k * zeta^2)   
       */
   const {
-    duration,
-    velocity: v0,
     stiffness: k,
     dampingRatio: zeta,
     restSpeedThreshold: threshold,
+    duration,
   } = config;
 
   const durationForMass = (mass: number) => {
     'worklet';
-    const amplitude = Math.sqrt((mass * v0 * v0 + k * x0 * x0) / k);
+    const amplitude =
+      (mass * v0 * v0 + k * x0 * x0) / (Math.exp(1 - 0.5 * zeta) * k);
     const c = zeta * 2 * Math.sqrt(k * mass);
     return (
       1000 * ((-2 * mass) / c) * Math.log((threshold * 0.01) / amplitude) -
@@ -140,7 +142,7 @@ export function calcuateNewMassToMatchDuration(
   };
 
   // Bisection turns out to be much faster than Newton's method in our case
-  return bisectRoot({ min: 0, max: 50, func: durationForMass });
+  return bisectRoot({ min: 0, max: 100, func: durationForMass });
 }
 
 export function criticallyDampedSpringCalculations(
