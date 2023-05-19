@@ -551,12 +551,14 @@ void NativeReanimatedModule::performOperations() {
     tagsToRemove_.clear();
   }
 
-  if (operationsInBatch_.empty()) {
+  if (propsRegistry_->shouldSkipCommit()) {
+    // skip the commit so that React Native can mount its tree
+    operationsInBatch_.clear();
     return;
   }
 
-  if (propsRegistry_->shouldSkipCommit()) {
-    // skipping the commit so that React Native can mount its tree
+  if (operationsInBatch_.empty()) {
+    // don't commit if there's no changes
     return;
   }
 
