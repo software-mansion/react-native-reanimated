@@ -10,8 +10,6 @@ import {
 } from '../shareables';
 
 interface ComponentRef extends Component {
-  displayName?: string;
-  name?: string;
   getNativeScrollRef?: () => ComponentRef;
   getScrollableNode?: () => ComponentRef;
 }
