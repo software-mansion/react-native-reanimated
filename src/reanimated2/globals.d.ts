@@ -10,6 +10,7 @@ import type {
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type { SensorContainer } from './SensorContainer';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -90,6 +91,7 @@ declare global {
   var __handleCache: WeakMap<object, any>;
   var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;
+  var __sensorContainer: SensorContainer;
   var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: {
     start(

@@ -39,6 +39,7 @@ import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import LettersExample from './LettersExample';
 import LightBoxExample from './LightBoxExample';
 import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
@@ -81,6 +82,7 @@ import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
+import VolumeExample from './VolumeExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 
 interface Example {
@@ -144,6 +146,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📰',
     title: 'Article progress',
     screen: ArticleProgressExample,
+  },
+  LettersExample: {
+    icon: '📖',
+    title: 'Letters',
+    screen: LettersExample,
   },
 
   // Basic examples
@@ -277,6 +284,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🙆‍♂️',
     title: 'Profiles',
     screen: ProfilesExample,
+  },
+  VolumeExample: {
+    icon: '🎧',
+    title: 'Volume slider & sensor',
+    screen: VolumeExample,
   },
   EmptyExample: {
     icon: '👻',

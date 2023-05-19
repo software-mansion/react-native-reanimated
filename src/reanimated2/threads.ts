@@ -82,6 +82,15 @@ export function runOnUI<A extends any[], R>(
       );
       return;
     }
+    if (__DEV__) {
+      // in DEV mode we call shareable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      makeShareableCloneRecursive(worklet);
+      makeShareableCloneRecursive(args);
+    }
     _runOnUIQueue.push([worklet, args]);
     if (_runOnUIQueue.length === 1) {
       queueMicrotask(() => {
@@ -122,9 +131,8 @@ export function runOnUIImmediately<A extends any[], R>(
 
 if (__DEV__) {
   try {
-    runOnUI(() => {
-      'worklet';
-    });
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    runOnUI(() => {});
   } catch (e) {
     throw new Error(
       'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'

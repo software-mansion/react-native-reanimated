@@ -6,8 +6,8 @@ var objX = {
   x: x
 };
 var _worklet_5359970077727_init_data = {
-  code: \\"function f(){const{x,objX}=this._closure;return{res:x+objX.x};}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function f(){const{x,objX}=this._closure;return{res:x+objX.x};}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var f = function () {
   var _e = [new global.Error(), -3, -27];
@@ -32,7 +32,7 @@ exports[`babel plugin doesn't break if there is a spread syntax 1`] = `
   return React.createElement(Animated.View, {
     style: [style, Object.assign({}, styles.container, {
       width: function () {
-        console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+        console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
         return sharedValue.value;
       }()
     })]
@@ -42,8 +42,8 @@ exports[`babel plugin doesn't break if there is a spread syntax 1`] = `
 
 exports[`babel plugin doesn't capture globals 1`] = `
 "var _worklet_13298016111221_init_data = {
-  code: \\"function f(){console.log('test');}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function f(){console.log('test');}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
@@ -60,12 +60,12 @@ var f = function () {
 
 exports[`babel plugin doesn't remove nested 'worklets' 1`] = `
 "var _worklet_1678749606628_init_data = {
-  code: \\"function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var _worklet_16974800582491_init_data = {
-  code: \\"function bar(x){return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function bar(x){return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -107,14 +107,14 @@ exports[`babel plugin doesn't transform standard callback functions 1`] = `
 
 exports[`babel plugin doesn't transform string literals 1`] = `
 "var _worklet_9810417751380_init_data = {
-  code: \\"function foo(x){const bar='worklet';const baz=\\\\\\"worklet\\\\\\";}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(x){const bar='worklet';const baz=\\"worklet\\";}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f(x) {
     var bar = 'worklet';
-    var baz = \\"worklet\\";
+    var baz = "worklet";
   };
   _f._closure = {};
   _f.__initData = _worklet_9810417751380_init_data;
@@ -129,7 +129,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style 1`
   return React.createElement(Animated.View, {
     style: {
       width: function () {
-        console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+        console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
         return sharedValue.value;
       }()
     }
@@ -142,7 +142,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, s
   return React.createElement(Animated.View, {
     style: [style, {
       width: function () {
-        console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+        console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
         return sharedValue.value;
       }()
     }]
@@ -156,7 +156,7 @@ exports[`babel plugin shows a warning if user uses .value inside inline style, t
     style: {
       transform: [{
         translateX: function () {
-          console.warn(require(\\"react-native-reanimated\\").getUseOfValueInStyleWarning());
+          console.warn(require("react-native-reanimated").getUseOfValueInStyleWarning());
           return sharedValue.value;
         }()
       }]
@@ -175,8 +175,8 @@ exports[`babel plugin supports SequenceExpression 1`] = `
 
 exports[`babel plugin supports SequenceExpression, many arguments 1`] = `
 "var _worklet_4434179069699_init_data = {
-  code: \\"function onStart(){}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onStart(){}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 function App() {
   (0, 3, fun)({
@@ -195,8 +195,8 @@ function App() {
 
 exports[`babel plugin supports SequenceExpression, with objectHook 1`] = `
 "var _worklet_4434179069699_init_data = {
-  code: \\"function onStart(){}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onStart(){}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 function App() {
   (0, useAnimatedGestureHandler)({
@@ -215,8 +215,8 @@ function App() {
 
 exports[`babel plugin supports SequenceExpression, with worklet 1`] = `
 "var _worklet_4434179069699_init_data = {
-  code: \\"function onStart(){}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onStart(){}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 function App() {
   (0, fun)({
@@ -235,8 +235,8 @@ function App() {
 
 exports[`babel plugin supports SequenceExpression, with worklet closure 1`] = `
 "var _worklet_16676723780973_init_data = {
-  code: \\"function onStart(){const{obj}=this._closure;const a=obj.a;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onStart(){const{obj}=this._closure;const a=obj.a;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 function App() {
   var obj = {
@@ -264,8 +264,8 @@ function App() {
 exports[`babel plugin supports recursive calls 1`] = `
 "var a = 1;
 var _worklet_2022702330805_init_data = {
-  code: \\"function foo(t){const foo=this._recur;const{a}=this._closure;if(t>0){return a+foo(t-1);}}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(t){const foo=this._recur;const{a}=this._closure;if(t>0){return a+foo(t-1);}}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), -2, -27];
@@ -285,12 +285,12 @@ var foo = function () {
 `;
 
 exports[`babel plugin transforms 1`] = `
-"var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== \\"function\\") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== \\"object\\" && typeof obj !== \\"function\\") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== \\"default\\" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+"var _reactNativeReanimated = _interopRequireWildcard(require("react-native-reanimated"));
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 var _worklet_16669311443114_init_data = {
-  code: \\"function anonymous(){const{offset}=this._closure;return{transform:[{translateX:offset.value*255}]};}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(){const{offset}=this._closure;return{transform:[{translateX:offset.value*255}]};}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 function Box() {
   var offset = (0, _reactNativeReanimated.useSharedValue)(0);
@@ -317,15 +317,15 @@ function Box() {
     onPress: function onPress() {
       return offset.value = Math.random();
     },
-    title: \\"Move\\"
+    title: "Move"
   }));
 }"
 `;
 
 exports[`babel plugin transforms spread operator in worklets for arrays 1`] = `
 "var _worklet_3161057533258_init_data = {
-  code: \\"function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -343,8 +343,8 @@ var foo = function () {
 
 exports[`babel plugin transforms spread operator in worklets for function arguments 1`] = `
 "var _worklet_9866931756941_init_data = {
-  code: \\"function foo(...args){console.log(args);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(...args){console.log(args);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -363,11 +363,11 @@ var foo = function () {
 `;
 
 exports[`babel plugin transforms spread operator in worklets for function calls 1`] = `
-"var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-var _toConsumableArray2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/toConsumableArray\\"));
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
 var _worklet_2015887751437_init_data = {
-  code: \\"function foo(arg){console.log(...arg);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(arg){console.log(...arg);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -385,8 +385,8 @@ var foo = function () {
 
 exports[`babel plugin transforms spread operator in worklets for objects 1`] = `
 "var _worklet_792186851025_init_data = {
-  code: \\"function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -412,8 +412,8 @@ var foo = function () {
 
 exports[`babel plugin workletizes ArrowFunctionExpression 1`] = `
 "var _worklet_16347365292089_init_data = {
-  code: \\"function anonymous(x){return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(x){return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -428,10 +428,28 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin workletizes ArrowFunctionExpression inside runOnUI automatically 1`] = `
+"var _worklet_15854903236968_init_data = {
+  code: "function anonymous(){console.log('Hello from the UI thread!');}",
+  location: "${ process.cwd() }/jest tests fixture"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('Hello from the UI thread!');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_15854903236968_init_data;
+  _f.__workletHash = 15854903236968;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
 exports[`babel plugin workletizes FunctionDeclaration 1`] = `
 "var _worklet_4679479961836_init_data = {
-  code: \\"function foo(x){return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(x){return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -447,19 +465,19 @@ var foo = function () {
 `;
 
 exports[`babel plugin workletizes getter 1`] = `
-"var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-var _classCallCheck2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/classCallCheck\\"));
-var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/createClass\\"));
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _worklet_10436985806815_init_data = {
-  code: \\"function get(){const{x}=this._closure;return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function get(){const{x}=this._closure;return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var Foo = function () {
   function Foo() {
     (0, _classCallCheck2.default)(this, Foo);
   }
   (0, _createClass2.default)(Foo, [{
-    key: \\"bar\\",
+    key: "bar",
     get: function () {
       var _e = [new global.Error(), -2, -27];
       var _f = function _f() {
@@ -480,8 +498,8 @@ var Foo = function () {
 
 exports[`babel plugin workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_9645206935615_init_data = {
-  code: \\"function anonymous(){return{width:50};}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(){return{width:50};}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
@@ -500,8 +518,8 @@ var animatedStyle = useAnimatedStyle(function () {
 
 exports[`babel plugin workletizes hook wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_6275510763626_init_data = {
-  code: \\"function foo(){return{width:50};}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(){return{width:50};}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
@@ -520,8 +538,8 @@ var animatedStyle = useAnimatedStyle(function () {
 
 exports[`babel plugin workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_9645206935615_init_data = {
-  code: \\"function anonymous(){return{width:50};}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(){return{width:50};}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
@@ -539,19 +557,19 @@ var animatedStyle = useAnimatedStyle(function () {
 `;
 
 exports[`babel plugin workletizes instance method 1`] = `
-"var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-var _classCallCheck2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/classCallCheck\\"));
-var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/createClass\\"));
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _worklet_16974800582491_init_data = {
-  code: \\"function bar(x){return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function bar(x){return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var Foo = function () {
   function Foo() {
     (0, _classCallCheck2.default)(this, Foo);
   }
   (0, _createClass2.default)(Foo, [{
-    key: \\"bar\\",
+    key: "bar",
     value: function () {
       var _e = [new global.Error(), 1, -27];
       var _f = function _f(x) {
@@ -570,8 +588,8 @@ var Foo = function () {
 
 exports[`babel plugin workletizes named FunctionExpression 1`] = `
 "var _worklet_4679479961836_init_data = {
-  code: \\"function foo(x){return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function foo(x){return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -586,19 +604,37 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin workletizes named FunctionExpression inside runOnUI automatically 1`] = `
+"var _worklet_5662051517689_init_data = {
+  code: "function hello(){console.log('Hello from the UI thread!');}",
+  location: "${ process.cwd() }/jest tests fixture"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('Hello from the UI thread!');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_5662051517689_init_data;
+  _f.__workletHash = 5662051517689;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
 exports[`babel plugin workletizes possibly chained gesture object callback functions automatically 1`] = `
-"var _reactNativeGestureHandler = require(\\"react-native-gesture-handler\\");
+"var _reactNativeGestureHandler = require("react-native-gesture-handler");
 var _worklet_15393478329680_init_data = {
-  code: \\"function anonymous(){console.log('onBegin');}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(){console.log('onBegin');}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var _worklet_12748187344900_init_data = {
-  code: \\"function anonymous(_event){console.log('onStart');}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(_event){console.log('onStart');}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var _worklet_232586479291_init_data = {
-  code: \\"function anonymous(_event,_success){console.log('onEnd');}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(_event,_success){console.log('onEnd');}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _e = [new global.Error(), 1, -27];
@@ -634,19 +670,19 @@ var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(funct
 `;
 
 exports[`babel plugin workletizes static method 1`] = `
-"var _interopRequireDefault = require(\\"@babel/runtime/helpers/interopRequireDefault\\");
-var _classCallCheck2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/classCallCheck\\"));
-var _createClass2 = _interopRequireDefault(require(\\"@babel/runtime/helpers/createClass\\"));
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _worklet_16974800582491_init_data = {
-  code: \\"function bar(x){return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function bar(x){return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var Foo = function () {
   function Foo() {
     (0, _classCallCheck2.default)(this, Foo);
   }
   (0, _createClass2.default)(Foo, null, [{
-    key: \\"bar\\",
+    key: "bar",
     value: function () {
       var _e = [new global.Error(), 1, -27];
       var _f = function _f(x) {
@@ -665,8 +701,8 @@ var Foo = function () {
 
 exports[`babel plugin workletizes unnamed FunctionExpression 1`] = `
 "var _worklet_16347365292089_init_data = {
-  code: \\"function anonymous(x){return x+2;}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(x){return x+2;}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -681,10 +717,28 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin workletizes unnamed FunctionExpression inside runOnUI automatically 1`] = `
+"var _worklet_15854903236968_init_data = {
+  code: "function anonymous(){console.log('Hello from the UI thread!');}",
+  location: "${ process.cwd() }/jest tests fixture"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('Hello from the UI thread!');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_15854903236968_init_data;
+  _f.__workletHash = 15854903236968;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
 exports[`babel plugin workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
-  code: \\"function anonymous(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -703,8 +757,8 @@ useAnimatedGestureHandler({
 
 exports[`babel plugin workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically 1`] = `
 "var _worklet_338158776260_init_data = {
-  code: \\"function onStart(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onStart(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -723,8 +777,8 @@ useAnimatedGestureHandler({
 
 exports[`babel plugin workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_338158776260_init_data = {
-  code: \\"function onStart(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onStart(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -743,8 +797,8 @@ useAnimatedGestureHandler({
 
 exports[`babel plugin workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
-  code: \\"function anonymous(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -763,8 +817,8 @@ useAnimatedGestureHandler({
 
 exports[`babel plugin workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
-  code: \\"function anonymous(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedScrollHandler({
   onScroll: function () {
@@ -783,8 +837,8 @@ useAnimatedScrollHandler({
 
 exports[`babel plugin workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
 "var _worklet_947458829673_init_data = {
-  code: \\"function onScroll(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onScroll(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedGestureHandler({
   onScroll: function () {
@@ -803,8 +857,8 @@ useAnimatedGestureHandler({
 
 exports[`babel plugin workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_947458829673_init_data = {
-  code: \\"function onScroll(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function onScroll(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedScrollHandler({
   onScroll: function () {
@@ -823,8 +877,8 @@ useAnimatedScrollHandler({
 
 exports[`babel plugin workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
-  code: \\"function anonymous(event){console.log(event);}\\",
-  location: \\"${ process.cwd() }/jest tests fixture\\"
+  code: "function anonymous(event){console.log(event);}",
+  location: "${ process.cwd() }/jest tests fixture"
 };
 useAnimatedScrollHandler({
   onScroll: function () {

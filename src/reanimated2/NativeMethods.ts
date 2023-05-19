@@ -86,7 +86,7 @@ export function dispatchCommand(
   args: Array<unknown>
 ): void {
   'worklet';
-  if (!_WORKLET || !isNative || !global._IS_FABRIC) {
+  if (!_WORKLET || !isNative) {
     return;
   }
 
