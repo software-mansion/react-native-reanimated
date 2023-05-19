@@ -47,6 +47,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   shadowTreeCloner.updateYogaChildren();
 
+  // request Reanimated to skip one commit so that React Native can mount the
+  // changes instead of failing 1024 times and crashing the app
+  propsRegistry_->pleaseSkipCommit();
+
   return std::static_pointer_cast<RootShadowNode>(rootNode);
 }
 

@@ -555,6 +555,11 @@ void NativeReanimatedModule::performOperations() {
     return;
   }
 
+  if (propsRegistry_->shouldSkipCommit()) {
+    // skipping the commit so that React Native can mount its tree
+    return;
+  }
+
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
