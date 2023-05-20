@@ -84,6 +84,7 @@ import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
+import RainbowExample from './RainbowExample';
 
 interface Example {
   icon?: string;
@@ -269,6 +270,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌓',
     title: 'Conditional',
     screen: NewestShadowNodesRegistryRemoveExample,
+  },
+  RainbowExample: {
+    icon: '🌈',
+    title: 'Rainbow',
+    screen: RainbowExample,
   },
   WithoutBabelPluginExample: {
     icon: '🔌',
