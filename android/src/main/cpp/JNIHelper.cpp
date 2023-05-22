@@ -65,31 +65,27 @@ jsi::Object JNIHelper::convertJNIMapToJSIObject(
   static const auto arrayFloatClass = jni::JList<JFloat>::javaClassStatic();
 
   auto object = jsi::Object(rt);
-  for (const auto &entry : *jniMap) {
-    auto key = entry.first->toStdString();
-    if (entry.second->isInstanceOf(integerClass)) {
+  for (const auto &[jniKey, jniValue] : *jniMap) {
+    auto key = jniKey->toStdString();
+    if (jniValue->isInstanceOf(integerClass)) {
       object.setProperty(
-          rt,
-          key.c_str(),
-          jni::static_ref_cast<JInteger>(entry.second)->value());
-    } else if (entry.second->isInstanceOf(doubleClass)) {
+          rt, key.c_str(), jni::static_ref_cast<JInteger>(jniValue)->value());
+    } else if (jniValue->isInstanceOf(doubleClass)) {
       object.setProperty(
-          rt,
-          key.c_str(),
-          jni::static_ref_cast<JDouble>(entry.second)->value());
-    } else if (entry.second->isInstanceOf(floatClass)) {
+          rt, key.c_str(), jni::static_ref_cast<JDouble>(jniValue)->value());
+    } else if (jniValue->isInstanceOf(floatClass)) {
       object.setProperty(
-          rt, key.c_str(), jni::static_ref_cast<JFloat>(entry.second)->value());
-    } else if (entry.second->isInstanceOf(stringClass)) {
+          rt, key.c_str(), jni::static_ref_cast<JFloat>(jniValue)->value());
+    } else if (jniValue->isInstanceOf(stringClass)) {
       auto jsiValue = jsi::String::createFromUtf8(
-          rt, jni::static_ref_cast<JString>(entry.second)->toStdString());
+          rt, jni::static_ref_cast<JString>(jniValue)->toStdString());
       object.setProperty(rt, key.c_str(), jsiValue);
     }
-    if (entry.second->isInstanceOf(arrayFloatClass)) {
-      auto floatArray = jni::static_ref_cast<JList<JFloat>>(entry.second);
+    if (jniValue->isInstanceOf(arrayFloatClass)) {
+      auto floatArray = jni::static_ref_cast<JList<JFloat>>(jniValue);
       unsigned int arraySize = floatArray->size();
       jsi::Array jsiArray(rt, arraySize);
-      int i = 0;
+      size_t i = 0;
       for (const auto &item : *floatArray) {
         jsiArray.setValueAtIndex(rt, i++, item->value());
       }

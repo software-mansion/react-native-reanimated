@@ -693,7 +693,7 @@ public class SharedTransitionManager {
       int viewTag = sharedElement.sourceView.getId();
       boolean viewHasProgressAnimation =
           mAnimationsManager.hasAnimationForTag(
-              viewTag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_WITH_PROGRESS);
+              viewTag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
       if (viewHasProgressAnimation) {
         mSharedElementsWithProgress.add(sharedElement);
       } else {

@@ -51,7 +51,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
     sharedTransitionGroups_.erase(groupName);
   }
   viewTagToSharedTag_.erase(tag);
-  sharedTransitioinProgressAnimations_.erase(tag);
+  sharedTransitionProgressAnimations_.erase(tag);
   sharedTransitionProgressAnimationsLowPriority_.erase(tag);
 }
 
@@ -134,7 +134,7 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
     case SHARED_ELEMENT_TRANSITION:
       return sharedTransitionAnimations_;
     case SHARED_ELEMENT_TRANSITION_PROGRESS:
-      return sharedTransitioinProgressAnimations_;
+      return sharedTransitionProgressAnimations_;
     default:
       assert(false);
   }

@@ -281,7 +281,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
       targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
       if (targetViewSnapshot == nil) {
         targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
-        NSLog(@"[Reanimated] Unable to find view style snapshot. It looks like you try to animate no-mounted view.");
+        NSLog(@"[Reanimated] Unable to find view style snapshot. It looks like you try to animate an unmounted view.");
       }
     }
 
@@ -478,7 +478,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)maybeClearConfigForStack:(UIView *)stack isInteractive:(bool)isInteractive
 {
   if (isInteractive) {
-    [self maybeClearConfigForStackLeater:stack];
+    [self maybeClearConfigForStackLater:stack];
   } else {
     [self clearConfigForStackNow:stack];
   }
@@ -494,7 +494,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)maybeClearConfigForStackLeater:(UIView *)stack
+- (void)maybeClearConfigForStackLater:(UIView *)stack
 {
   _droppedStack = stack;
 }

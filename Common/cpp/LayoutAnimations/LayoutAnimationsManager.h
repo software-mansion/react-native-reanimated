@@ -55,7 +55,7 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>>
       sharedTransitionAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>>
-      sharedTransitioinProgressAnimations_;
+      sharedTransitionProgressAnimations_;
   std::unordered_set<int> sharedTransitionProgressAnimationsLowPriority_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
