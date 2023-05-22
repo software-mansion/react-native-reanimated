@@ -2,6 +2,7 @@ import { Text, StyleSheet, View, Button } from 'react-native';
 
 import React, { useEffect } from 'react';
 import Animated, {
+  Easing,
   SharedValue,
   useAnimatedStyle,
   useSharedValue,
@@ -20,7 +21,11 @@ function useLoop() {
 
   useEffect(() => {
     sv.value = 0;
-    sv.value = withRepeat(withTiming(Math.PI, { duration: 1000 }), -1, true);
+    sv.value = withRepeat(
+      withTiming(2 * Math.PI, { duration: 1000, easing: Easing.linear }),
+      -1,
+      true
+    );
   }, [sv]);
 
   return sv;
@@ -35,7 +40,7 @@ function Item({ index, sv }: ItemProps) {
   const backgroundColor = `hsl(${(index / N) * 300}, 100%, 50%)`;
 
   const animatedStyle = useAnimatedStyle(() => {
-    return { width: 20 + Math.sin(sv.value) * 200 };
+    return { width: 120 + Math.cos(sv.value) * 100 };
   });
 
   return (
