@@ -1,4 +1,7 @@
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
 import {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -8,8 +11,10 @@ export class PinwheelIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): PinwheelIn {
-    return new PinwheelIn();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new PinwheelIn() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -55,8 +60,10 @@ export class PinwheelOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): PinwheelOut {
-    return new PinwheelOut();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new PinwheelOut() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
