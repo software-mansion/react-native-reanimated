@@ -48,7 +48,7 @@ export function withDecay(
     'worklet';
     const config: DefaultDecayConfig = {
       deceleration: 0.998,
-      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
+      velocityFactor: 1,
       velocity: 0,
       rubberBandFactor: 0.6,
     };

@@ -2,6 +2,9 @@ import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
+
+import javax.inject.Inject
+import java.nio.file.Files
 import java.nio.file.Paths
 
 /**
@@ -72,9 +75,12 @@ def resolveClientSideBuild() {
     return true
 }
 
+def isReanimatedExampleApp() {
+    return safeAppExtGet("isReanimatedExampleApp", false)
+}
+
 def isDeveloperMode() {
-    // developer mode, to run Example app
-    return safeAppExtGet("isReanimatedExampleApp", false) || System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
+    return isReanimatedExampleApp() || System.getenv("REANIMATED_PACKAGE_BUILD") == "1"
 }
 
 def isNewArchitectureEnabled() {
@@ -136,41 +142,6 @@ def shouldAssertNoMultipleInstances() {
   } else {
     return true
   }
-}
-
-def findReanimatedInstancesForPath(String path) {
-    return fileTree(path) {
-        include "**/react-native-reanimated/package.json"
-        exclude "**/.yarn/**"
-        exclude {{ file, attr -> attr.isSymbolicLink() }}
-    }.files
-}
-
-def checkNoMultipleInstances() {
-    // Assert there are no multiple installations of Reanimated
-    Set<File> files
-    if (projectDir.path.contains(rootDir.parent)) {
-        // standard app
-        files = findReanimatedInstancesForPath(rootDir.parent + "/node_modules")
-    } else {
-        // monorepo
-        files = findReanimatedInstancesForPath(rootDir.parent + "/node_modules")
-        files.addAll(
-            findReanimatedInstancesForPath(file(projectDir.parent).parent)
-        )
-    }
-    if (files.size() > 1) {
-        String parsedLocation = files.stream().map({
-            File file -> "- " + file.toString().replace("/package.json", "")
-        }).collect().join("\n")
-        String exceptionMessage = "\n[react-native-reanimated] Multiple versions of Reanimated " +
-            "were detected. Only one instance of react-native-reanimated can be installed in a " +
-            "project. You need to resolve the conflict manually. Check out the documentation: " +
-            "https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/" +
-            "troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict " +
-            "between: \n" + parsedLocation + "\n";
-        throw new GradleException(exceptionMessage)
-    }
 }
 
 def getReanimatedVersion() {
@@ -431,6 +402,10 @@ apply plugin: "de.undercouch.download"
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
+    def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+    if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
+        namespace "com.swmansion.reanimated"
+    }
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
         buildFeatures {
             prefab true
@@ -453,6 +428,7 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${isNewArchitectureEnabled()}",
+                        "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}",
                         "-DPLAYGROUND_APP_NAME=${getPlaygroundAppName()}",
                         "-DREANIMATED_PACKAGE_BUILD=${REANIMATED_PACKAGE_BUILD}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
@@ -576,15 +552,64 @@ android {
     }
 }
 
-def assertNoMultipleInstances = task assertNoMultipleInstancesTask {
-    onlyIf { shouldAssertNoMultipleInstances() && CLIENT_SIDE_BUILD }
-    doFirst {
-        checkNoMultipleInstances()
+abstract class NoMultipleInstancesAssertionTask extends DefaultTask {
+    @Inject abstract ObjectFactory getObjectFactory()
+
+    @Input abstract Property<File> getProjectDirFile()
+    @Input abstract Property<File> getRootDirFile()
+    @Input abstract Property<Boolean> getShouldCheck()
+
+    def findReanimatedInstancesForPath(String path) {
+        return objectFactory.fileTree().from(path)
+                .include("**/react-native-reanimated/package.json")
+                .exclude("**/.yarn/**")
+                .exclude({ Files.isSymbolicLink(it.getFile().toPath()) })
+                .findAll()
+    }
+
+    @TaskAction
+    def check() {
+        if (shouldCheck.get()) {
+            // Assert there are no multiple installations of Reanimated
+            Set<File> files
+
+            if (projectDirFile.get().parent.contains(rootDirFile.get().parent)) {
+                // standard app
+                files = findReanimatedInstancesForPath(rootDirFile.get().parent + "/node_modules")
+            } else {
+                // monorepo
+                files = findReanimatedInstancesForPath(rootDirFile.get().parent + "/node_modules")
+                files.addAll(
+                    findReanimatedInstancesForPath(projectDirFile.get().parentFile.parent)
+                )
+            }
+
+            if (files.size() > 1) {
+                String parsedLocation = files.stream().map({
+                    File file -> "- " + file.toString().replace("/package.json", "")
+                }).collect().join("\n")
+                String exceptionMessage = "\n[react-native-reanimated] Multiple versions of Reanimated " +
+                        "were detected. Only one instance of react-native-reanimated can be installed in a " +
+                        "project. You need to resolve the conflict manually. Check out the documentation: " +
+                        "https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/" +
+                        "troubleshooting#multiple-versions-of-reanimated-were-detected \n\nConflict " +
+                        "between: \n" + parsedLocation + "\n"
+                throw new GradleException(exceptionMessage)
+            }
+        }
     }
 }
 
+tasks.register('assertNoMultipleInstances', NoMultipleInstancesAssertionTask) {
+    shouldCheck = shouldAssertNoMultipleInstances()
+    rootDirFile = rootDir
+    projectDirFile = projectDir
+}
+
+def NEW_ARCH_ENABLED = isNewArchitectureEnabled()
+
 def assertNoReanimated2WithNewArchitecture = task assertNoReanimated2WithNewArchitectureTask {
-    onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION == 2 }
+    onlyIf { NEW_ARCH_ENABLED && REANIMATED_MAJOR_VERSION == 2 }
     doFirst {
         throw new GradleException(
             "\n[react-native-reanimated] Reanimated 2.x does not support Fabric. " +
@@ -595,11 +620,11 @@ def assertNoReanimated2WithNewArchitecture = task assertNoReanimated2WithNewArch
 }
 
 def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
-    onlyIf { isNewArchitectureEnabled() && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 71 }
+    onlyIf { NEW_ARCH_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 72 }
     doFirst {
         throw new GradleException(
             "\n[react-native-reanimated] Reanimated " + REANIMATED_VERSION + " supports the New Architecture " +
-            "only on the latest minor release of React Native. Please upgrade to React Native 0.71.0+ " +
+            "only on the latest minor release of React Native. Please upgrade to React Native 0.72.0+ " +
             "or downgrade to an older version of Reanimated v3."
         )
     }
@@ -1066,13 +1091,13 @@ afterEvaluate {
         nativeBuildDependsOn(prepareThirdPartyNdkHeaders)
         nativeBuildDependsOn(extractAARHeaders)
         nativeBuildDependsOn(extractSOFiles)
-
-        tasks.forEach({ task ->
-            if (task.name.contains("JniLibFolders")) {
-                task.dependsOn(packageNdkLibs)
-            }
-        })
     }
+
+    tasks.forEach({ task ->
+        if (task.name.contains("JniLibFolders")) {
+            task.dependsOn(packageNdkLibs)
+        }
+    })
 
     if (JS_RUNTIME == "hermes") {
         if (REACT_NATIVE_MINOR_VERSION < 71) {

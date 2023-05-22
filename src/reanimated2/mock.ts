@@ -28,7 +28,7 @@ class BaseAnimationMock {
     return this;
   }
 
-  withCallback(_: (finsihed: boolean) => void) {
+  withCallback(_: (finished: boolean) => void) {
     return this;
   }
 
@@ -99,6 +99,7 @@ const ReanimatedV2 = {
     bounce: ID,
     bezier: () => ({ factory: ID }),
     bezierFn: ID,
+    steps: ID,
     in: ID,
     out: ID,
     inOut: ID,

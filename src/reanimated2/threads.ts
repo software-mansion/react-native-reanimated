@@ -7,56 +7,65 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
+const IS_WEB = shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
-export function setupSetImmediate() {
+export function setupMicrotasks() {
   'worklet';
 
-  let immediateCalbacks: Array<() => void> = [];
+  let microtasksQueue: Array<() => void> = [];
+  let isExecutingMicrotasksQueue = false;
 
   // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.setImmediate = (callback: () => void): number => {
-    immediateCalbacks.push(callback);
+  global.queueMicrotask = (callback: () => void): number => {
+    microtasksQueue.push(callback);
     return -1;
   };
 
-  global.__flushImmediates = () => {
-    for (let index = 0; index < immediateCalbacks.length; index += 1) {
-      // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to setImmediate calls
-      immediateCalbacks[index]();
+  global.__callMicrotasks = () => {
+    if (isExecutingMicrotasksQueue) {
+      return;
     }
-    immediateCalbacks = [];
+    try {
+      isExecutingMicrotasksQueue = true;
+      for (let index = 0; index < microtasksQueue.length; index += 1) {
+        // we use classic 'for' loop because the size of the currentTasks array may change while executing some of the callbacks due to queueMicrotask calls
+        microtasksQueue[index]();
+      }
+      microtasksQueue = [];
+      global._maybeFlushUIUpdatesQueue();
+    } finally {
+      isExecutingMicrotasksQueue = false;
+    }
   };
 }
 
-function flushImmediatesOnUIThread() {
+function callMicrotasksOnUIThread() {
   'worklet';
-  global.__flushImmediates();
+  global.__callMicrotasks();
 }
 
-export const flushImmediates = shouldBeUseWeb()
+export const callMicrotasks = shouldBeUseWeb()
   ? () => {
       // on web flushing is a noop as immediates are handled by the browser
     }
-  : flushImmediatesOnUIThread;
+  : callMicrotasksOnUIThread;
 
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
- * waits for other worklets to be scheduled within the same JS loop. It uses setImmediate to schedule all the worklets
+ * waits for other worklets to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
  * at once making sure they will run within the same frame boundaries on the UI thread.
  */
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__ && !shouldBeUseWeb()) {
-    if (worklet.__workletHash === undefined) {
-      throw new Error('runOnUI() can only be used on worklets');
-    }
+  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+    throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
     if (IS_JEST) {
-      // Mocking time in Jest is tricky as both requestAnimationFrame and setImmediate
+      // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
       // callbacks run on the same queue and can be interleaved. There is no way
       // to flush particular queue in Jest and the only control over mocked timers
       // is by using jest.advanceTimersByTime() method which advances all types
@@ -73,9 +82,18 @@ export function runOnUI<A extends any[], R>(
       );
       return;
     }
+    if (__DEV__) {
+      // in DEV mode we call shareable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      makeShareableCloneRecursive(worklet);
+      makeShareableCloneRecursive(args);
+    }
     _runOnUIQueue.push([worklet, args]);
     if (_runOnUIQueue.length === 1) {
-      setImmediate(() => {
+      queueMicrotask(() => {
         const queue = _runOnUIQueue;
         _runOnUIQueue = [];
         NativeReanimatedModule.scheduleOnUI(
@@ -84,7 +102,7 @@ export function runOnUI<A extends any[], R>(
             queue.forEach(([worklet, args]) => {
               worklet(...args);
             });
-            flushImmediates();
+            callMicrotasks();
           })
         );
       });
@@ -98,10 +116,8 @@ export function runOnUI<A extends any[], R>(
 export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
-  if (__DEV__) {
-    if (worklet.__workletHash === undefined) {
-      throw new Error('runOnUI() can only be used on worklets');
-    }
+  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+    throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
@@ -115,9 +131,8 @@ export function runOnUIImmediately<A extends any[], R>(
 
 if (__DEV__) {
   try {
-    runOnUI(() => {
-      'worklet';
-    });
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    runOnUI(() => {});
   } catch (e) {
     throw new Error(
       'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'
