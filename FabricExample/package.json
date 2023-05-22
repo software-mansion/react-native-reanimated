@@ -36,7 +36,6 @@
     "@react-native/metro-config": "^0.72.5",
     "@tsconfig/react-native": "^3.0.0",
     "@types/jest": "^29.2.1",
-    "@types/metro-config": "^0.76.3",
     "@types/react": "^18.0.24",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.2.1",
