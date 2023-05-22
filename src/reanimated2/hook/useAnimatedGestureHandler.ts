@@ -1,6 +1,4 @@
-import { MutableRefObject } from 'react';
-import { Context, WorkletFunction } from '../commonTypes';
-import WorkletEventHandler from '../WorkletEventHandler';
+import { Context, WorkletFunction, NativeEvent } from '../commonTypes';
 import { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
@@ -18,38 +16,43 @@ export interface GestureHandlers<T, TContext extends Context> {
   onFinish?: Handler<T, TContext>;
 }
 
-export enum EventType {
-  UNDETERMINED = 0,
-  FAILED,
-  BEGAN,
-  CANCELLED,
-  ACTIVE,
-  END,
-}
+export const EventType = {
+  UNDETERMINED: 0,
+  FAILED: 1,
+  BEGAN: 2,
+  CANCELLED: 3,
+  ACTIVE: 4,
+  END: 5,
+};
 
-export interface GestureHandlerStateChangeNativeEvent {
+export interface GestureHandlerNativeEvent {
   handlerTag: number;
   numberOfPointers: number;
-  state: EventType;
-  oldState: EventType;
+  state: typeof EventType[keyof typeof EventType];
 }
 
-export interface GestureHandlerEvent<T>
-  extends GestureHandlerStateChangeNativeEvent {
+export interface GestureHandlerEvent<T> extends NativeEvent<T> {
   nativeEvent: T;
 }
 
+type InferArgument<T> = T extends GestureHandlerEvent<infer E>
+  ? E extends GestureHandlerNativeEvent
+    ? E
+    : never
+  : never;
+
 export function useAnimatedGestureHandler<
-  T extends GestureHandlerEvent<T>,
-  TContext extends Context
+  T extends GestureHandlerEvent<any>,
+  TContext extends Context = Context,
+  Payload = InferArgument<T>
 >(
-  handlers: GestureHandlers<T, TContext>,
+  handlers: GestureHandlers<Payload, TContext>,
   dependencies?: DependencyList
-): MutableRefObject<WorkletEventHandler<T> | null> | ((e: T) => void) {
-  const { context, doDependenciesDiffer, useWeb } = useHandler<T, TContext>(
-    handlers,
-    dependencies
-  );
+): (e: T) => void {
+  const { context, doDependenciesDiffer, useWeb } = useHandler<
+    Payload,
+    TContext
+  >(handlers, dependencies);
 
   const handler = (e: T) => {
     'worklet';
@@ -105,5 +108,5 @@ export function useAnimatedGestureHandler<
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     doDependenciesDiffer
-  );
+  ) as unknown as (e: T) => void; // this is not correct but we want to make GH think it receives a function
 }
