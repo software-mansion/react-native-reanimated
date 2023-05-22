@@ -8,7 +8,6 @@ import {
 import Animated, {
   SharedElementTransition,
   withSpring,
-  interpolate,
 } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
@@ -26,27 +25,18 @@ const transition = new SharedElementTransition()
   })
   .progressAnimation((values, progress) => {
     'worklet';
+    const getValue = (
+      progress: number,
+      target: number,
+      current: number
+    ): number => {
+      return progress * (target - current) + current;
+    };
     return {
-      width: interpolate(
-        progress,
-        [0, 1],
-        [values.currentWidth, values.targetWidth]
-      ),
-      height: interpolate(
-        progress,
-        [0, 1],
-        [values.currentHeight, values.targetHeight]
-      ),
-      originX: interpolate(
-        progress,
-        [0, 1],
-        [values.currentOriginX, values.targetOriginX]
-      ),
-      originY: interpolate(
-        progress,
-        [0, 1],
-        [values.currentOriginY, values.targetOriginY]
-      ),
+      width: getValue(progress, values.targetWidth, values.currentWidth),
+      height: getValue(progress, values.targetHeight, values.currentHeight),
+      originX: getValue(progress, values.targetOriginX, values.currentOriginX),
+      originY: getValue(progress, values.targetOriginY, values.currentOriginY),
     };
   });
 
