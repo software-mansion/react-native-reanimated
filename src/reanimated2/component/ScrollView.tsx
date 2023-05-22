@@ -20,7 +20,7 @@ const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
     const { scrollViewOffset, ...restProps } = props;
     const aref = ref === null ? useAnimatedRef<ScrollView>() : ref;
 
-    if (scrollViewOffset && aref) {
+    if (scrollViewOffset) {
       useScrollViewOffset(
         aref as RefObject<Animated.ScrollView>,
         scrollViewOffset
