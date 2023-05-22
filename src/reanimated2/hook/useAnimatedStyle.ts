@@ -391,7 +391,8 @@ function checkSharedValueUsage(
 }
 
 export function useAnimatedStyle<T extends AnimatedStyle>(
-  updater: BasicWorkletFunction<T>,
+  // animated style cannot be an array
+  updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
   dependencies?: DependencyList,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
 ): AnimatedStyleResult {

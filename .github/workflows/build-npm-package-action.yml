@@ -12,6 +12,12 @@ on:
       upload_binaries:
         required: false
         type: boolean
+      publish_on_npm:
+        required: false
+        type: boolean
+    secrets:
+      NODE_AUTH_TOKEN:
+        required: false
 
 jobs:
   build:
@@ -21,6 +27,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: https://registry.npmjs.org/
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
@@ -38,10 +50,34 @@ jobs:
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
-          ./createNPMPackage.sh ${{ inputs.version }}
+          ./createNPMPackage.sh ${{ inputs.version }} 2> build.log
+
+      - name: Check if any node_modules were packed
+        id: node_modules
+        run: >-
+          ! grep --silent -E "node_modules/.+"
+
+      - name: Check if size is over 1MB
+        if: ${{ inputs.ref != 'Reanimated2' }}
+        id: size
+        run: grep --silent -E "npm notice package size:\s*[0-9][0-9]?[0-9]?(\.[0-9]*)?\s*kB" build.log
+
+      - name: Show build log
+        if: failure() && steps.build.outcome == 'failure'
+        run: >-
+          cat build.log
+
+      - name: Show packed node_modules
+        if: failure() && steps.node_modules.outcome == 'failure'
+        run: >-
+          ! grep -E "node_modules/.+"
+
+      - name: Show exceeded package size
+        if: failure() && steps.size.outcome == 'failure'
+        run: grep -E "npm notice package size:" build.log
 
       - run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
-      
+
       - name: Upload npm package
         uses: actions/upload-artifact@v3
         with:
@@ -59,3 +95,8 @@ jobs:
           name: android-build-output
           path: android-build-output.zip
           retention-days: 5
+
+      - run: npm publish $PACKAGE_NAME --tag nightly
+        if: ${{ inputs.publish_on_npm }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

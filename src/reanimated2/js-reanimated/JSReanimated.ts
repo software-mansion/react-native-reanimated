@@ -48,8 +48,12 @@ export default class JSReanimated extends NativeReanimated {
 
   enableLayoutAnimations() {
     console.warn(
-      '[Reanimated] enableLayoutAnimations is not available for WEB yet'
+      '[Reanimated] Layout Animations are not supported on web yet.'
     );
+  }
+
+  configureLayoutAnimation() {
+    // no-op
   }
 
   registerSensor(

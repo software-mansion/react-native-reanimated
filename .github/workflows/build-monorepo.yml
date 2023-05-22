@@ -7,6 +7,9 @@ on:
       - RNReanimated.podspec
       - scripts/reanimated_utils.rb
       - android/build.gradle
+  merge_group:
+    branches:
+      - main
   push:
     branches:
       - main

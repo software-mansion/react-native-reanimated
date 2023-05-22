@@ -1,14 +1,23 @@
 import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
+import createReactDOMStyle from 'react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle';
+
+let createTransformValue: (transform: any) => any;
+try {
+  // React Native Web 0.19+
+  createTransformValue =
+    require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+} catch (e) {}
 
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = (c) => c;
-global._scheduleOnJS = setImmediate;
+global._scheduleOnJS = queueMicrotask;
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
-  setNativeProps: (style: StyleProps) => void;
+  setNativeProps?: (style: StyleProps) => void;
+  style?: StyleProps;
   props: Record<string, string | number>;
   _touchableNode: {
     setAttribute: (key: string, props: unknown) => void;
@@ -32,7 +41,14 @@ export const _updatePropsJS = (
     );
 
     if (typeof component.setNativeProps === 'function') {
+      // This is the legacy way to update props on React Native Web <= 0.18.
+      // Also, some components (e.g. from react-native-svg) don't have styles
+      // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles);
+    } else if (component.style !== undefined) {
+      // React Native Web 0.19+ no longer provides setNativeProps function,
+      // so we need to update DOM nodes directly.
+      updatePropsDOM(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -54,7 +70,24 @@ const setNativeProps = (
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
   component.previousStyle = currentStyle;
-  component.setNativeProps({ style: currentStyle });
+  component.setNativeProps?.({ style: currentStyle });
+};
+
+const updatePropsDOM = (
+  component: JSReanimatedComponent,
+  style: StyleProps
+): void => {
+  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const currentStyle = { ...previousStyle, ...style };
+  component.previousStyle = currentStyle;
+
+  const domStyle = createReactDOMStyle(currentStyle);
+  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
+    domStyle.transform = createTransformValue(domStyle.transform);
+  }
+  for (const key in domStyle) {
+    (component.style as StyleProps)[key] = domStyle[key];
+  }
 };
 
 export default reanimatedJS;

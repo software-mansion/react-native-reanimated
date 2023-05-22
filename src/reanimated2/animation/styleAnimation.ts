@@ -25,8 +25,9 @@ export function resolvePath<T>(
     if (Array.isArray(acc) && typeof current === 'number') {
       return acc[current];
     } else if (
+      acc !== null &&
       typeof acc === 'object' &&
-      (current as number | string) in acc!
+      (current as number | string) in acc
     ) {
       return (acc as { [key: string]: NestedObjectValues<T> })[
         current as number | string

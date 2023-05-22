@@ -117,10 +117,16 @@ const has = <K extends string>(
 };
 
 function isInlineStyleTransform(transform: any): boolean {
+  if (!transform) {
+    return false;
+  }
   return transform.some((t: Record<string, any>) => hasInlineStyles(t));
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
+  if (!style) {
+    return false;
+  }
   return Object.keys(style).some((key) => {
     const styleValue = style[key];
     return (
@@ -140,6 +146,9 @@ function extractSharedValuesMapFromProps(
     if (key === 'style') {
       const styles = flattenArray<StyleProps>(props.style ?? []);
       styles.forEach((style) => {
+        if (!style) {
+          return;
+        }
         for (const [key, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
             inlineProps[key] = styleValue;
@@ -238,8 +247,7 @@ export default function createAnimatedComponent(
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
-    '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
   );
 
   class AnimatedComponent extends React.Component<
@@ -328,8 +336,7 @@ export default function createAnimatedComponent(
         if (global._IS_FABRIC) {
           const viewTag = this._viewTag;
           runOnUI(() => {
-            'worklet';
-            _removeShadowNodeFromRegistry(viewTag);
+            _removeShadowNodeFromRegistry!(viewTag);
           })();
         }
       }
