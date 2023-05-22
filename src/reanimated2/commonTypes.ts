@@ -189,8 +189,8 @@ export type SensorConfig = {
   iosReferenceFrame: IOSReferenceFrame;
 };
 
-export type AnimatedSensor = {
-  sensor: SharedValue<Value3D | ValueRotation>;
+export type AnimatedSensor<T extends Value3D | ValueRotation> = {
+  sensor: SharedValue<T>;
   unregister: () => void;
   isAvailable: boolean;
   config: SensorConfig;
