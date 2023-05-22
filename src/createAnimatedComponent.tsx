@@ -1,5 +1,10 @@
 import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
-import { findNodeHandle, Platform, StyleSheet } from 'react-native';
+import {
+  findNodeHandle,
+  Platform,
+  StyleSheet,
+  TransformsStyle,
+} from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/animationsManager';
@@ -115,11 +120,16 @@ const has = <K extends string>(
   return false;
 };
 
-function isInlineStyleTransform(transform: any): boolean {
-  if (!transform) {
+function isInlineStyleTransform(
+  transform: TransformsStyle['transform']
+): boolean {
+  if (transform === undefined) {
     return false;
   }
-  return transform.some((t: Record<string, any>) => hasInlineStyles(t));
+
+  return transform.some(
+    (t: NonNullable<TransformsStyle['transform']>[number]) => hasInlineStyles(t)
+  );
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
@@ -179,14 +189,22 @@ function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
   return false;
 }
 
-function getInlinePropsUpdate(inlineProps: Record<string, any>) {
+function getInlinePropsUpdate(
+  inlineProps: TransformsStyle['transform'] | Record<string, any>
+) {
   'worklet';
   const update: Record<string, any> = {};
+  if (!inlineProps) {
+    return {};
+  }
+
   for (const [key, styleValue] of Object.entries(inlineProps)) {
     if (key === 'transform') {
-      update[key] = styleValue.map((transform: Record<string, any>) => {
-        return getInlinePropsUpdate(transform);
-      });
+      update[key] = styleValue.map(
+        (transform: TransformsStyle['transform']) => {
+          return getInlinePropsUpdate(transform);
+        }
+      );
     } else if (isSharedValue(styleValue)) {
       update[key] = styleValue.value;
     } else {
