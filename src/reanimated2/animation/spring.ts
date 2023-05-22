@@ -23,8 +23,7 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   lastTimestamp: Timestamp;
 }
 
-export interface InnerSpringAnimation
-  extends Omit<SpringAnimation, 'toValue' | 'current'> {
+export interface InnerSpringAnimation extends SpringAnimation {
   toValue: number;
   current: number;
 }
@@ -36,7 +35,7 @@ export function withSpring(
 ): Animation<SpringAnimation> {
   'worklet';
 
-  return defineAnimation<SpringAnimation>(toValue, () => {
+  return defineAnimation<SpringAnimation>(toValue, (): SpringAnimation => {
     'worklet';
 
     // TODO: figure out why we can't use spread or Object.assign here
@@ -58,8 +57,9 @@ export function withSpring(
       );
     }
 
-    function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
-      const { toValue, lastTimestamp, current, velocity } = animation;
+    function spring(animation: SpringAnimation, now: Timestamp): boolean {
+      const { toValue, lastTimestamp, current, velocity } =
+        animation as InnerSpringAnimation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
       animation.lastTimestamp = now;
@@ -139,9 +139,9 @@ export function withSpring(
 
     function onStart(
       animation: SpringAnimation,
-      value: number,
+      value: AnimatableValue,
       now: Timestamp,
-      previousAnimation: SpringAnimation
+      previousAnimation: Animation<any> | null
     ): void {
       animation.current = value;
       if (previousAnimation) {
@@ -161,6 +161,6 @@ export function withSpring(
       current: toValue,
       callback,
       lastTimestamp: 0,
-    } as SpringAnimation;
+    };
   });
 }

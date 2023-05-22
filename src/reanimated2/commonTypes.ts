@@ -139,7 +139,7 @@ export type AnimatableValue = Animatable | AnimatableValueObject;
 
 export interface AnimationObject {
   [key: string]: any;
-  callback: AnimationCallback;
+  callback?: AnimationCallback;
   current?: AnimatableValue;
   toValue?: AnimationObject['current'];
   startValue?: AnimationObject['current'];
@@ -162,9 +162,9 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
   onFrame: (animation: T, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: T,
-    current: T extends NumericAnimation ? number : AnimatableValue,
+    current: AnimatableValue,
     timestamp: Timestamp,
-    previousAnimation: T
+    previousAnimation: Animation<any> | null
   ) => void;
 }
 
