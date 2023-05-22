@@ -28,7 +28,7 @@ export const EventType = {
 export interface GestureHandlerNativeEvent {
   handlerTag: number;
   numberOfPointers: number;
-  state: typeof EventType[keyof typeof EventType];
+  state: (typeof EventType)[keyof typeof EventType];
 }
 
 export interface GestureHandlerEvent<T> extends NativeEvent<T> {
