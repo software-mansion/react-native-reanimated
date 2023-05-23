@@ -8,42 +8,43 @@ declare global {
   }
 }
 
-expect.extend({
-  toHaveWorkletData(received: string, times: number = 1) {
-    const UIworkletRegExp = /var _worklet_[0-9]+_init_data/g;
-    const actualTimes = received.match(UIworkletRegExp)?.length;
+const UIworkletRegExp = /var _worklet_[0-9]+_init_data/g;
+const inlineStyleWarningRegExp =
+  /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
 
-    if (actualTimes === times) {
+expect.extend({
+  toHaveWorkletData(received: string, expectedMatchCount: number = 1) {
+    const receivedMatchCount = received.match(UIworkletRegExp)?.length;
+
+    if (receivedMatchCount === expectedMatchCount) {
       return {
         message: () =>
-          `Reanimated: expected code to have worklet data ${times} times`,
+          `Reanimated: expected code to have worklet data ${expectedMatchCount} times`,
         pass: true,
       };
     }
     return {
       message: () =>
-        `Reanimated: expected code to have worklet data ${times} times, but found ${actualTimes}`,
+        `Reanimated: expected code to have worklet data ${expectedMatchCount} times, but found ${receivedMatchCount}`,
       pass: false,
     };
   },
 });
 
 expect.extend({
-  toHaveInlineStyleWarning(received: string, times: number = 1) {
-    const inlineStyleWarningRegExp =
-      /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
-    const match = received.match(inlineStyleWarningRegExp)?.length;
+  toHaveInlineStyleWarning(received: string, expectedMatchCount: number = 1) {
+    const receivedMatchCount = received.match(inlineStyleWarningRegExp)?.length;
 
-    if (match === times) {
+    if (receivedMatchCount === expectedMatchCount) {
       return {
         message: () =>
-          `Reanimated: expected to have inline style warning ${times} times`,
+          `Reanimated: expected to have inline style warning ${expectedMatchCount} times`,
         pass: true,
       };
     }
     return {
       message: () =>
-        `Reanimated: expected to have inline style warning ${times} times, but found ${match}`,
+        `Reanimated: expected to have inline style warning ${expectedMatchCount} times, but found ${receivedMatchCount}`,
       pass: false,
     };
   },
