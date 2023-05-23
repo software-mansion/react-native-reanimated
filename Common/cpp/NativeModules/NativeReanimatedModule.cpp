@@ -525,40 +525,14 @@ void NativeReanimatedModule::updateProps(
   // TODO: support multiple surfaces
   surfaceId_ = shadowNode->getSurfaceId();
 
-  // Even if only non-layout props are changed, we need to store the update in
-  // PropsRegistry anyway so that React doesn't overwrite it in the next render.
-  // Currently, only opacity and transform are treated in a special way
-  // but backgroundColor, shadowOpacity etc. would get overwritten
-  // (see `_propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN`).
-  propsRegistry_->update(shadowNode, dynamicFromValue(rt, props));
-
-  if (isThereAnyLayoutProp(rt, props)) {
-    operationsInBatch_.emplace_back(
-        shadowNode, std::make_unique<jsi::Value>(rt, props));
-  } else {
-    // TODO: batch with layout props changes?
-    Tag tag = shadowNode->getTag();
-    synchronouslyUpdateUIPropsFunction(rt, tag, props);
-  }
+  // TODO: move batching to JS side
+  operationsInBatch_.emplace_back(
+      shadowNode, std::make_unique<jsi::Value>(rt, props));
 }
 
 void NativeReanimatedModule::performOperations() {
-  // remove ShadowNodes from PropsRegistry
-  if (!tagsToRemove_.empty()) {
-    for (auto tag : tagsToRemove_) {
-      propsRegistry_->remove(tag);
-    }
-    tagsToRemove_.clear();
-  }
-
-  if (propsRegistry_->shouldSkipCommit()) {
-    // skip the commit so that React Native can mount its tree
-    operationsInBatch_.clear();
-    return;
-  }
-
-  if (operationsInBatch_.empty()) {
-    // don't commit if there's no changes
+  if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
+    // nothing to do
     return;
   }
 
@@ -566,9 +540,58 @@ void NativeReanimatedModule::performOperations() {
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
+  jsi::Runtime &rt = *this->runtime;
+
+  {
+    auto lock = propsRegistry_->createLock();
+
+    // remove recently unmounted ShadowNodes from PropsRegistry
+    if (!tagsToRemove_.empty()) {
+      for (auto tag : tagsToRemove_) {
+        propsRegistry_->remove(tag);
+      }
+      tagsToRemove_.clear();
+    }
+
+    // Even if only non-layout props are changed, we need to store the update in
+    // PropsRegistry anyway so that React doesn't overwrite it in the next
+    // render. Currently, only opacity and transform are treated in a special
+    // way but backgroundColor, shadowOpacity etc. would get overwritten (see
+    // `_propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN`).
+    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+      propsRegistry_->update(shadowNode, dynamicFromValue(rt, *props));
+    }
+  }
+
+  bool hasLayoutUpdates = false;
+  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+    if (isThereAnyLayoutProp(rt, *props)) {
+      hasLayoutUpdates = true;
+      break;
+    }
+  }
+
+  if (!hasLayoutUpdates) {
+    // If there's no layout props to be updated, we can apply the updates
+    // directly onto the components and skip the commit.
+    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+      Tag tag = shadowNode->getTag();
+      synchronouslyUpdateUIPropsFunction(rt, tag, *props);
+    }
+    return;
+  }
+
+  if (propsRegistry_->shouldSkipCommit()) {
+    // It may happen that `performOperations` is called on the UI thread
+    // while React Native tries to commit a new tree on the JS thread.
+    // In this case, we should skip the commit here and let React Native do it.
+    // The commit will include the current values from PropsRegistry
+    // which will be applied in ReanimatedCommitHook.
+    return;
+  }
+
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
     shadowTree.commit(
