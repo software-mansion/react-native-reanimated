@@ -23,6 +23,7 @@ export default function SharedStyleExample() {
   const style = useAnimatedStyle(() => {
     return {
       width: withTiming(randomWidth.value, config),
+      backgroundColor: '0x00ff00',
     };
   });
 
@@ -71,7 +72,15 @@ export default function SharedStyleExample() {
             ...itemList,
             <Animated.View
               key={greenCounter + 'b'}
-              style={[{ backgroundColor: 'green' }, styles.block, style]}
+              style={[
+                {
+                  backgroundColor: 'green',
+                  transform: undefined,
+                  // dupa: 'blada',
+                },
+                styles.block,
+                style,
+              ]}
             />,
           ]);
         }}
