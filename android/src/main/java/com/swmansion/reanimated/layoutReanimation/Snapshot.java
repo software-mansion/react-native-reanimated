@@ -1,17 +1,13 @@
 package com.swmansion.reanimated.layoutReanimation;
 
-import android.graphics.Outline;
-import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.image.ReactImageView;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
-import com.facebook.react.views.view.ReactViewGroup;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -132,10 +128,9 @@ public class Snapshot {
     originYByParent = view.getTop();
     if (view.getBackground() != null) {
       borderRadius = ((ReactViewBackgroundDrawable) view.getBackground()).getFullBorderRadius();
-    } else {
+    } else if (view instanceof ReactImageView) {
       borderRadius = getImageBorderRadius((ReactImageView) view);
     }
-    Log.v("a", "");
   }
 
   private float getImageBorderRadius(ReactImageView imageView) {

@@ -232,12 +232,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [newProps removeObjectForKey:@"transformMatrix"];
   }
 
-//  if (newProps[@"borderRadius"]) {
-//    CGFloat borderRadius = [newProps[@"borderRadius"] floatValue];
-//    view.layer.cornerRadius = borderRadius;
-//    [newProps removeObjectForKey:@"borderRadius"];
-//  }
-
   NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];
   RCTComponentData *componentData = componentDataByName[@"RCTView"];
   [componentData setProps:newProps forView:view];

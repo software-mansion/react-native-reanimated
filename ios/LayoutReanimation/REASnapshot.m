@@ -81,7 +81,7 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     }
     RCTView *viewController = (RCTView *)view;
     if ([viewController respondsToSelector:@selector(borderRadius)]) {
-      // For example `RCTTextView` hasn't `borderRadius` selector
+      // For example `RCTTextView` doesn't have `borderRadius` selector
       _values[@"borderRadius"] = @(viewController.borderRadius);
     } else {
       _values[@"borderRadius"] = @(0);
