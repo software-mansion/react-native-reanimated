@@ -21,6 +21,7 @@ import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.views.image.ReactImageView;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.Scheduler;
 import java.lang.ref.WeakReference;
@@ -271,6 +272,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
       keys = Snapshot.currentKeysToTransform;
     }
     for (String key : keys) {
+      if (key.contains("Radius")) {
+        preparedValues.put(key, values.get(key));
+        continue;
+      }
       preparedValues.put(key, PixelUtil.toDIPFromPixel((int) values.get(key)));
     }
 
@@ -348,13 +353,17 @@ public class AnimationsManager implements ViewHierarchyObserver {
       props.remove(Snapshot.TRANSFORM_MATRIX);
     }
 
-    if (props.containsKey(Snapshot.BORDER_RADIUS)) {
-      Double borderRadius = (Double) props.get(Snapshot.BORDER_RADIUS);
-      if (borderRadius != null) {
-        ((ReactViewBackgroundDrawable)view.getBackground()).setRadius(borderRadius.floatValue());
-      }
-      props.remove(Snapshot.TRANSFORM_MATRIX);
-    }
+//    if (props.containsKey(Snapshot.BORDER_RADIUS)) {
+//      Double borderRadius = (Double) props.get(Snapshot.BORDER_RADIUS);
+//      if (borderRadius != null) {
+//        if (view instanceof ReactImageView) {
+//          ((ReactImageView) view).setBorderRadius(borderRadius.floatValue());
+//        } else {
+//          ((ReactViewBackgroundDrawable)view.getBackground()).setRadius(borderRadius.floatValue());
+//        }
+//      }
+//      props.remove(Snapshot.BORDER_RADIUS);
+//    }
 
     updateLayout(
         view, parentViewManager, parentTag, view.getId(), x, y, width, height, isPositionAbsolute);

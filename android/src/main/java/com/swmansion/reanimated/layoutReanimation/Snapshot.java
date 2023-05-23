@@ -9,8 +9,11 @@ import android.view.ViewOutlineProvider;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.views.image.ReactImageView;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.facebook.react.views.view.ReactViewGroup;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -69,7 +72,8 @@ public class Snapshot {
               Snapshot.TARGET_ORIGIN_X,
               Snapshot.TARGET_ORIGIN_Y,
               Snapshot.TARGET_GLOBAL_ORIGIN_X,
-              Snapshot.TARGET_GLOBAL_ORIGIN_Y));
+              Snapshot.TARGET_GLOBAL_ORIGIN_Y,
+              Snapshot.TARGET_BORDER_RADIUS));
   public static ArrayList<String> currentKeysToTransform =
       new ArrayList<>(
           Arrays.asList(
@@ -78,7 +82,8 @@ public class Snapshot {
               Snapshot.CURRENT_ORIGIN_X,
               Snapshot.CURRENT_ORIGIN_Y,
               Snapshot.CURRENT_GLOBAL_ORIGIN_X,
-              Snapshot.CURRENT_GLOBAL_ORIGIN_Y));
+              Snapshot.CURRENT_GLOBAL_ORIGIN_Y,
+              Snapshot.CURRENT_BORDER_RADIUS));
 
   Snapshot(View view, NativeViewHierarchyManager viewHierarchyManager) {
     parent = (ViewGroup) view.getParent();
@@ -126,10 +131,21 @@ public class Snapshot {
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
     if (view.getBackground() != null) {
-      // TODO: handle image case, ReactImageView, view.getChildAt(0).mBorderRadius
       borderRadius = ((ReactViewBackgroundDrawable) view.getBackground()).getFullBorderRadius();
+    } else {
+      borderRadius = getImageBorderRadius((ReactImageView) view);
     }
     Log.v("a", "");
+  }
+
+  private float getImageBorderRadius(ReactImageView imageView) {
+    try {
+      Field field = imageView.getClass().getDeclaredField("mBorderRadius");
+      field.setAccessible(true);
+      return field.getFloat(imageView);
+    } catch (NullPointerException | NoSuchFieldException | IllegalAccessException e) {
+      return 0;
+    }
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
