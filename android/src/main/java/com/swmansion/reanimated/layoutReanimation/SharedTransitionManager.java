@@ -441,8 +441,7 @@ public class SharedTransitionManager {
           Object value = snapshotMap.get(key);
           if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
             preparedValues.put(key, value);
-          }
-          else {
+          } else {
             float pixelsValue = value instanceof Integer ? (int) value : (Float) value;
             preparedValues.put(key, (double) PixelUtil.toDIPFromPixel(pixelsValue));
           }

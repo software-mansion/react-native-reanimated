@@ -7,7 +7,6 @@ import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.image.ReactImageView;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
