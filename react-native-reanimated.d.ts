@@ -522,26 +522,12 @@ declare module 'react-native-reanimated' {
     deps?: DependencyList
   ): void;
 
-  type ValidateShape<ProvidedShape, ExpectedShape> =
-    ProvidedShape extends ExpectedShape
-      ? Exclude<keyof ProvidedShape, keyof ExpectedShape> extends never
-        ? ProvidedShape
-        : {
-            errorMessage: 'Provided object has too many parameters';
-            errorLocation: Exclude<keyof ProvidedShape, keyof ExpectedShape>;
-          }
-      : never;
-
   export type AnimatedStyleProp<T> =
     | AnimateStyle<T>
     | RegisteredStyle<AnimateStyle<T>>;
   export function useAnimatedStyle<
-    T extends ViewStyle | ImageStyle | TextStyle
-  >(
-    updater: () => ValidateShape<T, ViewStyle | ImageStyle | TextStyle>,
-    deps?: DependencyList | null
-  ): T;
-
+    T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
+  >(updater: () => T, deps?: DependencyList | null): T;
   export function useAnimatedProps<T extends {}>(
     updater: () => Partial<T>,
     deps?: DependencyList | null,

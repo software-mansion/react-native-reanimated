@@ -279,7 +279,8 @@ function AnimatedScrollHandlerTest() {
   });
   const stylez = useAnimatedStyle(() => {
     return {
-      backgroundColor: '0x00ff00',
+      color: 'red',
+      backgroundColor: 0x00ff00,
       transform: [
         {
           translateY: translationY.value,
