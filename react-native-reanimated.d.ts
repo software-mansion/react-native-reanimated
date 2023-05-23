@@ -35,26 +35,26 @@ declare module 'react-native-reanimated' {
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
 
-  import('./lib/reanimated2/globals');
+  import('./src/reanimated2/globals');
 
   export type TimingAnimation =
-    import('./lib/types/lib/reanimated2/animation/index').TimingAnimation;
+    import('./lib/typescript/src/reanimated2/animation/index').TimingAnimation;
   export type SpringAnimation =
-    import('./lib/types/lib/reanimated2/animation/index').SpringAnimation;
+    import('./lib/typescript/src/reanimated2/animation/index').SpringAnimation;
   export type DecayAnimation =
-    import('./lib/types/lib/reanimated2/animation/index').DecayAnimation;
+    import('./lib/typescript/src/reanimated2/animation/index').DecayAnimation;
   export type DelayAnimation =
-    import('./lib/types/lib/reanimated2/animation/commonTypes').DelayAnimation;
+    import('./lib/typescript/src/reanimated2/animation/commonTypes').DelayAnimation;
   export type RepeatAnimation =
-    import('./lib/types/lib/reanimated2/animation/index').RepeatAnimation;
+    import('./lib/typescript/src/reanimated2/animation/index').RepeatAnimation;
   export type SequenceAnimation =
-    import('./lib/types/lib/reanimated2/animation/index').SequenceAnimation;
+    import('./lib/typescript/src/reanimated2/animation/index').SequenceAnimation;
   export type StyleLayoutAnimation =
-    import('./lib/types/lib/reanimated2/animation/index').StyleLayoutAnimation;
+    import('./lib/typescript/src/reanimated2/animation/index').StyleLayoutAnimation;
   export type Animation<T> =
-    import('./lib/types/lib/reanimated2/commonTypes').Animation<T>;
+    import('./lib/typescript/src/reanimated2/commonTypes').Animation<T>;
   export type MeasuredDimensions =
-    import('./lib/types/lib/reanimated2/commonTypes').MeasuredDimensions;
+    import('./lib/typescript/src/reanimated2/commonTypes').MeasuredDimensions;
 
   namespace Animated {
     type Value = string | number | boolean;

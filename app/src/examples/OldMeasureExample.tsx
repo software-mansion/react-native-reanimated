@@ -167,7 +167,9 @@ function SectionHeader({
   contentHeight,
   show,
 }: SectionHeaderProps) {
-  const applyMeasure = ({ height }: ReturnType<typeof measure>) => {
+  const applyMeasure = ({
+    height,
+  }: NonNullable<ReturnType<typeof measure>>) => {
     'worklet';
     if (contentHeight.value === 0) {
       contentHeight.value = withTiming(height, {
@@ -195,7 +197,10 @@ function SectionHeader({
   } else {
     onActiveImpl = () => {
       'worklet';
-      applyMeasure(measure(animatedRef));
+      const measuredMeasure = measure(animatedRef);
+      if (measuredMeasure !== null) {
+        applyMeasure(measuredMeasure);
+      }
     };
   }
 
