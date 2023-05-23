@@ -148,7 +148,7 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeFlatList;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    export interface FlatList<T> extends ReactNativeView<T> {}
+    export interface FlatList<T> extends ReactNativeFlatList<T> {}
 
     type Options<P> = {
       setNativeProps: (ref: any, props: P) => void;
