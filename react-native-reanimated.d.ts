@@ -301,7 +301,7 @@ declare module 'react-native-reanimated' {
   ): AnimatedKeyboardInfo;
 
   export function useScrollViewOffset(
-    aref: RefObject<Animated.ScrollView>
+    animatedRef: RefObject<Animated.ScrollView>
   ): SharedValue<number>;
 
   export interface ExitAnimationsValues {
@@ -346,7 +346,9 @@ declare module 'react-native-reanimated' {
     build: () => EntryExitAnimationFunction;
   }
 
-  export type AnimatableValue = number | string | Array<number>;
+  type Animatable = number | string | Array<number>;
+  type AnimatableValueObject = { [key: string]: Animatable };
+  export type AnimatableValue = Animatable | AnimatableValueObject;
 
   // reanimated2 derived operations
   export enum Extrapolation {
@@ -462,6 +464,9 @@ declare module 'react-native-reanimated' {
     options?: InterpolationOptions
   ): T;
 
+  export type ParsedColorArray = [number, number, number, number];
+  export function convertToRGBA(color: unknown): ParsedColorArray;
+
   export enum ColorSpace {
     RGB = 0,
     HSV = 1,
@@ -556,11 +561,11 @@ declare module 'react-native-reanimated' {
   export function useAnimatedRef<T extends Component>(): RefObject<T>;
   export function defineAnimation<T>(starting: any, factory: () => T): number;
   export function measure<T extends Component>(
-    ref: RefObject<T>
+    animatedRef: RefObject<T>
   ): MeasuredDimensions | null;
 
   export function getRelativeCoords(
-    ref: RefObject<Component>,
+    animatedRef: RefObject<Component>,
     x: number,
     y: number
   ): {
@@ -569,7 +574,7 @@ declare module 'react-native-reanimated' {
   };
 
   export function scrollTo(
-    ref: RefObject<ReactNativeScrollView | ScrollView>,
+    animatedRef: RefObject<ReactNativeScrollView | ScrollView>,
     x: number,
     y: number,
     animated: boolean

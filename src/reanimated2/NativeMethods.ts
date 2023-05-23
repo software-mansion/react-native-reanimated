@@ -1,13 +1,14 @@
-import { Component } from 'react';
-import { findNodeHandle } from 'react-native';
 import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
-import { RefObjectFunction } from './hook/commonTypes';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
+
+import { Component } from 'react';
+import { RefObjectFunction } from './hook/commonTypes';
+import { findNodeHandle } from 'react-native';
 
 export function getTag(
   view: null | number | React.Component<any, any> | React.ComponentClass<any>
@@ -109,7 +110,7 @@ export let dispatchCommand: (
 if (isNative && global._IS_FABRIC) {
   dispatchCommand = (animatedRef, commandName, args) => {
     'worklet';
-    if (!_WORKLET) {
+    if (!_WORKLET || !isNative) {
       return;
     }
 
