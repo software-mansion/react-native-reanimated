@@ -270,11 +270,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       keys = Snapshot.currentKeysToTransform;
     }
     for (String key : keys) {
-      if (key.contains("Radius")) {
-        preparedValues.put(key, values.get(key));
-        continue;
-      }
-      preparedValues.put(key, PixelUtil.toDIPFromPixel((int) values.get(key)));
+      Object value = values.get(key);
+      float pixelsValue = value instanceof Integer ? (int) value : (float) value;
+      preparedValues.put(key, PixelUtil.toDIPFromPixel(pixelsValue));
     }
 
     if (addTransform) {

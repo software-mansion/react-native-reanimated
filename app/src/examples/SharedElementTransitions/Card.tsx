@@ -32,33 +32,28 @@ function Card({
       <Animated.View
         style={
           isOpen
-            ? { height: 500, marginTop: 50, /*backgroundColor: 'green'*/ }
-            : { height: 120, marginTop: 20, /*backgroundColor: 'green'*/ }
+            ? { height: 500, marginTop: 50, backgroundColor: 'green' }
+            : { height: 120, marginTop: 20, backgroundColor: 'green' }
         }
-        // sharedTransitionTag={transitionTag + '1'}
-        >
-        {/* <Animated.Text
+        sharedTransitionTag={transitionTag + '1'}>
+        <Animated.Text
           sharedTransitionTag={transitionTag + '2'}
           style={{ width: '100%', height: 20 }}>
           {title}
-        </Animated.Text> */}
+        </Animated.Text>
         <Animated.Image
           sharedTransitionTag={transitionTag + '3'}
           source={photo}
-          style={{ width: '100%', height: isOpen ? 300 : 100, borderRadius: isOpen ? 0 : 50 }}
+          style={{ width: '100%', height: isOpen ? 300 : 100 }}
         />
-        {/* <Animated.View 
-          style={{ width: '100%', height: 100, backgroundColor: 'red', borderRadius: isOpen ? 0 : 100 }} 
-          sharedTransitionTag={'e'}
-        /> */}
-        {/* <Animated.Text
+        <Animated.Text
           sharedTransitionTag={transitionTag + '4'}
           style={{ width: '100%', height: isOpen ? 100 : 0 }}>
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid,
           earum non, dignissimos fugit rerum exercitationem ab consequatur,
           error animi veritatis delectus. Nostrum sapiente distinctio possimus
           vel nam facilis ut?
-        </Animated.Text> */}
+        </Animated.Text>
       </Animated.View>
     </TouchableNativeFeedback>
   );
@@ -67,7 +62,7 @@ function Card({
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={{ flex: 1 }}>
-      {[...Array(1)].map((_, i) => (
+      {[...Array(6)].map((_, i) => (
         <Card
           key={i}
           navigation={navigation}
@@ -112,7 +107,7 @@ export default function CardExample() {
       <Stack.Screen
         name="Screen2"
         component={Screen2}
-        options={{ headerShown: false }}
+        options={{ headerShown: true }}
       />
     </Stack.Navigator>
   );

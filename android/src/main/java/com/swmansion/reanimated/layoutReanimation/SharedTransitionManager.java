@@ -442,10 +442,9 @@ public class SharedTransitionManager {
           if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
             preparedValues.put(key, value);
           }
-          else if (key.contains("Radius")) {
-//            preparedValues.put(key, value);
-          } else {
-            preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+          else {
+            float pixelsValue = value instanceof Integer ? (int) value : (Float) value;
+            preparedValues.put(key, (double) PixelUtil.toDIPFromPixel(pixelsValue));
           }
         }
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
