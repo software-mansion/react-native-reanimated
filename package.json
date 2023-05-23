@@ -31,7 +31,7 @@
     "plugin": "cd plugin && yarn && cd ..",
     "app": "cd app && yarn && cd .."
   },
-  "main": "lib/commonjs/index",
+  "main": "lib/module/index",
   "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
@@ -141,7 +141,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.72.0-rc.1",
+    "react-native": "0.72.0-rc.3",
     "react-native-builder-bob": "^0.18.3",
     "react-native-gesture-handler": "^2.10.0",
     "react-native-web": "~0.18.12",
@@ -166,7 +166,6 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "commonjs",
       "module",
       [
         "typescript",

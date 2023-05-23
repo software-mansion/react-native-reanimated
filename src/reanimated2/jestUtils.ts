@@ -1,5 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+
+import { isJest } from './PlatformChecker';
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
@@ -179,17 +182,25 @@ export const advanceAnimationByFrame = (count) => {
   jest.runOnlyPendingTimers();
 };
 
+const requireFunction = isJest()
+  ? require
+  : () => {
+      throw new Error(
+        '[Reanimated] setUpTests() is available only in Jest environment'
+      );
+    };
+
 export const setUpTests = (userConfig = {}) => {
   let expect = global.expect;
   if (expect === undefined) {
-    const expectModule = require('expect');
+    const expectModule = requireFunction('expect');
     expect = expectModule;
     // Starting from Jest 28, "expect" package uses named exports instead of default export.
     // So, requiring "expect" package doesn't give direct access to "expect" function anymore.
     // It gives access to the module object instead.
     // We use this info to detect if the project uses Jest 28 or higher.
     if (typeof expect === 'object') {
-      const jestGlobals = require('@jest/globals');
+      const jestGlobals = requireFunction('@jest/globals');
       expect = jestGlobals.expect;
     }
     if (expect === undefined || expect.extend === undefined) {
