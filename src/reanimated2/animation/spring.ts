@@ -37,16 +37,18 @@ export function withSpring(
       dampingRatio: 0.5,
     } as const;
 
-    const config = { ...defaultConfig, ...userConfig };
+    const config = {
+      ...defaultConfig,
+      ...userConfig,
+      useDuration: userConfig?.duration || userConfig?.dampingRatio,
+    };
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
 
-      const expectedDurationReached =
-        userConfig?.duration && timeFromStart >= userConfig.duration;
-      if (expectedDurationReached) {
+      if (config.useDuration && timeFromStart >= config.duration) {
         animation.current = toValue;
 
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -82,22 +84,25 @@ export function withSpring(
               t,
             });
 
-      const { isOvershooting, isVelocity, isDisplacement } =
-        isAnimationTerminatingCalculation(animation, config);
+      if (!config.useDuration) {
+        const { isOvershooting, isVelocity, isDisplacement } =
+          isAnimationTerminatingCalculation(animation, config);
 
-      animation.current = newPosition;
-      animation.velocity = newVelocity;
+        animation.current = newPosition;
+        animation.velocity = newVelocity;
 
-      const springIsNotInMove =
-        isOvershooting || (isVelocity && isDisplacement);
-      if (springIsNotInMove && !userConfig?.duration) {
-        if (config.stiffness !== 0) {
-          animation.velocity = 0;
-          animation.current = toValue;
+        const springIsNotInMove =
+          isOvershooting || (isVelocity && isDisplacement);
+
+        if (springIsNotInMove) {
+          if (config.stiffness !== 0) {
+            animation.velocity = 0;
+            animation.current = toValue;
+          }
+          // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
+          animation.lastTimestamp = 0;
+          return true;
         }
-        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
-        animation.lastTimestamp = 0;
-        return true;
       }
       return false;
     }
@@ -107,9 +112,9 @@ export function withSpring(
       animation: SpringAnimation
     ) {
       return (
-        previousAnimation?.type === 'spring' &&
         previousAnimation?.toValue === animation.toValue &&
-        previousAnimation?.duration === animation.duration
+        previousAnimation?.duration === animation.duration &&
+        previousAnimation?.dampingRatio === animation.dampingRatio
       );
     }
 
@@ -125,7 +130,7 @@ export function withSpring(
       let mass = config.mass;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
 
-      const duration = userConfig?.duration;
+      const duration = config.duration;
 
       const x0 = triggeredTwice
         ? // If animation is triggered twice we want to continue the previous animation
@@ -139,34 +144,34 @@ export function withSpring(
           : previousAnimation.velocity + config.velocity
         : config.velocity;
 
-      if (duration) {
-        const acutalDuration = triggeredTwice
-          ? // If animation is triggered twice we want to continue the previous animation
-            // so we need to include the time that already elapsed
-            duration -
-            ((previousAnimation?.lastTimestamp || 0) -
-              (previousAnimation?.startTimestamp || 0))
-          : duration;
+      if (triggeredTwice) {
+        animation.zeta = previousAnimation?.zeta || 0;
+        animation.omega0 = previousAnimation?.omega0 || 0;
+        animation.omega1 = previousAnimation?.omega1 || 0;
+      } else {
+        if (duration) {
+          const acutalDuration = triggeredTwice
+            ? // If animation is triggered twice we want to continue the previous animation
+              // so we need to include the time that already elapsed
+              duration -
+              ((previousAnimation?.lastTimestamp || 0) -
+                (previousAnimation?.startTimestamp || 0))
+            : duration;
 
-        config.duration = acutalDuration;
-        mass = calcuateNewMassToMatchDuration(x0, config, animation.velocity);
+          config.duration = acutalDuration;
+          mass = calcuateNewMassToMatchDuration(x0, config, animation.velocity);
+        }
+
+        const { zeta, omega0, omega1 } = initialCalculations(mass, config);
+        animation.zeta = zeta;
+        animation.omega0 = omega0;
+        animation.omega1 = omega1;
       }
 
-      const { zeta, omega0, omega1 } = initialCalculations(
-        mass,
-        config,
-        userConfig
-      );
-
       animation.lastTimestamp = now;
-
       animation.startTimestamp = triggeredTwice
         ? previousAnimation?.startTimestamp || now
         : now;
-
-      animation.zeta = zeta;
-      animation.omega0 = omega0;
-      animation.omega1 = omega1;
     }
 
     return {
@@ -182,7 +187,6 @@ export function withSpring(
       zeta: 0,
       omega0: 0,
       omega1: 0,
-      type: 'spring',
     } as SpringAnimation;
   });
 }

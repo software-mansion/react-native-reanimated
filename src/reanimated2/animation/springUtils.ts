@@ -31,7 +31,6 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   zeta: number;
   omega0: number;
   omega1: number;
-  type: 'spring';
 }
 
 export interface InnerSpringAnimation
@@ -70,18 +69,14 @@ function bisectRoot({
 
 export function initialCalculations(
   mass = 0,
-  config: Record<keyof SpringConfig, any>,
-  userConfig?: SpringConfig
+  config: Record<keyof SpringConfig | 'useDuration', any>
 ): {
   zeta: number;
   omega0: number;
   omega1: number;
 } {
   'worklet';
-  const useConfigWithDuration =
-    userConfig?.duration || userConfig?.dampingRatio;
-
-  if (useConfigWithDuration) {
+  if (config.useDuration) {
     const { stiffness: k, dampingRatio: zeta } = config;
 
     const omega0 = Math.sqrt(k / mass);
