@@ -121,15 +121,17 @@ const has = <K extends string>(
 };
 
 function isInlineStyleTransform(
-  transform: TransformsStyle['transform']
-): boolean {
-  if (transform === undefined) {
+  transform: unknown
+): transform is TransformsStyle['transform'] {
+  if (
+    transform === undefined ||
+    transform === null ||
+    !Array.isArray(transform)
+  ) {
     return false;
   }
 
-  return transform.some(
-    (t: NonNullable<TransformsStyle['transform']>[number]) => hasInlineStyles(t)
-  );
+  return transform.some(hasInlineStyles);
 }
 
 function hasInlineStyles(style: StyleProps): boolean {
@@ -200,11 +202,7 @@ function getInlinePropsUpdate(
 
   for (const [key, styleValue] of Object.entries(inlineProps)) {
     if (key === 'transform') {
-      update[key] = styleValue.map(
-        (transform: TransformsStyle['transform']) => {
-          return getInlinePropsUpdate(transform);
-        }
-      );
+      update[key] = styleValue.map(getInlinePropsUpdate);
     } else if (isSharedValue(styleValue)) {
       update[key] = styleValue.value;
     } else {
