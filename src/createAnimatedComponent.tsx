@@ -167,8 +167,6 @@ function extractSharedValuesMapFromProps(
   return inlineProps;
 }
 
-// XD
-
 function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
   if (Object.keys(styles1).length !== Object.keys(styles2).length) {
     return true;
@@ -295,7 +293,7 @@ export default function createAnimatedComponent(
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -303,6 +301,9 @@ export default function createAnimatedComponent(
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
+          if (viewTag === null) {
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
           prop.current.registerForEvents(viewTag as number, key);
         }
       }
