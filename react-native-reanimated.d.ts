@@ -395,15 +395,27 @@ declare module 'react-native-reanimated' {
     rubberBandEffect?: boolean;
     rubberBandFactor?: number;
   }
-  export interface WithSpringConfig {
-    damping?: number;
-    mass?: number;
+
+  export type WithSpringConfig = {
     stiffness?: number;
     overshootClamping?: boolean;
     restSpeedThreshold?: number;
     restDisplacementThreshold?: number;
     velocity?: number;
-  }
+  } & (
+    | {
+        mass?: number;
+        damping?: number;
+        duration?: never;
+        dampingRatio?: never;
+      }
+    | {
+        mass?: never;
+        damping?: never;
+        duration?: number;
+        dampingRatio?: number;
+      }
+  );
   export function withTiming<T extends AnimatableValue>(
     toValue: T,
     userConfig?: WithTimingConfig,
