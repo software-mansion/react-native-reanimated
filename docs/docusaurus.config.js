@@ -131,6 +131,7 @@ module.exports = {
         "We're working on a full documentation rewrite. Check out the <a target='_blank' rel='noopener noreferrer' href='https://reanimated-beta-docs.swmansion.com/'>New Reanimated Docs</a> and let us know what you think!",
       backgroundColor: '#FFFFFF',
       textColor: '#001A72',
+      isCloseable: false,
     },
   },
   presets: [
