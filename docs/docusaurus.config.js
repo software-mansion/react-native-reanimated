@@ -126,10 +126,11 @@ module.exports = {
       theme: prismConfig,
     },
     announcementBar: {
-      id: 'appjs_announcement',
-      content: 'mleko', // content is set in swizzled component but docusaurus requires it to be non-empty
-      backgroundColor: '#0033CC',
-      textColor: '#FFFFFF',
+      id: 'reanimated-beta-docs',
+      content:
+        "We're working on a full documentation rewrite. Check out the <a target='_blank' rel='noopener noreferrer' href='https://reanimated-beta-docs.swmansion.com/'>New Reanimated Docs</a> and let us know what you think!",
+      backgroundColor: '#FFFFFF',
+      textColor: '#001A72',
     },
   },
   presets: [
