@@ -610,7 +610,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mReanimatedNativeHierarchyManager.publicDropView(view);
     }
 
-    if (parent != null && tag != -1) {
+    if (parent != null) {
       parent.removeView(view);
     }
   }
