@@ -167,6 +167,8 @@ function extractSharedValuesMapFromProps(
   return inlineProps;
 }
 
+// XD
+
 function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
   if (Object.keys(styles1).length !== Object.keys(styles2).length) {
     return true;
