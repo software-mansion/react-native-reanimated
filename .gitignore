@@ -57,3 +57,4 @@ react-native-reanimated-tests.js
 
 # plugin
 !plugin/build
+plugin/types

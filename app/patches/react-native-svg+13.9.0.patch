@@ -1,0 +1,18 @@
+diff --git a/node_modules/react-native-svg/lib/module/ReactNativeSVG.web.js b/node_modules/react-native-svg/lib/module/ReactNativeSVG.web.js
+index 5bb83a4..b1b2776 100644
+--- a/node_modules/react-native-svg/lib/module/ReactNativeSVG.web.js
++++ b/node_modules/react-native-svg/lib/module/ReactNativeSVG.web.js
+@@ -1,11 +1,11 @@
+ import * as React from 'react';
+ import {
+ // @ts-ignore
+-unstable_createElement as ucE, createElement as cE } from 'react-native';
++unstable_createElement as ucE } from 'react-native';
+ import SvgTouchableMixin from './lib/SvgTouchableMixin';
+ import { resolve } from './lib/resolve';
+ import { transformsArrayToProps } from './lib/extract/extractTransform';
+-const createElement = cE || ucE;
++const createElement = ucE;
+ const hasTouchableProperty = props => props.onPress || props.onPressIn || props.onPressOut || props.onLongPress;
+ const camelCaseToDashed = camelCase => {
+   return camelCase.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
