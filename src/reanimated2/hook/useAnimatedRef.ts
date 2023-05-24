@@ -10,6 +10,7 @@ import {
 } from '../shareables';
 
 interface ComponentRef extends Component {
+  getNativeScrollRef?: () => ComponentRef;
   getScrollableNode?: () => ComponentRef;
 }
 
@@ -17,6 +18,15 @@ function getShareableShadowNodeFromComponent(
   component: ComponentRef
 ): ShadowNodeWrapper {
   return getShadowNodeWrapperFromHostInstance(component);
+}
+
+function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
+  if (global._IS_FABRIC && component.getNativeScrollRef) {
+    return component.getNativeScrollRef();
+  } else if (!global._IS_FABRIC && component.getScrollableNode) {
+    return component.getScrollableNode();
+  }
+  return component;
 }
 
 const getTagValueFunction = global._IS_FABRIC
@@ -31,11 +41,7 @@ export function useAnimatedRef<T extends ComponentRef>(): AnimatedRef<T> {
     const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(
-          component.getScrollableNode
-            ? component.getScrollableNode()
-            : component
-        );
+        tag.value = getTagValueFunction(getComponentOrScrollableRef(component));
         fun.current = component;
       }
       return tag.value;
@@ -50,7 +56,6 @@ export function useAnimatedRef<T extends ComponentRef>(): AnimatedRef<T> {
       },
     });
     registerShareableMapping(fun, remoteRef);
-
     ref.current = fun;
   }
 
