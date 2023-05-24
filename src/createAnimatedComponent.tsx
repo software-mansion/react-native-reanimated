@@ -358,8 +358,7 @@ export default function createAnimatedComponent(
         }
       }
 
-      const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = null;
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -368,6 +367,10 @@ export default function createAnimatedComponent(
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
         ) {
+          if (viewTag === null) {
+            const node = this._getEventViewRef();
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
           prop.current.registerForEvents(viewTag as number, key);
           prop.current.reattachNeeded = false;
         }
