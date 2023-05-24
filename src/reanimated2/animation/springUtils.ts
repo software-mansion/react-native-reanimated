@@ -79,7 +79,9 @@ export function initialCalculations(
   if (config.useDuration) {
     const { stiffness: k, dampingRatio: zeta } = config;
 
-// omega0 and omega1 denote angular frequency and natural angular frequency, see this link for formulas: https://courses.lumenlearning.com/suny-osuniversityphysics/chapter/15-5-damped-oscillations/
+    /** omega0 and omega1 denote angular frequency and natural angular frequency, see this link for formulas:
+     *  https://courses.lumenlearning.com/suny-osuniversityphysics/chapter/15-5-damped-oscillations/
+     */
     const omega0 = Math.sqrt(k / mass);
     const omega1 = omega0 * Math.sqrt(1 - zeta ** 2);
 
