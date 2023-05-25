@@ -70,7 +70,12 @@ export default class JSReanimated extends NativeReanimated {
     let callback;
     if (sensorType === SensorType.ROTATION) {
       callback = () => {
-        const [qw, qx, qy, qz] = sensor.quaternion;
+        let [qw, qx, qy, qz] = sensor.quaternion;
+
+        // Android sensors have a different coordinate system than iOS
+        if (this.isPlatformAndroid()) {
+          [qy, qz] = [qz, -qy];
+        }
 
         // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
         const yaw = Math.atan2(
@@ -95,7 +100,8 @@ export default class JSReanimated extends NativeReanimated {
       };
     } else {
       callback = () => {
-        const { x, y, z } = sensor;
+        let { x, y, z } = sensor;
+        [x, y, z] = this.isPlatformAndroid() ? [-x, -y, -z] : [x, y, z];
         eventHandler({ x, y, z, interfaceOrientation: 0 });
       };
     }
@@ -157,5 +163,18 @@ export default class JSReanimated extends NativeReanimated {
       case SensorType.ROTATION:
         return 'AbsoluteOrientationSensor';
     }
+  }
+
+  isPlatformAndroid(): boolean {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    return userAgent !== undefined && /android/i.test(userAgent);
+  }
+}
+
+declare global {
+  interface Navigator {
+    userAgent?: string;
+    vendor?: string;
+    opera?: string;
   }
 }
