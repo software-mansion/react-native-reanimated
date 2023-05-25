@@ -1,5 +1,5 @@
 diff --git a/node_modules/metro-inspector-proxy/src/Device.js b/node_modules/metro-inspector-proxy/src/Device.js
-index 7b82b40..e397782 100644
+index 6c43dd4..6dfd021 100644
 --- a/node_modules/metro-inspector-proxy/src/Device.js
 +++ b/node_modules/metro-inspector-proxy/src/Device.js
 @@ -67,7 +67,7 @@ const EMULATOR_LOCALHOST_ADDRESSES = ["10.0.2.2", "10.0.3.2"];
@@ -112,7 +112,7 @@ index 7b82b40..e397782 100644
          ) {
            debug(`Page ${pageId} is reloading.`);
            debuggerSocket.send(
-@@ -305,21 +316,50 @@ class Device {
+@@ -306,21 +317,50 @@ class Device {
      );
    }
  
@@ -172,7 +172,7 @@ index 7b82b40..e397782 100644
      this._isReloading = true;
  
      // We already had a debugger connected to React Native page and a
-@@ -556,10 +596,10 @@ class Device {
+@@ -557,10 +597,10 @@ class Device {
    }
    _mapToDevicePageId(pageId) {
      if (
@@ -187,7 +187,7 @@ index 7b82b40..e397782 100644
        return pageId;
      }
 diff --git a/node_modules/metro-inspector-proxy/src/Device.js.flow b/node_modules/metro-inspector-proxy/src/Device.js.flow
-index 3fbd3b7..5bad1fd 100644
+index cffa4f3..5e32ff0 100644
 --- a/node_modules/metro-inspector-proxy/src/Device.js.flow
 +++ b/node_modules/metro-inspector-proxy/src/Device.js.flow
 @@ -47,7 +47,13 @@ type DebuggerInfo = {
@@ -304,7 +304,7 @@ index 3fbd3b7..5bad1fd 100644
          ) {
            debug(`Page ${pageId} is reloading.`);
            debuggerSocket.send(JSON.stringify({method: 'reload'}));
-@@ -299,21 +316,48 @@ class Device {
+@@ -300,21 +317,48 @@ class Device {
      );
    }
  
@@ -362,7 +362,7 @@ index 3fbd3b7..5bad1fd 100644
      this._isReloading = true;
  
      // We already had a debugger connected to React Native page and a
-@@ -547,10 +591,10 @@ class Device {
+@@ -548,10 +592,10 @@ class Device {
  
    _mapToDevicePageId(pageId: string): string {
      if (
