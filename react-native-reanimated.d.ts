@@ -134,7 +134,12 @@ declare module 'react-native-reanimated' {
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
     export interface Image extends ReactNativeImage {}
-    export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
+    export interface AnimatedScrollViewProps extends ScrollViewProps {
+      scrollViewOffset?: SharedValue<number>;
+    }
+    export class ScrollView extends Component<
+      AnimateProps<AnimatedScrollViewProps<T>>
+    > {
       getNode(): ReactNativeScrollView;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
