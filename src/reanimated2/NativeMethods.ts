@@ -124,31 +124,26 @@ if (isNative && global._IS_FABRIC) {
   dispatchCommand = () => {
     'worklet';
     console.warn('[Reanimated] dispatchCommand() is not supported on Paper.');
-    return null;
   };
 } else if (isWeb()) {
   dispatchCommand = () => {
     console.warn('[Reanimated] dispatchCommand() is not supported on Web.');
-    return null;
   };
 } else if (isChromeDebugger()) {
   dispatchCommand = () => {
     console.warn(
       '[Reanimated] dispatchCommand() is not supported with Chrome Debugger.'
     );
-    return null;
   };
 } else if (isJest()) {
   dispatchCommand = () => {
     console.warn('[Reanimated] dispatchCommand() is not supported with Jest.');
-    return null;
   };
 } else {
   dispatchCommand = () => {
     console.warn(
       '[Reanimated] dispatchCommand() is not supported on this configuration.'
     );
-    return null;
   };
 }
 
@@ -188,19 +183,16 @@ if (isWeb()) {
     console.warn(
       '[Reanimated] scrollTo() is not supported with Chrome Debugger.'
     );
-    return null;
   };
 } else if (isJest()) {
   scrollTo = () => {
     console.warn('[Reanimated] scrollTo() is not supported with Jest.');
-    return null;
   };
 } else {
   scrollTo = () => {
     console.warn(
       '[Reanimated] scrollTo() is not supported on this configuration.'
     );
-    return null;
   };
 }
 
@@ -232,10 +224,9 @@ if (isNative) {
     console.warn('[Reanimated] setGestureState() cannot be used with Jest.');
   };
 } else {
-  measure = () => {
+  setGestureState = () => {
     console.warn(
       '[Reanimated] setGestureState() is not supported on this configuration.'
     );
-    return null;
   };
 }
