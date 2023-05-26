@@ -134,7 +134,12 @@ declare module 'react-native-reanimated' {
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
     export interface Image extends ReactNativeImage {}
-    export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
+    export interface AnimatedScrollViewProps extends ScrollViewProps {
+      scrollViewOffset?: SharedValue<number>;
+    }
+    export class ScrollView extends Component<
+      AnimateProps<AnimatedScrollViewProps<T>>
+    > {
       getNode(): ReactNativeScrollView;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -301,7 +306,7 @@ declare module 'react-native-reanimated' {
   ): AnimatedKeyboardInfo;
 
   export function useScrollViewOffset(
-    aref: RefObject<Animated.ScrollView>
+    animatedRef: RefObject<Animated.ScrollView>
   ): SharedValue<number>;
 
   export interface ExitAnimationsValues {
@@ -395,15 +400,27 @@ declare module 'react-native-reanimated' {
     rubberBandEffect?: boolean;
     rubberBandFactor?: number;
   }
-  export interface WithSpringConfig {
-    damping?: number;
-    mass?: number;
+
+  export type WithSpringConfig = {
     stiffness?: number;
     overshootClamping?: boolean;
     restSpeedThreshold?: number;
     restDisplacementThreshold?: number;
     velocity?: number;
-  }
+  } & (
+    | {
+        mass?: number;
+        damping?: number;
+        duration?: never;
+        dampingRatio?: never;
+      }
+    | {
+        mass?: never;
+        damping?: never;
+        duration?: number;
+        dampingRatio?: number;
+      }
+  );
   export function withTiming<T extends AnimatableValue>(
     toValue: T,
     userConfig?: WithTimingConfig,
@@ -463,7 +480,7 @@ declare module 'react-native-reanimated' {
     colorSpace?: 'RGB' | 'HSV',
     options?: InterpolationOptions
   ): T;
-  
+
   export type ParsedColorArray = [number, number, number, number];
   export function convertToRGBA(color: unknown): ParsedColorArray;
 
@@ -561,11 +578,11 @@ declare module 'react-native-reanimated' {
   export function useAnimatedRef<T extends Component>(): RefObject<T>;
   export function defineAnimation<T>(starting: any, factory: () => T): number;
   export function measure<T extends Component>(
-    ref: RefObject<T>
+    animatedRef: RefObject<T>
   ): MeasuredDimensions | null;
 
   export function getRelativeCoords(
-    ref: RefObject<Component>,
+    animatedRef: RefObject<Component>,
     x: number,
     y: number
   ): {
@@ -574,7 +591,7 @@ declare module 'react-native-reanimated' {
   };
 
   export function scrollTo(
-    ref: RefObject<ReactNativeScrollView | ScrollView>,
+    animatedRef: RefObject<ReactNativeScrollView | ScrollView>,
     x: number,
     y: number,
     animated: boolean

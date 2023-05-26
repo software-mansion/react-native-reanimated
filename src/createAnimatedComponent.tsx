@@ -293,7 +293,7 @@ export default function createAnimatedComponent(
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -301,6 +301,9 @@ export default function createAnimatedComponent(
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
+          if (viewTag === null) {
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
           prop.current.registerForEvents(viewTag as number, key);
         }
       }
@@ -335,7 +338,6 @@ export default function createAnimatedComponent(
         if (global._IS_FABRIC) {
           const viewTag = this._viewTag;
           runOnUI(() => {
-            'worklet';
             _removeShadowNodeFromRegistry!(viewTag);
           })();
         }
@@ -345,19 +347,6 @@ export default function createAnimatedComponent(
     _reattachNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      let viewTag: number | undefined;
-
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (
-          has('current', prop) &&
-          prop.current instanceof WorkletEventHandler
-        ) {
-          if (viewTag === undefined) {
-            viewTag = prop.current.viewTag;
-          }
-        }
-      }
       for (const key in prevProps) {
         const prop = this.props[key];
         if (
@@ -369,6 +358,8 @@ export default function createAnimatedComponent(
         }
       }
 
+      let viewTag = null;
+
       for (const key in this.props) {
         const prop = this.props[key];
         if (
@@ -376,8 +367,11 @@ export default function createAnimatedComponent(
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
         ) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          prop.current.registerForEvents(viewTag!, key);
+          if (viewTag === null) {
+            const node = this._getEventViewRef();
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
+          prop.current.registerForEvents(viewTag as number, key);
           prop.current.reattachNeeded = false;
         }
       }

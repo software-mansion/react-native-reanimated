@@ -80,8 +80,11 @@ export function createMapperRegistry() {
   }
 
   function mapperRun() {
-    processingMappers = true;
     runRequested = false;
+    if (processingMappers) {
+      return;
+    }
+    processingMappers = true;
     if (mappers.size !== sortedMappers.length) {
       updateMappersOrder();
     }
@@ -192,7 +195,6 @@ export function startMapper(
   const mapperID = (MAPPER_ID += 1);
 
   runOnUI(() => {
-    'worklet';
     let mapperRegistry = global.__mapperRegistry;
     if (mapperRegistry === undefined) {
       mapperRegistry = global.__mapperRegistry = createMapperRegistry();
@@ -205,7 +207,6 @@ export function startMapper(
 
 export function stopMapper(mapperID: number): void {
   runOnUI(() => {
-    'worklet';
     const mapperRegistry = global.__mapperRegistry;
     mapperRegistry?.stop(mapperID);
   })();

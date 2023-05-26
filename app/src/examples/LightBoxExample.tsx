@@ -214,7 +214,6 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
 
   useEffect(() => {
     runOnUI(() => {
-      'worklet';
       animationProgress.value = withTiming(1, timingConfig, () => {
         imageOpacity.value = 0;
       });

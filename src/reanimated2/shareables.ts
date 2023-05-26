@@ -85,9 +85,6 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: any;
 
-// We only want to show mismatch error once so we use this flag to track it
-let didShowPluginVersionMismatchError = false;
-
 export function makeShareableCloneRecursive<T>(
   value: any,
   shouldPersistRemote = false,
@@ -141,13 +138,8 @@ export function makeShareableCloneRecursive<T>(
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
           if (__DEV__) {
-            if (
-              // We don't want this error to be logged more than once.
-              !didShowPluginVersionMismatchError &&
-              value.__version !== jsVersion
-            ) {
-              didShowPluginVersionMismatchError = true;
-              console.error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${value.__version}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
+            if (value.__version !== jsVersion) {
+              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${value.__version}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
               \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.`);
             }
             registerWorkletStackDetails(
@@ -160,11 +152,11 @@ export function makeShareableCloneRecursive<T>(
           // we request shareable value to persist its UI counterpart. This means
           // that the __initData field that contains long strings represeting the
           // worklet code, source map, and location, will always be
-          // serialized/deserialized once. We don't increase depth when calling
-          // this method as these objects have one level anyways.
+          // serialized/deserialized once.
           toAdapt.__initData = makeShareableCloneRecursive(
             value.__initData,
-            true
+            true,
+            depth + 1
           );
           delete value.__initData;
         }
