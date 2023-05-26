@@ -2,26 +2,25 @@
 
 import { ShadowNodeWrapper } from './commonTypes';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let findHostInstance_DEPRECATED = (_ref: React.Component) => null;
+interface HostInstance {
+  _internalInstanceHandle: {
+    stateNode: {
+      node: ShadowNodeWrapper;
+    };
+  };
+}
 
+let findHostInstance_DEPRECATED: (ref: React.Component) => HostInstance;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   findHostInstance_DEPRECATED =
     require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
 } catch (e) {
-  // do nothing
-}
-
-export function getShadowNodeWrapperFromHostInstance(
-  hostInstance: unknown
-): ShadowNodeWrapper {
-  // @ts-ignore Fabric
-  return hostInstance._internalInstanceHandle.stateNode.node;
+  throw new Error('[Reanimated] Cannot import `findHostInstance_DEPRECATED`.');
 }
 
 export function getShadowNodeWrapperFromRef(
   ref: React.Component
 ): ShadowNodeWrapper {
-  return getShadowNodeWrapperFromHostInstance(findHostInstance_DEPRECATED(ref));
+  return findHostInstance_DEPRECATED(ref)._internalInstanceHandle.stateNode
+    .node;
 }

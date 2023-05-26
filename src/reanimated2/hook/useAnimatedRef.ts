@@ -2,7 +2,7 @@ import { Component, useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
 import { RefObjectFunction } from './commonTypes';
 import { ShadowNodeWrapper } from '../commonTypes';
-import { getShadowNodeWrapperFromHostInstance } from '../fabricUtils';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,
   registerShareableMapping,
@@ -12,12 +12,6 @@ import { findNodeHandle } from 'react-native';
 interface ComponentRef extends Component {
   getNativeScrollRef?: () => ComponentRef;
   getScrollableNode?: () => ComponentRef;
-}
-
-function getShareableShadowNodeFromComponent(
-  component: ComponentRef
-): ShadowNodeWrapper {
-  return getShadowNodeWrapperFromHostInstance(component);
 }
 
 function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
@@ -30,7 +24,7 @@ function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
 }
 
 const getTagValueFunction = global._IS_FABRIC
-  ? getShareableShadowNodeFromComponent
+  ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
 export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
