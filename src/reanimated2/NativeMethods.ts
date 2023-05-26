@@ -8,13 +8,6 @@ import {
 
 import { Component } from 'react';
 import { RefObjectFunction } from './hook/commonTypes';
-import { findNodeHandle } from 'react-native';
-
-export function getTag(
-  view: null | number | React.Component<any, any> | React.ComponentClass<any>
-): null | number {
-  return findNodeHandle(view);
-}
 
 const isNative = !shouldBeUseWeb();
 
