@@ -1,5 +1,4 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
-
 import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
@@ -29,7 +28,9 @@ import {
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  AnchoredTransform,
 } from '../commonTypes';
+
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
   initial: AnimatedStyle;
@@ -397,6 +398,35 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
+
+  const updater2: BasicWorkletFunction<T> = () => {
+    'worklet';
+
+    const oldTransforms = updater().transform;
+    const newTransforms: Array<AnchoredTransform> = [];
+    oldTransforms?.forEach((transform) => {
+      if (transform.anchor) {
+        const { anchor: _, ...filteredTransform } = transform;
+
+        newTransforms.push(
+          { translateX: transform.anchor.x },
+          { translateY: transform.anchor.y },
+          filteredTransform,
+          { translateX: -transform.anchor.x },
+          { translateY: -transform.anchor.y }
+        );
+      } else {
+        newTransforms.push(transform);
+      }
+    });
+
+    return {
+      ...updater(),
+      transform: newTransforms,
+      backgroundColor: 'pink',
+    };
+  };
+
   let inputs = Object.values(updater._closure ?? {});
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
@@ -431,12 +461,12 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
   adaptersHash && dependencies.push(adaptersHash);
 
   if (!initRef.current) {
-    const initialStyle: AnimatedStyle = initialUpdaterRun(updater);
+    const initialStyle: AnimatedStyle = initialUpdaterRun(updater2);
     validateAnimatedStyles(initialStyle);
     initRef.current = {
       initial: {
         value: initialStyle,
-        updater: updater,
+        updater: updater2,
       },
       remoteState: makeRemote<AnimatedState>({
         last: initialStyle,
@@ -457,11 +487,11 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater as BasicWorkletFunctionOptional<T>;
+    let updaterFn = updater2 as BasicWorkletFunctionOptional<T>;
     if (adapters) {
       updaterFn = () => {
         'worklet';
-        const newValues = updater();
+        const newValues = updater2();
         adaptersArray.forEach((adapter) => {
           adapter(newValues);
         });

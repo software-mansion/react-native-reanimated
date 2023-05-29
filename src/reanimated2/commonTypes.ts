@@ -1,35 +1,9 @@
-import {
-  PerpectiveTransform,
-  RotateTransform,
-  RotateXTransform,
-  RotateYTransform,
-  RotateZTransform,
-  ScaleTransform,
-  ScaleXTransform,
-  ScaleYTransform,
-  TranslateXTransform,
-  TranslateYTransform,
-  SkewXTransform,
-  SkewYTransform,
-  MatrixTransform,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
+import { ViewStyle, TextStyle, TransformsStyle } from 'react-native';
 
-export type TransformProperty =
-  | PerpectiveTransform
-  | RotateTransform
-  | RotateXTransform
-  | RotateYTransform
-  | RotateZTransform
-  | ScaleTransform
-  | ScaleXTransform
-  | ScaleYTransform
-  | TranslateXTransform
-  | TranslateYTransform
-  | SkewXTransform
-  | SkewYTransform
-  | MatrixTransform;
+type Unarray<T> = T extends Array<infer U> ? U : T;
+export type TransformProperty = Unarray<
+  NonNullable<TransformsStyle['transform']>
+>;
 
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
@@ -37,11 +11,26 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never;
+
+export type TransformKeys = keyof UnionToIntersection<
+  Unarray<NonNullable<TransformsStyle['transform']>>
+>;
+
+export type AnchoredTransform = TransformProperty & {
+  anchor?: { x: number; y: number; mode?: 'relative' | 'absolute' };
+};
+
 export interface AnimatedStyle
   extends Record<string, Animation<AnimationObject>> {
   [key: string]: any;
-  transform?: Array<Record<string, Animation<AnimationObject>>>;
+  transform?: Array<AnchoredTransform>;
 }
+
 export interface SharedValue<T> {
   value: T;
   addListener: (listenerID: number, listener: (value: T) => void) => void;
@@ -74,7 +63,18 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-export type Context = Record<string, unknown>;
+// export type Context = Record<string, unknown>;
+export type Context =
+  | {
+      '0': {
+        value: unknown;
+        _value: unknown;
+        addListener: unknown;
+        removeListener: unknown;
+        _isReanimatedSharedValue: unknown;
+      };
+    }
+  | Array<unknown>;
 
 export interface WorkletFunction {
   _closure?: Context;
