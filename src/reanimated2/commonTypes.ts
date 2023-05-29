@@ -1,6 +1,7 @@
 import { ViewStyle, TextStyle, TransformsStyle } from 'react-native';
 
-type Unarray<T> = T extends Array<infer U> ? U : T;
+type Unarray<ArrayT> = ArrayT extends Array<infer ElementT> ? ElementT : ArrayT;
+
 export type TransformProperty = Unarray<
   NonNullable<TransformsStyle['transform']>
 >;
@@ -11,24 +12,18 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
-  k: infer I
-) => void
-  ? I
+type UnionToIntersection<Union> = (
+  Union extends any ? (k: Union) => void : never
+) extends (k: infer Intersection) => void
+  ? Intersection
   : never;
 
-export type TransformKeys = keyof UnionToIntersection<
-  Unarray<NonNullable<TransformsStyle['transform']>>
->;
-
-export type AnchoredTransform = TransformProperty & {
-  anchor?: { x: number; y: number; mode?: 'relative' | 'absolute' };
-};
+export type TransformKeys = keyof UnionToIntersection<TransformProperty>;
 
 export interface AnimatedStyle
   extends Record<string, Animation<AnimationObject>> {
   [key: string]: any;
-  transform?: Array<AnchoredTransform>;
+  transform?: Array<Record<TransformKeys, Animation<AnimationObject>>>;
 }
 
 export interface SharedValue<T> {
@@ -64,17 +59,15 @@ export type MapperRegistry = {
 };
 
 // export type Context = Record<string, unknown>;
-export type Context =
-  | {
-      '0': {
-        value: unknown;
-        _value: unknown;
-        addListener: unknown;
-        removeListener: unknown;
-        _isReanimatedSharedValue: unknown;
-      };
-    }
-  | Array<unknown>;
+// export type Context = Array<{
+//   value: unknown;
+//   _value: unknown;
+//   addListener: unknown;
+//   removeListener: unknown;
+//   _isReanimatedSharedValue: unknown;
+// }>
+
+export type Context = Array<unknown>;
 
 export interface WorkletFunction {
   _closure?: Context;

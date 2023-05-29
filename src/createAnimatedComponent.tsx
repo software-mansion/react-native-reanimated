@@ -448,8 +448,6 @@ export default function createAnimatedComponent(
       const prevStyles = this._styles;
       this._styles = styles;
 
-      console.log(Object.keys(styles));
-
       const prevAnimatedProps = this._animatedProps;
       this._animatedProps = this.props.animatedProps;
 
