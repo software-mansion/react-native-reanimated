@@ -1,4 +1,5 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
+
 import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
@@ -29,7 +30,6 @@ import {
   SharedValue,
   StyleProps,
 } from '../commonTypes';
-
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
   initial: AnimatedStyle;
@@ -397,7 +397,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
-
   let inputs = Object.values(updater._closure ?? {});
   if (shouldBeUseWeb()) {
     if (!inputs.length && dependencies?.length) {
