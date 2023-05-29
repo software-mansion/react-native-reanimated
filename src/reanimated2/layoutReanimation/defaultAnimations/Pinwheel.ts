@@ -3,7 +3,9 @@ import {
   BaseAnimationBuilder,
 } from '../animationBuilder';
 import {
+  EntryAnimationsValues,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
@@ -24,7 +26,7 @@ export class PinwheelIn
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return (_values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -73,7 +75,7 @@ export class PinwheelOut
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return (_values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {

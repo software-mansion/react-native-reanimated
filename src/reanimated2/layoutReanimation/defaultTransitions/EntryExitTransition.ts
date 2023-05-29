@@ -10,6 +10,7 @@ import {
   StyleProps,
   TransformProperty,
   AnimationObject,
+  AnimatedStyle,
 } from '../../commonTypes';
 
 export class EntryExitTransition
@@ -154,7 +155,7 @@ export class EntryExitTransition
       }
 
       const mergedTransform = (
-        exitingValues.initialValues.transform ?? []
+        exitingValues.initialValues.transform ?? ([] as AnimatedStyle)
       ).concat(
         (enteringValues.animations.transform ?? []).map((value) => {
           const objectKeys = Object.keys(value);

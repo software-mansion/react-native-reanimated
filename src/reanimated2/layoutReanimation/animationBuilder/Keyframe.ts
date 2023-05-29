@@ -2,7 +2,9 @@ import { Easing, EasingFn } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
 import {
   AnimationFunction,
+  EntryAnimationsValues,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
   KeyframeProps,
 } from './commonTypes';
@@ -193,7 +195,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     const { keyframes, initialValues } = this.parseDefinitions();
     const callback = this.callbackV;
 
-    return (_targetValues) => {
+    return (_targetValues: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       const animations: StyleProps = {};
 
