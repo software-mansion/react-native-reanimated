@@ -31,6 +31,7 @@ import {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
+  TransformProperty,
 } from './reanimated2/commonTypes';
 import {
   makeViewDescriptorsSet,
@@ -40,7 +41,7 @@ import {
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
-import { isSharedValue } from './reanimated2';
+import { AnimatedStyleResult, isSharedValue } from './reanimated2';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -86,8 +87,19 @@ function flattenArray<T>(array: NestedArray<T>): T[] {
   return resultArr;
 }
 
-function onlyAnimatedStyles(styles: StyleProps[]) {
-  return styles.filter((style) => style?.viewDescriptors);
+function isAnimatedStyle(style: StyleProps): style is AnimatedStyleResult {
+  return !!(style?.viewDescriptors && style?.initial && style?.viewsRef);
+}
+
+function onlyAnimatedStyles(styles: StyleProps[]): AnimatedStyleResult[] {
+  const fileterdStyles: AnimatedStyleResult[] = [];
+
+  styles.forEach((style) => {
+    if (isAnimatedStyle(style)) {
+      fileterdStyles.push(style);
+    }
+  });
+  return fileterdStyles;
 }
 
 function isSameAnimatedStyle(
@@ -115,10 +127,17 @@ const has = <K extends string>(
   return false;
 };
 
-function isInlineStyleTransform(transform: any): boolean {
-  if (!transform) {
+function isInlineStyleTransform(
+  transform: unknown
+): transform is Array<TransformProperty> {
+  if (
+    transform === undefined ||
+    transform === null ||
+    !Array.isArray(transform)
+  ) {
     return false;
   }
+
   return transform.some((t: Record<string, any>) => hasInlineStyles(t));
 }
 
@@ -252,7 +271,7 @@ export default function createAnimatedComponent(
   class AnimatedComponent extends React.Component<
     AnimatedComponentProps<InitialComponentProps>
   > {
-    _styles: StyleProps[] | null = null;
+    _styles: AnimatedStyleResult[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
@@ -429,6 +448,8 @@ export default function createAnimatedComponent(
       const prevStyles = this._styles;
       this._styles = styles;
 
+      console.log(Object.keys(styles));
+
       const prevAnimatedProps = this._animatedProps;
       this._animatedProps = this.props.animatedProps;
 
@@ -482,7 +503,9 @@ export default function createAnimatedComponent(
             ...this.animatedStyle.value,
             ...style.initial.value,
           };
-          style.animatedStyle.current = this.animatedStyle;
+          if (style.animatedStyle) {
+            style.animatedStyle.current = this.animatedStyle;
+          }
         }
       });
 

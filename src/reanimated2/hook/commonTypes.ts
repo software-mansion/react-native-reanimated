@@ -8,9 +8,9 @@ export interface ContextWithDependencies<TContext extends Context> {
 }
 
 export interface Descriptor {
-  tag: number;
-  name: string;
-  shadowNodeWrapper: ShadowNodeWrapper;
+  tag: number | null;
+  name: string | null;
+  shadowNodeWrapper: ShadowNodeWrapper | null;
 }
 
 export interface RefObjectFunction<T> {

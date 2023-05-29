@@ -58,7 +58,10 @@ if (shouldBeUseWeb()) {
       }
 
       viewDescriptors.value.forEach((viewDescriptor) => {
-        _updatePropsFabric!(viewDescriptor.shadowNodeWrapper, updates);
+        _updatePropsFabric!(
+          viewDescriptor.shadowNodeWrapper as object, // This is nullable
+          updates
+        );
       });
     };
   } else {
@@ -76,7 +79,7 @@ if (shouldBeUseWeb()) {
       }
       viewDescriptors.value.forEach((viewDescriptor) => {
         _updatePropsPaper!(
-          viewDescriptor.tag,
+          viewDescriptor.tag as number, // This is nullable
           viewDescriptor.name || 'RCTView',
           updates
         );

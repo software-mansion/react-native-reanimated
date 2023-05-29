@@ -423,7 +423,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     return {
       ...updater(),
       transform: newTransforms,
-      backgroundColor: 'pink',
     };
   };
 

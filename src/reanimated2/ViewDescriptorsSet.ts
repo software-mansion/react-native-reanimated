@@ -12,7 +12,7 @@ export interface ViewRefSet<T> {
 export interface ViewDescriptorsSet {
   sharableViewDescriptors: SharedValue<Descriptor[]>;
   add: (item: Descriptor) => void;
-  remove: (viewTag: number) => void;
+  remove: (viewTag: number | null) => void;
 }
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
@@ -34,7 +34,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
       });
     },
 
-    remove: (viewTag: number) => {
+    remove: (viewTag: number | null) => {
       sharableViewDescriptors.modify((descriptors: Descriptor[]) => {
         'worklet';
         const index = descriptors.findIndex(
