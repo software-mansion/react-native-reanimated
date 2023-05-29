@@ -18,12 +18,29 @@ type UnionToIntersection<Union> = (
   ? Intersection
   : never;
 
-export type TransformKeys = keyof UnionToIntersection<TransformProperty>;
+type KeysOfPropertiesWithGivenValue<ObjectT, ExpectedValue> = {
+  [P in keyof ObjectT]: ExpectedValue extends ObjectT[P] ? P : never;
+}[keyof ObjectT];
+
+export type NumericTransformKeys = KeysOfPropertiesWithGivenValue<
+  UnionToIntersection<TransformProperty>,
+  number
+>;
+
+export type StringTransformKeys = KeysOfPropertiesWithGivenValue<
+  UnionToIntersection<TransformProperty>,
+  string
+>;
 
 export interface AnimatedStyle
   extends Record<string, Animation<AnimationObject>> {
   [key: string]: any;
-  transform?: Array<Record<TransformKeys, Animation<AnimationObject>>>;
+  transform?: Array<
+    | Record<'matrix', number[] | AnimationObject>
+    | Partial<Record<NumericTransformKeys, number | AnimationObject>>
+    | Partial<Record<StringTransformKeys, string | AnimationObject>>
+    | Record<string, AnimationObject>
+  >;
 }
 
 export interface SharedValue<T> {
@@ -58,17 +75,7 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-// TODO Actual Context type is like below, but adding it requires more fixes
-
-// export type Context = Array<{
-//   value: unknown;
-//   _value: unknown;
-//   addListener: unknown;
-//   removeListener: unknown;
-//   _isReanimatedSharedValue: unknown;
-// }>;
-
-export type Context = Array<unknown>;
+export type Context = Record<string, unknown>;
 
 export interface WorkletFunction {
   _closure?: Context;
