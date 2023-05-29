@@ -175,6 +175,5 @@ declare global {
   interface Navigator {
     userAgent?: string;
     vendor?: string;
-    opera?: string;
   }
 }
