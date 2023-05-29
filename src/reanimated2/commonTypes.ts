@@ -58,14 +58,15 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-// export type Context = Record<string, unknown>;
+// TODO Actual Context type is like below, but adding it requires more fixes
+
 // export type Context = Array<{
 //   value: unknown;
 //   _value: unknown;
 //   addListener: unknown;
 //   removeListener: unknown;
 //   _isReanimatedSharedValue: unknown;
-// }>
+// }>;
 
 export type Context = Array<unknown>;
 

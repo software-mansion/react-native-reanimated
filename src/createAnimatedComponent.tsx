@@ -92,14 +92,14 @@ function isAnimatedStyle(style: StyleProps): style is AnimatedStyleResult {
 }
 
 function onlyAnimatedStyles(styles: StyleProps[]): AnimatedStyleResult[] {
-  const fileterdStyles: AnimatedStyleResult[] = [];
+  const filteredStyles: AnimatedStyleResult[] = [];
 
   styles.forEach((style) => {
     if (isAnimatedStyle(style)) {
-      fileterdStyles.push(style);
+      filteredStyles.push(style);
     }
   });
-  return fileterdStyles;
+  return filteredStyles;
 }
 
 function isSameAnimatedStyle(
