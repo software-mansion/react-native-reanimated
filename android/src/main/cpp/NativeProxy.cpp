@@ -235,12 +235,20 @@ void NativeProxy::configureProps(
 }
 
 void NativeProxy::updateProps(jsi::Runtime &rt, const jsi::Value &operations) {
-  // static const auto method =
-  //     getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
-  //         "updateProps");
-  // method(
-  //     javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt,
-  //     props).get());
+  static const auto method =
+      getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
+          "updateProps");
+  auto array = operations.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  for (size_t i = 0; i < length; ++i) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    int viewTag = item.getProperty(rt, "tag").asNumber();
+    const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
+    method(
+        javaPart_.get(),
+        viewTag,
+        JNIHelper::ConvertToPropsMap(rt, props).get());
+  }
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
