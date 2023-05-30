@@ -149,7 +149,7 @@ export function withSpring(
         animation.omega0 = previousAnimation?.omega0 || 0;
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
-        if (duration) {
+        if (config.useDuration) {
           const acutalDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
@@ -168,7 +168,8 @@ export function withSpring(
         animation.omega1 = omega1;
       }
 
-      animation.lastTimestamp = now;
+      animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
+
       animation.startTimestamp = triggeredTwice
         ? previousAnimation?.startTimestamp || now
         : now;
