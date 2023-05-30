@@ -38,13 +38,6 @@ export default function ScrollViewOffsetCallScrollToExample() {
     return {};
   });
 
-  const onButtonPress = () => {
-    aref.current?.scrollTo({
-      y: Math.random() * 2000,
-      animated: true,
-    });
-  };
-
   return (
     <>
       <View style={styles.positionView}>
