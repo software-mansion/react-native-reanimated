@@ -10,6 +10,7 @@ import { WebSensor } from './WebSensor';
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
+  platform = Platform.UNKNOWN;
 
   constructor() {
     super(false);
@@ -66,6 +67,10 @@ export default class JSReanimated extends NativeReanimated {
       return -1;
     }
 
+    if (this.platform === Platform.UNKNOWN) {
+      this.detectPlatform();
+    }
+
     const sensor: WebSensor = this.initializeSensor(sensorType, interval);
     let callback;
     if (sensorType === SensorType.ROTATION) {
@@ -73,7 +78,7 @@ export default class JSReanimated extends NativeReanimated {
         let [qw, qx, qy, qz] = sensor.quaternion;
 
         // Android sensors have a different coordinate system than iOS
-        if (this.isPlatformAndroid()) {
+        if (this.platform === Platform.WEB_ANDROID) {
           [qy, qz] = [qz, -qy];
         }
 
@@ -101,7 +106,8 @@ export default class JSReanimated extends NativeReanimated {
     } else {
       callback = () => {
         let { x, y, z } = sensor;
-        [x, y, z] = this.isPlatformAndroid() ? [-x, -y, -z] : [x, y, z];
+        [x, y, z] =
+          this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
         eventHandler({ x, y, z, interfaceOrientation: 0 });
       };
     }
@@ -165,10 +171,26 @@ export default class JSReanimated extends NativeReanimated {
     }
   }
 
-  isPlatformAndroid(): boolean {
+  detectPlatform() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    return userAgent !== undefined && /android/i.test(userAgent);
+    if (userAgent === undefined) {
+      return;
+    }
+    if (/iPad|iPhone|iPod/.test(userAgent)) {
+      this.platform = Platform.WEB_IOS;
+    } else if (/android/i.test(userAgent)) {
+      this.platform = Platform.WEB_ANDROID;
+    } else {
+      this.platform = Platform.WEB;
+    }
   }
+}
+
+enum Platform {
+  WEB_IOS = 'web iOS',
+  WEB_ANDROID = 'web Android',
+  WEB = 'web',
+  UNKNOWN = 'unknown',
 }
 
 declare global {
