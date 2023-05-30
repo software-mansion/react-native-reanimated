@@ -1,9 +1,8 @@
 import { RefObject, useEffect, useRef } from 'react';
 
 import type Animated from 'react-native-reanimated';
-import { SharedValue as NativeSharedValue } from '../commonTypes';
-import { ScrollEvent } from './useAnimatedScrollHandler';
 import { SharedValue } from '../commonTypes';
+import { ScrollEvent } from './useAnimatedScrollHandler';
 import { scrollTo } from '../NativeMethods';
 import { findNodeHandle, ScrollViewProps } from 'react-native';
 import { useEvent } from './utils';
@@ -22,7 +21,7 @@ export interface AnimatedScrollViewProps extends ScrollViewProps {
   scrollViewOffset?: SharedValue<number>;
 }
 
-interface ScrollSharedValue<T> extends NativeSharedValue<T> {
+interface ScrollSharedValue<T> extends SharedValue<T> {
   triggerScrollListener?: boolean;
   triggerOffsetEvent?: boolean;
 }
@@ -49,13 +48,13 @@ const addListenerToScroll = (
 
 const removeListenerFromScroll = (
   offsetRef: ScrollSharedValue<number>,
-  animatedRef: any,
+  animatedRef: any
 ) => {
   runOnUI(() => {
     'worklet';
     offsetRef.removeListener(animatedRef());
   })();
-}
+};
 
 export function useScrollViewOffset(
   aref: RefObject<Animated.ScrollView>,
@@ -90,7 +89,7 @@ export function useScrollViewOffset(
     if (horizontal !== undefined) {
       addListenerToScroll(scrollPosition, aref, horizontal);
     }
-    
+
     const viewTag = findNodeHandle(
       (aref as RefObject<Animated.ScrollView>).current
     );
@@ -98,7 +97,7 @@ export function useScrollViewOffset(
     return () => {
       event.current?.unregisterFromEvents();
       removeListenerFromScroll(scrollPosition, aref);
-    }
+    };
   }, [(aref as RefObject<Animated.ScrollView>).current]);
 
   return scrollPosition;

@@ -24,7 +24,7 @@ const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
       useScrollViewOffset(
         aref as RefObject<Animated.ScrollView>,
         scrollViewOffset,
-        horizontal ?? false,
+        horizontal ?? false
       );
     }
     return <AnimatedScrollViewComponent ref={aref} {...restProps} />;
