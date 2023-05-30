@@ -183,7 +183,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,
-      const jsi::Value &uiProps);
+      const jsi::Object &props);
 #else
   void installJSIBindings(
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);

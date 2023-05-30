@@ -234,16 +234,13 @@ void NativeProxy::configureProps(
           .get());
 }
 
-void NativeProxy::updateProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    const jsi::Object &props) {
-  static const auto method =
-      getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
-          "updateProps");
-  method(
-      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+void NativeProxy::updateProps(jsi::Runtime &rt, const jsi::Value &operations) {
+  // static const auto method =
+  //     getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
+  //         "updateProps");
+  // method(
+  //     javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt,
+  //     props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
@@ -282,12 +279,13 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
 void NativeProxy::synchronouslyUpdateUIProps(
     jsi::Runtime &rt,
     Tag tag,
-    const jsi::Value &props) {
+    const jsi::Object &props) {
   static const auto method =
       getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
           "synchronouslyUpdateUIProps");
-  jni::local_ref<ReadableMap::javaobject> uiProps = castReadableMap(
-      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
+  jni::local_ref<ReadableMap::javaobject> uiProps =
+      castReadableMap(ReadableNativeMap::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, jsi::Value(rt, props))));
   method(javaPart_.get(), tag, uiProps);
 }
 #endif
