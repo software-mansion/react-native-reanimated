@@ -68,7 +68,8 @@ var require_commonObjects = __commonJS({
       "isNaN",
       "LayoutAnimationRepository",
       "_notifyAboutProgress",
-      "_notifyAboutEnd"
+      "_notifyAboutEnd",
+      "_runOnUIQueue"
     ]);
   }
 });
@@ -455,7 +456,8 @@ var require_processForCalleesWorklets = __commonJS({
       ["withTiming", [2]],
       ["withSpring", [2]],
       ["withDecay", [1]],
-      ["withRepeat", [3]]
+      ["withRepeat", [3]],
+      ["runOnUI", [0]]
     ]);
     var objectHooks = /* @__PURE__ */ new Set([
       "useAnimatedGestureHandler",

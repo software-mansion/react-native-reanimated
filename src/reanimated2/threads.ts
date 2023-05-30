@@ -60,6 +60,12 @@ export const callMicrotasks = shouldBeUseWeb()
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
+  'worklet';
+  if (__DEV__ && !IS_WEB && _WORKLET) {
+    throw new Error(
+      'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
   if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
     throw new Error('runOnUI() can only be used on worklets');
   }
@@ -116,8 +122,14 @@ export function runOnUI<A extends any[], R>(
 export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
+  'worklet';
+  if (__DEV__ && !IS_JEST && _WORKLET) {
+    throw new Error(
+      'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
   if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
-    throw new Error('runOnUI() can only be used on worklets');
+    throw new Error('runOnUIImmediately() can only be used on worklets');
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
@@ -131,9 +143,8 @@ export function runOnUIImmediately<A extends any[], R>(
 
 if (__DEV__) {
   try {
-    runOnUI(() => {
-      'worklet';
-    });
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    runOnUI(() => {});
   } catch (e) {
     throw new Error(
       'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'
