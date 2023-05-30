@@ -83,6 +83,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import UpdatePropsPerfExample from './UpdatePropsPerfExample';
 
 interface Example {
   icon?: string;
@@ -150,6 +151,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
+  },
+  UpdatePropsPerfExample: {
+    icon: '🏎️',
+    title: 'Update props performance',
+    screen: UpdatePropsPerfExample,
   },
 
   // Basic examples

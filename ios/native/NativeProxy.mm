@@ -97,15 +97,23 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // nothing
 #else
   RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
-  auto updatePropsFunction =
-      [reanimatedModule](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) -> void {
-    NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
-                                              encoding:[NSString defaultCStringEncoding]];
+  auto updatePropsFunction = [reanimatedModule](jsi::Runtime &rt, const jsi::Value &operations) -> void {
+    auto array = operations.asObject(rt).asArray(rt);
+    size_t length = array.size(rt);
+    for (size_t i = 0; i < length; ++i) {
+      auto item = array.getValueAtIndex(rt, i).asObject(rt);
+      int viewTag = item.getProperty(rt, "tag").asNumber();
+      const jsi::Value &viewName = item.getProperty(rt, "name");
+      const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
 
-    NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
-    [reanimatedModule.nodesManager updateProps:propsDict
-                                 ofViewWithTag:[NSNumber numberWithInt:viewTag]
-                                      withName:nsViewName];
+      NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
+                                                encoding:[NSString defaultCStringEncoding]];
+
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
+      [reanimatedModule.nodesManager updateProps:propsDict
+                                   ofViewWithTag:[NSNumber numberWithInt:viewTag]
+                                        withName:nsViewName];
+    }
   };
 
   auto measureFunction = [uiManager](int viewTag) -> std::vector<std::pair<std::string, double>> {
@@ -161,9 +169,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Object &props) {
     NSNumber *viewTag = @(tag);
-    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
+    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
 

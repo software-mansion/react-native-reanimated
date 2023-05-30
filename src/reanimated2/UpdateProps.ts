@@ -1,12 +1,18 @@
 /* global _updatePropsPaper _updatePropsFabric */
 import { MutableRefObject } from 'react';
 import { processColor } from './Colors';
-import { AnimatedStyle, SharedValue, StyleProps } from './commonTypes';
+import {
+  AnimatedStyle,
+  ShadowNodeWrapper,
+  SharedValue,
+  StyleProps,
+} from './commonTypes';
 import { makeShareable, isConfigured } from './core';
 import { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { ViewRefSet } from './ViewDescriptorsSet';
+import { runOnUIImmediately } from './threads';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 export const colorProps = [
@@ -43,46 +49,19 @@ if (shouldBeUseWeb()) {
     }
   };
 } else {
-  if (global._IS_FABRIC) {
-    updatePropsByPlatform = (
-      viewDescriptors: SharedValue<Descriptor[]>,
-      updates: StyleProps | AnimatedStyle,
-      _: ViewRefSet<any> | undefined
-    ): void => {
-      'worklet';
-
-      for (const key in updates) {
-        if (ColorProperties.indexOf(key) !== -1) {
-          updates[key] = processColor(updates[key]);
-        }
+  updatePropsByPlatform = (
+    viewDescriptors: SharedValue<Descriptor[]>,
+    updates: StyleProps | AnimatedStyle,
+    _: ViewRefSet<any> | undefined
+  ): void => {
+    'worklet';
+    for (const key in updates) {
+      if (ColorProperties.indexOf(key) !== -1) {
+        updates[key] = processColor(updates[key]);
       }
-
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        _updatePropsFabric!(viewDescriptor.shadowNodeWrapper, updates);
-      });
-    };
-  } else {
-    updatePropsByPlatform = (
-      viewDescriptors: SharedValue<Descriptor[]>,
-      updates: StyleProps | AnimatedStyle,
-      _: ViewRefSet<any> | undefined
-    ): void => {
-      'worklet';
-
-      for (const key in updates) {
-        if (ColorProperties.indexOf(key) !== -1) {
-          updates[key] = processColor(updates[key]);
-        }
-      }
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        _updatePropsPaper!(
-          viewDescriptor.tag,
-          viewDescriptor.name || 'RCTView',
-          updates
-        );
-      });
-    };
-  }
+    }
+    global.UpdatePropsManager!.update(viewDescriptors, updates);
+  };
 }
 
 export const updateProps: (
@@ -110,3 +89,68 @@ export const updatePropsJestWrapper = (
 };
 
 export default updateProps;
+
+const createUpdatePropsManager = global._IS_FABRIC
+  ? () => {
+      'worklet';
+      // Fabric
+      const operations: {
+        shadowNodeWrapper: ShadowNodeWrapper;
+        updates: StyleProps | AnimatedStyle;
+      }[] = [];
+      return {
+        update(
+          viewDescriptors: SharedValue<Descriptor[]>,
+          updates: StyleProps | AnimatedStyle
+        ) {
+          viewDescriptors.value.forEach((viewDescriptor) => {
+            operations.push({
+              shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
+              updates,
+            });
+          });
+          if (operations.length === 1) {
+            queueMicrotask(this.flush);
+          }
+        },
+        flush() {
+          _updatePropsFabric!(operations);
+          operations.length = 0;
+        },
+      };
+    }
+  : () => {
+      'worklet';
+      // Paper
+      const operations: {
+        tag: number;
+        name: string;
+        updates: StyleProps | AnimatedStyle;
+      }[] = [];
+      return {
+        update(
+          viewDescriptors: SharedValue<Descriptor[]>,
+          updates: StyleProps | AnimatedStyle
+        ) {
+          viewDescriptors.value.forEach((viewDescriptor) => {
+            operations.push({
+              tag: viewDescriptor.tag,
+              name: viewDescriptor.name || 'RCTView',
+              updates,
+            });
+          });
+          if (operations.length === 1) {
+            queueMicrotask(this.flush);
+          }
+        },
+        flush() {
+          _updatePropsPaper!(operations);
+          operations.length = 0;
+        },
+      };
+    };
+
+runOnUIImmediately(() => {
+  'worklet';
+  global.UpdatePropsManager = createUpdatePropsManager();
+})();

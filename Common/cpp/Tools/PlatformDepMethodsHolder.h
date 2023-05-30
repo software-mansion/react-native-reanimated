@@ -21,11 +21,9 @@ namespace reanimated {
 #ifdef RCT_NEW_ARCH_ENABLED
 
 using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Value &props)>;
-using UpdatePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue,
-    const jsi::Value &props)>;
+    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using RemoveShadowNodeFromRegistryFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &tag)>;
 using DispatchCommandFunction = std::function<void(
@@ -38,11 +36,8 @@ using MeasureFunction = std::function<
 
 #else
 
-using UpdatePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    jsi::Object object)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
