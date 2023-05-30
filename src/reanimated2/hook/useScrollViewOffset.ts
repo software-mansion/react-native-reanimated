@@ -76,6 +76,11 @@ export function useScrollViewOffset(
         ? event.contentOffset.y
         : event.contentOffset.x;
 
+    // @ts-ignore Don't trigger any listener when the value is the same
+    if (newValue === scrollPosition._value) {
+      return;
+    }
+
     scrollPosition.triggerScrollListener = false;
     // @ts-ignore Omit the setter to not override animation
     scrollPosition._value = newValue;
