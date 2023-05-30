@@ -36,9 +36,10 @@ export interface ExitAnimationsValues {
   windowHeight: number;
 }
 
-export type EntryExitAnimationFunction = (
-  targetValues: EntryAnimationsValues | ExitAnimationsValues
-) => LayoutAnimation;
+export type EntryExitAnimationFunction =
+  | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
+  | ((targetValues: ExitAnimationsValues) => LayoutAnimation)
+  | (() => LayoutAnimation);
 
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 

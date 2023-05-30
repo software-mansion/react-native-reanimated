@@ -28,7 +28,14 @@ export interface InnerSpringAnimation extends SpringAnimation {
   current: number;
 }
 
-export function withSpring(
+// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+type withSpringType = <T extends AnimatableValue>(
+  toValue: T,
+  userConfig?: SpringConfig,
+  callback?: AnimationCallback
+) => T;
+
+export const withSpring = function (
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
@@ -105,8 +112,8 @@ export function withSpring(
       const isOvershooting = () => {
         if (config.overshootClamping && config.stiffness !== 0) {
           return current < toValue
-            ? animation.current > toValue
-            : animation.current < toValue;
+            ? (animation.current as number) > toValue // TODO This is temporary to get rid of .d.ts file
+            : (animation.current as number) < toValue; // TODO This is temporary to get rid of .d.ts file
         } else {
           return false;
         }
@@ -163,4 +170,4 @@ export function withSpring(
       lastTimestamp: 0,
     };
   });
-}
+} as withSpringType;

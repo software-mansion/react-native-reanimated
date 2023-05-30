@@ -3,7 +3,9 @@ import {
   BaseAnimationBuilder,
 } from '../animationBuilder';
 import {
+  EntryAnimationsValues,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
@@ -24,7 +26,8 @@ export class RollInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -63,7 +66,8 @@ export class RollInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -99,7 +103,8 @@ export class RollOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -140,7 +145,8 @@ export class RollOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {

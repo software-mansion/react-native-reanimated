@@ -193,7 +193,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     const { keyframes, initialValues } = this.parseDefinitions();
     const callback = this.callbackV;
 
-    return (_targetValues) => {
+    return () => {
       'worklet';
       const animations: StyleProps = {};
 

@@ -7,7 +7,13 @@ import {
 } from '../commonTypes';
 import { DelayAnimation } from './commonTypes';
 
-export function withDelay<T extends AnimationObject>(
+// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+type withDelayType = <T extends AnimatableValue>(
+  delayMS: number,
+  delayedAnimation: T
+) => T;
+
+export const withDelay = function <T extends AnimationObject>(
   delayMs: number,
   _nextAnimation: T | (() => T)
 ): Animation<DelayAnimation> {
@@ -85,4 +91,4 @@ export function withDelay<T extends AnimationObject>(
       };
     }
   );
-}
+} as withDelayType;

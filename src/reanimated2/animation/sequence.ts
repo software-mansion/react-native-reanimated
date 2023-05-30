@@ -7,7 +7,10 @@ import {
   Timestamp,
 } from '../commonTypes';
 
-export function withSequence(
+// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+type withSequenceType = <T extends AnimatableValue>(...animations: T[]) => T;
+
+export const withSequence = function (
   ..._animations: NextAnimation<AnimationObject>[]
 ): Animation<SequenceAnimation> {
   'worklet';
@@ -82,4 +85,4 @@ export function withSequence(
       } as SequenceAnimation;
     }
   );
-}
+} as withSequenceType;

@@ -24,7 +24,7 @@ export class PinwheelIn
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -73,7 +73,7 @@ export class PinwheelOut
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return () => {
       'worklet';
       return {
         animations: {

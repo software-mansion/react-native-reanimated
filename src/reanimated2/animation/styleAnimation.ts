@@ -198,7 +198,7 @@ export function withStyleAnimation(
             currentAnimation = withTiming(
               currentEntry.value as AnimatableValue,
               { duration: 0 }
-            );
+            ) as AnimationObject; // TODO TYPESCRIPT this was put in here to get rid of .d.ts
             setPath(
               animation.styleAnimations,
               currentEntry.path,

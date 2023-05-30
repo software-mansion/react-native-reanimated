@@ -1,5 +1,7 @@
 import {
+  EntryAnimationsValues,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 import { withSequence, withTiming } from '../../animation';
@@ -86,7 +88,8 @@ export class BounceInDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -143,7 +146,8 @@ export class BounceInUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -196,7 +200,8 @@ export class BounceInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -249,7 +254,8 @@ export class BounceInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -355,7 +361,8 @@ export class BounceOutDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -410,7 +417,8 @@ export class BounceOutUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -465,7 +473,8 @@ export class BounceOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -520,7 +529,8 @@ export class BounceOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
+    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
         animations: {

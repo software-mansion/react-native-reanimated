@@ -8,7 +8,15 @@ import {
 } from '../commonTypes';
 import { RepeatAnimation } from './commonTypes';
 
-export function withRepeat<T extends AnimationObject>(
+// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+type withRepeatType = <T extends AnimatableValue>(
+  animation: T,
+  numberOfReps?: number,
+  reverse?: boolean,
+  callback?: AnimationCallback
+) => T;
+
+export const withRepeat = function <T extends AnimationObject>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,
   reverse = false,
@@ -90,4 +98,4 @@ export function withRepeat<T extends AnimationObject>(
       };
     }
   );
-}
+} as withRepeatType;
