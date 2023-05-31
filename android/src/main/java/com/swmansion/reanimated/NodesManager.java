@@ -26,6 +26,7 @@ import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.systrace.Systrace;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -234,6 +235,8 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
+    Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
+
     currentFrameTimeMs = frameTimeNanos / 1000000.;
 
     while (!mEventQueue.isEmpty()) {
@@ -257,6 +260,8 @@ public class NodesManager implements EventDispatcherListener {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }
+
+    Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
   public void enqueueUpdateViewOnNativeThread(
