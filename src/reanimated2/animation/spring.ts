@@ -84,26 +84,25 @@ export function withSpring(
               t,
             });
 
-      if (!config.useDuration) {
-        const { isOvershooting, isVelocity, isDisplacement } =
-          isAnimationTerminatingCalculation(animation, config);
+      animation.current = newPosition;
+      animation.velocity = newVelocity;
 
-        animation.current = newPosition;
-        animation.velocity = newVelocity;
+      const { isOvershooting, isVelocity, isDisplacement } =
+        isAnimationTerminatingCalculation(animation, config);
 
-        const springIsNotInMove =
-          isOvershooting || (isVelocity && isDisplacement);
+      const springIsNotInMove =
+        isOvershooting || (isVelocity && isDisplacement);
 
-        if (springIsNotInMove) {
-          if (config.stiffness !== 0) {
-            animation.velocity = 0;
-            animation.current = toValue;
-          }
-          // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
-          animation.lastTimestamp = 0;
-          return true;
+      if (!config.useDuration && springIsNotInMove) {
+        if (config.stiffness !== 0) {
+          animation.velocity = 0;
+          animation.current = toValue;
         }
+        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
+        animation.lastTimestamp = 0;
+        return true;
       }
+
       return false;
     }
 
@@ -138,11 +137,12 @@ export function withSpring(
           (previousAnimation?.startValue as number)
         : Number(animation.toValue) - value;
 
-      animation.velocity = previousAnimation
-        ? triggeredTwice
-          ? previousAnimation.velocity
-          : previousAnimation.velocity + config.velocity
-        : config.velocity;
+      animation.velocity =
+        (previousAnimation
+          ? triggeredTwice
+            ? previousAnimation?.velocity
+            : previousAnimation.velocity + config.velocity
+          : config.velocity) || 0;
 
       if (triggeredTwice) {
         animation.zeta = previousAnimation?.zeta || 0;
