@@ -215,6 +215,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
+    runtime.global().setProperty(runtime, "_WORKLET", false);
+
     runtime.global().setProperty(runtime, "_IS_FABRIC", true);
 
     auto version = getReanimatedVersionString(runtime);
