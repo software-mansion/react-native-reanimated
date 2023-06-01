@@ -91,7 +91,7 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  if !config[:is_tvos_target] && using_hermes
+  if using_hermes && !config[:is_tvos_target]
     s.dependency 'React-hermes'
     s.dependency 'hermes-engine'
   end
