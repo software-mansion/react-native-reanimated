@@ -2,6 +2,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTFabricSurface.h>
+#import <React/RCTRuntimeExecutorFromBridge.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
