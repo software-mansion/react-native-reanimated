@@ -175,7 +175,16 @@ const getInterpolateHSV = (
   return { h, s, v, a };
 };
 
-export const interpolateColor = (
+type interpolateColorType = <T extends string | number>(
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly T[],
+  colorSpace?: 'RGB' | 'HSV',
+  options?: InterpolationOptions
+) => T;
+
+// seems to be easy fix
+export const interpolateColor = ((
   value: number,
   inputRange: readonly number[],
   outputRange: readonly (string | number)[],
@@ -201,7 +210,7 @@ export const interpolateColor = (
   throw new Error(
     `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
   );
-};
+}) as interpolateColorType;
 
 export enum ColorSpace {
   RGB = 0,

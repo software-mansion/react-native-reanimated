@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef, RefAttributes } from 'react';
+import React, { Component, ForwardedRef, forwardRef } from 'react';
 import {
   FlatList,
   FlatListProps,
@@ -9,6 +9,7 @@ import { AnimatedView } from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import { StyleProps } from '../commonTypes';
+import { AnimateProps } from '../helperTypes';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
@@ -27,6 +28,7 @@ const createCellRenderer = (
   const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
       <AnimatedView
+        // @ts-ignore TODO TYPESCRIPT
         layout={itemLayoutAnimation}
         onLayout={props.onLayout}
         style={cellStyle}>
@@ -65,11 +67,26 @@ export const ReanimatedFlatList = forwardRef(
       />
     );
   }
-) as <T>(
-  props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
-) => React.ReactElement;
+  // old cast:
+  // ) as <T>(
+  //   props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
+  // ) => React.ReactElement;
+);
 
-export type ReanimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
+interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
+  itemLayoutAnimation?: ILayoutAnimationBuilder;
+}
+declare class ReanimatedFlatListType<T>
+  implements Component<AnimateProps<ReanimatedFlatListPropsWithLayout<T>>>
+{
+  getNode(): FlatList;
+}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface ReanimatedFlatListType<T> extends FlatList<T> {}
+
+export type ReanimatedFlatList<T> = ReanimatedFlatListType<T>;
+
+// export type ReanimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },
   horizontallyInverted: { transform: [{ scaleX: -1 }] },

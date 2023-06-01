@@ -30,6 +30,14 @@ import {
   SharedValue,
   StyleProps,
 } from '../commonTypes';
+import {
+  ImageStyle,
+  RegisteredStyle,
+  TextStyle,
+  ViewStyle,
+} from 'react-native/types';
+import { AnimateStyle } from '../helperTypes';
+
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
   initial: AnimatedStyle;
@@ -390,7 +398,16 @@ function checkSharedValueUsage(
   }
 }
 
-export function useAnimatedStyle<T extends AnimatedStyle>(
+type AnimatedStyleProp<T> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+
+type useAnimatedStyleType = <
+  T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
+>(
+  updater: () => T,
+  deps?: DependencyList | null
+) => T;
+
+export const useAnimatedStyle = function <T extends AnimatedStyle>(
   // animated style cannot be an array
   updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
   dependencies?: DependencyList,
@@ -515,4 +532,4 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
   } else {
     return { viewDescriptors, initial: initial, viewsRef };
   }
-}
+} as useAnimatedStyleType;
