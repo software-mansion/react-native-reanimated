@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { Text, TextProps } from 'react-native';
 import createAnimatedComponent from '../../createAnimatedComponent';
-import { AnimateProps } from 'src/reanimated2/helperTypes';
+import { AnimateProps } from '../helperTypes';
 
 declare class AnimatedTextType implements Component<AnimateProps<TextProps>> {
   getNode(): Text;

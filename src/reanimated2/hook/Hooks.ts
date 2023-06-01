@@ -4,7 +4,7 @@ import { useAnimatedStyle } from './useAnimatedStyle';
 
 type PropsAdapterFunction = (props: Record<string, unknown>) => void;
 
-type useAnimatedPropsType = <T extends {}>(
+type useAnimatedPropsType = <T extends object>(
   updater: () => Partial<T>,
   deps?: DependencyList | null,
   adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null

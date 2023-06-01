@@ -35,7 +35,7 @@ import {
   RegisteredStyle,
   TextStyle,
   ViewStyle,
-} from 'react-native/types';
+} from 'react-native';
 import { AnimateStyle } from '../helperTypes';
 
 export interface AnimatedStyleResult {
