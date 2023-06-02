@@ -27,4 +27,22 @@ void REAInitializer(RCTBridge *bridge)
   [bridge updateModuleWithInstance:eventDispatcher];
 }
 
+#if REACT_NATIVE_MINOR_VERSION <= 71
+
+JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
+    RCTBridge *bridge,
+    JSIExecutor::RuntimeInstaller runtimeInstallerToWrap)
+{
+  REAInitializer(bridge);
+
+  const auto runtimeInstaller = [runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
+    if (runtimeInstallerToWrap) {
+      runtimeInstallerToWrap(runtime);
+    }
+  };
+  return runtimeInstaller;
+}
+
+#endif // REACT_NATIVE_MINOR_VERSION <= 71
+
 } // namespace reanimated

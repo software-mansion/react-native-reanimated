@@ -1,9 +1,8 @@
+#if REACT_NATIVE_MINOR_VERSION >= 72 && !defined(RCT_NEW_ARCH_ENABLED) && !defined(DONT_AUTOINSTALL_REANIMATED)
+
 #import <Foundation/Foundation.h>
 #import <React-RCTAppDelegate/RCTAppDelegate.h>
 #import <React-cxxreact/cxxreact/JSExecutor.h>
-
-#ifndef RCT_NEW_ARCH_ENABLED
-#ifndef DONT_AUTOINSTALL_REANIMATED
 
 @interface RCTAppDelegate (Reanimated)
 
@@ -11,5 +10,4 @@
 
 @end
 
-#endif // DONT_AUTOINSTALL_REANIMATED
-#endif // RCT_NEW_ARCH_ENABLED
+#endif

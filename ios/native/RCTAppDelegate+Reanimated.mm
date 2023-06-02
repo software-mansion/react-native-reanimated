@@ -1,9 +1,8 @@
+#if REACT_NATIVE_MINOR_VERSION >= 72 && !defined(RCT_NEW_ARCH_ENABLED) && !defined(DONT_AUTOINSTALL_REANIMATED)
+
 #import <RNReanimated/RCTAppDelegate+Reanimated.h>
 #import <RNReanimated/REAInitializer.h>
 #import <objc/runtime.h>
-
-#ifndef RCT_NEW_ARCH_ENABLED
-#ifndef DONT_AUTOINSTALL_REANIMATED
 
 @implementation RCTAppDelegate (Reanimated)
 
@@ -26,5 +25,4 @@
 
 @end
 
-#endif // DONT_AUTOINSTALL_REANIMATED
-#endif // RCT_NEW_ARCH_ENABLED
+#endif
