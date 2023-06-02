@@ -8,6 +8,7 @@ import {
 
 const IS_JEST = isJest();
 const IS_WEB = shouldBeUseWeb();
+const IS_DEV = __DEV__;
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
@@ -61,12 +62,12 @@ export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (IS_DEV && !IS_WEB && _WORKLET) {
     throw new Error(
       'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (IS_DEV && !IS_WEB && worklet.__workletHash === undefined) {
     throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
@@ -88,7 +89,7 @@ export function runOnUI<A extends any[], R>(
       );
       return;
     }
-    if (__DEV__) {
+    if (IS_DEV) {
       // in DEV mode we call shareable conversion here because in case the object
       // can't be converted, we will get a meaningful stack-trace as opposed to the
       // situation when conversion is only done via microtask queue. This does not
@@ -123,12 +124,12 @@ export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_JEST && _WORKLET) {
+  if (IS_DEV && !IS_JEST && _WORKLET) {
     throw new Error(
       'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (IS_DEV && !IS_WEB && worklet.__workletHash === undefined) {
     throw new Error('runOnUIImmediately() can only be used on worklets');
   }
   return (...args) => {
