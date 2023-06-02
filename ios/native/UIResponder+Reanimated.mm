@@ -1,32 +1,30 @@
 #import <RNReanimated/REAInitializer.h>
-#import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/UIResponder+Reanimated.h>
-
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#import <reacthermes/HermesExecutorFactory.h>
-typedef HermesExecutorFactory ExecutorFactory;
-#elif __has_include(<React/HermesExecutorFactory.h>)
-#import <React/HermesExecutorFactory.h>
-typedef HermesExecutorFactory ExecutorFactory;
-#else
-#import <React/JSCExecutorFactory.h>
-typedef JSCExecutorFactory ExecutorFactory;
-#endif
+#import <React-cxxreact/cxxreact/JSExecutor.h>
+#import <objc/runtime.h>
 
 #ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DONT_AUTOINSTALL_REANIMATED
 
 @implementation UIResponder (Reanimated)
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
-{
-  const auto installer = reanimated::REAJSIExecutorRuntimeInstaller(bridge, NULL);
 
-#if REACT_NATIVE_MINOR_VERSION >= 64
-  // installs globals such as console, nativePerformanceNow, etc.
-  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(installer));
-#else
-  return std::make_unique<ExecutorFactory>(installer);
-#endif
+- (std::unique_ptr<facebook::react::JSExecutorFactory>)swizzled_jsExecutorFactoryForBridge:(RCTBridge *)bridge
+{
+  reanimated::REAInitializer(bridge);
+  return [self swizzled_jsExecutorFactoryForBridge:bridge];
+}
+
+- (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge
+{
+  static bool swizzled = false;
+  if (!swizzled) {
+    swizzled = true; // AppDelegate doesn't change during reload, don't swizzle again
+    Class cls = [bridge.delegate class];
+    Method originalMethod = class_getInstanceMethod(cls, @selector(jsExecutorFactoryForBridge:));
+    Method swizzledMethod = class_getInstanceMethod(cls, @selector(swizzled_jsExecutorFactoryForBridge:));
+    method_exchangeImplementations(originalMethod, swizzledMethod);
+  }
+  return nil;
 }
 
 @end

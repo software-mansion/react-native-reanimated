@@ -236,9 +236,45 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
 #else
 
-RCT_EXPORT_METHOD(installTurboModule)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
-  // TODO: Move initialization from UIResponder+Reanimated to here
+  facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
+      ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
+      : nullptr;
+
+  if (jsiRuntime) {
+    // Reanimated
+    jsi::Runtime &runtime = *jsiRuntime;
+
+#if REACT_NATIVE_MINOR_VERSION >= 63
+    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+#else
+    auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
+    auto reanimatedModule = reanimated::createReanimatedModule(bridge, callInvoker);
+#endif
+    auto workletRuntimeValue = runtime.global()
+                                   .getProperty(runtime, "ArrayBuffer")
+                                   .asObject(runtime)
+                                   .asFunction(runtime)
+                                   .callAsConstructor(runtime, {static_cast<double>(sizeof(void *))});
+    uintptr_t *workletRuntimeData =
+        reinterpret_cast<uintptr_t *>(workletRuntimeValue.getObject(runtime).getArrayBuffer(runtime).data(runtime));
+    workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedModule->runtime.get());
+
+    runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
+
+    runtime.global().setProperty(runtime, "_IS_FABRIC", false);
+
+    auto version = getReanimatedVersionString(runtime);
+    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
+
+    runtime.global().setProperty(
+        runtime,
+        jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(runtime, reanimatedModule));
+  }
+
+  return nil;
 }
 
 - (void)setBridge:(RCTBridge *)bridge

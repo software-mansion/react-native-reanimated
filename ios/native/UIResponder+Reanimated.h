@@ -6,6 +6,8 @@
 
 @interface UIResponder (Reanimated) <RCTCxxBridgeDelegate>
 
+- (std::unique_ptr<facebook::react::JSExecutorFactory>)swizzled_jsExecutorFactoryForBridge:(RCTBridge *)bridge;
+
 @end
 
 #endif // DONT_AUTOINSTALL_REANIMATED
