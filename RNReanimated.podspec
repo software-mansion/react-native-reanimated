@@ -15,7 +15,7 @@ boost_compiler_flags = '-Wno-documentation'
 fabric_flags = fabric_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
-using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == "1"
+using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
 
 Pod::Spec.new do |s|
   
