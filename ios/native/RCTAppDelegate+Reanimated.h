@@ -1,10 +1,11 @@
 #import <Foundation/Foundation.h>
-#import <React/RCTCxxBridgeDelegate.h>
+#import <React-RCTAppDelegate/RCTAppDelegate.h>
+#import <React-cxxreact/cxxreact/JSExecutor.h>
 
 #ifndef RCT_NEW_ARCH_ENABLED
 #ifndef DONT_AUTOINSTALL_REANIMATED
 
-@interface UIResponder (Reanimated) <RCTCxxBridgeDelegate>
+@interface RCTAppDelegate (Reanimated)
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)swizzled_jsExecutorFactoryForBridge:(RCTBridge *)bridge;
 
