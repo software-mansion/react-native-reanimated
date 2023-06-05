@@ -123,7 +123,7 @@ export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_JEST && _WORKLET) {
+  if (__DEV__ && !IS_WEB && _WORKLET) {
     throw new Error(
       'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
