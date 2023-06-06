@@ -62,4 +62,5 @@ export const useAnimatedRef = function <
   }
 
   return ref.current;
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
 } as <T extends Component>() => RefObject<T>;

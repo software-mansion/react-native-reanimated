@@ -28,8 +28,8 @@ const createCellRenderer = (
   const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
       <AnimatedView
-        // @ts-ignore TODO TYPESCRIPT not sure how to fix this
-        layout={itemLayoutAnimation}
+        // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
+        layout={itemLayoutAnimation as any}
         onLayout={props.onLayout}
         style={cellStyle}>
         {props.children}
@@ -43,15 +43,20 @@ const createCellRenderer = (
 interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 declare class ReanimatedFlatListClass<T> extends Component<
   AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
 > {
   getNode(): FlatList;
 }
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface ReanimatedFlatListInterface<T> extends FlatList<T> {}
 
-// export type ReanimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
+export type ReanimatedFlatListType<T> = typeof ReanimatedFlatListClass<T> &
+  ReanimatedFlatListInterface<T>;
 
 export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
@@ -80,14 +85,11 @@ export const ReanimatedFlatList = forwardRef(
       />
     );
   }
-  // old cast:
+  // TODO TYPESCRIPT this was a cast before
   // ) as <T>(
   //   props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
   // ) => React.ReactElement;
 );
-
-export type ReanimatedFlatListType<T> = typeof ReanimatedFlatListClass<T> &
-  ReanimatedFlatListInterface<T>;
 
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },

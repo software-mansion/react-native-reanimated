@@ -7,7 +7,7 @@ import {
 } from '../commonTypes';
 import { DelayAnimation } from './commonTypes';
 
-// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDelayType = <T extends AnimatableValue>(
   delayMS: number,
   delayedAnimation: T

@@ -8,7 +8,7 @@ import {
 } from '../commonTypes';
 import { RepeatAnimation } from './commonTypes';
 
-// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withRepeatType = <T extends AnimatableValue>(
   animation: T,
   numberOfReps?: number,

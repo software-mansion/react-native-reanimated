@@ -1,6 +1,7 @@
 import React, {
   Component,
   ComponentClass,
+  ComponentType,
   FunctionComponent,
   MutableRefObject,
   Ref,
@@ -247,11 +248,6 @@ export interface InitialComponentProps extends Record<string, unknown> {
   collapsable?: boolean;
 }
 
-// type createAnimatedComponentType = <P extends object>(
-//   component: FunctionComponent<P>,
-//   options?: Options<P>
-// ) => FunctionComponent<AnimateProps<P>>;
-
 export default function createAnimatedComponent<P extends object>(
   component: FunctionComponent<P>,
   options?: Options<P>
@@ -263,10 +259,8 @@ export default function createAnimatedComponent<P extends object>(
 ): ComponentClass<AnimateProps<P>>;
 
 export default function createAnimatedComponent(
-  // Component: ComponentType<InitialComponentProps>,
-  Component: any,
+  Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
-  // ): ComponentType<AnimatedComponentProps<InitialComponentProps>> {
 ): any {
   invariant(
     typeof Component !== 'function' ||

@@ -2,8 +2,10 @@ import { useCallback } from 'react';
 import { DependencyList } from './commonTypes';
 import { useAnimatedStyle } from './useAnimatedStyle';
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type PropsAdapterFunction = (props: Record<string, unknown>) => void;
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type useAnimatedPropsType = <T extends object>(
   updater: () => Partial<T>,
   deps?: DependencyList | null,

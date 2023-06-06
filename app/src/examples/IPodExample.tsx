@@ -136,7 +136,6 @@ export default function IPodExample(): React.ReactElement {
         style={styles.scroll}
         scrollEventThrottle={1}
         showsHorizontalScrollIndicator={false}
-        // @ts-ignore TODO LATER-TYPESCRIPT
         onScroll={scrollHandler}>
         {data.map(({ artist, song }, i) => {
           // eslint-disable-next-line react-hooks/rules-of-hooks

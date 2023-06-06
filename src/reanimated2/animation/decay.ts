@@ -38,6 +38,7 @@ export interface InnerDecayAnimation
   current: number;
 }
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDecayType = (
   userConfig: DecayConfig,
   callback?: AnimationCallback

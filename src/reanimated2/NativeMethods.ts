@@ -14,6 +14,7 @@ export function getTag(
 
 const isNative = !shouldBeUseWeb();
 
+// TODO TYPESCRIPT This was previous declaration that was more type-accurate.
 // export let measure: <T extends Component>(
 //   animatedRef: AnimatedRef<T>
 // ) => MeasuredDimensions | null;
@@ -23,8 +24,7 @@ export let measure: <T extends Component>(
 ) => MeasuredDimensions | null;
 
 if (isWeb()) {
-  // @ts-ignore TODO TYPESCRIPT
-  measure = <T extends Component>(animatedRef: AnimatedRef<T>) => {
+  measure = (<T extends Component>(animatedRef: AnimatedRef<T>) => {
     const element = animatedRef() as unknown as HTMLElement; // TODO: fix typing of animated refs on web
     const viewportOffset = element.getBoundingClientRect();
     return {
@@ -35,16 +35,14 @@ if (isWeb()) {
       pageX: viewportOffset.left,
       pageY: viewportOffset.top,
     };
-  };
+  }) as any;
 } else if (isChromeDebugger()) {
-  // @ts-ignore TODO TYPESCRIPT
-  measure = <T extends Component>(_animatedRef: AnimatedRef<T>) => {
+  measure = (<T extends Component>(_animatedRef: AnimatedRef<T>) => {
     console.warn('[Reanimated] measure() cannot be used with Chrome Debugger.');
     return null;
-  };
+  }) as any;
 } else {
-  // @ts-ignore TODO TYPESCRIPT
-  measure = <T extends Component>(animatedRef: AnimatedRef<T>) => {
+  measure = (<T extends Component>(animatedRef: AnimatedRef<T>) => {
     'worklet';
     if (!_WORKLET) {
       console.warn(
@@ -85,7 +83,7 @@ if (isWeb()) {
     } else {
       return measured;
     }
-  };
+  }) as any;
 }
 
 export function dispatchCommand<T extends Component>(
@@ -104,6 +102,7 @@ export function dispatchCommand<T extends Component>(
   _dispatchCommand!(shadowNodeWrapper, commandName, args);
 }
 
+// TODO TYPESCRIPT This was previous declaration that was more type-accurate.
 // export let scrollTo: <T extends Component>(
 //   animatedRef: AnimatedRef<T>,
 //   x: number,
@@ -119,8 +118,7 @@ export let scrollTo: (
 ) => void;
 
 if (isWeb()) {
-  // @ts-ignore TODO TYPESCRIPT
-  scrollTo = <T extends Component>(
+  scrollTo = (<T extends Component>(
     animatedRef: AnimatedRef<T>,
     x: number,
     y: number,
@@ -130,10 +128,9 @@ if (isWeb()) {
     const element = animatedRef() as unknown as HTMLElement;
     // @ts-ignore same call as in react-native-web
     element.scrollTo({ x, y, animated });
-  };
+  }) as any;
 } else if (isNative && global._IS_FABRIC) {
-  // @ts-ignore TODO TYPESCRIPT
-  scrollTo = <T extends Component>(
+  scrollTo = (<T extends Component>(
     animatedRef: AnimatedRef<T>,
     x: number,
     y: number,
@@ -141,10 +138,9 @@ if (isWeb()) {
   ) => {
     'worklet';
     dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
-  };
+  }) as any;
 } else if (isNative) {
-  // @ts-ignore TODO TYPESCRIPT
-  scrollTo = <T extends Component>(
+  scrollTo = (<T extends Component>(
     animatedRef: AnimatedRef<T>,
     x: number,
     y: number,
@@ -158,16 +154,15 @@ if (isWeb()) {
     // Calling animatedRef on Paper returns a number (nativeTag)
     const viewTag = animatedRef() as number;
     _scrollTo(viewTag, x, y, animated);
-  };
+  }) as any;
 } else {
-  // @ts-ignore TODO TYPESCRIPT
-  scrollTo = <T extends Component>(
+  scrollTo = (<T extends Component>(
     _animatedRef: AnimatedRef<T>,
     _x: number,
     _y: number
   ) => {
     // no-op
-  };
+  }) as any;
 }
 
 export function setGestureState(handlerTag: number, newState: number): void {

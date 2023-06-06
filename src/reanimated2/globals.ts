@@ -24,10 +24,10 @@ declare global {
         js: string,
         sourceURL: string,
         sourceMap: string
-        // eslint-ignore-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ) => any)
     | undefined;
-  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
   var _log: (s: string) => void;
   var _notifyAboutProgress: (
@@ -41,12 +41,15 @@ declare global {
     removeView: boolean
   ) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dataHolder: ShareableSyncDataHolderRef<any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: ShareableRef<any>
   ) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var _scheduleOnJS: (fun: ShareableRef<any>, args?: ShareableRef<any>) => void;
   var _updatePropsPaper:
     | ((tag: number, name: string, updates: StyleProps | AnimatedStyle) => void)
@@ -72,7 +75,6 @@ declare global {
         args: Array<unknown>
       ) => void)
     | undefined;
-  var performance: Performance;
   var __ErrorUtils: {
     reportFatalError: (error: Error) => void;
   };
@@ -80,9 +82,9 @@ declare global {
   var console: Console;
   var __frameTimestamp: number | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
-  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var __workletsCache: Map<string, any>;
-  // eslint-ignore-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var __handleCache: WeakMap<object, any>;
   var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;

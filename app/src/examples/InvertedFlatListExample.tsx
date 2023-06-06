@@ -61,7 +61,6 @@ function List({ horizontal }: { horizontal?: boolean }) {
       renderItem={({ item, index }) => (
         <Item index={index} item={item} scrollPosition={scrollPosition} />
       )}
-      // @ts-ignore TODO LATER-TYPESCRIPT
       onScroll={scrollHandler}
       scrollEventThrottle={1}
       onLayout={(event) =>
