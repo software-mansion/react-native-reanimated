@@ -111,6 +111,7 @@ export function withSpring(
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
         previousAnimation?.dampingRatio === animation.dampingRatio
@@ -137,12 +138,14 @@ export function withSpring(
           (previousAnimation?.startValue as number)
         : Number(animation.toValue) - value;
 
-      animation.velocity =
-        (previousAnimation
-          ? triggeredTwice
+      if (previousAnimation) {
+        animation.velocity =
+          (triggeredTwice
             ? previousAnimation?.velocity
-            : previousAnimation.velocity + config.velocity
-          : config.velocity) || 0;
+            : previousAnimation?.velocity + config.velocity) || 0;
+      } else {
+        animation.velocity = config.velocity || 0;
+      }
 
       if (triggeredTwice) {
         animation.zeta = previousAnimation?.zeta || 0;
