@@ -288,6 +288,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
+    runtime.global().setProperty(runtime, "_WORKLET", false);
+
 #ifdef RCT_NEW_ARCH_ENABLED
     runtime.global().setProperty(runtime, "_IS_FABRIC", true);
 #else

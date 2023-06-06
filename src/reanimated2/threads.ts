@@ -123,7 +123,7 @@ export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_JEST && _WORKLET) {
+  if (__DEV__ && !IS_WEB && _WORKLET) {
     throw new Error(
       'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
@@ -141,11 +141,12 @@ export function runOnUIImmediately<A extends any[], R>(
   };
 }
 
-if (__DEV__) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    runOnUI(() => {});
-  } catch (e) {
+if (__DEV__ && !IS_WEB) {
+  const f = () => {
+    'worklet';
+  };
+  // @ts-ignore plugin
+  if (f.__workletHash === undefined) {
     throw new Error(
       'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'
     );
