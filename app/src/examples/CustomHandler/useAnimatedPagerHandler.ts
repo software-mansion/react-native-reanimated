@@ -104,15 +104,13 @@ export function useAnimatedPagerSelectedPageHandler<
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
+  dependencies?: Array<unknown>
 ): (e: NativeSyntheticEvent<PagerViewOnPageSelectedEventData>) => void {
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageSelectedEventData,
     TContext
-    // @ts-ignore TODO LATER-TYPESCRIPT
   >(handlers, dependencies);
 
-  // @ts-ignore TODO LATER-TYPESCRIPT
   return useEvent<PagerViewOnPageSelectedEventData>(
     (event) => {
       'worklet';

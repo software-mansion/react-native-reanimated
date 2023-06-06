@@ -30,6 +30,7 @@ export function useScrollViewOffset(
 
   useEffect(() => {
     const viewTag = findNodeHandle(aref.current);
+    // @ts-ignore TODO TYPESCRIPT
     event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
 

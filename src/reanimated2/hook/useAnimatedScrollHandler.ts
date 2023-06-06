@@ -90,5 +90,5 @@ export const useAnimatedScrollHandler = function <TContext extends Context>(
     },
     subscribeForEvents,
     doDependenciesDiffer
-  );
+  ) as any;
 } as unknown as useAnimatedScrollHandler;

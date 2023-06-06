@@ -146,7 +146,7 @@ function asyncMeasure(
 ): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
-      // @ts-ignore TODO TYPESCRIPT this appears as an error sometimes
+      // @ts-ignore TODO TYPESCRIPT stems from the above comment
       animatedRef.current.measure?.((x, y, width, height, pageX, pageY) => {
         resolve({ x, y, width, height, pageX, pageY });
       });
