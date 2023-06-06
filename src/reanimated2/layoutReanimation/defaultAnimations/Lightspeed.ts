@@ -28,7 +28,6 @@ export class LightSpeedInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -82,7 +81,6 @@ export class LightSpeedInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -135,7 +133,6 @@ export class LightSpeedOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -181,7 +178,6 @@ export class LightSpeedOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {

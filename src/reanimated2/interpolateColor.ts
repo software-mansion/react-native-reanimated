@@ -175,6 +175,7 @@ const getInterpolateHSV = (
   return { h, s, v, a };
 };
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type interpolateColorType = <T extends string | number>(
   value: number,
   inputRange: readonly number[],
@@ -183,7 +184,6 @@ type interpolateColorType = <T extends string | number>(
   options?: InterpolationOptions
 ) => T;
 
-// seems to be easy fix
 export const interpolateColor = ((
   value: number,
   inputRange: readonly number[],
@@ -210,6 +210,8 @@ export const interpolateColor = ((
   throw new Error(
     `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
   );
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file,
+  // seems easy to fix that.
 }) as interpolateColorType;
 
 export enum ColorSpace {

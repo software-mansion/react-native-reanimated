@@ -28,6 +28,7 @@ export interface UseHandlerContext<TContext extends Context> {
   useWeb: boolean;
 }
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type useEventType = <T extends object>(
   handler: (e: T) => void,
   eventNames?: string[],
@@ -47,8 +48,10 @@ export const useEvent = function <T extends NativeEvent<T>>(
   }
 
   return initRef;
+  // TODO TYPESCRIPT This cast is to get rid of .d.ts file.
 } as unknown as useEventType;
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type useHandlerType = <T, TContext extends Context = Record<string, never>>(
   handlers: Handlers<T, TContext>,
   deps?: DependencyList
@@ -84,6 +87,7 @@ export const useHandler = function <T, TContext extends Context>(
   const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
 } as useHandlerType;
 
 // builds one big hash from multiple worklets' hashes
@@ -114,10 +118,10 @@ export function buildDependencies(
       };
     });
   } else {
-    // @ts-ignore TODO TYPESCRIPT this is implemented differently than in d.ts
     dependencies.push(buildWorkletsHash(handlersList));
   }
-  return dependencies as any; // TODO TYPESCRIPT this is temporary
+
+  return dependencies;
 }
 
 // this is supposed to work as useEffect comparison

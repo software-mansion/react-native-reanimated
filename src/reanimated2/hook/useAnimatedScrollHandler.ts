@@ -24,8 +24,10 @@ export interface ScrollHandlers<TContext extends Context> {
   onMomentumEnd?: ScrollHandler<TContext>;
 }
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 export type useAnimatedScrollHandler = <
   TContext extends Context = Record<string, never>
 >(
@@ -90,5 +92,7 @@ export const useAnimatedScrollHandler = function <TContext extends Context>(
     },
     subscribeForEvents,
     doDependenciesDiffer
+    // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
   ) as any;
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
 } as unknown as useAnimatedScrollHandler;

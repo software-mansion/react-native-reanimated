@@ -30,7 +30,8 @@ export function useScrollViewOffset(
 
   useEffect(() => {
     const viewTag = findNodeHandle(aref.current);
-    // @ts-ignore TODO TYPESCRIPT
+    // @ts-ignore TODO TYPESCRIPT This happens because of
+    // how we had to type `useEvent` to get rid of .d.ts file.
     event.current?.registerForEvents(viewTag as number);
   }, [aref.current]);
 

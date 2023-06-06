@@ -261,6 +261,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
   };
 }
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 export declare class ReanimatedKeyframe {
   constructor(definitions: Record<string, KeyframeProps>);
   duration(durationMs: number): ReanimatedKeyframe;
@@ -268,4 +269,5 @@ export declare class ReanimatedKeyframe {
   withCallback(callback: (finished: boolean) => void): ReanimatedKeyframe;
 }
 
+// TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
 export const Keyframe = InnerKeyframe as unknown as typeof ReanimatedKeyframe;

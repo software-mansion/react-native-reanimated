@@ -398,8 +398,10 @@ function checkSharedValueUsage(
   }
 }
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type AnimatedStyleProp<T> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
 
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type useAnimatedStyleType = <
   T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
 >(
@@ -532,4 +534,5 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
   } else {
     return { viewDescriptors, initial: initial, viewsRef };
   }
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
 } as useAnimatedStyleType;

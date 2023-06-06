@@ -99,7 +99,6 @@ export class ZoomInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -136,7 +135,6 @@ export class ZoomInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -173,7 +171,6 @@ export class ZoomInUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -210,7 +207,6 @@ export class ZoomInDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -389,7 +385,6 @@ export class ZoomOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -431,7 +426,6 @@ export class ZoomOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -473,7 +467,6 @@ export class ZoomOutUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
@@ -515,7 +508,6 @@ export class ZoomOutDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    // TODO TYPESCRIPT This should be temporary, it was added to get rid of .d.ts file
     return (values: EntryAnimationsValues | ExitAnimationsValues) => {
       'worklet';
       return {
