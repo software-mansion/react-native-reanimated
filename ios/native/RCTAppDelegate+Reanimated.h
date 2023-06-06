@@ -6,7 +6,7 @@
 
 @interface RCTAppDelegate (Reanimated)
 
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)swizzled_jsExecutorFactoryForBridge:(RCTBridge *)bridge;
+- (std::unique_ptr<facebook::react::JSExecutorFactory>)reanimated_jsExecutorFactoryForBridge:(RCTBridge *)bridge;
 
 @end
 

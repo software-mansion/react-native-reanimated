@@ -6,10 +6,10 @@
 
 @implementation RCTAppDelegate (Reanimated)
 
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)swizzled_jsExecutorFactoryForBridge:(RCTBridge *)bridge
+- (std::unique_ptr<facebook::react::JSExecutorFactory>)reanimated_jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
   reanimated::REAInitializer(bridge);
-  return [self swizzled_jsExecutorFactoryForBridge:bridge]; // call the original method
+  return [self reanimated_jsExecutorFactoryForBridge:bridge]; // call the original method
 }
 
 + (void)load
@@ -18,7 +18,7 @@
   dispatch_once(&onceToken, ^{
     Class cls = [self class];
     Method originalMethod = class_getInstanceMethod(cls, @selector(jsExecutorFactoryForBridge:));
-    Method swizzledMethod = class_getInstanceMethod(cls, @selector(swizzled_jsExecutorFactoryForBridge:));
+    Method swizzledMethod = class_getInstanceMethod(cls, @selector(reanimated_jsExecutorFactoryForBridge:));
     method_exchangeImplementations(originalMethod, swizzledMethod);
   });
 }
