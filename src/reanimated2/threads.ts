@@ -156,7 +156,9 @@ export function runOnJS<A extends any[], R>(
   }
   return (...args) => {
     _scheduleOnJS(
+      // @ts-ignore TODO TYPESCRIPT omitted in the past
       fun,
+      // @ts-ignore TODO TYPESCRIPT omitted in the past
       args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };

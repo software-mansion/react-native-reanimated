@@ -19,6 +19,7 @@ function Letters({ text }: LettersProps) {
   return (
     <Animated.View style={styles.line}>
       {splitLetters(text).map(({ char, key }, index) => (
+        /* @ts-ignore TODO TYPESCRIPT not sure what causes this */
         <Animated.Text
           key={key}
           style={styles.text}

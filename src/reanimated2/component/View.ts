@@ -3,15 +3,9 @@ import createAnimatedComponent from '../../createAnimatedComponent';
 import { Component } from 'react';
 import { AnimateProps } from '../helperTypes';
 
-declare class AnimatedViewType implements Component<AnimateProps<ViewProps>> {
+declare class AnimatedViewClass extends Component<AnimateProps<ViewProps>> {
   getNode(): View;
 }
+export type AnimatedView = typeof AnimatedViewClass & View;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface AnimatedViewType extends View {}
-
-// // @ts-ignore TODO TYPESCRIPT
 export const AnimatedView = createAnimatedComponent(View);
-export type AnimatedView = AnimatedViewType;
-
-// export type AnimatedView = View & AnimatedView;

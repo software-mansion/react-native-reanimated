@@ -40,6 +40,19 @@ const createCellRenderer = (
   return cellRenderer;
 };
 
+interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
+  itemLayoutAnimation?: ILayoutAnimationBuilder;
+}
+declare class ReanimatedFlatListClass<T> extends Component<
+  AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
+> {
+  getNode(): FlatList;
+}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface ReanimatedFlatListInterface<T> extends FlatList<T> {}
+
+// export type ReanimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
+
 export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
@@ -73,20 +86,9 @@ export const ReanimatedFlatList = forwardRef(
   // ) => React.ReactElement;
 );
 
-interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
-  itemLayoutAnimation?: ILayoutAnimationBuilder;
-}
-declare class ReanimatedFlatListType<T>
-  implements Component<AnimateProps<ReanimatedFlatListPropsWithLayout<T>>>
-{
-  getNode(): FlatList;
-}
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface ReanimatedFlatListType<T> extends FlatList<T> {}
+export type ReanimatedFlatListType<T> = typeof ReanimatedFlatListClass<T> &
+  ReanimatedFlatListInterface<T>;
 
-export type ReanimatedFlatList<T> = ReanimatedFlatListType<T>;
-
-// export type ReanimatedFlatList<T> = typeof ReanimatedFlatList<T> & FlatList<T>;
 const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },
   horizontallyInverted: { transform: [{ scaleX: -1 }] },

@@ -28,6 +28,7 @@ export default function AnimatedTextWidthExample() {
 
   return (
     <View style={styles.container}>
+      {/* @ts-ignore TODO TYPESCRIPT not sure what causes this */}
       <Animated.Text numberOfLines={1} style={[styles.text, animatedStyle]}>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis quis neque
         vel leo pharetra laoreet.

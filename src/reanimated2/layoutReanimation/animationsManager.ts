@@ -100,3 +100,7 @@ runOnUIImmediately(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
 })();
+
+export type LayoutAnimationsManager = ReturnType<
+  typeof createLayoutAnimationManager
+>;

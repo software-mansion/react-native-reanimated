@@ -1,5 +1,5 @@
 import { RefObject } from 'react';
-import { NativeScrollEvent } from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Context, NativeEvent, WorkletFunction } from '../commonTypes';
 import WorkletEventHandler from '../WorkletEventHandler';
 import { DependencyList } from './commonTypes';
@@ -24,7 +24,16 @@ export interface ScrollHandlers<TContext extends Context> {
   onMomentumEnd?: ScrollHandler<TContext>;
 }
 
-export function useAnimatedScrollHandler<TContext extends Context>(
+type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+export type useAnimatedScrollHandler = <
+  TContext extends Context = Record<string, never>
+>(
+  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
+  deps?: DependencyList
+) => OnScroll;
+
+export const useAnimatedScrollHandler = function <TContext extends Context>(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
 ): RefObject<WorkletEventHandler<ScrollEvent>> {
@@ -82,4 +91,4 @@ export function useAnimatedScrollHandler<TContext extends Context>(
     subscribeForEvents,
     doDependenciesDiffer
   );
-}
+} as unknown as useAnimatedScrollHandler;

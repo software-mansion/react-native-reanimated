@@ -11,11 +11,7 @@ import type {
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationType,
-  LayoutAnimationsValues,
-} from './layoutReanimation/animationBuilder';
+import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 
 declare global {
   var _WORKLET: boolean | undefined;
@@ -48,10 +44,10 @@ declare global {
   // eslint-ignore-next-line @typescript-eslint/no-explicit-any
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (
-    dataHolder: ShareableSyncDataHolderRef,
-    data: ShareableRef
+    dataHolder: ShareableSyncDataHolderRef<any>,
+    data: ShareableRef<any>
   ) => void;
-  var _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
+  var _scheduleOnJS: (fun: ShareableRef<any>, args?: ShareableRef<any>) => void;
   var _updatePropsPaper:
     | ((tag: number, name: string, updates: StyleProps | AnimatedStyle) => void)
     | undefined;
@@ -76,12 +72,11 @@ declare global {
         args: Array<unknown>
       ) => void)
     | undefined;
-  var performance: { now: () => number };
+  var performance: Performance;
   var __ErrorUtils: {
     reportFatalError: (error: Error) => void;
   };
   var _frameCallbackRegistry: FrameCallbackRegistryUI;
-  var requestAnimationFrame: (callback: (time: number) => void) => number;
   var console: Console;
   var __frameTimestamp: number | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
@@ -93,12 +88,5 @@ declare global {
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
   var _maybeFlushUIUpdatesQueue: () => void;
-  var LayoutAnimationsManager: {
-    start(
-      tag: number,
-      type: LayoutAnimationType,
-      yogaValues: LayoutAnimationsValues,
-      config: LayoutAnimationFunction
-    );
-  };
+  var LayoutAnimationsManager: LayoutAnimationsManager;
 }

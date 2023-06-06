@@ -1,4 +1,4 @@
-import {
+import type {
   ColorValue,
   MatrixTransform,
   PerpectiveTransform,
@@ -15,7 +15,7 @@ import {
   TranslateXTransform,
   TranslateYTransform,
 } from 'react-native';
-import {
+import type {
   AnimatableValue,
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
@@ -23,6 +23,7 @@ import {
   LayoutAnimationFunction,
   SharedValue,
 } from '.';
+import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 
 type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
 
@@ -87,12 +88,12 @@ export type AnimateProps<P extends object> = {
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe;
+    | ReanimatedKeyframe;
   exiting?:
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
-    | Keyframe;
+    | ReanimatedKeyframe;
   sharedTransitionTag?: string;
   sharedTransitionStyle?: ILayoutAnimationBuilder;
 };

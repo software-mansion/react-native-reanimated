@@ -21,6 +21,7 @@ if (isWeb()) {
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = (c) => c;
+// @ts-ignore TODO TYPESCRIPT this was omitted in the past
 global._scheduleOnJS = queueMicrotask;
 
 interface JSReanimatedComponent {

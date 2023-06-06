@@ -4,18 +4,22 @@ import { SharedValue } from '../commonTypes';
 import { Component } from 'react';
 import { AnimateProps } from '../helperTypes';
 
-export const AnimatedScrollView = createAnimatedComponent(ScrollView);
-
 interface AnimatedScrollViewProps extends ScrollViewProps {
   scrollViewOffset?: SharedValue<number>;
 }
-declare class AnimatedScrollViewType
-  implements Component<AnimateProps<AnimatedScrollViewProps>>
-{
+declare class AnimatedScrollViewClass extends Component<
+  AnimateProps<AnimatedScrollViewProps>
+> {
   getNode(): ScrollView;
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface AnimatedScrollViewType extends ScrollView {}
-export type AnimatedScrollView = AnimatedScrollViewType;
+interface AnimatedScrollViewInterface extends ScrollView {
+  getNode(): ScrollView;
+}
+
+export const AnimatedScrollView = createAnimatedComponent(ScrollView);
+
+export type AnimatedScrollView = typeof AnimatedScrollViewClass &
+  AnimatedScrollViewInterface;
 
 // export type AnimatedScrollView = typeof AnimatedScrollView & ScrollView;

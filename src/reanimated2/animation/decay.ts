@@ -38,7 +38,12 @@ export interface InnerDecayAnimation
   current: number;
 }
 
-export function withDecay(
+type withDecayType = (
+  userConfig: DecayConfig,
+  callback?: AnimationCallback
+) => number;
+
+export const withDecay = function (
   userConfig: DecayConfig,
   callback?: AnimationCallback
 ): Animation<DecayAnimation> {
@@ -187,4 +192,4 @@ export function withDecay(
       startTimestamp: 0,
     } as DecayAnimation;
   });
-}
+} as unknown as withDecayType;
