@@ -51,7 +51,6 @@ export default function ArticleProgressExample() {
         ref={scrollViewRef}
         scrollEventThrottle={16}
         style={styles.articleScrollView}>
-        {/* @ts-ignore TODO TYPESCRIPT text children */}
         <Animated.Text ref={textRef}>{loremIpsum}</Animated.Text>
       </Animated.ScrollView>
     </SafeAreaView>

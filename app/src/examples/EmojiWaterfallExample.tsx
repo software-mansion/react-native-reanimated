@@ -44,7 +44,6 @@ function Emoji({ emoji, progress }: EmojiProps) {
   });
 
   return (
-    /* @ts-ignore TODO TYPESCRIPT not sure what causes this */
     <Animated.Text style={[{ fontSize }, styles.text, animatedStyle]}>
       {emoji}
     </Animated.Text>

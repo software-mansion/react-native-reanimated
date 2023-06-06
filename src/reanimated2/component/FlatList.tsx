@@ -28,7 +28,7 @@ const createCellRenderer = (
   const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
       <AnimatedView
-        // @ts-ignore TODO TYPESCRIPT
+        // @ts-ignore TODO TYPESCRIPT not sure how to fix this
         layout={itemLayoutAnimation}
         onLayout={props.onLayout}
         style={cellStyle}>

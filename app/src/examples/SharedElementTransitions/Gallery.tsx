@@ -122,13 +122,11 @@ function DetailsScreen({
         style={styles.detailsImage}
       />
       <View style={styles.wrapper}>
-        {/* @ts-ignore TODO TYPESCRIPT not sure what causes this */}
         <Animated.Text
           entering={FadeIn.delay(150).duration(1000)}
           style={{ ...styles.header, fontSize: 28 }}>
           {gallery[tag].title}
         </Animated.Text>
-        {/* @ts-ignore TODO TYPESCRIPT not sure what causes this */}
         <Animated.Text
           entering={FadeIn.delay(300).duration(1000)}
           style={styles.text}>

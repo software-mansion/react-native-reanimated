@@ -1,9 +1,10 @@
 /* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
-import { Component } from 'react';
-import { findNodeHandle } from 'react-native';
+import { Component, RefObject } from 'react';
+import { ScrollView, findNodeHandle } from 'react-native';
 import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import { AnimatedRef } from './hook/commonTypes';
 import { isChromeDebugger, isWeb, shouldBeUseWeb } from './PlatformChecker';
+import { AnimatedScrollView } from './component/ScrollView';
 
 export function getTag(
   view: null | number | React.Component<any, any> | React.ComponentClass<any>
@@ -13,11 +14,16 @@ export function getTag(
 
 const isNative = !shouldBeUseWeb();
 
+// export let measure: <T extends Component>(
+//   animatedRef: AnimatedRef<T>
+// ) => MeasuredDimensions | null;
+
 export let measure: <T extends Component>(
-  animatedRef: AnimatedRef<T>
+  animatedRef: RefObject<T>
 ) => MeasuredDimensions | null;
 
 if (isWeb()) {
+  // @ts-ignore TODO TYPESCRIPT
   measure = <T extends Component>(animatedRef: AnimatedRef<T>) => {
     const element = animatedRef() as unknown as HTMLElement; // TODO: fix typing of animated refs on web
     const viewportOffset = element.getBoundingClientRect();
@@ -31,11 +37,13 @@ if (isWeb()) {
     };
   };
 } else if (isChromeDebugger()) {
+  // @ts-ignore TODO TYPESCRIPT
   measure = <T extends Component>(_animatedRef: AnimatedRef<T>) => {
     console.warn('[Reanimated] measure() cannot be used with Chrome Debugger.');
     return null;
   };
 } else {
+  // @ts-ignore TODO TYPESCRIPT
   measure = <T extends Component>(animatedRef: AnimatedRef<T>) => {
     'worklet';
     if (!_WORKLET) {
@@ -96,14 +104,22 @@ export function dispatchCommand<T extends Component>(
   _dispatchCommand!(shadowNodeWrapper, commandName, args);
 }
 
-export let scrollTo: <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+// export let scrollTo: <T extends Component>(
+//   animatedRef: AnimatedRef<T>,
+//   x: number,
+//   y: number,
+//   animated: boolean
+// ) => void;
+
+export let scrollTo: (
+  animatedRef: RefObject<ScrollView | AnimatedScrollView>,
   x: number,
   y: number,
   animated: boolean
 ) => void;
 
 if (isWeb()) {
+  // @ts-ignore TODO TYPESCRIPT
   scrollTo = <T extends Component>(
     animatedRef: AnimatedRef<T>,
     x: number,
@@ -116,6 +132,7 @@ if (isWeb()) {
     element.scrollTo({ x, y, animated });
   };
 } else if (isNative && global._IS_FABRIC) {
+  // @ts-ignore TODO TYPESCRIPT
   scrollTo = <T extends Component>(
     animatedRef: AnimatedRef<T>,
     x: number,
@@ -126,6 +143,7 @@ if (isWeb()) {
     dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
   };
 } else if (isNative) {
+  // @ts-ignore TODO TYPESCRIPT
   scrollTo = <T extends Component>(
     animatedRef: AnimatedRef<T>,
     x: number,
@@ -142,6 +160,7 @@ if (isWeb()) {
     _scrollTo(viewTag, x, y, animated);
   };
 } else {
+  // @ts-ignore TODO TYPESCRIPT
   scrollTo = <T extends Component>(
     _animatedRef: AnimatedRef<T>,
     _x: number,

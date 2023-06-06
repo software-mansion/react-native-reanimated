@@ -44,7 +44,6 @@ export default function ColorExample() {
     <View style={styles.container}>
       <Animated.View style={[styles.box1, style1]} />
       <Animated.View style={[styles.box2, style2]} />
-      {/* @ts-ignore TODO TYPESCRIPT text children */}
       <Animated.Text style={[styles.text3, style3]}>Reanimated</Animated.Text>
       <Animated.View style={[styles.box4, style4]} />
       <View style={styles.buttons}>

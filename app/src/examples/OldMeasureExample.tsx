@@ -199,7 +199,6 @@ function SectionHeader({
   } else {
     onActiveImpl = () => {
       'worklet';
-      // @ts-ignore TODO TYPESCRIPT this is the same as above
       applyMeasure(measure(animatedRef)!);
     };
   }

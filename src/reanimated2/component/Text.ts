@@ -11,4 +11,4 @@ export const AnimatedText = createAnimatedComponent(
   Text as any
 ) as unknown as AnimatedText;
 
-export type AnimatedText = typeof AnimatedTextClass & Text;
+export type AnimatedText = typeof AnimatedTextClass & AnimatedTextClass & Text;

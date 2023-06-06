@@ -36,7 +36,6 @@ function Card({
             : { height: 120, marginTop: 20, backgroundColor: 'green' }
         }
         sharedTransitionTag={transitionTag + '1'}>
-        {/* @ts-ignore TODO TYPESCRIPT not sure what causes this */}
         <Animated.Text
           sharedTransitionTag={transitionTag + '2'}
           style={{ width: '100%', height: 20 }}>
@@ -47,7 +46,6 @@ function Card({
           source={photo}
           style={{ width: '100%', height: isOpen ? 300 : 100 }}
         />
-        {/* @ts-ignore TODO TYPESCRIPT not sure what causes this */}
         <Animated.Text
           sharedTransitionTag={transitionTag + '4'}
           style={{ width: '100%', height: isOpen ? 100 : 0 }}>
