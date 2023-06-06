@@ -26,6 +26,18 @@ import {
   AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
+import {
+  AffiniteMatrixFlat,
+  AffiniteMatrix,
+  flatten,
+  multiplyMatrices,
+  scaleMatrix,
+  addMatrices,
+  decomposeMatrixIntoMatricesAndAngles,
+  isAffiniteMatrixFlat,
+  subtractMatrices,
+  getRotationMatrix,
+} from './transformationMatrix/matrixUtils';
 
 let IN_STYLE_UPDATER = false;
 
@@ -190,6 +202,88 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return finished;
   };
 
+  // START
+
+  const transformationMatrixOnStart = (
+    animation: Animation<AnimationObject>,
+    value: AffiniteMatrixFlat,
+    timestamp: Timestamp,
+    previousAnimation: Animation<AnimationObject>
+  ): void => {
+    const toValue = animation.toValue as AffiniteMatrixFlat;
+
+    animation.startMatrices = decomposeMatrixIntoMatricesAndAngles(value);
+    animation.stopMatrices = decomposeMatrixIntoMatricesAndAngles(toValue);
+
+    /** We create an animation copy to animate  single value between 0 and 100
+     **/
+    animation[0] = Object.assign({}, animationCopy);
+    animation[0].current = 0;
+    animation[0].toValue = 100;
+    animation[0].onStart(
+      animation[0],
+      0,
+      timestamp,
+      previousAnimation ? previousAnimation[0] : undefined
+    );
+
+    animation.current = value;
+  };
+  const transformationMatrixOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: Timestamp
+  ): boolean => {
+    let finished = 1;
+    finished &= animation[0].onFrame(animation[0], timestamp);
+
+    const progress = animation[0].current / 100;
+
+    function applyProgressToMatrix(
+      progress: number,
+      a: AffiniteMatrix,
+      b: AffiniteMatrix
+    ) {
+      return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
+    }
+
+    function applyProgessToNumber(progress: number, a: number, b: number) {
+      return a + progress * (b - a);
+    }
+
+    const currentTranslation = applyProgressToMatrix(
+      progress,
+      animation.startMatrices.translationMatrix,
+      animation.stopMatrices.translationMatrix
+    );
+
+    const currentScale = applyProgressToMatrix(
+      progress,
+      animation.startMatrices.scaleMatrix,
+      animation.stopMatrices.scaleMatrix
+    );
+
+    const currentAngleZ = applyProgessToNumber(
+      progress,
+      animation.startMatrices.rz,
+      animation.stopMatrices.rz
+    );
+    const rotationMatrixZ = getRotationMatrix(currentAngleZ, 'z');
+
+    const rotationMatrix = rotationMatrixZ;
+
+    const updated = flatten(
+      multiplyMatrices(
+        multiplyMatrices(currentScale, rotationMatrix),
+        currentTranslation
+      )
+    );
+    (animation.current as AffiniteMatrixFlat).forEach((_, i) => {
+      (animation.current as AffiniteMatrixFlat)[i] = updated[i];
+    });
+
+    return !!finished;
+  };
+
   const arrayOnStart = (
     animation: Animation<AnimationObject>,
     value: Array<number>,
@@ -216,7 +310,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp
   ): boolean => {
     let finished = true;
-    (animation.current as Array<number>).forEach((v, i) => {
+    (animation.current as Array<number>).forEach((_, i) => {
       // @ts-ignore: disable-next-line
       finished &= animation[i].onFrame(animation[i], timestamp);
       (animation.current as Array<number>)[i] = animation[i].current;
@@ -274,6 +368,15 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
       return;
+    } else if (isAffiniteMatrixFlat(value)) {
+      transformationMatrixOnStart(
+        animation,
+        value,
+        timestamp,
+        previousAnimation
+      );
+      animation.onFrame = transformationMatrixOnFrame;
+      return;
     } else if (Array.isArray(value)) {
       arrayOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = arrayOnFrame;
@@ -288,6 +391,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       return;
     }
     baseOnStart(animation, value, timestamp, previousAnimation);
+    value = 0;
   };
 }
 

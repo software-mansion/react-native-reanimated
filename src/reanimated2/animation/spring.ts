@@ -111,6 +111,7 @@ export function withSpring(
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.startTime &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
         previousAnimation?.dampingRatio === animation.dampingRatio

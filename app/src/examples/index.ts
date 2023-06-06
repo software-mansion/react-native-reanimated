@@ -83,6 +83,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import MatrixTransform from './MatrixTransform';
 
 interface Example {
   icon?: string;
@@ -290,6 +291,11 @@ export const EXAMPLES: Record<string, Example> = {
     screen: EmptyExample,
   },
 
+  MatrixExample: {
+    icon: '🧮',
+    title: 'useAnimatedStyle with matrix',
+    screen: MatrixTransform,
+  },
   // Old examples
 
   AnimatedStyleUpdateExample: {
