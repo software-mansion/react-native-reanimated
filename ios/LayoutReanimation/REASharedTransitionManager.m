@@ -28,7 +28,7 @@
   BOOL _isAsyncSharedTransitionConfigured;
   double _lastTransitionProgressValue;
   UIView *_droppedStack;
-  REAComputeSharedTransitionProgressAnimationForTagBlock _computeSharedTransitionProgressAnimationForTag;
+  REAUpdateSharedTransitionProgressBlock _updateSharedTransitionProgress;
 }
 
 /*
@@ -154,7 +154,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [self disableCleaningForViewTag:sourceView.reactTag];
     [self disableCleaningForViewTag:targetView.reactTag];
   }
-  [self startSharedTransition:sharedElementToRestart];
+  [self startSharedTransition:sharedElementToRestart type:SHARED_ELEMENT_TRANSITION];
 }
 
 - (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views
@@ -169,7 +169,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self orderByAnimationTypes:sharedElements];
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
-  [self startSharedTransition:_sharedElementsWithAnimation];
+  [self startSharedTransition:_sharedElementsWithAnimation type:SHARED_ELEMENT_TRANSITION];
+  [self startSharedTransition:_sharedElementsWithProgress type:SHARED_ELEMENT_TRANSITION_PROGRESS];
   return YES;
 }
 
@@ -422,32 +423,18 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
 }
 
-- (NSDictionary *)computeAnimationFrameWithProgress:(double)progress forSharedElement:(REASharedElement *)sharedElement
-{
-  NSMutableDictionary *sourceViewSnapshotValues = sharedElement.sourceViewSnapshot.values;
-  NSMutableDictionary *targetViewSnapshotValues = sharedElement.targetViewSnapshot.values;
-  NSDictionary *componentStyle = [_animationManager prepareDataForLayoutAnimatingWorklet:sourceViewSnapshotValues
-                                                                            targetValues:targetViewSnapshotValues];
-  return _computeSharedTransitionProgressAnimationForTag(
-      [sharedElement.sourceView.reactTag intValue], progress, componentStyle);
-}
-
 - (void)onScreenTransitionProgress:(double)progress
 {
   _lastTransitionProgressValue = progress;
-  NSArray<REASharedElement *> *sharedElements =
-      _isSharedProgressTransition ? _sharedElements : _sharedElementsWithProgress;
   if (!_isSharedTransitionActive) {
     return;
   }
+  NSArray<REASharedElement *> *sharedElements =
+      _isSharedProgressTransition ? _sharedElements : _sharedElementsWithProgress;
   for (REASharedElement *sharedElement in sharedElements) {
-    NSDictionary *values = [self computeAnimationFrameWithProgress:progress forSharedElement:sharedElement];
-    [_animationManager progressLayoutAnimationWithStyle:values
-                                                 forTag:sharedElement.sourceView.reactTag
-                                     isSharedTransition:YES];
-    [_animationManager progressLayoutAnimationWithStyle:values
-                                                 forTag:sharedElement.targetView.reactTag
-                                     isSharedTransition:YES];
+    int sourceViewTag = [sharedElement.sourceView.reactTag intValue];
+    int targetViewTag = [sharedElement.targetView.reactTag intValue];
+    _updateSharedTransitionProgress(sourceViewTag, targetViewTag, progress);
   }
 }
 
@@ -560,7 +547,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:_sharedElements];
-  [self startSharedTransition:_sharedElementsWithAnimation];
+  [self startSharedTransition:_sharedElementsWithAnimation type:SHARED_ELEMENT_TRANSITION];
+  [self startSharedTransition:_sharedElementsWithProgress type:SHARED_ELEMENT_TRANSITION_PROGRESS];
   [_addedSharedViews removeAllObjects];
   _isAsyncSharedTransitionConfigured = NO;
   [self onScreenTransitionProgress:0];
@@ -600,29 +588,31 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)startSharedTransition:(NSArray *)sharedElements
+- (void)startSharedTransition:(NSArray *)sharedElements type:(LayoutAnimationType)type
 {
   for (REASharedElement *sharedElement in sharedElements) {
     [self onViewTransition:sharedElement.sourceView
                     before:sharedElement.sourceViewSnapshot
-                     after:sharedElement.targetViewSnapshot];
+                     after:sharedElement.targetViewSnapshot
+                      type:type];
     [self onViewTransition:sharedElement.targetView
                     before:sharedElement.sourceViewSnapshot
-                     after:sharedElement.targetViewSnapshot];
+                     after:sharedElement.targetViewSnapshot
+                      type:type];
   }
 }
 
-- (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
+- (void)onViewTransition:(UIView *)view
+                  before:(REASnapshot *)before
+                   after:(REASnapshot *)after
+                    type:(LayoutAnimationType)type
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
   [view.superview bringSubviewToFront:view];
   NSDictionary *preparedValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
                                                                             targetValues:targetValues];
-  [_animationManager startAnimationForTag:view.reactTag
-                                     type:SHARED_ELEMENT_TRANSITION
-                               yogaValues:preparedValues
-                                    depth:@(0)];
+  [_animationManager startAnimationForTag:view.reactTag type:type yogaValues:preparedValues depth:@(0)];
 }
 
 - (void)finishSharedAnimation:(UIView *)view
@@ -769,10 +759,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)setComputeSharedTransitionProgressAnimationForTagBlock:
-    (REAComputeSharedTransitionProgressAnimationForTagBlock)block
+- (void)setUpdateSharedTransitionProgressBlock:(REAUpdateSharedTransitionProgressBlock)block
 {
-  _computeSharedTransitionProgressAnimationForTag = block;
+  _updateSharedTransitionProgress = block;
 }
 
 @end

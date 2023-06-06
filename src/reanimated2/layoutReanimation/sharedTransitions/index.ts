@@ -2,7 +2,8 @@ import { withTiming } from '../../animation';
 import {
   SharedTransitionAnimationsFunction,
   SharedTransitionAnimationsValues,
-  ProgressAnimationCallback,
+  CustomProgressAnimation,
+  ProgressAnimation,
   LayoutAnimationType,
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
@@ -19,8 +20,8 @@ export class SharedElementTransition {
   private _animationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
-  private _customProgressAnimation?: ProgressAnimationCallback = undefined;
-  private _progressAnimation?: ProgressAnimationCallback = undefined;
+  private _customProgressAnimation?: ProgressAnimation = undefined;
+  private _progressAnimation?: ProgressAnimation = undefined;
 
   public animation(
     animationFactory: AnimationFactory
@@ -30,9 +31,13 @@ export class SharedElementTransition {
   }
 
   public progressAnimation(
-    progressAnimationCallback: ProgressAnimationCallback
+    progressAnimationCallback: CustomProgressAnimation
   ): SharedElementTransition {
-    this._customProgressAnimation = progressAnimationCallback;
+    this._customProgressAnimation = (viewTag, values, progress) => {
+      'worklet';
+      const newStyles = progressAnimationCallback(values, progress);
+      _notifyAboutProgress(viewTag, newStyles, true);
+    };
     return this;
   }
 
@@ -62,7 +67,11 @@ export class SharedElementTransition {
     configureLayoutAnimations(
       viewTag,
       LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
-      progressAnimation,
+      (viewTag, progress) => {
+        'worklet';
+        const snapshot = global.LayoutAnimationsManager.getSnapshot(viewTag);
+        progressAnimation(viewTag, snapshot, progress);
+      },
       progressAnimationPriority
     );
   }
@@ -74,7 +83,7 @@ export class SharedElementTransition {
     return this._animation!;
   }
 
-  private getProgressAnimation(): ProgressAnimationCallback {
+  private getProgressAnimation(): ProgressAnimation {
     if (!this._progressAnimation) {
       this.buildProgressAnimation();
     }
@@ -136,9 +145,9 @@ export class SharedElementTransition {
       this._progressAnimation = this._customProgressAnimation;
       return;
     }
-    this._progressAnimation = (values, progress) => {
+    this._progressAnimation = (viewTag, values, progress) => {
       'worklet';
-      const output: { [key: string]: number | number[] } = {};
+      const newStyles: { [key: string]: number | number[] } = {};
       for (const propertyName of supportedProps) {
         if (propertyName === 'transform') {
           // this is not the perfect solution, but at this moment it just interpolates the whole
@@ -151,18 +160,18 @@ export class SharedElementTransition {
               progress * (targetMatrix[i] - currentMatrix[i]) +
               currentMatrix[i];
           }
-          output.transformMatrix = newMatrix;
+          newStyles.transformMatrix = newMatrix;
         } else {
           // PropertyName == propertyName with capitalized fist letter, (width -> Width)
           const PropertyName =
             propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
           const currentValue = values['current' + PropertyName] as number;
           const targetValue = values['target' + PropertyName] as number;
-          output[propertyName] =
+          newStyles[propertyName] =
             progress * (targetValue - currentValue) + currentValue;
         }
       }
-      return output;
+      _notifyAboutProgress(viewTag, newStyles, true);
     };
   }
 }

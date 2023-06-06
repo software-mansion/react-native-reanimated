@@ -127,6 +127,17 @@ export interface IExitAnimationBuilder {
 }
 
 export type ProgressAnimationCallback = (
+  viewTag: number,
+  progress: number
+) => void;
+
+export type ProgressAnimation = (
+  viewTag: number,
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => void;
+
+export type CustomProgressAnimation = (
   values: SharedTransitionAnimationsValues,
   progress: number
 ) => StyleProps;

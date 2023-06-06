@@ -140,19 +140,20 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
   }
 }
 
-jsi::Value
-LayoutAnimationsManager::computeSharedTransitionProgressAnimationForTag(
-    jsi::Runtime &rt,
-    const int viewTag,
-    const double progress,
-    const jsi::Value &snapshotValues) {
+void LayoutAnimationsManager::updateSharedTransitionProgress(
+    const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
+    const int sourceViewTag,
+    const int targetViewTag,
+    const double progress) {
   std::shared_ptr<Shareable> config;
   {
     auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-    config = getConfigsForType(SHARED_ELEMENT_TRANSITION_PROGRESS)[viewTag];
+    config =
+        getConfigsForType(SHARED_ELEMENT_TRANSITION_PROGRESS)[sourceViewTag];
   }
-  auto progressAnimation = config->getJSValue(rt).asObject(rt).asFunction(rt);
-  return progressAnimation.call(rt, snapshotValues, progress);
+  jsi::Value progressUpdater = config->getJSValue(*runtimeHelper->uiRuntime());
+  runtimeHelper->runOnUIGuarded(progressUpdater, sourceViewTag, progress);
+  runtimeHelper->runOnUIGuarded(progressUpdater, targetViewTag, progress);
 }
 
 } // namespace reanimated

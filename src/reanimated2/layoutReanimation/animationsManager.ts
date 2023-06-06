@@ -12,7 +12,7 @@ const TAG_OFFSET = 1e9;
 
 function startObservingProgress(
   tag: number,
-  sharedValue: SharedValue<number>,
+  sharedValue: SharedValue<Record<string, unknown>>,
   animationType: LayoutAnimationType
 ): void {
   'worklet';
@@ -38,6 +38,7 @@ function createLayoutAnimationManager() {
   'worklet';
   const enteringAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  const snapshot = new Map();
 
   return {
     start(
@@ -46,6 +47,11 @@ function createLayoutAnimationManager() {
       yogaValues: LayoutAnimationsValues,
       config: LayoutAnimationFunction
     ) {
+      if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
+        snapshot.set(tag, yogaValues);
+        return;
+      }
+
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 
@@ -76,6 +82,7 @@ function createLayoutAnimationManager() {
         if (finished) {
           enteringAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
+          snapshot.delete(tag);
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
@@ -92,6 +99,9 @@ function createLayoutAnimationManager() {
         return;
       }
       stopObservingProgress(tag, value, true, true);
+    },
+    getSnapshot(tag: number) {
+      return snapshot.get(tag);
     },
   };
 }

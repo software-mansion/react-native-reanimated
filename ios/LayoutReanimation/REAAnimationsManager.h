@@ -26,10 +26,8 @@ typedef void (
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
 BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
-typedef NSDictionary *_Nonnull (^REAComputeSharedTransitionProgressAnimationForTagBlock)(
-    int viewTag,
-    double progress,
-    NSDictionary *snapshotValues);
+typedef NSDictionary *_Nonnull (
+    ^REAUpdateSharedTransitionProgressBlock)(int sourceViewTag, int targetViewTag, double progress);
 
 @interface REAAnimationsManager : NSObject
 
@@ -65,8 +63,7 @@ typedef NSDictionary *_Nonnull (^REAComputeSharedTransitionProgressAnimationForT
                         type:(LayoutAnimationType)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
-- (void)setComputeSharedTransitionProgressAnimationForTagBlock:
-    (REAComputeSharedTransitionProgressAnimationForTagBlock)block;
+- (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAUpdateSharedTransitionProgressBlock)block;
 @end
 
 NS_ASSUME_NONNULL_END

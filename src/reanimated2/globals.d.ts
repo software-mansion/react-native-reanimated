@@ -36,7 +36,7 @@ declare global {
   var _log: (s: string) => void;
   var _notifyAboutProgress: (
     tag: number,
-    value: number,
+    value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
   var _notifyAboutEnd: (
@@ -100,5 +100,6 @@ declare global {
       yogaValues: LayoutAnimationsValues,
       config: LayoutAnimationFunction
     );
+    getSnapshot(tag: number): SharedTransitionAnimationsValues;
   };
 }

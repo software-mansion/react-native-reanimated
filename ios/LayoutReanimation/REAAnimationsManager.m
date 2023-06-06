@@ -581,10 +581,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _startAnimationForTag(tag, type, yogaValues, depth);
 }
 
-- (void)setComputeSharedTransitionProgressAnimationForTagBlock:
-    (REAComputeSharedTransitionProgressAnimationForTagBlock)block
+- (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAUpdateSharedTransitionProgressBlock)block
 {
-  [_sharedTransitionManager setComputeSharedTransitionProgressAnimationForTagBlock:block];
+  [_sharedTransitionManager setUpdateSharedTransitionProgressBlock:block];
 }
 
 @end
