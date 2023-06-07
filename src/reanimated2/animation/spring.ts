@@ -79,7 +79,6 @@ export function withSpring(
         else {
           animation.current = toValue;
           animation.lastTimestamp = 0;
-          console.log('STOP');
           return true;
         }
       }
