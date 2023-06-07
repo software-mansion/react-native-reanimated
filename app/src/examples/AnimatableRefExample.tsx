@@ -13,7 +13,7 @@ type SwitchProps = {
 };
 
 class Switch extends React.Component<SwitchProps> {
-  rectRef: Rect | null | undefined;
+  rectRef: Rect | null = null;
 
   // When an animated version of the Switch is created we want to animate the inner Rect instead of the outer Svg component.
   getAnimatableRef() {
