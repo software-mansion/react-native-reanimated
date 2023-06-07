@@ -23,7 +23,7 @@ export type SpringConfig = {
 
 export interface SpringConfigInner {
   useDuration: boolean;
-  isWrongConfig: boolean;
+  configIsInvalid: boolean;
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {

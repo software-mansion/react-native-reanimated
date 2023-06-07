@@ -42,7 +42,7 @@ export function withSpring(
       ...defaultConfig,
       ...userConfig,
       useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
-      isWrongConfig: false,
+      configIsInvalid: false,
     };
 
     if (
@@ -54,9 +54,9 @@ export function withSpring(
       config.restSpeedThreshold <= 2 ||
       config.mass === 0
     ) {
-      config.isWrongConfig = true;
+      config.configIsInvalid = true;
       console.warn(
-        "You have provided wrong spring config! \n If provided, values for stiffness, damping, duration and damping ratio must be greater than zero, and mass can't equal zero"
+        "You have provided invalid spring animation configuration! \n Value of stiffness, damping, duration and damping ratio must be greater than zero, and mass can't equal zero."
       );
     }
 
@@ -73,7 +73,7 @@ export function withSpring(
         return true;
       }
 
-      if (config.isWrongConfig) {
+      if (config.configIsInvalid) {
         // We don't animate wrong config
         if (config.useDuration) return false;
         else {
