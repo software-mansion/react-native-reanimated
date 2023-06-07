@@ -29,7 +29,7 @@ class Switch extends React.Component<SwitchProps> {
           width="60"
           height="300"
           fill="none"
-          stroke={'black'}
+          stroke="black"
           strokeWidth={10}
         />
         <Rect
