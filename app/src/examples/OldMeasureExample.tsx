@@ -15,6 +15,7 @@ import {
   TapGestureHandler,
   TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
+import '../types';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const sectionHeaderHeight = 40;
@@ -141,12 +142,10 @@ type MeasuredDimensions = {
   pageY: number;
 };
 function asyncMeasure(
-  // TODO TYPESCRIPT It shouldn't be declared as pure react thingy I think
   animatedRef: RefObject<React.Component>
 ): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
-      // @ts-ignore TODO TYPESCRIPT stems from the above comment
       animatedRef.current.measure?.((x, y, width, height, pageX, pageY) => {
         resolve({ x, y, width, height, pageX, pageY });
       });
