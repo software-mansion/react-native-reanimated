@@ -32,6 +32,10 @@ const NUMBER_OF_IMAGES = 4;
 const IMAGE_SIZE =
   (dimensions.width - GUTTER_WIDTH * (NUMBER_OF_IMAGES - 1)) / NUMBER_OF_IMAGES;
 
+declare global {
+  const _IS_FABRIC: boolean | undefined;
+}
+
 type ExampleImage = {
   uri: string;
   width: number;
@@ -60,13 +64,20 @@ type onItemPressFn = (
 type ImageListProps = {
   images: ExampleImage[];
   onItemPress: onItemPressFn;
+  activeImage: ActiveExampleImage | null;
 };
 
-function ImageList({ images, onItemPress }: ImageListProps) {
+function ImageList({ images, onItemPress, activeImage }: ImageListProps) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       {images.map((item, i) => (
-        <ListItem onPress={onItemPress} key={i} index={i} item={item} />
+        <ListItem
+          onPress={onItemPress}
+          key={i}
+          index={i}
+          item={item}
+          activeImage={activeImage}
+        />
       ))}
     </ScrollView>
   );
@@ -76,8 +87,9 @@ type ListItemProps = {
   item: ExampleImage;
   index: number;
   onPress: onItemPressFn;
+  activeImage: ActiveExampleImage | null;
 };
-function ListItem({ item, index, onPress }: ListItemProps) {
+function ListItem({ item, index, onPress, activeImage }: ListItemProps) {
   // @ts-ignore FIXME)TS) createAnimatedComponent type
   const ref = useRef<AnimatedImage>();
   const opacity = useSharedValue(1);
@@ -85,6 +97,8 @@ function ListItem({ item, index, onPress }: ListItemProps) {
   const containerStyle = {
     marginRight: (index + 1) % 4 === 0 ? 0 : GUTTER_WIDTH,
     marginBottom: GUTTER_WIDTH,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
   };
 
   const styles = useAnimatedStyle(() => {
@@ -99,7 +113,9 @@ function ListItem({ item, index, onPress }: ListItemProps) {
     <TouchableWithoutFeedback
       style={containerStyle}
       onPress={() => onPress(ref, item, opacity)}>
-      <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
+      {!(activeImage && activeImage.item.uri === item.uri) && (
+        <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
+      )}
     </TouchableWithoutFeedback>
   );
 }
@@ -126,7 +142,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   const { uri } = item;
 
   const headerHeight = useHeaderHeight();
-  const y = activeImage.y - headerHeight;
+  const y = activeImage.y - (global._IS_FABRIC ? 0 : headerHeight);
 
   const animationProgress = useSharedValue(0);
 
@@ -284,8 +300,11 @@ export default function LightBoxExample(): React.ReactElement {
 
   return (
     <View style={[styles.container, { height }]}>
-      <ImageList onItemPress={onItemPress} images={images} />
-
+      <ImageList
+        onItemPress={onItemPress}
+        images={images}
+        activeImage={activeImage}
+      />
       {activeImage && (
         <ImageTransition onClose={onClose} activeImage={activeImage} />
       )}
