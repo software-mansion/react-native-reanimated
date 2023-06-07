@@ -1,10 +1,9 @@
 /* global _WORKLET _measure _scrollTo _dispatchCommand _setGestureState */
 import { Component, RefObject } from 'react';
-import { ScrollView, findNodeHandle } from 'react-native';
+import { findNodeHandle } from 'react-native';
 import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import { AnimatedRef } from './hook/commonTypes';
 import { isChromeDebugger, isWeb, shouldBeUseWeb } from './PlatformChecker';
-import { AnimatedScrollView } from './component/ScrollView';
 
 export function getTag(
   view: null | number | React.Component<any, any> | React.ComponentClass<any>
@@ -110,8 +109,8 @@ export function dispatchCommand<T extends Component>(
 //   animated: boolean
 // ) => void;
 
-export let scrollTo: (
-  animatedRef: RefObject<ScrollView | AnimatedScrollView>,
+export let scrollTo: <T extends Component>(
+  animatedRef: RefObject<T>,
   x: number,
   y: number,
   animated: boolean

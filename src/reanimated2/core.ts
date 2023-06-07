@@ -21,7 +21,6 @@ import {
 import {
   LayoutAnimationFunction,
   LayoutAnimationType,
-  Keyframe,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
 import { SensorContainer } from './SensorContainer';

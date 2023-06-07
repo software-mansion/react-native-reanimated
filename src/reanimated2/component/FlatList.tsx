@@ -51,12 +51,8 @@ declare class ReanimatedFlatListClass<T> extends Component<
   getNode(): FlatList;
 }
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface ReanimatedFlatListInterface<T> extends FlatList<T> {}
-
 export type ReanimatedFlatListType<T> = typeof ReanimatedFlatListClass<T> &
-  ReanimatedFlatListInterface<T>;
+  FlatList<T>;
 
 export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
