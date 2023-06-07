@@ -21,6 +21,11 @@ export type SpringConfig = {
     }
 );
 
+export interface SpringConfigInner {
+  useDuration: boolean;
+  isWrongConfig: boolean;
+}
+
 export interface SpringAnimation extends Animation<SpringAnimation> {
   current: AnimatableValue;
   toValue: AnimatableValue;
@@ -69,7 +74,7 @@ function bisectRoot({
 
 export function initialCalculations(
   mass = 0,
-  config: Record<keyof SpringConfig | 'useDuration', any>
+  config: Record<keyof SpringConfig, any> & SpringConfigInner
 ): {
   zeta: number;
   omega0: number;
@@ -223,15 +228,13 @@ export function isAnimationTerminatingCalculation(
   'worklet';
   const { toValue, velocity, startValue, current } = animation;
 
-  const isOvershooting =
-    config.overshootClamping && config.stiffness !== 0
-      ? (current > toValue && startValue < toValue) ||
-        (current < toValue && startValue > toValue)
-      : false;
+  const isOvershooting = config.overshootClamping
+    ? (current > toValue && startValue < toValue) ||
+      (current < toValue && startValue > toValue)
+    : false;
 
   const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
   const isDisplacement =
-    config.stiffness === 0 ||
     Math.abs(toValue - current) < config.restDisplacementThreshold;
 
   return { isOvershooting, isVelocity, isDisplacement };

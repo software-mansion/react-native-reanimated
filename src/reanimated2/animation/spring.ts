@@ -14,6 +14,7 @@ import {
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
+  SpringConfigInner,
 } from './springUtils';
 
 export function withSpring(
@@ -37,11 +38,27 @@ export function withSpring(
       dampingRatio: 0.5,
     } as const;
 
-    const config = {
+    const config: Record<keyof SpringConfig, any> & SpringConfigInner = {
       ...defaultConfig,
       ...userConfig,
-      useDuration: userConfig?.duration || userConfig?.dampingRatio,
+      useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
+      isWrongConfig: false,
     };
+
+    if (
+      config.stiffness <= 0 ||
+      config.damping <= 0 ||
+      config.duration <= 0 ||
+      config.dampingRatio <= 0 ||
+      config.restDisplacementThreshold <= 0 ||
+      config.restSpeedThreshold <= 2 ||
+      config.mass === 0
+    ) {
+      config.isWrongConfig = true;
+      console.warn(
+        "You have provided wrong spring config! \n If provided, values for stiffness, damping, duration and damping ratio must be greater than zero, and mass can't equal zero"
+      );
+    }
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
       const { toValue, startTimestamp, current } = animation;
@@ -56,6 +73,16 @@ export function withSpring(
         return true;
       }
 
+      if (config.isWrongConfig) {
+        // We don't animate wrong config
+        if (config.useDuration) return false;
+        else {
+          animation.current = toValue;
+          animation.lastTimestamp = 0;
+          console.log('STOP');
+          return true;
+        }
+      }
       const { lastTimestamp, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
@@ -94,10 +121,8 @@ export function withSpring(
         isOvershooting || (isVelocity && isDisplacement);
 
       if (!config.useDuration && springIsNotInMove) {
-        if (config.stiffness !== 0) {
-          animation.velocity = 0;
-          animation.current = toValue;
-        }
+        animation.velocity = 0;
+        animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;
