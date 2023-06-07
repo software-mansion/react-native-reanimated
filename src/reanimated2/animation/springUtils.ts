@@ -81,6 +81,11 @@ export function initialCalculations(
   omega1: number;
 } {
   'worklet';
+
+  if (config.configIsInvalid) {
+    return { zeta: 0, omega0: 0, omega1: 0 };
+  }
+
   if (config.useDuration) {
     const { stiffness: k, dampingRatio: zeta } = config;
 
@@ -104,10 +109,14 @@ export function initialCalculations(
 
 export function calcuateNewMassToMatchDuration(
   x0: number,
-  config: Record<keyof SpringConfig, any>,
+  config: Record<keyof SpringConfig, any> & SpringConfigInner,
   v0: number
 ) {
   'worklet';
+  if (config.configIsInvalid) {
+    return 0;
+  }
+
   /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
        * to find the asympotote and esitmate the damping that gives us the expected duration 
 

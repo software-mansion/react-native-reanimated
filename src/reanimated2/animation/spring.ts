@@ -46,12 +46,14 @@ export function withSpring(
     };
 
     if (
-      config.stiffness <= 0 ||
-      config.damping <= 0 ||
-      config.duration <= 0 ||
-      config.dampingRatio <= 0 ||
-      config.restDisplacementThreshold <= 0 ||
-      config.restSpeedThreshold <= 2 ||
+      [
+        config.stiffness,
+        config.damping,
+        config.duration,
+        config.dampingRatio,
+        config.restDisplacementThreshold,
+        config.restSpeedThreshold,
+      ].some((x) => x <= 0) ||
       config.mass === 0
     ) {
       config.configIsInvalid = true;
@@ -60,7 +62,10 @@ export function withSpring(
       );
     }
 
-    function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
+    function springOnFrame(
+      animation: InnerSpringAnimation,
+      now: Timestamp
+    ): boolean {
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
@@ -203,7 +208,7 @@ export function withSpring(
     }
 
     return {
-      onFrame: spring,
+      onFrame: springOnFrame,
       onStart,
       toValue,
       velocity: config.velocity || 0,
