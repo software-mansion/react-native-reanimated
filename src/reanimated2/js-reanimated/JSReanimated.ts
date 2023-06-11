@@ -10,7 +10,7 @@ import { WebSensor } from './WebSensor';
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
-  platform = Platform.UNKNOWN;
+  platform?: Platform = undefined;
 
   constructor() {
     super(false);
@@ -67,7 +67,7 @@ export default class JSReanimated extends NativeReanimated {
       return -1;
     }
 
-    if (this.platform === Platform.UNKNOWN) {
+    if (this.platform === undefined) {
       this.detectPlatform();
     }
 
@@ -174,9 +174,8 @@ export default class JSReanimated extends NativeReanimated {
   detectPlatform() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     if (userAgent === undefined) {
-      return;
-    }
-    if (/iPad|iPhone|iPod/.test(userAgent)) {
+      this.platform = Platform.UNKNOWN;
+    } else if (/iPad|iPhone|iPod/.test(userAgent)) {
       this.platform = Platform.WEB_IOS;
     } else if (/android/i.test(userAgent)) {
       this.platform = Platform.WEB_ANDROID;
