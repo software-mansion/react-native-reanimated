@@ -87,8 +87,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(/some comment/);
-    expect(code).not.toMatch(/other comment/);
+    expect(code).not.toContain('some comment');
+    expect(code).not.toContain('other comment');
     expect(code).toMatchSnapshot();
   });
 
@@ -104,7 +104,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/const foo=this\._recur/);
+    expect(code).toContain('const foo=this._recur');
     expect(code).toMatchSnapshot();
   });
 
@@ -143,7 +143,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(/"worklet";/);
+    expect(code).not.toContain('"worklet";');
     expect(code).toMatchSnapshot();
   });
 
@@ -156,7 +156,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -170,8 +170,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/bar = 'worklet';/);
-    expect(code).toMatch(/baz = "worklet";/);
+    expect(code).toContain("bar = 'worklet';");
+    expect(code).toContain('baz = "worklet";');
     expect(code).toMatchSnapshot();
   });
 
@@ -189,7 +189,7 @@ describe('babel plugin', () => {
       }
     </script>`;
     const { code } = runPlugin(input);
-    expect(code).toMatch(/'worklet';/);
+    expect(code).toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -224,7 +224,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toMatch(/_f\._closure = \{\};/);
+    expect(code).not.toContain('_f._closure = {};');
     expect(code).toMatchSnapshot();
   });
 
@@ -267,7 +267,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -281,7 +281,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -295,7 +295,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -309,7 +309,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -327,7 +327,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -343,7 +343,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -359,7 +359,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -375,7 +375,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -391,7 +391,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -407,7 +407,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -423,7 +423,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -803,8 +803,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/\.\.\.\[2,3\]/);
-    expect(code).toMatch(/\.\.\.bar/);
+    expect(code).toContain('...[2,3]');
+    expect(code).toContain('...bar');
     expect(code).toMatchSnapshot();
   });
 
@@ -818,8 +818,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/\.\.\.\{b:2,c:3\}/);
-    expect(code).toMatch(/\.\.\.bar/);
+    expect(code).toContain('...{b:2,c:3}');
+    expect(code).toContain('...bar');
     expect(code).toMatchSnapshot();
   });
 
@@ -832,7 +832,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/\.\.\.args/);
+    expect(code).toContain('...args');
     expect(code).toMatchSnapshot();
   });
 
@@ -845,7 +845,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/\.\.\.arg/);
+    expect(code).toContain('...arg');
     expect(code).toMatchSnapshot();
   });
 
@@ -904,7 +904,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -924,7 +924,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData();
-    expect(code).not.toMatch(/'worklet';/);
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -1023,6 +1023,7 @@ describe('babel plugin', () => {
   it('is indempotent for common cases', () => {
     function resultIsIdempotent(input: string) {
       const firstResult = runPlugin(input).code;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const secondResult = runPlugin(firstResult!).code;
       return firstResult === secondResult;
     }
