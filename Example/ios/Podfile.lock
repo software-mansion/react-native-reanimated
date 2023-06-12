@@ -505,7 +505,7 @@ PODS:
     - React-Core
   - RNCPicker (2.4.10):
     - React-Core
-  - RNGestureHandler (2.10.0):
+  - RNGestureHandler (2.11.0):
     - React-Core
   - RNReanimated (3.3.0):
     - DoubleConversion
@@ -800,7 +800,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: b90b71f45b8b97be43bc4284e71a6af48ac9f547
   RNCMaskedView: 949696f25ec596bfc697fc88e6f95cf0c79669b6
   RNCPicker: 0bc2f0a29abcca7b7ed44a2d036aac9ab6d25700
-  RNGestureHandler: e145476da655f3dbc48ef2f0a08cf7a34338c02b
+  RNGestureHandler: 026038a97d4c8649ce397a22e162ca58b4e6c230
   RNReanimated: 2072c65be5a7fe9f704e99df2ee563c07435a719
   RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   RNSVG: 53c661b76829783cdaf9b7a57258f3d3b4c28315
