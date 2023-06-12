@@ -93,7 +93,7 @@ test('stop in the middle of animation', () => {
   expect(view).toHaveAnimatedStyle(style);
 
   fireEvent.press(button);
-  jest.advanceAnimationByTime(250); // if whole animation duration is a 500ms
+  jest.advanceTimersByTime(250); // if whole animation duration is a 500ms
   style.width = 50; // value of component width after 250ms of animation
   expect(view).toHaveAnimatedStyle(style);
 });
