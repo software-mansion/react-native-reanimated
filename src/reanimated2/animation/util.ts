@@ -250,33 +250,50 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       return a + progress * (b - a);
     }
 
-    const currentTranslation = applyProgressToMatrix(
-      progress,
-      animation.startMatrices.translationMatrix,
-      animation.stopMatrices.translationMatrix
+    const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
+    const mappedTransforms: Array<AffiniteMatrix> = [];
+
+    transforms.forEach((key, _) =>
+      mappedTransforms.push(
+        applyProgressToMatrix(
+          progress,
+          animation.startMatrices[key],
+          animation.stopMatrices[key]
+        )
+      )
     );
 
-    const currentScale = applyProgressToMatrix(
-      progress,
-      animation.startMatrices.scaleMatrix,
-      animation.stopMatrices.scaleMatrix
-    );
+    const [currentTranslation, currentScale, skewMatrix] = mappedTransforms;
 
-    const currentAngleZ = applyProgessToNumber(
-      progress,
-      animation.startMatrices.rz,
-      animation.stopMatrices.rz
-    );
-    const rotationMatrixZ = getRotationMatrix(currentAngleZ, 'z');
+    const rotations: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
+    const mappedRotations: Array<AffiniteMatrix> = [];
 
-    const rotationMatrix = rotationMatrixZ;
+    rotations.forEach((key, _) => {
+      const angle = applyProgessToNumber(
+        progress,
+        animation.startMatrices['r' + key],
+        animation.stopMatrices['r' + key]
+      );
+      mappedRotations.push(getRotationMatrix(angle, key));
+    });
+
+    const [rotationMatrixX, rotationMatrixY, rotationMatrixZ] = mappedRotations;
+
+    const rotationMatrix = multiplyMatrices(
+      rotationMatrixX,
+      multiplyMatrices(rotationMatrixY, rotationMatrixZ)
+    );
 
     const updated = flatten(
       multiplyMatrices(
-        multiplyMatrices(currentScale, rotationMatrix),
+        multiplyMatrices(
+          currentScale,
+          multiplyMatrices(skewMatrix, rotationMatrix)
+        ),
         currentTranslation
       )
     );
+
     (animation.current as AffiniteMatrixFlat).forEach((_, i) => {
       (animation.current as AffiniteMatrixFlat)[i] = updated[i];
     });

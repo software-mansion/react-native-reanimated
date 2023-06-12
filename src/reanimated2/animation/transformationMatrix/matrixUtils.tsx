@@ -11,6 +11,22 @@ export type AffiniteMatrix = FixedLengthArray<FixedLengthArray<number, 4>, 4>;
 
 export type AffiniteMatrixFlat = FixedLengthArray<number, 16>;
 
+export type TransformMatrixDecomposition = Record<
+  | 'translationMatrix'
+  | 'scaleMatrix'
+  | 'rotationMatrix'
+  | 'skewMatrix'
+  | 'scaleMatrix',
+  AffiniteMatrix
+>;
+
+interface TansformMatrixDecompositionWithAngles
+  extends TransformMatrixDecomposition {
+  rx: number;
+  ry: number;
+  rz: number;
+}
+
 export function isAffiniteMatrixFlat(x: unknown): x is AffiniteMatrixFlat {
   'worklet';
   return (
@@ -162,16 +178,16 @@ export function getRotationMatrix(
       ];
     case 'y':
       return [
-        [cos, 0, sin, 0],
-        [0, 0, 1, 0],
-        [-sin, 0, cos, 0],
+        [cos, 0, -sin, 0],
+        [0, 1, 0, 0],
+        [sin, 0, cos, 0],
         [0, 0, 0, 1],
       ];
     case 'x':
       return [
         [1, 0, 0, 0],
-        [0, cos, -sin, 0],
-        [0, sin, cos, 0],
+        [0, cos, sin, 0],
+        [0, -sin, cos, 0],
         [0, 0, 0, 1],
       ];
   }
@@ -182,10 +198,63 @@ function norm(x: number, y: number, z: number) {
   return Math.sqrt(x * x + y * y + z * z);
 }
 
-export function decomposeMatrix(_matrix: AffiniteMatrixFlat | AffiniteMatrix) {
+function transposeMatrix(_m: AffiniteMatrix): AffiniteMatrix {
+  'worklet';
+  const m = flatten(_m);
+  return [
+    [m[0], m[4], m[8], m[12]],
+    [m[1], m[5], m[9], m[13]],
+    [m[2], m[6], m[10], m[14]],
+    [m[3], m[7], m[11], m[15]],
+  ];
+}
+
+function innerProduct(a: number[], b: number[]) {
+  'worklet';
+  if (!(a.length === b.length)) {
+    console.warn(
+      `Error when evaluation inner product of ${a} and ${b}, because these arrays should have equal length`
+    );
+    return 0;
+  }
+  let output = 0;
+  a.forEach((_, i) => (output += a[i] * b[i]));
+  return output;
+}
+
+function projection(u: number[], a: number[]) {
+  'worklet';
+  const scaler = innerProduct(u, a) / innerProduct(u, u);
+  const output: Array<number> = [];
+  u.forEach((e) => output.push(e * scaler));
+  return output;
+}
+
+function subtract(a: number[], b: number[]) {
+  'worklet';
+  const output: Array<number> = [];
+  a.forEach((_, i) => output.push(a[i] - b[i]));
+  return output;
+}
+
+function scale(u: number[], a: number) {
+  'worklet';
+  const output: Array<number> = [];
+  u.forEach((e) => output.push(e * a));
+  return output;
+}
+
+export function decomposeMatrix(
+  _matrix: AffiniteMatrixFlat | AffiniteMatrix
+): TransformMatrixDecomposition {
   'worklet';
 
   const matrix: AffiniteMatrixFlat = maybeFlattenMatrix(_matrix);
+
+  // Normalize matrix
+  const lastElement: number = matrix[15];
+  if (lastElement === 0) console.error('Invalid transform matrix!');
+  _matrix.forEach((_, index) => (matrix[index] /= lastElement));
 
   const translationMatrix: AffiniteMatrix = [
     [1, 0, 0, 0],
@@ -211,22 +280,93 @@ export function decomposeMatrix(_matrix: AffiniteMatrixFlat | AffiniteMatrix) {
     [0, 0, 0, 1],
   ];
 
-  return { translationMatrix, scaleMatrix, rotationMatrix };
+  // Graham Shmidt Algorithm
+  const a1 = rotationMatrix[0];
+  const a2 = rotationMatrix[1];
+  const a3 = rotationMatrix[2];
+  const a4 = rotationMatrix[3];
+
+  const u1 = a1;
+  const u2 = subtract(a2, projection(u1, a2));
+  const u3 = subtract(subtract(a3, projection(u1, a3)), projection(u2, a3));
+  const u4 = subtract(
+    subtract(subtract(a4, projection(u1, a4)), projection(u2, a4)),
+    projection(u3, a4)
+  );
+
+  const e1 = scale(u1, 1 / Math.sqrt(innerProduct(u1, u1)));
+  const e2 = scale(u2, 1 / Math.sqrt(innerProduct(u2, u2)));
+  const e3 = scale(u3, 1 / Math.sqrt(innerProduct(u3, u3)));
+  const e4 = scale(u4, 1 / Math.sqrt(innerProduct(u4, u4)));
+
+  const newRotationMatrix: AffiniteMatrix = [
+    [e1[0], e2[0], e3[0], e4[0]],
+    [e1[1], e2[1], e3[1], e4[1]],
+    [e1[2], e2[2], e3[2], e4[2]],
+    [e1[3], e2[3], e3[3], e4[3]],
+  ];
+
+  const skewMatrix: AffiniteMatrix = [
+    [
+      innerProduct(e1, a1),
+      innerProduct(e1, a2),
+      innerProduct(e1, a3),
+      innerProduct(e1, a4),
+    ],
+    [0, innerProduct(e2, a2), innerProduct(e2, a3), innerProduct(e2, a4)],
+    [0, 0, innerProduct(e3, a3), innerProduct(e3, a4)],
+    [0, 0, 0, innerProduct(e4, a4)],
+  ];
+
+  console.log(
+    multiplyMatrices(
+      multiplyMatrices(
+        scaleMatrix,
+        multiplyMatrices(
+          transposeMatrix(skewMatrix),
+          transposeMatrix(newRotationMatrix)
+        )
+      ),
+      translationMatrix
+    ),
+    unflatten(matrix)
+  );
+
+  return {
+    translationMatrix,
+    scaleMatrix,
+    rotationMatrix: transposeMatrix(newRotationMatrix),
+    skewMatrix: transposeMatrix(skewMatrix),
+  };
 }
 
 export function decomposeMatrixIntoMatricesAndAngles(
   _matrix: AffiniteMatrixFlat | AffiniteMatrix
-) {
+): TansformMatrixDecompositionWithAngles {
   'worklet';
-  const { scaleMatrix, rotationMatrix, translationMatrix } =
+  const { scaleMatrix, rotationMatrix, translationMatrix, skewMatrix } =
     decomposeMatrix(_matrix);
 
-  /** We want to find angle of rotation around each axes
-   * R_z(α), R_y(β), R_x(γ) */
+  const sinRy = -rotationMatrix[0][2];
 
-  const ry = Math.asin(-flatten(rotationMatrix)[2]);
-  const rx = Math.asin(flatten(rotationMatrix)[6] / Math.cos(ry));
-  const rz = Math.asin(flatten(rotationMatrix)[1] / Math.cos(ry));
+  const ry = Math.asin(sinRy);
+  let rx;
+  let rz;
+  if (sinRy === 1 || sinRy === -1) {
+    rz = 0;
+    rx = Math.atan2(sinRy * rotationMatrix[0][1], sinRy * rotationMatrix[0][2]);
+  } else {
+    rz = Math.atan2(rotationMatrix[0][1], rotationMatrix[0][0]);
+    rx = Math.atan2(rotationMatrix[1][2], rotationMatrix[2][2]);
+  }
 
-  return { scaleMatrix, rotationMatrix, translationMatrix, rx, ry, rz };
+  return {
+    scaleMatrix,
+    rotationMatrix,
+    translationMatrix,
+    skewMatrix,
+    rx: rx || 0,
+    ry: ry || 0,
+    rz: rz || 0,
+  };
 }

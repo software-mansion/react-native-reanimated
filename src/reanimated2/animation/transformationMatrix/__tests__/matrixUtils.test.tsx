@@ -150,32 +150,31 @@ describe('Matrix decomposition', () => {
       [0, 0, 0, 1],
     ];
 
-    const { translationMatrix, scaleMatrix, rotationMatrix } = decomposeMatrix(
-      flatten(identityMatrix)
-    );
+    const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =
+      decomposeMatrix(flatten(identityMatrix));
 
     expect(translationMatrix).toEqual(identityMatrix);
     expect(scaleMatrix).toEqual(identityMatrix);
     expect(rotationMatrix).toEqual(identityMatrix);
+    expect(skewMatrix).toEqual(identityMatrix);
   });
 
   it('Decompose any matrix ', () => {
-    const consequitiveNumMatrix: AffiniteMatrix = [
-      [1, 2, 3, 0],
-      [5, 6, 7, 0],
-      [9, 10, 11, 0],
-      [12, 13, 14, 1],
+    const m2: AffiniteMatrixFlat = [
+      1, 2, 3, 0, 1, 1, 1, 0, 1, 2, 0, 0, 4, 5, 6, 1,
     ];
 
-    const { translationMatrix, scaleMatrix, rotationMatrix } = decomposeMatrix(
-      flatten(consequitiveNumMatrix)
-    );
+    const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =
+      decomposeMatrix(m2);
 
-    expect(
+    flatten(
       multiplyMatrices(
-        multiplyMatrices(scaleMatrix, rotationMatrix),
+        multiplyMatrices(
+          scaleMatrix,
+          multiplyMatrices(skewMatrix, rotationMatrix)
+        ),
         translationMatrix
       )
-    ).toEqual(consequitiveNumMatrix);
+    ).forEach((v, i) => expect(v).toBeCloseTo(m2[i]));
   });
 });
