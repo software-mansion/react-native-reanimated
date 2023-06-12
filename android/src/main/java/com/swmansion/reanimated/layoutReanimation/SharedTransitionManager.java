@@ -85,7 +85,9 @@ public class SharedTransitionManager {
                   | IllegalAccessException ignored) {
               }
             } else if (event.getEventName().equals("topFinishTransitioning")) {
-              screenTransitionFinished();
+              // to avoid modification children list during iteration over them by internal
+              // Android logic, this method needs to be executed after the current frame is drawn
+              mTransitionContainer.post(this::screenTransitionFinished);
             }
           });
     }
@@ -109,12 +111,7 @@ public class SharedTransitionManager {
       if (!animationStarted) {
         mRemovedSharedViews.clear();
       }
-//      ConfigCleanerTreeVisitor configCleanerTreeVisitor = new ConfigCleanerTreeVisitor();
-//      for (View removedSharedView : mRemovedSharedViews) {
-//        visitTree(removedSharedView, configCleanerTreeVisitor);
-//      }
-//      mRemovedSharedViews.clear();
-//      visitTreeForTags(tagsToDelete, configCleanerTreeVisitor);
+      visitTreeForTags(tagsToDelete, new ConfigCleanerTreeVisitor());
     } else if (mCurrentSharedTransitionViews.size() > 0) {
       // this happens when navigation goes back and previous shared animation is still running
       List<View> viewsWithNewTransition = new ArrayList<>();
@@ -219,7 +216,8 @@ public class SharedTransitionManager {
         disableCleaningForViewTag(targetView.getId());
       }
     }
-    startSharedTransition(sharedElementsToRestart, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
+    startSharedTransition(
+        sharedElementsToRestart, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
   }
 
   private boolean tryStartSharedTransitionForViews(
@@ -236,8 +234,10 @@ public class SharedTransitionManager {
     setupTransitionContainer();
     reparentSharedViewsForCurrentTransition(sharedElements);
     orderByAnimationTypes(sharedElements);
-    startSharedTransition(mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
-    startSharedTransition(mSharedElementsWithProgress, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
+    startSharedTransition(
+        mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
+    startSharedTransition(
+        mSharedElementsWithProgress, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION_PROGRESS);
     return true;
   }
 
@@ -501,9 +501,7 @@ public class SharedTransitionManager {
       if (mTransitionContainer != null) {
         ViewParent transitionContainerParent = mTransitionContainer.getParent();
         if (transitionContainerParent != null) {
-          Log.v("a", "a");
           ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
-          Log.v("a", "a");
         }
       }
       mSharedElements.clear();

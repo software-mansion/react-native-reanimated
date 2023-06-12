@@ -42,6 +42,9 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
 
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
+  if (groupName.empty()) {
+    return;
+  }
   auto &group = sharedTransitionGroups_[groupName];
   auto position = std::find(group.begin(), group.end(), tag);
   if (position != group.end()) {
