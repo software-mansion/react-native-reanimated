@@ -11,11 +11,15 @@ interface HostInstance {
 }
 
 let findHostInstance_DEPRECATED: (ref: React.Component) => HostInstance;
-try {
-  findHostInstance_DEPRECATED =
-    require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
-} catch (e) {
-  throw new Error('[Reanimated] Cannot import `findHostInstance_DEPRECATED`.');
+if (global._IS_FABRIC) {
+  try {
+    findHostInstance_DEPRECATED =
+      require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
+  } catch (e) {
+    throw new Error(
+      '[Reanimated] Cannot import `findHostInstance_DEPRECATED`.'
+    );
+  }
 }
 
 export function getShadowNodeWrapperFromRef(
