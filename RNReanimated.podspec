@@ -96,4 +96,8 @@ Pod::Spec.new do |s|
   else
     s.dependency 'React-callinvoker'
   end
+
+  if config[:react_native_minor_version] >= 72 && !fabric_enabled
+    s.dependency 'React-RCTAppDelegate'
+  end
 end
