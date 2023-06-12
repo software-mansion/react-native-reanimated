@@ -1101,7 +1101,7 @@ PODS:
     - React-Core
   - RNCPicker (2.4.10):
     - React-Core
-  - RNGestureHandler (2.10.0):
+  - RNGestureHandler (2.11.0):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1109,10 +1109,11 @@ PODS:
     - React-Codegen
     - React-RCTFabric
     - ReactCommon/turbomodule/core
-  - RNReanimated (3.2.0):
+  - RNReanimated (3.3.0):
     - DoubleConversion
     - FBLazyVector
     - glog
+    - hermes-engine
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1123,6 +1124,7 @@ PODS:
     - React-Core/RCTWebSocket
     - React-CoreModules
     - React-cxxreact
+    - React-hermes
     - React-jsi
     - React-jsiexecutor
     - React-jsinspector
@@ -1426,7 +1428,7 @@ SPEC CHECKSUMS:
   React-perflogger: fdd8c2969761105b1c85432fecdfff0616100cc6
   React-RCTActionSheet: 5aaa270460794991553f80d393bcdcb97a372273
   React-RCTAnimation: f1e0d1a03ce881c0e45fa151b63b1fd8d4068841
-  React-RCTAppDelegate: 70cfc996c623b94665dd4145420055a7b1147204
+  React-RCTAppDelegate: 54280f832c1656a828b6638d65a58bccebb11532
   React-RCTBlob: 5d83c1bd6d0b88b308f65a61685fac6cc9b58e84
   React-RCTFabric: f02272ef350bab1079393ccbd7e0a39088abbbfc
   React-RCTImage: 84508714b0a1858ae4aca6671bc7b4b19294f430
@@ -1443,8 +1445,8 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: b90b71f45b8b97be43bc4284e71a6af48ac9f547
   RNCMaskedView: 949696f25ec596bfc697fc88e6f95cf0c79669b6
   RNCPicker: 0bc2f0a29abcca7b7ed44a2d036aac9ab6d25700
-  RNGestureHandler: 8c8ccd3eb5a8d7b79b79c35635095687845c5534
-  RNReanimated: 2981a4459dc88e45d4a53907c0b4016843b4b65f
+  RNGestureHandler: 764b9390ddaa6dc5be66cd248859c7638438e8b3
+  RNReanimated: 30b0a8bb00d68cb215e2c72fbace23cb15ee0235
   RNScreens: 4666ca0a74ee229b2332c5d22d2a8b81ba9202be
   RNSVG: a9204714b832d82b483b0cbaee9e675646426b8d
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
@@ -1453,4 +1455,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: aa6908dfa38be86281ee11bf70805ff4622ae1c6
 
-COCOAPODS: 1.12.0
+COCOAPODS: 1.12.1
