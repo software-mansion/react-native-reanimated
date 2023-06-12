@@ -71,6 +71,9 @@ export class SharedElementTransition {
         'worklet';
         const snapshot = global.LayoutAnimationsManager.getSnapshot(viewTag);
         progressAnimation(viewTag, snapshot, progress);
+        if (progress == 1) {
+          global.LayoutAnimationsManager.removeSnapshot(viewTag);
+        }
       },
       progressAnimationPriority
     );

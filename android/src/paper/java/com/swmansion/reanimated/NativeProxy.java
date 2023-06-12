@@ -118,16 +118,15 @@ public class NativeProxy extends NativeProxyCommon {
             }
 
             @Override
-            public Map<String, Object> computeSharedTransitionProgressAnimationForTag(int viewTag, double progress, Map<String, Object> snapshotValues) {
+            public void updateSharedTransitionProgress(int sourceViewTag, int targetViewTag, double progress) {
                 LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
                 if (layoutAnimations != null) {
-                    return layoutAnimations.computeSharedTransitionProgressAnimationForTag(
-                        viewTag,
-                        progress,
-                        snapshotValues
+                    layoutAnimations.updateSharedTransitionProgress(
+                        sourceViewTag,
+                        targetViewTag,
+                        progress
                     );
                 }
-                return null;
             }
         };
     }

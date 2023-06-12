@@ -49,8 +49,8 @@ public class LayoutAnimations {
 
   public native int findPrecedingViewTagForTransition(int tag);
 
-  public native Map<String, Object> computeSharedTransitionProgressAnimationForTag(
-      int viewTag, double progress, Map<String, Object> snapshotValues);
+  public native void updateSharedTransitionProgress(
+      int sourceViewTag, int targetViewTag, double progress);
 
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     AnimationsManager animationsManager = getAnimationsManager();

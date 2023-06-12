@@ -245,7 +245,7 @@ void NativeProxy::updateProps(
   method(
       javaPart_.get(),
       viewTag,
-      JNIHelper::convertJSIObjectToJNIMap(rt, props).get());
+      JNIHelper::ConvertToPropsMap(rt, props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
@@ -389,7 +389,7 @@ void NativeProxy::progressLayoutAnimation(
     const jsi::Object &newProps,
     bool isSharedTransition) {
   auto &rt = *nativeReanimatedModule_->runtime;
-  auto newPropsJNI = JNIHelper::convertJSIObjectToJNIMap(rt, newProps);
+  auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
 }
@@ -569,25 +569,16 @@ void NativeProxy::setupLayoutAnimations() {
         }
       });
 
-  layoutAnimations_->cthis()->setComputeSharedTransitionProgressAnimationForTag(
-      [weakModule](
-          const int viewTag,
-          const double progress,
-          const jni::alias_ref<JMap<JString, JObject>> snapshotValues)
-          -> jni::local_ref<JMap<JString, JObject>> {
-        if (auto module = weakModule.lock()) {
-          jsi::Runtime &rt = *module->runtime;
-          jsi::Value convertedValues =
-              JNIHelper::convertJNIMapToJSIObject(rt, snapshotValues);
-          jsi::Value animationFrameData =
-              module->layoutAnimationsManager()
-                  .computeSharedTransitionProgressAnimationForTag(
-                      rt, viewTag, progress, convertedValues);
-          return JNIHelper::convertJSIObjectToJNIMap(
-              rt, animationFrameData.asObject(rt));
-        }
-        return nullptr;
-      });
+  layoutAnimations_->cthis()->setUpdateSharedTransitionProgressBlock(
+    [weakModule](
+      const int sourceViewTag,
+      const int targetViewTag,
+      const double progress) {
+      if (auto module = weakModule.lock()) {
+        module->layoutAnimationsManager()
+          .updateSharedTransitionProgress(module->runtimeHelper, sourceViewTag, targetViewTag, progress);
+      }
+    });
 }
 
 } // namespace reanimated

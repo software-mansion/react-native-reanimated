@@ -20,15 +20,15 @@ void JNIHelper::PropsMap::put(
   method(self(), jni::make_jstring(key), object);
 }
 
-jni::local_ref<JNIHelper::PropsMap> JNIHelper::convertJSIObjectToJNIMap(
+jni::local_ref<JNIHelper::PropsMap> JNIHelper::ConvertToPropsMap(
     jsi::Runtime &rt,
-    const jsi::Object &jsiObject) {
+    const jsi::Object &props) {
   auto map = PropsMap::create();
 
-  auto propNames = jsiObject.getPropertyNames(rt);
+  auto propNames = props.getPropertyNames(rt);
   for (size_t i = 0, size = propNames.size(rt); i < size; i++) {
     auto jsiKey = propNames.getValueAtIndex(rt, i).asString(rt);
-    auto value = jsiObject.getProperty(rt, jsiKey);
+    auto value = props.getProperty(rt, jsiKey);
     auto key = jsiKey.utf8(rt);
     if (value.isUndefined() || value.isNull()) {
       map->put(key, nullptr);
@@ -48,51 +48,12 @@ jni::local_ref<JNIHelper::PropsMap> JNIHelper::convertJSIObjectToJNIMap(
         map->put(
             key,
             ReadableNativeMap::newObjectCxxArgs(
-                jsi::dynamicFromValue(rt, value)));
+              jsi::dynamicFromValue(rt, value)));
+        }
       }
     }
-  }
-  return map;
-}
 
-jsi::Object JNIHelper::convertJNIMapToJSIObject(
-    jsi::Runtime &rt,
-    const jni::alias_ref<JMap<JString, JObject>> jniMap) {
-  static const auto integerClass = jni::JInteger::javaClassStatic();
-  static const auto doubleClass = jni::JDouble::javaClassStatic();
-  static const auto floatClass = jni::JFloat::javaClassStatic();
-  static const auto stringClass = jni::JString::javaClassStatic();
-  static const auto arrayFloatClass = jni::JList<JFloat>::javaClassStatic();
-
-  auto object = jsi::Object(rt);
-  for (const auto &[jniKey, jniValue] : *jniMap) {
-    auto key = jniKey->toStdString();
-    if (jniValue->isInstanceOf(integerClass)) {
-      object.setProperty(
-          rt, key.c_str(), jni::static_ref_cast<JInteger>(jniValue)->value());
-    } else if (jniValue->isInstanceOf(doubleClass)) {
-      object.setProperty(
-          rt, key.c_str(), jni::static_ref_cast<JDouble>(jniValue)->value());
-    } else if (jniValue->isInstanceOf(floatClass)) {
-      object.setProperty(
-          rt, key.c_str(), jni::static_ref_cast<JFloat>(jniValue)->value());
-    } else if (jniValue->isInstanceOf(stringClass)) {
-      auto jsiValue = jsi::String::createFromUtf8(
-          rt, jni::static_ref_cast<JString>(jniValue)->toStdString());
-      object.setProperty(rt, key.c_str(), jsiValue);
-    }
-    if (jniValue->isInstanceOf(arrayFloatClass)) {
-      auto floatArray = jni::static_ref_cast<JList<JFloat>>(jniValue);
-      unsigned int arraySize = floatArray->size();
-      jsi::Array jsiArray(rt, arraySize);
-      size_t i = 0;
-      for (const auto &item : *floatArray) {
-        jsiArray.setValueAtIndex(rt, i++, item->value());
-      }
-      object.setProperty(rt, key.c_str(), jsiArray);
-    }
+    return map;
   }
-  return object;
-}
 
 }; // namespace reanimated

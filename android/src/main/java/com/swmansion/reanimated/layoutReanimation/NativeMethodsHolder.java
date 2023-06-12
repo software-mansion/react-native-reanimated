@@ -16,6 +16,5 @@ public interface NativeMethodsHolder {
 
   int findPrecedingViewTagForTransition(int tag);
 
-  Map<String, Object> computeSharedTransitionProgressAnimationForTag(
-      int viewTag, double progress, Map<String, Object> snapshotValues);
+  void updateSharedTransitionProgress(int sourceViewTag, int targetViewTag, double progress);
 }

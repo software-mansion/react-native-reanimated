@@ -145,7 +145,6 @@ export default function ImageStackExample() {
       <Stack.Screen
         name="Screen2"
         component={ScreenTwo}
-        options={{ animation: 'none' }}
       />
       <Stack.Screen name="Screen3" component={ScreenThree} />
     </Stack.Navigator>

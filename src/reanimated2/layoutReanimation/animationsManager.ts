@@ -82,7 +82,6 @@ function createLayoutAnimationManager() {
         if (finished) {
           enteringAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
-          snapshot.delete(tag);
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, finished, shouldRemoveView);
         }
@@ -102,6 +101,9 @@ function createLayoutAnimationManager() {
     },
     getSnapshot(tag: number) {
       return snapshot.get(tag);
+    },
+    removeSnapshot(tag: number) {
+      return snapshot.delete(tag);
     },
   };
 }

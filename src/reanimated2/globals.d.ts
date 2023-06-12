@@ -101,5 +101,6 @@ declare global {
       config: LayoutAnimationFunction
     );
     getSnapshot(tag: number): SharedTransitionAnimationsValues;
+    removeSnapshot(tag: number);
   };
 }
