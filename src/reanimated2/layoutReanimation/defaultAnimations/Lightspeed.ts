@@ -3,10 +3,9 @@ import {
   ComplexAnimationBuilder,
   BaseAnimationBuilder,
 } from '../animationBuilder';
-import {
-  EntryAnimationsValues,
+import type {
+  EntryExitAnimationsValues,
   EntryExitAnimationFunction,
-  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
@@ -28,7 +27,7 @@ export class LightSpeedInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -81,7 +80,7 @@ export class LightSpeedInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -133,7 +132,7 @@ export class LightSpeedOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -178,7 +177,7 @@ export class LightSpeedOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {

@@ -1,8 +1,9 @@
-import {
+import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
   EntryAnimationsValues,
   ExitAnimationsValues,
+  EntryExitAnimationsValues,
   AnimationConfigFunction,
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
@@ -99,7 +100,7 @@ export class ZoomInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -135,7 +136,7 @@ export class ZoomInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -171,7 +172,7 @@ export class ZoomInUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -207,7 +208,7 @@ export class ZoomInDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -385,7 +386,7 @@ export class ZoomOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -426,7 +427,7 @@ export class ZoomOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -467,7 +468,7 @@ export class ZoomOutUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -508,7 +509,7 @@ export class ZoomOutDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {

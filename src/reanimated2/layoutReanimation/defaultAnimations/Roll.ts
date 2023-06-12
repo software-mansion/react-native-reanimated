@@ -2,10 +2,9 @@ import {
   ComplexAnimationBuilder,
   BaseAnimationBuilder,
 } from '../animationBuilder';
-import {
-  EntryAnimationsValues,
+import type {
+  EntryExitAnimationsValues,
   EntryExitAnimationFunction,
-  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
@@ -26,7 +25,7 @@ export class RollInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -65,7 +64,7 @@ export class RollInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -101,7 +100,7 @@ export class RollOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -142,7 +141,7 @@ export class RollOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {

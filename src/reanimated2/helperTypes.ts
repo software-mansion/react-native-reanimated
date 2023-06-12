@@ -8,20 +8,8 @@ This will not be easy though!
 
 import type {
   ColorValue,
-  MatrixTransform,
-  PerpectiveTransform,
-  RotateTransform,
-  RotateXTransform,
-  RotateYTransform,
-  RotateZTransform,
-  ScaleTransform,
-  ScaleXTransform,
-  ScaleYTransform,
-  SkewXTransform,
-  SkewYTransform,
   StyleProp,
-  TranslateXTransform,
-  TranslateYTransform,
+  TransformsStyle as RNTransformsStyle,
 } from 'react-native';
 import type {
   AnimatableValue,
@@ -39,25 +27,7 @@ type AdaptTransforms<T> = {
   [P in keyof T]: Adaptable<T[P]>;
 };
 
-interface TransformsStyle {
-  transform?:
-    | (
-        | PerpectiveTransform
-        | RotateTransform
-        | RotateXTransform
-        | RotateYTransform
-        | RotateZTransform
-        | ScaleTransform
-        | ScaleXTransform
-        | ScaleYTransform
-        | TranslateXTransform
-        | TranslateYTransform
-        | SkewXTransform
-        | SkewYTransform
-        | MatrixTransform
-      )[]
-    | undefined;
-}
+type TransformsStyle = Pick<RNTransformsStyle, 'transform'>;
 
 type TransformStyleTypes = TransformsStyle['transform'] extends
   | readonly (infer T)[]
@@ -82,6 +52,12 @@ type StylesOrDefault<T> = 'style' extends keyof T
   ? T['style']
   : Record<string, unknown>;
 
+type EntryOrExitLayoutType =
+  | BaseAnimationBuilder
+  | typeof BaseAnimationBuilder
+  | EntryExitAnimationFunction
+  | ReanimatedKeyframe;
+
 export type AnimateProps<P extends object> = {
   [K in keyof Omit<P, 'style'>]: P[K] | SharedValue<P[K]>;
 } & {
@@ -92,16 +68,8 @@ export type AnimateProps<P extends object> = {
     | BaseAnimationBuilder
     | LayoutAnimationFunction
     | typeof BaseAnimationBuilder;
-  entering?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | ReanimatedKeyframe;
-  exiting?:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
-    | ReanimatedKeyframe;
+  entering?: EntryOrExitLayoutType;
+  exiting?: EntryOrExitLayoutType;
   sharedTransitionTag?: string;
   sharedTransitionStyle?: ILayoutAnimationBuilder;
 };

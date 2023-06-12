@@ -2,7 +2,7 @@ import {
   ComplexAnimationBuilder,
   BaseAnimationBuilder,
 } from '../animationBuilder';
-import {
+import type {
   EntryAnimationsValues,
   ExitAnimationsValues,
   AnimationConfigFunction,

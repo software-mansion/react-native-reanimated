@@ -1,4 +1,4 @@
-import {
+import type {
   EntryAnimationsValues,
   ExitAnimationsValues,
   AnimationConfigFunction,

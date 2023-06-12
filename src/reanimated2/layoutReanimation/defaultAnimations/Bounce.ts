@@ -1,7 +1,6 @@
-import {
-  EntryAnimationsValues,
+import type {
   EntryExitAnimationFunction,
-  ExitAnimationsValues,
+  EntryExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 import { withSequence, withTiming } from '../../animation';
@@ -9,7 +8,6 @@ import {
   ComplexAnimationBuilder,
   BaseAnimationBuilder,
 } from '../animationBuilder';
-
 export class BounceIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
@@ -88,7 +86,7 @@ export class BounceInDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -145,7 +143,7 @@ export class BounceInUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -198,7 +196,7 @@ export class BounceInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -251,7 +249,7 @@ export class BounceInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -357,7 +355,7 @@ export class BounceOutDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -412,7 +410,7 @@ export class BounceOutUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -467,7 +465,7 @@ export class BounceOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -522,7 +520,7 @@ export class BounceOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values: EntryAnimationsValues | ExitAnimationsValues) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
