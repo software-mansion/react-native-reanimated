@@ -241,6 +241,7 @@ type Options<P> = {
 interface ComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => ComponentRef;
+  getAnimatableRef?: () => ComponentRef;
 }
 
 export interface InitialComponentProps extends Record<string, unknown> {
@@ -312,7 +313,7 @@ export default function createAnimatedComponent(
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -320,6 +321,9 @@ export default function createAnimatedComponent(
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
+          if (viewTag === null) {
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
           prop.current.registerForEvents(viewTag as number, key);
         }
       }
@@ -374,8 +378,7 @@ export default function createAnimatedComponent(
         }
       }
 
-      const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = null;
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -384,6 +387,10 @@ export default function createAnimatedComponent(
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
         ) {
+          if (viewTag === null) {
+            const node = this._getEventViewRef();
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
           prop.current.registerForEvents(viewTag as number, key);
           prop.current.reattachNeeded = false;
         }
@@ -405,14 +412,19 @@ export default function createAnimatedComponent(
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       let viewConfig;
+      // Component can specify ref which should be animated when animated version of the component is created.
+      // Otherwise, we animate the component itself.
+      const component = this._component?.getAnimatableRef
+        ? this._component.getAnimatableRef()
+        : this;
       if (Platform.OS === 'web') {
-        viewTag = findNodeHandle(this);
+        viewTag = findNodeHandle(component);
         viewName = null;
         shadowNodeWrapper = null;
         viewConfig = null;
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
-        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
         if (!hostInstance) {
           throw new Error(
             'Cannot find host instance for this component. Maybe it renders nothing?'

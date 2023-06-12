@@ -1,7 +1,8 @@
+import React, { Component, ForwardedRef, forwardRef, RefObject } from 'react';
 import { ScrollView, ScrollViewProps } from 'react-native';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import { SharedValue } from '../commonTypes';
-import { Component } from 'react';
+import { useScrollViewOffset, useAnimatedRef } from '../hook';
 import { AnimateProps } from '../helperTypes';
 
 interface AnimatedScrollViewProps extends ScrollViewProps {
@@ -20,7 +21,26 @@ interface AnimatedScrollViewInterface extends ScrollView {
   getNode(): ScrollView;
 }
 
-export const AnimatedScrollView = createAnimatedComponent(ScrollView);
+const AnimatedScrollViewComponent = createAnimatedComponent(
+  ScrollView as any
+) as any;
+
+type AnimatedScrollViewFC = React.FC<AnimatedScrollViewProps>;
+
+export const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
+  (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
+    const { scrollViewOffset, ...restProps } = props;
+    const aref = ref === null ? useAnimatedRef<ScrollView>() : ref;
+
+    if (scrollViewOffset) {
+      useScrollViewOffset(
+        aref as RefObject<AnimatedScrollView>,
+        scrollViewOffset
+      );
+    }
+    return <AnimatedScrollViewComponent ref={aref} {...restProps} />;
+  }
+);
 
 export type AnimatedScrollView = typeof AnimatedScrollViewClass &
   AnimatedScrollViewInterface;

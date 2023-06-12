@@ -16,9 +16,12 @@ const scrollEventNames = [
 ];
 
 export function useScrollViewOffset(
-  aref: RefObject<Animated.ScrollView>
+  aref: RefObject<Animated.ScrollView>,
+  initialRef?: SharedValue<number>
 ): SharedValue<number> {
-  const offsetRef = useRef(useSharedValue(0));
+  const offsetRef = useRef(
+    initialRef !== undefined ? initialRef : useSharedValue(0)
+  );
 
   const event = useEvent<ScrollEvent>((event: ScrollEvent) => {
     'worklet';
