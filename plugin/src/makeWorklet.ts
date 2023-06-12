@@ -86,13 +86,13 @@ export function makeWorklet(
 
   const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
-    presets: ['@babel/preset-typescript'],
+    presets: [require.resolve('@babel/preset-typescript')],
     plugins: [
-      '@babel/plugin-transform-shorthand-properties',
-      '@babel/plugin-transform-arrow-functions',
-      '@babel/plugin-proposal-optional-chaining',
-      '@babel/plugin-proposal-nullish-coalescing-operator',
-      ['@babel/plugin-transform-template-literals', { loose: true }],
+      require.resolve('@babel/plugin-transform-shorthand-properties'),
+      require.resolve('@babel/plugin-transform-arrow-functions'),
+      require.resolve('@babel/plugin-proposal-optional-chaining'),
+      require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
+      [require.resolve('@babel/plugin-transform-template-literals'), { loose: true }],
     ],
     ast: true,
     babelrc: false,
