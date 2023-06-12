@@ -244,6 +244,47 @@ function scale(u: number[], a: number) {
   return output;
 }
 
+function grahamSchmidtAlghoritm(matrix: AffiniteMatrix) {
+  'worklet';
+  const a1 = matrix[0];
+  const a2 = matrix[1];
+  const a3 = matrix[2];
+  const a4 = matrix[3];
+
+  const u1 = a1;
+  const u2 = subtract(a2, projection(u1, a2));
+  const u3 = subtract(subtract(a3, projection(u1, a3)), projection(u2, a3));
+  const u4 = subtract(
+    subtract(subtract(a4, projection(u1, a4)), projection(u2, a4)),
+    projection(u3, a4)
+  );
+
+  const e1 = scale(u1, 1 / Math.sqrt(innerProduct(u1, u1)));
+  const e2 = scale(u2, 1 / Math.sqrt(innerProduct(u2, u2)));
+  const e3 = scale(u3, 1 / Math.sqrt(innerProduct(u3, u3)));
+  const e4 = scale(u4, 1 / Math.sqrt(innerProduct(u4, u4)));
+
+  const rotationMatrix: AffiniteMatrix = [
+    [e1[0], e2[0], e3[0], e4[0]],
+    [e1[1], e2[1], e3[1], e4[1]],
+    [e1[2], e2[2], e3[2], e4[2]],
+    [e1[3], e2[3], e3[3], e4[3]],
+  ];
+
+  const skewMatrix: AffiniteMatrix = [
+    [
+      innerProduct(e1, a1),
+      innerProduct(e1, a2),
+      innerProduct(e1, a3),
+      innerProduct(e1, a4),
+    ],
+    [0, innerProduct(e2, a2), innerProduct(e2, a3), innerProduct(e2, a4)],
+    [0, 0, innerProduct(e3, a3), innerProduct(e3, a4)],
+    [0, 0, 0, innerProduct(e4, a4)],
+  ];
+  return { rotationMatrix, skewMatrix };
+}
+
 export function decomposeMatrix(
   _matrix: AffiniteMatrixFlat | AffiniteMatrix
 ): TransformMatrixDecomposition {
@@ -273,69 +314,21 @@ export function decomposeMatrix(
     [0, 0, 0, 1],
   ];
 
-  const rotationMatrix: AffiniteMatrix = [
+  const rotationAndSkewMatrix: AffiniteMatrix = [
     [matrix[0] / sx, matrix[1] / sx, matrix[2] / sx, 0],
     [matrix[4] / sy, matrix[5] / sy, matrix[6] / sy, 0],
     [matrix[8] / sz, matrix[9] / sz, matrix[10] / sz, 0],
     [0, 0, 0, 1],
   ];
 
-  // Graham Shmidt Algorithm
-  const a1 = rotationMatrix[0];
-  const a2 = rotationMatrix[1];
-  const a3 = rotationMatrix[2];
-  const a4 = rotationMatrix[3];
-
-  const u1 = a1;
-  const u2 = subtract(a2, projection(u1, a2));
-  const u3 = subtract(subtract(a3, projection(u1, a3)), projection(u2, a3));
-  const u4 = subtract(
-    subtract(subtract(a4, projection(u1, a4)), projection(u2, a4)),
-    projection(u3, a4)
-  );
-
-  const e1 = scale(u1, 1 / Math.sqrt(innerProduct(u1, u1)));
-  const e2 = scale(u2, 1 / Math.sqrt(innerProduct(u2, u2)));
-  const e3 = scale(u3, 1 / Math.sqrt(innerProduct(u3, u3)));
-  const e4 = scale(u4, 1 / Math.sqrt(innerProduct(u4, u4)));
-
-  const newRotationMatrix: AffiniteMatrix = [
-    [e1[0], e2[0], e3[0], e4[0]],
-    [e1[1], e2[1], e3[1], e4[1]],
-    [e1[2], e2[2], e3[2], e4[2]],
-    [e1[3], e2[3], e3[3], e4[3]],
-  ];
-
-  const skewMatrix: AffiniteMatrix = [
-    [
-      innerProduct(e1, a1),
-      innerProduct(e1, a2),
-      innerProduct(e1, a3),
-      innerProduct(e1, a4),
-    ],
-    [0, innerProduct(e2, a2), innerProduct(e2, a3), innerProduct(e2, a4)],
-    [0, 0, innerProduct(e3, a3), innerProduct(e3, a4)],
-    [0, 0, 0, innerProduct(e4, a4)],
-  ];
-
-  console.log(
-    multiplyMatrices(
-      multiplyMatrices(
-        scaleMatrix,
-        multiplyMatrices(
-          transposeMatrix(skewMatrix),
-          transposeMatrix(newRotationMatrix)
-        )
-      ),
-      translationMatrix
-    ),
-    unflatten(matrix)
+  const { rotationMatrix, skewMatrix } = grahamSchmidtAlghoritm(
+    rotationAndSkewMatrix
   );
 
   return {
     translationMatrix,
     scaleMatrix,
-    rotationMatrix: transposeMatrix(newRotationMatrix),
+    rotationMatrix: transposeMatrix(rotationMatrix),
     skewMatrix: transposeMatrix(skewMatrix),
   };
 }
