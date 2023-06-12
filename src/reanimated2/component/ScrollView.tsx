@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef, RefObject } from 'react';
+import React, { ForwardedRef, forwardRef, RefObject } from 'react';
 import { ScrollView, ScrollViewProps } from 'react-native';
 import type Animated from 'react-native-reanimated';
 import createAnimatedComponent from '../../createAnimatedComponent';
