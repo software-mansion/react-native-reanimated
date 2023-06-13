@@ -4,7 +4,7 @@
 
 #include <utility>
 
-const char ASYNC_TRANSITION[] = "animation";
+const char STANDARD_ANIMATION[] = "animation";
 
 namespace reanimated {
 
@@ -20,7 +20,7 @@ void LayoutAnimationsManager::configureAnimation(
     viewTagToSharedTag_[tag] = sharedTransitionTag;
   } else if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     const std::string &defaultAnimationType = sharedTransitionTag;
-    if (defaultAnimationType == ASYNC_TRANSITION) {
+    if (defaultAnimationType == STANDARD_ANIMATION) {
       ignoreProgressAnimationForTag_.insert(tag);
     }
   }
