@@ -46,8 +46,6 @@ public class SharedTransitionManager {
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
-
-    mAnimationsManager.getContext().getNativeModule(ReanimatedModule.class);
   }
 
   protected void notifyAboutNewView(View view) {
@@ -63,10 +61,10 @@ public class SharedTransitionManager {
     return mCurrentSharedTransitionViews.get(tag);
   }
 
-  protected void screenDidLayout(int screenChildViewTag) {
+  protected void screenDidLayout(int screenViewTag) {
     ReactContext context = mAnimationsManager.getContext();
     EventDispatcher eventDispatcher =
-        UIManagerHelper.getEventDispatcherForReactTag(context, screenChildViewTag);
+        UIManagerHelper.getEventDispatcherForReactTag(context, screenViewTag);
     if (eventDispatcher != null && !eventDispatchersWithListener.contains(eventDispatcher)) {
       eventDispatchersWithListener.add(eventDispatcher);
       eventDispatcher.addListener(

@@ -300,7 +300,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   }];
 #else
-
   // Layout Animation callbacks setup
   [animationsManager
       setAnimationStartingBlock:^(
@@ -372,7 +371,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
             reaModule->runtimeHelper, sourceViewTag, targetViewTag, progress);
       }
     }
-    return [NSDictionary new];
   }];
 #endif
 

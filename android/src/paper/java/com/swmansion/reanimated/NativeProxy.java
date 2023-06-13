@@ -14,7 +14,6 @@ import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.Map;
 
 public class NativeProxy extends NativeProxyCommon {
     @DoNotStrip
