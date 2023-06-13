@@ -310,14 +310,17 @@ static REASharedTransitionManager *_sharedTransitionManager;
 #if LOAD_SCREENS_HEADERS
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
+    SEL viewDidLayoutSubviewsSelector = @selector(viewDidLayoutSubviews);
+    SEL notifyWillDisappearSelector = @selector(notifyWillDisappear);
+
     // it replaces method for RNSScreenView class, so it can be done only once
-    if ([REASharedTransitionManager instancesRespondToSelector:@selector(viewDidLayoutSubviews)]) {
-      [self swizzleMethod:@selector(viewDidLayoutSubviews)
+    if ([RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
+        [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector]) {
+      [self swizzleMethod:viewDidLayoutSubviewsSelector
                      with:@selector(swizzled_viewDidLayoutSubviews)
                  forClass:[RNSScreen class]];
-    }
-    if ([REASharedTransitionManager instancesRespondToSelector:@selector(notifyWillDisappear)]) {
-      [self swizzleMethod:@selector(notifyWillDisappear)
+
+      [self swizzleMethod:notifyWillDisappearSelector
                      with:@selector(swizzled_notifyWillDisappear)
                  forClass:[RNSScreenView class]];
     }
