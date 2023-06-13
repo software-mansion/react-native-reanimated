@@ -48,12 +48,12 @@ jni::local_ref<JNIHelper::PropsMap> JNIHelper::ConvertToPropsMap(
         map->put(
             key,
             ReadableNativeMap::newObjectCxxArgs(
-              jsi::dynamicFromValue(rt, value)));
-        }
+                jsi::dynamicFromValue(rt, value)));
       }
     }
-
-    return map;
   }
+
+  return map;
+}
 
 }; // namespace reanimated

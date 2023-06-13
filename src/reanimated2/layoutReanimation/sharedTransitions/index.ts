@@ -8,7 +8,6 @@ import {
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
-import { Platform } from 'react-native';
 
 const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
 
@@ -16,17 +15,21 @@ type AnimationFactory = (
   values: SharedTransitionAnimationsValues
 ) => StyleProps;
 
+enum AnimationType {
+  PROGRESS_BASED = 'progressBased',
+  ASYNC_TRANSITION = 'asyncTransition',
+}
 export class SharedElementTransition {
-  private _animationFactory: AnimationFactory | null = null;
+  private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
   private _customProgressAnimation?: ProgressAnimation = undefined;
   private _progressAnimation?: ProgressAnimation = undefined;
 
   public animation(
-    animationFactory: AnimationFactory
+    customAnimationFactory: AnimationFactory
   ): SharedElementTransition {
-    this._animationFactory = animationFactory;
+    this._customAnimationFactory = customAnimationFactory;
     return this;
   }
 
@@ -52,11 +55,9 @@ export class SharedElementTransition {
   ): void {
     const transitionAnimation = this.getTransitionAnimation();
     const progressAnimation = this.getProgressAnimation();
-    let progressAnimationPriority = 'primary';
-    if (this._animationFactory) {
-      if (Platform.OS === 'ios') {
-        progressAnimationPriority = 'secondary';
-      }
+    let defaultAnimationType = AnimationType.PROGRESS_BASED;
+    if (this._customAnimationFactory) {
+      defaultAnimationType = AnimationType.ASYNC_TRANSITION;
     }
     configureLayoutAnimations(
       viewTag,
@@ -71,11 +72,11 @@ export class SharedElementTransition {
         'worklet';
         const snapshot = global.LayoutAnimationsManager.getSnapshot(viewTag);
         progressAnimation(viewTag, snapshot, progress);
-        if (progress == 1) {
+        if (progress === 1) {
           global.LayoutAnimationsManager.removeSnapshot(viewTag);
         }
       },
-      progressAnimationPriority
+      defaultAnimationType
     );
   }
 
@@ -94,7 +95,7 @@ export class SharedElementTransition {
   }
 
   private buildAnimation() {
-    const animationFactory = this._animationFactory;
+    const animationFactory = this._customAnimationFactory;
     const transitionDuration = this._transitionDuration;
     this._animation = (values: SharedTransitionAnimationsValues) => {
       'worklet';

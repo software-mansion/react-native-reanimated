@@ -93,38 +93,38 @@ int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
 }
 
 void LayoutAnimations::setUpdateSharedTransitionProgressBlock(
-  UpdateSharedTransitionProgressBlock updateSharedTransitionProgressBlock) {
+    UpdateSharedTransitionProgressBlock updateSharedTransitionProgressBlock) {
   updateSharedTransitionProgressBlock_ = updateSharedTransitionProgressBlock;
 }
 
 void LayoutAnimations::updateSharedTransitionProgress(
-  const int sourceViewTag,
-  const int targetViewTag,
-  const double progress) {
+    const int sourceViewTag,
+    const int targetViewTag,
+    const double progress) {
   updateSharedTransitionProgressBlock_(sourceViewTag, targetViewTag, progress);
 }
 
 void LayoutAnimations::registerNatives() {
   registerHybrid({
-                   makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
-                   makeNativeMethod(
-                     "startAnimationForTag", LayoutAnimations::startAnimationForTag),
-                   makeNativeMethod(
-                     "hasAnimationForTag", LayoutAnimations::hasAnimationForTag),
-                   makeNativeMethod(
-                     "clearAnimationConfigForTag",
-                     LayoutAnimations::clearAnimationConfigForTag),
-                   makeNativeMethod(
-                     "cancelAnimationForTag", LayoutAnimations::cancelAnimationForTag),
-                   makeNativeMethod(
-                     "isLayoutAnimationEnabled",
-                     LayoutAnimations::isLayoutAnimationEnabled),
-                   makeNativeMethod(
-                     "findPrecedingViewTagForTransition",
-                     LayoutAnimations::findPrecedingViewTagForTransition),
-                   makeNativeMethod(
-                     "updateSharedTransitionProgress",
-                     LayoutAnimations::updateSharedTransitionProgress),
-                 });
+      makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
+      makeNativeMethod(
+          "startAnimationForTag", LayoutAnimations::startAnimationForTag),
+      makeNativeMethod(
+          "hasAnimationForTag", LayoutAnimations::hasAnimationForTag),
+      makeNativeMethod(
+          "clearAnimationConfigForTag",
+          LayoutAnimations::clearAnimationConfigForTag),
+      makeNativeMethod(
+          "cancelAnimationForTag", LayoutAnimations::cancelAnimationForTag),
+      makeNativeMethod(
+          "isLayoutAnimationEnabled",
+          LayoutAnimations::isLayoutAnimationEnabled),
+      makeNativeMethod(
+          "findPrecedingViewTagForTransition",
+          LayoutAnimations::findPrecedingViewTagForTransition),
+      makeNativeMethod(
+          "updateSharedTransitionProgress",
+          LayoutAnimations::updateSharedTransitionProgress),
+  });
 }
 }; // namespace reanimated

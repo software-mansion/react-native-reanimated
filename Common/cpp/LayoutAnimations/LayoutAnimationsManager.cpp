@@ -4,6 +4,8 @@
 
 #include <utility>
 
+const char ASYNC_TRANSITION[] = "asyncTransition";
+
 namespace reanimated {
 
 void LayoutAnimationsManager::configureAnimation(
@@ -17,8 +19,9 @@ void LayoutAnimationsManager::configureAnimation(
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
   } else if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
-    if (sharedTransitionTag == "secondary") {
-      sharedTransitionProgressAnimationsLowPriority_.insert(tag);
+    const std::string &defaultAnimationType = sharedTransitionTag;
+    if (defaultAnimationType == ASYNC_TRANSITION) {
+      ignoreProgressAnimationForTag_.insert(tag);
     }
   }
 }
@@ -28,8 +31,8 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
-    auto end = sharedTransitionProgressAnimationsLowPriority_.end();
-    return sharedTransitionProgressAnimationsLowPriority_.find(tag) == end;
+    auto end = ignoreProgressAnimationForTag_.end();
+    return ignoreProgressAnimationForTag_.find(tag) == end;
   }
   return collection::contains(getConfigsForType(type), tag);
 }
@@ -55,7 +58,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   }
   viewTagToSharedTag_.erase(tag);
   sharedTransitionProgressAnimations_.erase(tag);
-  sharedTransitionProgressAnimationsLowPriority_.erase(tag);
+  ignoreProgressAnimationForTag_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(

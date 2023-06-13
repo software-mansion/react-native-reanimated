@@ -1,7 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public interface NativeMethodsHolder {
   void startAnimation(int tag, int type, HashMap<String, Object> values);

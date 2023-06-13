@@ -333,7 +333,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
                    with:@selector(swizzled_viewDidLayoutSubviews)
                forClass:[RNSScreen class]];
     [self swizzleMethod:@selector(viewDidAppear:) with:@selector(swizzled_viewDidAppear:) forClass:[RNSScreen class]];
-    [self swizzleMethod:@selector(viewDidDisappear:) with:@selector(swizzled_viewDidDisappear:) forClass:[RNSScreen class]];
+    [self swizzleMethod:@selector(viewDidDisappear:)
+                   with:@selector(swizzled_viewDidDisappear:)
+               forClass:[RNSScreen class]];
     [self swizzleMethod:@selector(notifyWillDisappear)
                    with:@selector(swizzled_notifyWillDisappear)
                forClass:[RNSScreenView class]];

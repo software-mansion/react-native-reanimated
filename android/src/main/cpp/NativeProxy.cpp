@@ -243,9 +243,7 @@ void NativeProxy::updateProps(
       getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
           "updateProps");
   method(
-      javaPart_.get(),
-      viewTag,
-      JNIHelper::ConvertToPropsMap(rt, props).get());
+      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
@@ -570,15 +568,15 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
   layoutAnimations_->cthis()->setUpdateSharedTransitionProgressBlock(
-    [weakModule](
-      const int sourceViewTag,
-      const int targetViewTag,
-      const double progress) {
-      if (auto module = weakModule.lock()) {
-        module->layoutAnimationsManager()
-          .updateSharedTransitionProgress(module->runtimeHelper, sourceViewTag, targetViewTag, progress);
-      }
-    });
+      [weakModule](
+          const int sourceViewTag,
+          const int targetViewTag,
+          const double progress) {
+        if (auto module = weakModule.lock()) {
+          module->layoutAnimationsManager().updateSharedTransitionProgress(
+              module->runtimeHelper, sourceViewTag, targetViewTag, progress);
+        }
+      });
 }
 
 } // namespace reanimated

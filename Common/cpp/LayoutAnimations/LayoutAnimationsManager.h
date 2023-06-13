@@ -56,7 +56,7 @@ class LayoutAnimationsManager {
       sharedTransitionAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>>
       sharedTransitionProgressAnimations_;
-  std::unordered_set<int> sharedTransitionProgressAnimationsLowPriority_;
+  std::unordered_set<int> ignoreProgressAnimationForTag_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
   mutable std::mutex
