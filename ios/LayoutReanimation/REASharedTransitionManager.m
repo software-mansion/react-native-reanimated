@@ -311,12 +311,16 @@ static REASharedTransitionManager *_sharedTransitionManager;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     // it replaces method for RNSScreenView class, so it can be done only once
-    [self swizzleMethod:@selector(viewDidLayoutSubviews)
-                   with:@selector(swizzled_viewDidLayoutSubviews)
-               forClass:[RNSScreen class]];
-    [self swizzleMethod:@selector(notifyWillDisappear)
-                   with:@selector(swizzled_notifyWillDisappear)
-               forClass:[RNSScreenView class]];
+    if ([REASharedTransitionManager instancesRespondToSelector:@selector(viewDidLayoutSubviews)]) {
+      [self swizzleMethod:@selector(viewDidLayoutSubviews)
+                     with:@selector(swizzled_viewDidLayoutSubviews)
+                 forClass:[RNSScreen class]];
+    }
+    if ([REASharedTransitionManager instancesRespondToSelector:@selector(notifyWillDisappear)]) {
+      [self swizzleMethod:@selector(notifyWillDisappear)
+                     with:@selector(swizzled_notifyWillDisappear)
+                 forClass:[RNSScreenView class]];
+    }
   });
 #endif
 }
