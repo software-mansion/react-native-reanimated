@@ -96,9 +96,10 @@ export function multiplyMatrices(
   return output;
 }
 
-export function linearOperationOnMatrix<
-  T extends AffiniteMatrixFlat | AffiniteMatrix
->(_a: T, func: (x: number) => number): T {
+function linearOperationOnMatrix<T extends AffiniteMatrixFlat | AffiniteMatrix>(
+  _a: T,
+  func: (x: number) => number
+): T {
   'worklet';
 
   const isFlatOnStart = !!isAffiniteMatrixFlat(_a);
@@ -244,7 +245,10 @@ function scale(u: number[], a: number) {
   return output;
 }
 
-function grahamSchmidtAlghoritm(matrix: AffiniteMatrix) {
+function grahamSchmidtAlghoritm(matrix: AffiniteMatrix): {
+  rotationMatrix: AffiniteMatrix;
+  skewMatrix: AffiniteMatrix;
+} {
   'worklet';
   const a1 = matrix[0];
   const a2 = matrix[1];

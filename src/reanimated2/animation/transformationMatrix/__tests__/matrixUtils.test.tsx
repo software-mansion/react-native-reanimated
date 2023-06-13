@@ -11,21 +11,26 @@ import {
   unflatten,
 } from '../matrixUtils';
 
+const identityMatrix: AffiniteMatrix = [
+  [1, 0, 0, 0],
+  [0, 1, 0, 0],
+  [0, 0, 1, 0],
+  [0, 0, 0, 1],
+];
+
+const flatIdentityMatrix: AffiniteMatrixFlat = [
+  1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+];
+
+const consequitiveNumMatrix: AffiniteMatrix = [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16],
+];
+
 describe('Matrix multiplication', () => {
   it('Multiply some 4x4 matrices', () => {
-    const identityMatrix: AffiniteMatrix = [
-      [1, 0, 0, 0],
-      [0, 1, 0, 0],
-      [0, 0, 1, 0],
-      [0, 0, 0, 1],
-    ];
-
-    const consequitiveNumMatrix: AffiniteMatrix = [
-      [1, 2, 3, 4],
-      [5, 6, 7, 8],
-      [9, 10, 11, 12],
-      [13, 14, 15, 16],
-    ];
     expect(multiplyMatrices(identityMatrix, consequitiveNumMatrix)).toEqual(
       consequitiveNumMatrix
     );
@@ -42,41 +47,19 @@ describe('Matrix multiplication', () => {
 });
 
 describe('Flatten & unflatten', () => {
-  it('Test that both helpers are work and flatten is idempotent', () => {
-    const identityMatrix: AffiniteMatrix = [
-      [1, 0, 0, 0],
-      [0, 1, 0, 0],
-      [0, 0, 1, 0],
-      [0, 0, 0, 1],
-    ];
-    const flatMatrix: AffiniteMatrixFlat = [
-      1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
-    ];
-
-    expect(flatten(identityMatrix)).toEqual(flatMatrix);
-    expect(unflatten(flatMatrix)).toEqual(identityMatrix);
+  it('Test that both helpers work', () => {
+    expect(flatten(identityMatrix)).toEqual(flatIdentityMatrix);
+    expect(unflatten(flatIdentityMatrix)).toEqual(identityMatrix);
     // @ts-ignore I know this is not the correct way to call this function, but I'm testing that it still works
-    expect(flatten(flatten(identityMatrix))).toEqual(flatMatrix);
-
+    expect(flatten(flatten(identityMatrix))).toEqual(flatIdentityMatrix);
     expect(unflatten(flatten(identityMatrix))).toEqual(identityMatrix);
-    expect(flatten(unflatten(flatMatrix))).toEqual(flatMatrix);
+    expect(flatten(unflatten(flatIdentityMatrix))).toEqual(flatIdentityMatrix);
   });
 });
 
-describe('Type assertions: isAffiniteMatrix & isAffiniteMatrixFlat', () => {
-  it('Test both correct and incorrect cases', () => {
-    const identityMatrix: AffiniteMatrix = [
-      [1, 0, 0, 0],
-      [0, 1, 0, 0],
-      [0, 0, 1, 0],
-      [0, 0, 0, 1],
-    ];
-    const flatMatrix: AffiniteMatrixFlat = [
-      1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1.77,
-    ];
-
+describe('Type assertions:', () => {
+  it('isAffiniteMatrix', () => {
     expect(isAffiniteMatrix(identityMatrix)).toEqual(true);
-    expect(isAffiniteMatrixFlat(flatMatrix)).toEqual(true);
 
     expect(
       isAffiniteMatrix([
@@ -94,22 +77,18 @@ describe('Type assertions: isAffiniteMatrix & isAffiniteMatrixFlat', () => {
         [0, 0, 0, 1],
       ])
     ).toEqual(false);
-
+  });
+  it('isAffiniteMatrixFlat', () => {
+    expect(isAffiniteMatrixFlat(flatIdentityMatrix)).toEqual(true);
     expect(isAffiniteMatrixFlat([1, 0, 0, 0, 0, 1])).toEqual(false);
-
     expect(
       isAffiniteMatrixFlat([1, 0, null, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     ).toEqual(false);
   });
 });
 
-describe('Matrix calculations', () => {
-  const a: AffiniteMatrix = [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8],
-    [9, 10, 11, 12],
-    [13, 14, 15, 16],
-  ];
+describe('Matrix calculations: ', () => {
+  const a = consequitiveNumMatrix;
   const b: AffiniteMatrix = [
     [0, 0, 0, 0],
     [0, 0, 0, 0],
@@ -143,13 +122,6 @@ describe('Matrix calculations', () => {
 
 describe('Matrix decomposition', () => {
   it('Decompose identity into identities', () => {
-    const identityMatrix: AffiniteMatrix = [
-      [1, 0, 0, 0],
-      [0, 1, 0, 0],
-      [0, 0, 1, 0],
-      [0, 0, 0, 1],
-    ];
-
     const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =
       decomposeMatrix(flatten(identityMatrix));
 
@@ -159,7 +131,7 @@ describe('Matrix decomposition', () => {
     expect(skewMatrix).toEqual(identityMatrix);
   });
 
-  it('Decompose any matrix ', () => {
+  it('Decompose random matrix ', () => {
     const m2: AffiniteMatrixFlat = [
       1, 2, 3, 0, 1, 1, 1, 0, 1, 2, 0, 0, 4, 5, 6, 1,
     ];
