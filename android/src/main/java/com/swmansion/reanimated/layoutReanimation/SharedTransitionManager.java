@@ -13,7 +13,6 @@ import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
-import com.swmansion.reanimated.ReanimatedModule;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
