@@ -4,7 +4,7 @@
 
 #include <utility>
 
-const char ASYNC_TRANSITION[] = "asyncTransition";
+const char ASYNC_TRANSITION[] = "animation";
 
 namespace reanimated {
 

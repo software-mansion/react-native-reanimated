@@ -141,3 +141,8 @@ export type CustomProgressAnimation = (
   values: SharedTransitionAnimationsValues,
   progress: number
 ) => StyleProps;
+
+export enum SharedTransitionType {
+  ANIMATION = 'animation',
+  PROGRESS_ANIMATION = 'progressAnimation',
+}

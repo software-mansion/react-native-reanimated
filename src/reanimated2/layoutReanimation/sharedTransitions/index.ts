@@ -5,6 +5,7 @@ import {
   CustomProgressAnimation,
   ProgressAnimation,
   LayoutAnimationType,
+  SharedTransitionType,
 } from '../animationBuilder/commonTypes';
 import { StyleProps } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
@@ -15,16 +16,13 @@ type AnimationFactory = (
   values: SharedTransitionAnimationsValues
 ) => StyleProps;
 
-enum AnimationType {
-  PROGRESS_BASED = 'progressBased',
-  ASYNC_TRANSITION = 'asyncTransition',
-}
 export class SharedElementTransition {
   private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
   private _customProgressAnimation?: ProgressAnimation = undefined;
   private _progressAnimation?: ProgressAnimation = undefined;
+  private _defaultTransitionType?: SharedTransitionType = undefined;
 
   public animation(
     customAnimationFactory: AnimationFactory
@@ -49,15 +47,25 @@ export class SharedElementTransition {
     return this;
   }
 
+  public defaultTransitionType(
+    transitionType: SharedTransitionType
+  ): SharedElementTransition {
+    this._defaultTransitionType = transitionType;
+    return this;
+  }
+
   public registerTransition(
     viewTag: number,
     sharedTransitionTag: string
   ): void {
     const transitionAnimation = this.getTransitionAnimation();
     const progressAnimation = this.getProgressAnimation();
-    let defaultAnimationType = AnimationType.PROGRESS_BASED;
-    if (this._customAnimationFactory) {
-      defaultAnimationType = AnimationType.ASYNC_TRANSITION;
+    if (!this._defaultTransitionType) {
+      if (this._customAnimationFactory && !this._customProgressAnimation) {
+        this._defaultTransitionType = SharedTransitionType.ANIMATION;
+      } else {
+        this._defaultTransitionType = SharedTransitionType.PROGRESS_ANIMATION;
+      }
     }
     configureLayoutAnimations(
       viewTag,
@@ -76,7 +84,7 @@ export class SharedElementTransition {
           global.LayoutAnimationsManager.removeSnapshot(viewTag);
         }
       },
-      defaultAnimationType
+      this._defaultTransitionType
     );
   }
 

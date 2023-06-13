@@ -8,6 +8,7 @@ import {
 import Animated, {
   SharedElementTransition,
   withSpring,
+  SharedTransitionType,
 } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
@@ -38,7 +39,8 @@ const transition = new SharedElementTransition()
       originX: getValue(progress, values.targetOriginX, values.currentOriginX),
       originY: getValue(progress, values.targetOriginY, values.currentOriginY),
     };
-  });
+  })
+  .defaultTransitionType(SharedTransitionType.ANIMATION);
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (

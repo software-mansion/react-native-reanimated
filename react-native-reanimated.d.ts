@@ -891,11 +891,19 @@ declare module 'react-native-reanimated' {
     progress: number
   ) => StyleProps;
 
+  export enum SharedTransitionType {
+    ANIMATION = 'animation',
+    PROGRESS_ANIMATION = 'progressAnimation',
+  }
+
   export class SharedElementTransition implements ILayoutAnimationBuilder {
     animation(animationFactory: AnimationFactoryType): SharedElementTransition;
     progressAnimation(
       progressAnimationFactory: ProgressAnimationFactoryType
     ): SharedElementTransition;
     duration(duration: number): SharedElementTransition;
+    defaultTransitionType(
+      transitionType: SharedTransitionType
+    ): SharedElementTransition;
   }
 }
