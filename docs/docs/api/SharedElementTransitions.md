@@ -61,7 +61,7 @@ const transition = SharedTransition.custom((values) => {
 
 ## Examples
 
-More examples of usage you can find in **[Reanimated Example App](https://github.com/software-mansion/react-native-reanimated/tree/main/app/src/examples/SharedElementTransitions)**.
+More examples of usage you can find in **[Reanimated Example App](https://github.com/software-mansion/react-native-reanimated/tree/3.3.0/app/src/examples/SharedElementTransitions)**.
 
 ```tsx {14,26}
 import * as React from 'react';
