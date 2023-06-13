@@ -164,7 +164,7 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
     nextAnimation: T,
     current: AnimatableValue,
     timestamp: Timestamp,
-    previousAnimation: Animation<any> | null
+    previousAnimation: Animation<any> | null | T
   ) => void;
 }
 

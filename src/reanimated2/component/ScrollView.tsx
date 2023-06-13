@@ -25,9 +25,9 @@ const AnimatedScrollViewComponent = createAnimatedComponent(
   ScrollView as any
 ) as any;
 
-type AnimatedScrollViewFC = React.FC<AnimatedScrollViewProps>;
+// type AnimatedScrollViewFC = React.FC<AnimatedScrollViewProps>;
 
-export const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
+export const AnimatedScrollView: AnimatedScrollView = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
     const { scrollViewOffset, ...restProps } = props;
     const aref = ref === null ? useAnimatedRef<ScrollView>() : ref;
@@ -40,7 +40,7 @@ export const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
     }
     return <AnimatedScrollViewComponent ref={aref} {...restProps} />;
   }
-);
+) as unknown as AnimatedScrollView;
 
 export type AnimatedScrollView = typeof AnimatedScrollViewClass &
   AnimatedScrollViewInterface;
