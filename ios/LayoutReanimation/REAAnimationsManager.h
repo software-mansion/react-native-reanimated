@@ -63,7 +63,7 @@ typedef NSDictionary *_Nonnull (
                         type:(LayoutAnimationType)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
-- (void)setComputeSharedTransitionProgressAnimationForTagBlock:(REAUpdateSharedTransitionProgressBlock)block;
+- (void)setUpdateSharedTransitionProgressBlock:(REAUpdateSharedTransitionProgressBlock)block;
 @end
 
 NS_ASSUME_NONNULL_END

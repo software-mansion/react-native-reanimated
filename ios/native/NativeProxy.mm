@@ -365,16 +365,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return nil;
   }];
 
-  [animationsManager
-      setComputeSharedTransitionProgressAnimationForTagBlock:^(int sourceViewTag, int targetViewTag, double progress) {
-        if (auto reaModule = weakModule.lock()) {
-          if (auto runtime = wrt.lock()) {
-            reaModule->layoutAnimationsManager().updateSharedTransitionProgress(
-                reaModule->runtimeHelper, sourceViewTag, targetViewTag, progress);
-          }
-        }
-        return [NSDictionary new];
-      }];
+  [animationsManager setUpdateSharedTransitionProgressBlock:^(int sourceViewTag, int targetViewTag, double progress) {
+    if (auto reaModule = weakModule.lock()) {
+      if (auto runtime = wrt.lock()) {
+        reaModule->layoutAnimationsManager().updateSharedTransitionProgress(
+            reaModule->runtimeHelper, sourceViewTag, targetViewTag, progress);
+      }
+    }
+    return [NSDictionary new];
+  }];
 #endif
 
   return module;
