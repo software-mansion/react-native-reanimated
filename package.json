@@ -166,12 +166,7 @@
     "output": "lib",
     "targets": [
       "module",
-      [
-        "typescript",
-        {
-          "project": "tsconfig.json"
-        }
-      ]
+      "typescript"
     ]
   },
   "sideEffects": [
