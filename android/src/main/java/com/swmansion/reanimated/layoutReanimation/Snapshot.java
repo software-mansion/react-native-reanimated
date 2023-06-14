@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -124,21 +125,24 @@ public class Snapshot {
     }
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
-    if (view.getBackground() != null) {
-      borderRadius = ((ReactViewBackgroundDrawable) view.getBackground()).getFullBorderRadius();
-    } else if (view instanceof ReactImageView) {
-      borderRadius = getImageBorderRadius((ReactImageView) view);
-    }
+    borderRadius = getBorderRadius(view);
   }
 
-  private float getImageBorderRadius(ReactImageView imageView) {
-    try {
-      Field field = imageView.getClass().getDeclaredField("mBorderRadius");
-      field.setAccessible(true);
-      return field.getFloat(imageView);
-    } catch (NullPointerException | NoSuchFieldException | IllegalAccessException e) {
-      return 0;
+  private float getBorderRadius(View view) {
+    if (view.getBackground() != null) {
+      Drawable background = view.getBackground();
+      if (background instanceof ReactViewBackgroundDrawable) {
+        return ((ReactViewBackgroundDrawable) background).getFullBorderRadius();
+      }
+    } else if (view instanceof ReactImageView) {
+      try {
+        Field field = view.getClass().getDeclaredField("mBorderRadius");
+        field.setAccessible(true);
+        return field.getFloat(view);
+      } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {
+      }
     }
+    return 0;
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
