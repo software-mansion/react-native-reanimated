@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.3.0",
+  "version": "3.3.0-remove-dts-2",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
@@ -53,7 +53,6 @@
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
-    "!lib/typescript",
     "!ios/build/",
     "!android/build/",
     "!android/.cxx/",
