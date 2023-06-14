@@ -127,6 +127,7 @@ public class Snapshot {
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
     borderRadius = getBorderRadius(view);
+    int a = 0;
   }
 
   private float getBorderRadius(View view) {
@@ -139,7 +140,8 @@ public class Snapshot {
       try {
         Field field = view.getClass().getDeclaredField("mBorderRadius");
         field.setAccessible(true);
-        return field.getFloat(view);
+        Float borderRadius = field.getFloat(view);
+        return Float.isNaN(borderRadius) ? 0 : borderRadius;
       } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {
         // In case of non-standard view is better to not support the border animation
         // instead of throwing exception

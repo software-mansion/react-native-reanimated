@@ -22,6 +22,8 @@ import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.Scheduler;
+import com.swmansion.reanimated.Utils;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -271,7 +273,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
     for (String key : keys) {
       Object value = values.get(key);
-      float pixelsValue = value instanceof Integer ? (int) value : (float) value;
+      float pixelsValue = Utils.parseNumberToFloat(value);
       preparedValues.put(key, PixelUtil.toDIPFromPixel(pixelsValue));
     }
 

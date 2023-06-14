@@ -35,4 +35,15 @@ public class Utils {
     // to make usage of std::istringstream in C++ easier
     return list.replace(",", "").replace("[", "").replace("]", "");
   }
+
+  public static float parseNumberToFloat(Object value) {
+    if (value instanceof Integer) {
+      return (int) value;
+    } else if (value instanceof Float) {
+      return (float) value;
+    } else if (value instanceof Double) {
+      return ((Double) value).floatValue();
+    }
+    return 0;
+  }
 }

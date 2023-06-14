@@ -11,6 +11,8 @@ import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
+import com.swmansion.reanimated.Utils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -442,7 +444,7 @@ public class SharedTransitionManager {
           if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
             preparedValues.put(key, value);
           } else {
-            float pixelsValue = value instanceof Integer ? (int) value : (Float) value;
+            float pixelsValue = Utils.parseNumberToFloat(value);
             preparedValues.put(key, (double) PixelUtil.toDIPFromPixel(pixelsValue));
           }
         }
