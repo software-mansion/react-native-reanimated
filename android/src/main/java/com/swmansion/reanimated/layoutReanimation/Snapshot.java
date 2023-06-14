@@ -127,7 +127,6 @@ public class Snapshot {
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
     borderRadius = getBorderRadius(view);
-    int a = 0;
   }
 
   private float getBorderRadius(View view) {
