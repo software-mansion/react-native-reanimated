@@ -12,7 +12,6 @@ import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Utils;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
