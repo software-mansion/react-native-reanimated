@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import com.facebook.react.uimanager.IllegalViewOperationException;
@@ -140,8 +141,11 @@ public class Snapshot {
         field.setAccessible(true);
         return field.getFloat(view);
       } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {
+        // In case of non-standard view is better to not support the border animation
+        // instead of throwing exception
       }
     }
+    Log.w("[Reanimated]", "Unable to get border radius value for view: " + view);
     return 0;
   }
 
