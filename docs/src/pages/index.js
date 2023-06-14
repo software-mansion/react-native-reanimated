@@ -39,7 +39,7 @@ const bannerDescription =
 const blogUrl =
   'https://blog.swmansion.com/introducing-reanimated-2-752b913af8b3';
 const exampleUrl =
-  'https://github.com/software-mansion/react-native-reanimated/tree/main/Example';
+  'https://github.com/software-mansion/react-native-reanimated/tree/3.3.0/app/src/examples';
 const playgroundUrl =
   'https://github.com/software-mansion-labs/reanimated-2-playground';
 const tryItOutDecription =
@@ -190,7 +190,7 @@ function Home() {
                       styles.getStarted
                     )}
                     to={exampleUrl}>
-                    Example on GitHub
+                    Examples on GitHub
                   </Link>
 
                   <Link
