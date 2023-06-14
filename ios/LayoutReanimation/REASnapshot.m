@@ -79,13 +79,13 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
       // Identity matrix is an default value
       _values[@"transformMatrix"] = @[ @(1), @(0), @(0), @(0), @(1), @(0), @(0), @(0), @(1) ];
     }
-#if defined(RCT_NEW_ARCH_ENABLED) || defined(TARGET_OS_TV)
+#if defined(RCT_NEW_ARCH_ENABLED) || TARGET_OS_TV
     _values[@"borderRadius"] = @(0);
 #else
-    RCTView *viewController = (RCTView *)view;
-    if ([viewController respondsToSelector:@selector(borderRadius)]) {
+    RCTView *reactView = (RCTView *)view;
+    if ([reactView respondsToSelector:@selector(borderRadius)]) {
       // For example `RCTTextView` doesn't have `borderRadius` selector
-      _values[@"borderRadius"] = @(viewController.borderRadius);
+      _values[@"borderRadius"] = @(reactView.borderRadius);
     } else {
       _values[@"borderRadius"] = @(0);
     }
