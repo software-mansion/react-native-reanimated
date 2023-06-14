@@ -2,18 +2,22 @@ import JSReanimated from './JSReanimated';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
 import { isWeb } from '../PlatformChecker';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createReactDOMStyle: (style: any) => any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let createTransformValue: (transform: any) => any;
 
 if (isWeb()) {
   try {
     createReactDOMStyle =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle').default;
   } catch (e) {}
 
   try {
     // React Native Web 0.19+
     createTransformValue =
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
   } catch (e) {}
 }
@@ -21,7 +25,9 @@ if (isWeb()) {
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = (c) => c;
-global._scheduleOnJS = queueMicrotask;
+global._scheduleOnJS = (func, args) => {
+  queueMicrotask(() => func(...args));
+};
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;

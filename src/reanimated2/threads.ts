@@ -164,13 +164,10 @@ export function runOnJS<A extends any[], R>(
     // reference to the original remote function in the `__remoteFunction` property.
     fun = fun.__remoteFunction;
   }
-  if (!_WORKLET) {
-    return fun;
-  }
   return (...args) => {
     _scheduleOnJS(
       fun,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : []
     );
   };
 }
