@@ -1,4 +1,5 @@
 import AboutExample from './AboutExample';
+import AnimatableRefExample from './AnimatableRefExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import AnimatedSensorExample from './AnimatedSensorExample';
@@ -156,6 +157,11 @@ export const EXAMPLES: Record<string, Example> = {
 
   // Basic examples
 
+  AnimatableRefExample: {
+    icon: '⏬',
+    title: 'Animate inner component',
+    screen: AnimatableRefExample,
+  },
   AnimatedTextInputExample: {
     icon: '🎰',
     title: 'Counter',

@@ -39,14 +39,6 @@ if (isWeb()) {
   measure = (animatedRef: RefObjectFunction<Component>) => {
     'worklet';
     if (!_WORKLET) {
-      console.warn(
-        '[Reanimated] measure() was called from the main JS context. Measure is ' +
-          'only available in the UI runtime. This may also happen if measure() ' +
-          'was called by a worklet in the useAnimatedStyle hook, because useAnimatedStyle ' +
-          'calls the given worklet on the JS runtime during render. If you want to ' +
-          'prevent this warning then wrap the call with `if (_WORKLET)`. Then it will ' +
-          'only be called on the UI runtime after the render has been completed.'
-      );
       return null;
     }
 

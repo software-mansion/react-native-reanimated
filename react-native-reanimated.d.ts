@@ -68,6 +68,7 @@ declare module 'react-native-reanimated' {
 
     export type TransformStyleTypes = TransformsStyle['transform'] extends
       | readonly (infer T)[]
+      | string
       | undefined
       ? T
       : never;
@@ -78,7 +79,7 @@ declare module 'react-native-reanimated' {
 
     export type AnimateStyle<S> = {
       [K in keyof S]: K extends 'transform'
-        ? AnimatedTransform
+        ? AnimatedTransform | string
         : S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
@@ -134,7 +135,12 @@ declare module 'react-native-reanimated' {
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
     export interface Image extends ReactNativeImage {}
-    export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
+    export interface AnimatedScrollViewProps extends ScrollViewProps {
+      scrollViewOffset?: SharedValue<number>;
+    }
+    export class ScrollView extends Component<
+      AnimateProps<AnimatedScrollViewProps<T>>
+    > {
       getNode(): ReactNativeScrollView;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -395,15 +401,27 @@ declare module 'react-native-reanimated' {
     rubberBandEffect?: boolean;
     rubberBandFactor?: number;
   }
-  export interface WithSpringConfig {
-    damping?: number;
-    mass?: number;
+
+  export type WithSpringConfig = {
     stiffness?: number;
     overshootClamping?: boolean;
     restSpeedThreshold?: number;
     restDisplacementThreshold?: number;
     velocity?: number;
-  }
+  } & (
+    | {
+        mass?: number;
+        damping?: number;
+        duration?: never;
+        dampingRatio?: never;
+      }
+    | {
+        mass?: never;
+        damping?: never;
+        duration?: number;
+        dampingRatio?: number;
+      }
+  );
   export function withTiming<T extends AnimatableValue>(
     toValue: T,
     userConfig?: WithTimingConfig,
