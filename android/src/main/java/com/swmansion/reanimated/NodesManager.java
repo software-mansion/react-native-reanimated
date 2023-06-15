@@ -81,7 +81,7 @@ public class NodesManager implements EventDispatcherListener {
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
-  public double currentFrameTimeMs;
+  private double lastFrameTimeMs;
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
@@ -234,25 +234,29 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
-    currentFrameTimeMs = frameTimeNanos / 1000000.;
+    double currentFrameTimeMs = frameTimeNanos / 1000000.;
 
-    while (!mEventQueue.isEmpty()) {
-      CopiedEvent copiedEvent = mEventQueue.poll();
-      handleEvent(copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
-    }
+    if (currentFrameTimeMs != lastFrameTimeMs) {
+      lastFrameTimeMs = currentFrameTimeMs;
 
-    if (!mFrameCallbacks.isEmpty()) {
-      List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
-      mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
-      for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
-        frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+      while (!mEventQueue.isEmpty()) {
+        CopiedEvent copiedEvent = mEventQueue.poll();
+        handleEvent(
+            copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
       }
-    }
 
-    performOperations();
+      if (!mFrameCallbacks.isEmpty()) {
+        List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
+        mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
+        for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
+          frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+        }
+      }
+
+      performOperations();
+    }
 
     mCallbackPosted.set(false);
-
     if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
