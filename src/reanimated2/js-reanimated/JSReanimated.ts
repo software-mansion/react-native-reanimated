@@ -6,6 +6,7 @@ import {
   ValueRotation,
 } from '../commonTypes';
 import { WebSensor } from './WebSensor';
+import { isWeb } from '../PlatformChecker';
 
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
@@ -71,7 +72,7 @@ export default class JSReanimated extends NativeReanimated {
       // https://w3c.github.io/sensors/#secure-context
       console.warn(
         '[Reanimated] Sensor is not available.' +
-          (location.protocol !== 'https:'
+          (isWeb() && location.protocol !== 'https:'
             ? ' Make sure you use secure origin with `npx expo start --web --https`.'
             : '') +
           (this.platform === Platform.WEB_IOS
