@@ -14,6 +14,7 @@ import {
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
+  SpringConfigInner,
 } from './springUtils';
 
 export function withSpring(
@@ -37,13 +38,34 @@ export function withSpring(
       dampingRatio: 0.5,
     } as const;
 
-    const config = {
+    const config: Record<keyof SpringConfig, any> & SpringConfigInner = {
       ...defaultConfig,
       ...userConfig,
-      useDuration: userConfig?.duration || userConfig?.dampingRatio,
+      useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
+      configIsInvalid: false,
     };
 
-    function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
+    if (
+      [
+        config.stiffness,
+        config.damping,
+        config.duration,
+        config.dampingRatio,
+        config.restDisplacementThreshold,
+        config.restSpeedThreshold,
+      ].some((x) => x <= 0) ||
+      config.mass === 0
+    ) {
+      config.configIsInvalid = true;
+      console.warn(
+        "You have provided invalid spring animation configuration! \n Value of stiffness, damping, duration and damping ratio must be greater than zero, and mass can't equal zero."
+      );
+    }
+
+    function springOnFrame(
+      animation: InnerSpringAnimation,
+      now: Timestamp
+    ): boolean {
       const { toValue, startTimestamp, current } = animation;
 
       const timeFromStart = now - startTimestamp;
@@ -56,6 +78,15 @@ export function withSpring(
         return true;
       }
 
+      if (config.configIsInvalid) {
+        // We don't animate wrong config
+        if (config.useDuration) return false;
+        else {
+          animation.current = toValue;
+          animation.lastTimestamp = 0;
+          return true;
+        }
+      }
       const { lastTimestamp, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
@@ -84,26 +115,23 @@ export function withSpring(
               t,
             });
 
-      if (!config.useDuration) {
-        const { isOvershooting, isVelocity, isDisplacement } =
-          isAnimationTerminatingCalculation(animation, config);
+      animation.current = newPosition;
+      animation.velocity = newVelocity;
 
-        animation.current = newPosition;
-        animation.velocity = newVelocity;
+      const { isOvershooting, isVelocity, isDisplacement } =
+        isAnimationTerminatingCalculation(animation, config);
 
-        const springIsNotInMove =
-          isOvershooting || (isVelocity && isDisplacement);
+      const springIsNotInMove =
+        isOvershooting || (isVelocity && isDisplacement);
 
-        if (springIsNotInMove) {
-          if (config.stiffness !== 0) {
-            animation.velocity = 0;
-            animation.current = toValue;
-          }
-          // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
-          animation.lastTimestamp = 0;
-          return true;
-        }
+      if (!config.useDuration && springIsNotInMove) {
+        animation.velocity = 0;
+        animation.current = toValue;
+        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
+        animation.lastTimestamp = 0;
+        return true;
       }
+
       return false;
     }
 
@@ -112,6 +140,7 @@ export function withSpring(
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
         previousAnimation?.dampingRatio === animation.dampingRatio
@@ -138,11 +167,14 @@ export function withSpring(
           (previousAnimation?.startValue as number)
         : Number(animation.toValue) - value;
 
-      animation.velocity = previousAnimation
-        ? triggeredTwice
-          ? previousAnimation.velocity
-          : previousAnimation.velocity + config.velocity
-        : config.velocity;
+      if (previousAnimation) {
+        animation.velocity =
+          (triggeredTwice
+            ? previousAnimation?.velocity
+            : previousAnimation?.velocity + config.velocity) || 0;
+      } else {
+        animation.velocity = config.velocity || 0;
+      }
 
       if (triggeredTwice) {
         animation.zeta = previousAnimation?.zeta || 0;
@@ -176,7 +208,7 @@ export function withSpring(
     }
 
     return {
-      onFrame: spring,
+      onFrame: springOnFrame,
       onStart,
       toValue,
       velocity: config.velocity || 0,

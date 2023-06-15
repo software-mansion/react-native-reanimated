@@ -3,10 +3,14 @@ import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
+import '../plugin/jestUtils';
 
 function runPlugin(input: string, opts = {}) {
   const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
-    filename: 'jest tests fixture',
+    // Our babel presets require us to specify a filename here
+    // but it is never used so we put in '/dev/null'
+    // as a safe fallback.
+    filename: '/dev/null',
     compact: false,
     plugins: [plugin],
     ...opts,
@@ -21,33 +25,7 @@ describe('babel plugin', () => {
     process.env.REANIMATED_JEST_DISABLE_VERSION = 'jest';
   });
 
-  it('injects its version', () => {
-    delete process.env.REANIMATED_JEST_DISABLE_VERSION;
-
-    const input = html`<script>
-      function foo() {
-        'worklet';
-        var foo = 'bar';
-      }
-    </script>`;
-
-    const { code } = runPlugin(input, {});
-    const { version: packageVersion } = require('../package.json');
-    expect(code).toContain(`f.__version = "${packageVersion}";`);
-  });
-
-  it("doesn't bother other Directive Literals", () => {
-    const input = html`<script>
-      function foo() {
-        'foobar';
-        var foo = 'bar';
-      }
-    </script>`;
-
-    const { code } = runPlugin(input, {});
-    expect(code).toContain('foobar');
-  });
-
+  // Utils
   it('transforms', () => {
     const input = html`<script>
       import Animated, {
@@ -77,47 +55,23 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
-  it('supports default ES6 style imports', () => {
+  it('injects its version', () => {
+    delete process.env.REANIMATED_JEST_DISABLE_VERSION;
+
     const input = html`<script>
-      import * as Reanimated from 'react-native-reanimated';
-
-      function Box() {
-        const offset = Reanimated.useSharedValue(0);
-
-        const animatedStyles = Reanimated.useAnimatedStyle(() => {
-          return {
-            transform: [{ translateX: offset.value * 255 }],
-          };
-        });
-
-        return (
-          <>
-            <Animated.View style={[styles.box, animatedStyles]} />
-            <Button
-              onPress={() => (offset.value = Math.random())}
-              title="Move"
-            />
-          </>
-        );
+      function foo() {
+        'worklet';
+        var foo = 'bar';
       }
     </script>`;
 
-    const { code } = runPlugin(input);
-    expect(code).toContain('_closure');
-  });
-
-  it("doesn't transform functions without 'worklet' directive", () => {
-    const input = html`<script>
-      function f(x) {
-        return x + 2;
-      }
-    </script>`;
-
-    const { code } = runPlugin(input);
-    expect(code).not.toContain('_f.__workletHash');
+    const { code } = runPlugin(input, {});
+    const { version: packageVersion } = require('../package.json');
+    expect(code).toContain(`f.__version = "${packageVersion}";`);
   });
 
   it('removes comments from worklets', () => {
@@ -135,6 +89,49 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).not.toContain('some comment');
     expect(code).not.toContain('other comment');
+    expect(code).toMatchSnapshot();
+  });
+
+  it('supports recursive calls', () => {
+    const input = html`<script>
+      const a = 1;
+      function foo(t) {
+        'worklet';
+        if (t > 0) {
+          return a + foo(t - 1);
+        }
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('const foo=this._recur');
+    expect(code).toMatchSnapshot();
+  });
+
+  // DirectiveLiterals and 'worklet'
+  it("doesn't bother other Directive Literals", () => {
+    const input = html`<script>
+      function foo() {
+        'foobar';
+        var foo = 'bar';
+      }
+    </script>`;
+
+    const { code } = runPlugin(input, {});
+    expect(code).toContain('foobar');
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't transform functions without 'worklet' directive", () => {
+    const input = html`<script>
+      function f(x) {
+        return x + 2;
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it('removes "worklet"; directive from worklets', () => {
@@ -146,7 +143,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).not.toContain('"worklet";');
+    expect(code).toMatchSnapshot();
   });
 
   it("removes 'worklet'; directive from worklets", () => {
@@ -159,6 +157,7 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).not.toContain("'worklet';");
+    expect(code).toMatchSnapshot();
   });
 
   it("doesn't transform string literals", () => {
@@ -171,10 +170,14 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toContain("bar = 'worklet';");
+    expect(code).toContain('baz = "worklet";');
     expect(code).toMatchSnapshot();
   });
 
-  it("doesn't remove nested 'worklets'", () => {
+  // Worklet nesting
+
+  it("doesn't nest worklets for other threads", () => {
     const input = html`<script>
       function foo(x) {
         'worklet';
@@ -186,9 +189,28 @@ describe('babel plugin', () => {
       }
     </script>`;
     const { code } = runPlugin(input);
+    expect(code).toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
+  it('transforms nested worklets for JS thread', () => {
+    const input = html`<script>
+      function foo(x) {
+        'worklet';
+        function bar(x) {
+          'worklet';
+          return x + 2;
+        }
+        return bar(x) + 1;
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(2);
+    expect(code).toMatchSnapshot();
+  });
+
+  // Closure capturing
   it('captures worklets environment', () => {
     const input = html`<script>
       const x = 5;
@@ -202,6 +224,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).not.toContain('_f._closure = {};');
     expect(code).toMatchSnapshot();
   });
 
@@ -232,7 +255,7 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
-  // functions
+  // Explicit worklets
 
   it('workletizes FunctionDeclaration', () => {
     const input = html`<script>
@@ -243,8 +266,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -257,8 +280,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -271,8 +294,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -285,12 +308,12 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
-  // class methods
+  // Class worklets
 
   it('workletizes instance method', () => {
     const input = html`<script>
@@ -303,8 +326,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -319,8 +342,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -335,12 +358,76 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
-    expect(code).not.toContain('\\"worklet\\";');
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
-  // function hooks
+  it('workletizes setter', () => {
+    const input = html`<script>
+      class Foo {
+        set bar(x) {
+          'worklet';
+          this.x = x + 2;
+        }
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes class field', () => {
+    const input = html`<script>
+      class Foo {
+        bar = (x) => {
+          'worklet';
+          return x + 2;
+        };
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes static class field', () => {
+    const input = html`<script>
+      class Foo {
+        static bar = (x) => {
+          'worklet';
+          return x + 2;
+        };
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes constructor', () => {
+    const input = html`<script>
+      class Foo {
+        constructor(x) {
+          'worklet';
+          this.x = x;
+        }
+      }
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
+    expect(code).toMatchSnapshot();
+  });
+
+  // Function hooks
 
   it('workletizes hook wrapped ArrowFunctionExpression automatically', () => {
     const input = html`<script>
@@ -350,7 +437,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -364,7 +451,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -378,7 +465,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -392,7 +479,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -404,7 +491,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -416,11 +503,11 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
-  // object hooks
+  // Object hooks
 
   it('workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically', () => {
     const input = html`<script>
@@ -432,7 +519,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -446,7 +533,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -460,7 +547,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -474,7 +561,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -488,7 +575,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -502,7 +589,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -516,7 +603,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -530,7 +617,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -540,7 +627,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toContain('_f.__workletHash');
+    expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it('supports empty object in useAnimatedScrollHandler', () => {
@@ -549,7 +637,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toContain('_f.__workletHash');
+    expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it('transforms each object property in useAnimatedGestureHandler', () => {
@@ -562,7 +651,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/^(.*)(_f\.__workletHash(.*)){3}$/s);
+    expect(code).toHaveWorkletData(3);
+    expect(code).toMatchSnapshot();
   });
 
   it('transforms each object property in useAnimatedScrollHandler', () => {
@@ -577,7 +667,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toMatch(/^(.*)(_f\.__workletHash(.*)){5}$/s);
+    expect(code).toHaveWorkletData(5);
+    expect(code).toMatchSnapshot();
   });
 
   it("doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler", () => {
@@ -586,7 +677,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toContain('_f.__workletHash');
+    expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it("doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler", () => {
@@ -595,7 +687,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toContain('_f.__workletHash');
+    expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it("doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler", () => {
@@ -604,7 +697,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).not.toContain('_f.__workletHash');
+    expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it('transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler', () => {
@@ -615,7 +709,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it('transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler', () => {
@@ -626,7 +721,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   it('transforms named FunctionExpression as argument of useAnimatedScrollHandler', () => {
@@ -637,15 +733,14 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('_f.__workletHash');
+    expect(code).toHaveWorkletData();
+    expect(code).toMatchSnapshot();
   });
 
   // React Native Gesture Handler
 
   it('workletizes possibly chained gesture object callback functions automatically', () => {
     const input = html`<script>
-      import { Gesture } from 'react-native-gesture-handler';
-
       const foo = Gesture.Tap()
         .numberOfTaps(2)
         .onBegin(() => {
@@ -660,6 +755,17 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(3);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't workletize irrelevant chained gesture object callback functions", () => {
+    const input = html`<script>
+      const foo = Gesture.Tap().toString();
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -671,6 +777,19 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't transform chained methods of objects containing Gesture property", () => {
+    const input = html`<script>
+      const foo = Something.Gesture.Tap().onEnd(() => {
+        console.log('onEnd');
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).not.toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -684,6 +803,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toContain('...[2,3]');
+    expect(code).toContain('...bar');
     expect(code).toMatchSnapshot();
   });
 
@@ -697,6 +818,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toContain('...{b:2,c:3}');
+    expect(code).toContain('...bar');
     expect(code).toMatchSnapshot();
   });
 
@@ -709,6 +832,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toContain('...args');
     expect(code).toMatchSnapshot();
   });
 
@@ -721,17 +845,18 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toContain('...arg');
     expect(code).toMatchSnapshot();
   });
 
-  it('supports recursive calls', () => {
+  it('transforms spread operator in Animated component', () => {
     const input = html`<script>
-      const a = 1;
-      function foo(t) {
-        'worklet';
-        if (t > 0) {
-          return a + foo(t - 1);
-        }
+      function App() {
+        return (
+          <Animated.View
+            style={[style, { ...styles.container, width: sharedValue.value }]}
+          />
+        );
       }
     </script>`;
 
@@ -739,6 +864,7 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  // SequenceExpressions
   it('supports SequenceExpression', () => {
     const input = html`<script>
       function App() {
@@ -758,6 +884,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
     expect(code).toMatchSnapshot();
   });
 
@@ -776,6 +903,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -794,6 +923,8 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData();
+    expect(code).not.toContain("'worklet';");
     expect(code).toMatchSnapshot();
   });
 
@@ -813,9 +944,28 @@ describe('babel plugin', () => {
       }
     </script>`;
 
-    const { code } = runPlugin(input);
+    const { code, ast } = runPlugin(input, { ast: true });
+    let closureBindings;
+    traverse(ast, {
+      enter(path) {
+        if (
+          path.isAssignmentExpression() &&
+          'property' in path.node.left &&
+          'name' in path.node.left.property &&
+          'properties' in path.node.right &&
+          path.node.left.property.name === '_closure'
+        ) {
+          closureBindings = path.node.right.properties;
+        }
+      },
+    });
+    expect(closureBindings).toHaveLength(1);
     expect(code).toMatchSnapshot();
   });
+
+  // TODO add a test that will workletize only last function in sequence expression
+
+  // Inline styles
 
   it('shows a warning if user uses .value inside inline style', () => {
     const input = html`<script>
@@ -825,6 +975,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
@@ -836,6 +987,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
@@ -851,6 +1003,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
@@ -862,27 +1015,15 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
+    expect(code).not.toHaveInlineStyleWarning();
     expect(code).toMatchSnapshot();
   });
 
-  it("doesn't break if there is a spread syntax", () => {
-    const input = html`<script>
-      function App() {
-        return (
-          <Animated.View
-            style={[style, { ...styles.container, width: sharedValue.value }]}
-          />
-        );
-      }
-    </script>`;
-
-    const { code } = runPlugin(input);
-    expect(code).toMatchSnapshot();
-  });
-
+  // Idempotency
   it('is indempotent for common cases', () => {
     function resultIsIdempotent(input: string) {
       const firstResult = runPlugin(input).code;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const secondResult = runPlugin(firstResult!).code;
       return firstResult === secondResult;
     }

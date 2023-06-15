@@ -1,10 +1,11 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
+    "test:update-snapshot": "jest --updateSnapshot",
     "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
     "lint:plugin": "cd plugin && yarn lint && cd ..",
@@ -142,7 +143,7 @@
     "react": "17.0.2",
     "react-native": "0.72.0-rc.5",
     "react-native-builder-bob": "^0.18.3",
-    "react-native-gesture-handler": "^2.10.0",
+    "react-native-gesture-handler": "^2.11.0",
     "react-native-web": "~0.18.12",
     "react-test-renderer": "17.0.2",
     "shelljs": "^0.8.5",
@@ -166,12 +167,7 @@
     "output": "lib",
     "targets": [
       "module",
-      [
-        "typescript",
-        {
-          "project": "tsconfig.json"
-        }
-      ]
+      "typescript"
     ]
   },
   "sideEffects": [
