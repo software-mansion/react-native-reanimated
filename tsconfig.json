@@ -15,13 +15,5 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "exclude": [
-    "app",
-    "docs",
-    "Example",
-    "FabricExample",
-    "plugin",
-    "TVOSExample",
-    "WebExample"
-  ]
+  "include": ["src"]
 }
