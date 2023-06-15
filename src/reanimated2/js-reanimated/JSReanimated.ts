@@ -69,13 +69,15 @@ export default class JSReanimated extends NativeReanimated {
 
     if (!(this.getSensorName(sensorType) in window)) {
       // https://w3c.github.io/sensors/#secure-context
-      console.warn(
-        '[Reanimated] Sensor is not available. Check if you are using ssl (https): expo start --web --https.'
-      );
       if (this.platform === Platform.WEB_IOS) {
         console.warn(
-          `[Reanimated] To use web sensors on iOS, you have to grant permission in the browser:
+          `[Reanimated] Sensor is not available. Ensure usage of SSL (HTTPS): expo start --web --https,
+          for iOS web, you have to also grant permission in the browser:
           https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.`
+        );
+      } else {
+        console.warn(
+          '[Reanimated] Sensor is not available. Ensure usage of SSL (HTTPS): expo start --web --https.'
         );
       }
       return -1;
