@@ -443,7 +443,7 @@ public class SharedTransitionManager {
           if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
             preparedValues.put(key, value);
           } else {
-            float pixelsValue = Utils.parseNumberToFloat(value);
+            float pixelsValue = Utils.convertToFloat(value);
             preparedValues.put(key, (double) PixelUtil.toDIPFromPixel(pixelsValue));
           }
         }

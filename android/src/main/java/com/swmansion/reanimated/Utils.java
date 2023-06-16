@@ -36,9 +36,9 @@ public class Utils {
     return list.replace(",", "").replace("[", "").replace("]", "");
   }
 
-  public static float parseNumberToFloat(Object value) {
+  public static float convertToFloat(Object value) {
     if (value instanceof Integer) {
-      return (int) value;
+      return ((Integer) value).floatValue();
     } else if (value instanceof Float) {
       return (float) value;
     } else if (value instanceof Double) {
