@@ -58,8 +58,8 @@ public class ReanimatedSensorListener implements SensorEventListener {
       float[] data =
           new float[] {
             quaternion[1], // qx
-            quaternion[2], // qy
-            quaternion[3], // qz
+            quaternion[3], // qy -> we set qz to match iOS
+            -quaternion[2], // qz -> we set -qy to match iOS
             quaternion[0], // qw
             // make Android consistent with iOS, which is better documented here:
             // https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data/understanding_reference_frames_and_device_attitude

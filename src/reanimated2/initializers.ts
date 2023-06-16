@@ -1,6 +1,6 @@
 import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
-import { isChromeDebugger, isJest } from './PlatformChecker';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 import {
   runOnJS,
   setupMicrotasks,
@@ -141,6 +141,7 @@ export function initializeUIRuntime() {
 
   const IS_JEST = isJest();
   const IS_CHROME_DEBUGGER = isChromeDebugger();
+  const IS_NATIVE = !shouldBeUseWeb();
 
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
@@ -182,7 +183,7 @@ export function initializeUIRuntime() {
       };
     }
 
-    if (!IS_JEST) {
+    if (IS_NATIVE) {
       setupMicrotasks();
       setupRequestAnimationFrame();
     }
