@@ -15,5 +15,8 @@ export interface Descriptor {
 
 export interface RefObjectFunction<T> {
   current: T | null;
-  (component?: T): number | ShadowNodeWrapper;
+  (component?: T):
+    | number // Paper
+    | ShadowNodeWrapper // Fabric
+    | HTMLElement; // web
 }
