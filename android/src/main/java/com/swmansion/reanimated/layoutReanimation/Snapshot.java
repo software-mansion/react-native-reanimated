@@ -59,6 +59,8 @@ public class Snapshot {
   public float borderRadius;
   private float[] identityMatrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 
+  private static Field mBorderRadiusField;
+
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
           Arrays.asList(
@@ -136,9 +138,11 @@ public class Snapshot {
       }
     } else if (view instanceof ReactImageView) {
       try {
-        Field field = view.getClass().getDeclaredField("mBorderRadius");
-        field.setAccessible(true);
-        Float borderRadius = field.getFloat(view);
+        if (mBorderRadiusField == null) {
+          mBorderRadiusField = ReactImageView.class.getDeclaredField("mBorderRadius");
+          mBorderRadiusField.setAccessible(true);
+        }
+        float borderRadius = mBorderRadiusField.getFloat(view);
         return Float.isNaN(borderRadius) ? 0 : borderRadius;
       } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {
         // In case of non-standard view is better to not support the border animation
