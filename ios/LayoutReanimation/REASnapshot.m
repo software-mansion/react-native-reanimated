@@ -91,8 +91,8 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
     }
 #endif
   } else {
-    _values[@"originX"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width / 2.0];
-    _values[@"originY"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height / 2.0];
+    _values[@"originX"] = @(view.center.x - view.bounds.size.width / 2.0);
+    _values[@"originY"] = @(view.center.y - view.bounds.size.height / 2.0);
   }
 }
 
