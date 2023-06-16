@@ -236,7 +236,9 @@ public class NodesManager implements EventDispatcherListener {
   private void onAnimationFrame(long frameTimeNanos) {
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
 
-    if (currentFrameTimeMs != lastFrameTimeMs) {
+    if (currentFrameTimeMs > lastFrameTimeMs) {
+      // It is possible for ChoreographerCallback to be executed twice within the same frame
+      // due to frame drops. If this occurs, the additional callback execution should be ignored.
       lastFrameTimeMs = currentFrameTimeMs;
 
       while (!mEventQueue.isEmpty()) {
