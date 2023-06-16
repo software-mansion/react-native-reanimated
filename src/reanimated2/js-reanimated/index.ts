@@ -1,45 +1,35 @@
 import JSReanimated from './JSReanimated';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
+import { isWeb } from '../PlatformChecker';
+
+let createReactDOMStyle: (style: any) => any;
+let createTransformValue: (transform: any) => any;
+
+if (isWeb()) {
+  try {
+    createReactDOMStyle =
+      require('react-native-web/dist/exports/StyleSheet/compiler/createReactDOMStyle').default;
+  } catch (e) {}
+
+  try {
+    // React Native Web 0.19+
+    createTransformValue =
+      require('react-native-web/dist/exports/StyleSheet/preprocess').createTransformValue;
+  } catch (e) {}
+}
 
 const reanimatedJS = new JSReanimated();
 
+global._makeShareableClone = (c) => c;
+global._scheduleOnJS = queueMicrotask;
+
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
-  setNativeProps: (style: StyleProps) => void;
+  setNativeProps?: (style: StyleProps) => void;
+  style?: StyleProps;
   props: Record<string, string | number>;
   _touchableNode: {
     setAttribute: (key: string, props: unknown) => void;
-  };
-}
-
-if (shouldBeUseWeb()) {
-  global._frameTimestamp = null;
-  global._setGlobalConsole = (_val) => {
-    // noop
-  };
-  global._measure = () => {
-    console.warn(
-      "[Reanimated] You can't use `measure` with Chrome Debugger or with web version"
-    );
-    return {
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-      pageX: 0,
-      pageY: 0,
-    };
-  };
-  global._scrollTo = () => {
-    console.warn(
-      "[Reanimated] You can't use `scrollTo` with Chrome Debugger or with web version"
-    );
-  };
-  global._setGestureState = () => {
-    console.warn(
-      "[Reanimated] You can't use `setGestureState` with Chrome Debugger or with web version"
-    );
   };
 }
 
@@ -60,7 +50,17 @@ export const _updatePropsJS = (
     );
 
     if (typeof component.setNativeProps === 'function') {
+      // This is the legacy way to update props on React Native Web <= 0.18.
+      // Also, some components (e.g. from react-native-svg) don't have styles
+      // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles);
+    } else if (
+      createReactDOMStyle !== undefined &&
+      component.style !== undefined
+    ) {
+      // React Native Web 0.19+ no longer provides setNativeProps function,
+      // so we need to update DOM nodes directly.
+      updatePropsDOM(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -82,7 +82,24 @@ const setNativeProps = (
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
   component.previousStyle = currentStyle;
-  component.setNativeProps({ style: currentStyle });
+  component.setNativeProps?.({ style: currentStyle });
+};
+
+const updatePropsDOM = (
+  component: JSReanimatedComponent,
+  style: StyleProps
+): void => {
+  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const currentStyle = { ...previousStyle, ...style };
+  component.previousStyle = currentStyle;
+
+  const domStyle = createReactDOMStyle(currentStyle);
+  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
+    domStyle.transform = createTransformValue(domStyle.transform);
+  }
+  for (const key in domStyle) {
+    (component.style as StyleProps)[key] = domStyle[key];
+  }
 };
 
 export default reanimatedJS;

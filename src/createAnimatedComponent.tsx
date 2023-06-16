@@ -1,32 +1,18 @@
 import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import ReanimatedEventEmitter from './ReanimatedEventEmitter';
-
-// @ts-ignore JS file
-import AnimatedEvent from './reanimated1/core/AnimatedEvent';
-// @ts-ignore JS file
-import AnimatedNode from './reanimated1/core/AnimatedNode';
-// @ts-ignore JS file
-import AnimatedValue from './reanimated1/core/AnimatedValue';
-// @ts-ignore JS file
-import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
-import './reanimated2/layoutReanimation/LayoutAnimationRepository';
-
+import './reanimated2/layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
-  makeMutable,
-  runOnUI,
+  configureLayoutAnimations,
   enableLayoutAnimations,
+  runOnUI,
+  startMapper,
+  stopMapper,
 } from './reanimated2/core';
-import {
-  DefaultEntering,
-  DefaultExiting,
-  DefaultLayout,
-} from './reanimated2/layoutReanimation/defaultAnimations/Default';
 import {
   isJest,
   isChromeDebugger,
@@ -35,45 +21,49 @@ import {
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
+  DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  LayoutAnimationFunction,
+  LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
-import { SharedValue, StyleProps } from './reanimated2/commonTypes';
 import {
+  SharedValue,
+  StyleProps,
+  ShadowNodeWrapper,
+} from './reanimated2/commonTypes';
+import {
+  makeViewDescriptorsSet,
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
-
-const NODE_MAPPING = new Map();
-
-interface ListenerData {
-  viewTag: number;
-  props: StyleProps;
-}
-
-function listener(data: ListenerData) {
-  const component = NODE_MAPPING.get(data.viewTag);
-  component && component._updateFromNative(data.props);
-}
+import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
+import updateProps from './reanimated2/UpdateProps';
+import NativeReanimatedModule from './reanimated2/NativeReanimated';
+import { isSharedValue } from './reanimated2';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
 }
 
-function hasAnimatedNodes(value: unknown): boolean {
-  if (value instanceof AnimatedNode) {
-    return true;
+function maybeBuild(
+  layoutAnimationOrBuilder:
+    | ILayoutAnimationBuilder
+    | LayoutAnimationFunction
+    | Keyframe
+): LayoutAnimationFunction | Keyframe {
+  const isAnimationBuilder = (
+    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
+  ): value is ILayoutAnimationBuilder =>
+    'build' in layoutAnimationOrBuilder &&
+    typeof layoutAnimationOrBuilder.build === 'function';
+
+  if (isAnimationBuilder(layoutAnimationOrBuilder)) {
+    return layoutAnimationOrBuilder.build();
+  } else {
+    return layoutAnimationOrBuilder;
   }
-  if (Array.isArray(value)) {
-    return value.some((item) => hasAnimatedNodes(item));
-  }
-  if (value && typeof value === 'object') {
-    return Object.keys(value).some((key) =>
-      hasAnimatedNodes((value as Record<string, unknown>)[key])
-    );
-  }
-  return false;
 }
 
 type NestedArray<T> = T | NestedArray<T>[];
@@ -125,6 +115,87 @@ const has = <K extends string>(
   return false;
 };
 
+function isInlineStyleTransform(transform: any): boolean {
+  if (!transform) {
+    return false;
+  }
+  return transform.some((t: Record<string, any>) => hasInlineStyles(t));
+}
+
+function hasInlineStyles(style: StyleProps): boolean {
+  if (!style) {
+    return false;
+  }
+  return Object.keys(style).some((key) => {
+    const styleValue = style[key];
+    return (
+      isSharedValue(styleValue) ||
+      (key === 'transform' && isInlineStyleTransform(styleValue))
+    );
+  });
+}
+
+function extractSharedValuesMapFromProps(
+  props: AnimatedComponentProps<InitialComponentProps>
+): Record<string, any> {
+  const inlineProps: Record<string, any> = {};
+
+  for (const key in props) {
+    const value = props[key];
+    if (key === 'style') {
+      const styles = flattenArray<StyleProps>(props.style ?? []);
+      styles.forEach((style) => {
+        if (!style) {
+          return;
+        }
+        for (const [key, styleValue] of Object.entries(style)) {
+          if (isSharedValue(styleValue)) {
+            inlineProps[key] = styleValue;
+          } else if (
+            key === 'transform' &&
+            isInlineStyleTransform(styleValue)
+          ) {
+            inlineProps[key] = styleValue;
+          }
+        }
+      });
+    } else if (isSharedValue(value)) {
+      inlineProps[key] = value;
+    }
+  }
+
+  return inlineProps;
+}
+
+function inlinePropsHasChanged(styles1: StyleProps, styles2: StyleProps) {
+  if (Object.keys(styles1).length !== Object.keys(styles2).length) {
+    return true;
+  }
+
+  for (const key of Object.keys(styles1)) {
+    if (styles1[key] !== styles2[key]) return true;
+  }
+
+  return false;
+}
+
+function getInlinePropsUpdate(inlineProps: Record<string, any>) {
+  'worklet';
+  const update: Record<string, any> = {};
+  for (const [key, styleValue] of Object.entries(inlineProps)) {
+    if (key === 'transform') {
+      update[key] = styleValue.map((transform: Record<string, any>) => {
+        return getInlinePropsUpdate(transform);
+      });
+    } else if (isSharedValue(styleValue)) {
+      update[key] = styleValue.value;
+    } else {
+      update[key] = styleValue;
+    }
+  }
+  return update;
+}
+
 interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   viewsRef?: ViewRefSet<unknown>;
@@ -150,6 +221,8 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | typeof BaseAnimationBuilder
     | EntryExitAnimationFunction
     | Keyframe;
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
 
 type Options<P> = {
@@ -159,19 +232,12 @@ type Options<P> = {
 interface ComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => ComponentRef;
+  getAnimatableRef?: () => ComponentRef;
 }
 
 export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
-}
-
-interface PropsAnimated {
-  __onEvaluate: () => StyleProps;
-  __detach: () => void;
-  __getValue: () => StyleProps;
-  update: () => void;
-  setNativeView: (view: Component) => void;
 }
 
 export default function createAnimatedComponent(
@@ -181,54 +247,41 @@ export default function createAnimatedComponent(
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
-    '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
   );
 
   class AnimatedComponent extends React.Component<
     AnimatedComponentProps<InitialComponentProps>
   > {
-    _invokeAnimatedPropsCallbackOnMount = false;
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     initialStyle = {};
-    sv: SharedValue<null | Record<string, unknown>> | null;
-    _propsAnimated?: PropsAnimated;
     _component: ComponentRef | null = null;
+    _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
+    _inlinePropsMapperId: number | null = null;
+    _inlineProps: StyleProps = {};
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
-      this._attachProps(this.props);
       if (isJest()) {
         this.animatedStyle = { value: {} };
       }
-      this.sv = makeMutable({});
     }
 
     componentWillUnmount() {
-      this._detachPropUpdater();
-      this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
       this._detachStyles();
-      this.sv = null;
+      this._detachInlineProps();
     }
 
     componentDidMount() {
-      if (this._invokeAnimatedPropsCallbackOnMount) {
-        this._invokeAnimatedPropsCallbackOnMount = false;
-        this._animatedPropsCallback();
-      }
-
-      this._propsAnimated &&
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._propsAnimated.setNativeView(this._component!);
       this._attachNativeEvents();
-      this._attachPropUpdater();
       this._attachAnimatedStyles();
+      this._attachInlineProps();
     }
 
     _getEventViewRef() {
@@ -241,28 +294,26 @@ export default function createAnimatedComponent(
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = null; // We set it only if needed
+
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          (prop as AnimatedEvent).attachEvent(node, key);
-        } else if (
+        if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
+          if (viewTag === null) {
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
           prop.current.registerForEvents(viewTag as number, key);
         }
       }
     }
 
     _detachNativeEvents() {
-      const node = this._getEventViewRef();
-
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          (prop as AnimatedEvent).detachEvent(node, key);
-        } else if (
+        if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
@@ -285,41 +336,21 @@ export default function createAnimatedComponent(
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
+        if (global._IS_FABRIC) {
+          const viewTag = this._viewTag;
+          runOnUI(() => {
+            _removeShadowNodeFromRegistry!(viewTag);
+          })();
+        }
       }
     }
 
     _reattachNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      const node = this._getEventViewRef();
-      const attached = new Set();
-      const nextEvts = new Set();
-      let viewTag: number | undefined;
-
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          nextEvts.add((prop as AnimatedEvent).__nodeID);
-        } else if (
-          has('current', prop) &&
-          prop.current instanceof WorkletEventHandler
-        ) {
-          if (viewTag === undefined) {
-            viewTag = prop.current.viewTag;
-          }
-        }
-      }
       for (const key in prevProps) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has((prop as AnimatedEvent).__nodeID)) {
-            // event was in prev props but not in current props, we detach
-            (prop as AnimatedEvent).detachEvent(node, key);
-          } else {
-            // event was in prev and is still in current props
-            attached.add((prop as AnimatedEvent).__nodeID);
-          }
-        } else if (
+        if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
@@ -328,66 +359,22 @@ export default function createAnimatedComponent(
         }
       }
 
+      let viewTag = null;
+
       for (const key in this.props) {
         const prop = this.props[key];
         if (
-          prop instanceof AnimatedEvent &&
-          !attached.has((prop as AnimatedEvent).__nodeID)
-        ) {
-          // not yet attached
-          (prop as AnimatedEvent).attachEvent(node, key);
-        } else if (
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
         ) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          prop.current.registerForEvents(viewTag!, key);
+          if (viewTag === null) {
+            const node = this._getEventViewRef();
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
+          prop.current.registerForEvents(viewTag as number, key);
           prop.current.reattachNeeded = false;
         }
-      }
-    }
-
-    // The system is best designed when setNativeProps is implemented. It is
-    // able to avoid re-rendering and directly set the attributes that changed.
-    // However, setNativeProps can only be implemented on native components
-    // If you want to animate a composite component, you need to re-render it.
-    // In this case, we have a fallback that uses forceUpdate.
-    _animatedPropsCallback = () => {
-      if (this._component == null) {
-        // AnimatedProps is created in will-mount because it's used in render.
-        // But this callback may be invoked before mount in async mode,
-        // In which case we should defer the setNativeProps() call.
-        // React may throw away uncommitted work in async mode,
-        // So a deferred call won't always be invoked.
-        this._invokeAnimatedPropsCallbackOnMount = true;
-      } else if (typeof this._component.setNativeProps !== 'function') {
-        this.forceUpdate();
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._component.setNativeProps(this._propsAnimated!.__getValue());
-      }
-    };
-
-    _attachProps(nextProps: StyleProps) {
-      const oldPropsAnimated = this._propsAnimated;
-
-      this._propsAnimated = createOrReusePropsNode(
-        nextProps,
-        this._animatedPropsCallback,
-        oldPropsAnimated
-      );
-      // If prop node has been reused we don't need to call into "__detach"
-      if (oldPropsAnimated !== this._propsAnimated) {
-        // When you call detach, it removes the element from the parent list
-        // of children. If it goes to 0, then the parent also detaches itself
-        // and so on.
-        // An optimization is to attach the new elements and THEN detach the old
-        // ones instead of detaching and THEN attaching.
-        // This way the intermediate state isn't to go to 0 and trigger
-        // this expensive recursive detaching to then re-attach everything on
-        // the very next operation.
-        oldPropsAnimated && oldPropsAnimated.__detach();
       }
     }
 
@@ -401,32 +388,24 @@ export default function createAnimatedComponent(
       }
     }
 
-    _attachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.set(viewTag, this);
-      if (NODE_MAPPING.size === 1) {
-        ReanimatedEventEmitter.addListener('onReanimatedPropsChange', listener);
-      }
-    }
-
-    _attachAnimatedStyles() {
-      const styles = this.props.style
-        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
-        : [];
-      const prevStyles = this._styles;
-      this._styles = styles;
-
-      const prevAnimatedProps = this._animatedProps;
-      this._animatedProps = this.props.animatedProps;
-
+    _getViewInfo() {
       let viewTag: number | null;
       let viewName: string | null;
+      let shadowNodeWrapper: ShadowNodeWrapper | null = null;
+      let viewConfig;
+      // Component can specify ref which should be animated when animated version of the component is created.
+      // Otherwise, we animate the component itself.
+      const component = this._component?.getAnimatableRef
+        ? this._component.getAnimatableRef()
+        : this;
       if (Platform.OS === 'web') {
-        viewTag = findNodeHandle(this);
+        viewTag = findNodeHandle(component);
         viewName = null;
+        shadowNodeWrapper = null;
+        viewConfig = null;
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
-        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
         if (!hostInstance) {
           throw new Error(
             'Cannot find host instance for this component. Maybe it renders nothing?'
@@ -439,13 +418,36 @@ export default function createAnimatedComponent(
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
-        // update UI props whitelist for this view
-        const hasReanimated2Props =
-          this.props.animatedProps?.viewDescriptors || styles.length;
-        if (hasReanimated2Props && hostInstance?.viewConfig) {
-          adaptViewConfig(hostInstance.viewConfig);
+
+        viewConfig = hostInstance?.viewConfig;
+
+        if (global._IS_FABRIC) {
+          shadowNodeWrapper = getShadowNodeWrapperFromRef(this);
         }
       }
+      return { viewTag, viewName, shadowNodeWrapper, viewConfig };
+    }
+
+    _attachAnimatedStyles() {
+      const styles = this.props.style
+        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
+        : [];
+      const prevStyles = this._styles;
+      this._styles = styles;
+
+      const prevAnimatedProps = this._animatedProps;
+      this._animatedProps = this.props.animatedProps;
+
+      const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
+        this._getViewInfo();
+
+      // update UI props whitelist for this view
+      const hasReanimated2Props =
+        this.props.animatedProps?.viewDescriptors || styles.length;
+      if (hasReanimated2Props && viewConfig) {
+        adaptViewConfig(viewConfig);
+      }
+
       this._viewTag = viewTag as number;
 
       // remove old styles
@@ -470,7 +472,11 @@ export default function createAnimatedComponent(
       }
 
       styles.forEach((style) => {
-        style.viewDescriptors.add({ tag: viewTag, name: viewName });
+        style.viewDescriptors.add({
+          tag: viewTag,
+          name: viewName,
+          shadowNodeWrapper,
+        });
         if (isJest()) {
           /**
            * We need to connect Jest's TestObject instance whose contains just props object
@@ -501,28 +507,78 @@ export default function createAnimatedComponent(
           tag: viewTag!,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           name: viewName!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          shadowNodeWrapper: shadowNodeWrapper!,
         });
       }
     }
 
-    _detachPropUpdater() {
-      const viewTag = findNodeHandle(this);
-      NODE_MAPPING.delete(viewTag);
-      if (NODE_MAPPING.size === 0) {
-        ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
+    _attachInlineProps() {
+      const newInlineProps: Record<string, any> =
+        extractSharedValuesMapFromProps(this.props);
+      const hasChanged = inlinePropsHasChanged(
+        newInlineProps,
+        this._inlineProps
+      );
+
+      if (hasChanged) {
+        if (!this._inlinePropsViewDescriptors) {
+          this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
+
+          const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
+            this._getViewInfo();
+
+          if (Object.keys(newInlineProps).length && viewConfig) {
+            adaptViewConfig(viewConfig);
+          }
+
+          this._inlinePropsViewDescriptors.add({
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            tag: viewTag!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            name: viewName!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            shadowNodeWrapper: shadowNodeWrapper!,
+          });
+        }
+        const sharableViewDescriptors =
+          this._inlinePropsViewDescriptors.sharableViewDescriptors;
+
+        const maybeViewRef = NativeReanimatedModule.native
+          ? undefined
+          : ({ items: new Set([this]) } as ViewRefSet<any>); // see makeViewsRefSet
+
+        const updaterFunction = () => {
+          'worklet';
+          const update = getInlinePropsUpdate(newInlineProps);
+          updateProps(sharableViewDescriptors, update, maybeViewRef);
+        };
+        this._inlineProps = newInlineProps;
+        if (this._inlinePropsMapperId) {
+          stopMapper(this._inlinePropsMapperId);
+        }
+        this._inlinePropsMapperId = null;
+        if (Object.keys(newInlineProps).length) {
+          this._inlinePropsMapperId = startMapper(
+            updaterFunction,
+            Object.values(newInlineProps)
+          );
+        }
+      }
+    }
+
+    _detachInlineProps() {
+      if (this._inlinePropsMapperId) {
+        stopMapper(this._inlinePropsMapperId);
       }
     }
 
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
-
-      this._propsAnimated &&
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._propsAnimated.setNativeView(this._component!);
       this._attachAnimatedStyles();
+      this._attachInlineProps();
     }
 
     _setComponentRef = setAndForwardRef<Component>({
@@ -533,43 +589,45 @@ export default function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
         const tag = findNodeHandle(ref);
+        const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
-          (this.props.layout || this.props.entering || this.props.exiting) &&
+          (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {
           if (!shouldBeUseWeb()) {
             enableLayoutAnimations(true, false);
           }
-          let layout = this.props.layout ? this.props.layout : DefaultLayout;
-          let entering = this.props.entering
-            ? this.props.entering
-            : DefaultEntering;
-          let exiting = this.props.exiting
-            ? this.props.exiting
-            : DefaultExiting;
-
-          if (has('build', layout)) {
-            layout = layout.build();
+          if (layout) {
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.LAYOUT,
+              maybeBuild(layout)
+            );
           }
-
-          if (has('build', entering)) {
-            entering = entering.build() as EntryExitAnimationFunction;
+          if (entering) {
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.ENTERING,
+              maybeBuild(entering)
+            );
           }
-
-          if (has('build', exiting)) {
-            exiting = exiting.build() as EntryExitAnimationFunction;
+          if (exiting) {
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.EXITING,
+              maybeBuild(exiting)
+            );
           }
-
-          const config = {
-            layout,
-            entering,
-            exiting,
-            sv: this.sv,
-          };
-          runOnUI(() => {
-            'worklet';
-            global.LayoutAnimationRepository.registerConfig(tag, config);
-          })();
+          if (sharedTransitionTag) {
+            const sharedElementTransition =
+              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
+            configureLayoutAnimations(
+              tag,
+              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+              maybeBuild(sharedElementTransition),
+              sharedTransitionTag
+            );
+          }
         }
 
         if (ref !== this._component) {
@@ -577,21 +635,6 @@ export default function createAnimatedComponent(
         }
       },
     });
-
-    _filterNonAnimatedStyle(inputStyle: StyleProps) {
-      const style: StyleProps = {};
-      for (const key in inputStyle) {
-        const value = inputStyle[key];
-        if (!hasAnimatedNodes(value)) {
-          style[key] = value;
-        } else if (value instanceof AnimatedValue) {
-          // if any style in animated component is set directly to the `Value` we set those styles to the first value of `Value` node in order
-          // to avoid flash of default styles when `Value` is being asynchrounously sent via bridge and initialized in the native side.
-          style[key] = value._startingValue;
-        }
-      }
-      return style;
-    }
 
     _filterNonAnimatedProps(
       inputProps: AnimatedComponentProps<InitialComponentProps>
@@ -613,13 +656,25 @@ export default function createAnimatedComponent(
                 };
               }
               return this.initialStyle;
+            } else if (hasInlineStyles(style)) {
+              if (this._isFirstRender) {
+                return getInlinePropsUpdate(style);
+              }
+              const newStyle: StyleProps = {};
+              for (const [key, styleValue] of Object.entries(style)) {
+                if (
+                  !isSharedValue(styleValue) &&
+                  !(key === 'transform' && isInlineStyleTransform(styleValue))
+                ) {
+                  newStyle[key] = styleValue;
+                }
+              }
+              return newStyle;
             } else {
               return style;
             }
           });
-          props[key] = this._filterNonAnimatedStyle(
-            StyleSheet.flatten(processedStyle)
-          );
+          props[key] = StyleSheet.flatten(processedStyle);
         } else if (key === 'animatedProps') {
           const animatedProp = inputProps.animatedProps as Partial<
             AnimatedComponentProps<AnimatedProps>
@@ -630,12 +685,6 @@ export default function createAnimatedComponent(
               animatedProp.viewsRef?.add(this);
             });
           }
-        } else if (value instanceof AnimatedEvent) {
-          // we cannot filter out event listeners completely as some components
-          // rely on having a callback registered in order to generate events
-          // alltogether. Therefore we provide a dummy callback here to allow
-          // native event dispatcher to hijack events.
-          props[key] = dummyListener;
         } else if (
           has('current', value) &&
           value.current instanceof WorkletEventHandler
@@ -651,14 +700,15 @@ export default function createAnimatedComponent(
           } else {
             props[key] = dummyListener;
           }
-        } else if (!(value instanceof AnimatedNode)) {
-          if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
-            props[key] = value;
+        } else if (isSharedValue(value)) {
+          if (this._isFirstRender) {
+            props[key] = (value as SharedValue<any>).value;
           }
-        } else if (value instanceof AnimatedValue) {
-          // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
-          // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
-          props[key] = (value as AnimatedValue)._startingValue;
+        } else if (
+          key !== 'onGestureHandlerStateChange' ||
+          !isChromeDebugger()
+        ) {
+          props[key] = value;
         }
       }
       return props;

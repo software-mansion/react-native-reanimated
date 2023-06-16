@@ -11,5 +11,15 @@ module.exports = {
     '@babel/preset-typescript',
     'module:metro-react-native-babel-preset',
   ],
-  plugins: ['@babel/plugin-proposal-class-properties', './plugin.js'],
+  plugins: [
+    '@babel/plugin-proposal-class-properties',
+    '@babel/plugin-proposal-private-methods',
+    ['./plugin', { disableInlineStylesWarning: true }],
+    [
+      '@babel/plugin-transform-react-jsx',
+      {
+        runtime: 'classic',
+      },
+    ],
+  ],
 };

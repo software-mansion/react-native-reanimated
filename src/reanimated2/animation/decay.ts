@@ -20,6 +20,8 @@ interface DefaultDecayConfig {
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
+  rubberBandEffect?: boolean;
+  rubberBandFactor: number;
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
@@ -46,8 +48,9 @@ export function withDecay(
     'worklet';
     const config: DefaultDecayConfig = {
       deceleration: 0.998,
-      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
+      velocityFactor: 1,
       velocity: 0,
+      rubberBandFactor: 0.6,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach(
@@ -59,40 +62,81 @@ export function withDecay(
     const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
-    function decay(animation: InnerDecayAnimation, now: number): boolean {
-      const {
-        lastTimestamp,
-        startTimestamp,
-        initialVelocity,
-        current,
-        velocity,
-      } = animation;
+    let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
-      const deltaTime = Math.min(now - lastTimestamp, 64);
-      const v =
-        velocity *
-        Math.exp(
-          -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
-        );
-      animation.current =
-        current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
-      animation.velocity = v;
-      animation.lastTimestamp = now;
+    if (config.rubberBandEffect) {
+      decay = (animation: InnerDecayAnimation, now: number): boolean => {
+        const {
+          lastTimestamp,
+          startTimestamp,
+          current,
+          initialVelocity,
+          velocity,
+        } = animation;
 
-      if (config.clamp) {
-        if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
-          animation.current = config.clamp[0];
-          return true;
-        } else if (
-          initialVelocity > 0 &&
-          animation.current >= config.clamp[1]
-        ) {
-          animation.current = config.clamp[1];
+        const deltaTime = Math.min(now - lastTimestamp, 64);
+        const clampIndex = initialVelocity > 0 ? 1 : 0;
+        let derivative = 0;
+        if (current < config.clamp![0] || current > config.clamp![1]) {
+          derivative = current - config.clamp![clampIndex];
+        }
+
+        if (derivative !== 0) {
+          animation.springActive = true;
+        } else if (derivative === 0 && animation.springActive) {
+          animation.current = config.clamp![clampIndex];
           return true;
         }
-      }
 
-      return Math.abs(v) < VELOCITY_EPS;
+        const v =
+          velocity *
+            Math.exp(
+              -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
+            ) -
+          derivative * config.rubberBandFactor;
+
+        animation.current =
+          current + (v * config.velocityFactor * deltaTime) / 1000;
+        animation.velocity = v;
+        animation.lastTimestamp = now;
+        return false;
+      };
+    } else {
+      decay = (animation: InnerDecayAnimation, now: number): boolean => {
+        const {
+          lastTimestamp,
+          startTimestamp,
+          initialVelocity,
+          current,
+          velocity,
+        } = animation;
+
+        const deltaTime = Math.min(now - lastTimestamp, 64);
+        const v =
+          velocity *
+          Math.exp(
+            -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
+          );
+        animation.current =
+          current + (v * config.velocityFactor * deltaTime) / 1000;
+        animation.velocity = v;
+        animation.lastTimestamp = now;
+
+        if (config.clamp) {
+          if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
+            animation.current = config.clamp[0];
+            return true;
+          } else if (
+            initialVelocity > 0 &&
+            animation.current >= config.clamp[1]
+          ) {
+            animation.current = config.clamp[1];
+            return true;
+          }
+        }
+
+        return Math.abs(v) < VELOCITY_EPS;
+      };
     }
 
     function validateConfig(): void {
@@ -111,6 +155,11 @@ export function withDecay(
       if (config.velocityFactor <= 0) {
         throw Error(
           `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
+        );
+      }
+      if (config.rubberBandEffect && !config.clamp) {
+        throw Error(
+          'You need to set `clamp` property when using `rubberBandEffect`.'
         );
       }
     }

@@ -1,48 +1,62 @@
 name: Test Android build
 on:
   pull_request:
+    paths:
+      - .github/workflows/android-build.yml
+      - android/**
+      - Common/**
+      - Example/package.json
+      - Example/android/**
+      - FabricExample/package.json
+      - FabricExample/android/**
+  merge_group:
     branches:
       - main
-    paths:
-      - 'android/**'
-      - 'Common/**'
   push:
     branches:
       - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      WORKING_DIRECTORY: Example
+    strategy:
+      matrix:
+        working-directory: [Example, FabricExample]
+      fail-fast: false
     concurrency:
-      group: android-${{ github.ref }}
+      group: android-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Setup Java 11
+        uses: actions/setup-java@v3
         with:
-          java-version: '11'
-      - name: Install NDK
-        uses: nttld/setup-ndk@v1
-        id: setup-ndk
+          distribution: 'zulu'
+          java-version: 11
+
+      - name: Restore Reanimated node_modules from cache
+        uses: actions/cache@v3
         with:
-          ndk-version: r21d
-      - name: Set ANDROID_NDK
-        run: echo "ANDROID_NDK=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
-      - name: Accept licenses
-        run: /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
-      - name: Use Node.js 14
-        uses: actions/setup-node@v2
+          path: node_modules
+          key: ${{ runner.os }}-android-node-modules-reanimated-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-android-node-modules-reanimated-
+
+      - name: Install Reanimated node_modules
+        run: yarn install --frozen-lockfile
+
+      - name: Restore app node_modules from cache
+        uses: actions/cache@v3
         with:
-          node-version: 14
-          cache: 'yarn'
-      - name: Install root node dependencies
-        run: yarn
-      - name: Install example app node dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn
+          path: ${{ matrix.working-directory }}/node_modules
+          key: ${{ runner.os }}-android-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
+          restore-keys: ${{ runner.os }}-android-node-modules-${{ matrix.working-directory }}-
+
+      - name: Install app node_modules
+        working-directory: ${{ matrix.working-directory }}
+        run: yarn install --frozen-lockfile
+
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}/android
-        run: ./gradlew assembleDebug --console=plain
+        working-directory: ${{ matrix.working-directory }}/android
+        run: ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a

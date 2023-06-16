@@ -1,0 +1,15 @@
+name: Build nightly npm package
+
+on:
+  schedule:
+    - cron: '27 23 * * *' # at 23:27 every day
+  workflow_dispatch:
+
+jobs:
+  call-build-workflow-rea-v3:
+    uses: ./.github/workflows/build-npm-package-action.yml
+    with:
+      version: nightly
+      publish_on_npm: true
+    secrets:
+      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

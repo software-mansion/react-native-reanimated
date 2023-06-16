@@ -4,7 +4,7 @@ title: Worklets
 sidebar_label: Worklets
 ---
 
-The ultimate goal of worklets was for them to define small pieces of JavaScript code that we run when updating view properties or reacting to events on the UI thread. A natural construct in JavaScript for such a purpose was a simple method. With Reanimated 2 we spawn a secondary JS context on the UI thread that then is able to run JavaScript functions. The only thing that is needed is for that function to have “worklet” directive at the top:
+The ultimate goal of worklets was for them to define small pieces of JavaScript code that we run when updating view properties or reacting to events on the UI thread. A natural construct in JavaScript for such a purpose was a simple method. With Reanimated we spawn a secondary JS context on the UI thread that then is able to run JavaScript functions. The only thing that is needed is for that function to have the “worklet” directive at the top:
 
 ```js
 function someWorklet(greeting) {
@@ -68,7 +68,7 @@ function someWorklet() {
 
 ## Using hooks
 
-In practice, when writing animations and interactions with Reanimated, you will rarely need to create worklets using `'worklet'` directive (just take a look at `Example/` folder to see we don't have that many occurences of the directive).
+In practice, when writing animations and interactions with Reanimated, you will rarely need to create worklets using `'worklet'` directive (just take a look at `Example/` folder to see we don't have that many occurrences of the directive).
 What you will be using most of the time instead, are worklets that can be constructed by one of the hooks from Reanimated API, e.g. `useAnimatedStyle`, `useDerivedValue`, `useAnimatedGestureHandler`, etc.
 When using one of the hooks listed in the Reanimated API Reference, we automatically detect that the provided method is a worklet and do not require the directive to be specified.
 The method provided to the hook will be turned into a worklet and executed on the UI thread automatically.

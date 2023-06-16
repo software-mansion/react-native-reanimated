@@ -75,15 +75,3 @@ export function withDelay(
     };
   });
 }
-
-/**
- * @deprecated Kept for backward compatibility. Will be removed soon.
- */
-export function delay(
-  delayMs: number,
-  _nextAnimation: NextAnimation<DelayAnimation>
-): Animation<DelayAnimation> {
-  'worklet';
-  console.warn('Method `delay` is deprecated. Please use `withDelay` instead');
-  return withDelay(delayMs, _nextAnimation);
-}

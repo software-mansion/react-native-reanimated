@@ -1,0 +1,47 @@
+diff --git a/node_modules/react-native-gesture-handler/android/noreanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt b/node_modules/react-native-gesture-handler/android/noreanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt
+index 18d3f93..6202cde 100644
+--- a/node_modules/react-native-gesture-handler/android/noreanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt
++++ b/node_modules/react-native-gesture-handler/android/noreanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt
+@@ -3,7 +3,7 @@ package com.swmansion.gesturehandler
+ import com.facebook.react.bridge.ReactContext
+ import com.facebook.react.uimanager.events.Event
+ 
+-object ReanimatedEventDispatcher {
++class ReanimatedEventDispatcher {
+     fun <T : Event<T>>sendEvent(event: T, reactApplicationContext: ReactContext) {
+         // no-op
+     }
+diff --git a/node_modules/react-native-gesture-handler/android/reanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt b/node_modules/react-native-gesture-handler/android/reanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt
+index 43f9d42..3abd665 100644
+--- a/node_modules/react-native-gesture-handler/android/reanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt
++++ b/node_modules/react-native-gesture-handler/android/reanimated/src/main/java/com/swmansion/gesturehandler/ReanimatedEventDispatcher.kt
+@@ -4,7 +4,7 @@ import com.facebook.react.bridge.ReactContext
+ import com.facebook.react.uimanager.events.Event
+ import com.swmansion.reanimated.ReanimatedModule
+ 
+-object ReanimatedEventDispatcher {
++class ReanimatedEventDispatcher {
+     private var reanimatedModule: ReanimatedModule? = null
+ 
+     fun <T : Event<T>>sendEvent(event: T, reactApplicationContext: ReactContext) {
+diff --git a/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt b/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt
+index 78fcb87..ebc4943 100644
+--- a/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt
++++ b/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerModule.kt
+@@ -347,6 +347,7 @@ class RNGestureHandlerModule(reactContext: ReactApplicationContext?)
+   private val interactionManager = RNGestureHandlerInteractionManager()
+   private val roots: MutableList<RNGestureHandlerRootHelper> = ArrayList()
+   private val enqueuedRootViewInit: MutableList<Int> = ArrayList()
++  private val reanimatedEventDispatcher = ReanimatedEventDispatcher()
+   override fun getName() = MODULE_NAME
+ 
+   @ReactMethod
+@@ -593,7 +594,7 @@ class RNGestureHandlerModule(reactContext: ReactApplicationContext?)
+     // Delivers the event to Reanimated.
+     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+       // Send event directly to Reanimated
+-      ReanimatedEventDispatcher.sendEvent(event, reactApplicationContext)
++      reanimatedEventDispatcher.sendEvent(event, reactApplicationContext)
+     } else {
+       // In the old architecture, Reanimated subscribes for specific direct events.
+       sendEventForDirectEvent(event)

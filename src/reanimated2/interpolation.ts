@@ -1,14 +1,7 @@
-// @ts-ignore JS file
-import interpolateNode from '../reanimated1/derived/interpolate';
-
 export enum Extrapolation {
   IDENTITY = 'identity',
   CLAMP = 'clamp',
   EXTEND = 'extend',
-}
-
-export interface InterpolatedNode {
-  __nodeId: number;
 }
 
 interface InterpolationNarrowedInput {
@@ -33,11 +26,6 @@ export type ExtrapolationType =
   | Extrapolation
   | string
   | undefined;
-
-function isNode(x: number | InterpolatedNode): x is InterpolatedNode {
-  'worklet';
-  return (x as InterpolatedNode).__nodeId !== undefined;
-}
 
 function getVal(
   type: Extrapolation,
@@ -156,7 +144,7 @@ function internalInterpolate(
 // TODO: support default values in worklets:
 // e.g. function interpolate(x, input, output, type = Extrapolatation.CLAMP)
 export function interpolate(
-  x: number | InterpolatedNode,
+  x: number,
   input: readonly number[],
   output: readonly number[],
   type?: ExtrapolationType
@@ -169,19 +157,6 @@ export function interpolate(
   }
 
   const extrapolationConfig = validateType(type);
-
-  if (isNode(x)) {
-    console.warn(
-      `interpolate() was renamed to interpolateNode() in Reanimated 2. Please use interpolateNode() instead`
-    );
-    return interpolateNode(x, {
-      inputRange: input,
-      outputRange: output,
-      extrapolateLeft: extrapolationConfig.extrapolateLeft,
-      extrapolateRight: extrapolationConfig.extrapolateRight,
-    });
-  }
-
   const length = input.length;
   const narrowedInput: InterpolationNarrowedInput = {
     leftEdgeInput: input[0],

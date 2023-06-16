@@ -70,7 +70,7 @@ In swizzled components look for "SWM -" string to see our modifications
 module.exports = {
   title: 'React Native Reanimated',
   tagline: "React Native's Animated library reimplemented",
-  url: 'https://docs.swmansion.com/react-native-reanimated/',
+  url: 'https://docs.swmansion.com',
   baseUrl: '/react-native-reanimated/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -82,13 +82,10 @@ module.exports = {
   projectName: 'react-native-reanimated',
   themeConfig: {
     algolia: {
-      apiKey: 'ffb6d91f5f14c201543b7ab35ae13535',
+      appId: 'CHLGM6BFRG',
+      apiKey: 'b87befadf62b27ce46142fee664e9c9c',
       indexName: 'react-native-reanimated',
       // contextualSearch: true, // doesn't work for some reason
-    },
-    googleAnalytics: {
-      trackingID: 'UA-41044622-6',
-      anonymizeIP: true,
     },
     colorMode: {
       disableSwitch: true,
@@ -128,6 +125,14 @@ module.exports = {
     prism: {
       theme: prismConfig,
     },
+    announcementBar: {
+      id: 'reanimated-beta-docs',
+      content:
+        "We're working on a full documentation rewrite. Check out the <a target='_blank' rel='noopener noreferrer' href='https://reanimated-beta-docs.swmansion.com/'>New Reanimated Docs</a> and <a target='_blank' rel='noopener noreferrer' href='https://github.com/software-mansion-labs/reanimated-beta-docs/discussions/12'>share your feedback</a> with us!",
+      backgroundColor: '#FFFFFF',
+      textColor: '#001A72',
+      isCloseable: false,
+    },
   },
   presets: [
     [
@@ -137,9 +142,19 @@ module.exports = {
           path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: undefined, // hide edit button
+          lastVersion: 'current', // <- this makes 3.x docs as default
+          versions: {
+            current: {
+              label: '3.x',
+            },
+          },
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        googleAnalytics: {
+          trackingID: 'UA-41044622-6',
+          anonymizeIP: true,
         },
       },
     ],

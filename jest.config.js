@@ -1,7 +1,8 @@
 module.exports = {
   preset: 'react-native',
-  modulePathIgnorePatterns: ['Example', 'docs', 'lib'],
+  modulePathIgnorePatterns: ['Example', 'FabricExample', 'docs', 'lib'],
   setupFiles: ['./jest-setup.js'],
-  testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
+  testEnvironment: 'node',
+  transformIgnorePatterns: [],
 };

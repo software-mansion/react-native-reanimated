@@ -1,11 +1,3 @@
-// spread and rest parameters can't be used in worklets right now
-/* eslint-disable prefer-rest-params */
-/* eslint-disable prefer-spread */
-
-/* global _WORKLET */
-
-// @ts-ignore reanimated1/Easing is JS file
-import EasingNode from '../reanimated1/Easing';
 import { Bezier } from './Bezier';
 
 /**
@@ -272,6 +264,24 @@ function inOut(easing: EasingFn): EasingFn {
   };
 }
 
+/**
+ * The `steps` easing function jumps between discrete values at regular intervals,
+ * creating a stepped animation effect. The `n` parameter determines the number of
+ * steps in the animation, and the `roundToNextStep` parameter determines whether the animation
+ * should start at the beginning or end of each step.
+ */
+function steps(n = 10, roundToNextStep = true): EasingFn {
+  'worklet';
+  return (t) => {
+    'worklet';
+    const value = Math.min(Math.max(t, 0), 1) * n;
+    if (roundToNextStep) {
+      return Math.ceil(value) / n;
+    }
+    return Math.floor(value) / n;
+  };
+}
+
 const EasingObject = {
   linear,
   ease,
@@ -286,54 +296,10 @@ const EasingObject = {
   bounce,
   bezier,
   bezierFn,
+  steps,
   in: in_,
   out,
   inOut,
 };
-
-// TODO type worklets
-function createChecker(
-  worklet: any,
-  workletName: string,
-  prevArgs?: unknown
-): any {
-  /* should return Animated.Value or worklet */
-  function checkIfReaOne(): any {
-    'worklet';
-    if (arguments && !_WORKLET) {
-      for (let i = 0; i < arguments.length; i++) {
-        const arg = arguments[i];
-        if (arg && arg.__nodeID) {
-          console.warn(
-            `Easing was renamed to EasingNode in Reanimated 2. Please use EasingNode instead`
-          );
-          if (prevArgs) {
-            return EasingNode[workletName]
-              .apply(undefined, prevArgs)
-              .apply(undefined, arguments);
-          }
-          return EasingNode[workletName].apply(undefined, arguments);
-        }
-      }
-    }
-    // @ts-ignore this is implicitly any - TODO
-    const res = worklet.apply(this, arguments);
-    if (!_WORKLET && res && typeof res === 'function' && res.__workletHash) {
-      return createChecker(res, workletName, arguments);
-    }
-    return res;
-  }
-  // use original worklet on UI side
-  checkIfReaOne._closure = worklet._closure;
-  checkIfReaOne.asString = worklet.asString;
-  checkIfReaOne.__workletHash = worklet.__workletHash;
-  checkIfReaOne.__location = worklet.__location;
-  return checkIfReaOne;
-}
-
-type EasingObjT = Array<keyof typeof EasingObject>;
-(Object.keys(EasingObject) as EasingObjT).forEach((key) => {
-  EasingObject[key] = createChecker(EasingObject[key], key);
-});
 
 export const Easing = EasingObject;

@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import { DependencyList } from './commonTypes';
-import { useSharedValue } from './useSharedValue';
+import { shouldBeUseWeb } from '../PlatformChecker';
 
 export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
   (prepared: T, previous: T | null): void;
@@ -18,11 +18,21 @@ export function useAnimatedReaction<T>(
   react: AnimatedReactionWorkletFunction<T>,
   dependencies: DependencyList
 ): void {
-  const previous = useSharedValue<T | null>(null);
+  const previous = useRef({ value: null as T | null }).current;
+
+  let inputs = Object.values(prepare._closure ?? {});
+
+  if (shouldBeUseWeb()) {
+    if (!inputs.length && dependencies?.length) {
+      // let web work without a Babel/SWC plugin
+      inputs = dependencies;
+    }
+  }
+
   if (dependencies === undefined) {
     dependencies = [
-      Object.values(prepare._closure ?? {}),
-      Object.values(react._closure ?? {}),
+      ...Object.values(prepare._closure ?? {}),
+      ...Object.values(react._closure ?? {}),
       prepare.__workletHash,
       react.__workletHash,
     ];
@@ -37,11 +47,7 @@ export function useAnimatedReaction<T>(
       react(input, previous.value);
       previous.value = input;
     };
-    const mapperId = startMapper(
-      fun,
-      Object.values(prepare._closure ?? {}),
-      []
-    );
+    const mapperId = startMapper(fun, inputs, []);
     return () => {
       stopMapper(mapperId);
     };

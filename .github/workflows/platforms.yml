@@ -5,30 +5,22 @@ on:
 
 jobs:
   main:
-    if: ${{ !contains(github.event.issue.labels.*.name, 'maintainer-issue') }}
+    if: ${{ !contains(github.event.issue.labels.*.name, 'Maintainer issue') }}
     runs-on: ubuntu-latest
     concurrency:
       group: platforms-${{ github.event.issue.number }}
       cancel-in-progress: true
     steps:
       - name: Checkout Actions
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: 'software-mansion-labs/swmansion-bot'
           ref: stable
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Use yarn cache
-        uses: actions/cache@v2
-        id: yarn-cache
+      - uses: actions/cache@v3
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install Actions
         run: yarn install
@@ -37,4 +29,6 @@ jobs:
         uses: ./platforms
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          platforms-with-labels: '{"Android": "🤖android", "iOS": "🍎iOS", "Web": "🧭web"}'
+          platforms-section-header: Platforms
+          platforms-comma-separated: true
+          platforms-with-labels: '{"Android": "Platform: Android", "iOS": "Platform: iOS", "Web": "Platform: Web"}'

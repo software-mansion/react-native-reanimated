@@ -6,13 +6,28 @@ sidebar_label: Events
 
 In the real world nothing changes instantly–there is always something between the states. When we touch a book we don't expect it to open instantly on a certain page. To make mobile apps feel more natural to the user, we use animations to smoothen out user interactions with the app user interface.
 
-To show how event handling is done in Reanimated 2 we are going to lead you step by step towards achieving the following result:
+To show how event handling is done in Reanimated we are going to lead you step by step towards achieving the following result:
 
 ![](/docs/events/final.gif)
 
 ## Handling gesture events
 
-Reanimated 2 integrates tightly with the [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/) package for the ability to define performant gesture-based interactions. We explain the library's APIs whenever we use bits of it in our examples, however, if you'd like to learn more about the gesture-handler outside of the context of reanimated, please visit the documentation website [here](https://docs.swmansion.com/react-native-gesture-handler/).
+Reanimated integrates tightly with the [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/) package for the ability to define performant gesture-based interactions. We explain the library's APIs whenever we use bits of it in our examples, however, if you'd like to learn more about the gesture-handler outside of the context of reanimated, please visit the documentation website [here](https://docs.swmansion.com/react-native-gesture-handler/).
+
+
+For Android OS, be sure to wrap your app entry point with `<GestureHandlerRootView>` component from `react-native-gesture-handler` library to capture events properly.
+
+```js
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* content */}
+    </GestureHandlerRootView>
+  );
+}
+```
 
 Going back to the interaction example, we start by focusing on tap events only.
 
@@ -73,7 +88,7 @@ After incorporating the changes described above here is what you will see on the
 
 ![](/docs/events/touch-raw.gif)
 
-Reanimated 2 makes it very easy to animate between state changes. You can try adding *withSpring* or *withTiming* in *useAnimatedStyle* to make this interaction feel much more natural:
+Reanimated makes it very easy to animate between state changes. You can try adding *withSpring* or *withTiming* in *useAnimatedStyle* to make this interaction feel much more natural:
 
 ```js
 {

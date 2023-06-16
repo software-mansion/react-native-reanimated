@@ -4,11 +4,11 @@ title: Custom Events
 sidebar_label: Custom Events
 ---
 
-Apart from gestures and scroll events, Reanimated 2.x exposes low-level API to create custom animated event handlers for custom animated components. With this API you can create handler hooks similar to `useAnimatedGestureHandler` and `useAnimatedScrollHandler`.
+Apart from gestures and scroll events, Reanimated exposes a low-level API to create custom animated event handlers for custom animated components. With this API you can create handler hooks similar to the `useAnimatedGestureHandler` and `useAnimatedScrollHandler`.
 
 ## Handling events from custom animated component
 
-Let's say that you want to animate pagination dots based on custom component which exposes its scroll value - for that example we will use [pager](https://github.com/callstack/react-native-pager-view) component.
+Let's say that you want to animate pagination dots based on a custom component which exposes its scroll value - in this example we will use the [pager](https://github.com/callstack/react-native-pager-view) component.
 
 ```js
 const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
@@ -28,9 +28,9 @@ const PagerExample = () => {
 };
 ```
 
-Here, we create animated pager with a scroll shared value, which will keep current pager's scroll value.
+Here, we create and animated pager with a scroll shared value, which will keep the pager's current scroll value.
 
-Next, we create custom handler hook to listen for native events from pager component and process them inside worklets.
+Next, we create a custom handler hook to listen for native events from the pager component and process them inside a worklet.
 
 ```js
 const scrollHandler = useAnimatedPagerScrollHandler({
@@ -41,9 +41,9 @@ const scrollHandler = useAnimatedPagerScrollHandler({
 });
 ```
 
-`useAnimatedPagerScrollHandler` is our custom hook - in _onPageScroll_ worklet we have access to current pager's page position and offset, combined together, give us scroll position, which we can use to animate components or compute by how much density points pager content is offset.
+`useAnimatedPagerScrollHandler` is our custom hook - in the _onPageScroll_ worklet we have access to the pager's current page position and offset. Combined together they give us the scroll position, which we can use to animate components or compute by how much the pager's content is offset.
 
-To implement custom hook we will use two low-level methods - `useHandler` and `useEvent`
+To implement our custom hook we will use two low-level methods - `useHandler` and `useEvent`
 
 ```js
 function useAnimatedPagerScrollHandler(handlers, dependencies) {
@@ -64,8 +64,8 @@ function useAnimatedPagerScrollHandler(handlers, dependencies) {
 }
 ```
 
-`useHandler` is responsible for providing context object for our handler, and an information whether it should be rebuilt.
+`useHandler` is responsible for providing a context object for our handler and information whether it should be rebuilt.
 
-`useEvent` is returning worklet event handler, which passed to animated component, will provide native events that can be handled on UI thread
+`useEvent` is returning a worklet event handler, which passed to an animated component, will provide native events that can be handled on the UI thread
 
-For full example, checkout Example App (look for Custom Handler Example - Pager)
+For a full example, checkout our Example App (look for _Custom Handler Example - Pager_)

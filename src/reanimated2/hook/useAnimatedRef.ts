@@ -1,28 +1,55 @@
 import { Component, useRef } from 'react';
-import { getTag } from '../NativeMethods';
 import { useSharedValue } from './useSharedValue';
 import { RefObjectFunction } from './commonTypes';
+import { ShadowNodeWrapper } from '../commonTypes';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import {
+  makeShareableCloneRecursive,
+  registerShareableMapping,
+} from '../shareables';
+import { findNodeHandle } from 'react-native';
 
-export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
-  const tag = useSharedValue<number | null>(-1);
+interface ComponentRef extends Component {
+  getNativeScrollRef?: () => ComponentRef;
+  getScrollableNode?: () => ComponentRef;
+}
+
+function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
+  if (global._IS_FABRIC && component.getNativeScrollRef) {
+    return component.getNativeScrollRef();
+  } else if (!global._IS_FABRIC && component.getScrollableNode) {
+    return component.getScrollableNode();
+  }
+  return component;
+}
+
+const getTagValueFunction = global._IS_FABRIC
+  ? getShadowNodeWrapperFromRef
+  : findNodeHandle;
+
+export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
+  const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const ref = useRef<RefObjectFunction<T>>();
 
   if (!ref.current) {
     const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
-      'worklet';
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTag(component);
+        tag.value = getTagValueFunction(getComponentOrScrollableRef(component));
         fun.current = component;
       }
       return tag.value;
     });
 
-    Object.defineProperty(fun, 'current', {
-      value: null,
-      writable: true,
-      enumerable: false,
+    fun.current = null;
+
+    const remoteRef = makeShareableCloneRecursive({
+      __init: () => {
+        'worklet';
+        return () => tag.value;
+      },
     });
+    registerShareableMapping(fun, remoteRef);
     ref.current = fun;
   }
 

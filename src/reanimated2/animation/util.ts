@@ -7,7 +7,14 @@ import {
   StyleLayoutAnimation,
 } from './commonTypes';
 /* global _WORKLET */
-import { ParsedColorArray, convertToHSVA, isColor, toRGBA } from '../Colors';
+import {
+  ParsedColorArray,
+  isColor,
+  convertToRGBA,
+  rgbaArrayToRGBAColor,
+  toGammaSpace,
+  toLinearSpace,
+} from '../Colors';
 
 import {
   AnimatedStyle,
@@ -16,6 +23,7 @@ import {
   Animation,
   AnimationObject,
   Timestamp,
+  AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 
@@ -29,6 +37,7 @@ export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = false;
   return result;
 }
+
 interface RecognizedPrefixSuffix {
   prefix?: string;
   suffix?: string;
@@ -87,7 +96,14 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation.startValue = strippedValue;
     animation.toValue = strippedToValue;
     if (previousAnimation && previousAnimation !== animation) {
-      previousAnimation.current = previousAnimation.strippedCurrent;
+      const {
+        prefix: paPrefix,
+        suffix: paSuffix,
+        strippedValue: paStrippedValue,
+      } = recognizePrefixSuffix(previousAnimation.current as string | number);
+      previousAnimation.current = paStrippedValue;
+      previousAnimation.__prefix = paPrefix;
+      previousAnimation.__suffix = paSuffix;
     }
 
     baseOnStart(animation, strippedValue, timestamp, previousAnimation);
@@ -118,55 +134,59 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return res;
   };
 
-  const tab = ['H', 'S', 'V', 'A'];
+  const tab = ['R', 'G', 'B', 'A'];
   const colorOnStart = (
     animation: Animation<AnimationObject>,
     value: string | number,
     timestamp: Timestamp,
     previousAnimation: Animation<AnimationObject>
   ): void => {
-    let HSVAValue: ParsedColorArray;
-    let HSVACurrent: ParsedColorArray;
-    let HSVAToValue: ParsedColorArray;
+    let RGBAValue: ParsedColorArray;
+    let RGBACurrent: ParsedColorArray;
+    let RGBAToValue: ParsedColorArray;
     const res: Array<number> = [];
     if (isColor(value)) {
-      HSVACurrent = convertToHSVA(animation.current);
-      HSVAValue = convertToHSVA(value);
+      RGBACurrent = toLinearSpace(convertToRGBA(animation.current));
+      RGBAValue = toLinearSpace(convertToRGBA(value));
       if (animation.toValue) {
-        HSVAToValue = convertToHSVA(animation.toValue);
+        RGBAToValue = toLinearSpace(convertToRGBA(animation.toValue));
       }
     }
     tab.forEach((i, index) => {
       animation[i] = Object.assign({}, animationCopy);
-      animation[i].current = HSVACurrent[index];
-      animation[i].toValue = HSVAToValue ? HSVAToValue[index] : undefined;
+      animation[i].current = RGBACurrent[index];
+      animation[i].toValue = RGBAToValue ? RGBAToValue[index] : undefined;
       animation[i].onStart(
         animation[i],
-        HSVAValue[index],
+        RGBAValue[index],
         timestamp,
         previousAnimation ? previousAnimation[i] : undefined
       );
       res.push(animation[i].current);
     });
 
-    animation.current = toRGBA(res as ParsedColorArray);
+    animation.current = rgbaArrayToRGBAColor(
+      toGammaSpace(res as ParsedColorArray)
+    );
   };
 
   const colorOnFrame = (
     animation: Animation<AnimationObject>,
     timestamp: Timestamp
   ): boolean => {
-    const HSVACurrent = convertToHSVA(animation.current);
+    const RGBACurrent = toLinearSpace(convertToRGBA(animation.current));
     const res: Array<number> = [];
     let finished = true;
     tab.forEach((i, index) => {
-      animation[i].current = HSVACurrent[index];
+      animation[i].current = RGBACurrent[index];
       // @ts-ignore: disable-next-line
       finished &= animation[i].onFrame(animation[i], timestamp);
       res.push(animation[i].current);
     });
 
-    animation.current = toRGBA(res as ParsedColorArray);
+    animation.current = rgbaArrayToRGBAColor(
+      toGammaSpace(res as ParsedColorArray)
+    );
     return finished;
   };
 
@@ -205,6 +225,45 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return finished;
   };
 
+  const objectOnStart = (
+    animation: Animation<AnimationObject>,
+    value: AnimatableValueObject,
+    timestamp: Timestamp,
+    previousAnimation: Animation<AnimationObject>
+  ): void => {
+    for (const key in value) {
+      animation[key] = Object.assign({}, animationCopy);
+      animation[key].onStart = animation.onStart;
+
+      animation[key].current = value[key];
+      animation[key].toValue = (animation.toValue as AnimatableValueObject)[
+        key
+      ];
+      animation[key].onStart(
+        animation[key],
+        value[key],
+        timestamp,
+        previousAnimation ? previousAnimation[key] : undefined
+      );
+    }
+    animation.current = value;
+  };
+
+  const objectOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: Timestamp
+  ): boolean => {
+    let finished = true;
+    const newObject: AnimatableValueObject = {};
+    for (const key in animation.current as AnimatableValueObject) {
+      // @ts-ignore: disable-next-line
+      finished &= animation[key].onFrame(animation[key], timestamp);
+      newObject[key] = animation[key].current;
+    }
+    animation.current = newObject;
+    return finished;
+  };
+
   animation.onStart = (
     animation: Animation<AnimationObject>,
     value: number,
@@ -223,6 +282,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       prefNumberSuffOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = prefNumberSuffOnFrame;
       return;
+    } else if (typeof value === 'object' && value !== null) {
+      objectOnStart(animation, value, timestamp, previousAnimation);
+      animation.onFrame = objectOnFrame;
+      return;
     }
     baseOnStart(animation, value, timestamp, previousAnimation);
   };
@@ -239,6 +302,8 @@ type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
     ? NextAnimation<SequenceAnimation>
     : AnimatableValue | T;
 
+const IS_NATIVE = NativeReanimatedModule.native;
+
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation
 >(starting: AnimationToDecoration<T>, factory: () => T): T {
@@ -253,7 +318,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !NativeReanimatedModule.native) {
+  if (_WORKLET || !IS_NATIVE) {
     return create();
   }
   // @ts-ignore: eslint-disable-line

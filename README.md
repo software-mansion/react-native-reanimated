@@ -2,7 +2,7 @@
 
 ### React Native's Animated library reimplemented
 
-> Reanimated 2 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
+> Reanimated 3 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
 
 React Native Reanimated provides a more comprehensive,
 low level abstraction for the Animated library API to be built
@@ -12,6 +12,10 @@ comes to gesture based interactions.
 ## Installation
 
 Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) section of our docs for the detailed installation instructions.
+
+## Fabric
+
+To learn how to use `react-native-reanimated` with Fabric architecture, head over to [Fabric README](README-Fabric.md). Instructions on how to run Fabric Example within this repo can be found in the [FabricExample README](FabricExample/README.md).
 
 ## Documentation
 

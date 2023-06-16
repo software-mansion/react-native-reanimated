@@ -235,6 +235,9 @@ h6 {
 .github-navbar-logo>span{
   display: none;
 }
+.github-navbar-logo>svg{
+  display: none;
+}
 
 /* .githubStarLink {
   display: flex;
@@ -261,7 +264,7 @@ header > .container {
   max-width: var(--ifm-container-width);
 }
 
-section > .container {
+.landing-page__section > .container {
   margin-left: 0;
   margin-right: 0;
   padding: 0 60px;
@@ -316,18 +319,18 @@ section > .container {
   background-repeat: no-repeat;
 }
 
-section {
+.landing-page__section {
   display: flex;
   justify-content: center;
   padding: 3rem 0;
   background-color: var(--swm-color-bright);
 }
 
-section:nth-child(2) {
+.landing-page__section:nth-child(2) {
   background-color: var(--ifm-color-white);
 }
 
-section > .contaner > .row {
+.landing-page__section > .contaner > .row {
   display: flex;
   align-items: flex-start;
 }
@@ -408,7 +411,7 @@ section > .contaner > .row {
     max-width: 1300px;
   }
 
-  section > .container {
+  .landing-page__section > .container {
     max-width: 1300px;
   }
 }
@@ -429,7 +432,7 @@ section > .contaner > .row {
     max-width: 1300px;
   }
 
-  section > .container {
+  .landing-page__section > .container {
     max-width: 1300px;
   }
 
@@ -468,7 +471,7 @@ section > .contaner > .row {
     max-width: 1140px;
   }
 
-  section > .container {
+  .landing-page__section > .container {
     max-width: 1140px;
   }
 }
@@ -499,7 +502,7 @@ section > .contaner > .row {
     max-width: 1300px;
   }
 
-  section > .container {
+  .landing-page__section > .container {
     max-width: 1300px;
   }
 
@@ -658,4 +661,12 @@ section > .contaner > .row {
 }
 .imageHolder-sponsor {
   max-width: 100px;
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+.theme-back-to-top-button {
+  display: none;
 }

@@ -1,14 +1,10 @@
 {
   "compilerOptions": {
-    // for react-native-reanimated-tests.tsx
-    "paths": {
-      "react-native-reanimated": ["./react-native-reanimated.d.ts"]
-    },
-    // change to true after we transition to TS
-    "declaration": false,
+    "baseUrl": ".",
+    "declaration": true,
     "preserveSymlinks": true,
     "target": "es6",
-    "module": "es6",
+    "module": "ESNext",
     "jsx": "react-native",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
@@ -17,11 +13,7 @@
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   },
-  "include": [
-    "lib/**/*.ts",
-    "lib/**/*.tsx",
-    "react-native-reanimated.d.ts",
-    "react-native-reanimated-tests.tsx"
-  ]
+  "include": ["src"]
 }

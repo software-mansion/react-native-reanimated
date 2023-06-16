@@ -6,15 +6,20 @@ on:
       - main
     paths:
       - '.github/workflows/validate-cpp.yml'
+      - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
       - 'ios/native/**'
       - 'android/src/main/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
+      - 'scripts/cpplint.sh'
       - 'Common/cpp/**'
       - 'ios/native/**'
       - 'android/src/main/cpp/**'
+  merge_group:
+    branches:
+      - main
 
 jobs:
   lint:
@@ -25,10 +30,10 @@ jobs:
         python-version: [3.7]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 

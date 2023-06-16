@@ -39,7 +39,7 @@ const bannerDescription =
 const blogUrl =
   'https://blog.swmansion.com/introducing-reanimated-2-752b913af8b3';
 const exampleUrl =
-  'https://github.com/software-mansion/react-native-reanimated/tree/main/Example';
+  'https://github.com/software-mansion/react-native-reanimated/tree/3.3.0/app/src/examples';
 const playgroundUrl =
   'https://github.com/software-mansion-labs/reanimated-2-playground';
 const tryItOutDecription =
@@ -123,7 +123,7 @@ function SectionBoxes() {
 
 function BannerSection() {
   return (
-    <section>
+    <section className="landing-page__section">
       <div className="container">
         <div className="row">
           <div
@@ -165,7 +165,7 @@ function Home() {
       <Hero />
 
       <main>
-        <section>
+        <section className="landing-page__section">
           <div className="container">
             <div className="row row--box-section">
               <SectionBoxes />
@@ -174,7 +174,7 @@ function Home() {
           </div>
         </section>
         {/* <BannerSection /> */}
-        <section>
+        <section className="landing-page__section">
           <div className="container container--center">
             <div className="row row--center">
               <div className="col col--7 text--center col--bottom-section">
@@ -190,7 +190,7 @@ function Home() {
                       styles.getStarted
                     )}
                     to={exampleUrl}>
-                    Example on GitHub
+                    Examples on GitHub
                   </Link>
 
                   <Link
@@ -214,7 +214,7 @@ function Home() {
             </div>
           </div>
         </section>
-        <section>
+        <section className="landing-page__section">
           <div className="container">
             <div className="row row--center">
               <div className="col col--7 text--center col--bottom-section">

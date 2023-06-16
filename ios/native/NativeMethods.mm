@@ -25,16 +25,14 @@ std::vector<std::pair<std::string, double>> measure(int viewTag, RCTUIManager *u
   CGRect frame = view.frame;
   CGRect globalBounds = [view convertRect:view.bounds toView:rootView];
 
-  std::vector<std::pair<std::string, double>> result;
-  result.push_back({"x", frame.origin.x});
-  result.push_back({"y", frame.origin.y});
-
-  result.push_back({"width", globalBounds.size.width});
-  result.push_back({"height", globalBounds.size.height});
-
-  result.push_back({"pageX", globalBounds.origin.x});
-  result.push_back({"pageY", globalBounds.origin.y});
-  return result;
+  return {
+      {"x", frame.origin.x},
+      {"y", frame.origin.y},
+      {"width", globalBounds.size.width},
+      {"height", globalBounds.size.height},
+      {"pageX", globalBounds.origin.x},
+      {"pageY", globalBounds.origin.y},
+  };
 }
 
 void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bool animated)
@@ -51,4 +49,4 @@ void setGestureState(id<RNGestureHandlerStateManager> gestureHandlerStateManager
   }
 }
 
-}
+} // namespace reanimated
