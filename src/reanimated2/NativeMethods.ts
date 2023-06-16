@@ -9,7 +9,7 @@ import {
 import { Component } from 'react';
 import { RefObjectFunction } from './hook/commonTypes';
 
-const isNative = !shouldBeUseWeb();
+const IS_NATIVE = !shouldBeUseWeb();
 
 export let measure: (
   animatedRef: RefObjectFunction<Component>
@@ -38,7 +38,7 @@ if (isWeb()) {
     console.warn('[Reanimated] measure() cannot be used with Jest.');
     return null;
   };
-} else if (isNative) {
+} else if (IS_NATIVE) {
   measure = (animatedRef) => {
     'worklet';
     if (!_WORKLET) {
@@ -92,10 +92,10 @@ export let dispatchCommand: (
   args: Array<unknown>
 ) => void;
 
-if (isNative && global._IS_FABRIC) {
+if (IS_NATIVE && global._IS_FABRIC) {
   dispatchCommand = (animatedRef, commandName, args) => {
     'worklet';
-    if (!_WORKLET || !isNative) {
+    if (!_WORKLET) {
       return;
     }
 
@@ -105,14 +105,14 @@ if (isNative && global._IS_FABRIC) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
   };
-} else if (isNative) {
+} else if (IS_NATIVE) {
   dispatchCommand = () => {
     'worklet';
     console.warn('[Reanimated] dispatchCommand() is not supported on Paper.');
   };
 } else if (isWeb()) {
   dispatchCommand = () => {
-    console.warn('[Reanimated] dispatchCommand() is not supported on Web.');
+    console.warn('[Reanimated] dispatchCommand() is not supported on web.');
   };
 } else if (isChromeDebugger()) {
   dispatchCommand = () => {
@@ -146,12 +146,12 @@ if (isWeb()) {
     // @ts-ignore same call as in react-native-web
     element.scrollTo({ x, y, animated });
   };
-} else if (isNative && global._IS_FABRIC) {
+} else if (IS_NATIVE && global._IS_FABRIC) {
   scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
     dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
   };
-} else if (isNative) {
+} else if (IS_NATIVE) {
   scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
     if (!_WORKLET) {
@@ -183,7 +183,7 @@ if (isWeb()) {
 
 export let setGestureState: (handlerTag: number, newState: number) => void;
 
-if (isNative) {
+if (IS_NATIVE) {
   setGestureState = (handlerTag, newState) => {
     'worklet';
     if (!_WORKLET) {
@@ -196,7 +196,7 @@ if (isNative) {
   };
 } else if (isWeb()) {
   setGestureState = () => {
-    console.warn('[Reanimated] setGestureState is not available on web.');
+    console.warn('[Reanimated] setGestureState() is not available on web.');
   };
 } else if (isChromeDebugger()) {
   setGestureState = () => {
