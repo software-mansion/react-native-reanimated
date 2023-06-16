@@ -28,14 +28,14 @@ export const colorProps = [
 
 export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
-let updatePropsByPlatform: (
+export let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle,
   maybeViewRef: ViewRefSet<any> | undefined
 ) => void;
 
 if (shouldBeUseWeb()) {
-  updatePropsByPlatform = (_, updates, maybeViewRef) => {
+  updateProps = (_, updates, maybeViewRef) => {
     'worklet';
     if (maybeViewRef) {
       maybeViewRef.items.forEach((item, _) => {
@@ -44,7 +44,7 @@ if (shouldBeUseWeb()) {
     }
   };
 } else if (global._IS_FABRIC) {
-  updatePropsByPlatform = (viewDescriptors, updates) => {
+  updateProps = (viewDescriptors, updates) => {
     'worklet';
 
     for (const key in updates) {
@@ -59,7 +59,7 @@ if (shouldBeUseWeb()) {
     });
   };
 } else {
-  updatePropsByPlatform = (viewDescriptors, updates) => {
+  updateProps = (viewDescriptors, updates) => {
     'worklet';
 
     for (const key in updates) {
@@ -77,8 +77,6 @@ if (shouldBeUseWeb()) {
     });
   };
 }
-
-export const updateProps = updatePropsByPlatform;
 
 export const updatePropsJestWrapper = (
   viewDescriptors: SharedValue<Descriptor[]>,
