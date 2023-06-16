@@ -3,7 +3,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface REAEventDispatcher : RCTEventDispatcher
+@interface RCTEventDispatcher (Reanimated)
+
+- (void)reanimated_sentEvent:(id<RCTEvent>)event;
 
 @end
 
