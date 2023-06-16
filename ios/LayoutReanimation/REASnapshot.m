@@ -82,10 +82,9 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
 #if defined(RCT_NEW_ARCH_ENABLED) || TARGET_OS_TV
     _values[@"borderRadius"] = @(0);
 #else
-    RCTView *reactView = (RCTView *)view;
-    if ([reactView respondsToSelector:@selector(borderRadius)]) {
+    if ([view respondsToSelector:@selector(borderRadius)]) {
       // For example `RCTTextView` doesn't have `borderRadius` selector
-      _values[@"borderRadius"] = @(reactView.borderRadius);
+      _values[@"borderRadius"] = @(((RCTView *)view).borderRadius);
     } else {
       _values[@"borderRadius"] = @(0);
     }
