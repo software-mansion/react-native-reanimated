@@ -28,13 +28,14 @@ export const colorProps = [
 
 export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
-let updatePropsByPlatform;
+export let updateProps: (
+  viewDescriptor: SharedValue<Descriptor[]>,
+  updates: StyleProps | AnimatedStyle,
+  maybeViewRef: ViewRefSet<any> | undefined
+) => void;
+
 if (shouldBeUseWeb()) {
-  updatePropsByPlatform = (
-    _: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle,
-    maybeViewRef: ViewRefSet<any> | undefined
-  ): void => {
+  updateProps = (_, updates, maybeViewRef) => {
     'worklet';
     if (maybeViewRef) {
       maybeViewRef.items.forEach((item, _) => {
@@ -42,54 +43,40 @@ if (shouldBeUseWeb()) {
       });
     }
   };
+} else if (global._IS_FABRIC) {
+  updateProps = (viewDescriptors, updates) => {
+    'worklet';
+
+    for (const key in updates) {
+      if (ColorProperties.indexOf(key) !== -1) {
+        updates[key] = processColor(updates[key]);
+      }
+    }
+
+    viewDescriptors.value.forEach((viewDescriptor) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      _updatePropsFabric!(viewDescriptor.shadowNodeWrapper, updates);
+    });
+  };
 } else {
-  if (global._IS_FABRIC) {
-    updatePropsByPlatform = (
-      viewDescriptors: SharedValue<Descriptor[]>,
-      updates: StyleProps | AnimatedStyle,
-      _: ViewRefSet<any> | undefined
-    ): void => {
-      'worklet';
+  updateProps = (viewDescriptors, updates) => {
+    'worklet';
 
-      for (const key in updates) {
-        if (ColorProperties.indexOf(key) !== -1) {
-          updates[key] = processColor(updates[key]);
-        }
+    for (const key in updates) {
+      if (ColorProperties.indexOf(key) !== -1) {
+        updates[key] = processColor(updates[key]);
       }
-
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        _updatePropsFabric!(viewDescriptor.shadowNodeWrapper, updates);
-      });
-    };
-  } else {
-    updatePropsByPlatform = (
-      viewDescriptors: SharedValue<Descriptor[]>,
-      updates: StyleProps | AnimatedStyle,
-      _: ViewRefSet<any> | undefined
-    ): void => {
-      'worklet';
-
-      for (const key in updates) {
-        if (ColorProperties.indexOf(key) !== -1) {
-          updates[key] = processColor(updates[key]);
-        }
-      }
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        _updatePropsPaper!(
-          viewDescriptor.tag,
-          viewDescriptor.name || 'RCTView',
-          updates
-        );
-      });
-    };
-  }
+    }
+    viewDescriptors.value.forEach((viewDescriptor) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      _updatePropsPaper!(
+        viewDescriptor.tag,
+        viewDescriptor.name || 'RCTView',
+        updates
+      );
+    });
+  };
 }
-
-export const updateProps: (
-  viewDescriptor: SharedValue<Descriptor[]>,
-  updates: StyleProps | AnimatedStyle,
-  maybeViewRef: ViewRefSet<any> | undefined
-) => void = updatePropsByPlatform;
 
 export const updatePropsJestWrapper = (
   viewDescriptors: SharedValue<Descriptor[]>,
