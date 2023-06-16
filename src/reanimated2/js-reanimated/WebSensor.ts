@@ -30,5 +30,6 @@ declare global {
     Magnetometer: Constructable<WebSensor>;
     AbsoluteOrientationSensor: Constructable<WebSensor>;
     Sensor: Constructable<WebSensor>;
+    opera?: string;
   }
 }

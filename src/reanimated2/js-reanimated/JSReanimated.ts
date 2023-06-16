@@ -10,6 +10,7 @@ import { WebSensor } from './WebSensor';
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
+  platform?: Platform = undefined;
 
   constructor() {
     super(false);
@@ -66,11 +67,20 @@ export default class JSReanimated extends NativeReanimated {
       return -1;
     }
 
+    if (this.platform === undefined) {
+      this.detectPlatform();
+    }
+
     const sensor: WebSensor = this.initializeSensor(sensorType, interval);
     let callback;
     if (sensorType === SensorType.ROTATION) {
       callback = () => {
-        const [qw, qx, qy, qz] = sensor.quaternion;
+        let [qw, qx, qy, qz] = sensor.quaternion;
+
+        // Android sensors have a different coordinate system than iOS
+        if (this.platform === Platform.WEB_ANDROID) {
+          [qy, qz] = [qz, -qy];
+        }
 
         // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
         const yaw = Math.atan2(
@@ -95,7 +105,9 @@ export default class JSReanimated extends NativeReanimated {
       };
     } else {
       callback = () => {
-        const { x, y, z } = sensor;
+        let { x, y, z } = sensor;
+        [x, y, z] =
+          this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
         eventHandler({ x, y, z, interfaceOrientation: 0 });
       };
     }
@@ -157,5 +169,32 @@ export default class JSReanimated extends NativeReanimated {
       case SensorType.ROTATION:
         return 'AbsoluteOrientationSensor';
     }
+  }
+
+  detectPlatform() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (userAgent === undefined) {
+      this.platform = Platform.UNKNOWN;
+    } else if (/iPad|iPhone|iPod/.test(userAgent)) {
+      this.platform = Platform.WEB_IOS;
+    } else if (/android/i.test(userAgent)) {
+      this.platform = Platform.WEB_ANDROID;
+    } else {
+      this.platform = Platform.WEB;
+    }
+  }
+}
+
+enum Platform {
+  WEB_IOS = 'web iOS',
+  WEB_ANDROID = 'web Android',
+  WEB = 'web',
+  UNKNOWN = 'unknown',
+}
+
+declare global {
+  interface Navigator {
+    userAgent?: string;
+    vendor?: string;
   }
 }
