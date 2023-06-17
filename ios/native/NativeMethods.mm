@@ -48,8 +48,8 @@ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bo
 void dispatchCommand(RCTUIManager *uiManager, NSNumber *viewTag, NSString *commandID, NSArray *commandArgs)
 {
   SEL privateMethodSelector = NSSelectorFromString(@"dispatchViewManagerCommand:commandID:commandArgs:");
-  NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:
-                              [uiManager methodSignatureForSelector:privateMethodSelector]];
+  NSInvocation *invocation =
+      [NSInvocation invocationWithMethodSignature:[uiManager methodSignatureForSelector:privateMethodSelector]];
   [invocation setSelector:privateMethodSelector];
   [invocation setTarget:uiManager];
   [invocation setArgument:&viewTag atIndex:2];

@@ -254,16 +254,23 @@ void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
 
 inline jni::local_ref<ReadableArray::javaobject> castReadableArray(
     jni::local_ref<ReadableNativeArray::javaobject> const &nativeArray) {
-  return make_local(reinterpret_cast<ReadableArray::javaobject>(nativeArray.get()));
+  return make_local(
+      reinterpret_cast<ReadableArray::javaobject>(nativeArray.get()));
 }
 
-void NativeProxy::dispatchCommand(jsi::Runtime &rt, const int viewTag, const jsi::Value &commandNameValue, const jsi::Value &argsValue) {
-  static const auto method =
-      getJniMethod<void(int, jni::local_ref<JString>, jni::local_ref<ReadableArray::javaobject>)>("dispatchCommand");
+void NativeProxy::dispatchCommand(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue) {
+  static const auto method = getJniMethod<void(
+      int, jni::local_ref<JString>, jni::local_ref<ReadableArray::javaobject>)>(
+      "dispatchCommand");
   local_ref<JString> commandId =
       jni::make_jstring(commandNameValue.asString(rt).utf8(rt).c_str());
-  jni::local_ref<ReadableArray::javaobject> commandArgs = castReadableArray(
-      ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, argsValue)));
+  jni::local_ref<ReadableArray::javaobject> commandArgs =
+      castReadableArray(ReadableNativeArray::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, argsValue)));
   method(javaPart_.get(), viewTag, commandId, commandArgs);
 }
 
