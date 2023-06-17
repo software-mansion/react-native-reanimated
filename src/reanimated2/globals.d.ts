@@ -69,6 +69,9 @@ declare global {
   var _scrollToPaper:
     | ((viewTag: number, x: number, y: number, animated: boolean) => void)
     | undefined;
+  var _dispatchCommandPaper:
+    | ((viewTag: number, commandName: string, args: Array<unknown>) => void)
+    | undefined;
   var _dispatchCommandFabric:
     | ((
         shadowNodeWrapper: ShadowNodeWrapper,
