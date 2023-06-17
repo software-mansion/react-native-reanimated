@@ -64,6 +64,7 @@ var require_commonObjects = __commonJS({
       "_measurePaper",
       "_measureFabric",
       "_scrollToPaper",
+      "_dispatchCommandPaper",
       "_dispatchCommandFabric",
       "_setGestureState",
       "isNaN",

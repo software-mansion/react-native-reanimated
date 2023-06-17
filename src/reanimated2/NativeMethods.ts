@@ -99,16 +99,20 @@ if (IS_NATIVE && global._IS_FABRIC) {
       return;
     }
 
-    // dispatchCommand works only on Fabric where animatedRef returns
-    // an object (ShadowNodeWrapper) and not a number
     const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
   };
 } else if (IS_NATIVE) {
-  dispatchCommand = () => {
+  dispatchCommand = (animatedRef, commandName, args) => {
     'worklet';
-    console.warn('[Reanimated] dispatchCommand() is not supported on Paper.');
+    if (!_WORKLET) {
+      return;
+    }
+
+    const viewTag = animatedRef() as number;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _dispatchCommandPaper!(viewTag, commandName, args);
   };
 } else if (isWeb()) {
   dispatchCommand = () => {

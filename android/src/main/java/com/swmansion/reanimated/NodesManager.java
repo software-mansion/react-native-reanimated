@@ -53,6 +53,16 @@ public class NodesManager implements EventDispatcherListener {
     NativeMethodsHelper.scrollTo(view, x, y, animated);
   }
 
+  public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
+    mContext.runOnNativeModulesQueueThread(
+            new GuardedRunnable(mContext.getExceptionHandler()) {
+              @Override
+              public void runGuarded() {
+                mUIManager.dispatchCommand(viewTag, commandId, commandArgs);
+              }
+            });
+  }
+
   public float[] measure(int viewTag) {
     View view;
     try {

@@ -1,6 +1,7 @@
 #import <RNReanimated/NativeMethods.h>
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTScrollView.h>
+#import <React/RCTUIManagerUtils.h>
 
 namespace reanimated {
 
@@ -42,6 +43,21 @@ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bo
   UIView *view = [uiManager viewForReactTag:@(scrollViewTag)];
   RCTScrollView *scrollView = (RCTScrollView *)view;
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
+}
+
+void dispatchCommand(RCTUIManager *uiManager, NSNumber *viewTag, NSString *commandID, NSArray *commandArgs)
+{
+  SEL privateMethodSelector = NSSelectorFromString(@"dispatchViewManagerCommand:commandID:commandArgs:");
+  NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:
+                              [uiManager methodSignatureForSelector:privateMethodSelector]];
+  [invocation setSelector:privateMethodSelector];
+  [invocation setTarget:uiManager];
+  [invocation setArgument:&viewTag atIndex:2];
+  [invocation setArgument:&commandID atIndex:3];
+  [invocation setArgument:&commandArgs atIndex:4];
+  RCTUnsafeExecuteOnUIManagerQueueSync(^{
+    [invocation invoke];
+  });
 }
 
 void setGestureState(id<RNGestureHandlerStateManager> gestureHandlerStateManager, int handlerTag, int newState)

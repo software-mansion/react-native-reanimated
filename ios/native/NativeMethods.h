@@ -16,6 +16,11 @@ void scrollTo(
     double x,
     double y,
     bool animated);
+void dispatchCommand(
+    RCTUIManager *uiManager,
+    NSNumber *viewTag,
+    NSString *commandID,
+    NSArray *commandArgs);
 void setGestureState(
     id<RNGestureHandlerStateManager> gestureHandlerStateManager,
     int handlerTag,

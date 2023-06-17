@@ -80,10 +80,10 @@ void RuntimeDecorator::decorateUIRuntime(
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
     const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
-    const DispatchCommandFunction dispatchCommand,
 #else
     const ScrollToFunction scrollTo,
 #endif
+    const DispatchCommandFunction dispatchCommand,
     const RequestFrameFunction requestFrame,
     const ScheduleOnJSFunction scheduleOnJS,
     const MakeShareableCloneFunction makeShareableClone,
@@ -104,6 +104,7 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi_utils::installJsiFunction(rt, "_measureFabric", measure);
 #else
   jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
+  jsi_utils::installJsiFunction(rt, "_dispatchCommandPaper", dispatchCommand);
   jsi_utils::installJsiFunction(rt, "_scrollToPaper", scrollTo);
 
   std::function<jsi::Value(jsi::Runtime &, int)> _measure =

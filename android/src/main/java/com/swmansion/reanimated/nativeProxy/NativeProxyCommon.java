@@ -7,6 +7,7 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
@@ -110,6 +111,11 @@ public abstract class NativeProxyCommon {
   @DoNotStrip
   public void scrollTo(int viewTag, double x, double y, boolean animated) {
     mNodesManager.scrollTo(viewTag, x, y, animated);
+  }
+
+  @DoNotStrip
+  public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
+    mNodesManager.dispatchCommand(viewTag, commandId, commandArgs);
   }
 
   @DoNotStrip

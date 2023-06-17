@@ -598,6 +598,12 @@ declare module 'react-native-reanimated' {
     animated: boolean
   ): void;
 
+  export function dispatchCommand(
+    animatedRef: RefObjectFunction<Component>,
+    commandName: string,
+    args: Array<unknown>
+  ): void;
+
   // gesture-handler
   type OnGestureEvent<T extends GestureHandlerGestureEvent> = (
     event: T
