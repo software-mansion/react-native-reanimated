@@ -10,7 +10,7 @@ import Animated, {
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export default function DispatchCommandExample() {
-  const aref = useAnimatedRef();
+  const aref = useAnimatedRef<TextInput>();
 
   const focusFromJS = () => {
     console.log(_WORKLET);
