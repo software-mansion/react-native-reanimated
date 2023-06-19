@@ -15,13 +15,14 @@ import {
   ScreenStack,
   ScreenStackHeaderConfig,
 } from 'react-native-screens';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
-  // @ts-ignore will be fixed with https://github.com/software-mansion/react-native-screens/pull/1760
-  ScreenStackHeaderConfig
+  Platform.OS === 'web'
+    ? React.forwardRef(ScreenStackHeaderConfig)
+    : ScreenStackHeaderConfig
 );
 Animated.addWhitelistedNativeProps({ title: true });
 
