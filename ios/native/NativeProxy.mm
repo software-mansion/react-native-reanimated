@@ -36,6 +36,12 @@
 - (void *)runtime;
 @end
 
+@interface RCTUIManager (DispatchCommand)
+- (void)dispatchViewManagerCommand:(nonnull NSNumber *)reactTag
+                         commandID:(id /*(NSString or NSNumber) */)commandID
+                       commandArgs:(NSArray<id> *)commandArgs;
+@end
+
 namespace reanimated {
 
 using namespace facebook;
@@ -123,7 +129,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSString *commandID = [NSString stringWithCString:commandNameValue.asString(rt).utf8(rt).c_str()
                                              encoding:[NSString defaultCStringEncoding]];
     NSArray *commandArgs = convertJSIArrayToNSArray(rt, argsValue.asObject(rt).asArray(rt));
-    dispatchCommand(uiManager, viewTag, commandID, commandArgs);
+    RCTUnsafeExecuteOnUIManagerQueueSync(^{
+      [uiManager dispatchViewManagerCommand:viewTag commandID:commandID commandArgs:commandArgs];
+    });
   };
 
 #endif
