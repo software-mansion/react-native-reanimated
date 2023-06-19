@@ -5,13 +5,13 @@
 
 @implementation RCTEventDispatcher (Reanimated)
 
-- (void)reanimated_sentEvent:(id<RCTEvent>)event
+- (void)reanimated_sendEvent:(id<RCTEvent>)event
 {
   // Pass the event to Reanimated
   [[[self bridge] moduleForName:@"ReanimatedModule"] eventDispatcherWillDispatchEvent:event];
 
   // Pass the event to React Native by calling the original method
-  [self reanimated_sentEvent:event];
+  [self reanimated_sendEvent:event];
 }
 
 + (void)load
@@ -20,7 +20,7 @@
   dispatch_once(&onceToken, ^{
     Class class = [self class];
     Method originalMethod = class_getInstanceMethod(class, @selector(sendEvent:));
-    Method swizzledMethod = class_getInstanceMethod(class, @selector(reanimated_sentEvent:));
+    Method swizzledMethod = class_getInstanceMethod(class, @selector(reanimated_sendEvent:));
     method_exchangeImplementations(originalMethod, swizzledMethod);
   });
 }
