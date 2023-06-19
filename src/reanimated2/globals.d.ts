@@ -62,16 +62,16 @@ declare global {
       ) => void)
     | undefined;
   var _removeFromPropsRegistry: (tag: number) => void | undefined;
-  var _measure: (viewTag: number | ShadowNodeWrapper) => MeasuredDimensions;
-  var _scrollTo: (
-    viewTag: number,
-    x: number,
-    y: number,
-    animated: boolean
-  ) => void;
-  var _dispatchCommand:
+  var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
+  var _measureFabric:
+    | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)
+    | undefined;
+  var _scrollToPaper:
+    | ((viewTag: number, x: number, y: number, animated: boolean) => void)
+    | undefined;
+  var _dispatchCommandFabric:
     | ((
-        nodeRef: ShadowNodeWrapper,
+        shadowNodeWrapper: ShadowNodeWrapper,
         commandName: string,
         args: Array<unknown>
       ) => void)
