@@ -1,4 +1,7 @@
+#ifndef RCT_NEW_ARCH_ENABLED
+
 #import <RNReanimated/RCTEventDispatcher+Reanimated.h>
+#import <RNReanimated/REAModule.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTEventDispatcher.h>
 #import <objc/message.h>
@@ -7,8 +10,11 @@
 
 - (void)reanimated_sendEvent:(id<RCTEvent>)event
 {
-  // Pass the event to Reanimated
-  [[[self bridge] moduleForName:@"ReanimatedModule"] eventDispatcherWillDispatchEvent:event];
+  static __weak REAModule *reaModule;
+  if (reaModule == nil) {
+    reaModule = [[self bridge] moduleForName:@"ReanimatedModule"];
+  }
+  [reaModule eventDispatcherWillDispatchEvent:event];
 
   // Pass the event to React Native by calling the original method
   [self reanimated_sendEvent:event];
@@ -26,3 +32,5 @@
 }
 
 @end
+
+#endif // RCT_NEW_ARCH_ENABLED
