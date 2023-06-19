@@ -10,6 +10,7 @@
 
 - (void)reanimated_sendEvent:(id<RCTEvent>)event
 {
+  // Pass the event to Reanimated
   static __weak REAModule *reaModule;
   if (reaModule == nil) {
     reaModule = [[self bridge] moduleForName:@"ReanimatedModule"];
