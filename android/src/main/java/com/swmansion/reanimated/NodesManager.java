@@ -82,7 +82,7 @@ public class NodesManager implements EventDispatcherListener {
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
-  public double currentFrameTimeMs;
+  private double lastFrameTimeMs;
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
@@ -237,25 +237,31 @@ public class NodesManager implements EventDispatcherListener {
   private void onAnimationFrame(long frameTimeNanos) {
     Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
 
-    currentFrameTimeMs = frameTimeNanos / 1000000.;
+    double currentFrameTimeMs = frameTimeNanos / 1000000.;
 
-    while (!mEventQueue.isEmpty()) {
-      CopiedEvent copiedEvent = mEventQueue.poll();
-      handleEvent(copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
-    }
+    if (currentFrameTimeMs > lastFrameTimeMs) {
+      // It is possible for ChoreographerCallback to be executed twice within the same frame
+      // due to frame drops. If this occurs, the additional callback execution should be ignored.
+      lastFrameTimeMs = currentFrameTimeMs;
 
-    if (!mFrameCallbacks.isEmpty()) {
-      List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
-      mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
-      for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
-        frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+      while (!mEventQueue.isEmpty()) {
+        CopiedEvent copiedEvent = mEventQueue.poll();
+        handleEvent(
+            copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
       }
-    }
 
-    performOperations();
+      if (!mFrameCallbacks.isEmpty()) {
+        List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
+        mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
+        for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
+          frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+        }
+      }
+
+      performOperations();
+    }
 
     mCallbackPosted.set(false);
-
     if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
       // enqueue next frame
       startUpdatingOnAnimationFrame();

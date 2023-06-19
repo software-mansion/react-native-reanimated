@@ -34,13 +34,14 @@ export const colorProps = [
 
 export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
-let updatePropsByPlatform;
+export let updateProps: (
+  viewDescriptor: SharedValue<Descriptor[]>,
+  updates: StyleProps | AnimatedStyle,
+  maybeViewRef: ViewRefSet<any> | undefined
+) => void;
+
 if (shouldBeUseWeb()) {
-  updatePropsByPlatform = (
-    _: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle,
-    maybeViewRef: ViewRefSet<any> | undefined
-  ): void => {
+  updateProps = (_, updates, maybeViewRef) => {
     'worklet';
     if (maybeViewRef) {
       maybeViewRef.items.forEach((item, _) => {
@@ -49,26 +50,17 @@ if (shouldBeUseWeb()) {
     }
   };
 } else {
-  updatePropsByPlatform = (
-    viewDescriptors: SharedValue<Descriptor[]>,
-    updates: StyleProps | AnimatedStyle,
-    _: ViewRefSet<any> | undefined
-  ): void => {
+  updateProps = (viewDescriptors, updates) => {
     'worklet';
     for (const key in updates) {
       if (ColorProperties.indexOf(key) !== -1) {
         updates[key] = processColor(updates[key]);
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     global.UpdatePropsManager!.update(viewDescriptors, updates);
   };
 }
-
-export const updateProps: (
-  viewDescriptor: SharedValue<Descriptor[]>,
-  updates: StyleProps | AnimatedStyle,
-  maybeViewRef: ViewRefSet<any> | undefined
-) => void = updatePropsByPlatform;
 
 export const updatePropsJestWrapper = (
   viewDescriptors: SharedValue<Descriptor[]>,
@@ -114,6 +106,7 @@ const createUpdatePropsManager = global._IS_FABRIC
           }
         },
         flush() {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           _updatePropsFabric!(operations);
           operations.length = 0;
         },
@@ -144,6 +137,7 @@ const createUpdatePropsManager = global._IS_FABRIC
           }
         },
         flush() {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           _updatePropsPaper!(operations);
           operations.length = 0;
         },

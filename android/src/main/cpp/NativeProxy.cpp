@@ -263,18 +263,15 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
   size_t size = output->size();
   auto elements = output->getRegion(0, size);
-  std::vector<std::pair<std::string, double>> result;
 
-  result.push_back({"x", elements[0]});
-  result.push_back({"y", elements[1]});
-
-  result.push_back({"pageX", elements[2]});
-  result.push_back({"pageY", elements[3]});
-
-  result.push_back({"width", elements[4]});
-  result.push_back({"height", elements[5]});
-
-  return result;
+  return {
+      {"x", elements[0]},
+      {"y", elements[1]},
+      {"pageX", elements[2]},
+      {"pageY", elements[3]},
+      {"width", elements[4]},
+      {"height", elements[5]},
+  };
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
