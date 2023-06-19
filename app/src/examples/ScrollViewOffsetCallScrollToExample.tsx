@@ -55,7 +55,8 @@ export default function ScrollViewOffsetCallScrollToExample() {
       <View style={styles.scrollsContainer}>
         <Animated.ScrollView
           scrollViewOffset={scrollHandler}
-          style={styles.scrollView}>
+          style={styles.scrollView}
+          scrollEventThrottle={16}>
           {[...Array(100)].map((_, i) => (
             <Text key={i} style={styles.text}>
               {i}
@@ -65,7 +66,8 @@ export default function ScrollViewOffsetCallScrollToExample() {
         <Animated.ScrollView
           scrollViewOffset={scrollHandler2}
           ref={aref}
-          style={styles.scrollView}>
+          style={styles.scrollView}
+          scrollEventThrottle={16}>
           {[...Array(100)].map((_, i) => (
             <Text key={i} style={styles.text}>
               {i}
