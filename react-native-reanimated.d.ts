@@ -598,6 +598,11 @@ declare module 'react-native-reanimated' {
     animated: boolean
   ): void;
 
+  export function setNativeProps<T extends Component>(
+    animatedRef: RefObjectFunction<T>,
+    updates: StyleProps
+  ): void;
+
   // gesture-handler
   type OnGestureEvent<T extends GestureHandlerGestureEvent> = (
     event: T

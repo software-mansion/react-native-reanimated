@@ -70,6 +70,7 @@ import ScrollEventExample from './ScrollEventExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import SetNativePropsExample from './SetNativePropsExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
@@ -151,6 +152,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
+  },
+  SetNativePropsExample: {
+    icon: '🪄',
+    title: 'setNativeProps',
+    screen: SetNativePropsExample,
   },
 
   // Basic examples

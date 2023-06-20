@@ -7,11 +7,14 @@ import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
-import { findNodeHandle } from 'react-native';
+import { Platform, findNodeHandle } from 'react-native';
 
 interface ComponentRef extends Component {
   getNativeScrollRef?: () => ComponentRef;
   getScrollableNode?: () => ComponentRef;
+  viewConfig?: {
+    uiViewClassName?: string;
+  };
 }
 
 function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
@@ -29,6 +32,8 @@ const getTagValueFunction = global._IS_FABRIC
 
 export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
+  const viewName = useSharedValue<string | null>(null);
+
   const ref = useRef<RefObjectFunction<T>>();
 
   if (!ref.current) {
@@ -37,6 +42,10 @@ export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
       if (component) {
         tag.value = getTagValueFunction(getComponentOrScrollableRef(component));
         fun.current = component;
+        // viewName is required only on iOS with Paper
+        if (Platform.OS === 'ios' && !global._IS_FABRIC) {
+          viewName.value = component?.viewConfig?.uiViewClassName || 'RCTView';
+        }
       }
       return tag.value;
     });
@@ -46,7 +55,9 @@ export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
     const remoteRef = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        return () => tag.value;
+        const f = () => tag.value;
+        f.viewName = viewName;
+        return f;
       },
     });
     registerShareableMapping(fun, remoteRef);

@@ -1,4 +1,8 @@
-import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
+import {
+  MeasuredDimensions,
+  ShadowNodeWrapper,
+  StyleProps,
+} from './commonTypes';
 import {
   isChromeDebugger,
   isJest,
@@ -141,7 +145,6 @@ export let scrollTo: (
 
 if (isWeb()) {
   scrollTo = (animatedRef, x, y, animated) => {
-    'worklet';
     const element = animatedRef() as HTMLElement; // TODO: fix typing of animated refs on web
     // @ts-ignore same call as in react-native-web
     element.scrollTo({ x, y, animated });
@@ -212,6 +215,49 @@ if (IS_NATIVE) {
   setGestureState = () => {
     console.warn(
       '[Reanimated] setGestureState() is not supported on this configuration.'
+    );
+  };
+}
+
+export let setNativeProps: <T extends Component>(
+  animatedRef: RefObjectFunction<T>,
+  updates: StyleProps
+) => void;
+
+if (isWeb()) {
+  setNativeProps = (_animatedRef, _updates) => {
+    throw new Error('[Reanimated] setNativeProps() is not supported on web yet.');
+  };
+} else if (IS_NATIVE && global._IS_FABRIC) {
+  setNativeProps = (animatedRef, updates) => {
+    'worklet';
+    const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _updatePropsFabric!(shadowNodeWrapper, updates);
+  };
+} else if (IS_NATIVE) {
+  setNativeProps = (animatedRef, updates) => {
+    'worklet';
+    const viewTag = animatedRef() as number;
+    // @ts-ignore TODO: fix once #4519 lands
+    const viewName = animatedRef.viewName.value;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _updatePropsPaper!(viewTag, viewName, updates);
+  };
+} else if (isChromeDebugger()) {
+  scrollTo = () => {
+    console.warn(
+      '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
+    );
+  };
+} else if (isJest()) {
+  scrollTo = () => {
+    console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
+  };
+} else {
+  scrollTo = () => {
+    console.warn(
+      '[Reanimated] setNativeProps() is not supported on this configuration.'
     );
   };
 }
