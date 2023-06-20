@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef, RefObject } from 'react';
+import React, { ForwardedRef, forwardRef, RefObject } from 'react';
 import { ScrollView, ScrollViewProps } from 'react-native';
 import type Animated from 'react-native-reanimated';
 import createAnimatedComponent from '../../createAnimatedComponent';
@@ -26,6 +26,13 @@ const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
         scrollViewOffset
       );
     }
+
+    if (!restProps.scrollEventThrottle) {
+      // Set default scrollEventThrottle to 8, because user expects
+      // to have continuous scroll events
+      restProps.scrollEventThrottle = 8;
+    }
+
     return <AnimatedScrollViewComponent ref={aref} {...restProps} />;
   }
 );

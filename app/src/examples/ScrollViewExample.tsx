@@ -10,10 +10,7 @@ export default function ScrollViewExample() {
   });
 
   return (
-    <Animated.ScrollView
-      scrollEventThrottle={16}
-      onScroll={scrollHandler}
-      style={styles.scrollView}>
+    <Animated.ScrollView onScroll={scrollHandler} style={styles.scrollView}>
       {[...Array(100)].map((_, i) => (
         <Text key={i} style={styles.text}>
           {i}
