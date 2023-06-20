@@ -38,6 +38,7 @@ export interface InnerDecayAnimation
   current: number;
 }
 
+const EPSILON = 0.01;
 export function withDecay(
   userConfig: DecayConfig,
   callback?: AnimationCallback
@@ -76,14 +77,11 @@ export function withDecay(
 
         const deltaTime = Math.min(now - lastTimestamp, 64);
         const clampIndex = initialVelocity > 0 ? 1 : 0;
-        let derivative = 0;
-        if (current < config.clamp![0] || current > config.clamp![1]) {
-          derivative = current - config.clamp![clampIndex];
-        }
+        const derivative = current - config.clamp![clampIndex];
 
-        if (derivative !== 0) {
+        if (Math.abs(derivative) > EPSILON) {
           animation.springActive = true;
-        } else if (derivative === 0 && animation.springActive) {
+        } else if (Math.abs(derivative) <= EPSILON && animation.springActive) {
           animation.current = config.clamp![clampIndex];
           return true;
         }
