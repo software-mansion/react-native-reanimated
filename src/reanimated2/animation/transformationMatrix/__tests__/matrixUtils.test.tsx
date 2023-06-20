@@ -22,7 +22,7 @@ const flatIdentityMatrix: AffiniteMatrixFlat = [
   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
 ];
 
-const consequitiveNumMatrix: AffiniteMatrix = [
+const consecutiveNumMatrix: AffiniteMatrix = [
   [1, 2, 3, 4],
   [5, 6, 7, 8],
   [9, 10, 11, 12],
@@ -31,12 +31,12 @@ const consequitiveNumMatrix: AffiniteMatrix = [
 
 describe('Matrix multiplication', () => {
   it('Multiply some 4x4 matrices', () => {
-    expect(multiplyMatrices(identityMatrix, consequitiveNumMatrix)).toEqual(
-      consequitiveNumMatrix
+    expect(multiplyMatrices(identityMatrix, consecutiveNumMatrix)).toEqual(
+      consecutiveNumMatrix
     );
 
     expect(
-      multiplyMatrices(consequitiveNumMatrix, consequitiveNumMatrix)
+      multiplyMatrices(consecutiveNumMatrix, consecutiveNumMatrix)
     ).toEqual([
       [90, 100, 110, 120],
       [202, 228, 254, 280],
@@ -47,11 +47,15 @@ describe('Matrix multiplication', () => {
 });
 
 describe('Flatten & unflatten', () => {
-  it('Test that both helpers work', () => {
+  it('Test flatten', () => {
     expect(flatten(identityMatrix)).toEqual(flatIdentityMatrix);
-    expect(unflatten(flatIdentityMatrix)).toEqual(identityMatrix);
     // @ts-ignore I know this is not the correct way to call this function, but I'm testing that it still works
     expect(flatten(flatten(identityMatrix))).toEqual(flatIdentityMatrix);
+  });
+  it('Test unflatten', () => {
+    expect(unflatten(flatIdentityMatrix)).toEqual(identityMatrix);
+  });
+  it('Test compositions of flatten & unflatten', () => {
     expect(unflatten(flatten(identityMatrix))).toEqual(identityMatrix);
     expect(flatten(unflatten(flatIdentityMatrix))).toEqual(flatIdentityMatrix);
   });
@@ -88,7 +92,7 @@ describe('Type assertions:', () => {
 });
 
 describe('Matrix calculations: ', () => {
-  const a = consequitiveNumMatrix;
+  const a = consecutiveNumMatrix;
   const b: AffiniteMatrix = [
     [0, 0, 0, 0],
     [0, 0, 0, 0],

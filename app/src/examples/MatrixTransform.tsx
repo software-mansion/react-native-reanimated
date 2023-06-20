@@ -3,15 +3,15 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { SafeAreaView, Button, View } from 'react-native';
+import { SafeAreaView, Button, View, StyleSheet } from 'react-native';
 import React from 'react';
 
-const START_MATRIX = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+const START_MATRIX = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2];
 const STOP_MATRIX = [0.5, 1, 0, 0, -1, 0.5, 0, 0, 0, 0, 1, 0, 100, 100, 100, 1];
 
 const springConfig = { duration: 5000 };
 
-export default function Test() {
+export default function MatrixTransform() {
   const transformed = useSharedValue(false);
   const matrix = useSharedValue(START_MATRIX);
   const matrix2 = useSharedValue([...START_MATRIX, 0]);
@@ -29,7 +29,7 @@ export default function Test() {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.container}>
       <Button
         onPress={() => {
           matrix.value = transformed.value
@@ -46,50 +46,36 @@ export default function Test() {
       />
 
       <Animated.View
-        style={[
-          {
-            width: 80,
-            height: 80,
-            borderRadius: 10,
-            backgroundColor: 'blue',
-            marginLeft: 100,
-          },
-          matrixTransforms,
-        ]}>
-        <Animated.View
-          style={[
-            {
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              backgroundColor: 'lime',
-            },
-          ]}
-        />
+        style={[styles.bigBox, { backgroundColor: 'blue' }, matrixTransforms]}>
+        <Animated.View style={[styles.smallBox, { backgroundColor: 'lime' }]} />
       </Animated.View>
+
       <View style={{ height: 100 }} />
+
       <Animated.View
         style={[
-          {
-            width: 80,
-            height: 80,
-            borderRadius: 10,
-            backgroundColor: 'orange',
-            marginLeft: 100,
-          },
+          styles.bigBox,
+          { backgroundColor: 'orange' },
           matrixTransforms2,
         ]}>
-        <Animated.View
-          style={[
-            {
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              backgroundColor: 'red',
-            },
-          ]}
-        />
+        <Animated.View style={[styles.smallBox, { backgroundColor: 'red' }]} />
       </Animated.View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  bigBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    backgroundColor: 'blue',
+    marginLeft: 100,
+  },
+  smallBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+  },
+});

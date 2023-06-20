@@ -77,6 +77,20 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   }
 }
 
+function applyProgressToMatrix(
+  progress: number,
+  a: AffiniteMatrix,
+  b: AffiniteMatrix
+) {
+  'worklet';
+  return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
+}
+
+function applyProgressToNumber(progress: number, a: number, b: number) {
+  'worklet';
+  return a + progress * (b - a);
+}
+
 function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   animation: T
 ): void {
@@ -202,8 +216,6 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return finished;
   };
 
-  // START
-
   const transformationMatrixOnStart = (
     animation: Animation<AnimationObject>,
     value: AffiniteMatrixFlat,
@@ -215,8 +227,12 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation.startMatrices = decomposeMatrixIntoMatricesAndAngles(value);
     animation.stopMatrices = decomposeMatrixIntoMatricesAndAngles(toValue);
 
-    /** We create an animation copy to animate  single value between 0 and 100
+    /**
+     * We create an animation copy to animate  single value between 0 and 100
+     * We set limits from 0 to 100 (instead of 0-1) to make spring look good
+     * with default thresholds.
      **/
+
     animation[0] = Object.assign({}, animationCopy);
     animation[0].current = 0;
     animation[0].toValue = 100;
@@ -229,6 +245,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
     animation.current = value;
   };
+
   const transformationMatrixOnFrame = (
     animation: Animation<AnimationObject>,
     timestamp: Timestamp
@@ -237,18 +254,6 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     finished &= animation[0].onFrame(animation[0], timestamp);
 
     const progress = animation[0].current / 100;
-
-    function applyProgressToMatrix(
-      progress: number,
-      a: AffiniteMatrix,
-      b: AffiniteMatrix
-    ) {
-      return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
-    }
-
-    function applyProgessToNumber(progress: number, a: number, b: number) {
-      return a + progress * (b - a);
-    }
 
     const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
     const mappedTransforms: Array<AffiniteMatrix> = [];
@@ -269,7 +274,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     const mappedRotations: Array<AffiniteMatrix> = [];
 
     rotations.forEach((key, _) => {
-      const angle = applyProgessToNumber(
+      const angle = applyProgressToNumber(
         progress,
         animation.startMatrices['r' + key],
         animation.stopMatrices['r' + key]
@@ -294,9 +299,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       )
     );
 
-    (animation.current as AffiniteMatrixFlat).forEach((_, i) => {
-      (animation.current as AffiniteMatrixFlat)[i] = updated[i];
-    });
+    animation.current = updated;
 
     return !!finished;
   };
@@ -408,7 +411,6 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       return;
     }
     baseOnStart(animation, value, timestamp, previousAnimation);
-    value = 0;
   };
 }
 
