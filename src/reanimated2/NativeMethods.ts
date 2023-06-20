@@ -226,7 +226,9 @@ export let setNativeProps: <T extends Component>(
 
 if (isWeb()) {
   setNativeProps = (_animatedRef, _updates) => {
-    throw new Error('[Reanimated] setNativeProps() is not supported on web yet.');
+    throw new Error(
+      '[Reanimated] setNativeProps() is not supported on web yet.'
+    );
   };
 } else if (IS_NATIVE && global._IS_FABRIC) {
   setNativeProps = (animatedRef, updates) => {
