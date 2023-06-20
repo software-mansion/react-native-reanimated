@@ -92,7 +92,10 @@ export function makeWorklet(
       require.resolve('@babel/plugin-transform-arrow-functions'),
       require.resolve('@babel/plugin-proposal-optional-chaining'),
       require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
-      [require.resolve('@babel/plugin-transform-template-literals'), { loose: true }],
+      [
+        require.resolve('@babel/plugin-transform-template-literals'),
+        { loose: true },
+      ],
     ],
     ast: true,
     babelrc: false,
