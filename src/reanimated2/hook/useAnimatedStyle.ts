@@ -373,7 +373,11 @@ function checkSharedValueUsage(
     for (const element of prop) {
       checkSharedValueUsage(element, currentKey);
     }
-  } else if (typeof prop === 'object' && prop.value === undefined) {
+  } else if (
+    typeof prop === 'object' &&
+    prop !== null &&
+    prop.value === undefined
+  ) {
     // if it's a nested object, run validation for all its props
     for (const key of Object.keys(prop)) {
       checkSharedValueUsage(prop[key], key);
@@ -381,6 +385,7 @@ function checkSharedValueUsage(
   } else if (
     currentKey !== undefined &&
     typeof prop === 'object' &&
+    prop !== null &&
     prop.value !== undefined
   ) {
     // if shared value is passed insted of its value, throw an error
