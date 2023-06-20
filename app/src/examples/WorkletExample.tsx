@@ -213,7 +213,7 @@ function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
 
   return (
     <View style={{ height: 100 }}>
-      <Animated.ScrollView scrollEventThrottle={16} onScroll={scrollHandler}>
+      <Animated.ScrollView onScroll={scrollHandler}>
         <View
           style={{
             width: 100,
@@ -241,7 +241,7 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
 
   return (
     <View style={{ height: 100 }}>
-      <Animated.ScrollView scrollEventThrottle={16} ref={aref}>
+      <Animated.ScrollView ref={aref}>
         <View
           style={{
             width: 100,
