@@ -521,8 +521,8 @@ void NativeReanimatedModule::updateProps(
   for (size_t i = 0; i < length; ++i) {
     auto item = array.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
-    ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-    const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
+    auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    const jsi::Value &props = item.getProperty(rt, "updates");
 
     // TODO: support multiple surfaces
     surfaceId_ = shadowNode->getSurfaceId();
