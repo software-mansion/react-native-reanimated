@@ -53,12 +53,20 @@ declare global {
   ) => void;
   var _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
   var _updatePropsPaper:
-    | ((tag: number, name: string, updates: StyleProps | AnimatedStyle) => void)
+    | ((
+        operations: {
+          tag: number;
+          name: string;
+          updates: StyleProps | AnimatedStyle;
+        }[]
+      ) => void)
     | undefined;
   var _updatePropsFabric:
     | ((
-        shadowNodeWrapper: ShadowNodeWrapper,
-        props: StyleProps | AnimatedStyle
+        operations: {
+          shadowNodeWrapper: ShadowNodeWrapper;
+          updates: StyleProps | AnimatedStyle;
+        }[]
       ) => void)
     | undefined;
   var _removeShadowNodeFromRegistry: ((viewTag: number) => void) | undefined;
@@ -101,4 +109,13 @@ declare global {
       config: LayoutAnimationFunction
     );
   };
+  var UpdatePropsManager:
+    | {
+        update(
+          viewDescriptors: SharedValue<Descriptor[]>,
+          updates: StyleProps | AnimatedStyle
+        );
+        flush();
+      }
+    | undefined;
 }

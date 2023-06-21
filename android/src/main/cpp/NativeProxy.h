@@ -183,7 +183,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,
-      const jsi::Value &uiProps);
+      const jsi::Object &props);
 #else
   void installJSIBindings(
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
@@ -220,11 +220,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
-  void updateProps(
-      jsi::Runtime &rt,
-      int viewTag,
-      const jsi::Value &viewName,
-      const jsi::Object &props);
+  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
   void scrollTo(int viewTag, double x, double y, bool animated);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif

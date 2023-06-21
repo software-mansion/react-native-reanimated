@@ -117,10 +117,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
-  void updateProps(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeValue,
-      const jsi::Value &props);
+  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
 
   void removeShadowNodeFromRegistry(jsi::Runtime &rt, const jsi::Value &tag);
 
@@ -164,7 +161,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
+  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
