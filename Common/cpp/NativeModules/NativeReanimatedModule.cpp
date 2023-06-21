@@ -522,13 +522,11 @@ void NativeReanimatedModule::updateProps(
     auto item = array.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-    const jsi::Value &props = item.getProperty(rt, "updates");
+    const jsi::Value &updates = item.getProperty(rt, "updates");
+    operationsInBatch_.emplace_back(shadowNode, std::make_unique<jsi::Value>(rt, updates));
 
     // TODO: support multiple surfaces
     surfaceId_ = shadowNode->getSurfaceId();
-
-    operationsInBatch_.emplace_back(
-      shadowNode, std::make_unique<jsi::Value>(rt, props));
   }
 }
 
