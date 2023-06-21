@@ -7,7 +7,6 @@ import {
   ValueRotation,
 } from '../commonTypes';
 import { WebSensor } from './WebSensor';
-import { isWeb } from '../PlatformChecker';
 
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
