@@ -59,12 +59,13 @@ export function flatten(matrix: AffiniteMatrix): AffiniteMatrixFlat {
 
 export function unflatten(matrix: AffiniteMatrixFlat): AffiniteMatrix {
   'worklet';
-  const result = [];
-  const matrixCopy = [...matrix];
-  while (matrixCopy.length) {
-    result.push(matrixCopy.splice(0, 4));
-  }
-  return result as AffiniteMatrix;
+
+  return [
+    [matrix[0], matrix[1], matrix[2], matrix[3]],
+    [matrix[4], matrix[5], matrix[6], matrix[7]],
+    [matrix[8], matrix[9], matrix[10], matrix[11]],
+    [matrix[12], matrix[13], matrix[14], matrix[15]],
+  ] as AffiniteMatrix;
 }
 
 function maybeFlattenMatrix(
@@ -327,10 +328,6 @@ function gramSchmidtAlghoritm(matrix: AffiniteMatrix): {
   const [e0, e1, e2, e3] = [u0, u1, u2, u3].map((u) =>
     scale(u, 1 / Math.sqrt(innerProduct(u, u)))
   );
-  // const e0 = scale(u0, 1 / Math.sqrt(innerProduct(u0, u0)));
-  // const e1 = scale(u1, 1 / Math.sqrt(innerProduct(u1, u1)));
-  // const e2 = scale(u2, 1 / Math.sqrt(innerProduct(u2, u2)));
-  // const e3 = scale(u3, 1 / Math.sqrt(innerProduct(u3, u3)));
 
   const rotationMatrix: AffiniteMatrix = [
     [e0[0], e1[0], e2[0], e3[0]],
