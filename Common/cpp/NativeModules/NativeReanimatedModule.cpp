@@ -112,11 +112,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto updateProps = [this](
-                         jsi::Runtime &rt,
-                         const jsi::Value &shadowNodeValue,
-                         const jsi::Value &props) {
-    this->updateProps(rt, shadowNodeValue, props);
+  auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
+    this->updateProps(rt, operations);
   };
 
   auto removeFromPropsRegistry = [this](
@@ -457,8 +454,8 @@ void NativeReanimatedModule::cleanupSensors() {
 #ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::isThereAnyLayoutProp(
     jsi::Runtime &rt,
-    const jsi::Value &props) {
-  const jsi::Array propNames = props.asObject(rt).getPropertyNames(rt);
+    const jsi::Object &props) {
+  const jsi::Array propNames = props.getPropertyNames(rt);
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
@@ -518,16 +515,21 @@ bool NativeReanimatedModule::handleRawEvent(
 
 void NativeReanimatedModule::updateProps(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue,
-    const jsi::Value &props) {
-  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+    const jsi::Value &operations) {
+  auto array = operations.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  for (size_t i = 0; i < length; ++i) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
+    ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
 
-  // TODO: support multiple surfaces
-  surfaceId_ = shadowNode->getSurfaceId();
+    // TODO: support multiple surfaces
+    surfaceId_ = shadowNode->getSurfaceId();
 
-  // TODO: move batching to JS side
-  operationsInBatch_.emplace_back(
+    operationsInBatch_.emplace_back(
       shadowNode, std::make_unique<jsi::Value>(rt, props));
+  }
 }
 
 void NativeReanimatedModule::performOperations() {
@@ -565,7 +567,7 @@ void NativeReanimatedModule::performOperations() {
 
   bool hasLayoutUpdates = false;
   for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    if (isThereAnyLayoutProp(rt, *props)) {
+    if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
       hasLayoutUpdates = true;
       break;
     }
@@ -576,7 +578,7 @@ void NativeReanimatedModule::performOperations() {
     // directly onto the components and skip the commit.
     for (const auto &[shadowNode, props] : copiedOperationsQueue) {
       Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction(rt, tag, *props);
+      synchronouslyUpdateUIPropsFunction(rt, tag, props->asObject(rt));
     }
     return;
   }

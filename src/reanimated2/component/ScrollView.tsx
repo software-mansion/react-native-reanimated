@@ -26,6 +26,13 @@ const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
         scrollViewOffset
       );
     }
+
+    if (!restProps.scrollEventThrottle) {
+      // Set default scrollEventThrottle to 8, because user expects
+      // to have continuous scroll events
+      restProps.scrollEventThrottle = 8;
+    }
+
     return <AnimatedScrollViewComponent ref={aref} {...restProps} />;
   }
 );
