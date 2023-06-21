@@ -183,7 +183,7 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   'worklet';
   if (Array.isArray(prop)) {
     return prop.some(isAnimated);
-  } else if (typeof prop === 'object') {
+  } else if (typeof prop === 'object' && prop !== null) {
     if (prop.onFrame !== undefined) {
       return true;
     } else {

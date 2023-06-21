@@ -1,8 +1,29 @@
 "use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 
 // lib/commonObjects.js
 var require_commonObjects = __commonJS({
@@ -56,14 +77,15 @@ var require_commonObjects = __commonJS({
       "eval",
       "_updatePropsPaper",
       "_updatePropsFabric",
-      "_removeShadowNodeFromRegistry",
+      "_removeFromPropsRegistry",
       "RegExp",
       "Error",
       "__ErrorUtils",
       "global",
-      "_measure",
-      "_scrollTo",
-      "_dispatchCommand",
+      "_measurePaper",
+      "_measureFabric",
+      "_scrollToPaper",
+      "_dispatchCommandFabric",
       "_setGestureState",
       "isNaN",
       "LayoutAnimationRepository",
@@ -249,13 +271,16 @@ var require_makeWorklet = __commonJS({
       codeObject.code = "(" + ((0, types_1.isObjectMethod)(fun) ? "function " : "") + codeObject.code + "\n)";
       const transformed = (0, core_1.transformSync)(codeObject.code, {
         filename: state.file.opts.filename,
-        presets: ["@babel/preset-typescript"],
+        presets: [require.resolve("@babel/preset-typescript")],
         plugins: [
-          "@babel/plugin-transform-shorthand-properties",
-          "@babel/plugin-transform-arrow-functions",
-          "@babel/plugin-proposal-optional-chaining",
-          "@babel/plugin-proposal-nullish-coalescing-operator",
-          ["@babel/plugin-transform-template-literals", { loose: true }]
+          require.resolve("@babel/plugin-transform-shorthand-properties"),
+          require.resolve("@babel/plugin-transform-arrow-functions"),
+          require.resolve("@babel/plugin-proposal-optional-chaining"),
+          require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
+          [
+            require.resolve("@babel/plugin-transform-template-literals"),
+            { loose: true }
+          ]
         ],
         ast: true,
         babelrc: false,

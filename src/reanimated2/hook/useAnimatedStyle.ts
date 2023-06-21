@@ -381,7 +381,11 @@ function checkSharedValueUsage(
     for (const element of prop) {
       checkSharedValueUsage(element, currentKey);
     }
-  } else if (typeof prop === 'object' && prop.value === undefined) {
+  } else if (
+    typeof prop === 'object' &&
+    prop !== null &&
+    prop.value === undefined
+  ) {
     // if it's a nested object, run validation for all its props
     for (const key of Object.keys(prop)) {
       checkSharedValueUsage(prop[key], key);
@@ -389,6 +393,7 @@ function checkSharedValueUsage(
   } else if (
     currentKey !== undefined &&
     typeof prop === 'object' &&
+    prop !== null &&
     prop.value !== undefined
   ) {
     // if shared value is passed insted of its value, throw an error
@@ -529,10 +534,10 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
 
   checkSharedValueUsage(initial.value);
 
-  if (process.env.JEST_WORKER_ID) {
-    return { viewDescriptors, initial: initial, viewsRef, animatedStyle };
+  if (isJest()) {
+    return { viewDescriptors, initial, viewsRef, animatedStyle };
   } else {
-    return { viewDescriptors, initial: initial, viewsRef };
+    return { viewDescriptors, initial, viewsRef };
   }
   // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
 } as useAnimatedStyleType;

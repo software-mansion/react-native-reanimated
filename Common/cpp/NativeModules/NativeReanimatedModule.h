@@ -2,7 +2,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
-#include "NewestShadowNodesRegistry.h"
 #endif
 
 #include <memory>
@@ -20,6 +19,10 @@
 #include "RuntimeManager.h"
 #include "Scheduler.h"
 #include "SingleInstanceChecker.h"
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include "PropsRegistry.h"
+#endif
 
 namespace reanimated {
 
@@ -117,12 +120,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
-  void updateProps(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeValue,
-      const jsi::Value &props);
+  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
 
-  void removeShadowNodeFromRegistry(jsi::Runtime &rt, const jsi::Value &tag);
+  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &tag);
 
   void performOperations();
 
@@ -136,8 +136,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void setUIManager(std::shared_ptr<UIManager> uiManager);
 
-  void setNewestShadowNodesRegistry(
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+  void setPropsRegistry(std::shared_ptr<PropsRegistry> propsRegistry);
 #endif
 
   jsi::Value registerSensor(
@@ -164,7 +163,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
+  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
@@ -189,9 +188,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
 
-  std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
+  std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps

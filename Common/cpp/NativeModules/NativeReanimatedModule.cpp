@@ -13,8 +13,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "NewestShadowNodesRegistry.h"
-#include "ReanimatedUIManagerBinding.h"
+#include "PropsRegistry.h"
 #include "ShadowTreeCloner.h"
 #endif
 
@@ -113,17 +112,14 @@ NativeReanimatedModule::NativeReanimatedModule(
       };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto updateProps = [this](
-                         jsi::Runtime &rt,
-                         const jsi::Value &shadowNodeValue,
-                         const jsi::Value &props) {
-    this->updateProps(rt, shadowNodeValue, props);
+  auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
+    this->updateProps(rt, operations);
   };
 
-  auto removeShadowNodeFromRegistry =
-      [this](jsi::Runtime &rt, const jsi::Value &tag) {
-        this->removeShadowNodeFromRegistry(rt, tag);
-      };
+  auto removeFromPropsRegistry = [this](
+                                     jsi::Runtime &rt, const jsi::Value &tag) {
+    this->removeFromPropsRegistry(rt, tag);
+  };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
@@ -142,8 +138,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       *runtime,
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
+      removeFromPropsRegistry,
       measure,
-      removeShadowNodeFromRegistry,
       dispatchCommand,
 #else
       platformDepMethodsHolder.updatePropsFunction,
@@ -458,8 +454,8 @@ void NativeReanimatedModule::cleanupSensors() {
 #ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::isThereAnyLayoutProp(
     jsi::Runtime &rt,
-    const jsi::Value &props) {
-  const jsi::Array propNames = props.asObject(rt).getPropertyNames(rt);
+    const jsi::Object &props) {
+  const jsi::Array propNames = props.getPropertyNames(rt);
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
@@ -519,25 +515,24 @@ bool NativeReanimatedModule::handleRawEvent(
 
 void NativeReanimatedModule::updateProps(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue,
-    const jsi::Value &props) {
-  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+    const jsi::Value &operations) {
+  auto array = operations.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  for (size_t i = 0; i < length; ++i) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
+    auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    const jsi::Value &updates = item.getProperty(rt, "updates");
+    operationsInBatch_.emplace_back(shadowNode, std::make_unique<jsi::Value>(rt, updates));
 
-  // TODO: support multiple surfaces
-  surfaceId_ = shadowNode->getSurfaceId();
-
-  if (isThereAnyLayoutProp(rt, props)) {
-    operationsInBatch_.emplace_back(
-        shadowNode, std::make_unique<jsi::Value>(rt, props));
-  } else {
-    // TODO: batch with layout props changes?
-    Tag tag = shadowNode->getTag();
-    synchronouslyUpdateUIPropsFunction(rt, tag, props);
+    // TODO: support multiple surfaces
+    surfaceId_ = shadowNode->getSurfaceId();
   }
 }
 
 void NativeReanimatedModule::performOperations() {
-  if (operationsInBatch_.empty()) {
+  if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
+    // nothing to do
     return;
   }
 
@@ -545,54 +540,101 @@ void NativeReanimatedModule::performOperations() {
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
-  auto copiedTagsToRemove = std::move(tagsToRemove_);
-  tagsToRemove_ = std::vector<Tag>();
+  jsi::Runtime &rt = *this->runtime;
+
+  {
+    auto lock = propsRegistry_->createLock();
+
+    // remove recently unmounted ShadowNodes from PropsRegistry
+    if (!tagsToRemove_.empty()) {
+      for (auto tag : tagsToRemove_) {
+        propsRegistry_->remove(tag);
+      }
+      tagsToRemove_.clear();
+    }
+
+    // Even if only non-layout props are changed, we need to store the update in
+    // PropsRegistry anyway so that React doesn't overwrite it in the next
+    // render. Currently, only opacity and transform are treated in a special
+    // way but backgroundColor, shadowOpacity etc. would get overwritten (see
+    // `_propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN`).
+    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+      propsRegistry_->update(shadowNode, dynamicFromValue(rt, *props));
+    }
+  }
+
+  bool hasLayoutUpdates = false;
+  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+    if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
+      hasLayoutUpdates = true;
+      break;
+    }
+  }
+
+  if (!hasLayoutUpdates) {
+    // If there's no layout props to be updated, we can apply the updates
+    // directly onto the components and skip the commit.
+    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+      Tag tag = shadowNode->getTag();
+      synchronouslyUpdateUIPropsFunction(rt, tag, props->asObject(rt));
+    }
+    return;
+  }
+
+  if (propsRegistry_->shouldSkipCommit()) {
+    // It may happen that `performOperations` is called on the UI thread
+    // while React Native tries to commit a new tree on the JS thread.
+    // In this case, we should skip the commit here and let React Native do it.
+    // The commit will include the current values from PropsRegistry
+    // which will be applied in ReanimatedCommitHook.
+    return;
+  }
 
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  jsi::Runtime &rt = *runtime.get();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    auto lock = newestShadowNodesRegistry_->createLock();
-
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode) {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner{
-              newestShadowNodesRegistry_, uiManager_, surfaceId_};
+          ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
 
-          for (const auto &pair : copiedOperationsQueue) {
-            const ShadowNodeFamily &family = pair.first->getFamily();
-            react_native_assert(family.getSurfaceId() == surfaceId_);
+          {
+            auto lock = propsRegistry_->createLock();
 
-            auto newRootNode = shadowTreeCloner.cloneWithNewProps(
-                rootNode, family, RawProps(rt, *pair.second));
+            for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+              const ShadowNodeFamily &family = shadowNode->getFamily();
+              react_native_assert(family.getSurfaceId() == surfaceId_);
 
-            if (newRootNode == nullptr) {
-              // this happens when React removed the component but Reanimated
-              // still tries to animate it, let's skip update for this specific
-              // component
-              continue;
+              auto newRootNode = shadowTreeCloner.cloneWithNewProps(
+                  rootNode, family, RawProps(rt, *props));
+
+              if (newRootNode == nullptr) {
+                // this happens when React removed the component but Reanimated
+                // still tries to animate it, let's skip update for this
+                // specific component
+                continue;
+              }
+              rootNode = newRootNode;
             }
-            rootNode = newRootNode;
-          }
-
-          // remove ShadowNodes and its ancestors from NewestShadowNodesRegistry
-          for (auto tag : copiedTagsToRemove) {
-            newestShadowNodesRegistry_->remove(tag);
           }
 
           shadowTreeCloner.updateYogaChildren();
 
-          return std::static_pointer_cast<RootShadowNode>(rootNode);
+          auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
+
+          // skip ReanimatedCommitHook for this ShadowTree
+          propsRegistry_->setLastReanimatedRoot(newRoot);
+
+          return newRoot;
         },
         {/* default commit options */});
   });
 }
 
-void NativeReanimatedModule::removeShadowNodeFromRegistry(
+void NativeReanimatedModule::removeFromPropsRegistry(
     jsi::Runtime &rt,
     const jsi::Value &tag) {
   tagsToRemove_.push_back(tag.asNumber());
@@ -658,9 +700,9 @@ void NativeReanimatedModule::setUIManager(
   uiManager_ = uiManager;
 }
 
-void NativeReanimatedModule::setNewestShadowNodesRegistry(
-    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry) {
-  newestShadowNodesRegistry_ = newestShadowNodesRegistry;
+void NativeReanimatedModule::setPropsRegistry(
+    std::shared_ptr<PropsRegistry> propsRegistry) {
+  propsRegistry_ = propsRegistry;
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

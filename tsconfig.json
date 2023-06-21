@@ -18,14 +18,5 @@
     },
     "resolveJsonModule": true
   },
-  "include": ["src"],
-  "exclude": [
-    "app",
-    "docs",
-    "Example",
-    "FabricExample",
-    "plugin",
-    "TVOSExample",
-    "WebExample"
-  ]
+  "include": ["src"]
 }

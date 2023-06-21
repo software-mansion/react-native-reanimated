@@ -12,6 +12,7 @@ import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegis
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
+import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
   var _WORKLET: boolean | undefined;
@@ -52,25 +53,33 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var _scheduleOnJS: (fun: ShareableRef<any>, args?: ShareableRef<any>) => void;
   var _updatePropsPaper:
-    | ((tag: number, name: string, updates: StyleProps | AnimatedStyle) => void)
+    | ((
+        operations: {
+          tag: number;
+          name: string;
+          updates: StyleProps | AnimatedStyle;
+        }[]
+      ) => void)
     | undefined;
   var _updatePropsFabric:
     | ((
-        shadowNodeWrapper: ShadowNodeWrapper,
-        props: StyleProps | AnimatedStyle
+        operations: {
+          shadowNodeWrapper: ShadowNodeWrapper;
+          updates: StyleProps | AnimatedStyle;
+        }[]
       ) => void)
     | undefined;
-  var _removeShadowNodeFromRegistry: ((viewTag: number) => void) | undefined;
-  var _measure: (viewTag: number | ShadowNodeWrapper) => MeasuredDimensions;
-  var _scrollTo: (
-    viewTag: number,
-    x: number,
-    y: number,
-    animated: boolean
-  ) => void;
-  var _dispatchCommand:
+  var _removeFromPropsRegistry: (tag: number) => void | undefined;
+  var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
+  var _measureFabric:
+    | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)
+    | undefined;
+  var _scrollToPaper:
+    | ((viewTag: number, x: number, y: number, animated: boolean) => void)
+    | undefined;
+  var _dispatchCommandFabric:
     | ((
-        nodeRef: ShadowNodeWrapper,
+        shadowNodeWrapper: ShadowNodeWrapper,
         commandName: string,
         args: Array<unknown>
       ) => void)
@@ -91,4 +100,5 @@ declare global {
   var __sensorContainer: SensorContainer;
   var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: LayoutAnimationsManager;
+  var UpdatePropsManager: UpdatePropsManager;
 }
