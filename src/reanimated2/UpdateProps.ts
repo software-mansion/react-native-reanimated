@@ -100,10 +100,10 @@ const createUpdatePropsManager = global._IS_FABRIC
               shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
               updates,
             });
+            if (operations.length === 1) {
+              queueMicrotask(this.flush);
+            }
           });
-          if (operations.length === 1) {
-            queueMicrotask(this.flush);
-          }
         },
         flush() {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -131,10 +131,10 @@ const createUpdatePropsManager = global._IS_FABRIC
               name: viewDescriptor.name || 'RCTView',
               updates,
             });
+            if (operations.length === 1) {
+              queueMicrotask(this.flush);
+            }
           });
-          if (operations.length === 1) {
-            queueMicrotask(this.flush);
-          }
         },
         flush() {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
