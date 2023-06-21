@@ -69,7 +69,7 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _removeShadowNodeFromRegistry: ((viewTag: number) => void) | undefined;
+  var _removeFromPropsRegistry: (tag: number) => void | undefined;
   var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
   var _measureFabric:
     | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)

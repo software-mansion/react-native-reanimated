@@ -20,8 +20,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "NewestShadowNodesRegistry.h"
-#include "ReanimatedUIManagerBinding.h"
+#include "ReanimatedCommitHook.h"
 #endif
 
 namespace reanimated {
@@ -48,7 +47,7 @@ NativeProxy::NativeProxy(
       scheduler_(scheduler)
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
-      newestShadowNodesRegistry_(std::make_shared<NewestShadowNodesRegistry>())
+      propsRegistry_(std::make_shared<PropsRegistry>())
 #endif
 {
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -56,8 +55,9 @@ NativeProxy::NativeProxy(
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
+  uiManager->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -135,8 +135,8 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
-  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
-  newestShadowNodesRegistry_ = nullptr;
+  module->setPropsRegistry(propsRegistry_);
+  propsRegistry_ = nullptr;
 //  removed temporary, new event listener mechanism need fix on the RN side
 //  eventListener_ = std::make_shared<EventListener>(
 //      [module, getCurrentTime](const RawEvent &rawEvent) {

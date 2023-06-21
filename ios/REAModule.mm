@@ -13,9 +13,8 @@
 #import <RNReanimated/NativeProxy.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
+#import <RNReanimated/ReanimatedCommitHook.h>
 #endif
 
 #import <RNReanimated/REAModule.h>
@@ -44,7 +43,8 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
@@ -89,20 +89,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)injectReanimatedUIManagerBinding:(jsi::Runtime &)runtime uiManager:(std::shared_ptr<UIManager>)uiManager
-{
-  RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
-    callback(runtime);
-  };
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry);
-}
-
 - (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
 {
   if (auto reanimatedModule = reanimatedModule_.lock()) {
     reanimatedModule->setUIManager(uiManager);
-    reanimatedModule->setNewestShadowNodesRegistry(newestShadowNodesRegistry);
+    reanimatedModule->setPropsRegistry(propsRegistry_);
   }
 }
 
@@ -110,14 +101,15 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
-  [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
+  propsRegistry_ = std::make_shared<PropsRegistry>();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
+  uiManager->registerCommitHook(*commitHook_);
   [self setUpNativeReanimatedModule:uiManager];
 }
 
 #pragma mark-- Initialize
 
-- (void)installReanimatedUIManagerBindingAfterReload
+- (void)installReanimatedAfterReload
 {
   // called from REAInitializerRCTFabricSurface::start
   __weak __typeof__(self) weakSelf = self;
@@ -185,7 +177,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 #endif
 
   if (_surfacePresenter == nil) {
-    // _surfacePresenter will be set in installReanimatedUIManagerBindingAfterReload
+    // _surfacePresenter will be set in installReanimatedAfterReload
     _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:nil];
     return;
   }
@@ -307,7 +299,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 #ifdef RCT_NEW_ARCH_ENABLED
     reanimatedModule_ = reanimatedModule;
     if (_surfacePresenter != nil) {
-      // reload, uiManager is null right now, we need to wait for `installReanimatedUIManagerBindingAfterReload`
+      // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
       [self injectDependencies:runtime];
     }
 #endif // RCT_NEW_ARCH_ENABLED

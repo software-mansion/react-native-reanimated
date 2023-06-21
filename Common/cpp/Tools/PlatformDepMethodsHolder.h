@@ -24,7 +24,7 @@ using SynchronouslyUpdateUIPropsFunction =
     std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
-using RemoveShadowNodeFromRegistryFunction =
+using RemoveFromPropsRegistryFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &tag)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,

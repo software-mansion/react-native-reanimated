@@ -339,8 +339,9 @@ export default function createAnimatedComponent(
         }
         if (global._IS_FABRIC) {
           const viewTag = this._viewTag;
+          // TODO: batching
           runOnUI(() => {
-            _removeShadowNodeFromRegistry!(viewTag);
+            _removeFromPropsRegistry!(viewTag);
           })();
         }
       }

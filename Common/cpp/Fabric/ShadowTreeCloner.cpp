@@ -6,11 +6,9 @@
 namespace reanimated {
 
 ShadowTreeCloner::ShadowTreeCloner(
-    std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry,
     std::shared_ptr<UIManager> uiManager,
     SurfaceId surfaceId)
-    : newestShadowNodesRegistry_{newestShadowNodesRegistry},
-      propsParserContext_{
+    : propsParserContext_{
           surfaceId,
           *getContextContainerFromUIManager(&*uiManager)} {}
 
@@ -35,11 +33,7 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
   }
 
   auto &parent = ancestors.back();
-  auto &oldShadowNode = parent.first.get().getChildren().at(parent.second);
-
-  const auto newest = newestShadowNodesRegistry_->get(oldShadowNode->getTag());
-
-  const auto &source = newest == nullptr ? oldShadowNode : newest;
+  auto &source = parent.first.get().getChildren().at(parent.second);
 
   const auto props = source->getComponentDescriptor().cloneProps(
       propsParserContext_, source->getProps(), rawProps);
@@ -53,8 +47,6 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
     auto children = parentNode.getChildren();
     const auto &oldChildNode = *children.at(childIndex);
     react_native_assert(ShadowNode::sameFamily(oldChildNode, *newChildNode));
-
-    newestShadowNodesRegistry_->set(newChildNode, parentNode.getTag());
 
     if (!parentNode.getSealed()) {
       // Optimization: if a ShadowNode is unsealed, we can directly update its
