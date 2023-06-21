@@ -406,6 +406,14 @@ android {
     if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
         namespace "com.swmansion.reanimated"
     }
+
+    if (rootProject.hasProperty("ndkPath")) {
+        ndkPath rootProject.ext.ndkPath
+    }
+    if (rootProject.hasProperty("ndkVersion")) {
+        ndkVersion rootProject.ext.ndkVersion
+    }
+
     if (REACT_NATIVE_MINOR_VERSION >= 71) {
         buildFeatures {
             prefab true
