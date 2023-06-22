@@ -6,7 +6,7 @@ import {
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import { Platform } from 'react-native';
+import { isWeb } from '../PlatformChecker';
 
 interface DecayConfig {
   deceleration?: number;
@@ -39,6 +39,8 @@ export interface InnerDecayAnimation
 }
 
 const EPSILON = 0.01;
+const IS_WEB = isWeb();
+
 export function withDecay(
   userConfig: DecayConfig,
   callback?: AnimationCallback
@@ -60,7 +62,7 @@ export function withDecay(
       );
     }
 
-    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
+    const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
     const SLOPE_FACTOR = 0.1;
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
