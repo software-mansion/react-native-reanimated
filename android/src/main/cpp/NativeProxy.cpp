@@ -491,13 +491,13 @@ void NativeProxy::setGlobalProperties(
 }
 
 void NativeProxy::setupLayoutAnimations() {
-  auto weakModule =
+  auto weakNativeReanimatedModule =
       std::weak_ptr<NativeReanimatedModule>(nativeReanimatedModule_);
 
   layoutAnimations_->cthis()->setAnimationStartingBlock(
-      [weakModule](
+      [weakNativeReanimatedModule](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
-        auto nativeReanimatedModule = weakModule.lock();
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
         if (nativeReanimatedModule == nullptr) {
           return;
         }
@@ -530,9 +530,9 @@ void NativeProxy::setupLayoutAnimations() {
             rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
-  layoutAnimations_->cthis()->setHasAnimationBlock([weakModule](
+  layoutAnimations_->cthis()->setHasAnimationBlock([weakNativeReanimatedModule](
                                                        int tag, int type) {
-    auto nativeReanimatedModule = weakModule.lock();
+    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
     if (nativeReanimatedModule == nullptr) {
       return false;
     }
@@ -542,8 +542,8 @@ void NativeProxy::setupLayoutAnimations() {
   });
 
   layoutAnimations_->cthis()->setClearAnimationConfigBlock(
-      [weakModule](int tag) {
-        auto nativeReanimatedModule = weakModule.lock();
+      [weakNativeReanimatedModule](int tag) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
         if (nativeReanimatedModule == nullptr) {
           return;
         }
@@ -553,8 +553,9 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(
-      [weakModule](int tag, int type, jboolean cancelled, jboolean removeView) {
-        if (auto nativeReanimatedModule = weakModule.lock()) {
+      [weakNativeReanimatedModule](
+          int tag, int type, jboolean cancelled, jboolean removeView) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
           jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
           nativeReanimatedModule->layoutAnimationsManager()
               .cancelLayoutAnimation(
@@ -567,8 +568,8 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
   layoutAnimations_->cthis()->setFindPrecedingViewTagForTransition(
-      [weakModule](int tag) {
-        if (auto nativeReanimatedModule = weakModule.lock()) {
+      [weakNativeReanimatedModule](int tag) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
           return nativeReanimatedModule->layoutAnimationsManager()
               .findPrecedingViewTagForTransition(tag);
         } else {

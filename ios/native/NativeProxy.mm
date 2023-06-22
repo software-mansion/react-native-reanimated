@@ -296,10 +296,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     nativeReanimatedModule->handleEvent(eventName, payload, currentTime);
   }];
 
-  std::weak_ptr<NativeReanimatedModule> weakModule = nativeReanimatedModule; // to avoid retain cycle
+  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
 #ifdef RCT_NEW_ARCH_ENABLED
   [reaModule.nodesManager registerPerformOperations:^() {
-    if (auto nativeReanimatedModule = weakModule.lock()) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
       nativeReanimatedModule->performOperations();
     }
   }];
@@ -308,7 +308,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager
       setAnimationStartingBlock:^(
           NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
-        auto nativeReanimatedModule = weakModule.lock();
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
         if (nativeReanimatedModule == nullptr) {
           return;
         }
@@ -333,7 +333,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    auto nativeReanimatedModule = weakModule.lock();
+    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
     if (nativeReanimatedModule == nullptr) {
       return NO;
     }
@@ -343,7 +343,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    auto nativeReanimatedModule = weakModule.lock();
+    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
     if (nativeReanimatedModule == nullptr) {
       return;
     }
@@ -352,7 +352,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   [animationsManager
       setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
-        if (auto nativeReanimatedModule = weakModule.lock()) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
           if (auto runtime = wrt.lock()) {
             jsi::Runtime &rt = *runtime;
             nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(
@@ -362,7 +362,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       }];
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakModule.lock()) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
       int resultTag =
           nativeReanimatedModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
       return resultTag == -1 ? nil : @(resultTag);
