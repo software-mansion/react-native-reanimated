@@ -1,15 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, {
-  useState,
-  useCallback,
-  forwardRef,
-  Component,
-  useRef,
-} from 'react';
+import React, { useState, useCallback, forwardRef, useRef } from 'react';
 import {
-  Text,
   StyleSheet,
   Button,
   View,
@@ -20,7 +13,6 @@ import {
 } from 'react-native';
 import {
   PanGestureHandler,
-  PinchGestureHandlerEventPayload,
   PinchGestureHandler,
   PanGestureHandlerGestureEvent,
   FlatList,
@@ -48,14 +40,6 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
-  TimingAnimation,
-  SpringAnimation,
-  DecayAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
-  StyleLayoutAnimation,
-  Animation,
   // eslint-disable-next-line import/no-unresolved
 } from '../src';
 import {
