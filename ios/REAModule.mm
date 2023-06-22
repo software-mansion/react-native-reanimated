@@ -70,6 +70,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 #endif
   [_nodesManager invalidate];
+  [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                  name:UIApplicationDidReceiveMemoryWarningNotification
+                                                object:nil];
   [super invalidate];
 }
 
@@ -303,9 +306,108 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       [self injectDependencies:runtime];
     }
 #endif // RCT_NEW_ARCH_ENABLED
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleMemoryWarning)
+                                                 name:UIApplicationDidReceiveMemoryWarningNotification
+                                               object:nil];
   }
 
   return nil;
 }
 
+- (void)handleMemoryWarning
+{
+  int a = 0;
+}
+
 @end
+
+//- (void)handleMemoryWarning
+//{
+//  // We only want to run garbage collector when the loading is finished
+//  // and the instance is valid.
+//  if (!_valid || _loading) {
+//    return;
+//  }
+//
+//  // We need to hold a local retaining pointer to react instance
+//  // in case if some other tread resets it.
+//  auto reactInstance = _reactInstance;
+//  if (reactInstance) {
+//    int unloadLevel = RCTGetMemoryPressureUnloadLevel();
+//    reactInstance->handleMemoryPressure(unloadLevel);
+//  }
+//}
+
+// react-native/packages/react-native/ReactCommon/react/bridgeless/ReactInstance.cpp
+// void ReactInstance::handleMemoryPressureJs(int pressureLevel) {
+//  // The level is an enum value passed by the Android OS to an onTrimMemory
+//  // event callback. Defined in ComponentCallbacks2.
+//  enum AndroidMemoryPressure {
+//    TRIM_MEMORY_BACKGROUND = 40,
+//    TRIM_MEMORY_COMPLETE = 80,
+//    TRIM_MEMORY_MODERATE = 60,
+//    TRIM_MEMORY_RUNNING_CRITICAL = 15,
+//    TRIM_MEMORY_RUNNING_LOW = 10,
+//    TRIM_MEMORY_RUNNING_MODERATE = 5,
+//    TRIM_MEMORY_UI_HIDDEN = 20,
+//  };
+//  const char *levelName;
+//  switch (pressureLevel) {
+//    case TRIM_MEMORY_BACKGROUND:
+//      levelName = "TRIM_MEMORY_BACKGROUND";
+//      break;
+//    case TRIM_MEMORY_COMPLETE:
+//      levelName = "TRIM_MEMORY_COMPLETE";
+//      break;
+//    case TRIM_MEMORY_MODERATE:
+//      levelName = "TRIM_MEMORY_MODERATE";
+//      break;
+//    case TRIM_MEMORY_RUNNING_CRITICAL:
+//      levelName = "TRIM_MEMORY_RUNNING_CRITICAL";
+//      break;
+//    case TRIM_MEMORY_RUNNING_LOW:
+//      levelName = "TRIM_MEMORY_RUNNING_LOW";
+//      break;
+//    case TRIM_MEMORY_RUNNING_MODERATE:
+//      levelName = "TRIM_MEMORY_RUNNING_MODERATE";
+//      break;
+//    case TRIM_MEMORY_UI_HIDDEN:
+//      levelName = "TRIM_MEMORY_UI_HIDDEN";
+//      break;
+//    default:
+//      levelName = "UNKNOWN";
+//      break;
+//  }
+//
+//  switch (pressureLevel) {
+//    case TRIM_MEMORY_RUNNING_LOW:
+//    case TRIM_MEMORY_RUNNING_MODERATE:
+//    case TRIM_MEMORY_UI_HIDDEN:
+//      // For non-severe memory trims, do nothing.
+//      LOG(INFO) << "Memory warning (pressure level: " << levelName
+//                << ") received by JS VM, ignoring because it's non-severe";
+//      break;
+//    case TRIM_MEMORY_BACKGROUND:
+//    case TRIM_MEMORY_COMPLETE:
+//    case TRIM_MEMORY_MODERATE:
+//    case TRIM_MEMORY_RUNNING_CRITICAL:
+//      // For now, pressureLevel is unused by collectGarbage.
+//      // This may change in the future if the JS GC has different styles of
+//      // collections.
+//      LOG(INFO) << "Memory warning (pressure level: " << levelName
+//                << ") received by JS VM, running a GC";
+//      runtimeScheduler_->scheduleWork([=](jsi::Runtime &runtime) {
+//        SystraceSection s("ReactInstance::handleMemoryPressure");
+//        runtime.instrumentation().collectGarbage(levelName);
+//      });
+//      break;
+//    default:
+//      // Use the raw number instead of the name here since the name is
+//      // meaningless.
+//      LOG(WARNING) << "Memory warning (pressure level: " << pressureLevel
+//                   << ") received by JS VM, unrecognized pressure level";
+//      break;
+//  }
+//}
