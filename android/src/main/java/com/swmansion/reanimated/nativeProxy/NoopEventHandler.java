@@ -5,14 +5,15 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 
-public class EventHandlerMock implements RCTEventEmitter {
+public class NoopEventHandler implements RCTEventEmitter {
   @Override
-  public void receiveEvent(int i, String s, @Nullable WritableMap writableMap) {
+  public void receiveEvent(int targetTag, String eventName, @Nullable WritableMap event) {
     // NOOP
   }
 
   @Override
-  public void receiveTouches(String s, WritableArray writableArray, WritableArray writableArray1) {
+  public void receiveTouches(
+      String eventName, WritableArray touches, WritableArray changedIndices) {
     // NOOP
   }
 }
