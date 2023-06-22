@@ -273,7 +273,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     for (String key : keys) {
       Object value = values.get(key);
       float pixelsValue = Utils.convertToFloat(value);
-      preparedValues.put(key, PixelUtil.toDIPFromPixel(pixelsValue));
+      float dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+      preparedValues.put(key, dipValue);
     }
 
     if (addTransform) {

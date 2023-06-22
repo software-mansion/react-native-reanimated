@@ -444,7 +444,8 @@ public class SharedTransitionManager {
             preparedValues.put(key, value);
           } else {
             float pixelsValue = Utils.convertToFloat(value);
-            preparedValues.put(key, (double) PixelUtil.toDIPFromPixel(pixelsValue));
+            float dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+            preparedValues.put(key, dipValue);
           }
         }
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);
