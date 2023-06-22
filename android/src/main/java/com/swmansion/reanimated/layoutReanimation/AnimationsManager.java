@@ -503,7 +503,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         View child = viewGroup.getChildAt(i);
         if (removeOrAnimateExitRecursive(child, shouldRemove)) {
           hasAnimatedChildren = true;
-        } else if (shouldRemove) {
+        } else if (shouldRemove && child.getId() != -1) {
           toBeRemoved.add(child);
         }
       }
@@ -529,6 +529,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     if (hasAnimatedChildren) {
+      if (tag == -1) {
+        // View tags are used to identify views, but it is hard for no-react views with -1 tag.
+        // We shouldn't to manage the lifetime of no-react components.
+        cancelAnimationsRecursive(view);
+        return false;
+      }
       mAncestorsToRemove.add(tag);
     }
 
@@ -600,7 +606,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   private void removeView(View view, @Nullable ViewGroup parent) {
     int tag = view.getId();
-
     if (mCallbacks.containsKey(tag)) {
       Runnable callback = mCallbacks.get(tag);
       mCallbacks.remove(tag);
@@ -611,7 +616,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mReanimatedNativeHierarchyManager.publicDropView(view);
     }
 
-    if (parent != null && tag != -1) {
+    if (parent != null) {
       parent.removeView(view);
     }
   }
