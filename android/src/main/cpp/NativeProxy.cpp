@@ -127,7 +127,7 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  scheduler_->setRuntimeManager(module);
+  scheduler_->setRuntimeManager(module->runtimeManager_);
   nativeReanimatedModule_ = module;
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -371,7 +371,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = *nativeReanimatedModule_->runtime;
+  jsi::Runtime &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -389,7 +389,7 @@ void NativeProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newProps,
     bool isSharedTransition) {
-  auto &rt = *nativeReanimatedModule_->runtime;
+  auto &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
@@ -500,8 +500,8 @@ void NativeProxy::setupLayoutAnimations() {
         if (module == nullptr) {
           return;
         }
-        auto &rt = *module->runtime;
-        auto errorHandler = module->errorHandler;
+        auto &rt = *module->runtimeManager_->runtime;
+        auto errorHandler = module->runtimeManager_->errorHandler;
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -552,7 +552,7 @@ void NativeProxy::setupLayoutAnimations() {
   layoutAnimations_->cthis()->setCancelAnimationForTag(
       [weakModule](int tag, int type, jboolean cancelled, jboolean removeView) {
         if (auto module = weakModule.lock()) {
-          jsi::Runtime &rt = *module->runtime;
+          jsi::Runtime &rt = *module->runtimeManager_->runtime;
           module->layoutAnimationsManager().cancelLayoutAnimation(
               rt,
               tag,
