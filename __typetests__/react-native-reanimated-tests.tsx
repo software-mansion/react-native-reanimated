@@ -40,7 +40,6 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
-  // eslint-disable-next-line import/no-unresolved
 } from '../src';
 import {
   dispatchCommand,
