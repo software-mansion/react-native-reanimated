@@ -83,7 +83,7 @@ export function withDecay(
 
         if (Math.abs(derivative) > EPSILON) {
           animation.springActive = true;
-        } else if (Math.abs(derivative) <= EPSILON && animation.springActive) {
+        } else if (animation.springActive) {
           animation.current = config.clamp![clampIndex];
           return true;
         }
