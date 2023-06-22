@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
 import type {
   AnimatedStyle,
@@ -21,14 +22,8 @@ declare global {
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
   var evalWithSourceMap:
-    | ((
-        js: string,
-        sourceURL: string,
-        sourceMap: string
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ) => any)
+    | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
   var _log: (s: string) => void;
   var _notifyAboutProgress: (
@@ -42,16 +37,15 @@ declare global {
     removeView: boolean
   ) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dataHolder: ShareableSyncDataHolderRef<any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: ShareableRef<any>
   ) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  var _scheduleOnJS: (fun: ShareableRef<any>, args?: ShareableRef<any>) => void;
+  var _scheduleOnJS: (
+    fun: ComplexWorkletFunction<A, R>,
+    ...args: unknown[]
+  ) => void;
   var _updatePropsPaper:
     | ((
         operations: {
@@ -91,9 +85,7 @@ declare global {
   var console: Console;
   var __frameTimestamp: number | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var __workletsCache: Map<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var __handleCache: WeakMap<object, any>;
   var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;

@@ -287,13 +287,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       platformDepMethodsHolder);
 
-  scheduler->setRuntimeManager(module);
+  scheduler->setRuntimeManager(module->runtimeManager_);
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [eventNameNSString UTF8String];
     id eventData = [event arguments][2];
-    jsi::Runtime &rt = *module->runtime;
+    jsi::Runtime &rt = *module->runtimeManager_->runtime;
     jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
     module->handleEvent(eventName, payload, currentTime);
