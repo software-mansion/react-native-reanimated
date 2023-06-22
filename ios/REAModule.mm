@@ -276,7 +276,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
                                    .callAsConstructor(runtime, {static_cast<double>(sizeof(void *))});
     uintptr_t *workletRuntimeData =
         reinterpret_cast<uintptr_t *>(workletRuntimeValue.getObject(runtime).getArrayBuffer(runtime).data(runtime));
-    workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedModule->runtime.get());
+    workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedModule->runtimeManager_->runtime.get());
 
     runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
 

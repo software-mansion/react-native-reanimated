@@ -41,7 +41,11 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
+      runtimeManager_(std::make_shared<RuntimeManager>(
+          rt,
+          errorHandler,
+          scheduler,
+          RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -78,7 +82,7 @@ NativeReanimatedModule::NativeReanimatedModule(
         ? nullptr
         : extractShareableOrThrow(rt, argsValue);
     auto jsRuntime = this->runtimeHelper->rnRuntime();
-    this->scheduler->scheduleOnJS([=] {
+    runtimeManager_->scheduler->scheduleOnJS([=] {
       jsi::Runtime &rt = *jsRuntime;
       auto remoteFun = shareableRemoteFun->getJSValue(rt);
       if (shareableArgs == nullptr) {
@@ -135,7 +139,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
 
   RuntimeDecorator::decorateUIRuntime(
-      *runtime,
+      *runtimeManager_->runtime,
 #ifdef RCT_NEW_ARCH_ENABLED
       updateProps,
       removeFromPropsRegistry,
@@ -178,8 +182,8 @@ void NativeReanimatedModule::installCoreFunctions(
   if (!runtimeHelper) {
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
-    runtimeHelper =
-        std::make_shared<JSRuntimeHelper>(&rt, this->runtime.get(), scheduler);
+    runtimeHelper = std::make_shared<JSRuntimeHelper>(
+        &rt, runtimeManager_->runtime.get(), runtimeManager_->scheduler);
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
@@ -195,7 +199,7 @@ NativeReanimatedModule::~NativeReanimatedModule() {
     // runtime, so they have to go away before we tear down the runtime
     eventHandlerRegistry.reset();
     frameCallbacks.clear();
-    runtime.reset();
+    runtimeManager_->runtime.reset();
     // make sure uiRuntimeDestroyed is set after the runtime is deallocated
     runtimeHelper->uiRuntimeDestroyed = true;
   }
@@ -208,7 +212,7 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  scheduler->scheduleOnUI([=] {
+  runtimeManager_->scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto workletValue = shareableWorklet->getJSValue(rt);
     runtimeHelper->runOnUIGuarded(workletValue);
@@ -311,7 +315,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   auto eventName = eventHash.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
-  scheduler->scheduleOnUI([=] {
+  runtimeManager_->scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
     auto handlerFunction = handlerShareable->getJSValue(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
@@ -329,7 +333,7 @@ void NativeReanimatedModule::unregisterEventHandler(
     jsi::Runtime &rt,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  scheduler->scheduleOnUI(
+  runtimeManager_->scheduler->scheduleOnUI(
       [=] { eventHandlerRegistry->unregisterEventHandler(id); });
 }
 
@@ -344,18 +348,19 @@ jsi::Value NativeReanimatedModule::getViewProp(
   std::shared_ptr<jsi::Function> funPtr =
       std::make_shared<jsi::Function>(std::move(fun));
 
-  scheduler->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
-    const jsi::String propNameValue =
-        jsi::String::createFromUtf8(rt, propNameStr);
-    jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
-    std::string resultStr = result.asString(rt).utf8(rt);
+  runtimeManager_->scheduler->scheduleOnUI(
+      [&rt, viewTagInt, funPtr, this, propNameStr]() {
+        const jsi::String propNameValue =
+            jsi::String::createFromUtf8(rt, propNameStr);
+        jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
+        std::string resultStr = result.asString(rt).utf8(rt);
 
-    scheduler->scheduleOnJS([&rt, resultStr, funPtr]() {
-      const jsi::String resultValue =
-          jsi::String::createFromUtf8(rt, resultStr);
-      funPtr->call(rt, resultValue);
-    });
-  });
+        runtimeManager_->scheduler->scheduleOnJS([&rt, resultStr, funPtr]() {
+          const jsi::String resultValue =
+              jsi::String::createFromUtf8(rt, resultStr);
+          funPtr->call(rt, resultValue);
+        });
+      });
 
   return jsi::Value::undefined();
 }
@@ -403,7 +408,7 @@ void NativeReanimatedModule::onEvent(
     const std::string &eventName,
     const jsi::Value &payload) {
   eventHandlerRegistry->processEvent(
-      *runtime, eventTimestamp, eventName, payload);
+      *runtimeManager_->runtime, eventTimestamp, eventName, payload);
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -414,7 +419,7 @@ bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
 void NativeReanimatedModule::maybeRequestRender() {
   if (!renderRequested) {
     renderRequested = true;
-    requestRender(onRenderCallback, *this->runtime);
+    requestRender(onRenderCallback, *runtimeManager_->runtime);
   }
 }
 
@@ -501,7 +506,7 @@ bool NativeReanimatedModule::handleRawEvent(
     eventType = "on" + eventType.substr(3);
   }
   std::string eventName = std::to_string(tag) + eventType;
-  jsi::Runtime &rt = *runtime.get();
+  jsi::Runtime &rt = *runtimeManager_->runtime.get();
   jsi::Value payload = payloadFactory(rt);
 
   auto res = handleEvent(eventName, std::move(payload), currentTime);
@@ -523,7 +528,8 @@ void NativeReanimatedModule::updateProps(
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    operationsInBatch_.emplace_back(shadowNode, std::make_unique<jsi::Value>(rt, updates));
+    operationsInBatch_.emplace_back(
+        shadowNode, std::make_unique<jsi::Value>(rt, updates));
 
     // TODO: support multiple surfaces
     surfaceId_ = shadowNode->getSurfaceId();
@@ -540,7 +546,7 @@ void NativeReanimatedModule::performOperations() {
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>();
 
-  jsi::Runtime &rt = *this->runtime;
+  jsi::Runtime &rt = *runtimeManager_->runtime;
 
   {
     auto lock = propsRegistry_->createLock();

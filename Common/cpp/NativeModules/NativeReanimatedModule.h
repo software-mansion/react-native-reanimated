@@ -30,8 +30,7 @@ using FrameCallback = std::function<void(double)>;
 
 class EventHandlerRegistry;
 
-class NativeReanimatedModule : public NativeReanimatedModuleSpec,
-                               public RuntimeManager {
+class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
       const std::shared_ptr<CallInvoker> &jsInvoker,
@@ -48,6 +47,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   ~NativeReanimatedModule();
 
+  std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<JSRuntimeHelper> runtimeHelper;
 
   void installCoreFunctions(
