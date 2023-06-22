@@ -151,13 +151,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
-  std::shared_ptr<NativeReanimatedModule> module;
+  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
 
   auto nodesManager = reaModule.nodesManager;
 
   auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
 
-  auto requestRender = [nodesManager, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
+  auto requestRender = [nodesManager, &nativeReanimatedModule](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
       onRender(frameTimestamp);
@@ -272,7 +272,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  module = std::make_shared<NativeReanimatedModule>(
+  nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsInvoker,
       scheduler,
       animatedRuntime,
@@ -284,23 +284,23 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       platformDepMethodsHolder);
 
-  scheduler->setRuntimeManager(module->runtimeManager_);
+  scheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
 
   [reaModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [eventNameNSString UTF8String];
     id eventData = [event arguments][2];
-    jsi::Runtime &rt = *module->runtimeManager_->runtime;
+    jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
     jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
-    module->handleEvent(eventName, payload, currentTime);
+    nativeReanimatedModule->handleEvent(eventName, payload, currentTime);
   }];
 
-  std::weak_ptr<NativeReanimatedModule> weakModule = module; // to avoid retain cycle
+  std::weak_ptr<NativeReanimatedModule> weakModule = nativeReanimatedModule; // to avoid retain cycle
 #ifdef RCT_NEW_ARCH_ENABLED
   [reaModule.nodesManager registerPerformOperations:^() {
-    if (auto module = weakModule.lock()) {
-      module->performOperations();
+    if (auto nativeReanimatedModule = weakModule.lock()) {
+      nativeReanimatedModule->performOperations();
     }
   }];
 #else
@@ -308,8 +308,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager
       setAnimationStartingBlock:^(
           NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
-        auto reaModule = weakModule.lock();
-        if (reaModule == nullptr) {
+        auto nativeReanimatedModule = weakModule.lock();
+        if (nativeReanimatedModule == nullptr) {
           return;
         }
 
@@ -329,47 +329,49 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
           }
         }
 
-        reaModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
+        nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    auto reaModule = weakModule.lock();
-    if (reaModule == nullptr) {
+    auto nativeReanimatedModule = weakModule.lock();
+    if (nativeReanimatedModule == nullptr) {
       return NO;
     }
-    bool hasLayoutAnimation = reaModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
+    bool hasLayoutAnimation =
+        nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
     return hasLayoutAnimation ? YES : NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    auto reaModule = weakModule.lock();
-    if (reaModule == nullptr) {
+    auto nativeReanimatedModule = weakModule.lock();
+    if (nativeReanimatedModule == nullptr) {
       return;
     }
-    reaModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+    nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
   [animationsManager
       setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
-        if (auto reaModule = weakModule.lock()) {
+        if (auto nativeReanimatedModule = weakModule.lock()) {
           if (auto runtime = wrt.lock()) {
             jsi::Runtime &rt = *runtime;
-            reaModule->layoutAnimationsManager().cancelLayoutAnimation(
+            nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(
                 rt, [tag intValue], type, cancelled == YES, removeView == YES);
           }
         }
       }];
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
-    if (auto reaModule = weakModule.lock()) {
-      int resultTag = reaModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
+    if (auto nativeReanimatedModule = weakModule.lock()) {
+      int resultTag =
+          nativeReanimatedModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
       return resultTag == -1 ? nil : @(resultTag);
     }
     return nil;
   }];
 #endif
 
-  return module;
+  return nativeReanimatedModule;
 }
 
 } // namespace reanimated
