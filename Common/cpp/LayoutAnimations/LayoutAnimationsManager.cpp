@@ -4,9 +4,9 @@
 
 #include <utility>
 
-const char STANDARD_ANIMATION[] = "animation";
-
 namespace reanimated {
+
+constexpr auto STANDARD_ANIMATION = "animation";
 
 void LayoutAnimationsManager::configureAnimation(
     int tag,
