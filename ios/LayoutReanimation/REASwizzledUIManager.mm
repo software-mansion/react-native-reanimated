@@ -49,7 +49,7 @@ static REASwizzledUIManager *_reaUIManager;
                        with:@selector(reanimated_uiBlockWithLayoutUpdateForRootView:)
                   fromClass:[self class]];
     SEL manageChildrenOriginal = @selector
-        (manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+        (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     SEL manageChildrenReaniamted =
         @selector(reanimated_manageChildren:
                             moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
