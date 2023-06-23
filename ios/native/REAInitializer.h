@@ -12,8 +12,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 namespace reanimated {
 
-void REAInitializer(RCTBridge *bridge);
-
 #if REACT_NATIVE_MINOR_VERSION <= 71
 JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     RCTBridge *bridge,

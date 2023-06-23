@@ -9,7 +9,7 @@
 #import <RNReanimated/REAMessageThread.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/REAUIManager.h>
+#import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
@@ -185,18 +185,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
-  ((REAUIManager *)uiManager).flushUiOperations = ^void() {
-    std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
-    if (scheduler != nullptr) {
-      scheduler->triggerUI();
-    }
-  };
-
-  REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
-  RCTUIManager *reaUiManager = reaUiManagerNoCast;
-  REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
-  [reaUiManagerNoCast setUp:animationsManager];
-
+  REAAnimationsManager *animationsManager = reanimatedModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
