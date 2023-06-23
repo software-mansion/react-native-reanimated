@@ -213,6 +213,11 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
   function cloneRecursive<T>(value: T): ShareableRef<T> {
     const type = typeof value;
     if ((type === 'object' || type === 'function') && value !== null) {
+      // @ts-ignore trust me
+      if (value.__remoteFunction) {
+        // @ts-ignore trust me
+        return value.__remoteFunction;
+      }
       let toAdapt: any;
       if (Array.isArray(value)) {
         toAdapt = value.map((element) => cloneRecursive(element));
