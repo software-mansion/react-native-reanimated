@@ -1,7 +1,6 @@
 #ifndef RCT_NEW_ARCH_ENABLED
 
 #import <RNReanimated/REAInitializer.h>
-#import <RNReanimated/REASwizzledUIManager.h>
 
 namespace reanimated {
 
@@ -11,12 +10,7 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     RCTBridge *bridge,
     JSIExecutor::RuntimeInstaller runtimeInstallerToWrap)
 {
-  const auto runtimeInstaller = [runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
-    if (runtimeInstallerToWrap) {
-      runtimeInstallerToWrap(runtime);
-    }
-  };
-  return runtimeInstaller;
+  return runtimeInstallerToWrap;
 }
 
 #endif // REACT_NATIVE_MINOR_VERSION <= 71

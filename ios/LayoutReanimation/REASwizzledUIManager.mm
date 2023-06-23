@@ -48,14 +48,15 @@ static REASwizzledUIManager *_reaUIManager;
                    forClass:[RCTUIManager class]
                        with:@selector(reanimated_uiBlockWithLayoutUpdateForRootView:)
                   fromClass:[self class]];
-    [REAUtils
-        swizzleMethod:@selector(_manageChildren:
-                                moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:)
-             forClass:[RCTUIManager class]
-                 with:@selector
-                 (reanimated_manageChildren:
-                            moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:)
-            fromClass:[self class]];
+    SEL manageChildrenOriginal = @selector
+        (manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    SEL manageChildrenReaniamted =
+        @selector(reanimated_manageChildren:
+                            moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    [REAUtils swizzleMethod:manageChildrenOriginal
+                   forClass:[RCTUIManager class]
+                       with:manageChildrenReaniamted
+                  fromClass:[self class]];
   });
 }
 
