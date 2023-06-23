@@ -24,6 +24,11 @@
 #include "NativeReanimatedModule.h"
 #include "Scheduler.h"
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#include "PropsRegistry.h"
+#include "ReanimatedCommitHook.h"
+#endif
+
 namespace reanimated {
 
 using namespace facebook;
@@ -170,7 +175,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
   std::shared_ptr<Scheduler> scheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
 
 // removed temporary, new event listener mechanism need fix on the RN side
 // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
@@ -183,7 +189,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
       Tag viewTag,
-      const jsi::Value &uiProps);
+      const jsi::Object &props);
 #else
   void installJSIBindings(
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
@@ -220,11 +226,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime &rt,
       const jsi::Value &uiProps,
       const jsi::Value &nativeProps);
-  void updateProps(
-      jsi::Runtime &rt,
-      int viewTag,
-      const jsi::Value &viewName,
-      const jsi::Object &props);
+  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
   void scrollTo(int viewTag, double x, double y, bool animated);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif

@@ -514,9 +514,9 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
 
   checkSharedValueUsage(initial.value);
 
-  if (process.env.JEST_WORKER_ID) {
-    return { viewDescriptors, initial: initial, viewsRef, animatedStyle };
+  if (isJest()) {
+    return { viewDescriptors, initial, viewsRef, animatedStyle };
   } else {
-    return { viewDescriptors, initial: initial, viewsRef };
+    return { viewDescriptors, initial, viewsRef };
   }
 }

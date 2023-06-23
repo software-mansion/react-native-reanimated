@@ -205,8 +205,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     tab.forEach((i, index) => {
       animation[i].current = RGBACurrent[index];
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       res.push(animation[i].current);
     });
 
@@ -250,8 +251,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation: Animation<AnimationObject>,
     timestamp: Timestamp
   ): boolean => {
-    let finished = 1;
-    finished &= animation[0].onFrame(animation[0], timestamp);
+    let finished = true;
+    const result = animation[0].onFrame(animation[0], timestamp);
+    // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+    finished &&= result;
 
     const progress = animation[0].current / 100;
 
@@ -331,8 +334,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   ): boolean => {
     let finished = true;
     (animation.current as Array<number>).forEach((_, i) => {
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       (animation.current as Array<number>)[i] = animation[i].current;
     });
 
@@ -370,8 +374,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     const newObject: AnimatableValueObject = {};
     for (const key in animation.current as AnimatableValueObject) {
-      // @ts-ignore: disable-next-line
-      finished &= animation[key].onFrame(animation[key], timestamp);
+      const result = animation[key].onFrame(animation[key], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       newObject[key] = animation[key].current;
     }
     animation.current = newObject;

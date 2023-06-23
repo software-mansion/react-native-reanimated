@@ -17,6 +17,7 @@ import {
   isJest,
   isChromeDebugger,
   shouldBeUseWeb,
+  isWeb,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
@@ -323,7 +324,7 @@ export default function createAnimatedComponent(
     }
 
     _detachStyles() {
-      if (Platform.OS === 'web' && this._styles !== null) {
+      if (isWeb() && this._styles !== null) {
         for (const style of this._styles) {
           if (style?.viewsRef) {
             style.viewsRef.remove(this);
@@ -338,8 +339,9 @@ export default function createAnimatedComponent(
         }
         if (global._IS_FABRIC) {
           const viewTag = this._viewTag;
+          // TODO: batching
           runOnUI(() => {
-            _removeShadowNodeFromRegistry!(viewTag);
+            _removeFromPropsRegistry!(viewTag);
           })();
         }
       }
@@ -398,7 +400,7 @@ export default function createAnimatedComponent(
       const component = this._component?.getAnimatableRef
         ? this._component.getAnimatableRef()
         : this;
-      if (Platform.OS === 'web') {
+      if (isWeb()) {
         viewTag = findNodeHandle(component);
         viewName = null;
         shadowNodeWrapper = null;

@@ -20,8 +20,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
-#include "NewestShadowNodesRegistry.h"
-#include "ReanimatedUIManagerBinding.h"
+#include "ReanimatedCommitHook.h"
 #endif
 
 namespace reanimated {
@@ -48,7 +47,7 @@ NativeProxy::NativeProxy(
       scheduler_(scheduler)
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
-      newestShadowNodesRegistry_(std::make_shared<NewestShadowNodesRegistry>())
+      propsRegistry_(std::make_shared<PropsRegistry>())
 #endif
 {
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -56,8 +55,9 @@ NativeProxy::NativeProxy(
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      *rt, runtimeExecutor, uiManager, newestShadowNodesRegistry_);
+  commitHook_ =
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
+  uiManager->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -127,7 +127,7 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  scheduler_->setRuntimeManager(module);
+  scheduler_->setRuntimeManager(module->runtimeManager_);
   nativeReanimatedModule_ = module;
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -135,8 +135,8 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
   module->setUIManager(uiManager);
-  module->setNewestShadowNodesRegistry(newestShadowNodesRegistry_);
-  newestShadowNodesRegistry_ = nullptr;
+  module->setPropsRegistry(propsRegistry_);
+  propsRegistry_ = nullptr;
 //  removed temporary, new event listener mechanism need fix on the RN side
 //  eventListener_ = std::make_shared<EventListener>(
 //      [module, getCurrentTime](const RawEvent &rawEvent) {
@@ -234,16 +234,21 @@ void NativeProxy::configureProps(
           .get());
 }
 
-void NativeProxy::updateProps(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    const jsi::Object &props) {
+void NativeProxy::updateProps(jsi::Runtime &rt, const jsi::Value &operations) {
   static const auto method =
       getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
           "updateProps");
-  method(
-      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+  auto array = operations.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  for (size_t i = 0; i < length; ++i) {
+    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    int viewTag = item.getProperty(rt, "tag").asNumber();
+    const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
+    method(
+        javaPart_.get(),
+        viewTag,
+        JNIHelper::ConvertToPropsMap(rt, props).get());
+  }
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
@@ -279,12 +284,13 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
 void NativeProxy::synchronouslyUpdateUIProps(
     jsi::Runtime &rt,
     Tag tag,
-    const jsi::Value &props) {
+    const jsi::Object &props) {
   static const auto method =
       getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
           "synchronouslyUpdateUIProps");
-  jni::local_ref<ReadableMap::javaobject> uiProps = castReadableMap(
-      ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, props)));
+  jni::local_ref<ReadableMap::javaobject> uiProps =
+      castReadableMap(ReadableNativeMap::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, jsi::Value(rt, props))));
   method(javaPart_.get(), tag, uiProps);
 }
 #endif
@@ -365,7 +371,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = *nativeReanimatedModule_->runtime;
+  jsi::Runtime &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -383,7 +389,7 @@ void NativeProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newProps,
     bool isSharedTransition) {
-  auto &rt = *nativeReanimatedModule_->runtime;
+  auto &rt = *nativeReanimatedModule_->runtimeManager_->runtime;
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
@@ -494,8 +500,8 @@ void NativeProxy::setupLayoutAnimations() {
         if (module == nullptr) {
           return;
         }
-        auto &rt = *module->runtime;
-        auto errorHandler = module->errorHandler;
+        auto &rt = *module->runtimeManager_->runtime;
+        auto errorHandler = module->runtimeManager_->errorHandler;
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -546,7 +552,7 @@ void NativeProxy::setupLayoutAnimations() {
   layoutAnimations_->cthis()->setCancelAnimationForTag(
       [weakModule](int tag, int type, jboolean cancelled, jboolean removeView) {
         if (auto module = weakModule.lock()) {
-          jsi::Runtime &rt = *module->runtime;
+          jsi::Runtime &rt = *module->runtimeManager_->runtime;
           module->layoutAnimationsManager().cancelLayoutAnimation(
               rt,
               tag,
