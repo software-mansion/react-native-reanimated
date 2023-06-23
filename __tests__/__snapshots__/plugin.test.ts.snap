@@ -69,6 +69,82 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin for UIRuntimeChecks changes _WORKLET and global._WORKLET in worklets 1`] = `
+"var _worklet_138651347916_init_data = {
+  code: "function foo(){if(true&&true){return 1;}}",
+  location: "/dev/null"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    if (_WORKLET && global._WORKLET) {
+      return 1;
+    }
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_138651347916_init_data;
+  _f.__workletHash = 138651347916;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for UIRuntimeChecks changes _WORKLET in worklets 1`] = `
+"var _worklet_13060407119290_init_data = {
+  code: "function foo(){if(true){return 1;}}",
+  location: "/dev/null"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    if (_WORKLET) {
+      return 1;
+    }
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_13060407119290_init_data;
+  _f.__workletHash = 13060407119290;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for UIRuntimeChecks changes global._WORKLET in worklets 1`] = `
+"var _worklet_13060407119290_init_data = {
+  code: "function foo(){if(true){return 1;}}",
+  location: "/dev/null"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    if (global._WORKLET) {
+      return 1;
+    }
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_13060407119290_init_data;
+  _f.__workletHash = 13060407119290;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for UIRuntimeChecks doesn't change _WORKLET in non-worklets 1`] = `
+"function foo() {
+  if (_WORKLET) {
+    return 1;
+  }
+}"
+`;
+
+exports[`babel plugin for UIRuntimeChecks doesn't change global._WORKLET in non-worklets 1`] = `
+"function foo() {
+  if (global._WORKLET) {
+    return 1;
+  }
+}"
+`;
+
 exports[`babel plugin for class worklets workletizes class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));

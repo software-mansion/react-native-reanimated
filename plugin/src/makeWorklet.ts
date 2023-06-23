@@ -32,7 +32,6 @@ import {
   isFunctionExpression,
   isIdentifier,
   File as BabelFile,
-  booleanLiteral,
 } from '@babel/types';
 import { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { isRelease } from './utils';
@@ -43,6 +42,8 @@ import { buildWorkletString } from './buildWorkletString';
 
 const version = require('../../package.json').version;
 
+export const UI_RUNTIME_CHECK_REGEX = /(global.)?_WORKLET/g;
+
 export function makeWorklet(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
@@ -52,7 +53,7 @@ export function makeWorklet(
 
   const functionName = makeWorkletName(fun);
 
-  transformWorkletTree(fun);
+  removeWorkletDirective(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -62,6 +63,10 @@ export function makeWorklet(
     sourceMaps: true,
     sourceFileName: state.file.opts.filename,
   });
+
+  // We change _WORKLET to true to simplify conditionals and avoid
+  // situations when _WORKLET is not yet defined but referenced.
+  codeObject.code = codeObject.code.replace(UI_RUNTIME_CHECK_REGEX, 'true');
 
   // We need to add a newline at the end, because there could potentially be a
   // comment after the function that gets included here, and then the closing
@@ -246,23 +251,12 @@ export function makeWorklet(
   return newFun;
 }
 
-function transformWorkletTree(fun: NodePath<WorkletizableFunction>) {
+function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
   fun.traverse({
     // Remove 'worklet'; directive before generating string.
     DirectiveLiteral(path) {
       if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
         path.parentPath.remove();
-      }
-    },
-    // Change _WORKLET to true to simplify conditionals and avoid
-    // situations when _WORKLET is not yet defined but referenced.
-    Identifier(path) {
-      if (
-        (path.node.name === '_WORKLET' ||
-          path.node.name === 'global._WORKLET') &&
-        path.isReferencedIdentifier()
-      ) {
-        path.replaceWith(booleanLiteral(true));
       }
     },
   });

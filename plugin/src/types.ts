@@ -20,8 +20,9 @@ export interface ReanimatedPluginPass {
   [key: string]: unknown;
 }
 
-export type WorkletizableFunction =
+export type ExplicitWorklet =
   | FunctionDeclaration
   | FunctionExpression
-  | ObjectMethod
   | ArrowFunctionExpression;
+
+export type WorkletizableFunction = ExplicitWorklet | ObjectMethod;

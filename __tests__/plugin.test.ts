@@ -1129,4 +1129,84 @@ describe('babel plugin', () => {
     </script>`;
     expect(resultIsIdempotent(input9)).toBe(true);
   });
+
+  describe('for UIRuntimeChecks', () => {
+    it("doesn't change _WORKLET in non-worklets", () => {
+      const input = html`<script>
+        function foo() {
+          if (_WORKLET) {
+            return 1;
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      expect(code).toHaveUIRuntimeCheck();
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't change global._WORKLET in non-worklets", () => {
+      const input = html`<script>
+        function foo() {
+          if (global._WORKLET) {
+            return 1;
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      expect(code).toHaveUIRuntimeCheck();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('changes _WORKLET in worklets', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          if (_WORKLET) {
+            return 1;
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      expect(code).toHaveUIRuntimeCheck(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('changes global._WORKLET in worklets', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          if (global._WORKLET) {
+            return 1;
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      expect(code).toHaveUIRuntimeCheck(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('changes _WORKLET and global._WORKLET in worklets', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          if (_WORKLET && global._WORKLET) {
+            return 1;
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+
+      expect(code).toHaveUIRuntimeCheck(2);
+      expect(code).toMatchSnapshot();
+    });
+  });
 });

@@ -244,7 +244,7 @@ var require_makeWorklet = __commonJS({
       return mod && mod.__esModule ? mod : { "default": mod };
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.makeWorklet = void 0;
+    exports2.makeWorklet = exports2.UI_RUNTIME_CHECK_REGEX = void 0;
     var core_1 = require("@babel/core");
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_1 = require("@babel/types");
@@ -254,14 +254,16 @@ var require_makeWorklet = __commonJS({
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
     var version = require("../../package.json").version;
+    exports2.UI_RUNTIME_CHECK_REGEX = /(global.)?_WORKLET/g;
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
-      transformWorkletTree(fun);
+      removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "'state.file.opts.filename' is undefined");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
         sourceFileName: state.file.opts.filename
       });
+      codeObject.code = codeObject.code.replace(exports2.UI_RUNTIME_CHECK_REGEX, "true");
       codeObject.code = "(" + ((0, types_1.isObjectMethod)(fun) ? "function " : "") + codeObject.code + "\n)";
       const transformed = (0, core_1.transformSync)(codeObject.code, {
         filename: state.file.opts.filename,
@@ -340,16 +342,11 @@ var require_makeWorklet = __commonJS({
       return newFun;
     }
     exports2.makeWorklet = makeWorklet;
-    function transformWorkletTree(fun) {
+    function removeWorkletDirective(fun) {
       fun.traverse({
         DirectiveLiteral(path) {
           if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
             path.parentPath.remove();
-          }
-        },
-        Identifier(path) {
-          if ((path.node.name === "_WORKLET" || path.node.name === "global._WORKLET") && path.isReferencedIdentifier()) {
-            path.replaceWith((0, types_1.booleanLiteral)(true));
           }
         }
       });
