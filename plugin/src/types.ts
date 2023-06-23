@@ -1,4 +1,10 @@
 import { BabelFile } from '@babel/core';
+import {
+  FunctionDeclaration,
+  FunctionExpression,
+  ObjectMethod,
+  ArrowFunctionExpression,
+} from '@babel/types';
 
 export interface ReanimatedPluginPass {
   file: BabelFile;
@@ -13,3 +19,9 @@ export interface ReanimatedPluginPass {
   set(key: unknown, value: unknown): void;
   [key: string]: unknown;
 }
+
+export type WorkletizableFunction =
+  | FunctionDeclaration
+  | FunctionExpression
+  | ObjectMethod
+  | ArrowFunctionExpression;
