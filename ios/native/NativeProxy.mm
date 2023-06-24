@@ -91,6 +91,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     std::shared_ptr<CallInvoker> jsInvoker)
 {
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
+  mlmlemlmlem;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
