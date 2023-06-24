@@ -72,6 +72,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &newData);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+  void scheduleOnJS(
+      jsi::Runtime &rt,
+      const jsi::Value &remoteFun,
+      const jsi::Value &argsValue);
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
