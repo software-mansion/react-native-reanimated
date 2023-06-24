@@ -182,7 +182,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
   // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
-  REAAnimationsManager *animationsManager = reanimatedModule.animationsManager;
+  REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
 
