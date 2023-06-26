@@ -1,14 +1,12 @@
 package com.swmansion.reanimated.layoutReanimation;
 
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
-import com.facebook.react.views.image.ReactImageView;
-import com.facebook.react.views.view.ReactViewBackgroundDrawable;
-import java.lang.reflect.Field;
+import com.swmansion.reanimated.ReactNativeUtils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,8 +56,6 @@ public class Snapshot {
   public int originYByParent;
   public float borderRadius;
   private float[] identityMatrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-
-  private static Field mBorderRadiusField;
 
   public static ArrayList<String> targetKeysToTransform =
       new ArrayList<>(
@@ -127,32 +123,7 @@ public class Snapshot {
     }
     originXByParent = view.getLeft();
     originYByParent = view.getTop();
-    borderRadius = getBorderRadius(view);
-  }
-
-  private float getBorderRadius(View view) {
-    if (view.getBackground() != null) {
-      Drawable background = view.getBackground();
-      if (background instanceof ReactViewBackgroundDrawable) {
-        return ((ReactViewBackgroundDrawable) background).getFullBorderRadius();
-      }
-    } else if (view instanceof ReactImageView) {
-      try {
-        if (mBorderRadiusField == null) {
-          mBorderRadiusField = ReactImageView.class.getDeclaredField("mBorderRadius");
-          mBorderRadiusField.setAccessible(true);
-        }
-        float borderRadius = mBorderRadiusField.getFloat(view);
-        if (Float.isNaN(borderRadius)) {
-          return 0;
-        }
-        return borderRadius;
-      } catch (NullPointerException | NoSuchFieldException | IllegalAccessException ignored) {
-        // In case of non-standard view is better to not support the border animation
-        // instead of throwing exception
-      }
-    }
-    return 0;
+    borderRadius = ReactNativeUtils.getBorderRadius(view);
   }
 
   private void addTargetConfig(HashMap<String, Object> data) {
