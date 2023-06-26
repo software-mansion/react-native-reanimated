@@ -15,11 +15,8 @@ typedef NS_ENUM(NSInteger, ViewState) {
 };
 
 typedef BOOL (^REAHasAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type);
-typedef void (^REAAnimationStartingBlock)(
-    NSNumber *_Nonnull tag,
-    LayoutAnimationType type,
-    NSDictionary *_Nonnull yogaValues,
-    NSNumber *_Nonnull depth);
+typedef void (
+    ^REAAnimationStartingBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull yogaValues);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 typedef void (
     ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView);

@@ -306,8 +306,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
   // Layout Animation callbacks setup
   [animationsManager
-      setAnimationStartingBlock:^(
-          NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
+      setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
         auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
         if (nativeReanimatedModule == nullptr) {
           return;
