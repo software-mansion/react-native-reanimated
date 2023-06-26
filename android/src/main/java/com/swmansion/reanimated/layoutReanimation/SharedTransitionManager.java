@@ -444,7 +444,7 @@ public class SharedTransitionManager {
             preparedValues.put(key, value);
           } else {
             float pixelsValue = Utils.convertToFloat(value);
-            float dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+            double dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
             preparedValues.put(key, dipValue);
           }
         }

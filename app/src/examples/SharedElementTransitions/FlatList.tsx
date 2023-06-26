@@ -38,7 +38,7 @@ const Item = ({ item, parentItem, onPress }: any) => (
       <Animated.Image
         sharedTransitionTag={item.id + '-' + parentItem.index + 'image'}
         source={photo}
-        style={{ width: '100%', maxHeight: 100 }}
+        style={{ width: '100%', maxHeight: 100, borderRadius: 10, }}
       />
     </Animated.View>
   </TouchableOpacity>
@@ -119,7 +119,6 @@ const styles = StyleSheet.create({
     height: 100,
     marginVertical: 5,
     marginHorizontal: 5,
-    borderRadius: 10,
     overflow: 'hidden',
   },
   title: {
