@@ -427,7 +427,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:before.values frameConfig:ExitingFrame];
     [_exitingViews setObject:view forKey:view.reactTag];
     [self registerExitingAncestors:view];
-    _startAnimationForTag(view.reactTag, EXITING, preparedValues, @(0));
+    _startAnimationForTag(view.reactTag, EXITING, preparedValues);
   }
 
   if (hasAnimatedChildren) {
@@ -491,7 +491,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary *targetValues = after.values;
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
   [_enteringViews addObject:view.reactTag];
-  _startAnimationForTag(view.reactTag, ENTERING, preparedValues, @(0));
+  _startAnimationForTag(view.reactTag, ENTERING, preparedValues);
 }
 
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
@@ -500,7 +500,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary *currentValues = before.values;
 
   NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
-  _startAnimationForTag(view.reactTag, LAYOUT, preparedValues, @(0));
+  _startAnimationForTag(view.reactTag, LAYOUT, preparedValues);
 }
 
 - (REASnapshot *)prepareSnapshotBeforeMountForView:(UIView *)view
@@ -573,12 +573,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _clearAnimationConfigForTag(tag);
 }
 
-- (void)startAnimationForTag:(NSNumber *)tag
-                        type:(LayoutAnimationType)type
-                  yogaValues:(NSDictionary *)yogaValues
-                       depth:(NSNumber *)depth;
+- (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues
 {
-  _startAnimationForTag(tag, type, yogaValues, depth);
+  _startAnimationForTag(tag, type, yogaValues);
 }
 
 @end
