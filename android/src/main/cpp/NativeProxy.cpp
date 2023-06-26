@@ -115,7 +115,7 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<ErrorHandler> errorHandler =
       std::make_shared<AndroidErrorHandler>(scheduler_);
 
-  auto module = std::make_shared<NativeReanimatedModule>(
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
       animatedRuntime,
@@ -127,20 +127,21 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  scheduler_->setRuntimeManager(module->runtimeManager_);
-  nativeReanimatedModule_ = module;
+  scheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+  nativeReanimatedModule_ = nativeReanimatedModule;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   std::shared_ptr<UIManager> uiManager =
       binding->getScheduler()->getUIManager();
-  module->setUIManager(uiManager);
-  module->setPropsRegistry(propsRegistry_);
+  nativeReanimatedModule->setUIManager(uiManager);
+  nativeReanimatedModule->setPropsRegistry(propsRegistry_);
   propsRegistry_ = nullptr;
 //  removed temporary, new event listener mechanism need fix on the RN side
 //  eventListener_ = std::make_shared<EventListener>(
-//      [module, getCurrentTime](const RawEvent &rawEvent) {
-//        return module->handleRawEvent(rawEvent, getCurrentTime());
+//      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+//        return nativeReanimatedModule->handleRawEvent(rawEvent,
+//        getCurrentTime());
 //      });
 //  reactScheduler_ = binding->getScheduler();
 //  reactScheduler_->addEventListener(eventListener_);
@@ -154,7 +155,7 @@ void NativeProxy::installJSIBindings(
   rt.global().setProperty(
       rt,
       jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(rt, module));
+      jsi::Object::createFromHostObject(rt, nativeReanimatedModule));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
@@ -490,18 +491,19 @@ void NativeProxy::setGlobalProperties(
 }
 
 void NativeProxy::setupLayoutAnimations() {
-  auto weakModule =
+  auto weakNativeReanimatedModule =
       std::weak_ptr<NativeReanimatedModule>(nativeReanimatedModule_);
 
   layoutAnimations_->cthis()->setAnimationStartingBlock(
-      [weakModule](
+      [weakNativeReanimatedModule](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
-        auto module = weakModule.lock();
-        if (module == nullptr) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
           return;
         }
-        auto &rt = *module->runtimeManager_->runtime;
-        auto errorHandler = module->runtimeManager_->errorHandler;
+        auto &rt = *nativeReanimatedModule->runtimeManager_->runtime;
+        auto errorHandler =
+            nativeReanimatedModule->runtimeManager_->errorHandler;
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -524,48 +526,51 @@ void NativeProxy::setupLayoutAnimations() {
           }
         }
 
-        module->layoutAnimationsManager().startLayoutAnimation(
+        nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(
             rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
       });
 
-  layoutAnimations_->cthis()->setHasAnimationBlock(
-      [weakModule](int tag, int type) {
-        auto module = weakModule.lock();
-        if (module == nullptr) {
-          return false;
-        }
+  layoutAnimations_->cthis()->setHasAnimationBlock([weakNativeReanimatedModule](
+                                                       int tag, int type) {
+    auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+    if (nativeReanimatedModule == nullptr) {
+      return false;
+    }
 
-        return module->layoutAnimationsManager().hasLayoutAnimation(
-            tag, static_cast<LayoutAnimationType>(type));
-      });
+    return nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation(
+        tag, static_cast<LayoutAnimationType>(type));
+  });
 
   layoutAnimations_->cthis()->setClearAnimationConfigBlock(
-      [weakModule](int tag) {
-        auto module = weakModule.lock();
-        if (module == nullptr) {
+      [weakNativeReanimatedModule](int tag) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
           return;
         }
 
-        module->layoutAnimationsManager().clearLayoutAnimationConfig(tag);
+        nativeReanimatedModule->layoutAnimationsManager()
+            .clearLayoutAnimationConfig(tag);
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(
-      [weakModule](int tag, int type, jboolean cancelled, jboolean removeView) {
-        if (auto module = weakModule.lock()) {
-          jsi::Runtime &rt = *module->runtimeManager_->runtime;
-          module->layoutAnimationsManager().cancelLayoutAnimation(
-              rt,
-              tag,
-              static_cast<LayoutAnimationType>(type),
-              cancelled,
-              removeView);
+      [weakNativeReanimatedModule](
+          int tag, int type, jboolean cancelled, jboolean removeView) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
+          nativeReanimatedModule->layoutAnimationsManager()
+              .cancelLayoutAnimation(
+                  rt,
+                  tag,
+                  static_cast<LayoutAnimationType>(type),
+                  cancelled,
+                  removeView);
         }
       });
 
   layoutAnimations_->cthis()->setFindPrecedingViewTagForTransition(
-      [weakModule](int tag) {
-        if (auto module = weakModule.lock()) {
-          return module->layoutAnimationsManager()
+      [weakNativeReanimatedModule](int tag) {
+        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+          return nativeReanimatedModule->layoutAnimationsManager()
               .findPrecedingViewTagForTransition(tag);
         } else {
           return -1;
