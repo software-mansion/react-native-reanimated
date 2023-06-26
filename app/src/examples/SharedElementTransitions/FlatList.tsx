@@ -38,7 +38,7 @@ const Item = ({ item, parentItem, onPress }: any) => (
       <Animated.Image
         sharedTransitionTag={item.id + '-' + parentItem.index + 'image'}
         source={photo}
-        style={{ width: '100%', maxHeight: 100, borderRadius: 10, }}
+        style={{ width: '100%', maxHeight: 100, borderRadius: 10 }}
       />
     </Animated.View>
   </TouchableOpacity>
