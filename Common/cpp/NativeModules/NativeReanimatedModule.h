@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <queue>
 
 #include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
@@ -49,6 +50,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<JSRuntimeHelper> runtimeHelper;
+
+  mutable std::mutex tagsMutex_;
+  std::vector<Tag> tagsOfEnteringViews_;
+  std::vector<Tag> tagsOfLayoutViews_;
+  std::vector<Tag> tagsOfExitingViews_;
 
   void installCoreFunctions(
       jsi::Runtime &rt,

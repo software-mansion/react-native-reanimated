@@ -25,6 +25,7 @@ class LayoutAnimationsManager {
       const std::string &sharedTransitionTag,
       std::shared_ptr<Shareable> config);
   bool hasLayoutAnimation(int tag, LayoutAnimationType type);
+  void updateTag(int layoutAnimationTag, int viewTag, LayoutAnimationType type);
   void startLayoutAnimation(
       jsi::Runtime &rt,
       int tag,

@@ -19,6 +19,7 @@
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#import <RNReanimated/REASnapshot.h>
 #import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
 
@@ -43,6 +44,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
+  __weak RCTUIManager *_uiManager; // viewForReactTag
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
@@ -68,6 +70,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
 #ifdef RCT_NEW_ARCH_ENABLED
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self.bridge.surfacePresenter removeObserver:self];
 #endif
   [_nodesManager invalidate];
   [super invalidate];
@@ -102,7 +105,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
   propsRegistry_ = std::make_shared<PropsRegistry>();
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager, weakNativeReanimatedModule_);
   uiManager->registerCommitHook(*commitHook_);
   [self setUpNativeReanimatedModule:uiManager];
 }
@@ -162,7 +165,14 @@ RCT_EXPORT_MODULE(ReanimatedModule);
                                              object:nil];
 
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  [bridge.surfacePresenter addObserver:self];
+  _uiManager = bridge.uiManager;
+  _animationsManager = [[REAAnimationsManager alloc] initWithUIManager:_uiManager];
+#else
   [bridge.uiManager.observerCoordinator addObserver:self];
+#endif
 
   // only within the first loading `self.bridge.surfacePresenter` exists
   // during the reload `self.bridge.surfacePresenter` is null
@@ -307,5 +317,93 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   return nil;
 }
+
+#pragma mark - RCTSurfacePresenterObserver
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+static NSMutableDictionary<NSNumber *, REASnapshot *> *beforeSnapshots = nil;
+static NSMutableDictionary<NSNumber *, UIView *> *exitingSnapshotViews = nil;
+
+- (void)willMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+
+  if (beforeSnapshots == nil) {
+    beforeSnapshots = [[NSMutableDictionary alloc] init];
+    exitingSnapshotViews = [[NSMutableDictionary alloc] init];
+  }
+
+  [CATransaction begin];
+  // this transaction wraps transaction inside RCTPerformMountInstructions
+  // because we don't want to splash view for a single frame before entering/layout animations starts
+
+  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
+    auto lock = std::lock_guard<std::mutex>(nativeReanimatedModule->tagsMutex_);
+
+    // layout transitions
+    for (const auto viewTag : nativeReanimatedModule->tagsOfLayoutViews_) {
+      UIView *view = [_uiManager viewForReactTag:@(viewTag)];
+      view.reactTag = @(viewTag);
+      REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+      beforeSnapshots[@(viewTag)] = snapshot;
+    }
+
+    // exiting animations
+    for (const auto viewTag : nativeReanimatedModule->tagsOfExitingViews_) {
+      UIView *view = [_uiManager viewForReactTag:@(viewTag)];
+      REASnapshot *snapshot = [[REASnapshot alloc] initWithAbsolutePosition:view];
+      UIView *snapshotView = [view snapshotViewAfterScreenUpdates:NO];
+      CGFloat x = [snapshot.values[@"originX"] floatValue];
+      CGFloat y = [snapshot.values[@"originY"] floatValue];
+      CGFloat width = [snapshot.values[@"width"] floatValue];
+      CGFloat height = [snapshot.values[@"height"] floatValue];
+      snapshotView.frame = CGRectMake(x, y, width, height);
+      snapshotView.reactTag = @(viewTag);
+      exitingSnapshotViews[@(viewTag)] = snapshotView;
+    }
+  }
+}
+
+- (void)didMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+
+  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
+    auto lock = std::lock_guard<std::mutex>(nativeReanimatedModule->tagsMutex_);
+    // TODO: ensure vectors are the same as in willMountComponentsWithRootTag
+
+    // entering animations
+    for (const auto viewTag : nativeReanimatedModule->tagsOfEnteringViews_) {
+      UIView *view = [_uiManager viewForReactTag:@(viewTag)];
+      REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+      view.reactTag = @(viewTag);
+      [_animationsManager onViewCreate:view after:afterSnapshot];
+    }
+    nativeReanimatedModule->tagsOfEnteringViews_.clear();
+
+    // layout transitions
+    for (const auto viewTag : nativeReanimatedModule->tagsOfLayoutViews_) {
+      UIView *view = [_uiManager viewForReactTag:@(viewTag)];
+      REASnapshot *afterSnapshot = [[REASnapshot alloc] init:view];
+      [_animationsManager onViewUpdate:view before:beforeSnapshots[@(viewTag)] after:afterSnapshot];
+    }
+    nativeReanimatedModule->tagsOfLayoutViews_.clear();
+
+    // exiting animations
+    for (const auto viewTag : nativeReanimatedModule->tagsOfExitingViews_) {
+      UIView *snapshotView = exitingSnapshotViews[@(viewTag)];
+      [exitingSnapshotViews removeObjectForKey:@(viewTag)];
+      UIView *windowView = UIApplication.sharedApplication.keyWindow;
+      [windowView addSubview:snapshotView];
+      [_animationsManager startAnimationsRecursive:snapshotView shouldRemoveSubviewsWithoutAnimations:YES];
+    }
+    nativeReanimatedModule->tagsOfExitingViews_.clear();
+  }
+
+  [CATransaction commit];
+}
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 @end

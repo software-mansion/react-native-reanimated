@@ -264,6 +264,7 @@ export default function createAnimatedComponent(
     _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
+    _layoutAnimationsTag: number | null = null;
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -589,49 +590,6 @@ export default function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
-        // TODO update config
-        const tag = findNodeHandle(ref);
-        const { layout, entering, exiting, sharedTransitionTag } = this.props;
-        if (
-          (layout || entering || exiting || sharedTransitionTag) &&
-          tag != null
-        ) {
-          if (!shouldBeUseWeb()) {
-            enableLayoutAnimations(true, false);
-          }
-          if (layout) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.LAYOUT,
-              maybeBuild(layout)
-            );
-          }
-          if (entering) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.ENTERING,
-              maybeBuild(entering)
-            );
-          }
-          if (exiting) {
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.EXITING,
-              maybeBuild(exiting)
-            );
-          }
-          if (sharedTransitionTag) {
-            const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
-            configureLayoutAnimations(
-              tag,
-              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-              maybeBuild(sharedElementTransition),
-              sharedTransitionTag
-            );
-          }
-        }
-
         if (ref !== this._component) {
           this._component = ref;
         }
@@ -716,6 +674,50 @@ export default function createAnimatedComponent(
       return props;
     }
 
+    _configureLayoutAnimations() {
+      const { layout, entering, exiting, sharedTransitionTag } = this.props;
+      if (layout || entering || exiting || sharedTransitionTag) {
+        if (this._layoutAnimationsTag === null) {
+          this._layoutAnimationsTag = getNextLayoutAnimationTag();
+        }
+        const tag = this._layoutAnimationsTag;
+        if (!shouldBeUseWeb()) {
+          enableLayoutAnimations(true, false);
+        }
+        if (layout) {
+          configureLayoutAnimations(
+            tag,
+            LayoutAnimationType.LAYOUT,
+            maybeBuild(layout)
+          );
+        }
+        if (entering) {
+          configureLayoutAnimations(
+            tag,
+            LayoutAnimationType.ENTERING,
+            maybeBuild(entering)
+          );
+        }
+        if (exiting) {
+          configureLayoutAnimations(
+            tag,
+            LayoutAnimationType.EXITING,
+            maybeBuild(exiting)
+          );
+        }
+        if (sharedTransitionTag) {
+          const sharedElementTransition =
+            this.props.sharedTransitionStyle ?? DefaultSharedTransition;
+          configureLayoutAnimations(
+            tag,
+            LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+            maybeBuild(sharedElementTransition),
+            sharedTransitionTag
+          );
+        }
+      }
+    }
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
@@ -730,8 +732,21 @@ export default function createAnimatedComponent(
         web: {},
         default: { collapsable: false },
       });
+
+      this._configureLayoutAnimations();
+      // TODO: pass original testID
+      const testID =
+        this._layoutAnimationsTag === null
+          ? undefined
+          : `LA${this._layoutAnimationsTag}`;
+
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component
+          {...props}
+          ref={this._setComponentRef}
+          {...platformProps}
+          testID={testID}
+        />
       );
     }
   }
@@ -748,4 +763,9 @@ export default function createAnimatedComponent(
       />
     );
   });
+}
+
+let nextTag = 10001;
+function getNextLayoutAnimationTag() {
+  return nextTag++;
 }

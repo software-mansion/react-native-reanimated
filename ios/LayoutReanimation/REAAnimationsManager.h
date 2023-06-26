@@ -62,6 +62,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
                         type:(LayoutAnimationType)type
                   yogaValues:(NSDictionary *)yogaValues
                        depth:(NSNumber *)depth;
+- (BOOL)startAnimationsRecursive:(UIView *)view shouldRemoveSubviewsWithoutAnimations:(BOOL)shouldRemoveSubviewsWithoutAnimations;
 
 @end
 

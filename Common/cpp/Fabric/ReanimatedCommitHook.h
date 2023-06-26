@@ -5,6 +5,7 @@
 
 #include <memory>
 
+#include "NativeReanimatedModule.h"
 #include "PropsRegistry.h"
 
 using namespace facebook::react;
@@ -15,8 +16,9 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<PropsRegistry> &propsRegistry,
-      const std::shared_ptr<UIManager> &uiManager)
-      : propsRegistry_(propsRegistry), uiManager_(uiManager) {}
+      const std::shared_ptr<UIManager> &uiManager,
+      const std::weak_ptr<NativeReanimatedModule> &weakNativeReanimatedModule)
+      : propsRegistry_(propsRegistry), uiManager_(uiManager), weakNativeReanimatedModule_(weakNativeReanimatedModule) {}
 
   void commitHookWasRegistered(
       UIManager const &uiManager) const noexcept override {}
@@ -36,6 +38,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<PropsRegistry> propsRegistry_;
 
   std::shared_ptr<UIManager> uiManager_;
+  
+  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 };
 
 } // namespace reanimated

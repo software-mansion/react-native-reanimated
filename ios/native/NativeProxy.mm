@@ -170,17 +170,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
-
-  auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    // noop
-  };
-
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
-    // noop
-  };
-
 #else
-  // Layout Animations start
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
   ((REAUIManager *)uiManager).flushUiOperations = ^void() {
     std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
@@ -188,11 +178,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       scheduler->triggerUI();
     }
   };
+#endif // RCT_NEW_ARCH_ENABLED
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  REAAnimationsManager *animationsManager = reaModule.animationsManager;
+#else
   REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
   RCTUIManager *reaUiManager = reaUiManagerNoCast;
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
   [reaUiManagerNoCast setUp:animationsManager];
+#endif // RCT_NEW_ARCH_ENABLED
 
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
@@ -208,14 +203,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     [weakAnimationsManager endLayoutAnimationForTag:@(tag) cancelled:isCancelled removeView:removeView];
   };
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  // do nothing
+#else
   auto configurePropsFunction = [reaModule](
                                     jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
     NSSet *uiPropsSet = convertProps(rt, uiProps);
     NSSet *nativePropsSet = convertProps(rt, nativeProps);
     [reaModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
-
-  // Layout Animations end
 #endif
 
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
@@ -303,7 +299,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       nativeReanimatedModule->performOperations();
     }
   }];
-#else
+#endif // RCT_NEW_ARCH_ENABLED
+
   // Layout Animation callbacks setup
   [animationsManager
       setAnimationStartingBlock:^(
@@ -369,7 +366,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
-#endif
 
   return nativeReanimatedModule;
 }

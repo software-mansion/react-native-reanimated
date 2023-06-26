@@ -491,6 +491,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   NSMutableDictionary *targetValues = after.values;
   NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
   [_enteringViews addObject:view.reactTag];
+  assert(_startAnimationForTag != nil);
   _startAnimationForTag(view.reactTag, ENTERING, preparedValues, @(0));
 }
 

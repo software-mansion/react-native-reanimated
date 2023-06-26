@@ -26,6 +26,12 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
   return collection::contains(getConfigsForType(type), tag);
 }
 
+void LayoutAnimationsManager::updateTag(int layoutAnimationTag, int viewTag, LayoutAnimationType type) {
+  auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  getConfigsForType(type)[viewTag] = getConfigsForType(type)[layoutAnimationTag];
+  getConfigsForType(type).erase(layoutAnimationTag);
+}
+
 void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
   enteringAnimations_.erase(tag);
@@ -53,8 +59,9 @@ void LayoutAnimationsManager::startLayoutAnimation(
   std::shared_ptr<Shareable> config, viewShareable;
   {
     auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-    config = getConfigsForType(type)[tag];
+    config = getConfigsForType(type)[tag]; // this is a hack
   }
+  assert(config != nullptr);
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
