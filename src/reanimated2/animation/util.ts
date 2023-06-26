@@ -179,8 +179,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     tab.forEach((i, index) => {
       animation[i].current = RGBACurrent[index];
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       res.push(animation[i].current);
     });
 
@@ -216,9 +217,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp
   ): boolean => {
     let finished = true;
-    (animation.current as Array<number>).forEach((v, i) => {
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+    (animation.current as Array<number>).forEach((_, i) => {
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       (animation.current as Array<number>)[i] = animation[i].current;
     });
 
@@ -256,8 +258,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     const newObject: AnimatableValueObject = {};
     for (const key in animation.current as AnimatableValueObject) {
-      // @ts-ignore: disable-next-line
-      finished &= animation[key].onFrame(animation[key], timestamp);
+      const result = animation[key].onFrame(animation[key], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       newObject[key] = animation[key].current;
     }
     animation.current = newObject;

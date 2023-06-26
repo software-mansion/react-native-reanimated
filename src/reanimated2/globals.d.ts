@@ -53,25 +53,33 @@ declare global {
   ) => void;
   var _scheduleOnJS: (fun: ShareableRef, args?: ShareableRef) => void;
   var _updatePropsPaper:
-    | ((tag: number, name: string, updates: StyleProps | AnimatedStyle) => void)
+    | ((
+        operations: {
+          tag: number;
+          name: string;
+          updates: StyleProps | AnimatedStyle;
+        }[]
+      ) => void)
     | undefined;
   var _updatePropsFabric:
     | ((
-        shadowNodeWrapper: ShadowNodeWrapper,
-        props: StyleProps | AnimatedStyle
+        operations: {
+          shadowNodeWrapper: ShadowNodeWrapper;
+          updates: StyleProps | AnimatedStyle;
+        }[]
       ) => void)
     | undefined;
-  var _removeShadowNodeFromRegistry: ((viewTag: number) => void) | undefined;
-  var _measure: (viewTag: number | ShadowNodeWrapper) => MeasuredDimensions;
-  var _scrollTo: (
-    viewTag: number,
-    x: number,
-    y: number,
-    animated: boolean
-  ) => void;
-  var _dispatchCommand:
+  var _removeFromPropsRegistry: (tag: number) => void | undefined;
+  var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
+  var _measureFabric:
+    | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)
+    | undefined;
+  var _scrollToPaper:
+    | ((viewTag: number, x: number, y: number, animated: boolean) => void)
+    | undefined;
+  var _dispatchCommandFabric:
     | ((
-        nodeRef: ShadowNodeWrapper,
+        shadowNodeWrapper: ShadowNodeWrapper,
         commandName: string,
         args: Array<unknown>
       ) => void)
@@ -101,4 +109,13 @@ declare global {
       config: LayoutAnimationFunction
     );
   };
+  var UpdatePropsManager:
+    | {
+        update(
+          viewDescriptors: SharedValue<Descriptor[]>,
+          updates: StyleProps | AnimatedStyle
+        );
+        flush();
+      }
+    | undefined;
 }

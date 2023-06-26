@@ -23,6 +23,7 @@
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
   BOOL _isAsyncSharedTransitionConfigured;
+  BOOL _isConfigured;
 }
 
 /*
@@ -50,6 +51,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _isAsyncSharedTransitionConfigured = NO;
+    _isConfigured = NO;
     [self swizzleScreensMethods];
   }
   return self;
@@ -73,11 +75,17 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)notifyAboutNewView:(UIView *)view
 {
+  if (!_isConfigured) {
+    return;
+  }
   [_addedSharedViews addObject:view];
 }
 
 - (void)notifyAboutViewLayout:(UIView *)view withViewFrame:(CGRect)frame
 {
+  if (!_isConfigured) {
+    return;
+  }
   [_layoutedSharedViewsTags addObject:view.reactTag];
   float x = frame.origin.x;
   float y = frame.origin.y;
@@ -88,6 +96,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)viewsDidLayout
 {
+  if (!_isConfigured) {
+    return;
+  }
   [self configureAsyncSharedTransitionForViews:_addedSharedViews];
   [_addedSharedViews removeAllObjects];
   [self maybeRestartAnimationWithNewLayout];
@@ -310,13 +321,19 @@ static REASharedTransitionManager *_sharedTransitionManager;
 #if LOAD_SCREENS_HEADERS
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    // it replaces method for RNSScreenView class, so it can be done only once
-    [self swizzleMethod:@selector(viewDidLayoutSubviews)
-                   with:@selector(swizzled_viewDidLayoutSubviews)
-               forClass:[RNSScreen class]];
-    [self swizzleMethod:@selector(notifyWillDisappear)
-                   with:@selector(swizzled_notifyWillDisappear)
-               forClass:[RNSScreenView class]];
+    SEL viewDidLayoutSubviewsSelector = @selector(viewDidLayoutSubviews);
+    SEL notifyWillDisappearSelector = @selector(notifyWillDisappear);
+    if ([RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
+        [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector]) {
+      [self swizzleMethod:viewDidLayoutSubviewsSelector
+                     with:@selector(swizzled_viewDidLayoutSubviews)
+                 forClass:[RNSScreen class]];
+
+      [self swizzleMethod:notifyWillDisappearSelector
+                     with:@selector(swizzled_notifyWillDisappear)
+                 forClass:[RNSScreenView class]];
+      _isConfigured = YES;
+    }
   });
 #endif
 }
@@ -539,6 +556,9 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)finishSharedAnimation:(UIView *)view
 {
+  if (!_isConfigured) {
+    return;
+  }
   NSNumber *viewTag = view.reactTag;
   if (_disableCleaningForView[viewTag]) {
     [self enableCleaningForViewTag:viewTag];
