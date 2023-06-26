@@ -6,7 +6,6 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.ReactNativeUtils;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
