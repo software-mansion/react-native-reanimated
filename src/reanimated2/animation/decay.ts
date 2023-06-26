@@ -38,7 +38,6 @@ export interface InnerDecayAnimation
   current: number;
 }
 
-const EPSILON = 0.01;
 const IS_WEB = isWeb();
 
 export function withDecay(
@@ -69,21 +68,23 @@ export function withDecay(
 
     if (config.rubberBandEffect) {
       decay = (animation: InnerDecayAnimation, now: number): boolean => {
-        const {
-          lastTimestamp,
-          startTimestamp,
-          current,
-          initialVelocity,
-          velocity,
-        } = animation;
+        const { lastTimestamp, startTimestamp, current, velocity } = animation;
 
         const deltaTime = Math.min(now - lastTimestamp, 64);
-        const clampIndex = initialVelocity > 0 ? 1 : 0;
-        const derivative = current - config.clamp![clampIndex];
+        const clampIndex =
+          Math.abs(current - config.clamp![0]) <
+          Math.abs(current - config.clamp![1])
+            ? 0
+            : 1;
 
-        if (Math.abs(derivative) > EPSILON) {
+        let derivative = 0;
+        if (current < config.clamp![0] || current > config.clamp![1]) {
+          derivative = current - config.clamp![clampIndex];
+        }
+
+        if (derivative !== 0) {
           animation.springActive = true;
-        } else if (animation.springActive) {
+        } else if (derivative === 0 && animation.springActive) {
           animation.current = config.clamp![clampIndex];
           return true;
         }
