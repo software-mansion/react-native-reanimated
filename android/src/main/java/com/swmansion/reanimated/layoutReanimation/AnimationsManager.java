@@ -347,8 +347,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       props.remove(Snapshot.TRANSFORM_MATRIX);
     }
 
-    updateLayout(
-        view, parentViewManager, parentTag, view.getId(), x, y, width, height, isPositionAbsolute);
+    updateLayout(view, parentViewManager, parentTag, x, y, width, height, isPositionAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
     props.remove(Snapshot.GLOBAL_ORIGIN_X);
@@ -394,7 +393,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       View viewToUpdate,
       ViewManager parentViewManager,
       int parentTag,
-      int tag,
       float xf,
       float yf,
       float widthf,
