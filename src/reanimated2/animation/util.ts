@@ -229,7 +229,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation.stopMatrices = decomposeMatrixIntoMatricesAndAngles(toValue);
 
     /**
-     * We create an animation copy to animate  single value between 0 and 100
+     * We create an animation copy to animate single value between 0 and 100
      * We set limits from 0 to 100 (instead of 0-1) to make spring look good
      * with default thresholds.
      **/

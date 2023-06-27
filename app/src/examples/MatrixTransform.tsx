@@ -28,44 +28,41 @@ export default function MatrixTransform() {
     };
   });
 
+  const handlePress = React.useCallback(() => {
+    matrix.value = withSpring(
+      transformed.value ? START_MATRIX : STOP_MATRIX,
+      springConfig
+    );
+
+    matrix2.value = withSpring(
+      [...(transformed.value ? START_MATRIX : STOP_MATRIX), 0],
+      springConfig
+    );
+
+    transformed.value = !transformed.value;
+  }, [matrix, matrix2, transformed]);
+
   return (
     <SafeAreaView style={styles.container}>
-      <Button
-        onPress={() => {
-          matrix.value = transformed.value
-            ? withSpring(START_MATRIX, springConfig)
-            : withSpring(STOP_MATRIX, springConfig);
+      <Button onPress={handlePress} title="GO GO matrix" />
 
-          matrix2.value = transformed.value
-            ? withSpring([...START_MATRIX, 0], springConfig)
-            : withSpring([...STOP_MATRIX, 0], springConfig);
-
-          transformed.value = !transformed.value;
-        }}
-        title="GO GO matrix"
-      />
-
-      <Animated.View
-        style={[styles.bigBox, { backgroundColor: 'blue' }, matrixTransforms]}>
-        <Animated.View style={[styles.smallBox, { backgroundColor: 'lime' }]} />
+      <Animated.View style={[styles.bigBox, styles.blue, matrixTransforms]}>
+        <Animated.View style={[styles.smallBox, styles.lime]} />
       </Animated.View>
 
       <View style={{ height: 100 }} />
 
-      <Animated.View
-        style={[
-          styles.bigBox,
-          { backgroundColor: 'orange' },
-          matrixTransforms2,
-        ]}>
-        <Animated.View style={[styles.smallBox, { backgroundColor: 'red' }]} />
+      <Animated.View style={[styles.bigBox, styles.orange, matrixTransforms2]}>
+        <Animated.View style={[styles.smallBox, styles.red]} />
       </Animated.View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
   bigBox: {
     width: 80,
     height: 80,
@@ -78,4 +75,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 10,
   },
+  red: { backgroundColor: 'red' },
+  lime: { backgroundColor: 'lime' },
+  blue: { backgroundColor: 'blue' },
+  orange: { backgroundColor: 'orange' },
 });

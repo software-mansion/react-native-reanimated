@@ -31,7 +31,15 @@ const consecutiveNumMatrix: AffiniteMatrix = [
 
 describe('Matrix multiplication', () => {
   it('Multiply some 4x4 matrices', () => {
+    expect(multiplyMatrices(identityMatrix, identityMatrix)).toEqual(
+      identityMatrix
+    );
+
     expect(multiplyMatrices(identityMatrix, consecutiveNumMatrix)).toEqual(
+      consecutiveNumMatrix
+    );
+
+    expect(multiplyMatrices(consecutiveNumMatrix, identityMatrix)).toEqual(
       consecutiveNumMatrix
     );
 
@@ -105,7 +113,6 @@ describe('Matrix calculations: ', () => {
     [8, 9, 10, 11],
     [12, 13, 14, 15],
   ];
-
   const aPlusB: AffiniteMatrix = [
     [1, 2, 3, 4],
     [5, 6, 7, 8],
@@ -125,6 +132,18 @@ describe('Matrix calculations: ', () => {
 });
 
 describe('Matrix decomposition', () => {
+  it('Throw an error if matrix is incorrect (has zero as its last element)', () => {
+    const incorrectMatrix: AffiniteMatrix = [
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 0],
+    ];
+    expect(() => decomposeMatrix(incorrectMatrix)).toThrowError(
+      new Error('Invalid transform matrix!')
+    );
+  });
+
   it('Decompose identity into identities', () => {
     const { translationMatrix, scaleMatrix, rotationMatrix, skewMatrix } =
       decomposeMatrix(flatten(identityMatrix));

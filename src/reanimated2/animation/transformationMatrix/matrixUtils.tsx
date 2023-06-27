@@ -47,7 +47,7 @@ export function isAffiniteMatrix(x: unknown): x is AffiniteMatrix {
       (row) =>
         Array.isArray(row) &&
         row.length === 4 &&
-        row.every((element) => typeof element === 'number')
+        row.every((element) => typeof element === 'number' && !isNaN(element))
     )
   );
 }
@@ -170,13 +170,13 @@ export function multiplyMatrices(
 }
 
 function linearOperationOnMatrix<T extends AffiniteMatrixFlat | AffiniteMatrix>(
-  _a: T,
+  maybeFlatA: T,
   func: (x: number) => number
 ): T {
   'worklet';
 
-  const isFlatOnStart = !!isAffiniteMatrixFlat(_a);
-  const a: AffiniteMatrixFlat = maybeFlattenMatrix(_a);
+  const isFlatOnStart = isAffiniteMatrixFlat(maybeFlatA) || !!true;
+  const a: AffiniteMatrixFlat = maybeFlattenMatrix(maybeFlatA);
 
   a.forEach((_, i) => {
     a[i] = func(a[i]);
@@ -185,54 +185,45 @@ function linearOperationOnMatrix<T extends AffiniteMatrixFlat | AffiniteMatrix>(
   return isFlatOnStart ? (a as T) : (unflatten(a) as T);
 }
 
-function linearOperationOnMatrices<
-  T extends AffiniteMatrixFlat | AffiniteMatrix
->(maybeFlatA: T, maybeFlatB: T, operation: 'add' | 'subtract'): T {
+export function subtractMatrices<T extends AffiniteMatrixFlat | AffiniteMatrix>(
+  maybeFlatA: T,
+  maybeFlatB: T
+): T {
   'worklet';
-
   const isFlatOnStart = !!isAffiniteMatrixFlat(maybeFlatA);
   const a: AffiniteMatrixFlat = maybeFlattenMatrix(maybeFlatA);
   const b: AffiniteMatrixFlat = maybeFlattenMatrix(maybeFlatB);
 
   a.forEach((_, i) => {
-    switch (operation) {
-      case 'subtract':
-        a[i] -= b[i];
-        break;
-      case 'add':
-        a[i] += b[i];
-        break;
-    }
+    a[i] -= b[i];
   });
 
   return isFlatOnStart ? (a as T) : (unflatten(a) as T);
 }
 
-export function subtractMatrices<T extends AffiniteMatrixFlat | AffiniteMatrix>(
-  _a: T,
-  _b: T
-): T {
-  'worklet';
-
-  return linearOperationOnMatrices(_a, _b, 'subtract');
-}
-
 export function addMatrices<T extends AffiniteMatrixFlat | AffiniteMatrix>(
-  _a: T,
-  _b: T
+  maybeFlatA: T,
+  maybeFlatB: T
 ): T {
   'worklet';
+  const isFlatOnStart = !!isAffiniteMatrixFlat(maybeFlatA);
+  const a: AffiniteMatrixFlat = maybeFlattenMatrix(maybeFlatA);
+  const b: AffiniteMatrixFlat = maybeFlattenMatrix(maybeFlatB);
 
-  return linearOperationOnMatrices(_a, _b, 'add');
+  a.forEach((_, i) => {
+    a[i] += b[i];
+  });
+
+  return isFlatOnStart ? (a as T) : (unflatten(a) as T);
 }
 
 export function scaleMatrix<T extends AffiniteMatrixFlat | AffiniteMatrix>(
-  _a: T,
+  maybeFlatA: T,
   scalar: number
 ): T {
   'worklet';
 
-  return linearOperationOnMatrix(_a, (x) => x * scalar);
+  return linearOperationOnMatrix(maybeFlatA, (x) => x * scalar);
 }
 
 export function getRotationMatrix(
@@ -296,8 +287,8 @@ function innerProduct(a: number[], b: number[]) {
 
 function projection(u: number[], a: number[]) {
   'worklet';
-  const scaler = innerProduct(u, a) / innerProduct(u, u);
-  return u.map((e) => e * scaler);
+  const s = innerProduct(u, a) / innerProduct(u, u);
+  return u.map((e) => e * s);
 }
 
 function subtract(a: number[], b: number[]) {
@@ -355,15 +346,13 @@ export function decomposeMatrix(
 ): TransformMatrixDecomposition {
   'worklet';
 
-  const matrix: AffiniteMatrixFlat = maybeFlattenMatrix(unknownTypeMatrix);
+  const matrix = maybeFlattenMatrix(unknownTypeMatrix);
 
   // Normalize matrix
-  const lastElement: number = matrix[15];
-  if (lastElement === 0) {
-    throw Error('Invalid transform matrix!');
+  if (matrix[15] === 0) {
+    throw new Error('Invalid transform matrix!');
   }
-
-  matrix.forEach((_, index) => (matrix[index] /= lastElement));
+  matrix.forEach((_, i) => (matrix[i] /= matrix[15]));
 
   const translationMatrix: AffiniteMatrix = [
     [1, 0, 0, 0],
