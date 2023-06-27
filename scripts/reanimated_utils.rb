@@ -54,11 +54,18 @@ def assert_no_multiple_instances(react_native_info)
     return
   end
 
+  # Find all instances in the node_modules location where React Native lives
   lib_instances_in_react_native_node_modules = %x[find #{react_native_info[:react_native_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
   lib_instances_in_react_native_node_modules_array = lib_instances_in_react_native_node_modules.split("\n")
+
+  reanimated_instances = lib_instances_in_react_native_node_modules_array.length
+
+  # Find all instances in the node_modules location where RNReanimated lives, unless:
+  #
+  # - It's the same location as React Native (as that would give us the same results); or
+  # - The user passed a custom node_modules location (as that is guaranteed to give multiple instances since the RNReanimated location is relative to this project)
   lib_instances_in_reanimated_node_modules_array = Array.new
-  reanimated_instances = lib_instances_in_react_native_node_modules_array.length()
-  if react_native_info[:react_native_node_modules_dir] != react_native_info[:reanimated_node_modules_dir]
+  if react_native_info[:react_native_node_modules_dir] != react_native_info[:reanimated_node_modules_dir] && ENV.fetch('REACT_NATIVE_NODE_MODULES_DIR').nil?
     lib_instances_in_reanimated_node_modules = %x[find #{react_native_info[:reanimated_node_modules_dir]} -name "package.json" | grep "/react-native-reanimated/package.json"]
     lib_instances_in_reanimated_node_modules_array = lib_instances_in_reanimated_node_modules.split("\n")
     reanimated_instances += lib_instances_in_reanimated_node_modules_array.length()
