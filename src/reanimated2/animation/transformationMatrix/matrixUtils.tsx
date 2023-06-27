@@ -12,11 +12,7 @@ export type AffiniteMatrix = FixedLengthArray<FixedLengthArray<number, 4>, 4>;
 export type AffiniteMatrixFlat = FixedLengthArray<number, 16>;
 
 export type TransformMatrixDecomposition = Record<
-  | 'translationMatrix'
-  | 'scaleMatrix'
-  | 'rotationMatrix'
-  | 'skewMatrix'
-  | 'scaleMatrix',
+  'translationMatrix' | 'scaleMatrix' | 'rotationMatrix' | 'skewMatrix',
   AffiniteMatrix
 >;
 
@@ -34,7 +30,7 @@ export function isAffiniteMatrixFlat(x: unknown): x is AffiniteMatrixFlat {
   return (
     Array.isArray(x) &&
     x.length === 16 &&
-    x.every((element) => typeof element === 'number')
+    x.every((element) => typeof element === 'number' && !isNaN(element))
   );
 }
 

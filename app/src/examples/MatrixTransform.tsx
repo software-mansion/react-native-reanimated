@@ -49,13 +49,10 @@ export default function MatrixTransform() {
   return (
     <SafeAreaView style={styles.container}>
       <Button onPress={handlePress} title="GO GO matrix" />
-
       <Animated.View style={[styles.bigBox, styles.blue, matrixTransforms]}>
         <Animated.View style={[styles.smallBox, styles.lime]} />
       </Animated.View>
-
       <View style={{ height: 100 }} />
-
       <Animated.View style={[styles.bigBox, styles.orange, matrixTransforms2]}>
         <Animated.View style={[styles.smallBox, styles.red]} />
       </Animated.View>
@@ -71,7 +68,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     backgroundColor: 'blue',
-    //Border radius on rotated view doesn't work on android https://github.com/facebook/react-native/issues/18266
+    //Border radius of rotated view doesn't work on android https://github.com/facebook/react-native/issues/18266
     borderRadius: Platform.select({ ios: 10, android: 0 }),
     marginLeft: 100,
   },
