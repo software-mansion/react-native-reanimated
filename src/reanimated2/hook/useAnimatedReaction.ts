@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import { DependencyList } from './commonTypes';
+import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
 export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
@@ -18,7 +19,7 @@ export function useAnimatedReaction<T>(
   react: AnimatedReactionWorkletFunction<T>,
   dependencies: DependencyList
 ): void {
-  const previous = useRef({ value: null as T | null }).current;
+  const previous = useSharedValue<T | null>(null, true);
 
   let inputs = Object.values(prepare._closure ?? {});
 
