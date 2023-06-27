@@ -532,8 +532,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (hasAnimatedChildren) {
       if (tag == -1) {
-        // View tags are used to identify views, but it is hard for no-react views with -1 tag.
-        // We shouldn't to manage the lifetime of no-react components.
+        // View tags are used to identify react views, therefore native-only views
+        // don't have any view tag and view.getId returns -1
+        // We shouldn't manage lifetime of non-react components.
         cancelAnimationsRecursive(view);
         return false;
       }
