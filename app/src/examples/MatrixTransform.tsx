@@ -3,18 +3,21 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { SafeAreaView, Button, View, StyleSheet } from 'react-native';
-import React from 'react';
+import { SafeAreaView, Button, View, StyleSheet, Platform } from 'react-native';
+import React, { useRef } from 'react';
 
-const START_MATRIX = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2];
-const STOP_MATRIX = [0.5, 1, 0, 0, -1, 0.5, 0, 0, 0, 0, 1, 0, 100, 100, 100, 1];
+const TRANSFORM_MATRICES = [
+  [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2],
+  [0.5, 1, 0, 0, -1, 0.5, 0, 0, 0, 0, 1, 0, 100, 100, 100, 1],
+  [0.5, 5, 0, 0, -1, 0.5, 0, 0, 0, 0, 1, 0, 100, 100, 100, 4],
+];
 
 const springConfig = { duration: 5000 };
 
 export default function MatrixTransform() {
-  const transformed = useSharedValue(false);
-  const matrix = useSharedValue(START_MATRIX);
-  const matrix2 = useSharedValue([...START_MATRIX, 0]);
+  const currentTransformIndex = useRef(0);
+  const matrix = useSharedValue(TRANSFORM_MATRICES[0]);
+  const matrix2 = useSharedValue([...TRANSFORM_MATRICES[0], 0]);
 
   const matrixTransforms = useAnimatedStyle(() => {
     return {
@@ -30,17 +33,18 @@ export default function MatrixTransform() {
 
   const handlePress = React.useCallback(() => {
     matrix.value = withSpring(
-      transformed.value ? START_MATRIX : STOP_MATRIX,
+      TRANSFORM_MATRICES[currentTransformIndex.current],
       springConfig
     );
 
     matrix2.value = withSpring(
-      [...(transformed.value ? START_MATRIX : STOP_MATRIX), 0],
+      [...TRANSFORM_MATRICES[currentTransformIndex.current], 0],
       springConfig
     );
 
-    transformed.value = !transformed.value;
-  }, [matrix, matrix2, transformed]);
+    currentTransformIndex.current += 1;
+    currentTransformIndex.current %= 3;
+  }, [matrix, matrix2, currentTransformIndex]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -66,14 +70,15 @@ const styles = StyleSheet.create({
   bigBox: {
     width: 80,
     height: 80,
-    borderRadius: 10,
     backgroundColor: 'blue',
+    //Border radius on rotated view doesn't work on android https://github.com/facebook/react-native/issues/18266
+    borderRadius: Platform.select({ ios: 10, android: 0 }),
     marginLeft: 100,
   },
   smallBox: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: Platform.select({ ios: 10, android: 0 }),
   },
   red: { backgroundColor: 'red' },
   lime: { backgroundColor: 'lime' },
