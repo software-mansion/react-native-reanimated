@@ -17,14 +17,15 @@ def find_config()
     :react_native_common_dir => nil,
   }
 
-  react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
-  react_native_json = try_to_parse_react_native_package_json(react_native_node_modules_dir)
-
-  if react_native_json == nil
-    # user configuration, just in case
-    node_modules_dir = ENV["REACT_NATIVE_NODE_MODULES_DIR"]
-    react_native_json = try_to_parse_react_native_package_json(node_modules_dir)
+  # If the user set a custom location for where to look for React Native, use that
+  custom_react_native_node_modules_dir = ENV.fetch('REACT_NATIVE_NODE_MODULES_DIR')
+  if custom_react_native_node_modules_dir.nil?
+    react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
+  else
+    react_native_node_modules_dir = custom_react_native_node_modules_dir
   end
+
+  react_native_json = try_to_parse_react_native_package_json(react_native_node_modules_dir)
 
   if react_native_json == nil
     raise '[RNReanimated] Unable to recognize your `react-native` version! Please set environmental variable with `react-native` locations: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install'
