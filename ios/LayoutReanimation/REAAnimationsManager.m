@@ -266,8 +266,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   }
 }
 
-- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
-                                          targetValues:(NSMutableDictionary *)targetValues
+- (NSMutableDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
+                                                 targetValues:(NSMutableDictionary *)targetValues
 {
   NSMutableDictionary *preparedData = [NSMutableDictionary new];
   preparedData[@"currentWidth"] = currentValues[@"width"];
@@ -284,10 +284,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   preparedData[@"targetGlobalOriginY"] = targetValues[@"globalOriginY"];
   preparedData[@"windowWidth"] = currentValues[@"windowWidth"];
   preparedData[@"windowHeight"] = currentValues[@"windowHeight"];
-  if (currentValues[@"transformMatrix"] != nil && targetValues[@"transformMatrix"] != nil) {
-    preparedData[@"currentTransformMatrix"] = currentValues[@"transformMatrix"];
-    preparedData[@"targetTransformMatrix"] = targetValues[@"transformMatrix"];
-  }
   return preparedData;
 }
 

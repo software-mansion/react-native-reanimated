@@ -22,6 +22,7 @@ import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.Scheduler;
+import com.swmansion.reanimated.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -270,7 +271,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
       keys = Snapshot.currentKeysToTransform;
     }
     for (String key : keys) {
-      preparedValues.put(key, PixelUtil.toDIPFromPixel((int) values.get(key)));
+      Object value = values.get(key);
+      float pixelsValue = Utils.convertToFloat(value);
+      float dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+      preparedValues.put(key, dipValue);
     }
 
     if (addTransform) {
