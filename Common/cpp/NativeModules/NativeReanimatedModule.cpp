@@ -510,11 +510,10 @@ bool NativeReanimatedModule::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  std::string eventName = std::to_string(tag) + eventType;
   jsi::Runtime &rt = *runtimeManager_->runtime.get();
   jsi::Value payload = payloadFactory(rt);
 
-  auto res = handleEvent(eventName, std::move(payload), currentTime);
+  auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to be
