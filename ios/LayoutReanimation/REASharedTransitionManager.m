@@ -548,10 +548,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   NSMutableDictionary *currentValues = before.values;
   [view.superview bringSubviewToFront:view];
   NSDictionary *preparedValues = [self prepareDataForWorklet:currentValues targetValues:targetValues];
-  [_animationManager startAnimationForTag:view.reactTag
-                                     type:SHARED_ELEMENT_TRANSITION
-                               yogaValues:preparedValues
-                                    depth:@(0)];
+  [_animationManager startAnimationForTag:view.reactTag type:SHARED_ELEMENT_TRANSITION yogaValues:preparedValues];
 }
 
 - (void)finishSharedAnimation:(UIView *)view
