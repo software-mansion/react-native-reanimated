@@ -382,7 +382,7 @@ void NativeProxy::handleEvent(
   }
 
   nativeReanimatedModule_->handleEvent(
-      eventName->toString(), targetTag, payload, this->getCurrentTime());
+      eventName->toString(), emitterReactTag, payload, this->getCurrentTime());
 }
 
 void NativeProxy::progressLayoutAnimation(

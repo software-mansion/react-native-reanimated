@@ -37,8 +37,8 @@ void EventHandlerRegistry::processEvent(
         handlersForEvent.push_back(handler.second);
       }
     }
-    handlersIt =
-        eventMappings.find(std::to_string(emitterReactTag) + eventName);
+    auto eventHash = std::to_string(emitterReactTag) + eventName;
+    handlersIt = eventMappings.find(eventHash);
     if (handlersIt != eventMappings.end()) {
       for (auto handler : handlersIt->second) {
         handlersForEvent.push_back(handler.second);

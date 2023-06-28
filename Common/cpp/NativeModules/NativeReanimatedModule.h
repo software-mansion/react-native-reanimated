@@ -113,7 +113,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   bool handleEvent(
       const std::string &eventName,
-      const int viewTag,
+      const int emitterReactTag,
       const jsi::Value &payload,
       double currentTime);
 
