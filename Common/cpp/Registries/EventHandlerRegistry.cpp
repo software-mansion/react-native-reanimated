@@ -26,11 +26,18 @@ void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
     double eventTimestamp,
     const std::string &eventName,
+    const int viewTag,
     const jsi::Value &eventPayload) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);
     auto handlersIt = eventMappings.find(eventName);
+    if (handlersIt != eventMappings.end()) {
+      for (auto handler : handlersIt->second) {
+        handlersForEvent.push_back(handler.second);
+      }
+    }
+    handlersIt = eventMappings.find(std::to_string(viewTag) + eventName);
     if (handlersIt != eventMappings.end()) {
       for (auto handler : handlersIt->second) {
         handlersForEvent.push_back(handler.second);

@@ -106,11 +106,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void onRender(double timestampMs);
 
-  void onEvent(
-      double eventTimestamp,
-      const std::string &eventName,
-      const jsi::Value &payload);
-
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
@@ -118,6 +113,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   bool handleEvent(
       const std::string &eventName,
+      const int viewTag,
       const jsi::Value &payload,
       double currentTime);
 

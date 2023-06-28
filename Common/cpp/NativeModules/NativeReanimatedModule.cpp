@@ -410,14 +410,6 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
   return jsi::Value::undefined();
 }
 
-void NativeReanimatedModule::onEvent(
-    double eventTimestamp,
-    const std::string &eventName,
-    const jsi::Value &payload) {
-  eventHandlerRegistry->processEvent(
-      *runtimeManager_->runtime, eventTimestamp, eventName, payload);
-}
-
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
     std::string eventName) {
   return eventHandlerRegistry->isAnyHandlerWaitingForEvent(eventName);
@@ -483,9 +475,11 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
+    const int viewTag,
     const jsi::Value &payload,
     double currentTime) {
-  onEvent(currentTime, eventName, payload);
+  eventHandlerRegistry->processEvent(
+      *runtimeManager_->runtime, currentTime, eventName, viewTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
