@@ -1,4 +1,3 @@
-# random change just to trigger a CI test
 name: Test monorepo build
 on:
   pull_request:
