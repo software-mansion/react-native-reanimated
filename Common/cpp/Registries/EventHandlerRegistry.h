@@ -31,7 +31,7 @@ class EventHandlerRegistry {
       jsi::Runtime &rt,
       double eventTimestamp,
       const std::string &eventName,
-      const int viewTag,
+      const int emitterReactTag,
       const jsi::Value &eventPayload);
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName);

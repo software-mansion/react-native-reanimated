@@ -20,12 +20,13 @@ public class EventHandler implements RCTEventEmitter {
   }
 
   @Override
-  public void receiveEvent(int targetTag, String eventName, @Nullable WritableMap event) {
+  public void receiveEvent(int emitterReactTag, String eventName, @Nullable WritableMap event) {
     String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
-    receiveEvent(resolvedEventName, targetTag, event);
+    receiveEvent(resolvedEventName, emitterReactTag, event);
   }
 
-  public native void receiveEvent(String eventKey, int targetTag, @Nullable WritableMap event);
+  public native void receiveEvent(
+      String eventKey, int emitterReactTag, @Nullable WritableMap event);
 
   @Override
   public void receiveTouches(

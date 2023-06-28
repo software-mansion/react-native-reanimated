@@ -26,7 +26,7 @@ void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
     double eventTimestamp,
     const std::string &eventName,
-    const int viewTag,
+    const int emitterReactTag,
     const jsi::Value &eventPayload) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
@@ -37,7 +37,8 @@ void EventHandlerRegistry::processEvent(
         handlersForEvent.push_back(handler.second);
       }
     }
-    handlersIt = eventMappings.find(std::to_string(viewTag) + eventName);
+    handlersIt =
+        eventMappings.find(std::to_string(emitterReactTag) + eventName);
     if (handlersIt != eventMappings.end()) {
       for (auto handler : handlersIt->second) {
         handlersForEvent.push_back(handler.second);

@@ -289,12 +289,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
-    int viewTag = [event.viewTag intValue];
+    int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
     jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
     jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
-    nativeReanimatedModule->handleEvent(eventName, viewTag, payload, currentTime);
+    nativeReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
   }];
 
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle

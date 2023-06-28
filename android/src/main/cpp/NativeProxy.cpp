@@ -347,7 +347,7 @@ double NativeProxy::getCurrentTime() {
 
 void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
-    jint targetTag,
+    jint emitterReactTag,
     jni::alias_ref<react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
   // TODO: convert event directly to jsi::Value without JSON serialization

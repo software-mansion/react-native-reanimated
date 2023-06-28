@@ -234,7 +234,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #endif
   void handleEvent(
       jni::alias_ref<JString> eventName,
-      jint targetTag,
+      jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event);
 
   void progressLayoutAnimation(
