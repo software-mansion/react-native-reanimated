@@ -66,8 +66,9 @@ class EventHandler : public HybridClass<EventHandler> {
 
   void receiveEvent(
       jni::alias_ref<JString> eventKey,
+      jint targetTag,
       jni::alias_ref<react::WritableMap> event) {
-    handler_(eventKey, event);
+    handler_(eventKey, targetTag, event);
   }
 
   static void registerNatives() {
@@ -81,11 +82,12 @@ class EventHandler : public HybridClass<EventHandler> {
 
   explicit EventHandler(std::function<void(
                             jni::alias_ref<JString>,
+                            jint targetTag,
                             jni::alias_ref<react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
   std::function<
-      void(jni::alias_ref<JString>, jni::alias_ref<react::WritableMap>)>
+      void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>)>
       handler_;
 };
 
@@ -231,7 +233,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
   void handleEvent(
-      jni::alias_ref<JString> eventKey,
+      jni::alias_ref<JString> eventName,
+      jint targetTag,
       jni::alias_ref<react::WritableMap> event);
 
   void progressLayoutAnimation(

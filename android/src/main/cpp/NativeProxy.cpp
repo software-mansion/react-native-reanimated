@@ -346,11 +346,10 @@ double NativeProxy::getCurrentTime() {
 }
 
 void NativeProxy::handleEvent(
-    jni::alias_ref<JString> eventKey,
+    jni::alias_ref<JString> eventName,
+    jint targetTag,
     jni::alias_ref<react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
-  auto eventName = eventKey->toString();
-
   // TODO: convert event directly to jsi::Value without JSON serialization
   std::string eventAsString;
   try {
@@ -383,7 +382,7 @@ void NativeProxy::handleEvent(
   }
 
   nativeReanimatedModule_->handleEvent(
-      eventName, payload, this->getCurrentTime());
+      eventName->toString(), targetTag, payload, this->getCurrentTime());
 }
 
 void NativeProxy::progressLayoutAnimation(

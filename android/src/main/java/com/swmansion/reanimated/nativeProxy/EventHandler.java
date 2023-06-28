@@ -22,10 +22,10 @@ public class EventHandler implements RCTEventEmitter {
   @Override
   public void receiveEvent(int targetTag, String eventName, @Nullable WritableMap event) {
     String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
-    receiveEvent(targetTag + resolvedEventName, event);
+    receiveEvent(resolvedEventName, targetTag, event);
   }
 
-  public native void receiveEvent(String eventKey, @Nullable WritableMap event);
+  public native void receiveEvent(String eventKey, int targetTag, @Nullable WritableMap event);
 
   @Override
   public void receiveTouches(
