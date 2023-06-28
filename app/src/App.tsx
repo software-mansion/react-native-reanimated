@@ -55,7 +55,7 @@ function findExamples(search: string) {
 }
 
 function HomeScreen({ navigation }: HomeScreenProps) {
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = React.useState('KeyboardAvoidingView');
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
