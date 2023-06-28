@@ -11,28 +11,25 @@ using namespace facebook;
 
 namespace reanimated {
 
-class EventHandlerRegistry;
-
 class WorkletEventHandler {
-  friend EventHandlerRegistry;
-
- private:
-  std::shared_ptr<JSRuntimeHelper> _runtimeHelper;
-  uint64_t id;
-  std::string eventName;
-  jsi::Value _handlerFunction;
+  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
+  jsi::Value handlerFunction_;
+  uint64_t handlerId_;
+  std::string eventName_;
 
  public:
   WorkletEventHandler(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      uint64_t id,
+      uint64_t handlerId,
       std::string eventName,
       jsi::Value &&handlerFunction)
-      : _runtimeHelper(runtimeHelper),
-        id(id),
-        eventName(eventName),
-        _handlerFunction(std::move(handlerFunction)) {}
-  void process(double eventTimestamp, const jsi::Value &eventValue);
+      : runtimeHelper_(runtimeHelper),
+        handlerId_(handlerId),
+        eventName_(eventName),
+        handlerFunction_(std::move(handlerFunction)) {}
+  void process(double eventTimestamp, const jsi::Value &eventValue) const;
+  uint64_t getHandlerId() const;
+  const std::string &getEventName() const;
 };
 
 } // namespace reanimated
