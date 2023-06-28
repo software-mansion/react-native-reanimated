@@ -43,7 +43,7 @@ export default function MatrixTransform() {
     );
 
     currentTransformIndex.current += 1;
-    currentTransformIndex.current %= 3;
+    currentTransformIndex.current %= TRANSFORM_MATRICES.length;
   }, [matrix, matrix2, currentTransformIndex]);
 
   return (
@@ -52,7 +52,7 @@ export default function MatrixTransform() {
       <Animated.View style={[styles.bigBox, styles.blue, matrixTransforms]}>
         <Animated.View style={[styles.smallBox, styles.lime]} />
       </Animated.View>
-      <View style={{ height: 100 }} />
+      <View style={styles.spacer} />
       <Animated.View style={[styles.bigBox, styles.orange, matrixTransforms2]}>
         <Animated.View style={[styles.smallBox, styles.red]} />
       </Animated.View>
@@ -68,9 +68,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     backgroundColor: 'blue',
-    //Border radius of rotated view doesn't work on android https://github.com/facebook/react-native/issues/18266
+    // border radius of rotated view doesn't work on android https://github.com/facebook/react-native/issues/18266
     borderRadius: Platform.select({ ios: 10, android: 0 }),
     marginLeft: 100,
+  },
+  spacer: {
+    height: 100,
   },
   smallBox: {
     width: 40,

@@ -27,14 +27,14 @@ import {
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 import {
-  AffiniteMatrixFlat,
-  AffiniteMatrix,
+  AffineMatrixFlat,
+  AffineMatrix,
   flatten,
   multiplyMatrices,
   scaleMatrix,
   addMatrices,
   decomposeMatrixIntoMatricesAndAngles,
-  isAffiniteMatrixFlat,
+  isAffineMatrixFlat,
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
@@ -79,8 +79,8 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
 
 function applyProgressToMatrix(
   progress: number,
-  a: AffiniteMatrix,
-  b: AffiniteMatrix
+  a: AffineMatrix,
+  b: AffineMatrix
 ) {
   'worklet';
   return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
@@ -219,11 +219,11 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
   const transformationMatrixOnStart = (
     animation: Animation<AnimationObject>,
-    value: AffiniteMatrixFlat,
+    value: AffineMatrixFlat,
     timestamp: Timestamp,
     previousAnimation: Animation<AnimationObject>
   ): void => {
-    const toValue = animation.toValue as AffiniteMatrixFlat;
+    const toValue = animation.toValue as AffineMatrixFlat;
 
     animation.startMatrices = decomposeMatrixIntoMatricesAndAngles(value);
     animation.stopMatrices = decomposeMatrixIntoMatricesAndAngles(toValue);
@@ -257,7 +257,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     const progress = animation[0].current / 100;
 
     const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
-    const mappedTransforms: Array<AffiniteMatrix> = [];
+    const mappedTransforms: Array<AffineMatrix> = [];
 
     transforms.forEach((key, _) =>
       mappedTransforms.push(
@@ -272,7 +272,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     const [currentTranslation, currentScale, skewMatrix] = mappedTransforms;
 
     const rotations: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
-    const mappedRotations: Array<AffiniteMatrix> = [];
+    const mappedRotations: Array<AffineMatrix> = [];
 
     rotations.forEach((key, _) => {
       const angle = applyProgressToNumber(
@@ -391,7 +391,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
       return;
-    } else if (isAffiniteMatrixFlat(value)) {
+    } else if (isAffineMatrixFlat(value)) {
       transformationMatrixOnStart(
         animation,
         value,

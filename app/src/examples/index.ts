@@ -314,12 +314,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
-
   MatrixExample: {
     icon: '🧮',
     title: 'useAnimatedStyle with matrix',
     screen: MatrixTransform,
   },
+
   // Old examples
 
   AnimatedStyleUpdateExample: {
