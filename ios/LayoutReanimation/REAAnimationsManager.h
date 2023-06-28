@@ -55,10 +55,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (UIView *)viewForTag:(NSNumber *)tag;
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type;
 - (void)clearAnimationConfigForTag:(NSNumber *)tag;
-- (void)startAnimationForTag:(NSNumber *)tag
-                        type:(LayoutAnimationType)type
-                  yogaValues:(NSDictionary *)yogaValues
-                       depth:(NSNumber *)depth;
+- (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues;
 
 @end
 
