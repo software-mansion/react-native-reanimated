@@ -83,7 +83,7 @@ export function withDecay(
       const isOutsideClamp =
         current < config.clamp![0] || current > config.clamp![1];
 
-      if (isOutsideClamp || config?.pushedForward) {
+      if (isOutsideClamp || animation?.pushedForward) {
         derivative = current - config.clamp![clampIndex];
       }
 
@@ -102,20 +102,8 @@ export function withDecay(
         derivative * config.rubberBandFactor;
 
       if (isOutsideClamp) {
-        const distanceToClamp = Math.abs(current - config.clamp![clampIndex]);
-        const timeToReachClampWithCurrentVelocity =
-          Math.abs(distanceToClamp / (v * config.velocityFactor)) * 1000;
-
-        const expectedMeanVelocity =
-          distanceToClamp / timeToReachClampWithCurrentVelocity;
-
-        if (expectedMeanVelocity > 1) {
-          config.pushedForward = true;
-        } else {
-          config.pushedForward = false;
-        }
-
-        console.log(expectedMeanVelocity);
+        const currentAcceleration = v / velocity;
+        animation.pushedForward = currentAcceleration > 0.95;
       }
 
       animation.current =
