@@ -6,17 +6,22 @@ namespace reanimated {
 void EventHandlerRegistry::registerEventHandler(
     std::shared_ptr<WorkletEventHandler> eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
-  eventMappings[eventHandler->eventName][eventHandler->id] = eventHandler;
-  eventHandlers[eventHandler->id] = eventHandler;
+  const auto &eventName = eventHandler->getEventName();
+  auto handlerId = eventHandler->getHandlerId();
+  eventMappings[eventName][handlerId] = eventHandler;
+  eventHandlers[handlerId] = eventHandler;
 }
 
 void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
-    eventMappings[handlerIt->second->eventName].erase(id);
-    if (eventMappings[handlerIt->second->eventName].empty()) {
-      eventMappings.erase(handlerIt->second->eventName);
+    const auto &eventName = handlerIt->second->getEventName();
+    auto eventMappingIt = eventMappings.find(eventName);
+    auto &handlersMap = eventMappingIt->second;
+    handlersMap.erase(id);
+    if (handlersMap.empty()) {
+      eventMappings.erase(eventMappingIt);
     }
     eventHandlers.erase(handlerIt);
   }
