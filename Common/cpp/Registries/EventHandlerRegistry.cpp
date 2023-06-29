@@ -26,11 +26,19 @@ void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
     double eventTimestamp,
     const std::string &eventName,
+    const int emitterReactTag,
     const jsi::Value &eventPayload) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);
     auto handlersIt = eventMappings.find(eventName);
+    if (handlersIt != eventMappings.end()) {
+      for (auto handler : handlersIt->second) {
+        handlersForEvent.push_back(handler.second);
+      }
+    }
+    auto eventHash = std::to_string(emitterReactTag) + eventName;
+    handlersIt = eventMappings.find(eventHash);
     if (handlersIt != eventMappings.end()) {
       for (auto handler : handlersIt->second) {
         handlersForEvent.push_back(handler.second);
