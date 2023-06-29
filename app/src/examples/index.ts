@@ -87,6 +87,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import PendulumExample from './PendulumExample';
 
 interface Example {
   icon?: string;
@@ -312,6 +313,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  SpringExample: {
+    icon: '🕰',
+    title: 'Pendulum example',
+    screen: PendulumExample,
   },
 
   // Old examples
