@@ -12,16 +12,16 @@ using namespace facebook;
 namespace reanimated {
 
 class WorkletEventHandler {
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
-  jsi::Value handlerFunction_;
-  uint64_t handlerId_;
-  std::string eventName_;
+  const std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
+  const jsi::Value handlerFunction_;
+  const uint64_t handlerId_;
+  const std::string eventName_;
 
  public:
   WorkletEventHandler(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      uint64_t handlerId,
-      std::string eventName,
+      const uint64_t handlerId,
+      const std::string &eventName,
       jsi::Value &&handlerFunction)
       : runtimeHelper_(runtimeHelper),
         handlerFunction_(std::move(handlerFunction)),
