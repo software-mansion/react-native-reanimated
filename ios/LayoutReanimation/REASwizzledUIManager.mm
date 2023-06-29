@@ -42,20 +42,33 @@
 {
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    [REAUtils swizzleMethod:@selector(uiBlockWithLayoutUpdateForRootView:)
-                   forClass:[RCTUIManager class]
-                       with:@selector(reanimated_uiBlockWithLayoutUpdateForRootView:)
-                  fromClass:[self class]];
+    [self swizzleMethod:@selector(uiBlockWithLayoutUpdateForRootView:)
+               forClass:[RCTUIManager class]
+                   with:@selector(reanimated_uiBlockWithLayoutUpdateForRootView:)
+              fromClass:[self class]];
     SEL manageChildrenOriginal = @selector
         (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     SEL manageChildrenReanimated =
         @selector(reanimated_manageChildren:
                             moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
-    [REAUtils swizzleMethod:manageChildrenOriginal
-                   forClass:[RCTUIManager class]
-                       with:manageChildrenReanimated
-                  fromClass:[self class]];
+    [self swizzleMethod:manageChildrenOriginal
+               forClass:[RCTUIManager class]
+                   with:manageChildrenReanimated
+              fromClass:[self class]];
   });
+}
+
+- (void)swizzleMethod:(SEL)originalSelector
+             forClass:(Class)originalClass
+                 with:(SEL)newSelector
+            fromClass:(Class)newClass
+{
+  Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
+  Method newMethod = class_getInstanceMethod(newClass, newSelector);
+  IMP originalImplementation = method_getImplementation(originalMethod);
+  IMP newImplementation = method_getImplementation(newMethod);
+  class_replaceMethod(originalClass, newSelector, originalImplementation, method_getTypeEncoding(originalMethod));
+  class_replaceMethod(originalClass, originalSelector, newImplementation, method_getTypeEncoding(newMethod));
 }
 
 - (void)reanimated_manageChildren:(NSNumber *)containerTag
