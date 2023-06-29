@@ -701,6 +701,125 @@ var require_processInlineStylesWarning = __commonJS({
   }
 });
 
+// lib/processIfLayoutAnimationsWithCallback.js
+var require_processIfLayoutAnimationsWithCallback = __commonJS({
+  "lib/processIfLayoutAnimationsWithCallback.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfLayoutAnimationsWithCallback = void 0;
+    var types_1 = require("@babel/types");
+    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
+    var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
+      "BounceIn",
+      "BounceInDown",
+      "BounceInLeft",
+      "BounceInRight",
+      "BounceInUp",
+      "BounceOut",
+      "BounceOutDown",
+      "BounceOutLeft",
+      "BounceOutRight",
+      "BounceOutUp",
+      "FadeIn",
+      "FadeInDown",
+      "FadeInLeft",
+      "FadeInRight",
+      "FadeInUp",
+      "FadeOut",
+      "FadeOutDown",
+      "FadeOutLeft",
+      "FadeOutRight",
+      "FadeOutUp",
+      "FlipInEasyX",
+      "FlipInEasyY",
+      "FlipInXDown",
+      "FlipInXUp",
+      "FlipInYLeft",
+      "FlipInYRight",
+      "FlipOutEasyX",
+      "FlipOutEasyY",
+      "FlipOutXDown",
+      "FlipOutXUp",
+      "FlipOutYLeft",
+      "FlipOutYRight",
+      "LightSpeedInLeft",
+      "LightSpeedInRight",
+      "LightSpeedOutLeft",
+      "LightSpeedOutRight",
+      "PinwheelIn",
+      "PinwheelOut",
+      "RollInLeft",
+      "RollInRight",
+      "RollOutLeft",
+      "RollOutRight",
+      "RotateInDownLeft",
+      "RotateInDownRight",
+      "RotateInUpLeft",
+      "RotateInUpRight",
+      "RotateOutDownLeft",
+      "RotateOutDownRight",
+      "RotateOutUpLeft",
+      "RotateOutUpRight",
+      "SlideInDown",
+      "SlideInLeft",
+      "SlideInRight",
+      "SlideInUp",
+      "SlideOutDown",
+      "SlideOutLeft",
+      "SlideOutRight",
+      "SlideOutUp",
+      "StretchInX",
+      "StretchInY",
+      "StretchOutX",
+      "StretchOutY",
+      "ZoomIn",
+      "ZoomInDown",
+      "ZoomInEasyDown",
+      "ZoomInEasyUp",
+      "ZoomInLeft",
+      "ZoomInRight",
+      "ZoomInRotate",
+      "ZoomInUp",
+      "ZoomOut",
+      "ZoomOutDown",
+      "ZoomOutEasyDown",
+      "ZoomOutEasyUp",
+      "ZoomOutLeft",
+      "ZoomOutRight",
+      "ZoomOutRotate",
+      "ZoomOutUp",
+      "Layout",
+      "SequencedTransition",
+      "FadingTransition",
+      "JumpingTransition",
+      "CurvedTransition",
+      "EntryExitTransition"
+    ]);
+    var gestureHandlerBuilderMethods = /* @__PURE__ */ new Set(["withCallback"]);
+    function processIfLayoutAnimationsWithCallback(path, state) {
+      if ((0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee)) {
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(path, state);
+      }
+    }
+    exports2.processIfLayoutAnimationsWithCallback = processIfLayoutAnimationsWithCallback;
+    function isGestureObjectEventCallbackMethod(exp) {
+      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && gestureHandlerBuilderMethods.has(exp.property.name) && containsGestureObject(exp.object);
+    }
+    function containsGestureObject(exp) {
+      if (isGestureObject(exp)) {
+        return true;
+      }
+      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && containsGestureObject(exp.callee.object)) {
+        return true;
+      }
+      return false;
+    }
+    function isGestureObject(exp) {
+      return (0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.object) && exp.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(exp.callee.property) && gestureHandlerGestureObjects.has(exp.callee.property.name);
+    }
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var commonObjects_1 = require_commonObjects();
@@ -708,6 +827,7 @@ var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
 var processIfGestureHandlerEventCallbackFunctionNode_1 = require_processIfGestureHandlerEventCallbackFunctionNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
+var processIfLayoutAnimationsWithCallback_1 = require_processIfLayoutAnimationsWithCallback();
 module.exports = function() {
   return {
     pre() {
@@ -727,6 +847,7 @@ module.exports = function() {
         enter(path, state) {
           (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
           (0, processIfGestureHandlerEventCallbackFunctionNode_1.processIfGestureHandlerEventCallbackFunctionNode)(path, state);
+          (0, processIfLayoutAnimationsWithCallback_1.processIfLayoutAnimationsWithCallback)(path, state);
         }
       },
       JSXAttribute: {

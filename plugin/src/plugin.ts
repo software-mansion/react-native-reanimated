@@ -11,6 +11,7 @@ import { ReanimatedPluginPass } from './types';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
+import { processIfLayoutAnimationsWithCallback } from './processIfLayoutAnimationsWithCallback';
 
 module.exports = function (): PluginItem {
   return {
@@ -37,6 +38,7 @@ module.exports = function (): PluginItem {
         ) {
           processIfWorkletNode(path, state);
           processIfGestureHandlerEventCallbackFunctionNode(path, state);
+          processIfLayoutAnimationsWithCallback(path, state);
         },
       },
       JSXAttribute: {

@@ -18,7 +18,6 @@ function runPlugin(input: string, opts = {}) {
   assert(transformed);
   return transformed;
 }
-
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.REANIMATED_JEST_DISABLE_SOURCEMAP = 'jest';
@@ -790,6 +789,20 @@ describe('babel plugin', () => {
 
     const { code } = runPlugin(input);
     expect(code).not.toHaveWorkletData();
+    expect(code).toMatchSnapshot();
+  });
+
+  // Layout Animations
+
+  it('workletizes possibly chained callback functions automatically', () => {
+    const input = html`<script>
+      FadeIn.duration(400).withCallback(() => {
+        console.log('withCallback');
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(1);
     expect(code).toMatchSnapshot();
   });
 
