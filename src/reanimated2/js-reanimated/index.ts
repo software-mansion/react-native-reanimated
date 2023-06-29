@@ -27,7 +27,7 @@ const reanimatedJS = new JSReanimated();
 global._makeShareableClone = (c) => c;
 global._scheduleOnJS = (func, args) => {
   if (args) {
-    queueMicrotask(() => func(args));
+    queueMicrotask(() => func(...args));
   } else {
     queueMicrotask(func);
   }
