@@ -17,13 +17,14 @@ type AnimatedScrollViewFC = React.FC<AnimatedScrollViewProps>;
 
 const AnimatedScrollView: AnimatedScrollViewFC = forwardRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<Animated.ScrollView>) => {
-    const { scrollViewOffset, ...restProps } = props;
+    const { scrollViewOffset, horizontal, ...restProps } = props;
     const aref = ref === null ? useAnimatedRef<ScrollView>() : ref;
 
     if (scrollViewOffset) {
       useScrollViewOffset(
         aref as RefObject<Animated.ScrollView>,
-        scrollViewOffset
+        scrollViewOffset,
+        horizontal ?? false
       );
     }
 

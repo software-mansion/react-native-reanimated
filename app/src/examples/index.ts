@@ -72,6 +72,7 @@ import ScrollEventExample from './ScrollEventExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
+import ScrollViewOffsetCallScrollToExample from './ScrollViewOffsetCallScrollToExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
@@ -235,8 +236,13 @@ export const EXAMPLES: Record<string, Example> = {
   },
   ScrollViewOffsetExample: {
     icon: '𝌍',
-    title: 'useScrollViewOffset',
+    title: 'ScrollView offset',
     screen: ScrollViewOffsetExample,
+  },
+  ScrollViewOffsetCallScrollToExample: {
+    icon: '𝌍',
+    title: 'ScrollView offset triggers scrollTo',
+    screen: ScrollViewOffsetCallScrollToExample,
   },
   MeasureExample: {
     icon: '📐',
