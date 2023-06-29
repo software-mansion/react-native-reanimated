@@ -26,7 +26,7 @@ public class EventHandler implements RCTEventEmitter {
   }
 
   public native void receiveEvent(
-      String eventKey, int emitterReactTag, @Nullable WritableMap event);
+      String eventName, int emitterReactTag, @Nullable WritableMap event);
 
   @Override
   public void receiveTouches(

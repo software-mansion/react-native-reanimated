@@ -188,6 +188,7 @@ using namespace facebook::react;
     _componentUpdateBuffer = [NSMutableDictionary new];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
     _eventHandler = ^(id<RCTEvent> event) {
+      // no-op
     };
   }
 

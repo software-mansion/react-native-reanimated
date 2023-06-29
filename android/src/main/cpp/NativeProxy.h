@@ -66,9 +66,9 @@ class EventHandler : public HybridClass<EventHandler> {
 
   void receiveEvent(
       jni::alias_ref<JString> eventKey,
-      jint targetTag,
+      jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event) {
-    handler_(eventKey, targetTag, event);
+    handler_(eventKey, emitterReactTag, event);
   }
 
   static void registerNatives() {
@@ -82,7 +82,7 @@ class EventHandler : public HybridClass<EventHandler> {
 
   explicit EventHandler(std::function<void(
                             jni::alias_ref<JString>,
-                            jint targetTag,
+                            jint emitterReactTag,
                             jni::alias_ref<react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
