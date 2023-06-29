@@ -91,7 +91,7 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  if using_hermes && !config[:is_tvos_target]
+  if using_hermes && !config[:is_tvos_target] && config[:react_native_minor_version] >= 70
     s.dependency 'React-hermes'
     s.dependency 'hermes-engine'
   end
