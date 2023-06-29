@@ -1,6 +1,5 @@
 #import <RNReanimated/FeaturesConfig.h>
 #import <RNReanimated/REASwizzledUIManager.h>
-#import <RNReanimated/REAUtils.h>
 #import <React/RCTLayoutAnimation.h>
 #import <React/RCTLayoutAnimationGroup.h>
 #import <React/RCTRootShadowView.h>
