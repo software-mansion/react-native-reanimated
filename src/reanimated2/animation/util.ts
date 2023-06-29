@@ -1,9 +1,6 @@
 import {
   HigherOrderAnimation,
   NextAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
   StyleLayoutAnimation,
 } from './commonTypes';
 /* global _WORKLET */
@@ -294,30 +291,27 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   };
 }
 
-type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
-  T extends StyleLayoutAnimation
-    ? Record<string, unknown>
-    : T extends DelayAnimation
-    ? NextAnimation<DelayAnimation>
-    : T extends RepeatAnimation
-    ? NextAnimation<RepeatAnimation>
-    : T extends SequenceAnimation
-    ? NextAnimation<SequenceAnimation>
-    : AnimatableValue | T;
+type AnimationToDecoration<
+  T extends AnimationObject | StyleLayoutAnimation,
+  U extends AnimationObject | StyleLayoutAnimation
+> = T extends StyleLayoutAnimation
+  ? Record<string, unknown>
+  : U | (() => U) | AnimatableValue;
 
 const IS_NATIVE = NativeReanimatedModule.native;
 
 export function defineAnimation<
-  T extends AnimationObject | StyleLayoutAnimation
->(starting: AnimationToDecoration<T>, factory: () => T): T {
+  T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
+  U extends AnimationObject | StyleLayoutAnimation = T // type that's received
+>(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
-    return starting as T;
+    return starting as unknown as T;
   }
   const create = () => {
     'worklet';
     const animation = factory();
-    decorateAnimation<T>(animation);
+    decorateAnimation<U>(animation as unknown as U);
     return animation;
   };
 

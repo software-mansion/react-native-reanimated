@@ -20,3 +20,5 @@ export interface RefObjectFunction<T> {
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
 }
+
+export type AnimatedRef<T> = RefObjectFunction<T>;

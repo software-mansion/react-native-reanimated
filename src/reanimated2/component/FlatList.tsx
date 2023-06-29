@@ -1,14 +1,15 @@
-import React, { ForwardedRef, forwardRef } from 'react';
+import React, { Component, ForwardedRef, forwardRef } from 'react';
 import {
   FlatList,
   FlatListProps,
   LayoutChangeEvent,
   StyleSheet,
 } from 'react-native';
-import ReanimatedView from './View';
+import { AnimatedView } from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import { StyleProps } from '../commonTypes';
+import { AnimateProps } from '../helperTypes';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
@@ -26,25 +27,35 @@ const createCellRenderer = (
 ) => {
   const cellRenderer = (props: AnimatedFlatListProps) => {
     return (
-      <ReanimatedView
-        layout={itemLayoutAnimation}
+      <AnimatedView
+        // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
+        layout={itemLayoutAnimation as any}
         onLayout={props.onLayout}
         style={cellStyle}>
         {props.children}
-      </ReanimatedView>
+      </AnimatedView>
     );
   };
 
   return cellRenderer;
 };
 
+interface ReanimatedFlatListPropsWithLayout<T> extends FlatListProps<T> {
+  itemLayoutAnimation?: ILayoutAnimationBuilder;
+}
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+declare class ReanimatedFlatListClass<T> extends Component<
+  AnimateProps<ReanimatedFlatListPropsWithLayout<T>>
+> {
+  getNode(): FlatList;
+}
+
 export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
 
-type ReanimatedFlatListFC<T = any> = React.FC<ReanimatedFlatListProps<T>>;
-
-const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
+export const ReanimatedFlatList = forwardRef(
   (props: ReanimatedFlatListProps<any>, ref: ForwardedRef<FlatList>) => {
     const { itemLayoutAnimation, ...restProps } = props;
 
@@ -67,6 +78,10 @@ const ReanimatedFlatlist: ReanimatedFlatListFC = forwardRef(
       />
     );
   }
+  // TODO TYPESCRIPT this was a cast before
+  // ) as <T>(
+  //   props: ReanimatedFlatListProps<T> & RefAttributes<FlatList<any>>
+  // ) => React.ReactElement;
 );
 
 const styles = StyleSheet.create({
@@ -74,4 +89,5 @@ const styles = StyleSheet.create({
   horizontallyInverted: { transform: [{ scaleX: -1 }] },
 });
 
-export default ReanimatedFlatlist;
+export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
+  FlatList<T>;
