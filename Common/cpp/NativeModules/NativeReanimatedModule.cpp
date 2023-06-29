@@ -410,14 +410,6 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
   return jsi::Value::undefined();
 }
 
-void NativeReanimatedModule::onEvent(
-    double eventTimestamp,
-    const std::string &eventName,
-    const jsi::Value &payload) {
-  eventHandlerRegistry->processEvent(
-      *runtimeManager_->runtime, eventTimestamp, eventName, payload);
-}
-
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
     std::string eventName) {
   return eventHandlerRegistry->isAnyHandlerWaitingForEvent(eventName);
@@ -483,9 +475,15 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
+    const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
-  onEvent(currentTime, eventName, payload);
+  eventHandlerRegistry->processEvent(
+      *runtimeManager_->runtime,
+      currentTime,
+      eventName,
+      emitterReactTag,
+      payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -512,11 +510,10 @@ bool NativeReanimatedModule::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  std::string eventName = std::to_string(tag) + eventType;
   jsi::Runtime &rt = *runtimeManager_->runtime.get();
   jsi::Value payload = payloadFactory(rt);
 
-  auto res = handleEvent(eventName, std::move(payload), currentTime);
+  auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to be
