@@ -1,40 +1,38 @@
-#import <Foundation/Foundation.h>
 #import <RNReanimated/FeaturesConfig.h>
-#import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REASwizzledUIManager.h>
 #import <RNReanimated/REAUtils.h>
-#import <RNReanimated/Scheduler.h>
-#import <React/RCTComponentData.h>
 #import <React/RCTLayoutAnimation.h>
 #import <React/RCTLayoutAnimationGroup.h>
-#import <React/RCTModalHostView.h>
 #import <React/RCTRootShadowView.h>
 #import <React/RCTRootViewInternal.h>
-#import <React/RCTUIManagerObserverCoordinator.h>
-
-#if __has_include(<RNScreens/RNSScreen.h>)
-#import <RNScreens/RNSScreen.h>
-#endif
+#import <React/RCTUIManager.h>
+#import <objc/runtime.h>
 
 @interface RCTUIManager (REA)
+@property REAAnimationsManager *animationsManager;
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
 
-@implementation REASwizzledUIManager {
-  REAAnimationsManager *_animationsManager;
-  RCTUIManager *_uiManager;
+@implementation RCTUIManager (REA)
+@dynamic animationsManager;
+- (void)setAnimationsManager:(REAAnimationsManager *)animationsManager
+{
+  objc_setAssociatedObject(self, @selector(animationsManager), animationsManager, OBJC_ASSOCIATION_RETAIN);
 }
+- (id)animationsManager
+{
+  return objc_getAssociatedObject(self, @selector(animationsManager));
+}
+@end
 
-static REASwizzledUIManager *_reaUIManager;
+@implementation REASwizzledUIManager
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager
             withAnimatioinManager:(REAAnimationsManager *)animationsManager
 {
   if (self = [super init]) {
-    _animationsManager = animationsManager;
-    _uiManager = uiManager;
-    _reaUIManager = self;
+    [uiManager setAnimationsManager:animationsManager];
     [self swizzleMethods];
   }
   return self;
@@ -50,12 +48,12 @@ static REASwizzledUIManager *_reaUIManager;
                   fromClass:[self class]];
     SEL manageChildrenOriginal = @selector
         (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
-    SEL manageChildrenReaniamted =
+    SEL manageChildrenReanimated =
         @selector(reanimated_manageChildren:
                             moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     [REAUtils swizzleMethod:manageChildrenOriginal
                    forClass:[RCTUIManager class]
-                       with:manageChildrenReaniamted
+                       with:manageChildrenReanimated
                   fromClass:[self class]];
   });
 }
@@ -72,10 +70,10 @@ static REASwizzledUIManager *_reaUIManager;
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
   BOOL containerIsRootOfViewController = NO;
+  RCTUIManager *_self = (RCTUIManager *)self;
   if (isLayoutAnimationEnabled) {
     container = registry[containerTag];
-    permanentlyRemovedChildren = [_reaUIManager->_uiManager _childrenToRemoveFromContainer:container
-                                                                                 atIndices:removeAtIndices];
+    permanentlyRemovedChildren = [_self _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
 
     if ([container isKindOfClass:[UIView class]]) {
       UIViewController *controller = ((UIView *)container).reactViewController;
@@ -87,12 +85,12 @@ static REASwizzledUIManager *_reaUIManager;
     // of some view controller. In that case, we skip running exiting animations
     // in its children, to prevent issues with RN Screens.
     if (containerIsRootOfViewController) {
-      NSArray<id<RCTComponent>> *permanentlyRemovedChildren =
-          [_reaUIManager->_uiManager _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+      NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [_self _childrenToRemoveFromContainer:container
+                                                                                          atIndices:removeAtIndices];
       for (UIView *view in permanentlyRemovedChildren) {
-        [_reaUIManager->_animationsManager endAnimationsRecursive:view];
+        [_self.animationsManager endAnimationsRecursive:view];
       }
-      [_reaUIManager->_animationsManager removeAnimationsFromSubtree:(UIView *)container];
+      [_self.animationsManager removeAnimationsFromSubtree:(UIView *)container];
     }
   }
 
@@ -123,9 +121,9 @@ static REASwizzledUIManager *_reaUIManager;
         return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
       }];
 
-  [_reaUIManager->_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
-                                                  toContainer:container
-                                                    atIndices:removeAtIndices];
+  [_self.animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
+                                        toContainer:container
+                                          atIndices:removeAtIndices];
 }
 
 - (RCTViewManagerUIBlock)reanimated_uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView
@@ -134,6 +132,7 @@ static REASwizzledUIManager *_reaUIManager;
     return [self reanimated_uiBlockWithLayoutUpdateForRootView:rootShadowView];
   }
 
+  RCTUIManager *_self = (RCTUIManager *)self;
   NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 
@@ -247,8 +246,7 @@ static REASwizzledUIManager *_reaUIManager;
       }
 
       // Reanimated changes /start
-      REASnapshot *snapshotBefore =
-          isNew ? nil : [_reaUIManager->_animationsManager prepareSnapshotBeforeMountForView:view];
+      REASnapshot *snapshotBefore = isNew ? nil : [_self.animationsManager prepareSnapshotBeforeMountForView:view];
       snapshotsBefore[reactTag] = snapshotBefore;
       // Reanimated changes /end
 
@@ -309,7 +307,7 @@ static REASwizzledUIManager *_reaUIManager;
       REASnapshot *snapshotBefore = snapshotsBefore[reactTag];
 
       if (isNew || snapshotBefore != nil) {
-        [_reaUIManager->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
+        [_self.animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
       }
     }
 
@@ -318,7 +316,7 @@ static REASwizzledUIManager *_reaUIManager;
     // private field
     [uiManager setNextLayoutAnimationGroup:nil];
 
-    [_reaUIManager->_animationsManager viewsDidLayout];
+    [_self.animationsManager viewsDidLayout];
     // Reanimated changes /end
   };
 }
