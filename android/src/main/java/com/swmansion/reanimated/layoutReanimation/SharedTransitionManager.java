@@ -40,8 +40,6 @@ public class SharedTransitionManager {
   private List<SharedElement> mSharedElementsWithProgress = new ArrayList<>();
   private List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
-  private final Set<EventDispatcher> eventDispatchersWithListener = new HashSet<>();
-  private double mLastTransitionProgressValue = -1;
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
     mAnimationsManager = animationsManager;
@@ -60,24 +58,7 @@ public class SharedTransitionManager {
     return mCurrentSharedTransitionViews.get(tag);
   }
 
-  protected void screenDidLayout(int screenViewTag) {
-    ReactContext context = mAnimationsManager.getContext();
-    EventDispatcher eventDispatcher =
-        UIManagerHelper.getEventDispatcherForReactTag(context, screenViewTag);
-    if (eventDispatcher != null && !eventDispatchersWithListener.contains(eventDispatcher)) {
-      eventDispatchersWithListener.add(eventDispatcher);
-      eventDispatcher.addListener(
-          event -> {
-            if (mSharedElementsWithProgress.isEmpty()) {
-              return;
-            }
-            if (event.getEventName().equals("topFinishTransitioning")) {
-              // to avoid modification children list during iteration over them by internal
-              // Android logic, this method needs to be executed after the current frame is drawn
-              mTransitionContainer.post(this::screenTransitionFinished);
-            }
-          });
-    }
+  protected void screenDidLayout() {
     tryStartSharedTransitionForViews(mAddedSharedViews, true);
     mAddedSharedViews.clear();
   }
@@ -639,16 +620,6 @@ public class SharedTransitionManager {
       mDisableCleaningForViewTag.remove(viewTag);
     } else {
       mDisableCleaningForViewTag.put(viewTag, counter - 1);
-    }
-  }
-
-  private void screenTransitionFinished() {
-    if (mCurrentSharedTransitionViews.isEmpty()) {
-      return;
-    }
-    for (SharedElement sharedElement : mSharedElements) {
-      finishSharedAnimation(sharedElement.sourceView.getId());
-      finishSharedAnimation(sharedElement.targetView.getId());
     }
   }
 

@@ -131,6 +131,11 @@ export class SharedElementTransition {
         }
       );
       SharedElementTransition._transitionProgressEventHandlerId = handlerId;
+
+      registerEventHandler('onFinishTransitioning', () => {
+        'worklet';
+        global.ProgressTransitionManager.onTransitionEnd();
+      });
     }
   }
 
@@ -282,7 +287,6 @@ function createProgressTransitionManager() {
       }
       if (progress === 1) {
         snapshots.clear();
-        currentTransition.clear();
         if (toRemove.size > 0) {
           for (const viewTag of toRemove) {
             progressAnimations.delete(viewTag);
@@ -290,6 +294,12 @@ function createProgressTransitionManager() {
           toRemove.clear();
         }
       }
+    },
+    onTransitionEnd: () => {
+      for (const viewTag of currentTransition) {
+        _notifyAboutEnd(viewTag, false, false);
+      }
+      currentTransition.clear();
     },
   };
 }
