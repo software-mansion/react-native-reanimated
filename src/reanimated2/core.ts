@@ -131,7 +131,7 @@ export function getSensorContainer(): SensorContainer {
 export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
-): string {
+): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
     global.__frameTimestamp = eventTimestamp;
@@ -145,7 +145,7 @@ export function registerEventHandler<T>(
   );
 }
 
-export function unregisterEventHandler(id: string): void {
+export function unregisterEventHandler(id: number): void {
   return NativeReanimatedModule.unregisterEventHandler(id);
 }
 

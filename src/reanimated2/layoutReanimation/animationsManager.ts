@@ -38,7 +38,6 @@ function createLayoutAnimationManager() {
   'worklet';
   const enteringAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
-  const snapshot = new Map();
 
   return {
     start(
@@ -48,7 +47,7 @@ function createLayoutAnimationManager() {
       config: LayoutAnimationFunction
     ) {
       if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
-        snapshot.set(tag, yogaValues);
+        global.ProgressTransitionManager.onTransitionStart(tag, yogaValues);
         return;
       }
 
@@ -98,12 +97,6 @@ function createLayoutAnimationManager() {
         return;
       }
       stopObservingProgress(tag, value, true, true);
-    },
-    getSnapshot(tag: number) {
-      return snapshot.get(tag);
-    },
-    removeSnapshot(tag: number) {
-      return snapshot.delete(tag);
     },
   };
 }

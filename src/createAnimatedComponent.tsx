@@ -283,6 +283,7 @@ export default function createAnimatedComponent(
     _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
+    _sharedElementTransition: SharedElementTransition | null = null;
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -296,6 +297,7 @@ export default function createAnimatedComponent(
       this._detachNativeEvents();
       this._detachStyles();
       this._detachInlineProps();
+      this._sharedElementTransition?.unregisterTransition(this._viewTag);
     }
 
     componentDidMount() {
@@ -646,6 +648,7 @@ export default function createAnimatedComponent(
               tag,
               sharedTransitionTag
             );
+            this._sharedElementTransition = sharedElementTransition;
           }
         }
 
