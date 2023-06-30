@@ -575,17 +575,6 @@ void NativeProxy::setupLayoutAnimations() {
           return -1;
         }
       });
-
-  layoutAnimations_->cthis()->setUpdateSharedTransitionProgressBlock(
-      [weakModule](
-          const int sourceViewTag,
-          const int targetViewTag,
-          const double progress) {
-        if (auto module = weakModule.lock()) {
-          module->layoutAnimationsManager().updateSharedTransitionProgress(
-              module->runtimeHelper, sourceViewTag, targetViewTag, progress);
-        }
-      });
 }
 
 } // namespace reanimated

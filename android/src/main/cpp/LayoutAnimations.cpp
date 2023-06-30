@@ -92,18 +92,6 @@ int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
   return findPrecedingViewTagForTransitionBlock_(tag);
 }
 
-void LayoutAnimations::setUpdateSharedTransitionProgressBlock(
-    UpdateSharedTransitionProgressBlock updateSharedTransitionProgressBlock) {
-  updateSharedTransitionProgressBlock_ = updateSharedTransitionProgressBlock;
-}
-
-void LayoutAnimations::updateSharedTransitionProgress(
-    const int sourceViewTag,
-    const int targetViewTag,
-    const double progress) {
-  updateSharedTransitionProgressBlock_(sourceViewTag, targetViewTag, progress);
-}
-
 void LayoutAnimations::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
@@ -122,9 +110,6 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
-      makeNativeMethod(
-          "updateSharedTransitionProgress",
-          LayoutAnimations::updateSharedTransitionProgress),
   });
 }
 }; // namespace reanimated

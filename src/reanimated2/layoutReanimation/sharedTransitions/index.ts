@@ -14,6 +14,7 @@ import {
   unregisterEventHandler,
 } from '../../core';
 import { runOnUIImmediately } from '../../threads';
+import { Platform } from 'react-native';
 
 const supportedProps = [
   'width',
@@ -116,8 +117,12 @@ export class SharedElementTransition {
 
     SharedElementTransition._sharedElementCount++;
     if (SharedElementTransition._transitionProgressEventHandlerId < 0) {
+      const eventName =
+        Platform.OS === 'android'
+          ? 'onTransitionProgress'
+          : 'topTransitionProgress';
       const handlerId = registerEventHandler(
-        'topTransitionProgress',
+        eventName,
         (event: TransitionProgressEvent) => {
           'worklet';
           if (event.closing === 1) {

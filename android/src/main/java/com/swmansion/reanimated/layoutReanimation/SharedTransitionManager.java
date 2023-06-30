@@ -13,7 +13,6 @@ import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
-import java.lang.reflect.Field;
 import com.swmansion.reanimated.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,17 +71,7 @@ public class SharedTransitionManager {
             if (mSharedElementsWithProgress.isEmpty()) {
               return;
             }
-            if (event.getEventName().equals("topTransitionProgress")) {
-              try {
-                Field field = event.getClass().getDeclaredField("mProgress");
-                field.setAccessible(true);
-                double progress = field.getDouble(event);
-                onTransitionProgress(progress);
-              } catch (NullPointerException
-                  | NoSuchFieldException
-                  | IllegalAccessException ignored) {
-              }
-            } else if (event.getEventName().equals("topFinishTransitioning")) {
+            if (event.getEventName().equals("topFinishTransitioning")) {
               // to avoid modification children list during iteration over them by internal
               // Android logic, this method needs to be executed after the current frame is drawn
               mTransitionContainer.post(this::screenTransitionFinished);
@@ -650,18 +639,6 @@ public class SharedTransitionManager {
       mDisableCleaningForViewTag.remove(viewTag);
     } else {
       mDisableCleaningForViewTag.put(viewTag, counter - 1);
-    }
-  }
-
-  private void onTransitionProgress(double progress) {
-    if (mLastTransitionProgressValue == progress) {
-      return;
-    }
-    mLastTransitionProgressValue = progress;
-    for (SharedElement sharedElement : mSharedElementsWithProgress) {
-      int sourceViewTag = sharedElement.sourceView.getId();
-      int targetViewTag = sharedElement.targetView.getId();
-      mNativeMethodsHolder.updateSharedTransitionProgress(sourceViewTag, targetViewTag, progress);
     }
   }
 

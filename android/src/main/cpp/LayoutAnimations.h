@@ -19,8 +19,6 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using CancelAnimationBlock =
       std::function<void(int, int, jboolean, jboolean)>;
   using FindPrecedingViewTagForTransitionBlock = std::function<int(int)>;
-  using UpdateSharedTransitionProgressBlock =
-      std::function<void(const int, const int, const double)>;
 
  public:
   static auto constexpr kJavaDescriptor =
@@ -44,8 +42,6 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   void setFindPrecedingViewTagForTransition(
       FindPrecedingViewTagForTransitionBlock
           findPrecedingViewTagForTransitionBlock);
-  void setUpdateSharedTransitionProgressBlock(
-      UpdateSharedTransitionProgressBlock updateSharedTransitionProgressBlock);
 
   void progressLayoutAnimation(
       int tag,
@@ -59,10 +55,6 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       jboolean cancelled,
       jboolean removeView);
   int findPrecedingViewTagForTransition(int tag);
-  void updateSharedTransitionProgress(
-      const int sourceViewTag,
-      const int targetViewTag,
-      const double progress);
 
  private:
   friend HybridBase;
@@ -73,7 +65,6 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   CancelAnimationBlock cancelAnimationBlock_;
   FindPrecedingViewTagForTransitionBlock
       findPrecedingViewTagForTransitionBlock_;
-  UpdateSharedTransitionProgressBlock updateSharedTransitionProgressBlock_;
 
   explicit LayoutAnimations(
       jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
