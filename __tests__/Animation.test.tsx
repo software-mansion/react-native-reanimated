@@ -2,12 +2,8 @@ import React from 'react';
 import { View, Button } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { renderHook } from '@testing-library/react-hooks';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  SharedValue,
-} from '../src';
+import type { SharedValue } from '../src';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from '../src';
 import { getAnimatedStyle } from '../src/reanimated2/jestUtils';
 
 interface Props {

@@ -1,5 +1,5 @@
 import { addWhitelistedNativeProps } from '../ConfigHelper';
-import { AdapterWorkletFunction } from './commonTypes';
+import type { AdapterWorkletFunction } from './commonTypes';
 
 export function createAnimatedPropAdapter(
   adapter: AdapterWorkletFunction,

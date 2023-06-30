@@ -10,7 +10,7 @@ import {
 } from './Colors';
 import { makeMutable } from './core';
 import { interpolate } from './interpolation';
-import { SharedValue } from './commonTypes';
+import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
 
 export const Extrapolate = {

@@ -1,5 +1,5 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   AnimationObject,

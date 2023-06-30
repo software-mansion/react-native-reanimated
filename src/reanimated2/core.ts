@@ -1,6 +1,6 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
-import {
+import type {
   AnimatedKeyboardOptions,
   BasicWorkletFunction,
   SensorConfig,
@@ -18,7 +18,7 @@ import {
   makeMutable as makeMutableUnwrapped,
   makeRemote as makeRemoteUnwrapped,
 } from './mutables';
-import {
+import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './layoutReanimation';

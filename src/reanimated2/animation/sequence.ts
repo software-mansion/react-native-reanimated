@@ -1,6 +1,6 @@
 import { defineAnimation } from './util';
-import { NextAnimation, SequenceAnimation } from './commonTypes';
-import {
+import type { NextAnimation, SequenceAnimation } from './commonTypes';
+import type {
   Animation,
   AnimatableValue,
   AnimationObject,

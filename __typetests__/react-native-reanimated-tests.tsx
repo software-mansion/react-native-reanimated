@@ -1,30 +1,17 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, {
-  useState,
-  useCallback,
-  forwardRef,
-  Component,
-  useRef,
-} from 'react';
-import {
-  Text,
-  StyleSheet,
-  Button,
-  View,
-  Image,
-  FlatListProps,
-  ViewProps,
-  ImageProps,
-} from 'react-native';
+import React, { useState, useCallback, forwardRef, useRef } from 'react';
+import type { FlatListProps, ViewProps, ImageProps } from 'react-native';
+import { StyleSheet, Button, View, Image } from 'react-native';
+import type {
+  PanGestureHandlerGestureEvent,
+  PinchGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import {
   PanGestureHandler,
-  PinchGestureHandlerEventPayload,
   PinchGestureHandler,
-  PanGestureHandlerGestureEvent,
   FlatList,
-  PinchGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -48,14 +35,6 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
-  TimingAnimation,
-  SpringAnimation,
-  DecayAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
-  StyleLayoutAnimation,
-  Animation,
   // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 import {
