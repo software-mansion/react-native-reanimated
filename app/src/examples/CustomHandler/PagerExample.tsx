@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  SharedValue,
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -57,7 +58,10 @@ export default function PagerExample(): React.ReactElement {
           style={styles.pagerDetailsText}
           text={stringifiedCurrentPage}
         />
-        <AnimatedText style={styles.pagerDetailsText} text={scrollState} />
+        <AnimatedText
+          style={styles.pagerDetailsText}
+          text={scrollState as SharedValue<string>}
+        />
       </View>
       <AnimatedPagerView
         initialPage={0}

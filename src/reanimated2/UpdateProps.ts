@@ -148,3 +148,11 @@ runOnUIImmediately(() => {
   'worklet';
   global.UpdatePropsManager = createUpdatePropsManager();
 })();
+
+export interface UpdatePropsManager {
+  update(
+    viewDescriptors: SharedValue<Descriptor[]>,
+    updates: StyleProps | AnimatedStyle
+  ): void;
+  flush(): void;
+}

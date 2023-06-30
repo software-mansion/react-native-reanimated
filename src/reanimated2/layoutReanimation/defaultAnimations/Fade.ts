@@ -1,15 +1,20 @@
-import {
+import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
 } from '../animationBuilder/commonTypes';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
 
 export class FadeIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeIn {
-    return new FadeIn();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeIn() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -19,7 +24,7 @@ export class FadeIn
     const initialValues = this.initialValues;
     const delay = this.getDelay();
 
-    return (_) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -39,8 +44,10 @@ export class FadeInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInRight {
-    return new FadeInRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -74,8 +81,10 @@ export class FadeInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInLeft {
-    return new FadeInLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -109,8 +118,10 @@ export class FadeInUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInUp {
-    return new FadeInUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInUp() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -144,8 +155,10 @@ export class FadeInDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeInDown {
-    return new FadeInDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeInDown() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -179,8 +192,10 @@ export class FadeOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOut {
-    return new FadeOut();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOut() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -190,7 +205,7 @@ export class FadeOut
     const initialValues = this.initialValues;
     const delay = this.getDelay();
 
-    return (_) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -210,8 +225,10 @@ export class FadeOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutRight {
-    return new FadeOutRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -245,8 +262,10 @@ export class FadeOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutLeft {
-    return new FadeOutLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -280,8 +299,10 @@ export class FadeOutUp
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutUp {
-    return new FadeOutUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutUp() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -315,8 +336,10 @@ export class FadeOutDown
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): FadeOutDown {
-    return new FadeOutDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new FadeOutDown() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {

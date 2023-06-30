@@ -35,8 +35,10 @@ export function useAnimatedPagerScrollHandler<
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageScrollEventData,
     TContext
+    // @ts-ignore TODO LATER-TYPESCRIPT
   >(handlers, dependencies);
 
+  // @ts-ignore TODO LATER-TYPESCRIPT
   return useEvent<PagerViewOnPageScrollEventData>(
     (event) => {
       'worklet';
@@ -65,7 +67,7 @@ export function useAnimatedPagerScrollStateHandler<
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
+  dependencies?: Array<unknown>
 ): (e: NativeSyntheticEvent<PageScrollStateChangedEvent>) => void {
   const { context, doDependenciesDiffer } = useHandler<
     PageScrollStateChangedEvent,
@@ -100,7 +102,7 @@ export function useAnimatedPagerSelectedPageHandler<
       context: TContext
     ) => void;
   },
-  dependencies?: ReadonlyArray<unknown>
+  dependencies?: Array<unknown>
 ): (e: NativeSyntheticEvent<PagerViewOnPageSelectedEventData>) => void {
   const { context, doDependenciesDiffer } = useHandler<
     PagerViewOnPageSelectedEventData,
