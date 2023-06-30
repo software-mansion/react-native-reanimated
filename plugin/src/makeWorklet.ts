@@ -1,11 +1,8 @@
 import { NodePath, transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import {
-  ObjectMethod,
   isObjectMethod,
-  FunctionDeclaration,
   FunctionExpression,
-  ArrowFunctionExpression,
   identifier,
   Identifier,
   objectProperty,
@@ -36,7 +33,7 @@ import {
   isIdentifier,
   File as BabelFile,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './types';
+import { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { isRelease } from './utils';
 import { strict as assert } from 'assert';
 import { globals } from './commonObjects';
@@ -46,12 +43,7 @@ import { buildWorkletString } from './buildWorkletString';
 const version = require('../../package.json').version;
 
 export function makeWorklet(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >,
+  fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
@@ -59,14 +51,7 @@ export function makeWorklet(
 
   const functionName = makeWorkletName(fun);
 
-  // remove 'worklet'; directive before generating string
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
-  });
+  removeWorkletDirective(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -260,6 +245,16 @@ export function makeWorklet(
   return newFun;
 }
 
+function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
+      }
+    },
+  });
+}
+
 function shouldInjectVersion() {
   // We don't inject version in release since cache is reset there anyway
   if (isRelease()) {
@@ -292,14 +287,7 @@ function hash(str: string) {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
-) {
+function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
   if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
@@ -314,12 +302,7 @@ function makeWorkletName(
 
 function makeArrayFromCapturedBindings(
   ast: BabelFile,
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
+  fun: NodePath<WorkletizableFunction>
 ) {
   const closure = new Map<string, Identifier>();
 

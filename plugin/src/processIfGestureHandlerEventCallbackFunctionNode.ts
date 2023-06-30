@@ -1,8 +1,5 @@
 import { NodePath } from '@babel/core';
 import {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
   isIdentifier,
   isCallExpression,
   Expression,
@@ -10,7 +7,7 @@ import {
   isExpression,
 } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
-import { ReanimatedPluginPass } from './types';
+import { ExplicitWorklet, ReanimatedPluginPass } from './types';
 
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
@@ -89,9 +86,7 @@ const gestureHandlerBuilderMethods = new Set([
   )
   */
 export function processIfGestureHandlerEventCallbackFunctionNode(
-  path: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >,
+  path: NodePath<ExplicitWorklet>,
   state: ReanimatedPluginPass
 ) {
   if (
