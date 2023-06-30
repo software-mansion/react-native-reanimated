@@ -9,9 +9,8 @@ import {
 import { processForCalleesWorklets } from './processForCalleesWorklets';
 import { ReanimatedPluginPass } from './types';
 import { processIfWorkletNode } from './processIfWorkletNode';
-import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
-import { processIfLayoutAnimationsWithCallback } from './processIfLayoutAnimationsWithCallback';
+import { processIfCallback } from './processIfCallback';
 
 module.exports = function (): PluginItem {
   return {
@@ -37,8 +36,7 @@ module.exports = function (): PluginItem {
           state: ReanimatedPluginPass
         ) {
           processIfWorkletNode(path, state);
-          processIfGestureHandlerEventCallbackFunctionNode(path, state);
-          processIfLayoutAnimationsWithCallback(path, state);
+          processIfCallback(path, state);
         },
       },
       JSXAttribute: {
