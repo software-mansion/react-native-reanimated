@@ -642,8 +642,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *currentValues = before.values;
   [view.superview bringSubviewToFront:view];
-  NSDictionary *preparedValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
-                                                                            targetValues:targetValues];
+  NSDictionary *preparedValues = [self prepareDataForWorklet:currentValues targetValues:targetValues];
   [_animationManager startAnimationForTag:view.reactTag type:type yogaValues:preparedValues];
 }
 
