@@ -146,20 +146,4 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
   }
 }
 
-void LayoutAnimationsManager::updateSharedTransitionProgress(
-    const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-    const int sourceViewTag,
-    const int targetViewTag,
-    const double progress) {
-  std::shared_ptr<Shareable> config;
-  {
-    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-    config =
-        getConfigsForType(SHARED_ELEMENT_TRANSITION_PROGRESS)[sourceViewTag];
-  }
-  jsi::Value progressUpdater = config->getJSValue(*runtimeHelper->uiRuntime());
-  runtimeHelper->runOnUIGuarded(progressUpdater, sourceViewTag, progress);
-  runtimeHelper->runOnUIGuarded(progressUpdater, targetViewTag, progress);
-}
-
 } // namespace reanimated

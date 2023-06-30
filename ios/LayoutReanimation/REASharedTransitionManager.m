@@ -343,14 +343,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
     SEL notifyWillDisappearSelector = @selector(notifyWillDisappear);
     SEL viewDidAppearSelector = @selector(viewDidAppear:);
     SEL viewDidDisappearSelector = @selector(viewDidDisappear:);
-    SEL notifyTransitionProgressSelector = @selector(notifyTransitionProgress:closing:goingForward:);
     Class screenClass = [RNSScreen class];
     Class screenViewClass = [RNSScreenView class];
     BOOL allSelectorsAreAvailable = [RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
         [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector] &&
         [RNSScreen instancesRespondToSelector:viewDidAppearSelector] &&
-        [RNSScreen instancesRespondToSelector:viewDidDisappearSelector] &&
-        [RNSScreenView instancesRespondToSelector:notifyTransitionProgressSelector];
+        [RNSScreen instancesRespondToSelector:viewDidDisappearSelector];
 
     if (allSelectorsAreAvailable) {
       [self swizzleMethod:viewDidLayoutSubviewsSelector
@@ -361,9 +359,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
                  forClass:screenViewClass];
       [self swizzleMethod:viewDidAppearSelector with:@selector(swizzled_viewDidAppear:) forClass:screenClass];
       [self swizzleMethod:viewDidDisappearSelector with:@selector(swizzled_viewDidDisappear:) forClass:screenClass];
-      [self swizzleMethod:notifyTransitionProgressSelector
-                     with:@selector(swizzled_notifyTransitionProgress:closing:goingForward:)
-                 forClass:screenViewClass];
       _isConfigured = YES;
     }
   });
@@ -394,13 +389,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   // call original method from react-native-screens, self == RNSScreenView
   [self swizzled_notifyWillDisappear];
   [_sharedTransitionManager screenRemovedFromStack:(UIView *)self];
-}
-
-- (void)swizzled_notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
-{
-  // call original method from react-native-screens, self == RNSScreenView
-  [self swizzled_notifyTransitionProgress:progress closing:closing goingForward:goingForward];
-  [_sharedTransitionManager onScreenTransitionProgress:progress];
 }
 
 - (void)swizzled_viewDidAppear:(BOOL)animated
@@ -453,21 +441,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (bool)isInteractiveScreenChange:(UIView *)screen
 {
   return [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
-}
-
-- (void)onScreenTransitionProgress:(double)progress
-{
-  if (!_isSharedTransitionActive || _lastTransitionProgressValue == progress) {
-    return;
-  }
-  _lastTransitionProgressValue = progress;
-  NSArray<REASharedElement *> *sharedElements =
-      _isSharedProgressTransition ? _sharedElements : _sharedElementsWithProgress;
-  for (REASharedElement *sharedElement in sharedElements) {
-    int sourceViewTag = [sharedElement.sourceView.reactTag intValue];
-    int targetViewTag = [sharedElement.targetView.reactTag intValue];
-    _updateSharedTransitionProgress(sourceViewTag, targetViewTag, progress);
-  }
 }
 
 - (void)makeSnapshotForScreenViews:(UIView *)screen
@@ -583,7 +556,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self startSharedTransition:_sharedElementsWithProgress type:SHARED_ELEMENT_TRANSITION_PROGRESS];
   [_addedSharedViews removeAllObjects];
   _isAsyncSharedTransitionConfigured = NO;
-  [self onScreenTransitionProgress:0];
 }
 
 - (void)configureTransitionContainer

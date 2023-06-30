@@ -369,15 +369,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
-
-  [animationsManager setUpdateSharedTransitionProgressBlock:^(int sourceViewTag, int targetViewTag, double progress) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      if (auto runtime = wrt.lock()) {
-        nativeReanimatedModule->layoutAnimationsManager().updateSharedTransitionProgress(
-            nativeReanimatedModule->runtimeHelper, sourceViewTag, targetViewTag, progress);
-      }
-    }
-  }];
 #endif
 
   return nativeReanimatedModule;

@@ -39,11 +39,6 @@ class LayoutAnimationsManager {
       bool cancelled /* = true */,
       bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
-  void updateSharedTransitionProgress(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      const int sourceViewTag,
-      const int targetViewTag,
-      const double progress);
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(

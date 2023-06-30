@@ -12,7 +12,6 @@
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock;
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
 - (UIView *)getTransitioningView:(NSNumber *)tag;
-- (void)setUpdateSharedTransitionProgressBlock:(REAUpdateSharedTransitionProgressBlock)block;
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
                            targetValues:(NSMutableDictionary *)targetValues;
 

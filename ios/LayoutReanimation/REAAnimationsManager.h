@@ -57,7 +57,6 @@ typedef void (
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type;
 - (void)clearAnimationConfigForTag:(NSNumber *)tag;
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues;
-- (void)setUpdateSharedTransitionProgressBlock:(REAUpdateSharedTransitionProgressBlock)block;
 
 @end
 
