@@ -644,7 +644,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [view.superview bringSubviewToFront:view];
   NSDictionary *preparedValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
                                                                             targetValues:targetValues];
-  [_animationManager startAnimationForTag:view.reactTag type:type yogaValues:preparedValues depth:@(0)];
+  [_animationManager startAnimationForTag:view.reactTag type:type yogaValues:preparedValues];
 }
 
 - (void)finishSharedAnimation:(UIView *)view
@@ -797,6 +797,17 @@ static REASharedTransitionManager *_sharedTransitionManager;
 - (void)setUpdateSharedTransitionProgressBlock:(REAUpdateSharedTransitionProgressBlock)block
 {
   _updateSharedTransitionProgress = block;
+}
+- (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
+                           targetValues:(NSMutableDictionary *)targetValues
+{
+  NSMutableDictionary *workletValues = [_animationManager prepareDataForLayoutAnimatingWorklet:currentValues
+                                                                                  targetValues:targetValues];
+  workletValues[@"currentTransformMatrix"] = currentValues[@"transformMatrix"];
+  workletValues[@"targetTransformMatrix"] = targetValues[@"transformMatrix"];
+  workletValues[@"currentBorderRadius"] = currentValues[@"borderRadius"];
+  workletValues[@"targetBorderRadius"] = targetValues[@"borderRadius"];
+  return workletValues;
 }
 
 @end

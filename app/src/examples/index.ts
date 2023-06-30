@@ -55,12 +55,14 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
+import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PagerExample from './CustomHandler/PagerExample';
 import PinExample from './PinExample';
+import RainbowExample from './RainbowExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
@@ -77,6 +79,7 @@ import SvgExample from './SvgExample';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
+import UpdatePropsPerfExample from './UpdatePropsPerfExample';
 import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
 import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -151,6 +154,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
+  },
+  UpdatePropsPerfExample: {
+    icon: '🏎️',
+    title: 'Update props performance',
+    screen: UpdatePropsPerfExample,
   },
 
   // Basic examples
@@ -250,6 +258,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Layout props',
     screen: WidthExample,
   },
+  NonLayoutPropAndRenderExample: {
+    icon: '🎭',
+    title: 'Non-layout prop and render example',
+    screen: NonLayoutPropAndRenderExample,
+  },
   RefExample: {
     icon: '🦑',
     title: 'forwardRef & useImperativeHandle',
@@ -269,6 +282,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌓',
     title: 'Conditional',
     screen: NewestShadowNodesRegistryRemoveExample,
+  },
+  RainbowExample: {
+    icon: '🌈',
+    title: 'Rainbow',
+    screen: RainbowExample,
   },
   WithoutBabelPluginExample: {
     icon: '🔌',

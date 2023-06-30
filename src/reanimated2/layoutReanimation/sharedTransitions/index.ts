@@ -10,7 +10,14 @@ import {
 import { StyleProps } from '../../commonTypes';
 import { configureLayoutAnimations } from '../../core';
 
-const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
+const supportedProps = [
+  'width',
+  'height',
+  'originX',
+  'originY',
+  'transform',
+  'borderRadius',
+];
 
 type AnimationFactory = (
   values: SharedTransitionAnimationsValues

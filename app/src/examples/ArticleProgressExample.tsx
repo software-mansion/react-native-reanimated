@@ -47,10 +47,7 @@ export default function ArticleProgressExample() {
   return (
     <SafeAreaView>
       <Animated.View style={[styles.progressBar, progressBarAnimatedStyle]} />
-      <Animated.ScrollView
-        ref={scrollViewRef}
-        scrollEventThrottle={16}
-        style={styles.articleScrollView}>
+      <Animated.ScrollView ref={scrollViewRef} style={styles.articleScrollView}>
         <Animated.Text ref={textRef}>{loremIpsum}</Animated.Text>
       </Animated.ScrollView>
     </SafeAreaView>

@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
 import java.lang.reflect.Field;
+import com.swmansion.reanimated.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -476,7 +477,9 @@ public class SharedTransitionManager {
           if (key.equals(Snapshot.TRANSFORM_MATRIX)) {
             preparedValues.put(key, value);
           } else {
-            preparedValues.put(key, (double) PixelUtil.toDIPFromPixel((int) value));
+            float pixelsValue = Utils.convertToFloat(value);
+            double dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+            preparedValues.put(key, dipValue);
           }
         }
         mAnimationsManager.progressLayoutAnimation(viewTag, preparedValues, true);

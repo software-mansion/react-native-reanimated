@@ -1,9 +1,6 @@
 import {
   HigherOrderAnimation,
   NextAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
   StyleLayoutAnimation,
 } from './commonTypes';
 /* global _WORKLET */
@@ -179,8 +176,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     tab.forEach((i, index) => {
       animation[i].current = RGBACurrent[index];
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       res.push(animation[i].current);
     });
 
@@ -216,9 +214,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp
   ): boolean => {
     let finished = true;
-    (animation.current as Array<number>).forEach((v, i) => {
-      // @ts-ignore: disable-next-line
-      finished &= animation[i].onFrame(animation[i], timestamp);
+    (animation.current as Array<number>).forEach((_, i) => {
+      const result = animation[i].onFrame(animation[i], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       (animation.current as Array<number>)[i] = animation[i].current;
     });
 
@@ -256,8 +255,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     let finished = true;
     const newObject: AnimatableValueObject = {};
     for (const key in animation.current as AnimatableValueObject) {
-      // @ts-ignore: disable-next-line
-      finished &= animation[key].onFrame(animation[key], timestamp);
+      const result = animation[key].onFrame(animation[key], timestamp);
+      // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+      finished &&= result;
       newObject[key] = animation[key].current;
     }
     animation.current = newObject;
@@ -291,30 +291,27 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   };
 }
 
-type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
-  T extends StyleLayoutAnimation
-    ? Record<string, unknown>
-    : T extends DelayAnimation
-    ? NextAnimation<DelayAnimation>
-    : T extends RepeatAnimation
-    ? NextAnimation<RepeatAnimation>
-    : T extends SequenceAnimation
-    ? NextAnimation<SequenceAnimation>
-    : AnimatableValue | T;
+type AnimationToDecoration<
+  T extends AnimationObject | StyleLayoutAnimation,
+  U extends AnimationObject | StyleLayoutAnimation
+> = T extends StyleLayoutAnimation
+  ? Record<string, unknown>
+  : U | (() => U) | AnimatableValue;
 
 const IS_NATIVE = NativeReanimatedModule.native;
 
 export function defineAnimation<
-  T extends AnimationObject | StyleLayoutAnimation
->(starting: AnimationToDecoration<T>, factory: () => T): T {
+  T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
+  U extends AnimationObject | StyleLayoutAnimation = T // type that's received
+>(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
-    return starting as T;
+    return starting as unknown as T;
   }
   const create = () => {
     'worklet';
     const animation = factory();
-    decorateAnimation<T>(animation);
+    decorateAnimation<U>(animation as unknown as U);
     return animation;
   };
 

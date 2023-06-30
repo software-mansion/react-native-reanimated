@@ -78,7 +78,21 @@ export default class JSReanimated extends NativeReanimated {
     iosReferenceFrame: number,
     eventHandler: (data: Value3D | ValueRotation) => void
   ): number {
+    if (this.platform === undefined) {
+      this.detectPlatform();
+    }
+
     if (!(this.getSensorName(sensorType) in window)) {
+      // https://w3c.github.io/sensors/#secure-context
+      console.warn(
+        '[Reanimated] Sensor is not available.' +
+          (isWeb() && location.protocol !== 'https:'
+            ? ' Make sure you use secure origin with `npx expo start --web --https`.'
+            : '') +
+          (this.platform === Platform.WEB_IOS
+            ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
+            : '')
+      );
       return -1;
     }
 
