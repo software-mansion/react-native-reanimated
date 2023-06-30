@@ -20,6 +20,7 @@ import type {
   SharedValue,
 } from '.';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import type { DependencyList } from './hook/commonTypes';
 
 type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
 
@@ -73,3 +74,11 @@ export type AnimateProps<P extends object> = {
   sharedTransitionTag?: string;
   sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
+
+export type PropsAdapterFunction = (props: Record<string, unknown>) => void;
+
+export type useAnimatedPropsType = <T extends object>(
+  updater: () => Partial<T>,
+  deps?: DependencyList | null,
+  adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
+) => Partial<T>;
