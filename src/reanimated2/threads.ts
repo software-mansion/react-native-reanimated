@@ -164,15 +164,13 @@ export function runOnJS<A extends any[], R>(
     // reference to the original remote function in the `__remoteFunction` property.
     fun = fun.__remoteFunction;
   }
-  if (!_WORKLET) {
-    return fun;
-  }
   return (...args) => {
     _scheduleOnJS(
       // @ts-ignore TODO TYPESCRIPT omitted in the past
       fun,
-      // @ts-ignore TODO TYPESCRIPT omitted in the past
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+      args.length > 0
+        ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+        : undefined
     );
   };
 }

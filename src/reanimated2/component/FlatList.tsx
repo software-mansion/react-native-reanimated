@@ -51,9 +51,6 @@ declare class ReanimatedFlatListClass<T> extends Component<
   getNode(): FlatList;
 }
 
-export type ReanimatedFlatListType<T> = typeof ReanimatedFlatListClass<T> &
-  FlatList<T>;
-
 export interface ReanimatedFlatListProps<ItemT> extends FlatListProps<ItemT> {
   itemLayoutAnimation?: ILayoutAnimationBuilder;
 }
@@ -91,3 +88,6 @@ const styles = StyleSheet.create({
   verticallyInverted: { transform: [{ scaleY: -1 }] },
   horizontallyInverted: { transform: [{ scaleX: -1 }] },
 });
+
+export type ReanimatedFlatList<T> = typeof ReanimatedFlatListClass<T> &
+  FlatList<T>;

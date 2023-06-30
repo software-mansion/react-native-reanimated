@@ -13,4 +13,4 @@ export * from './commonTypes';
 export * from './frameCallback';
 export * from './pluginUtils';
 export * from './jestUtils';
-export { AnimateProps } from './helperTypes';
+export type { AnimateProps } from './helperTypes';

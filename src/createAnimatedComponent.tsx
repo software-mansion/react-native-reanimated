@@ -50,7 +50,7 @@ import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
-import { AnimateProps } from './reanimated2/helperTypes';
+import type { AnimateProps } from './reanimated2/helperTypes';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
