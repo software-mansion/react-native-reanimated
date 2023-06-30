@@ -166,7 +166,6 @@ export function runOnJS<A extends any[], R>(
   }
   return (...args) => {
     _scheduleOnJS(
-      // @ts-ignore TODO TYPESCRIPT omitted in the past
       fun,
       args.length > 0
         ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
