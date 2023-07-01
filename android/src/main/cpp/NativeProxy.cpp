@@ -53,11 +53,10 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
-  std::shared_ptr<UIManager> uiManager =
-      binding->getScheduler()->getUIManager();
+  uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
-  uiManager->registerCommitHook(*commitHook_);
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  uiManager_->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -69,6 +68,7 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   nativeReanimatedModule_->cleanupSensors();
+  uiManager_->unregisterCommitHook(*commitHook_);
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
