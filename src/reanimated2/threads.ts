@@ -168,7 +168,7 @@ export function runOnJS<A extends any[], R>(
   if (fun.__workletHash) {
     // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments
-    return (...args) => runOnJS(runWorkletOnJS)(fun, ...args);
+    return (...args) => runOnJS(runWorkletOnJS<A, R>)(fun, ...args);
   }
   if (fun.__remoteFunction) {
     // in development mode the function provided as `fun` throws an error message
