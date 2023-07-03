@@ -1,15 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, {
-  useState,
-  useCallback,
-  forwardRef,
-  Component,
-  useRef,
-} from 'react';
+import React, { useState, useCallback, forwardRef, useRef } from 'react';
 import {
-  Text,
   StyleSheet,
   Button,
   View,
@@ -20,7 +13,6 @@ import {
 } from 'react-native';
 import {
   PanGestureHandler,
-  PinchGestureHandlerEventPayload,
   PinchGestureHandler,
   PanGestureHandlerGestureEvent,
   FlatList,
@@ -48,19 +40,9 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
-  TimingAnimation,
-  SpringAnimation,
-  DecayAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
-  StyleLayoutAnimation,
-  Animation,
-  // eslint-disable-next-line import/no-unresolved
-} from 'react-native-reanimated';
+} from '../src';
 import {
   dispatchCommand,
-  getTag,
   measure,
   scrollTo,
   setGestureState,
@@ -166,6 +148,40 @@ function CreateAnimatedFlatListTest2() {
         renderItem={({ item, index }) => <View key={item.id} />}
       />
     </>
+  );
+}
+
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest3(
+  contentContainerStyle: React.ComponentProps<
+    typeof AnimatedFlatList
+  >['contentContainerStyle']
+) {
+  const newContentContainerStyle = [contentContainerStyle, { flex: 1 }];
+
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={newContentContainerStyle}
+    />
+  );
+}
+
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest4(
+  contentContainerStyle: React.ComponentProps<typeof AnimatedFlatList>['style']
+) {
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={contentContainerStyle}
+    />
   );
 }
 
@@ -754,30 +770,6 @@ function testPartialAnimatedProps() {
   );
 
   // NativeMethods:
-  // test getTag
-  function testGetTag() {
-    // @ts-expect-error string is not a valid view
-    const test1 = getTag('whatever');
-    // number is a valid view (shadowNodeRef?)
-    const test2 = getTag(1);
-    // @ts-expect-error by TypeScript standards null is not an object
-    const test4: object = getTag(0);
-    class TestClass extends React.Component {
-      render() {
-        return <View />;
-      }
-    }
-
-    const variable = new TestClass({});
-    // this is valid argument
-    const test5 = getTag(variable);
-    // I don't know how to implement this case
-    // class test6class extends React.Component<any> implements React.ComponentClass {
-    //   constructor(props: any, context?: any) {
-    //     super(props);
-    //   }
-    // }
-  }
 
   // test measure
   function testMeasure() {
