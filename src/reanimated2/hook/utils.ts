@@ -13,7 +13,7 @@ import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import { ContextWithDependencies, DependencyList } from './commonTypes';
-
+import { NativeSyntheticEvent } from 'react-native';
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext): void;
 }
@@ -28,7 +28,14 @@ export interface UseHandlerContext<TContext extends Context> {
   useWeb: boolean;
 }
 
-export function useEvent<T extends NativeEvent<T>>(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type useEventType = <T extends object>(
+  handler: (e: T) => void,
+  eventNames?: string[],
+  rebuild?: boolean
+) => (e: NativeSyntheticEvent<T>) => void;
+
+export const useEvent = function <T extends NativeEvent<T>>(
   handler: (event: T) => void,
   eventNames: string[] = [],
   rebuild = false
@@ -41,9 +48,16 @@ export function useEvent<T extends NativeEvent<T>>(
   }
 
   return initRef;
-}
+  // TODO TYPESCRIPT This cast is to get rid of .d.ts file.
+} as unknown as useEventType;
 
-export function useHandler<T, TContext extends Context>(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type useHandlerType = <T, TContext extends Context = Record<string, never>>(
+  handlers: Handlers<T, TContext>,
+  deps?: DependencyList
+) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
+
+export const useHandler = function <T, TContext extends Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
 ): UseHandlerContext<TContext> {
@@ -73,7 +87,8 @@ export function useHandler<T, TContext extends Context>(
   const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
-}
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+} as useHandlerType;
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
@@ -105,6 +120,7 @@ export function buildDependencies(
   } else {
     dependencies.push(buildWorkletsHash(handlersList));
   }
+
   return dependencies;
 }
 

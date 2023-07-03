@@ -1,6 +1,10 @@
 import { withSequence, withTiming } from '../../animation';
-import { ComplexAnimationBuilder } from '../animationBuilder';
 import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
+import type {
+  EntryExitAnimationsValues,
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
@@ -9,8 +13,10 @@ export class LightSpeedInRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): LightSpeedInRight {
-    return new LightSpeedInRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new LightSpeedInRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -21,7 +27,7 @@ export class LightSpeedInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -60,8 +66,10 @@ export class LightSpeedInLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): LightSpeedInLeft {
-    return new LightSpeedInLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new LightSpeedInLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -72,7 +80,7 @@ export class LightSpeedInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -111,8 +119,10 @@ export class LightSpeedOutRight
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): LightSpeedOutRight {
-    return new LightSpeedOutRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new LightSpeedOutRight() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -122,7 +132,7 @@ export class LightSpeedOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
@@ -154,8 +164,10 @@ export class LightSpeedOutLeft
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): LightSpeedOutLeft {
-    return new LightSpeedOutLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new LightSpeedOutLeft() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -165,7 +177,7 @@ export class LightSpeedOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (values) => {
+    return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {

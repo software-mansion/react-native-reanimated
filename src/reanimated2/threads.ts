@@ -180,7 +180,9 @@ export function runOnJS<A extends any[], R>(
   return (...args) => {
     _scheduleOnJS(
       fun,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+      args.length > 0
+        ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+        : undefined
     );
   };
 }

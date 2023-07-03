@@ -28,7 +28,14 @@ export interface InnerTimingAnimation
   current: number;
 }
 
-export function withTiming(
+// TODO TYPESCRIPT This is temporary type put in here to get rid of our .d.ts file
+type withTimingType = <T extends AnimatableValue>(
+  toValue: T,
+  userConfig?: TimingConfig,
+  callback?: AnimationCallback
+) => T;
+
+export const withTiming = function (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
@@ -108,4 +115,4 @@ export function withTiming(
       callback,
     } as TimingAnimation;
   });
-}
+} as withTimingType;

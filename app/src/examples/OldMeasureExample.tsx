@@ -15,6 +15,7 @@ import {
   TapGestureHandler,
   TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
+import '../types';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const sectionHeaderHeight = 40;
@@ -167,7 +168,9 @@ function SectionHeader({
   contentHeight,
   show,
 }: SectionHeaderProps) {
-  const applyMeasure = ({ height }: ReturnType<typeof measure>) => {
+  const applyMeasure = ({
+    height,
+  }: NonNullable<ReturnType<typeof measure>>) => {
     'worklet';
     if (contentHeight.value === 0) {
       contentHeight.value = withTiming(height, {
@@ -195,7 +198,7 @@ function SectionHeader({
   } else {
     onActiveImpl = () => {
       'worklet';
-      applyMeasure(measure(animatedRef));
+      applyMeasure(measure(animatedRef)!);
     };
   }
 

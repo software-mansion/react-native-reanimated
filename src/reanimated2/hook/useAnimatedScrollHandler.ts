@@ -1,5 +1,5 @@
 import { RefObject } from 'react';
-import { NativeScrollEvent } from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Context, NativeEvent, WorkletFunction } from '../commonTypes';
 import WorkletEventHandler from '../WorkletEventHandler';
 import { DependencyList } from './commonTypes';
@@ -24,7 +24,18 @@ export interface ScrollHandlers<TContext extends Context> {
   onMomentumEnd?: ScrollHandler<TContext>;
 }
 
-export function useAnimatedScrollHandler<TContext extends Context>(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+export type useAnimatedScrollHandler = <
+  TContext extends Context = Record<string, never>
+>(
+  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
+  deps?: DependencyList
+) => OnScroll;
+
+export const useAnimatedScrollHandler = function <TContext extends Context>(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
 ): RefObject<WorkletEventHandler<ScrollEvent>> {
@@ -81,5 +92,7 @@ export function useAnimatedScrollHandler<TContext extends Context>(
     },
     subscribeForEvents,
     doDependenciesDiffer
-  );
-}
+    // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+  ) as any;
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+} as unknown as useAnimatedScrollHandler;
