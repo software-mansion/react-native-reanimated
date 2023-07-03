@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { nativeShouldBeMock, isWeb } from './PlatformChecker';
+import { nativeShouldBeMock, isWeb, isMacos } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   SensorConfig,
@@ -155,7 +155,7 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-if (!isWeb()) {
+if (!isWeb() && !isMacos()) {
   initializeUIRuntime();
 }
 
