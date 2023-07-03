@@ -27,7 +27,7 @@ class ShadowTreeCloner {
 
  private:
   PropsParserContext propsParserContext_;
-  std::set<ShadowNode *> yogaChildrenUpdates_;
+  std::set<const ShadowNode *> yogaChildrenUpdates_;
 };
 
 } // namespace reanimated

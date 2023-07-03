@@ -53,7 +53,7 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
       // children instead of cloning the whole path to the root node.
       auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
       parentNodeNonConst.replaceChild(oldChildNode, newChildNode, childIndex);
-      yogaChildrenUpdates_.insert(&parentNodeNonConst);
+      yogaChildrenUpdates_.insert(&parentNode);
       return std::const_pointer_cast<ShadowNode>(oldRootNode);
     }
 
@@ -63,6 +63,7 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
         ShadowNodeFragment::propsPlaceholder(),
         std::make_shared<ShadowNode::ListOfShared>(children),
     });
+    yogaChildrenUpdates_.erase(&parentNode);
   }
 
   return std::const_pointer_cast<ShadowNode>(newChildNode);
@@ -71,8 +72,10 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
 void ShadowTreeCloner::updateYogaChildren() {
   // Unfortunately, `replaceChild` does not update Yoga nodes, so we need to
   // update them manually here.
-  for (ShadowNode *shadowNode : yogaChildrenUpdates_) {
-    static_cast<YogaLayoutableShadowNode *>(shadowNode)->updateYogaChildren();
+  for (auto *shadowNode : yogaChildrenUpdates_) {
+    static_cast<YogaLayoutableShadowNode *>(
+        const_cast<ShadowNode *>(shadowNode))
+        ->updateYogaChildren();
   }
 #ifdef DEBUG
   yogaChildrenUpdates_.clear();
