@@ -21,6 +21,7 @@ const _shareableFlag = Symbol('shareable flag');
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
 function isHostObject(value: any): boolean {
+  'worklet';
   // We could use JSI to determine whether an object is a host object, however
   // the below workaround works well and is way faster than an additional JSI call.
   // We use the fact that host objects have broken implementation of `hasOwnProperty`
@@ -215,6 +216,9 @@ export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
     if ((type === 'object' || type === 'function') && value !== null) {
       if (value.__remoteFunction) {
         return value.__remoteFunction;
+      }
+      if (isHostObject(value)) {
+        return value as ShareableRef<T>;
       }
       let toAdapt: any;
       if (Array.isArray(value)) {
