@@ -5,7 +5,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet, TextInput, Text } from 'react-native';
 import { View, Button } from 'react-native';
-import React, { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import {
   Gesture,
   GestureDetector,
@@ -13,6 +13,13 @@ import {
   GestureStateManager,
   GestureTouchEvent,
 } from 'react-native-gesture-handler';
+
+type FieldDefinition = [
+  string,
+  string,
+  Dispatch<SetStateAction<string>>,
+  Dispatch<SetStateAction<number>>
+];
 
 function InputField({ fieldName, textValue, setTextValue, setValue }) {
   return (
@@ -105,6 +112,24 @@ export default function SpringExample(): React.ReactElement {
       state.activate();
     });
 
+  const fields: Array<FieldDefinition> = [
+    ['Stiffness', stiffnessText, setStiffnessText, setStiffness],
+    ...(useConfigWithDuration
+      ? ([
+          ['Duration', durationText, setDurationText, setDuration],
+          [
+            'Damping Ratio',
+            dampingRatioText,
+            setDampingRatioText,
+            setDampingRatio,
+          ],
+        ] as Array<FieldDefinition>)
+      : ([
+          ['Mass', massText, setMassText, setMass],
+          ['Damping', dampingText, setDampingText, setDamping],
+        ] as Array<FieldDefinition>)),
+  ];
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <GestureDetector gesture={gesture}>
@@ -137,30 +162,14 @@ export default function SpringExample(): React.ReactElement {
         />
       </View>
       <React.Fragment>
-        {[
-          ['Stiffness', stiffnessText, setStiffnessText, setStiffness],
-          ...(useConfigWithDuration
-            ? [
-                ['Duration', durationText, setDurationText, setDuration],
-                [
-                  'Damping Ratio',
-                  dampingRatioText,
-                  setDampingRatioText,
-                  setDampingRatio,
-                ],
-              ]
-            : ([
-                ['Mass', massText, setMassText, setMass],
-                ['Damping', dampingText, setDampingText, setDamping],
-              ] as const)),
-        ].map((item) => {
+        {fields.map((item) => {
           return (
             <InputField
               fieldName={item[0]}
               textValue={item[1]}
               setTextValue={item[2]}
               setValue={item[3]}
-              key={item[0] as string}
+              key={item[0]}
             />
           );
         })}
