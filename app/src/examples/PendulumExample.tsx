@@ -16,7 +16,7 @@ import {
 
 function InputField({ fieldName, textValue, setTextValue, setValue }) {
   return (
-    <View style={styles.row}>
+    <View style={styles.row} key={fieldName}>
       <Text
         style={[
           styles.inputDescription,
@@ -46,7 +46,7 @@ function InputField({ fieldName, textValue, setTextValue, setValue }) {
 }
 
 export default function SpringExample(): React.ReactElement {
-  const randomWidth = useSharedValue(10);
+  const pendulumSwing = useSharedValue(0);
   const offset = useSharedValue({ x: 0, y: 0 });
   const [useConfigWithDuration, setUseConfigWithDuration] = useState(true);
 
@@ -79,7 +79,7 @@ export default function SpringExample(): React.ReactElement {
     return {
       transform: [
         { translateY: -100 },
-        { rotateZ: `${randomWidth.value}deg` },
+        { rotateZ: `${pendulumSwing.value}deg` },
         { translateY: 100 },
       ],
     };
@@ -93,13 +93,13 @@ export default function SpringExample(): React.ReactElement {
         x: e.x,
         y: e.y,
       };
-      randomWidth.value =
+      pendulumSwing.value =
         (Math.atan2(-offset.value.x + 140 / 2, offset.value.y - 40) * 180) /
         Math.PI;
     })
     .onFinalize(() => {
       'worklet';
-      randomWidth.value = withSpring(0, config);
+      pendulumSwing.value = withSpring(0, config);
     })
     .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
       state.activate();
@@ -153,10 +153,10 @@ export default function SpringExample(): React.ReactElement {
                   setDampingRatio,
                 ],
               ]
-            : [
+            : ([
                 ['Mass', massText, setMassText, setMass],
                 ['Damping', dampingText, setDampingText, setDamping],
-              ]),
+              ] as const)),
         ].map((item) => {
           return (
             <InputField
@@ -164,6 +164,7 @@ export default function SpringExample(): React.ReactElement {
               textValue={item[1]}
               setTextValue={item[2]}
               setValue={item[3]}
+              key={item[0] as string}
             />
           );
         })}
