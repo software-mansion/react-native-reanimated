@@ -8,6 +8,11 @@ import {
 } from '../commonTypes';
 import { WebSensor } from './WebSensor';
 
+// In Node.js environments (like when static rendering with Expo Router)
+// requestAnimationFrame is unavailable, so we use setImmediate.
+const requestAnimationFrame =
+  globalThis.requestAnimationFrame || (globalThis as any).setImmediate;
+
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
