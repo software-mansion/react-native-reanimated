@@ -94,7 +94,7 @@ export default function SpringExample(): React.ReactElement {
         y: e.y,
       };
       pendulumSwing.value =
-        (Math.atan2(-offset.value.x + 140 / 2, offset.value.y - 40) * 180) /
+        (Math.atan2(-offset.value.x + 140 / 2, offset.value.y - 60) * 180) /
         Math.PI;
     })
     .onFinalize(() => {
@@ -111,31 +111,27 @@ export default function SpringExample(): React.ReactElement {
         <View style={styles.pendulumContainer}>
           <Animated.View style={[styles.pendulum, style]}>
             <View style={styles.rope} />
-            <View
-              style={[
-                styles.ball,
-                {
-                  width: useConfigWithDuration ? 40 : Math.min(10 * mass, 100),
-                  height: useConfigWithDuration ? 40 : Math.min(10 * mass, 100),
-                  borderRadius: useConfigWithDuration
-                    ? 20
-                    : Math.min(5 * mass, 50),
-                },
-              ]}
-            />
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: useConfigWithDuration
+                  ? 20
+                  : Math.min(0.75 * mass, 40) + 10,
+              }}>
+              {/* Using here view with border radius would be more natural, but views with border radius and rotation are bugged on android */}
+              🟤
+            </Text>
           </Animated.View>
         </View>
       </GestureDetector>
       <View style={styles.row}>
         <Button
           title="with duration"
-          // disabled={useConfigWithDuration}
           onPress={() => setUseConfigWithDuration(true)}
           color={useConfigWithDuration ? 'blue' : 'gray'}
         />
         <Button
           title="without duration"
-          // disabled={!useConfigWithDuration}
           onPress={() => setUseConfigWithDuration(false)}
           color={!useConfigWithDuration ? 'blue' : 'gray'}
         />
@@ -196,12 +192,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     alignContent: 'center',
-
     padding: 50,
     width: 140,
   },
   pendulum: {
-    width: 40,
+    width: 60,
     height: 200,
   },
   rope: {
