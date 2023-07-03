@@ -92,14 +92,7 @@ function isAnimatedStyle(style: StyleProps): style is AnimatedStyleResult {
 }
 
 function onlyAnimatedStyles(styles: StyleProps[]): AnimatedStyleResult[] {
-  const filteredStyles: AnimatedStyleResult[] = [];
-
-  styles.forEach((style) => {
-    if (isAnimatedStyle(style)) {
-      filteredStyles.push(style);
-    }
-  });
-  return filteredStyles;
+  return styles.filter(isAnimatedStyle);
 }
 
 function isSameAnimatedStyle(
@@ -129,7 +122,7 @@ const has = <K extends string>(
 
 function isInlineStyleTransform(
   transform: unknown
-): transform is Array<TransformProperty> {
+): transform is TransformProperty[] {
   if (
     transform === undefined ||
     transform === null ||

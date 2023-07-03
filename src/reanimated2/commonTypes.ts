@@ -12,23 +12,22 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-type UnionToIntersection<Union> = (
-  Union extends any ? (k: Union) => void : never
-) extends (k: infer Intersection) => void
-  ? Intersection
-  : never;
+type UnionToInterface<Union> = Union;
 
-type KeysOfPropertiesWithGivenValue<ObjectT, ExpectedValue> = {
-  [P in keyof ObjectT]: ExpectedValue extends ObjectT[P] ? P : never;
-}[keyof ObjectT];
+type KeysOfPropertiesWithGivenValue<ObjectT, ExpectedValue> =
+  ObjectT extends ObjectT // This is a hack to iterate over union elements https://github.com/microsoft/TypeScript/issues/43694
+    ? {
+        [P in keyof ObjectT]: ExpectedValue extends ObjectT[P] ? P : never;
+      }[keyof ObjectT]
+    : never;
 
 export type NumericTransformKeys = KeysOfPropertiesWithGivenValue<
-  UnionToIntersection<TransformProperty>,
+  UnionToInterface<TransformProperty>,
   number
 >;
 
 export type StringTransformKeys = KeysOfPropertiesWithGivenValue<
-  UnionToIntersection<TransformProperty>,
+  UnionToInterface<TransformProperty>,
   string
 >;
 
