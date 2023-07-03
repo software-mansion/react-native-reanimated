@@ -16,18 +16,13 @@ class ShadowTreeCloner {
  public:
   ShadowTreeCloner(std::shared_ptr<UIManager> uiManager, SurfaceId surfaceId);
 
-  ~ShadowTreeCloner();
-
   ShadowNode::Unshared cloneWithNewProps(
       const ShadowNode::Shared &oldRootNode,
       const ShadowNodeFamily &family,
       RawProps &&rawProps);
 
-  void updateYogaChildren();
-
  private:
   PropsParserContext propsParserContext_;
-  std::set<ShadowNode *> yogaChildrenUpdates_;
 };
 
 } // namespace reanimated

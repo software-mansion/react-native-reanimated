@@ -631,8 +631,6 @@ void NativeReanimatedModule::performOperations() {
             }
           }
 
-          shadowTreeCloner.updateYogaChildren();
-
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
 
           // skip ReanimatedCommitHook for this ShadowTree
