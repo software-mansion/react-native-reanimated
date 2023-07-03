@@ -58,18 +58,36 @@ type EntryOrExitLayoutType =
   | EntryExitAnimationFunction
   | ReanimatedKeyframe;
 
-export type AnimateProps<P extends object> = {
+type NonStyleAnimatedProps<P extends object> = {
   [K in keyof Omit<P, 'style'>]: P[K] | SharedValue<P[K]>;
-} & {
+};
+
+type StyleAnimatedProps<P extends object> = {
   style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
-} & {
-  animatedProps?: Partial<AnimateProps<P>>;
+};
+
+type LayoutProps = {
   layout?:
     | BaseAnimationBuilder
     | LayoutAnimationFunction
     | typeof BaseAnimationBuilder;
   entering?: EntryOrExitLayoutType;
   exiting?: EntryOrExitLayoutType;
+};
+
+type SharedTransitionProps = {
   sharedTransitionTag?: string;
   sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
+
+type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &
+  StyleAnimatedProps<P> &
+  LayoutProps &
+  SharedTransitionProps;
+
+export type AnimateProps<P extends object> = AnimatedPropsProp<P> & {
+  animatedProps?: Partial<AnimatedPropsProp<P>>;
+};
+
+// This is to provide alias because it's weird that it's named 'AnimateProps'.
+export type AnimatedProps<P extends object> = AnimateProps<P>;

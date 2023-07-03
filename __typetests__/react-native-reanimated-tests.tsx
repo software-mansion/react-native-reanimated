@@ -696,8 +696,10 @@ function updatePropsTest() {
   // @ts-expect-error works only for useAnimatedProps
   useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]);
 
+  // THIS SHOULD BE FIXED SOON
   useAnimatedProps(() => ({}), null, adapter1);
 
+  // THIS SHOULD BE FIXED SOON
   useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
 }
 
@@ -718,8 +720,10 @@ function testPartialAnimatedProps() {
     <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
   );
 
-  // claimed by comments to be correct but fails now, need to check
-  const test3 = <AnimatedImage animatedProps={ap} />;
+  // @ts-expect-error This is a correct usage but it doesn't pass
+  // and seems tricky to make it work correctly
+  // (I have tried and it's probably not worth the time at the moment).
+  const test3 = <AnimatedImage animatedProps={aps} />;
 
   // should pass because source is set normally and in `animatedProps`
   const test4 = (
@@ -742,6 +746,7 @@ function testPartialAnimatedProps() {
   // test dispatchCommand
   function testDispatchCommand() {
     const animatedRef = useAnimatedRef<Animated.View>();
+    // TODO I don't know how to fix it at the moment
     dispatchCommand(animatedRef, 'command', [1, 2, 3]);
     const plainRef = useRef<Animated.View>();
     // @ts-expect-error should only work for Animated refs?
