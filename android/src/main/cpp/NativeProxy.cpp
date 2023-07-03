@@ -53,11 +53,10 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
-  std::shared_ptr<UIManager> uiManager =
-      binding->getScheduler()->getUIManager();
+  uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
-  uiManager->registerCommitHook(*commitHook_);
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  uiManager_->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -69,6 +68,9 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   nativeReanimatedModule_->cleanupSensors();
+#ifdef RCT_NEW_ARCH_ENABLED
+  uiManager_->unregisterCommitHook(*commitHook_);
+#endif // RCT_NEW_ARCH_ENABLED
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -346,11 +348,10 @@ double NativeProxy::getCurrentTime() {
 }
 
 void NativeProxy::handleEvent(
-    jni::alias_ref<JString> eventKey,
+    jni::alias_ref<JString> eventName,
+    jint emitterReactTag,
     jni::alias_ref<react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
-  auto eventName = eventKey->toString();
-
   // TODO: convert event directly to jsi::Value without JSON serialization
   std::string eventAsString;
   try {
@@ -383,7 +384,7 @@ void NativeProxy::handleEvent(
   }
 
   nativeReanimatedModule_->handleEvent(
-      eventName, payload, this->getCurrentTime());
+      eventName->toString(), emitterReactTag, payload, this->getCurrentTime());
 }
 
 void NativeProxy::progressLayoutAnimation(

@@ -66,8 +66,9 @@ class EventHandler : public HybridClass<EventHandler> {
 
   void receiveEvent(
       jni::alias_ref<JString> eventKey,
+      jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event) {
-    handler_(eventKey, event);
+    handler_(eventKey, emitterReactTag, event);
   }
 
   static void registerNatives() {
@@ -81,11 +82,12 @@ class EventHandler : public HybridClass<EventHandler> {
 
   explicit EventHandler(std::function<void(
                             jni::alias_ref<JString>,
+                            jint emitterReactTag,
                             jni::alias_ref<react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
   std::function<
-      void(jni::alias_ref<JString>, jni::alias_ref<react::WritableMap>)>
+      void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>)>
       handler_;
 };
 
@@ -176,6 +178,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<Scheduler> scheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<PropsRegistry> propsRegistry_;
+  std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
 
 // removed temporary, new event listener mechanism need fix on the RN side
@@ -231,7 +234,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
   void handleEvent(
-      jni::alias_ref<JString> eventKey,
+      jni::alias_ref<JString> eventName,
+      jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event);
 
   void progressLayoutAnimation(

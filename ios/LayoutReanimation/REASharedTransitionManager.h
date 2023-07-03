@@ -13,5 +13,7 @@
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock;
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
 - (UIView *)getTransitioningView:(NSNumber *)tag;
+- (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
+                           targetValues:(NSMutableDictionary *)targetValues;
 
 @end

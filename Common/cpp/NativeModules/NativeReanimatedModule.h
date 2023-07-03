@@ -72,6 +72,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const jsi::Value &newData);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+  void scheduleOnJS(
+      jsi::Runtime &rt,
+      const jsi::Value &remoteFun,
+      const jsi::Value &argsValue);
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -102,11 +106,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void onRender(double timestampMs);
 
-  void onEvent(
-      double eventTimestamp,
-      const std::string &eventName,
-      const jsi::Value &payload);
-
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
@@ -114,6 +113,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   bool handleEvent(
       const std::string &eventName,
+      const int emitterReactTag,
       const jsi::Value &payload,
       double currentTime);
 

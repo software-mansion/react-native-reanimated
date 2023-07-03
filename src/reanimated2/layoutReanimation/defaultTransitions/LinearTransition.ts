@@ -1,4 +1,7 @@
-import { ComplexAnimationBuilder } from '../animationBuilder/ComplexAnimationBuilder';
+import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
 import {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -8,8 +11,10 @@ export class LinearTransition
   extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder
 {
-  static createInstance(): LinearTransition {
-    return new LinearTransition();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new LinearTransition() as InstanceType<T>;
   }
 
   build = (): LayoutAnimationFunction => {

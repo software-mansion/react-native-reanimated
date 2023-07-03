@@ -1,5 +1,5 @@
 import JSReanimated from './JSReanimated';
-import { AnimatedStyle, StyleProps } from '../commonTypes';
+import type { AnimatedStyle, StyleProps } from '../commonTypes';
 import { isWeb } from '../PlatformChecker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

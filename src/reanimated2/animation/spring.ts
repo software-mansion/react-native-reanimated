@@ -17,11 +17,18 @@ import {
   SpringConfigInner,
 } from './springUtils';
 
-export function withSpring(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type withSpringType = <T extends AnimatableValue>(
+  toValue: T,
+  userConfig?: SpringConfig,
+  callback?: AnimationCallback
+) => T;
+
+export const withSpring = ((
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
-): Animation<SpringAnimation> {
+): Animation<SpringAnimation> => {
   'worklet';
 
   return defineAnimation<SpringAnimation>(toValue, () => {
@@ -164,7 +171,7 @@ export function withSpring(
       const x0 = triggeredTwice
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
-          (previousAnimation?.startValue as number)
+          previousAnimation?.startValue
         : Number(animation.toValue) - value;
 
       if (previousAnimation) {
@@ -191,7 +198,11 @@ export function withSpring(
             : duration;
 
           config.duration = acutalDuration;
-          mass = calcuateNewMassToMatchDuration(x0, config, animation.velocity);
+          mass = calcuateNewMassToMatchDuration(
+            x0 as number,
+            config,
+            animation.velocity
+          );
         }
 
         const { zeta, omega0, omega1 } = initialCalculations(mass, config);
@@ -222,4 +233,4 @@ export function withSpring(
       omega1: 0,
     } as SpringAnimation;
   });
-}
+}) as withSpringType;

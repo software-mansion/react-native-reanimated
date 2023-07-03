@@ -20,8 +20,10 @@ export class EntryExitTransition
 
   exitingV: BaseAnimationBuilder | typeof BaseAnimationBuilder = FadeOut;
 
-  static createInstance(): EntryExitTransition {
-    return new EntryExitTransition();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new EntryExitTransition() as InstanceType<T>;
   }
 
   static entering(
@@ -56,7 +58,9 @@ export class EntryExitTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
+    // @ts-ignore Calling `.build()` both static and instance methods works fine here, but `this` types are incompatible. They are not used though, so it's fine.
     const enteringAnimation = this.enteringV.build();
+    // @ts-ignore Calling `.build()` both static and instance methods works fine here, but `this` types are incompatible. They are not used though, so it's fine.
     const exitingAnimation = this.exitingV.build();
     const exitingDuration = this.exitingV.getDuration();
 
