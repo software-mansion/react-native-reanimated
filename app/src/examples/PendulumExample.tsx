@@ -21,7 +21,17 @@ type FieldDefinition = [
   Dispatch<SetStateAction<number>>
 ];
 
-function InputField({ fieldName, textValue, setTextValue, setValue }) {
+function InputField({
+  fieldName,
+  textValue,
+  setTextValue,
+  setValue,
+}: {
+  fieldName: string;
+  textValue: string;
+  setTextValue: Dispatch<SetStateAction<string>>;
+  setValue: Dispatch<SetStateAction<number>>;
+}) {
   return (
     <View style={styles.row} key={fieldName}>
       <Text
