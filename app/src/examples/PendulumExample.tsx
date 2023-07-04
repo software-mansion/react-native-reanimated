@@ -14,22 +14,15 @@ import {
   GestureTouchEvent,
 } from 'react-native-gesture-handler';
 
-type FieldDefinition = [
-  string,
-  string,
-  Dispatch<SetStateAction<string>>,
-  Dispatch<SetStateAction<number>>
-];
+type FieldDefinition = [string, number, Dispatch<SetStateAction<number>>];
 
 function InputField({
   fieldName,
-  textValue,
-  setTextValue,
+  value,
   setValue,
 }: {
   fieldName: string;
-  textValue: string;
-  setTextValue: Dispatch<SetStateAction<string>>;
+  value: number;
   setValue: Dispatch<SetStateAction<number>>;
 }) {
   return (
@@ -46,13 +39,12 @@ function InputField({
       </Text>
       <TextInput
         key={fieldName}
-        value={textValue}
+        value={`${value}`}
         onChangeText={(s) => {
           const parsedInput = Number.parseFloat(s);
           if (parsedInput) {
             setValue(parsedInput);
           }
-          setTextValue(s);
         }}
         autoCapitalize="none"
         inputMode="numeric"
@@ -67,19 +59,10 @@ export default function SpringExample(): React.ReactElement {
   const offset = useSharedValue({ x: 0, y: 0 });
   const [useConfigWithDuration, setUseConfigWithDuration] = useState(true);
 
-  const [stiffnessText, setStiffnessText] = useState('100');
   const [stiffness, setStiffness] = useState(100);
-
-  const [durationText, setDurationText] = useState('5000');
   const [duration, setDuration] = useState(5000);
-
-  const [dampingRatioText, setDampingRatioText] = useState('0.5');
   const [dampingRatio, setDampingRatio] = useState(0.5);
-
-  const [massText, setMassText] = useState('1');
   const [mass, setMass] = useState(1);
-
-  const [dampingText, setDampingText] = useState('10');
   const [damping, setDamping] = useState(1);
 
   const config = {
@@ -105,7 +88,6 @@ export default function SpringExample(): React.ReactElement {
   const gesture = Gesture.Pan()
     .manualActivation(true)
     .onChange((e) => {
-      'worklet';
       offset.value = {
         x: e.x,
         y: e.y,
@@ -115,7 +97,6 @@ export default function SpringExample(): React.ReactElement {
         Math.PI;
     })
     .onFinalize(() => {
-      'worklet';
       pendulumSwing.value = withSpring(0, config);
     })
     .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
@@ -123,20 +104,15 @@ export default function SpringExample(): React.ReactElement {
     });
 
   const fields: Array<FieldDefinition> = [
-    ['Stiffness', stiffnessText, setStiffnessText, setStiffness],
+    ['Stiffness', stiffness, setStiffness],
     ...(useConfigWithDuration
       ? ([
-          ['Duration', durationText, setDurationText, setDuration],
-          [
-            'Damping Ratio',
-            dampingRatioText,
-            setDampingRatioText,
-            setDampingRatio,
-          ],
+          ['Duration', duration, setDuration],
+          ['Damping Ratio', dampingRatio, setDampingRatio],
         ] as Array<FieldDefinition>)
       : ([
-          ['Mass', massText, setMassText, setMass],
-          ['Damping', dampingText, setDampingText, setDamping],
+          ['Mass', mass, setMass],
+          ['Damping', damping, setDamping],
         ] as Array<FieldDefinition>)),
   ];
 
@@ -176,9 +152,8 @@ export default function SpringExample(): React.ReactElement {
           return (
             <InputField
               fieldName={item[0]}
-              textValue={item[1]}
-              setTextValue={item[2]}
-              setValue={item[3]}
+              value={item[1]}
+              setValue={item[2]}
               key={item[0]}
             />
           );
