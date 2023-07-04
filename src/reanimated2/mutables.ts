@@ -1,6 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
+  ShareableClone,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
   registerShareableMapping,
@@ -36,7 +37,10 @@ export function makeUIMutable<T>(
       if (syncDataHolder) {
         _updateDataSynchronously(
           syncDataHolder,
-          makeShareableCloneOnUIRecursive(newValue)
+          makeShareableCloneOnUIRecursive(
+            // this is a scam
+            newValue as unknown as ShareableClone<object>
+          )
         );
       }
       listeners.forEach((listener) => {

@@ -204,34 +204,58 @@ export function makeShareableCloneRecursive<T>(
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
 }
 
-export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
+type RemoteFunctionShareableClone<T> = {
+  __remoteFunction: ShareableRef<T>;
+};
+
+export type ShareableClone<T> =
+  | T
+  | RemoteFunctionShareableClone<T>
+  | ShareableRef<T>[];
+
+function isRemoteFunctionShareableClone<T extends object>(
+  value: ShareableClone<T>
+): value is RemoteFunctionShareableClone<T> {
+  return '__remoteFunction' in value;
+}
+
+export function makeShareableCloneOnUIRecursive<T extends object>(
+  value: ShareableClone<T>
+): ShareableRef<T> {
   'worklet';
   if (USE_STUB_IMPLEMENTATION) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
-  function cloneRecursive<T>(value: T): ShareableRef<T> {
-    const type = typeof value;
-    if ((type === 'object' || type === 'function') && value !== null) {
-      if (value.__remoteFunction) {
+  function cloneRecursive<T extends object>(
+    value: ShareableClone<T>
+  ): ShareableRef<T> {
+    if (
+      (typeof value === 'object' && value !== null) ||
+      typeof value === 'function'
+    ) {
+      if (isRemoteFunctionShareableClone(value)) {
         return value.__remoteFunction;
       }
       if (isHostObject(value)) {
         return value as ShareableRef<T>;
       }
-      let toAdapt: any;
+      let toAdapt:
+        | ShareableRef<ShareableRef<T>>[]
+        | Record<string, ShareableRef<T>>;
       if (Array.isArray(value)) {
         toAdapt = value.map((element) => cloneRecursive(element));
+        return _makeShareableClone(toAdapt);
       } else if (value !== undefined) {
         toAdapt = {};
         for (const [key, element] of Object.entries(
-          value as Record<string, unknown>
+          value as Record<string, ShareableClone<T>>
         )) {
           toAdapt[key] = cloneRecursive(element);
         }
+        return _makeShareableClone(toAdapt);
       }
-      return _makeShareableClone(toAdapt);
     }
     return _makeShareableClone(value);
   }
