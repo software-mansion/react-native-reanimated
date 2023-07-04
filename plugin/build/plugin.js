@@ -545,6 +545,9 @@ var require_processIfWorkletNode = __commonJS({
     exports2.processIfWorkletNode = void 0;
     var types_1 = require("@babel/types");
     var processIfWorkletFunction_1 = require_processIfWorkletFunction();
+    function hasWorkletDirective(directives) {
+      return directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet");
+    }
     function processIfWorkletNode(fun, state) {
       let shouldBeProcessed = false;
       fun.traverse({
@@ -554,10 +557,8 @@ var require_processIfWorkletNode = __commonJS({
             const parent = path.getFunctionParent();
             if (parent === fun) {
               const directives = fun.node.body.directives;
-              if (directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet")) {
-                shouldBeProcessed = true;
-              }
-            } else if (state.opts.useOnExitLogicForWorkletNodes && ((parent === null || parent === void 0 ? void 0 : parent.isFunctionDeclaration()) || (parent === null || parent === void 0 ? void 0 : parent.isFunctionExpression()) || (parent === null || parent === void 0 ? void 0 : parent.isArrowFunctionExpression()))) {
+              shouldBeProcessed = hasWorkletDirective(directives);
+            } else if (state.opts.processNestedWorklets && ((parent === null || parent === void 0 ? void 0 : parent.isFunctionDeclaration()) || (parent === null || parent === void 0 ? void 0 : parent.isFunctionExpression()) || (parent === null || parent === void 0 ? void 0 : parent.isArrowFunctionExpression()))) {
               processIfWorkletNode(parent, state);
             }
           }

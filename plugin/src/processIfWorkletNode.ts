@@ -5,9 +5,22 @@ import {
   ArrowFunctionExpression,
   isBlockStatement,
   isDirectiveLiteral,
+  BlockStatement,
 } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { ReanimatedPluginPass } from './types';
+
+function hasWorkletDirective(directives: BlockStatement['directives']) {
+  return (
+    directives &&
+    directives.length > 0 &&
+    directives.some(
+      (directive) =>
+        isDirectiveLiteral(directive.value) &&
+        directive.value.value === 'worklet'
+    )
+  );
+}
 
 export function processIfWorkletNode(
   fun: NodePath<
@@ -26,19 +39,11 @@ export function processIfWorkletNode(
           // this is necessary as because of some bug, babel will attempt to
           // process replaced function if it is nested inside another function
           const directives = fun.node.body.directives;
-          if (
-            directives &&
-            directives.length > 0 &&
-            directives.some(
-              (directive) =>
-                isDirectiveLiteral(directive.value) &&
-                directive.value.value === 'worklet'
-            )
-          ) {
-            shouldBeProcessed = true;
-          }
+
+          shouldBeProcessed = hasWorkletDirective(directives);
         } else if (
-          state.opts.useOnExitLogicForWorkletNodes &&
+          state.opts.processNestedWorklets &&
+          // use better function for that once proper merges come to life
           (parent?.isFunctionDeclaration() ||
             parent?.isFunctionExpression() ||
             parent?.isArrowFunctionExpression())

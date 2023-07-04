@@ -6,7 +6,7 @@ export interface ReanimatedPluginPass {
   opts: {
     relativeSourceLocation?: boolean;
     disableInlineStylesWarning?: boolean;
-    useOnExitLogicForWorkletNodes?: boolean;
+    processNestedWorklets?: boolean;
   };
   cwd: string;
   filename: string | undefined;
