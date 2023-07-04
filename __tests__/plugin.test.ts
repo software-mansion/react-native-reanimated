@@ -1023,8 +1023,8 @@ describe('babel plugin', () => {
   it('is indempotent for common cases', () => {
     function resultIsIdempotent(input: string) {
       const firstResult = runPlugin(input).code;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const secondResult = runPlugin(firstResult!).code;
+      assert(firstResult);
+      const secondResult = runPlugin(firstResult).code;
       return firstResult === secondResult;
     }
 
