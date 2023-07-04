@@ -1,5 +1,8 @@
-import { ComplexAnimationBuilder } from '../animationBuilder';
 import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
+import type {
   EntryAnimationsValues,
   ExitAnimationsValues,
   AnimationConfigFunction,
@@ -11,8 +14,10 @@ export class RotateInDownLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): RotateInDownLeft {
-    return new RotateInDownLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateInDownLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -52,8 +57,10 @@ export class RotateInDownRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): RotateInDownRight {
-    return new RotateInDownRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateInDownRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -93,8 +100,10 @@ export class RotateInUpLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): RotateInUpLeft {
-    return new RotateInUpLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateInUpLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -134,8 +143,10 @@ export class RotateInUpRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): RotateInUpRight {
-    return new RotateInUpRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateInUpRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -175,8 +186,10 @@ export class RotateOutDownLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): RotateOutDownLeft {
-    return new RotateOutDownLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateOutDownLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -228,8 +241,10 @@ export class RotateOutDownRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): RotateOutDownRight {
-    return new RotateOutDownRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateOutDownRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -281,8 +296,10 @@ export class RotateOutUpLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): RotateOutUpLeft {
-    return new RotateOutUpLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateOutUpLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -334,8 +351,10 @@ export class RotateOutUpRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): RotateOutUpRight {
-    return new RotateOutUpRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new RotateOutUpRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {

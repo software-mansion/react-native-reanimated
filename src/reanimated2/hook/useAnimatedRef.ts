@@ -1,6 +1,6 @@
-import { Component, useRef } from 'react';
+import { Component, RefObject, useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import { RefObjectFunction } from './commonTypes';
+import { AnimatedRef, RefObjectFunction } from './commonTypes';
 import { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
@@ -27,7 +27,9 @@ const getTagValueFunction = global._IS_FABRIC
   ? getShadowNodeWrapperFromRef
   : findNodeHandle;
 
-export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
+export const useAnimatedRef = function <
+  T extends ComponentRef
+>(): AnimatedRef<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const ref = useRef<RefObjectFunction<T>>();
 
@@ -54,4 +56,5 @@ export function useAnimatedRef<T extends ComponentRef>(): RefObjectFunction<T> {
   }
 
   return ref.current;
-}
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+} as <T extends Component>() => RefObject<T>;

@@ -1,18 +1,23 @@
-import {
+import type {
   EntryAnimationsValues,
   ExitAnimationsValues,
   AnimationConfigFunction,
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
+} from '../animationBuilder';
 
 export class SlideInRight
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): SlideInRight {
-    return new SlideInRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideInRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -45,8 +50,10 @@ export class SlideInLeft
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): SlideInLeft {
-    return new SlideInLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideInLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -79,8 +86,10 @@ export class SlideOutRight
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): SlideOutRight {
-    return new SlideOutRight();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideOutRight() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -119,8 +128,10 @@ export class SlideOutLeft
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): SlideOutLeft {
-    return new SlideOutLeft();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideOutLeft() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -159,8 +170,10 @@ export class SlideInUp
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): SlideInUp {
-    return new SlideInUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideInUp() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -193,8 +206,10 @@ export class SlideInDown
   extends ComplexAnimationBuilder
   implements IEntryAnimationBuilder
 {
-  static createInstance(): SlideInDown {
-    return new SlideInDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideInDown() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<EntryAnimationsValues> => {
@@ -227,8 +242,10 @@ export class SlideOutUp
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): SlideOutUp {
-    return new SlideOutUp();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideOutUp() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
@@ -264,8 +281,10 @@ export class SlideOutDown
   extends ComplexAnimationBuilder
   implements IExitAnimationBuilder
 {
-  static createInstance(): SlideOutDown {
-    return new SlideOutDown();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new SlideOutDown() as InstanceType<T>;
   }
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {

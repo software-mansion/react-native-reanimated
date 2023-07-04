@@ -187,6 +187,9 @@ using namespace facebook::react;
     _operationsInBatch = [NSMutableDictionary new];
     _componentUpdateBuffer = [NSMutableDictionary new];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
+    _eventHandler = ^(id<RCTEvent> event) {
+      // no-op
+    };
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -371,25 +374,19 @@ using namespace facebook::react;
 
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
-  NSString *key = [NSString stringWithFormat:@"%@%@", event.viewTag, RCTNormalizeInputEventName(event.eventName)];
-
-  NSString *eventHash = [NSString stringWithFormat:@"%@%@", event.viewTag, event.eventName];
-
-  if (_eventHandler != nil) {
-    __weak REAEventHandler eventHandler = _eventHandler;
-    __weak __typeof__(self) weakSelf = self;
-    RCTExecuteOnMainQueue(^void() {
-      __typeof__(self) strongSelf = weakSelf;
-      if (strongSelf == nil) {
-        return;
-      }
-      if (eventHandler == nil) {
-        return;
-      }
-      eventHandler(eventHash, event);
-      [strongSelf performOperations];
-    });
-  }
+  __weak REAEventHandler eventHandler = _eventHandler;
+  __weak __typeof__(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^void() {
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    if (eventHandler == nil) {
+      return;
+    }
+    eventHandler(event);
+    [strongSelf performOperations];
+  });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

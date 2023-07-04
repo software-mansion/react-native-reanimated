@@ -1,4 +1,11 @@
-import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
+import React, {
+  Component,
+  ComponentClass,
+  ComponentType,
+  FunctionComponent,
+  MutableRefObject,
+  Ref,
+} from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
@@ -25,6 +32,7 @@ import {
   DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  Keyframe,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
@@ -42,6 +50,7 @@ import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
+import type { AnimateProps } from './reanimated2/helperTypes';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -241,10 +250,20 @@ export interface InitialComponentProps extends Record<string, unknown> {
   collapsable?: boolean;
 }
 
+export default function createAnimatedComponent<P extends object>(
+  component: FunctionComponent<P>,
+  options?: Options<P>
+): FunctionComponent<AnimateProps<P>>;
+
+export default function createAnimatedComponent<P extends object>(
+  component: ComponentClass<P>,
+  options?: Options<P>
+): ComponentClass<AnimateProps<P>>;
+
 export default function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
-): ComponentType<AnimatedComponentProps<InitialComponentProps>> {
+): any {
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
