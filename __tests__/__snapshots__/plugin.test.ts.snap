@@ -162,8 +162,8 @@ exports[`babel plugin doesn't workletize callback functions on unknown objects o
 `;
 
 exports[`babel plugin doesn't workletize callback functions on unknown objects with known object chained after 1`] = `
-"AmongusIn.withCallback(function () {
-  console.log('AmongusIn with FadeIn before');
+"AmogusIn.withCallback(function () {
+  console.log('AmogusIn with FadeIn before');
 }).FadeIn();"
 `;
 
@@ -817,22 +817,40 @@ FadeIn.build().withCallback(function () {
 }());"
 `;
 
+exports[`babel plugin workletizes callback functions on longer chains of known objects 1`] = `
+"var _worklet_1134777276323_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build');}",
+  location: "/dev/null"
+};
+FadeIn.build().duration().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1134777276323_init_data;
+  _f.__workletHash = 1134777276323;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
 exports[`babel plugin workletizes callback functions on unknown objects chained after 1`] = `
-"var _worklet_16548078838682_init_data = {
-  code: "function anonymous(){console.log('FadeIn with AmongusIn after');}",
+"var _worklet_5878665076948_init_data = {
+  code: "function anonymous(){console.log('FadeIn with AmogusIn after');}",
   location: "/dev/null"
 };
 FadeIn.withCallback(function () {
   var _e = [new global.Error(), 1, -27];
   var _f = function _f() {
-    console.log('FadeIn with AmongusIn after');
+    console.log('FadeIn with AmogusIn after');
   };
   _f._closure = {};
-  _f.__initData = _worklet_16548078838682_init_data;
-  _f.__workletHash = 16548078838682;
+  _f.__initData = _worklet_5878665076948_init_data;
+  _f.__workletHash = 5878665076948;
   _f.__stackDetails = _e;
   return _f;
-}()).AmongusIn();"
+}()).AmogusIn();"
 `;
 
 exports[`babel plugin workletizes class field 1`] = `

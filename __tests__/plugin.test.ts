@@ -1126,7 +1126,8 @@ describe('babel plugin', () => {
     expect(resultIsIdempotent(input9)).toBe(true);
   });
 
-  // Layout Animations
+  // Layout Animations for functions
+
   it('workletizes unchained callback functions automatically', () => {
     const input = html`<script>
       FadeIn.withCallback(() => {
@@ -1213,8 +1214,8 @@ describe('babel plugin', () => {
   it('workletizes callback functions on unknown objects chained after', () => {
     const input = html`<script>
       FadeIn.withCallback(() => {
-        console.log('FadeIn with AmongusIn after');
-      }).AmongusIn();
+        console.log('FadeIn with AmogusIn after');
+      }).AmogusIn();
     </script>`;
 
     const { code } = runPlugin(input);
@@ -1224,13 +1225,26 @@ describe('babel plugin', () => {
 
   it("doesn't workletize callback functions on unknown objects with known object chained after", () => {
     const input = html`<script>
-      AmongusIn.withCallback(() => {
-        console.log('AmongusIn with FadeIn before');
+      AmogusIn.withCallback(() => {
+        console.log('AmogusIn with FadeIn before');
       }).FadeIn();
     </script>`;
 
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes callback functions on longer chains of known objects', () => {
+    const input = html`<script>
+      FadeIn.build()
+        .duration()
+        .withCallback(() => {
+          console.log('FadeIn with build');
+        });
+    </script>`;
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(1);
     expect(code).toMatchSnapshot();
   });
 });
