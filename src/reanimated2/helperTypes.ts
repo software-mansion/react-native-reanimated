@@ -49,8 +49,10 @@ export type AnimateStyle<S> = {
     : S[K] | SharedValue<AnimatableValue>;
 };
 
+// provided types can either be their original types (like backgroundColor: pink)
+// or inline shared values/derived values
 type MaybeSharedValue<S> = {
-  [K in keyof S]: S[K] | Readonly<SharedValue<NonNullable<S[K]>>>;
+  [K in keyof S]: S[K] | Readonly<SharedValue<Extract<S[K], AnimatableValue>>>;
 };
 
 type StylesOrDefault<T> = 'style' extends keyof T

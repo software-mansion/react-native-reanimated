@@ -814,7 +814,7 @@ function testPartialAnimatedProps() {
 
   function testInlineStyles1() {
     const animatedIndex = useSharedValue(0);
-    const backgroundColor = useDerivedValue<ColorValue>(() => {
+    const backgroundColor = useDerivedValue(() => {
       return interpolateColor(
         animatedIndex.value,
         [0, 1, 2],
