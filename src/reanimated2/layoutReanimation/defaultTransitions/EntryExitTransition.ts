@@ -182,7 +182,6 @@ export class EntryExitTransition
           } else {
             return { [transformProp]: 1 } as unknown as TransformProperty;
           }
-          return value;
         })
       );
 

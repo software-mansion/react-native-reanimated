@@ -208,13 +208,6 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     backgroundColor: 'white',
   },
-  ball: {
-    width: SMALL_BALL_SIZE,
-    height: SMALL_BALL_SIZE,
-    backgroundColor: 'orange',
-    borderRadius: SMALL_BALL_SIZE,
-    position: 'absolute',
-  },
   innerBall: {
     position: 'absolute',
     width: INNER_BALL_SIZE,

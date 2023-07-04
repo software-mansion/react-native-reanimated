@@ -7,7 +7,7 @@
     "test:unit": "jest",
     "test:update-snapshot": "jest --updateSnapshot",
     "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
-    "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
+    "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__  && yarn prettier --check src __tests__ __typetests__",
     "lint:plugin": "cd plugin && yarn lint && cd ..",
     "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
@@ -150,7 +150,7 @@
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin",
+      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin --ignore-pattern .eslintrc.js",
       "prettier --write"
     ],
     "plugin/**/*.ts": "yarn lint:plugin",
