@@ -29,6 +29,8 @@ jobs:
         run: yarn
       - name: Check types
         run: yarn tsc --noEmit
+      - name: Check api
+        run: yarn type:check-api
       - name: Lint
         run: yarn lint:js
       - name: Finding circular dependencies

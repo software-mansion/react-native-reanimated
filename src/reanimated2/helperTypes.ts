@@ -72,22 +72,46 @@ type PickStyleProps<T> = Pick<
   }[keyof T]
 >;
 
-export type AnimateProps<P extends object> = {
+type StyleAnimatedProps<P extends object> = {
+  [K in keyof PickStyleProps<P>]: StyleProp<AnimateStyle<P[K]>>;
+};
+
+type JustStyleAnimatedProp<P extends object> = {
+  style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
+};
+
+type NonStyleAnimatedProps<P extends object> = {
   [K in keyof Omit<P, keyof PickStyleProps<P> | 'style'>]:
     | P[K]
     | SharedValue<P[K]>;
-} & {
-  style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
-} & {
-  [K in keyof PickStyleProps<P>]: StyleProp<AnimateStyle<P[K]>>;
-} & {
-  animatedProps?: Partial<AnimateProps<P>>;
+};
+
+type LayoutProps = {
   layout?:
     | BaseAnimationBuilder
     | LayoutAnimationFunction
     | typeof BaseAnimationBuilder;
   entering?: EntryOrExitLayoutType;
   exiting?: EntryOrExitLayoutType;
+};
+
+type SharedTransitionProps = {
   sharedTransitionTag?: string;
   sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
+
+type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &
+  JustStyleAnimatedProp<P> &
+  StyleAnimatedProps<P> &
+  LayoutProps &
+  SharedTransitionProps;
+
+export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
+  JustStyleAnimatedProp<P> &
+  StyleAnimatedProps<P> &
+  LayoutProps &
+  SharedTransitionProps & {
+    animatedProps?: Partial<AnimatedPropsProp<P>>;
+  };
+
+export type AnimatedProps<P extends object> = AnimateProps<P>;
