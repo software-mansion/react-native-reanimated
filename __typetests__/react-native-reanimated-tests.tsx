@@ -309,7 +309,7 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
-  // @ts-expect-error must specify rad or deg
+  // @ts-expect-error Valid rotation is a string (either radians or degrees)
   const style2 = useAnimatedStyle(() => {
     return {
       transform: [
