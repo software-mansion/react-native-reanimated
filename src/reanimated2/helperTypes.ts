@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
 This file is a legacy remainder of manual types from react-native-reanimated.d.ts file. 
 I wasn't able to get rid of all of them from the code. 
@@ -58,12 +59,31 @@ type EntryOrExitLayoutType =
   | EntryExitAnimationFunction
   | ReanimatedKeyframe;
 
-type NonStyleAnimatedProps<P extends object> = {
-  [K in keyof Omit<P, 'style'>]: P[K] | SharedValue<P[K]>;
-};
+/* 
+  Style type properties (properties that extends StyleProp<ViewStyle>)
+  can be defined with other property names than "style". For example `contentContainerStyle` in FlatList.
+  Type definition for all style type properties should act similarly, hence we
+  pick keys with 'Style' substring with the use of this utility type.
+*/
+type PickStyleProps<T> = Pick<
+  T,
+  {
+    [Key in keyof T]-?: Key extends `${string}Style` ? Key : never;
+  }[keyof T]
+>;
 
 type StyleAnimatedProps<P extends object> = {
+  [K in keyof PickStyleProps<P>]: StyleProp<AnimateStyle<P[K]>>;
+};
+
+type JustStyleAnimatedProp<P extends object> = {
   style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
+};
+
+type NonStyleAnimatedProps<P extends object> = {
+  [K in keyof Omit<P, keyof PickStyleProps<P> | 'style'>]:
+    | P[K]
+    | SharedValue<P[K]>;
 };
 
 type LayoutProps = {
@@ -81,13 +101,17 @@ type SharedTransitionProps = {
 };
 
 type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &
+  JustStyleAnimatedProp<P> &
   StyleAnimatedProps<P> &
   LayoutProps &
   SharedTransitionProps;
 
-export type AnimateProps<P extends object> = AnimatedPropsProp<P> & {
-  animatedProps?: Partial<AnimatedPropsProp<P>>;
-};
+export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
+  JustStyleAnimatedProp<P> &
+  StyleAnimatedProps<P> &
+  LayoutProps &
+  SharedTransitionProps & {
+    animatedProps?: Partial<AnimatedPropsProp<P>>;
+  };
 
-// This is to provide alias because it's weird that it's named 'AnimateProps'.
 export type AnimatedProps<P extends object> = AnimateProps<P>;

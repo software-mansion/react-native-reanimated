@@ -145,6 +145,40 @@ function CreateAnimatedFlatListTest2() {
   );
 }
 
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest3(
+  contentContainerStyle: React.ComponentProps<
+    typeof AnimatedFlatList
+  >['contentContainerStyle']
+) {
+  const newContentContainerStyle = [contentContainerStyle, { flex: 1 }];
+
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={newContentContainerStyle}
+    />
+  );
+}
+
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest4(
+  contentContainerStyle: React.ComponentProps<typeof AnimatedFlatList>['style']
+) {
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={contentContainerStyle}
+    />
+  );
+}
+
 function TestClassComponentRef() {
   const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
   return <AnimatedImage ref={animatedRef} source={{}} />;
