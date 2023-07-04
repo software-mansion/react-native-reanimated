@@ -10,6 +10,7 @@ import {
   FlatListProps,
   ViewProps,
   ImageProps,
+  ColorValue,
 } from 'react-native';
 import {
   PanGestureHandler,
@@ -807,5 +808,35 @@ function testPartialAnimatedProps() {
   function testSetGestureState() {
     setGestureState(1, 2);
     // not sure what more I can test here
+  }
+
+  // test InlineStyles
+
+  function testInlineStyles1() {
+    const animatedIndex = useSharedValue(0);
+    const backgroundColor = useDerivedValue<ColorValue>(() => {
+      return interpolateColor(
+        animatedIndex.value,
+        [0, 1, 2],
+        ['#273D3A', '#8B645C', '#60545A']
+      );
+    });
+    <Animated.View
+      style={{
+        flex: 1,
+        height: '100%',
+        backgroundColor,
+      }}
+    />;
+  }
+
+  function testInlineStyles2() {
+    const animatedFlex = useSharedValue(0);
+    <Animated.View
+      style={{
+        flex: animatedFlex,
+        height: '100%',
+      }}
+    />;
   }
 }

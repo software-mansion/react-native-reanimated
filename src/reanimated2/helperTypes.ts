@@ -49,8 +49,12 @@ export type AnimateStyle<S> = {
     : S[K] | SharedValue<AnimatableValue>;
 };
 
+type MaybeSharedValue<S> = {
+  [K in keyof S]: S[K] | Readonly<SharedValue<NonNullable<S[K]>>>;
+};
+
 type StylesOrDefault<T> = 'style' extends keyof T
-  ? T['style']
+  ? MaybeSharedValue<T['style']>
   : Record<string, unknown>;
 
 type EntryOrExitLayoutType =
