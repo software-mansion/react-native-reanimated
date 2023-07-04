@@ -34,6 +34,7 @@ export function setupMicrotasks() {
         microtasksQueue[index]();
       }
       microtasksQueue = [];
+      global._maybeFlushUIUpdatesQueue();
     } finally {
       isExecutingMicrotasksQueue = false;
     }
@@ -59,6 +60,12 @@ export const callMicrotasks = shouldBeUseWeb()
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
+  'worklet';
+  if (__DEV__ && !IS_WEB && _WORKLET) {
+    throw new Error(
+      'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
   if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
     throw new Error('runOnUI() can only be used on worklets');
   }
@@ -80,6 +87,15 @@ export function runOnUI<A extends any[], R>(
         })
       );
       return;
+    }
+    if (__DEV__) {
+      // in DEV mode we call shareable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      makeShareableCloneRecursive(worklet);
+      makeShareableCloneRecursive(args);
     }
     _runOnUIQueue.push([worklet, args]);
     if (_runOnUIQueue.length === 1) {
@@ -106,8 +122,14 @@ export function runOnUI<A extends any[], R>(
 export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
+  'worklet';
+  if (__DEV__ && !IS_WEB && _WORKLET) {
+    throw new Error(
+      'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
   if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
-    throw new Error('runOnUI() can only be used on worklets');
+    throw new Error('runOnUIImmediately() can only be used on worklets');
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(
@@ -119,12 +141,12 @@ export function runOnUIImmediately<A extends any[], R>(
   };
 }
 
-if (__DEV__) {
-  try {
-    runOnUI(() => {
-      'worklet';
-    });
-  } catch (e) {
+if (__DEV__ && !IS_WEB) {
+  const f = () => {
+    'worklet';
+  };
+  // @ts-ignore plugin
+  if (f.__workletHash === undefined) {
     throw new Error(
       'Failed to create a worklet. Did you forget to add Reanimated Babel plugin in babel.config.js? See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation#babel-plugin.'
     );
@@ -142,13 +164,12 @@ export function runOnJS<A extends any[], R>(
     // reference to the original remote function in the `__remoteFunction` property.
     fun = fun.__remoteFunction;
   }
-  if (!_WORKLET) {
-    return fun;
-  }
   return (...args) => {
     _scheduleOnJS(
       fun,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+      args.length > 0
+        ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+        : undefined
     );
   };
 }

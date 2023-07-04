@@ -22,6 +22,7 @@ import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.Scheduler;
+import com.swmansion.reanimated.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,7 +85,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     Integer tag = view.getId();
     mCallbacks.put(tag, callback);
 
-    if (!removeOrAnimateExitRecursive(view, parent, true)) {
+    if (!removeOrAnimateExitRecursive(view, true)) {
       removeView(view, parent);
     }
   }
@@ -270,7 +271,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
       keys = Snapshot.currentKeysToTransform;
     }
     for (String key : keys) {
-      preparedValues.put(key, PixelUtil.toDIPFromPixel((int) values.get(key)));
+      Object value = values.get(key);
+      float pixelsValue = Utils.convertToFloat(value);
+      float dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+      preparedValues.put(key, dipValue);
     }
 
     if (addTransform) {
@@ -347,8 +351,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       props.remove(Snapshot.TRANSFORM_MATRIX);
     }
 
-    updateLayout(
-        view, parentViewManager, parentTag, view.getId(), x, y, width, height, isPositionAbsolute);
+    updateLayout(view, parentViewManager, parentTag, x, y, width, height, isPositionAbsolute);
     props.remove(Snapshot.ORIGIN_X);
     props.remove(Snapshot.ORIGIN_Y);
     props.remove(Snapshot.GLOBAL_ORIGIN_X);
@@ -394,7 +397,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
       View viewToUpdate,
       ViewManager parentViewManager,
       int parentTag,
-      int tag,
       float xf,
       float yf,
       float widthf,
@@ -473,7 +475,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled();
   }
 
-  private boolean removeOrAnimateExitRecursive(View view, ViewGroup parent, boolean shouldRemove) {
+  private boolean removeOrAnimateExitRecursive(View view, boolean shouldRemove) {
     int tag = view.getId();
     ViewManager viewManager = resolveViewManager(tag);
 
@@ -501,9 +503,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       ViewGroup viewGroup = (ViewGroup) view;
       for (int i = viewGroup.getChildCount() - 1; i >= 0; i--) {
         View child = viewGroup.getChildAt(i);
-        if (removeOrAnimateExitRecursive(child, viewGroup, shouldRemove)) {
+        if (removeOrAnimateExitRecursive(child, shouldRemove)) {
           hasAnimatedChildren = true;
-        } else if (shouldRemove) {
+        } else if (shouldRemove && child.getId() != -1) {
           toBeRemoved.add(child);
         }
       }
@@ -529,6 +531,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     if (hasAnimatedChildren) {
+      if (tag == -1) {
+        // View tags are used to identify react views, therefore native-only views
+        // don't have any view tag and view.getId returns -1
+        // We shouldn't manage lifetime of non-react components.
+        cancelAnimationsRecursive(view);
+        return false;
+      }
       mAncestorsToRemove.add(tag);
     }
 

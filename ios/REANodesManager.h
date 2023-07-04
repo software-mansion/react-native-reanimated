@@ -9,7 +9,7 @@
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
-typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
+typedef void (^REAEventHandler)(id<RCTEvent> event);
 
 #ifdef RCT_NEW_ARCH_ENABLED
 typedef void (^REAPerformOperations)();
@@ -55,5 +55,6 @@ typedef void (^REAPerformOperations)();
                        trySynchronously:(BOOL)trySync;
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 #endif
+- (void)maybeFlushUIUpdatesQueue;
 
 @end

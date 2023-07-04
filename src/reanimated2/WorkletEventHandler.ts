@@ -54,6 +54,10 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
     }
   }
 
+  registerForEventByName(eventName: string) {
+    this.registrations.push(registerEventHandler(eventName, this.worklet));
+  }
+
   unregisterFromEvents(): void {
     this.registrations.forEach((id) => unregisterEventHandler(id));
     this.registrations = [];

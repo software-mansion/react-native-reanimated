@@ -1,25 +1,35 @@
-import { Component, useRef } from 'react';
+import { Component, RefObject, useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import { RefObjectFunction } from './commonTypes';
+import { AnimatedRef, RefObjectFunction } from './commonTypes';
 import { ShadowNodeWrapper } from '../commonTypes';
-import { getTag } from '../NativeMethods';
-import { getShadowNodeWrapperFromHostInstance } from '../fabricUtils';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from '../shareables';
+import { findNodeHandle } from 'react-native';
 
-function getShareableShadowNodeFromComponent(
-  component: Component
-): ShadowNodeWrapper {
-  return getShadowNodeWrapperFromHostInstance(component);
+interface ComponentRef extends Component {
+  getNativeScrollRef?: () => ComponentRef;
+  getScrollableNode?: () => ComponentRef;
+}
+
+function getComponentOrScrollableRef(component: ComponentRef): ComponentRef {
+  if (global._IS_FABRIC && component.getNativeScrollRef) {
+    return component.getNativeScrollRef();
+  } else if (!global._IS_FABRIC && component.getScrollableNode) {
+    return component.getScrollableNode();
+  }
+  return component;
 }
 
 const getTagValueFunction = global._IS_FABRIC
-  ? getShareableShadowNodeFromComponent
-  : getTag;
+  ? getShadowNodeWrapperFromRef
+  : findNodeHandle;
 
-export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
+export const useAnimatedRef = function <
+  T extends ComponentRef
+>(): AnimatedRef<T> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const ref = useRef<RefObjectFunction<T>>();
 
@@ -27,7 +37,7 @@ export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
     const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        tag.value = getTagValueFunction(component);
+        tag.value = getTagValueFunction(getComponentOrScrollableRef(component));
         fun.current = component;
       }
       return tag.value;
@@ -42,9 +52,9 @@ export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
       },
     });
     registerShareableMapping(fun, remoteRef);
-
     ref.current = fun;
   }
 
   return ref.current;
-}
+  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+} as <T extends Component>() => RefObject<T>;

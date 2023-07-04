@@ -16,7 +16,7 @@ export interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
   keyframes: Record<string, KeyframePoint[]>;
 }
-export class Keyframe implements IEntryExitAnimationBuilder {
+class InnerKeyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
   callbackV?: (finished: boolean) => void;
@@ -162,17 +162,17 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     return { initialValues: initialValues, keyframes: parsedKeyframes };
   }
 
-  duration(durationMs: number): Keyframe {
+  duration(durationMs: number): InnerKeyframe {
     this.durationV = durationMs;
     return this;
   }
 
-  delay(delayMs: number): Keyframe {
+  delay(delayMs: number): InnerKeyframe {
     this.delayV = delayMs;
     return this;
   }
 
-  withCallback(callback: (finsihed: boolean) => void): Keyframe {
+  withCallback(callback: (finsihed: boolean) => void): InnerKeyframe {
     this.callbackV = callback;
     return this;
   }
@@ -193,7 +193,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     const { keyframes, initialValues } = this.parseDefinitions();
     const callback = this.callbackV;
 
-    return (_targetValues) => {
+    return () => {
       'worklet';
       const animations: StyleProps = {};
 
@@ -260,3 +260,14 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     };
   };
 }
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+export declare class ReanimatedKeyframe {
+  constructor(definitions: Record<string, KeyframeProps>);
+  duration(durationMs: number): ReanimatedKeyframe;
+  delay(delayMs: number): ReanimatedKeyframe;
+  withCallback(callback: (finished: boolean) => void): ReanimatedKeyframe;
+}
+
+// TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
+export const Keyframe = InnerKeyframe as unknown as typeof ReanimatedKeyframe;

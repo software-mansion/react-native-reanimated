@@ -23,6 +23,8 @@ const functionArgsToWorkletize = new Map([
   ['withSpring', [2]],
   ['withDecay', [1]],
   ['withRepeat', [3]],
+  // scheduling functions
+  ['runOnUI', [0]],
 ]);
 
 const objectHooks = new Set([
@@ -55,6 +57,10 @@ export function processForCalleesWorklets(
     assert(!Array.isArray(workletToProcess), "'workletToProcess' is an array'");
     if (workletToProcess.isObjectExpression()) {
       processObjectHook(workletToProcess, state);
+      // useAnimatedScrollHandler can take a function as an argument instead of an ObjectExpression
+      // but useAnimatedGestureHandler can't
+    } else if (name === 'useAnimatedScrollHandler') {
+      processIfWorkletFunction(workletToProcess, state);
     }
   } else {
     const indices = functionArgsToWorkletize.get(name);
@@ -75,7 +81,6 @@ function processObjectHook(
       processWorkletObjectMethod(property, state);
     } else if (property.isObjectProperty()) {
       const value = property.get('value');
-      assert(!Array.isArray(value), "'value' is an array'");
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(

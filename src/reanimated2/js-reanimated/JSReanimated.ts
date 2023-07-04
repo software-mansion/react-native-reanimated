@@ -1,4 +1,5 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
+import { isChromeDebugger, isJest, isWeb } from '../PlatformChecker';
 import {
   SensorType,
   ShareableRef,
@@ -10,6 +11,7 @@ import { WebSensor } from './WebSensor';
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
+  platform?: Platform = undefined;
 
   constructor() {
     super(false);
@@ -47,9 +49,23 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   enableLayoutAnimations() {
-    console.warn(
-      '[Reanimated] Layout Animations are not supported on web yet.'
-    );
+    if (isWeb()) {
+      console.warn(
+        '[Reanimated] Layout Animations are not supported on web yet.'
+      );
+    } else if (isChromeDebugger()) {
+      console.warn(
+        '[Reanimated] Layout Animations are no-ops when using Chrome Debugger.'
+      );
+    } else if (isJest()) {
+      console.warn(
+        '[Reanimated] Layout Animations are no-ops when using Jest.'
+      );
+    } else {
+      console.warn(
+        '[Reanimated] Layout Animations are not supported on this configuration.'
+      );
+    }
   }
 
   configureLayoutAnimation() {
@@ -62,15 +78,38 @@ export default class JSReanimated extends NativeReanimated {
     iosReferenceFrame: number,
     eventHandler: (data: Value3D | ValueRotation) => void
   ): number {
+    if (this.platform === undefined) {
+      this.detectPlatform();
+    }
+
     if (!(this.getSensorName(sensorType) in window)) {
+      // https://w3c.github.io/sensors/#secure-context
+      console.warn(
+        '[Reanimated] Sensor is not available.' +
+          (isWeb() && location.protocol !== 'https:'
+            ? ' Make sure you use secure origin with `npx expo start --web --https`.'
+            : '') +
+          (this.platform === Platform.WEB_IOS
+            ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
+            : '')
+      );
       return -1;
+    }
+
+    if (this.platform === undefined) {
+      this.detectPlatform();
     }
 
     const sensor: WebSensor = this.initializeSensor(sensorType, interval);
     let callback;
     if (sensorType === SensorType.ROTATION) {
       callback = () => {
-        const [qw, qx, qy, qz] = sensor.quaternion;
+        let [qw, qx, qy, qz] = sensor.quaternion;
+
+        // Android sensors have a different coordinate system than iOS
+        if (this.platform === Platform.WEB_ANDROID) {
+          [qy, qz] = [qz, -qy];
+        }
 
         // reference: https://stackoverflow.com/questions/5782658/extracting-yaw-from-a-quaternion
         const yaw = Math.atan2(
@@ -95,7 +134,9 @@ export default class JSReanimated extends NativeReanimated {
       };
     } else {
       callback = () => {
-        const { x, y, z } = sensor;
+        let { x, y, z } = sensor;
+        [x, y, z] =
+          this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
         eventHandler({ x, y, z, interfaceOrientation: 0 });
       };
     }
@@ -115,9 +156,23 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   subscribeForKeyboardEvents(_: ShareableRef<number>): number {
-    console.warn(
-      '[Reanimated] useAnimatedKeyboard is not available on web yet.'
-    );
+    if (isWeb()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available on web yet.'
+      );
+    } else if (isChromeDebugger()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available when using Chrome Debugger.'
+      );
+    } else if (isJest()) {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available when using Jest.'
+      );
+    } else {
+      console.warn(
+        '[Reanimated] useAnimatedKeyboard is not available on this configuration.'
+      );
+    }
     return -1;
   }
 
@@ -157,5 +212,32 @@ export default class JSReanimated extends NativeReanimated {
       case SensorType.ROTATION:
         return 'AbsoluteOrientationSensor';
     }
+  }
+
+  detectPlatform() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (userAgent === undefined) {
+      this.platform = Platform.UNKNOWN;
+    } else if (/iPad|iPhone|iPod/.test(userAgent)) {
+      this.platform = Platform.WEB_IOS;
+    } else if (/android/i.test(userAgent)) {
+      this.platform = Platform.WEB_ANDROID;
+    } else {
+      this.platform = Platform.WEB;
+    }
+  }
+}
+
+enum Platform {
+  WEB_IOS = 'web iOS',
+  WEB_ANDROID = 'web Android',
+  WEB = 'web',
+  UNKNOWN = 'unknown',
+}
+
+declare global {
+  interface Navigator {
+    userAgent?: string;
+    vendor?: string;
   }
 }

@@ -1,8 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/NewestShadowNodesRegistry.h>
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
-#endif
-
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTEventEmitter.h>
@@ -17,7 +12,7 @@
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 
 #ifdef RCT_NEW_ARCH_ENABLED
-- (void)installReanimatedUIManagerBindingAfterReload;
+- (void)installReanimatedAfterReload;
 #endif
 
 @end

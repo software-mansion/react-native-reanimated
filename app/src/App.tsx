@@ -1,17 +1,36 @@
 import './types';
 
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Linking,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   GestureHandlerRootView,
   RectButton,
 } from 'react-native-gesture-handler';
 import {
+  HeaderBackButton,
+  HeaderBackButtonProps,
+} from '@react-navigation/elements';
+import {
   NativeStackNavigationProp,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
+import {
+  NavigationContainer,
+  NavigationProp,
+  PathConfigMap,
+  useNavigation,
+} from '@react-navigation/native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
-import { NavigationContainer } from '@react-navigation/native';
 import React from 'react';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
@@ -94,10 +113,76 @@ function ItemSeparator() {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const linking = {
+  prefixes: [],
+  config: {
+    screens: EXAMPLES_NAMES.reduce<PathConfigMap<RootStackParamList>>(
+      (acc, name) => {
+        acc[name] = name;
+        return acc;
+      },
+      { Home: '' }
+    ),
+  },
+};
+
+function BackButton(props: HeaderBackButtonProps) {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  return (
+    <HeaderBackButton {...props} onPress={() => navigation.navigate('Home')} />
+  );
+}
+
+// copied from https://reactnavigation.org/docs/state-persistence/
+const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
+
 export default function App() {
+  const [isReady, setIsReady] = React.useState(__DEV__ ? false : true);
+  const [initialState, setInitialState] = React.useState();
+
+  React.useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const initialUrl = await Linking.getInitialURL();
+
+        if (Platform.OS !== 'web' && initialUrl == null) {
+          // Only restore state if there's no deep link and we're not on web
+          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+          const state = savedStateString
+            ? JSON.parse(savedStateString)
+            : undefined;
+
+          if (state !== undefined) {
+            setInitialState(state);
+          }
+        }
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    if (!isReady) {
+      restoreState();
+    }
+  }, [isReady]);
+
+  if (!isReady) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={styles.container}>
-      <NavigationContainer>
+      <NavigationContainer
+        linking={linking}
+        initialState={initialState}
+        onStateChange={(state) =>
+          AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
+        }>
         <Stack.Navigator>
           <Stack.Screen
             name="Home"
@@ -105,6 +190,7 @@ export default function App() {
             options={{
               headerTitle: '🐎 Reanimated examples',
               title: 'Reanimated examples',
+              headerLeft: Platform.OS === 'web' ? () => null : undefined,
             }}
           />
           {EXAMPLES_NAMES.map((name) => (
@@ -115,6 +201,7 @@ export default function App() {
               options={{
                 headerTitle: EXAMPLES[name].title,
                 title: EXAMPLES[name].title,
+                headerLeft: Platform.OS === 'web' ? BackButton : undefined,
               }}
             />
           ))}
@@ -127,6 +214,10 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  center: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   list: {
     backgroundColor: '#EFEFF4',

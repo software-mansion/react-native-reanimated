@@ -15,11 +15,8 @@ typedef NS_ENUM(NSInteger, ViewState) {
 };
 
 typedef BOOL (^REAHasAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type);
-typedef void (^REAAnimationStartingBlock)(
-    NSNumber *_Nonnull tag,
-    LayoutAnimationType type,
-    NSDictionary *_Nonnull yogaValues,
-    NSNumber *_Nonnull depth);
+typedef void (
+    ^REAAnimationStartingBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull yogaValues);
 typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 typedef void (
     ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView);
@@ -53,15 +50,12 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after;
 - (void)onViewUpdate:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after;
 - (void)viewsDidLayout;
-- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
-                                          targetValues:(NSMutableDictionary *)targetValues;
+- (NSMutableDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
+                                                 targetValues:(NSMutableDictionary *)targetValues;
 - (UIView *)viewForTag:(NSNumber *)tag;
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type;
 - (void)clearAnimationConfigForTag:(NSNumber *)tag;
-- (void)startAnimationForTag:(NSNumber *)tag
-                        type:(LayoutAnimationType)type
-                  yogaValues:(NSDictionary *)yogaValues
-                       depth:(NSNumber *)depth;
+- (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues;
 
 @end
 

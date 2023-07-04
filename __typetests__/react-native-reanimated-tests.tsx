@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useCallback, forwardRef } from 'react';
+import React, { useState, useCallback, forwardRef, useRef } from 'react';
 import {
-  Text,
   StyleSheet,
   Button,
   View,
@@ -14,10 +13,10 @@ import {
 } from 'react-native';
 import {
   PanGestureHandler,
-  PinchGestureHandlerGestureEvent,
   PinchGestureHandler,
   PanGestureHandlerGestureEvent,
   FlatList,
+  PinchGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -41,16 +40,13 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
-  TimingAnimation,
-  SpringAnimation,
-  DecayAnimation,
-  DelayAnimation,
-  RepeatAnimation,
-  SequenceAnimation,
-  StyleLayoutAnimation,
-  Animation,
-  // eslint-disable-next-line import/no-unresolved
-} from 'react-native-reanimated';
+} from '../src';
+import {
+  dispatchCommand,
+  measure,
+  scrollTo,
+  setGestureState,
+} from '../src/reanimated2/NativeMethods';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {
@@ -116,7 +112,7 @@ function CreateAnimatedFlatListTest1() {
       if (Math.random()) {
         return null;
       }
-      return <View style={{ width: 100 }}></View>;
+      return <View style={{ width: 100 }} />;
     },
     []
   );
@@ -152,6 +148,40 @@ function CreateAnimatedFlatListTest2() {
         renderItem={({ item, index }) => <View key={item.id} />}
       />
     </>
+  );
+}
+
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest3(
+  contentContainerStyle: React.ComponentProps<
+    typeof AnimatedFlatList
+  >['contentContainerStyle']
+) {
+  const newContentContainerStyle = [contentContainerStyle, { flex: 1 }];
+
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={newContentContainerStyle}
+    />
+  );
+}
+
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest4(
+  contentContainerStyle: React.ComponentProps<typeof AnimatedFlatList>['style']
+) {
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={contentContainerStyle}
+    />
   );
 }
 
@@ -405,7 +435,7 @@ function WithTimingTest() {
 function WithTimingToValueAsColorTest() {
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(
+      backgroundColor: withTiming(
         'rgba(255,105,180,0)',
         {
           duration: 500,
@@ -455,7 +485,7 @@ function WithSpringTest() {
 function WithSpringToValueAsColorTest() {
   const style = useAnimatedStyle(() => {
     return {
-      width: withSpring('rgba(255,105,180,0)', {}, (_finished) => {}),
+      backgroundColor: withSpring('rgba(255,105,180,0)', {}, (_finished) => {}),
     };
   });
   return (
@@ -738,4 +768,44 @@ function testPartialAnimatedProps() {
   const test5 = (
     <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
   );
+
+  // NativeMethods:
+
+  // test measure
+  function testMeasure() {
+    const animatedRef = useAnimatedRef<Animated.View>();
+    measure(animatedRef);
+    const plainRef = useRef<Animated.View>();
+    // @ts-expect-error should only work for Animated refs?
+    measure(plainRef);
+  }
+
+  // test dispatchCommand
+  function testDispatchCommand() {
+    const animatedRef = useAnimatedRef<Animated.View>();
+    dispatchCommand(animatedRef, 'command', [1, 2, 3]);
+    const plainRef = useRef<Animated.View>();
+    // @ts-expect-error should only work for Animated refs?
+    dispatchCommand(plainRef, 'command', [1, 2, 3]);
+    // @ts-expect-error args are not optional
+    dispatchCommand(animatedRef, 'command');
+  }
+
+  // test scrollTo
+  function testScrollTo() {
+    const animatedRef = useAnimatedRef<Animated.ScrollView>();
+    scrollTo(animatedRef, 0, 0, true);
+    const plainRef = useRef<Animated.ScrollView>();
+    // @ts-expect-error should only work for Animated refs
+    scrollTo(plainRef, 0, 0, true);
+    const animatedViewRef = useAnimatedRef<Animated.View>();
+    // @ts-expect-error should only get a scrollable object?
+    scrollTo(animatedViewRef, 0, 0, true);
+  }
+
+  // test setGestureState
+  function testSetGestureState() {
+    setGestureState(1, 2);
+    // not sure what more I can test here
+  }
 }

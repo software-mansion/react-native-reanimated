@@ -13,7 +13,7 @@ First, make sure that your tests run with Node version 16 or newer.
 Add the following line to your `jest-setup.js` file:
 
 ```js
-require('react-native-reanimated/lib/reanimated2/jestUtils').setUpTests();
+require('react-native-reanimated').setUpTests();
 ```
 
 `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps.
@@ -93,7 +93,7 @@ test('stop in the middle of animation', () => {
   expect(view).toHaveAnimatedStyle(style);
 
   fireEvent.press(button);
-  jest.advanceAnimationByTime(250); // if whole animation duration is a 500ms
+  jest.advanceTimersByTime(250); // if whole animation duration is a 500ms
   style.width = 50; // value of component width after 250ms of animation
   expect(view).toHaveAnimatedStyle(style);
 });

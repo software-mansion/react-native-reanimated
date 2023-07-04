@@ -21,12 +21,10 @@ namespace reanimated {
 #ifdef RCT_NEW_ARCH_ENABLED
 
 using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Value &props)>;
-using UpdatePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue,
-    const jsi::Value &props)>;
-using RemoveShadowNodeFromRegistryFunction =
+    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
+using RemoveFromPropsRegistryFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &tag)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,
@@ -38,11 +36,8 @@ using MeasureFunction = std::function<
 
 #else
 
-using UpdatePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    jsi::Object object)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
@@ -68,6 +63,7 @@ using ConfigurePropsFunction = std::function<void(
 using KeyboardEventSubscribeFunction =
     std::function<int(std::function<void(int, int)>, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
+using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
@@ -87,6 +83,7 @@ struct PlatformDepMethodsHolder {
   SetGestureStateFunction setGestureStateFunction;
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
+  MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
 };
 
 } // namespace reanimated

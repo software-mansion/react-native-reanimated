@@ -134,7 +134,6 @@ export default function IPodExample(): React.ReactElement {
         ref={animatedRef}
         horizontal={true}
         style={styles.scroll}
-        scrollEventThrottle={1}
         showsHorizontalScrollIndicator={false}
         onScroll={scrollHandler}>
         {data.map(({ artist, song }, i) => {

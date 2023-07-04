@@ -203,4 +203,11 @@ public abstract class NativeProxyCommon {
 
     animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
   }
+
+  @DoNotStrip
+  void maybeFlushUIUpdatesQueue() {
+    if (!mNodesManager.isAnimationRunning()) {
+      mNodesManager.performOperations();
+    }
+  }
 }

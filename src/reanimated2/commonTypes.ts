@@ -37,11 +37,31 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export interface AnimatedStyle
-  extends Record<string, Animation<AnimationObject>> {
+export interface AnimatedStyle extends Record<string, AnimationObject> {
   [key: string]: any;
-  transform?: Array<Record<string, Animation<AnimationObject>>>;
+  transform?: Array<
+    | Record<'matrix', number[] | AnimationObject>
+    | Partial<
+        Record<
+          | 'perspective'
+          | 'scale'
+          | 'scaleX'
+          | 'scaleY'
+          | 'translateX'
+          | 'translateY',
+          number | AnimationObject
+        >
+      >
+    | Partial<
+        Record<
+          'rotate' | 'rotateX' | 'rotateY' | 'rotateZ' | 'skewX' | 'skewY',
+          string | AnimationObject
+        >
+      >
+    | Record<string, AnimationObject>
+  >;
 }
+
 export interface SharedValue<T> {
   value: T;
   addListener: (listenerID: number, listener: (value: T) => void) => void;
@@ -111,11 +131,15 @@ export interface AdapterWorkletFunction extends WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;
 }
 
-export type AnimatableValue = number | string | Array<number>;
+type Animatable = number | string | Array<number>;
+
+export type AnimatableValueObject = { [key: string]: Animatable };
+
+export type AnimatableValue = Animatable | AnimatableValueObject;
 
 export interface AnimationObject {
   [key: string]: any;
-  callback: AnimationCallback;
+  callback?: AnimationCallback;
   current?: AnimatableValue;
   toValue?: AnimationObject['current'];
   startValue?: AnimationObject['current'];
@@ -138,9 +162,9 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
   onFrame: (animation: T, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: T,
-    current: T extends NumericAnimation ? number : AnimatableValue,
+    current: AnimatableValue,
     timestamp: Timestamp,
-    previousAnimation: T
+    previousAnimation: Animation<any> | null | T
   ) => void;
 }
 
@@ -158,6 +182,19 @@ export enum IOSReferenceFrame {
   XTrueNorthZVertical,
   Auto,
 }
+
+export type SensorConfig = {
+  interval: number | 'auto';
+  adjustToInterfaceOrientation: boolean;
+  iosReferenceFrame: IOSReferenceFrame;
+};
+
+export type AnimatedSensor<T extends Value3D | ValueRotation> = {
+  sensor: SharedValue<T>;
+  unregister: () => void;
+  isAvailable: boolean;
+  config: SensorConfig;
+};
 
 export interface NumericAnimation {
   current?: number;

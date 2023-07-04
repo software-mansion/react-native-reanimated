@@ -64,7 +64,7 @@ public class ReanimatedKeyboardEventListener {
           }
           int paddingTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
           View content =
-              rootView.getRootView().findViewById(com.swmansion.reanimated.R.id.action_bar_root);
+              rootView.getRootView().findViewById(androidx.appcompat.R.id.action_bar_root);
 
           FrameLayout.LayoutParams params =
               new FrameLayout.LayoutParams(
@@ -145,11 +145,11 @@ public class ReanimatedKeyboardEventListener {
 
   private void bringBackWindowInsets() {
     WindowCompat.setDecorFitsSystemWindows(
-        reactContext.get().getCurrentActivity().getWindow(), true);
+        reactContext.get().getCurrentActivity().getWindow(), !isStatusBarTranslucent);
     ViewCompat.setOnApplyWindowInsetsListener(getRootView(), null);
     ViewCompat.setWindowInsetsAnimationCallback(getRootView(), null);
     View content =
-        getRootView().getRootView().findViewById(com.swmansion.reanimated.R.id.action_bar_root);
+        getRootView().getRootView().findViewById(androidx.appcompat.R.id.action_bar_root);
 
     FrameLayout.LayoutParams params =
         new FrameLayout.LayoutParams(

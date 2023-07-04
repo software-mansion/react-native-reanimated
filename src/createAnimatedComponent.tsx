@@ -1,4 +1,11 @@
-import React, { Component, ComponentType, MutableRefObject, Ref } from 'react';
+import React, {
+  Component,
+  ComponentClass,
+  ComponentType,
+  FunctionComponent,
+  MutableRefObject,
+  Ref,
+} from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
@@ -17,6 +24,7 @@ import {
   isJest,
   isChromeDebugger,
   shouldBeUseWeb,
+  isWeb,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
@@ -24,6 +32,7 @@ import {
   DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  Keyframe,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
@@ -41,6 +50,7 @@ import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
+import type { AnimateProps } from './reanimated2/helperTypes';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -232,6 +242,7 @@ type Options<P> = {
 interface ComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => ComponentRef;
+  getAnimatableRef?: () => ComponentRef;
 }
 
 export interface InitialComponentProps extends Record<string, unknown> {
@@ -239,15 +250,24 @@ export interface InitialComponentProps extends Record<string, unknown> {
   collapsable?: boolean;
 }
 
+export default function createAnimatedComponent<P extends object>(
+  component: FunctionComponent<P>,
+  options?: Options<P>
+): FunctionComponent<AnimateProps<P>>;
+
+export default function createAnimatedComponent<P extends object>(
+  component: ComponentClass<P>,
+  options?: Options<P>
+): ComponentClass<AnimateProps<P>>;
+
 export default function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
-): ComponentType<AnimatedComponentProps<InitialComponentProps>> {
+): any {
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
-    '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
   );
 
   class AnimatedComponent extends React.Component<
@@ -294,7 +314,7 @@ export default function createAnimatedComponent(
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+      let viewTag = null; // We set it only if needed
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -302,6 +322,9 @@ export default function createAnimatedComponent(
           has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
+          if (viewTag === null) {
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
           prop.current.registerForEvents(viewTag as number, key);
         }
       }
@@ -320,7 +343,7 @@ export default function createAnimatedComponent(
     }
 
     _detachStyles() {
-      if (Platform.OS === 'web' && this._styles !== null) {
+      if (isWeb() && this._styles !== null) {
         for (const style of this._styles) {
           if (style?.viewsRef) {
             style.viewsRef.remove(this);
@@ -335,9 +358,9 @@ export default function createAnimatedComponent(
         }
         if (global._IS_FABRIC) {
           const viewTag = this._viewTag;
+          // TODO: batching
           runOnUI(() => {
-            'worklet';
-            _removeShadowNodeFromRegistry(viewTag);
+            _removeFromPropsRegistry!(viewTag);
           })();
         }
       }
@@ -346,19 +369,6 @@ export default function createAnimatedComponent(
     _reattachNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      let viewTag: number | undefined;
-
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (
-          has('current', prop) &&
-          prop.current instanceof WorkletEventHandler
-        ) {
-          if (viewTag === undefined) {
-            viewTag = prop.current.viewTag;
-          }
-        }
-      }
       for (const key in prevProps) {
         const prop = this.props[key];
         if (
@@ -370,6 +380,8 @@ export default function createAnimatedComponent(
         }
       }
 
+      let viewTag = null;
+
       for (const key in this.props) {
         const prop = this.props[key];
         if (
@@ -377,8 +389,11 @@ export default function createAnimatedComponent(
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
         ) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          prop.current.registerForEvents(viewTag!, key);
+          if (viewTag === null) {
+            const node = this._getEventViewRef();
+            viewTag = findNodeHandle(options?.setNativeProps ? this : node);
+          }
+          prop.current.registerForEvents(viewTag as number, key);
           prop.current.reattachNeeded = false;
         }
       }
@@ -399,14 +414,19 @@ export default function createAnimatedComponent(
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       let viewConfig;
-      if (Platform.OS === 'web') {
-        viewTag = findNodeHandle(this);
+      // Component can specify ref which should be animated when animated version of the component is created.
+      // Otherwise, we animate the component itself.
+      const component = this._component?.getAnimatableRef
+        ? this._component.getAnimatableRef()
+        : this;
+      if (isWeb()) {
+        viewTag = findNodeHandle(component);
         viewName = null;
         shadowNodeWrapper = null;
         viewConfig = null;
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
-        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
         if (!hostInstance) {
           throw new Error(
             'Cannot find host instance for this component. Maybe it renders nothing?'

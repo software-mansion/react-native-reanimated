@@ -77,9 +77,11 @@ void RuntimeDecorator::decorateRuntime(
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
     const UpdatePropsFunction updateProps,
+#ifdef RCT_NEW_ARCH_ENABLED
+    const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
+#endif
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
-    const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
     const DispatchCommandFunction dispatchCommand,
 #else
     const ScrollToFunction scrollTo,
@@ -91,19 +93,20 @@ void RuntimeDecorator::decorateUIRuntime(
     const TimeProviderFunction getCurrentTime,
     const SetGestureStateFunction setGestureState,
     const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
-    const EndLayoutAnimationFunction endLayoutAnimationFunction) {
+    const EndLayoutAnimationFunction endLayoutAnimationFunction,
+    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
 #ifdef RCT_NEW_ARCH_ENABLED
   jsi_utils::installJsiFunction(rt, "_updatePropsFabric", updateProps);
   jsi_utils::installJsiFunction(
-      rt, "_removeShadowNodeFromRegistry", removeShadowNodeFromRegistry);
-  jsi_utils::installJsiFunction(rt, "_dispatchCommand", dispatchCommand);
-  jsi_utils::installJsiFunction(rt, "_measure", measure);
+      rt, "_removeFromPropsRegistry", removeFromPropsRegistry);
+  jsi_utils::installJsiFunction(rt, "_dispatchCommandFabric", dispatchCommand);
+  jsi_utils::installJsiFunction(rt, "_measureFabric", measure);
 #else
   jsi_utils::installJsiFunction(rt, "_updatePropsPaper", updateProps);
-  jsi_utils::installJsiFunction(rt, "_scrollTo", scrollTo);
+  jsi_utils::installJsiFunction(rt, "_scrollToPaper", scrollTo);
 
   std::function<jsi::Value(jsi::Runtime &, int)> _measure =
       [measure](jsi::Runtime &rt, int viewTag) -> jsi::Value {
@@ -115,7 +118,7 @@ void RuntimeDecorator::decorateUIRuntime(
     return resultObject;
   };
 
-  jsi_utils::installJsiFunction(rt, "_measure", _measure);
+  jsi_utils::installJsiFunction(rt, "_measurePaper", _measure);
 #endif // RCT_NEW_ARCH_ENABLED
 
   jsi_utils::installJsiFunction(rt, "requestAnimationFrame", requestFrame);
@@ -146,6 +149,8 @@ void RuntimeDecorator::decorateUIRuntime(
       rt, "_notifyAboutEnd", endLayoutAnimationFunction);
 
   jsi_utils::installJsiFunction(rt, "_setGestureState", setGestureState);
+  jsi_utils::installJsiFunction(
+      rt, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueueFunction);
 }
 
 } // namespace reanimated

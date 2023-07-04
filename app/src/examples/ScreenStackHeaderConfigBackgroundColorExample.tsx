@@ -15,20 +15,20 @@ import {
   ScreenStack,
   ScreenStackHeaderConfig,
 } from 'react-native-screens';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
-  // @ts-ignore it works in FabricExample
-  ScreenStackHeaderConfig
+  Platform.OS === 'web'
+    ? React.forwardRef(ScreenStackHeaderConfig)
+    : ScreenStackHeaderConfig
 );
+Animated.addWhitelistedNativeProps({ title: true });
 
 export default function ScreenStackHeaderConfigBackgroundColorExample() {
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
-
-  // useJSThreadKiller();
 
   const gesture = Gesture.Pan()
     .minDistance(0)

@@ -38,9 +38,11 @@ class RuntimeDecorator {
   static void decorateUIRuntime(
       jsi::Runtime &rt,
       const UpdatePropsFunction updateProps,
+#ifdef RCT_NEW_ARCH_ENABLED
+      const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
+#endif
       const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
-      const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
       const DispatchCommandFunction dispatchCommand,
 #else
       const ScrollToFunction scrollTo,
@@ -52,7 +54,8 @@ class RuntimeDecorator {
       const TimeProviderFunction getCurrentTime,
       const SetGestureStateFunction setGestureState,
       const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
-      const EndLayoutAnimationFunction endLayoutAnimationFunction);
+      const EndLayoutAnimationFunction endLayoutAnimationFunction,
+      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction);
 
   /**
    Returns true if the given Runtime is the Reanimated UI-Thread Runtime.
