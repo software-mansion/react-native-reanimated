@@ -4,7 +4,7 @@ import {
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { StyleSheet, TouchableNativeFeedback, View } from 'react-native';
+import { StyleSheet, TouchableNativeFeedback, View, Text } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 const firstPhoto = require('./assets/doge.jpg');
@@ -20,8 +20,8 @@ interface DogeProps {
 function Doge({ orientation, firstSharedTag, secondSharedTag }: DogeProps) {
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      width: 200,
-      height: 200,
+      width: 150,
+      height: 150,
       transform: [{ rotate: `${orientation}deg` }],
     };
   });
@@ -56,13 +56,17 @@ function DogeScreen({
           onPressOut={() => {
             navigation.navigate('Screen1');
           }}>
-          <Animated.View style={[styles.quarterScreen, styles.topLeft]} />
+          <View style={[styles.quarterScreen, styles.topLeft]}>
+            <Text style={styles.textStyle}>1</Text>
+          </View>
         </TouchableNativeFeedback>
         <TouchableNativeFeedback
           onPressOut={() => {
             navigation.navigate('Screen2');
           }}>
-          <Animated.View style={[styles.quarterScreen, styles.topRight]} />
+          <View style={[styles.quarterScreen, styles.topRight]}>
+            <Text style={styles.textStyle}>2</Text>
+          </View>
         </TouchableNativeFeedback>
       </View>
 
@@ -71,13 +75,17 @@ function DogeScreen({
           onPressOut={() => {
             navigation.navigate('Screen3');
           }}>
-          <Animated.View style={[styles.quarterScreen, styles.bottomLeft]} />
+          <View style={[styles.quarterScreen, styles.bottomLeft]}>
+            <Text style={styles.textStyle}>3</Text>
+          </View>
         </TouchableNativeFeedback>
         <TouchableNativeFeedback
           onPressOut={() => {
             navigation.navigate('Screen4');
           }}>
-          <Animated.View style={[styles.quarterScreen, styles.bottomRight]} />
+          <View style={[styles.quarterScreen, styles.bottomRight]}>
+            <Text style={styles.textStyle}>4</Text>
+          </View>
         </TouchableNativeFeedback>
       </View>
       <Doge
@@ -181,6 +189,8 @@ const styles = StyleSheet.create({
   },
   quarterScreen: {
     flex: 0.5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   topLeft: {
     backgroundColor: 'navy',
@@ -196,5 +206,12 @@ const styles = StyleSheet.create({
   },
   dogeContainer: {
     position: 'absolute',
+  },
+  textStyle: {
+    color: 'white',
+    fontSize: 48,
+    fontWeight: 'bold',
+    shadowColor: 'black',
+    shadowRadius: 2,
   },
 });
