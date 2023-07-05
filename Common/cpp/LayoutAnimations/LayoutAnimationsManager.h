@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ErrorHandler.h"
+#include "JSLogger.h"
 #include "LayoutAnimationType.h"
 #include "Shareables.h"
 
+#include <boost/functional/hash.hpp>
 #include <jsi/jsi.h>
 #include <stdio.h>
 #include <functional>
@@ -11,6 +13,8 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -38,10 +42,23 @@ class LayoutAnimationsManager {
       bool cancelled /* = true */,
       bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
+  bool hasDuplicateSharedTag(int viewTag, int screenTag);
+  void initializeJSLogger(const std::shared_ptr<JSLogger> &jsLogger);
 
  private:
+  std::shared_ptr<JSLogger> jsLogger;
+
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       LayoutAnimationType type);
+
+  // This set's function is to detect duplicate sharedTags on a single screen
+  //     it contains pairs(reactScreenTag, sharedTag)
+  std::unordered_set<
+      std::pair<int, std::string>,
+      boost::hash<std::pair<int, std::string>>>
+      screenSharedTagSet;
+  // And this map is to remove collected pairs on SET removal
+  std::unordered_map<int, std::pair<int, std::string>> viewsScreenSharedTagMap;
 
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
@@ -52,7 +69,7 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::string> viewTagToSharedTag_;
   mutable std::mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
-                        // `layoutAnimations_` and `viewSharedValues_`.
+  // `layoutAnimations_` and `viewSharedValues_`.
 };
 
 } // namespace reanimated

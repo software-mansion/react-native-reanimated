@@ -175,6 +175,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::function<void(double)> onRenderCallback;
   AnimatedSensorModule animatedSensorModule;
   ConfigurePropsFunction configurePropsPlatformFunction;
+  std::shared_ptr<JSLogger> jsLogger;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;

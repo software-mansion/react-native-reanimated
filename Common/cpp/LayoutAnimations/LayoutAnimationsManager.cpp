@@ -1,5 +1,6 @@
 #include "LayoutAnimationsManager.h"
 #include "CollectionUtils.h"
+#include "JSLogger.h"
 #include "Shareables.h"
 
 #include <utility>
@@ -31,6 +32,9 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
+  auto pair = viewsScreenSharedTagMap[tag];
+  screenSharedTagSet.erase(pair);
+  viewsScreenSharedTagMap.erase(tag);
 
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
@@ -110,6 +114,28 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
     return *std::prev(position);
   }
   return -1;
+}
+
+bool LayoutAnimationsManager::hasDuplicateSharedTag(
+    int viewTag,
+    int screenTag) {
+  std::string sharedTag = viewTagToSharedTag_[viewTag];
+  auto pair = std::pair(screenTag, sharedTag);
+  bool hasDuplicate = screenSharedTagSet.count(pair);
+  if (hasDuplicate) {
+    jsLogger->warnOnJs(
+        "Reanimated: Found duplicate shared tag on the same screen.\nOffendening tag is " +
+        sharedTag);
+    return true;
+  }
+  viewsScreenSharedTagMap[viewTag] = pair;
+  screenSharedTagSet.insert(pair);
+  return false;
+}
+
+void LayoutAnimationsManager::initializeJSLogger(
+    const std::shared_ptr<JSLogger> &jsLogger) {
+  this->jsLogger = jsLogger;
 }
 
 std::unordered_map<int, std::shared_ptr<Shareable>>
