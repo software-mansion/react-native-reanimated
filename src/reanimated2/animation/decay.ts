@@ -38,6 +38,8 @@ export interface InnerDecayAnimation
   current: number;
 }
 
+const IS_WEB = isWeb();
+
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDecayType = (
   userConfig: DecayConfig,
@@ -49,7 +51,6 @@ export const withDecay = function (
   callback?: AnimationCallback
 ): Animation<DecayAnimation> {
   'worklet';
-  const IS_WEB = isWeb();
 
   return defineAnimation<DecayAnimation>(0, () => {
     'worklet';

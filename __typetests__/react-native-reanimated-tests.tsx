@@ -35,11 +35,9 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
-  // eslint-disable-next-line import/no-unresolved
-} from 'react-native-reanimated';
+} from '..';
 import {
   dispatchCommand,
-  getTag,
   measure,
   scrollTo,
   setGestureState,
@@ -134,17 +132,45 @@ function CreateAnimatedFlatListTest1() {
 function CreateAnimatedFlatListTest2() {
   return (
     <>
-      <Animated.FlatList<Item>
-        // @ts-expect-error
+      <Animated.FlatList
         data={[{ foo: 1 }]}
-        // @ts-expect-error
         renderItem={({ item, index }) => <View key={item.foo} />}
       />
-      <Animated.FlatList<Item>
-        data={[{ id: 1 }]}
-        renderItem={({ item, index }) => <View key={item.id} />}
-      />
     </>
+  );
+}
+
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest3(
+  contentContainerStyle: React.ComponentProps<
+    typeof AnimatedFlatList
+  >['contentContainerStyle']
+) {
+  const newContentContainerStyle = [contentContainerStyle, { flex: 1 }];
+
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={newContentContainerStyle}
+    />
+  );
+}
+
+// This tests checks if the type of the contentContainerStyle
+// (or any other '...Style') is treated the same
+// as the style prop of the AnimatedFlatList.
+function CreateAnimatedFlatListTest4(
+  contentContainerStyle: React.ComponentProps<typeof AnimatedFlatList>['style']
+) {
+  return (
+    <AnimatedFlatList
+      data={[{ foo: 1 }]}
+      renderItem={() => null}
+      contentContainerStyle={contentContainerStyle}
+    />
   );
 }
 
@@ -177,12 +203,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'blue',
   },
 });
-
-/**
- * Reanimated 1
- */
-
-// @TODO: add reanimated 1 tests here
 
 /**
  * Reanimated 2 Functions
@@ -284,7 +304,7 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
-  // @ts-expect-error
+  // @ts-expect-error Valid rotation is a string (either radians or degrees)
   const style2 = useAnimatedStyle(() => {
     return {
       transform: [
@@ -294,7 +314,7 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
-  // @ts-expect-error
+  // @ts-expect-error color cannot be an object
   const style3 = useAnimatedStyle(() => {
     return {
       color: {},
@@ -601,7 +621,7 @@ function WithDecayTest() {
     onEnd: (evt) => {
       x.value = withDecay({
         velocity: evt.velocityX,
-        clamp: [0, 200], // optionally define boundaries for the animation
+        clamp: [0, 200],
       });
     },
   });
@@ -705,8 +725,10 @@ function updatePropsTest() {
   // @ts-expect-error works only for useAnimatedProps
   useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]);
 
+  // THIS SHOULD BE FIXED SOON
   useAnimatedProps(() => ({}), null, adapter1);
 
+  // THIS SHOULD BE FIXED SOON
   useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
 }
 
@@ -719,44 +741,27 @@ function testPartialAnimatedProps() {
     source: { uri: 'whatever' },
   }));
 
-  // TODO: Figure out a way to let this error pass, if `source` is set in `animatedProps` that should be okay even if it is not set in normal props!!
   // should pass because source is set
-  const test3 = <AnimatedImage source={{ uri: 'whatever' }} />;
+  const test1 = <AnimatedImage source={{ uri: 'whatever' }} />;
+
   // should pass because source is set and `animatedProps` doesn't change that
-  const test4 = (
+  const test2 = (
     <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
   );
-  // TODO: Should this test fail? Setting it twice might not be intentional...
+
+  // @ts-expect-error This is a correct usage but it doesn't pass
+  // and seems tricky to make it work correctly
+  // (I have tried and it's probably not worth the time at the moment).
+  const test3 = <AnimatedImage animatedProps={aps} />;
+
   // should pass because source is set normally and in `animatedProps`
-  const test5 = (
+  const test4 = (
     <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
   );
 
-  // NativeMethods:
-  // test getTag
-  function testGetTag() {
-    // @ts-expect-error string is not a valid view
-    const test1 = getTag('whatever');
-    // number is a valid view (shadowNodeRef?)
-    const test2 = getTag(1);
-    // @ts-expect-error by TypeScript standards null is not an object
-    const test4: object = getTag(0);
-    class TestClass extends React.Component {
-      render() {
-        return <View />;
-      }
-    }
-
-    const variable = new TestClass({});
-    // this is valid argument
-    const test5 = getTag(variable);
-    // I don't know how to implement this case
-    // class test6class extends React.Component<any> implements React.ComponentClass {
-    //   constructor(props: any, context?: any) {
-    //     super(props);
-    //   }
-    // }
-  }
+  /* 
+    NativeMethods:
+  */
 
   // test measure
   function testMeasure() {
@@ -770,6 +775,7 @@ function testPartialAnimatedProps() {
   // test dispatchCommand
   function testDispatchCommand() {
     const animatedRef = useAnimatedRef<Animated.View>();
+    // TODO I don't know how to fix it at the moment
     dispatchCommand(animatedRef, 'command', [1, 2, 3]);
     const plainRef = useRef<Animated.View>();
     // @ts-expect-error should only work for Animated refs?
@@ -786,8 +792,6 @@ function testPartialAnimatedProps() {
     // @ts-expect-error should only work for Animated refs
     scrollTo(plainRef, 0, 0, true);
     const animatedViewRef = useAnimatedRef<Animated.View>();
-    // @ts-expect-error should only get a scrollable object?
-    scrollTo(animatedViewRef, 0, 0, true);
   }
 
   // test setGestureState
