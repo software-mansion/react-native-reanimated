@@ -131,7 +131,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self endAnimationsRecursive:view];
     [view removeFromSuperview];
   }
-  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag]];
+  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag] removeView:removeView];
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
