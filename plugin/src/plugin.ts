@@ -1,13 +1,13 @@
-import { PluginItem, NodePath } from '@babel/core';
+import type { PluginItem, NodePath } from '@babel/core';
 import { globals } from './commonObjects';
-import {
+import type {
   CallExpression,
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
 } from '@babel/types';
 import { processForCalleesWorklets } from './processForCalleesWorklets';
-import { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass } from './types';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processIfGestureHandlerEventCallbackFunctionNode } from './processIfGestureHandlerEventCallbackFunctionNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';

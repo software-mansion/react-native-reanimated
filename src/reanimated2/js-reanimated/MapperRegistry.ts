@@ -1,5 +1,5 @@
-import { JSReanimated } from './commonTypes';
-import Mapper from './Mapper';
+import type { JSReanimated } from './commonTypes';
+import type Mapper from './Mapper';
 
 export default class MapperRegistry<T> {
   sortedMappers: Mapper<T>[] = [];
