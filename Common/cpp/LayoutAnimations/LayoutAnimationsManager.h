@@ -45,8 +45,10 @@ class LayoutAnimationsManager {
       bool cancelled /* = true */,
       bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
+#ifdef DEBUG
   bool hasDuplicateSharedTag(int viewTag, int screenTag);
   void initializeJSLogger(const std::shared_ptr<JSLogger> &jsLogger);
+#endif
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
