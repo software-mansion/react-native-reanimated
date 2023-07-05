@@ -1,4 +1,4 @@
-import { Animation, AnimatableValue, Timestamp } from '../commonTypes';
+import type { Animation, AnimatableValue, Timestamp } from '../commonTypes';
 
 export type SpringConfig = {
   stiffness?: number;

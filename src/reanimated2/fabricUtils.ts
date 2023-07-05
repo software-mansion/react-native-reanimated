@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 
-import { ShadowNodeWrapper } from './commonTypes';
+import type { ShadowNodeWrapper } from './commonTypes';
 
 interface HostInstance {
   _internalInstanceHandle: {

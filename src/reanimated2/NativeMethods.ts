@@ -1,12 +1,12 @@
-import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
+import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
-import { AnimatedRef } from './hook/commonTypes';
-import { Component, RefObject } from 'react';
+import type { AnimatedRef } from './hook/commonTypes';
+import type { Component, RefObject } from 'react';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
