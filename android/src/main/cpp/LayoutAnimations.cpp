@@ -51,6 +51,13 @@ void LayoutAnimations::setHasAnimationBlock(
   this->hasAnimationBlock_ = hasAnimationBlock;
 }
 
+#ifdef DEBUG
+void LayoutAnimations::setHasDuplicateSharedTag(
+    HasDuplicateSharedTag hasDuplicateSharedTag) {
+  this->hasDuplicateSharedTag_ = hasDuplicateSharedTag;
+}
+#endif
+
 bool LayoutAnimations::hasAnimationForTag(int tag, int type) {
   return hasAnimationBlock_(tag, type);
 }

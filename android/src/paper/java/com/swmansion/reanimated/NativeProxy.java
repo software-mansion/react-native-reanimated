@@ -114,6 +114,14 @@ public class NativeProxy extends NativeProxyCommon {
                 }
                 return -1;
             }
+
+            public boolean hasDuplicateSharedTag(int viewTag, int screenTag) {
+                LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+                if (layoutAnimations != null) {
+                    return layoutAnimations.hasDuplicateSharedTag(viewTag, screenTag);
+                }
+                return false;
+            }
         };
     }
 }

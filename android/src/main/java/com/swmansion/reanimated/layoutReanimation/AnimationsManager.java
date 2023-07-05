@@ -178,6 +178,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (hasAnimationForTag(view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       mSharedTransitionManager.notifyAboutNewView(view);
     }
+    int viewTag = view.getId();
+
+    ViewParent parent = view.getParent();
+    while (parent != null) {
+      if (parent.getClass().getSimpleName().equals("Screen")) {
+        break;
+      }
+      parent = (ViewParent) parent.getParent();
+    }
+
+    int screenTag = ((View) parent).getId();
+    mNativeMethodsHolder.hasDuplicateSharedTag(viewTag, screenTag);
   }
 
   public void progressLayoutAnimation(
