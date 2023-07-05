@@ -8,10 +8,8 @@ import android.view.ViewParent;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
-import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
-import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.swmansion.reanimated.Utils;
 import java.util.ArrayList;
@@ -471,7 +469,15 @@ public class SharedTransitionManager {
       if (mTransitionContainer != null) {
         ViewParent transitionContainerParent = mTransitionContainer.getParent();
         if (transitionContainerParent != null) {
-          ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
+          mTransitionContainer.setVisibility(View.INVISIBLE);
+          // To prevent modifications of the views tree while Android is iterating
+          // over them, we can schedule the modification for the next frame. This
+          // approach is safe. The transparent transition container will remain on
+          // the screen for one additional frame before being removed.
+          mTransitionContainer.post(() -> {
+            ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
+            mTransitionContainer.setVisibility(View.VISIBLE);
+          });
         }
       }
       mSharedElements.clear();

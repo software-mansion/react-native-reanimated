@@ -8,7 +8,7 @@ function createProgressTransitionManager() {
   const currentTransition = new Set<number>();
   const toRemove = new Set<number>();
 
-  return {
+  const progressTransitionManager = {
     addProgressAnimation: (
       viewTag: number,
       progressAnimation: ProgressAnimation
@@ -26,6 +26,8 @@ function createProgressTransitionManager() {
     onTransitionStart: (viewTag: number, snapshot: any) => {
       snapshots.set(viewTag, snapshot);
       currentTransition.add(viewTag);
+      // set initial style for re-parented components
+      progressTransitionManager.frame(0);
     },
     frame: (progress: number) => {
       for (const viewTag of currentTransition) {
@@ -34,9 +36,10 @@ function createProgressTransitionManager() {
         progressAnimation!(viewTag, snapshot, progress);
       }
     },
-    onTransitionEnd: () => {
+    onTransitionEnd: (removeViews = false) => {
       for (const viewTag of currentTransition) {
-        _notifyAboutEnd(viewTag, false, false);
+        console.log(viewTag)
+        _notifyAboutEnd(viewTag, false, removeViews);
       }
       currentTransition.clear();
       snapshots.clear();
@@ -48,6 +51,7 @@ function createProgressTransitionManager() {
       }
     },
   };
+  return progressTransitionManager;
 }
 
 runOnUIImmediately(() => {

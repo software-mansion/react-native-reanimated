@@ -51,9 +51,12 @@ export class SharedElementTransition {
   private _progressAnimation?: ProgressAnimation = undefined;
   private _defaultTransitionType?: SharedTransitionType = undefined;
   private static _sharedElementCount = 0;
-  private static _eventHandlerIds = {
+  private static _eventHandler = {
+    isRegistered: false,
     onTransitionProgress: -1,
-    onTransitionEnd: -1,
+    onAppear: -1,
+    onDisappear: -1,
+    onSwipeDismiss: -1,
   };
 
   public animation(
@@ -118,46 +121,86 @@ export class SharedElementTransition {
         progressAnimation
       );
     })();
-
-    SharedElementTransition._sharedElementCount++;
-    const eventHandlerIds = SharedElementTransition._eventHandlerIds;
-    if (eventHandlerIds.onTransitionEnd < 0) {
-      const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
-      const progressHandlerId = registerEventHandler(
-        eventPrefix + 'TransitionProgress',
-        (event: TransitionProgressEvent) => {
-          'worklet';
-          if (event.closing === 1) {
-            global.ProgressTransitionManager.frame(event.progress);
-          }
-        }
-      );
-      eventHandlerIds.onTransitionEnd = progressHandlerId;
-
-      const finishedHandlerId = registerEventHandler(
-        eventPrefix + 'FinishTransitioning',
-        () => {
-          'worklet';
-          global.ProgressTransitionManager.onTransitionEnd();
-        }
-      );
-      eventHandlerIds.onTransitionEnd = finishedHandlerId;
-    }
+    this.registerEventHandlers();
   }
 
   public unregisterTransition(viewTag: number): void {
     SharedElementTransition._sharedElementCount--;
     if (SharedElementTransition._sharedElementCount === 0) {
-      const eventHandlerIds = SharedElementTransition._eventHandlerIds;
-      unregisterEventHandler(eventHandlerIds.onTransitionProgress);
-      eventHandlerIds.onTransitionProgress = -1;
-      unregisterEventHandler(eventHandlerIds.onTransitionEnd);
-      eventHandlerIds.onTransitionEnd = -1;
+      const eventHandler = SharedElementTransition._eventHandler;
+      eventHandler.isRegistered = false;
+      if (eventHandler.onTransitionProgress !== -1) {
+        unregisterEventHandler(eventHandler.onTransitionProgress);
+        eventHandler.onTransitionProgress = -1;
+      }
+      if (eventHandler.onAppear !== -1) {
+        unregisterEventHandler(eventHandler.onAppear);
+        eventHandler.onAppear = -1;
+      }
+      if (eventHandler.onDisappear !== -1) {
+        unregisterEventHandler(eventHandler.onDisappear);
+        eventHandler.onDisappear = -1;
+      }
+      if (eventHandler.onSwipeDismiss !== -1) {
+        unregisterEventHandler(eventHandler.onSwipeDismiss);
+        eventHandler.onSwipeDismiss = -1;
+      }
     }
     runOnUIImmediately(() => {
       'worklet';
       global.ProgressTransitionManager.removeProgressAnimation(viewTag);
     })();
+  }
+
+  private registerEventHandlers() {
+    SharedElementTransition._sharedElementCount++;
+    const eventHandler = SharedElementTransition._eventHandler;
+    if (!eventHandler.isRegistered) {
+      eventHandler.isRegistered = true;
+      const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
+      let lastProgressValue = -1;
+      eventHandler.onTransitionProgress = registerEventHandler(
+        eventPrefix + 'TransitionProgress',
+        (event: TransitionProgressEvent) => {
+          'worklet';
+          const progress = event.progress;
+          if (progress === lastProgressValue) {
+            // During screen transition, handler receives two events with the same progress 
+            // value for both screens, but for modals, there is only one event. To optimize 
+            // performance and avoid unnecessary worklet calls, let's skip the second event.
+            return;
+          }
+          global.ProgressTransitionManager.frame(progress);
+        }
+      );
+      eventHandler.onAppear = registerEventHandler(
+        eventPrefix + 'Appear',
+        () => {
+          'worklet';
+          console.log(Date.now(), "Appear")
+          global.ProgressTransitionManager.onTransitionEnd();
+        }
+      );
+      if (Platform.OS === 'ios') {
+        // required by modals
+        eventHandler.onDisappear = registerEventHandler(
+          'topDisappear',
+          () => {
+            'worklet';
+            console.log(Date.now(), "Disappear")
+            global.ProgressTransitionManager.onTransitionEnd(true);
+          }
+        );
+        eventHandler.onSwipeDismiss = registerEventHandler(
+          'topSwipeDismiss',
+          () => {
+            'worklet';
+            console.log(Date.now(), "topSwipeDismiss")
+            global.ProgressTransitionManager.onTransitionEnd();
+          }
+        );
+      }
+    }
   }
 
   private getTransitionAnimation(): SharedTransitionAnimationsFunction {
