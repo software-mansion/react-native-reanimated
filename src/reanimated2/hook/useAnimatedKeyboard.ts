@@ -4,11 +4,11 @@ import {
   subscribeForKeyboardEvents,
   unsubscribeFromKeyboardEvents,
 } from '../core';
-import {
+import type {
   AnimatedKeyboardInfo,
   AnimatedKeyboardOptions,
-  KeyboardState,
 } from '../commonTypes';
+import { KeyboardState } from '../commonTypes';
 
 export function useAnimatedKeyboard(
   options: AnimatedKeyboardOptions = { isStatusBarTranslucentAndroid: false }

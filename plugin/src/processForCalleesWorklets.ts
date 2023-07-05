@@ -1,10 +1,7 @@
-import { NodePath } from '@babel/core';
-import {
-  CallExpression,
-  isSequenceExpression,
-  ObjectExpression,
-} from '@babel/types';
-import { ReanimatedPluginPass } from './types';
+import type { NodePath } from '@babel/core';
+import type { CallExpression, ObjectExpression } from '@babel/types';
+import { isSequenceExpression } from '@babel/types';
+import type { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { strict as assert } from 'assert';

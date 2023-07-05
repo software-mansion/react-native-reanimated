@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { DependencyList } from './commonTypes';
+import type { DependencyList } from './commonTypes';
 import { useAnimatedStyle } from './useAnimatedStyle';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
