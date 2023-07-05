@@ -1,8 +1,6 @@
-import {
-  ComplexAnimationBuilder,
-  BaseAnimationBuilder,
-} from '../animationBuilder';
-import {
+import type { BaseAnimationBuilder } from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';

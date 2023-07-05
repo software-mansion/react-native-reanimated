@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { ShareableRef } from './commonTypes';
+import type { ShareableRef } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';

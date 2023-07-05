@@ -1,6 +1,7 @@
-import { Easing, EasingFn, EasingFactoryFn } from '../Easing';
+import type { EasingFn, EasingFactoryFn } from '../Easing';
+import { Easing } from '../Easing';
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   Timestamp,

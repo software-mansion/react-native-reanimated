@@ -1,8 +1,8 @@
-import { RefObject } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { Context, NativeEvent, WorkletFunction } from '../commonTypes';
-import WorkletEventHandler from '../WorkletEventHandler';
-import { DependencyList } from './commonTypes';
+import type { RefObject } from 'react';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type { Context, NativeEvent, WorkletFunction } from '../commonTypes';
+import type WorkletEventHandler from '../WorkletEventHandler';
+import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
 export interface ScrollHandler<TContext extends Context>

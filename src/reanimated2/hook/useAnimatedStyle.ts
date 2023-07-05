@@ -1,4 +1,5 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import type { MutableRefObject } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { startMapper, stopMapper, makeRemote } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
@@ -11,15 +12,11 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-import { DependencyList, Descriptor } from './commonTypes';
-import {
-  makeViewDescriptorsSet,
-  makeViewsRefSet,
-  ViewDescriptorsSet,
-  ViewRefSet,
-} from '../ViewDescriptorsSet';
+import type { DependencyList, Descriptor } from './commonTypes';
+import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import {
+import type {
   AnimationObject,
   Timestamp,
   AdapterWorkletFunction,
@@ -30,13 +27,13 @@ import {
   SharedValue,
   StyleProps,
 } from '../commonTypes';
-import {
+import type {
   ImageStyle,
   RegisteredStyle,
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import { AnimateStyle } from '../helperTypes';
+import type { AnimateStyle } from '../helperTypes';
 
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
