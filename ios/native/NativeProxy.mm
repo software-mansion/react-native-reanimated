@@ -9,7 +9,9 @@
 #import <RNReanimated/REAMessageThread.h>
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
+#ifdef DEBUG
 #import <RNReanimated/REAScreensHelper.h>
+#endif
 #import <RNReanimated/REAUIManager.h>
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedRuntime.h>
@@ -370,7 +372,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
-
+#ifdef DEBUG
   [animationsManager setHasDuplicateSharedTagBlock:^(UIView *view, NSNumber *_Nonnull viewTag) {
     UIView *screen = [REAScreensHelper getScreenForView:(UIView *)view];
     auto screenTag = [screen.reactTag intValue];
@@ -379,6 +381,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     if (hasDuplicateSharedTag)
       NSLog(@"Found duplicate shared tag.");
   }];
+#endif
 
 #endif
 

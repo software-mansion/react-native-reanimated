@@ -43,7 +43,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAHasAnimationBlock _hasAnimationForTag;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
+#ifdef DEBUG
   REAHasDuplicateSharedTagBlock _hasDuplicateSharedTag;
+#endif
 }
 
 + (NSArray *)layoutKeys
@@ -104,10 +106,12 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _clearAnimationConfigForTag = clearAnimation;
 }
 
+#ifdef DEBUG
 - (void)setHasDuplicateSharedTagBlock:(REAHasDuplicateSharedTagBlock)hasDuplicateSharedTag
 {
   _hasDuplicateSharedTag = hasDuplicateSharedTag;
 }
+#endif
 
 - (UIView *)viewForTag:(NSNumber *)tag
 {
@@ -539,7 +543,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (_hasAnimationForTag(viewTag, SHARED_ELEMENT_TRANSITION)) {
     if (type == ENTERING) {
       [_sharedTransitionManager notifyAboutNewView:view];
+#ifdef DEBUG
       _hasDuplicateSharedTag(view, viewTag);
+#endif
     } else {
       [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
     }

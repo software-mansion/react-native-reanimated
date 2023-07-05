@@ -1,3 +1,4 @@
+#ifdef DEBUG
 #include "JSLogger.h"
 #include <memory>
 
@@ -15,3 +16,4 @@ void JSLogger::warnOnJs(std::string warning) const {
   });
 }
 } // namespace reanimated
+#endif

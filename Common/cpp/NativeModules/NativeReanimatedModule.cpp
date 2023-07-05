@@ -165,10 +165,12 @@ void NativeReanimatedModule::installCoreFunctions(
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
   runtimeHelper->valueUnpacker =
       std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
+#ifdef DEBUG
   // We initialize jsLogger here because I needed runtimeHelper
   // to be initialized already (probably it's not necessary)
   jsLogger = std::make_shared<JSLogger>(runtimeHelper);
   layoutAnimationsManager_.initializeJSLogger(jsLogger);
+#endif
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {

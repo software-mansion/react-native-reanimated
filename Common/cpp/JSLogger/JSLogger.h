@@ -1,3 +1,4 @@
+#ifdef DEBUG
 #pragma once
 
 #include "LayoutAnimationType.h"
@@ -19,3 +20,4 @@ class JSLogger {
 };
 
 } // namespace reanimated
+#endif
