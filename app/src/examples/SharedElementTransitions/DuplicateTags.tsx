@@ -20,21 +20,19 @@ interface DogeProps {
 function Doge({ orientation, firstSharedTag, secondSharedTag }: DogeProps) {
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      width: 150,
-      height: 150,
       transform: [{ rotate: `${orientation}deg` }],
     };
   });
   return (
-    <Animated.View style={styles.dogeContainer}>
+    <Animated.View style={[styles.dogeContainer, animatedStyle]}>
       <Animated.Image
         source={firstPhoto}
-        style={animatedStyle}
+        style={styles.dogeStyle}
         sharedTransitionTag={firstSharedTag}
       />
       <Animated.Image
         source={secondPhoto}
-        style={animatedStyle}
+        style={styles.dogeStyle}
         sharedTransitionTag={secondSharedTag}
       />
     </Animated.View>
@@ -119,8 +117,8 @@ function Screen2({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
       route={route}
       navigation={navigation}
       orientation={90}
-      firstSharedTag="2"
-      secondSharedTag="1"
+      firstSharedTag="1"
+      secondSharedTag="2"
     />
   );
 }
@@ -210,6 +208,10 @@ const styles = StyleSheet.create({
   },
   dogeContainer: {
     position: 'absolute',
+  },
+  dogeStyle: {
+    width: 150,
+    height: 150,
   },
   numberStyle: {
     color: 'white',
