@@ -190,7 +190,7 @@ export class SharedElementTransition {
           global.ProgressTransitionManager.onTransitionEnd(true);
         });
         eventHandler.onSwipeDismiss = registerEventHandler(
-          'topSwipeCanceled',
+          'topGestureCancel',
           () => {
             'worklet';
             global.ProgressTransitionManager.onTransitionEnd();
