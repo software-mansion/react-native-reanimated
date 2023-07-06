@@ -34,38 +34,42 @@ class CoreFunction {
   CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
   template <typename... Args>
   jsi::Value call(jsi::Runtime &rt, Args &&...args) {
-    return getFunction(rt)->call(rt, args...);
+    auto result = getFunction(rt)->call(rt, args...);
+    uiFunction_ = nullptr; // reset the pointer to call jsi::Value::~Value
+    return result;
   }
 };
 
 class JSRuntimeHelper {
  private:
   jsi::Runtime *rnRuntime_; // React-Native's main JS runtime
-  jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
+  //  jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
   std::shared_ptr<Scheduler> scheduler_;
 
  public:
   JSRuntimeHelper(
       jsi::Runtime *rnRuntime,
-      jsi::Runtime *uiRuntime,
+      //      jsi::Runtime *uiRuntime,
       const std::shared_ptr<Scheduler> &scheduler)
-      : rnRuntime_(rnRuntime), uiRuntime_(uiRuntime), scheduler_(scheduler) {}
+      : rnRuntime_(rnRuntime),
+        // uiRuntime_(uiRuntime),
+        scheduler_(scheduler) {}
 
   volatile bool uiRuntimeDestroyed = false;
   std::unique_ptr<CoreFunction> callGuard;
   std::unique_ptr<CoreFunction> valueUnpacker;
 
-  inline jsi::Runtime *uiRuntime() const {
-    return uiRuntime_;
-  }
+  //  inline jsi::Runtime *uiRuntime() const {
+  //    return uiRuntime_;
+  //  }
 
   inline jsi::Runtime *rnRuntime() const {
     return rnRuntime_;
   }
 
-  inline bool isUIRuntime(const jsi::Runtime &rt) const {
-    return &rt == uiRuntime_;
-  }
+  //  inline bool isUIRuntime(const jsi::Runtime &rt) const {
+  //    return &rt == uiRuntime_;
+  //  }
 
   inline bool isRNRuntime(const jsi::Runtime &rt) const {
     return &rt == rnRuntime_;
@@ -80,17 +84,20 @@ class JSRuntimeHelper {
   }
 
   template <typename... Args>
-  inline void runOnUIGuarded(const jsi::Value &function, Args &&...args) {
+  inline void runOnRuntimeGuarded(
+      jsi::Runtime &rt,
+      const jsi::Value &function,
+      Args &&...args) {
     // We only use callGuard in debug mode, otherwise we call the provided
     // function directly. CallGuard provides a way of capturing exceptions in
     // JavaScript and propagating them to the main React Native thread such that
     // they can be presented using RN's LogBox.
-    jsi::Runtime &rt = *uiRuntime_;
-#ifdef DEBUG
-    callGuard->call(rt, function, args...);
-#else
+    //    jsi::Runtime &rt = *uiRuntime_;
+    // #ifdef DEBUG
+    //    callGuard->call(rt, function, args...);
+    // #else
     function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif
+    // #endif
   }
 };
 
@@ -156,9 +163,9 @@ class RetainingShareable : virtual public BaseClass {
       // shared value is created and then accessed on the same runtime
       return BaseClass::toJSValue(rt);
     } else if (remoteValue_ == nullptr) {
-      auto value = BaseClass::toJSValue(rt);
-      remoteValue_ = std::make_unique<jsi::Value>(rt, value);
-      return value;
+      //      auto value = BaseClass::toJSValue(rt);
+      //      remoteValue_ = std::make_unique<jsi::Value>(rt, value);
+      return BaseClass::toJSValue(rt);
     }
     return jsi::Value(rt, *remoteValue_);
   }
@@ -246,14 +253,7 @@ class ShareableArray : public Shareable {
 class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    auto obj = jsi::Object(rt);
-    for (size_t i = 0, size = data_.size(); i < size; i++) {
-      obj.setProperty(
-          rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
-    }
-    return obj;
-  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
@@ -303,14 +303,8 @@ class ShareableWorklet : public ShareableObject {
   ShareableWorklet(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       jsi::Runtime &rt,
-      const jsi::Object &worklet)
-      : ShareableObject(rt, worklet), runtimeHelper_(runtimeHelper) {
-    valueType_ = WorkletType;
-  }
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
-    jsi::Value obj = ShareableObject::toJSValue(rt);
-    return runtimeHelper_->valueUnpacker->call(rt, obj);
-  }
+      const jsi::Object &worklet);
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
 class ShareableRemoteFunction
@@ -329,15 +323,15 @@ class ShareableRemoteFunction
         function_(std::move(function)),
         runtimeHelper_(runtimeHelper) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    if (runtimeHelper_->isUIRuntime(rt)) {
-#ifdef DEBUG
-      return runtimeHelper_->valueUnpacker->call(
-          rt,
-          ShareableJSRef::newHostObject(rt, shared_from_this()),
-          jsi::String::createFromAscii(rt, "RemoteFunction"));
-#else
+    if (!runtimeHelper_->isRNRuntime(rt)) {
+      // #ifdef DEBUG
+      //       return runtimeHelper_->valueUnpacker->call(
+      //           rt,
+      //           ShareableJSRef::newHostObject(rt, shared_from_this()),
+      //           jsi::String::createFromAscii(rt, "RemoteFunction"));
+      // #else
       return ShareableJSRef::newHostObject(rt, shared_from_this());
-#endif
+      // #endif
     } else {
       return jsi::Value(rt, function_);
     }
@@ -414,7 +408,7 @@ class ShareableSynchronizedDataHolder
 
   jsi::Value get(jsi::Runtime &rt) {
     std::unique_lock<std::mutex> read_lock(dataAccessMutex_);
-    if (runtimeHelper_->isUIRuntime(rt)) {
+    if (!runtimeHelper_->isRNRuntime(rt)) {
       if (uiValue_ == nullptr) {
         auto value = data_->getJSValue(rt);
         uiValue_ = std::make_shared<jsi::Value>(rt, value);

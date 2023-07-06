@@ -64,8 +64,9 @@ NativeReanimatedModule::NativeReanimatedModule(
 {
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
-    frameCallbacks.push_back([=](double timestamp) {
-      runtimeHelper->runOnUIGuarded(*jsFunction, jsi::Value(timestamp));
+    frameCallbacks.push_back([=, &rt](double timestamp) {
+      runtimeHelper->runOnRuntimeGuarded(
+          rt, *jsFunction, jsi::Value(timestamp));
     });
     maybeRequestRender();
   };
@@ -157,8 +158,8 @@ void NativeReanimatedModule::installCoreFunctions(
   if (!runtimeHelper) {
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
-    runtimeHelper = std::make_shared<JSRuntimeHelper>(
-        &rt, runtimeManager_->runtime.get(), runtimeManager_->scheduler);
+    runtimeHelper =
+        std::make_shared<JSRuntimeHelper>(&rt, runtimeManager_->scheduler);
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
@@ -188,9 +189,9 @@ void NativeReanimatedModule::scheduleOnUI(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
   runtimeManager_->scheduler->scheduleOnUI([=] {
-    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
-    auto workletValue = shareableWorklet->getJSValue(rt);
-    runtimeHelper->runOnUIGuarded(workletValue);
+    jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
+    auto workletValue = shareableWorklet->getJSValue(uiRuntime);
+    runtimeHelper->runOnRuntimeGuarded(uiRuntime, workletValue);
   });
 }
 
@@ -323,7 +324,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
   runtimeManager_->scheduler->scheduleOnUI([=] {
-    jsi::Runtime &rt = *runtimeHelper->uiRuntime();
+    jsi::Runtime &rt = *runtimeManager_->runtime;
     auto handlerFunction = handlerShareable->getJSValue(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
         runtimeHelper,
@@ -724,10 +725,10 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
   auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
-        jsi::Runtime &rt = *runtimeHelper->uiRuntime();
+        jsi::Runtime &rt = *runtimeManager_->runtime;
         auto handler = shareableHandler->getJSValue(rt);
-        runtimeHelper->runOnUIGuarded(
-            handler, jsi::Value(keyboardState), jsi::Value(height));
+        runtimeHelper->runOnRuntimeGuarded(
+            rt, handler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool());
 }
