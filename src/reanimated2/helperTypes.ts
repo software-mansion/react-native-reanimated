@@ -117,10 +117,15 @@ export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
 
 export type AnimatedProps<P extends object> = AnimateProps<P>;
 
-export type PropsAdapterFunction = (props: Record<string, unknown>) => void;
+export type AnimatedPropsAdapterFunction = (
+  props: Record<string, unknown>
+) => void;
 
 export type useAnimatedPropsType = <T extends object>(
   updater: () => Partial<T>,
   deps?: DependencyList | null,
-  adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null
 ) => Partial<T>;

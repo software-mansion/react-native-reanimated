@@ -1,12 +1,12 @@
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 import type { AdapterWorkletFunction } from './commonTypes';
-import type { PropsAdapterFunction } from './helperTypes';
+import type { AnimatedPropsAdapterFunction } from './helperTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 export type createAnimatedPropAdapterType = (
-  adapter: PropsAdapterFunction,
+  adapter: AnimatedPropsAdapterFunction,
   nativeProps?: string[]
-) => PropsAdapterFunction;
+) => AnimatedPropsAdapterFunction;
 
 export const createAnimatedPropAdapter = ((
   adapter: AdapterWorkletFunction,
