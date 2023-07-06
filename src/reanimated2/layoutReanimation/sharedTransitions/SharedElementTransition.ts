@@ -165,11 +165,12 @@ export class SharedElementTransition {
           'worklet';
           const progress = event.progress;
           if (progress === lastProgressValue) {
-            // During screen transition, handler receives two events with the same progress 
-            // value for both screens, but for modals, there is only one event. To optimize 
+            // During screen transition, handler receives two events with the same progress
+            // value for both screens, but for modals, there is only one event. To optimize
             // performance and avoid unnecessary worklet calls, let's skip the second event.
             return;
           }
+          lastProgressValue = progress;
           global.ProgressTransitionManager.frame(progress);
         }
       );
@@ -177,25 +178,19 @@ export class SharedElementTransition {
         eventPrefix + 'Appear',
         () => {
           'worklet';
-          console.log(Date.now(), "Appear")
           global.ProgressTransitionManager.onTransitionEnd();
         }
       );
       if (Platform.OS === 'ios') {
         // required by modals
-        eventHandler.onDisappear = registerEventHandler(
-          'topDisappear',
-          () => {
-            'worklet';
-            console.log(Date.now(), "Disappear")
-            global.ProgressTransitionManager.onTransitionEnd(true);
-          }
-        );
+        eventHandler.onDisappear = registerEventHandler('topDisappear', () => {
+          'worklet';
+          global.ProgressTransitionManager.onTransitionEnd(true);
+        });
         eventHandler.onSwipeDismiss = registerEventHandler(
-          'topSwipeDismiss',
+          'topSwipeCanceled',
           () => {
             'worklet';
-            console.log(Date.now(), "topSwipeDismiss")
             global.ProgressTransitionManager.onTransitionEnd();
           }
         );

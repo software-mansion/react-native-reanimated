@@ -38,7 +38,6 @@ function createProgressTransitionManager() {
     },
     onTransitionEnd: (removeViews = false) => {
       for (const viewTag of currentTransition) {
-        console.log(viewTag)
         _notifyAboutEnd(viewTag, false, removeViews);
       }
       currentTransition.clear();
