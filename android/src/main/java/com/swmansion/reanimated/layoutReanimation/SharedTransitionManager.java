@@ -474,10 +474,11 @@ public class SharedTransitionManager {
           // over them, we can schedule the modification for the next frame. This
           // approach is safe. The transparent transition container will remain on
           // the screen for one additional frame before being removed.
-          mTransitionContainer.post(() -> {
-            ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
-            mTransitionContainer.setVisibility(View.VISIBLE);
-          });
+          mTransitionContainer.post(
+              () -> {
+                ((ViewGroup) transitionContainerParent).removeView(mTransitionContainer);
+                mTransitionContainer.setVisibility(View.VISIBLE);
+              });
         }
       }
       mSharedElements.clear();
