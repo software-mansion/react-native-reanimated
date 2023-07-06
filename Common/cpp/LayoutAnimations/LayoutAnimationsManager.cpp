@@ -130,7 +130,6 @@ std::string LayoutAnimationsManager::getScreenSharedTagPairString(
 bool LayoutAnimationsManager::hasDuplicateSharedTag(
     int viewTag,
     int screenTag) {
-  return false;
   if (!viewTagToSharedTag_.count(viewTag)) {
     return false;
   }
@@ -139,7 +138,7 @@ bool LayoutAnimationsManager::hasDuplicateSharedTag(
   bool hasDuplicate = screenSharedTagSet.count(pair);
   if (hasDuplicate) {
     jsLogger->warnOnJs(
-        "Reanimated: Found duplicate shared tag on the same screen.\nOffendening tag is " +
+        "Reanimated: Found duplicate shared tag on the same screen.\nOffendening tag is: " +
         sharedTag);
     return true;
   }

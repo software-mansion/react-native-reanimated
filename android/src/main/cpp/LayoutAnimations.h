@@ -72,7 +72,9 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   CancelAnimationBlock cancelAnimationBlock_;
   FindPrecedingViewTagForTransitionBlock
       findPrecedingViewTagForTransitionBlock_;
+#ifdef DEBUG
   HasDuplicateSharedTag hasDuplicateSharedTag_;
+#endif
 
   explicit LayoutAnimations(
       jni::alias_ref<LayoutAnimations::jhybridobject> jThis);

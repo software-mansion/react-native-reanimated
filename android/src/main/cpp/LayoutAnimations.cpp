@@ -121,8 +121,10 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
+#ifdef DEBUG
       makeNativeMethod(
           "hasDuplicateSharedTag", LayoutAnimations::hasDuplicateSharedTag),
+#endif
   });
 }
 }; // namespace reanimated

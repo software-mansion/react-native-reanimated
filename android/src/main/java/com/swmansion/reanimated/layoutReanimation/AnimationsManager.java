@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import com.facebook.react.BuildConfig;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -188,7 +189,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       parent = (ViewParent) parent.getParent();
     }
 
-    if (parent != null) {
+    if (parent != null && BuildConfig.DEBUG) {
       int screenTag = ((View) parent).getId();
       mNativeMethodsHolder.hasDuplicateSharedTag(viewTag, screenTag);
     }
