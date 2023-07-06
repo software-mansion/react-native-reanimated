@@ -1,5 +1,5 @@
 import { withSequence, withTiming } from '../../animation';
-import {
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';

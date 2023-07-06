@@ -1,12 +1,12 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   AnimatableValue,
   Timestamp,
   AnimationObject,
 } from '../commonTypes';
-import { RepeatAnimation } from './commonTypes';
+import type { RepeatAnimation } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withRepeatType = <T extends AnimatableValue>(

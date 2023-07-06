@@ -12,14 +12,6 @@ ShadowTreeCloner::ShadowTreeCloner(
           surfaceId,
           *getContextContainerFromUIManager(&*uiManager)} {}
 
-ShadowTreeCloner::~ShadowTreeCloner() {
-#ifdef DEBUG
-  react_native_assert(
-      yogaChildrenUpdates_.empty() &&
-      "Deallocating `ShadowTreeCloner` without calling `updateYogaChildren`.");
-#endif
-}
-
 ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
     const ShadowNode::Shared &oldRootNode,
     const ShadowNodeFamily &family,
@@ -53,7 +45,10 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
       // children instead of cloning the whole path to the root node.
       auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
       parentNodeNonConst.replaceChild(oldChildNode, newChildNode, childIndex);
-      yogaChildrenUpdates_.insert(&parentNodeNonConst);
+      // Unfortunately, `replaceChild` does not update Yoga nodes, so we need to
+      // update them manually here.
+      static_cast<YogaLayoutableShadowNode *>(&parentNodeNonConst)
+          ->updateYogaChildren();
       return std::const_pointer_cast<ShadowNode>(oldRootNode);
     }
 
@@ -66,17 +61,6 @@ ShadowNode::Unshared ShadowTreeCloner::cloneWithNewProps(
   }
 
   return std::const_pointer_cast<ShadowNode>(newChildNode);
-}
-
-void ShadowTreeCloner::updateYogaChildren() {
-  // Unfortunately, `replaceChild` does not update Yoga nodes, so we need to
-  // update them manually here.
-  for (ShadowNode *shadowNode : yogaChildrenUpdates_) {
-    static_cast<YogaLayoutableShadowNode *>(shadowNode)->updateYogaChildren();
-  }
-#ifdef DEBUG
-  yogaChildrenUpdates_.clear();
-#endif
 }
 
 } // namespace reanimated

@@ -2,21 +2,16 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useCallback, forwardRef, useRef } from 'react';
-import {
-  StyleSheet,
-  Button,
-  View,
-  Image,
-  FlatListProps,
-  ViewProps,
-  ImageProps,
-} from 'react-native';
+import type { FlatListProps, ViewProps, ImageProps } from 'react-native';
+import { StyleSheet, Button, View, Image } from 'react-native';
+import type {
+  PanGestureHandlerGestureEvent,
+  PinchGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import {
   PanGestureHandler,
   PinchGestureHandler,
-  PanGestureHandlerGestureEvent,
   FlatList,
-  PinchGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -803,5 +798,35 @@ function testPartialAnimatedProps() {
   function testSetGestureState() {
     setGestureState(1, 2);
     // not sure what more I can test here
+  }
+
+  // test InlineStyles
+
+  function testInlineStyles1() {
+    const animatedIndex = useSharedValue(0);
+    const backgroundColor = useDerivedValue(() => {
+      return interpolateColor(
+        animatedIndex.value,
+        [0, 1, 2],
+        ['#273D3A', '#8B645C', '#60545A']
+      );
+    });
+    <Animated.View
+      style={{
+        flex: 1,
+        height: '100%',
+        backgroundColor,
+      }}
+    />;
+  }
+
+  function testInlineStyles2() {
+    const animatedFlex = useSharedValue(0);
+    <Animated.View
+      style={{
+        flex: animatedFlex,
+        height: '100%',
+      }}
+    />;
   }
 }
