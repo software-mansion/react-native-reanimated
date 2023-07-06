@@ -57,7 +57,8 @@ function DogeScreen({
             navigation.navigate('Screen1');
           }}>
           <View style={[styles.quarterScreen, styles.topLeft]}>
-            <Text style={styles.textStyle}>1</Text>
+            <Text style={styles.numberStyle}>1</Text>
+            <Text style={styles.subtextStyle}>no duplicates</Text>
           </View>
         </TouchableNativeFeedback>
         <TouchableNativeFeedback
@@ -65,7 +66,8 @@ function DogeScreen({
             navigation.navigate('Screen2');
           }}>
           <View style={[styles.quarterScreen, styles.topRight]}>
-            <Text style={styles.textStyle}>2</Text>
+            <Text style={styles.numberStyle}>2</Text>
+            <Text style={styles.subtextStyle}>no duplicates</Text>
           </View>
         </TouchableNativeFeedback>
       </View>
@@ -76,7 +78,8 @@ function DogeScreen({
             navigation.navigate('Screen3');
           }}>
           <View style={[styles.quarterScreen, styles.bottomLeft]}>
-            <Text style={styles.textStyle}>3</Text>
+            <Text style={styles.numberStyle}>3</Text>
+            <Text style={styles.subtextStyle}>duplicate tag: 2</Text>
           </View>
         </TouchableNativeFeedback>
         <TouchableNativeFeedback
@@ -84,7 +87,8 @@ function DogeScreen({
             navigation.navigate('Screen4');
           }}>
           <View style={[styles.quarterScreen, styles.bottomRight]}>
-            <Text style={styles.textStyle}>4</Text>
+            <Text style={styles.numberStyle}>4</Text>
+            <Text style={styles.subtextStyle}>duplicate tag: 1</Text>
           </View>
         </TouchableNativeFeedback>
       </View>
@@ -202,16 +206,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'orange',
   },
   bottomRight: {
-    backgroundColor: 'yellow',
+    backgroundColor: 'pink',
   },
   dogeContainer: {
     position: 'absolute',
   },
-  textStyle: {
+  numberStyle: {
     color: 'white',
     fontSize: 48,
     fontWeight: 'bold',
-    shadowColor: 'black',
-    shadowRadius: 2,
+    textShadowColor: 'black',
+    textShadowRadius: 5,
+  },
+  subtextStyle: {
+    color: 'white',
+    fontSize: 12,
   },
 });

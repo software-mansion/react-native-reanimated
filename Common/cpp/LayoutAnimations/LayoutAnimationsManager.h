@@ -5,9 +5,7 @@
 #include "Shareables.h"
 
 #ifdef DEBUG
-#include <boost/functional/hash.hpp>
 #include <unordered_set>
-#include <utility>
 #include "JSLogger.h"
 #endif
 
@@ -46,6 +44,9 @@ class LayoutAnimationsManager {
       bool removeView /* = true */);
   int findPrecedingViewTagForTransition(int tag);
 #ifdef DEBUG
+  std::string getScreenSharedTagPairString(
+      int screenTag,
+      std::string sharedTag);
   bool hasDuplicateSharedTag(int viewTag, int screenTag);
   void initializeJSLogger(const std::shared_ptr<JSLogger> &jsLogger);
 #endif
@@ -57,13 +58,10 @@ class LayoutAnimationsManager {
 #ifdef DEBUG
   std::shared_ptr<JSLogger> jsLogger;
   // This set's function is to detect duplicate sharedTags on a single screen
-  //     it contains pairs(reactScreenTag, sharedTag)
-  std::unordered_set<
-      std::pair<int, std::string>,
-      boost::hash<std::pair<int, std::string>>>
-      screenSharedTagSet;
+  //     it contains strings in form: "reactScreenTag:sharedTag"
+  std::unordered_set<std::string> screenSharedTagSet;
   // And this map is to remove collected pairs on SET removal
-  std::unordered_map<int, std::pair<int, std::string>> viewsScreenSharedTagMap;
+  std::unordered_map<int, std::string> viewsScreenSharedTagMap;
 #endif
 
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;

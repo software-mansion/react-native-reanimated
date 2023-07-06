@@ -188,8 +188,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
       parent = (ViewParent) parent.getParent();
     }
 
-    int screenTag = ((View) parent).getId();
-    mNativeMethodsHolder.hasDuplicateSharedTag(viewTag, screenTag);
+    if (parent != null) {
+      int screenTag = ((View) parent).getId();
+      mNativeMethodsHolder.hasDuplicateSharedTag(viewTag, screenTag);
+    }
   }
 
   public void progressLayoutAnimation(

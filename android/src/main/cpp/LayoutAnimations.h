@@ -39,7 +39,10 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
 
   void setAnimationStartingBlock(AnimationStartingBlock animationStartingBlock);
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
+#ifdef DEBUG
   void setHasDuplicateSharedTag(HasDuplicateSharedTag hasDuplicateSharedTag);
+  bool hasDuplicateSharedTag(int viewTag, int screenTag);
+#endif
   void setClearAnimationConfigBlock(
       ClearAnimationConfigBlock clearAnimationConfigBlock);
   void setCancelAnimationForTag(CancelAnimationBlock cancelAnimationBlock);

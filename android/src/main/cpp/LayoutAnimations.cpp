@@ -56,6 +56,10 @@ void LayoutAnimations::setHasDuplicateSharedTag(
     HasDuplicateSharedTag hasDuplicateSharedTag) {
   this->hasDuplicateSharedTag_ = hasDuplicateSharedTag;
 }
+
+bool LayoutAnimations::hasDuplicateSharedTag(int viewTag, int screenTag) {
+  return hasDuplicateSharedTag_(viewTag, screenTag);
+}
 #endif
 
 bool LayoutAnimations::hasAnimationForTag(int tag, int type) {
@@ -117,6 +121,8 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
+      makeNativeMethod(
+          "hasDuplicateSharedTag", LayoutAnimations::hasDuplicateSharedTag),
   });
 }
 }; // namespace reanimated

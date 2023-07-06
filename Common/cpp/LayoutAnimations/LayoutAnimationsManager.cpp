@@ -121,11 +121,21 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
 }
 
 #ifdef DEBUG
+std::string LayoutAnimationsManager::getScreenSharedTagPairString(
+    int screenTag,
+    std::string sharedTag) {
+  return std::to_string(screenTag) + ":" + sharedTag;
+}
+
 bool LayoutAnimationsManager::hasDuplicateSharedTag(
     int viewTag,
     int screenTag) {
-  std::string sharedTag = viewTagToSharedTag_[viewTag];
-  auto pair = std::pair(screenTag, sharedTag);
+  return false;
+  if (!viewTagToSharedTag_.count(viewTag)) {
+    return false;
+  }
+  auto sharedTag = viewTagToSharedTag_[viewTag];
+  auto pair = getScreenSharedTagPairString(screenTag, sharedTag);
   bool hasDuplicate = screenSharedTagSet.count(pair);
   if (hasDuplicate) {
     jsLogger->warnOnJs(
