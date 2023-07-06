@@ -1,4 +1,4 @@
-import {
+import type {
   SensorType,
   SensorConfig,
   Value3D,

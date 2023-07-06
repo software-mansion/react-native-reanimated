@@ -1,12 +1,12 @@
 import { withTiming, withSpring } from '../../animation';
-import {
+import type {
   AnimationFunction,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
 } from './commonTypes';
-import { EasingFn } from '../../Easing';
+import type { EasingFn } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
-import { StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   easingV?: EasingFn;

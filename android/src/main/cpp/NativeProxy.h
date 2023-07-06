@@ -178,6 +178,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<Scheduler> scheduler_;
 #ifdef RCT_NEW_ARCH_ENABLED
   std::shared_ptr<PropsRegistry> propsRegistry_;
+  std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
 
 // removed temporary, new event listener mechanism need fix on the RN side

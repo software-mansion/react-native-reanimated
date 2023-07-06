@@ -1,13 +1,15 @@
 import { withTiming } from '../../animation';
-import {
+import type {
   SharedTransitionAnimationsFunction,
   SharedTransitionAnimationsValues,
   CustomProgressAnimation,
   ProgressAnimation,
+} from '../animationBuilder/commonTypes';
+import {
   LayoutAnimationType,
   SharedTransitionType,
 } from '../animationBuilder/commonTypes';
-import { StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 import {
   configureLayoutAnimations,
   registerEventHandler,

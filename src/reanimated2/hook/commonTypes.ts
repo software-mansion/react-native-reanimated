@@ -1,4 +1,4 @@
-import { Context, ShadowNodeWrapper } from '../commonTypes';
+import type { Context, ShadowNodeWrapper } from '../commonTypes';
 
 export type DependencyList = Array<unknown> | undefined;
 

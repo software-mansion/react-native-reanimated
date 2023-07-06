@@ -1,5 +1,5 @@
 import { runOnUIImmediately } from '../../threads';
-import { ProgressAnimation } from '../animationBuilder/commonTypes';
+import type { ProgressAnimation } from '../animationBuilder/commonTypes';
 
 function createProgressTransitionManager() {
   'worklet';

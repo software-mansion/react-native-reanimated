@@ -1,12 +1,12 @@
 import NativeReanimatedModule from './NativeReanimated';
-import {
-  SensorType,
+import type {
   SensorConfig,
   SharedValue,
   Value3D,
   ValueRotation,
   ShareableRef,
 } from './commonTypes';
+import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
 
 function initSensorData(

@@ -1,4 +1,4 @@
-import React, {
+import type {
   Component,
   ComponentClass,
   ComponentType,
@@ -6,6 +6,7 @@ import React, {
   MutableRefObject,
   Ref,
 } from 'react';
+import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
@@ -27,25 +28,26 @@ import {
   isWeb,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
-import {
+import type {
   BaseAnimationBuilder,
-  SharedElementTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-  Keyframe,
   LayoutAnimationFunction,
-  LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import {
+  SharedElementTransition,
+  LayoutAnimationType,
+} from './reanimated2/layoutReanimation';
+import type {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
 } from './reanimated2/commonTypes';
-import {
-  makeViewDescriptorsSet,
+import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';

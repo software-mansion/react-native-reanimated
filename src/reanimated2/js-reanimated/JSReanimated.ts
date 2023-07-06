@@ -1,12 +1,8 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { isChromeDebugger, isJest, isWeb } from '../PlatformChecker';
-import {
-  SensorType,
-  ShareableRef,
-  Value3D,
-  ValueRotation,
-} from '../commonTypes';
-import { WebSensor } from './WebSensor';
+import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
+import { SensorType } from '../commonTypes';
+import type { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;

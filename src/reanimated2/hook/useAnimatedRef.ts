@@ -1,7 +1,8 @@
-import { Component, RefObject, useRef } from 'react';
+import type { Component, RefObject } from 'react';
+import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
-import { AnimatedRef, RefObjectFunction } from './commonTypes';
-import { ShadowNodeWrapper } from '../commonTypes';
+import type { AnimatedRef, RefObjectFunction } from './commonTypes';
+import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import {
   makeShareableCloneRecursive,

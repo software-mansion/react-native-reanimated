@@ -1,9 +1,10 @@
-import {
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
-import { EasingFn, Easing } from '../../Easing';
+import type { EasingFn } from '../../Easing';
+import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
 
 export class CurvedTransition

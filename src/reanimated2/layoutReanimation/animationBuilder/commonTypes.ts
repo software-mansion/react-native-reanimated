@@ -1,5 +1,5 @@
-import { EasingFn } from '../../Easing';
-import { StyleProps } from '../../commonTypes';
+import type { EasingFn } from '../../Easing';
+import type { StyleProps } from '../../commonTypes';
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFn;

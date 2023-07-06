@@ -1,11 +1,11 @@
 import { NativeModules } from 'react-native';
-import {
+import type {
   ShareableRef,
   ShareableSyncDataHolderRef,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import {
+import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from '../layoutReanimation';
