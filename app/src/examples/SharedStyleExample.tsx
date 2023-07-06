@@ -33,7 +33,7 @@ export default function SharedStyleExample() {
   );
 
   const renderItems = () => {
-    const output = [];
+    const output: JSX.Element[] = [];
     for (let i = 0; i < blueCounter; i++) {
       output.push(
         <Animated.View

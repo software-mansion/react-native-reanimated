@@ -322,6 +322,7 @@ function AnimatedScrollHandlerTest() {
   });
   return (
     <View style={styles.container}>
+      {/* @ts-expect-error currently React Native doesn't allow numbers as color props - should we enable it? */}
       <Animated.View style={[styles.box, stylez]} />
       <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={16} />
     </View>

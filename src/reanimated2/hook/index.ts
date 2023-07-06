@@ -1,4 +1,4 @@
-export type { DependencyList } from './commonTypes';
+export type { DependencyList, AnimatedRef } from './commonTypes';
 export {
   useAnimatedProps,
   useEvent,

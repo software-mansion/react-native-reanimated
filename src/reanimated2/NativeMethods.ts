@@ -85,8 +85,8 @@ if (isWeb()) {
   };
 }
 
-export let dispatchCommand: (
-  animatedRef: AnimatedRef<Component>,
+export let dispatchCommand: <T extends Component>(
+  animatedRef: AnimatedRef<T>,
   commandName: string,
   args: Array<unknown>
 ) => void;
