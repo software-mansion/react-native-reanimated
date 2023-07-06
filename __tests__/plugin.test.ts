@@ -4,6 +4,7 @@ import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
+import { version as packageVersion } from '../package.json';
 
 function runPlugin(input: string, opts = {}) {
   const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
@@ -70,7 +71,6 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input, {});
-    const { version: packageVersion } = require('../package.json');
     expect(code).toContain(`f.__version = "${packageVersion}";`);
   });
 

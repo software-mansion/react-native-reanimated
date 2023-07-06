@@ -1,4 +1,4 @@
-import { NativeEvent } from './commonTypes';
+import type { NativeEvent } from './commonTypes';
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
 

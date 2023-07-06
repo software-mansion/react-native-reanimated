@@ -1,13 +1,12 @@
-import { NodePath } from '@babel/core';
-import {
+import type { NodePath } from '@babel/core';
+import type {
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
-  isBlockStatement,
-  isDirectiveLiteral,
 } from '@babel/types';
+import { isBlockStatement, isDirectiveLiteral } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
-import { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass } from './types';
 
 export function processIfWorkletNode(
   fun: NodePath<
