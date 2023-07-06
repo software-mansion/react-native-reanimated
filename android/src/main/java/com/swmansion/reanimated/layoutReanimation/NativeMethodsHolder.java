@@ -14,6 +14,4 @@ public interface NativeMethodsHolder {
   boolean isLayoutAnimationEnabled();
 
   int findPrecedingViewTagForTransition(int tag);
-
-  void updateSharedTransitionProgress(int sourceViewTag, int targetViewTag, double progress);
 }

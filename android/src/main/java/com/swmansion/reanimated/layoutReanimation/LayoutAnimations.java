@@ -49,9 +49,6 @@ public class LayoutAnimations {
 
   public native int findPrecedingViewTagForTransition(int tag);
 
-  public native void updateSharedTransitionProgress(
-      int sourceViewTag, int targetViewTag, double progress);
-
   private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
     AnimationsManager animationsManager = getAnimationsManager();
     if (animationsManager == null) {
@@ -69,7 +66,7 @@ public class LayoutAnimations {
     animationsManager.progressLayoutAnimation(tag, newStyle, isSharedTransition);
   }
 
-  public AnimationsManager getAnimationsManager() {
+  private AnimationsManager getAnimationsManager() {
     AnimationsManager animationsManager = mWeakAnimationsManager.get();
     if (animationsManager != null) {
       return mWeakAnimationsManager.get();

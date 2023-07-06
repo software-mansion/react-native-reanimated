@@ -26,7 +26,6 @@
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
   BOOL _isSharedProgressTransition;
   BOOL _isAsyncSharedTransitionConfigured;
-  REAUpdateSharedTransitionProgressBlock _updateSharedTransitionProgress;
   BOOL _isConfigured;
   UIView *_droppedStack;
 }
@@ -717,10 +716,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)setUpdateSharedTransitionProgressBlock:(REAUpdateSharedTransitionProgressBlock)block
-{
-  _updateSharedTransitionProgress = block;
-}
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
                            targetValues:(NSMutableDictionary *)targetValues
 {

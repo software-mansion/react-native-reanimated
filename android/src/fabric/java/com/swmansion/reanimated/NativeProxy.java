@@ -91,11 +91,6 @@ public class NativeProxy extends NativeProxyCommon {
 
             @Override
             public void cancelAnimation(int tag, int type, boolean cancelled, boolean removeView) {}
-
-            @Override
-            public void updateSharedTransitionProgress(int sourceViewTag, int targetViewTag, double progress) {
-                // TODO: we need to wait for LayoutAnimations to be implemented in Fabric
-            }
         };
     }
 }
