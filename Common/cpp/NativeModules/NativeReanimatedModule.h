@@ -122,7 +122,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
 
-  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &tag);
+  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
 
   void performOperations();
 
