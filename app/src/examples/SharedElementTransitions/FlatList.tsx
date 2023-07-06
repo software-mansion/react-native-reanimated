@@ -32,12 +32,12 @@ const Item = ({ item, parentItem, onPress }: any) => (
   <TouchableOpacity onPress={onPress}>
     <Text style={styles.title}>{item.title}</Text>
     <Animated.View
-      style={[styles.item]}
+      style={styles.item}
       sharedTransitionTag={item.id + '-' + parentItem.index}>
       <Animated.Image
         sharedTransitionTag={item.id + '-' + parentItem.index + 'image'}
         source={photo}
-        style={{ width: '100%', maxHeight: 100, borderRadius: 10 }}
+        style={styles.itemImage}
       />
     </Animated.View>
   </TouchableOpacity>
@@ -59,7 +59,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flexOne}>
       <FlatList
         data={[...new Array(3)]}
         renderItem={(parentItem) => (
@@ -80,12 +80,12 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 
 function Screen2({ route, navigation }: any) {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flexOne}>
       <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
       <Animated.Image
         sharedTransitionTag={route.params.sharedTransitionTag + 'image'}
         source={photo}
-        style={{ width: '100%', height: 200 }}
+        style={styles.imageScreenTwo}
       />
     </View>
   );
@@ -109,6 +109,7 @@ export default function FlatListExample() {
 }
 
 const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
   item: {
     width: 180,
     height: 100,
@@ -116,7 +117,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     overflow: 'hidden',
   },
+  itemImage: {
+    width: '100%',
+    maxHeight: 100,
+    borderRadius: 10,
+  },
   title: {
     fontSize: 10,
+  },
+  imageScreenTwo: {
+    width: '100%',
+    height: 200,
   },
 });

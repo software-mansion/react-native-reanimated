@@ -6,7 +6,7 @@ module.exports = {
     'prettier',
     'plugin:import/typescript',
   ],
-  plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
+  plugins: ['jest', 'react-native'],
   env: {
     'react-native/react-native': true,
     'jest/globals': true,

@@ -163,7 +163,7 @@ export default function IPodExample(): React.ReactElement {
           return (
             <Animated.View key={i} style={[styles.item, uas]}>
               <View style={styles.cover}>
-                <Text style={{ fontSize: 80, textAlign: 'center' }}>♪</Text>
+                <Text style={styles.noteText}>♪</Text>
               </View>
               <Text style={styles.label}>{artist}</Text>
               <Text style={[styles.label, styles.songLabel]}>{song}</Text>
@@ -231,5 +231,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     margin: 20,
     marginLeft: ITEM_SIZE.size / 2 - 100 / 2,
+  },
+  noteText: {
+    fontSize: 80,
+    textAlign: 'center',
   },
 });
