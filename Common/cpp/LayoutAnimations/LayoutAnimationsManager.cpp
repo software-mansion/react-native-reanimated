@@ -127,11 +127,11 @@ std::string LayoutAnimationsManager::getScreenSharedTagPairString(
   return std::to_string(screenTag) + ":" + sharedTag;
 }
 
-bool LayoutAnimationsManager::hasDuplicateSharedTag(
+void LayoutAnimationsManager::checkDuplicateSharedTag(
     const int viewTag,
     const int screenTag) {
   if (!viewTagToSharedTag_.count(viewTag)) {
-    return false;
+    return;
   }
   const auto &sharedTag = viewTagToSharedTag_[viewTag];
   const auto &pair = getScreenSharedTagPairString(screenTag, sharedTag);
@@ -140,11 +140,9 @@ bool LayoutAnimationsManager::hasDuplicateSharedTag(
     jsLogger_->warnOnJS(
         "[Reanimated] Duplicate shared tag \"" + sharedTag +
         "\" on the same screen");
-    return true;
   }
   viewsScreenSharedTagMap_[viewTag] = pair;
   screenSharedTagSet_.insert(pair);
-  return false;
 }
 
 void LayoutAnimationsManager::initializeJSLogger(

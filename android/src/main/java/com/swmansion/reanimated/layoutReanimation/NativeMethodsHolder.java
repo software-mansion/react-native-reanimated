@@ -15,5 +15,5 @@ public interface NativeMethodsHolder {
 
   int findPrecedingViewTagForTransition(int tag);
 
-  boolean hasDuplicateSharedTag(int viewTag, int screenTag);
+  void checkDuplicateSharedTag(int viewTag, int screenTag);
 }

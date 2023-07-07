@@ -180,11 +180,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mSharedTransitionManager.notifyAboutNewView(view);
     }
     if (BuildConfig.DEBUG) {
-      hasDuplicateSharedTag(view);
+      checkDuplicateSharedTag(view);
     }
   }
 
-  private boolean hasDuplicateSharedTag(View view) {
+  private void checkDuplicateSharedTag(View view) {
     int viewTag = view.getId();
 
     ViewParent parent = view.getParent();
@@ -197,9 +197,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (parent != null) {
       int screenTag = ((View) parent).getId();
-      return mNativeMethodsHolder.hasDuplicateSharedTag(viewTag, screenTag);
+      mNativeMethodsHolder.checkDuplicateSharedTag(viewTag, screenTag);
     }
-    return false;
   }
 
   public void progressLayoutAnimation(

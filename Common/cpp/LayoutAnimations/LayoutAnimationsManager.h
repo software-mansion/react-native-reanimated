@@ -47,7 +47,7 @@ class LayoutAnimationsManager {
   std::string getScreenSharedTagPairString(
       const int screenTag,
       const std::string &sharedTag);
-  bool hasDuplicateSharedTag(const int viewTag, const int screenTag);
+  void checkDuplicateSharedTag(const int viewTag, const int screenTag);
   void initializeJSLogger(const std::shared_ptr<JSLogger> &jsLogger);
 #endif
 

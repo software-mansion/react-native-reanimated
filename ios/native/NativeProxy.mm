@@ -374,11 +374,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     return nil;
   }];
 #ifdef DEBUG
-  [animationsManager setHasDuplicateSharedTagBlock:^(UIView *view, NSNumber *_Nonnull viewTag) {
+  [animationsManager setCheckDuplicateSharedTagBlock:^(UIView *view, NSNumber *_Nonnull viewTag) {
     UIView *screen = [REAScreensHelper getScreenForView:(UIView *)view];
     auto screenTag = [screen.reactTag intValue];
     // Here we check if there are duplicate tags (we don't use return bool value currently)
-    nativeReanimatedModule->layoutAnimationsManager().hasDuplicateSharedTag([viewTag intValue], screenTag);
+    nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
   }];
 #endif // DEBUG
 

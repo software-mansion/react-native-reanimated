@@ -52,13 +52,13 @@ void LayoutAnimations::setHasAnimationBlock(
 }
 
 #ifdef DEBUG
-void LayoutAnimations::setHasDuplicateSharedTag(
-    HasDuplicateSharedTag hasDuplicateSharedTag) {
-  hasDuplicateSharedTag_ = hasDuplicateSharedTag;
+void LayoutAnimations::setCheckDuplicateSharedTag(
+    CheckDuplicateSharedTag checkDuplicateSharedTag) {
+  checkDuplicateSharedTag_ = checkDuplicateSharedTag;
 }
 
-bool LayoutAnimations::hasDuplicateSharedTag(int viewTag, int screenTag) {
-  return hasDuplicateSharedTag_(viewTag, screenTag);
+void LayoutAnimations::checkDuplicateSharedTag(int viewTag, int screenTag) {
+  checkDuplicateSharedTag_(viewTag, screenTag);
 }
 #endif
 
@@ -123,7 +123,7 @@ void LayoutAnimations::registerNatives() {
           LayoutAnimations::findPrecedingViewTagForTransition),
 #ifdef DEBUG
       makeNativeMethod(
-          "hasDuplicateSharedTag", LayoutAnimations::hasDuplicateSharedTag),
+          "checkDuplicateSharedTag", LayoutAnimations::checkDuplicateSharedTag),
 #endif
   });
 }
