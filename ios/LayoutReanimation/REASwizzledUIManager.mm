@@ -13,7 +13,7 @@
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
 
-@implementation RCTUIManager (REA)
+@implementation RCTUIManager (Reanimated)
 @dynamic animationsManager;
 - (void)setAnimationsManager:(REAAnimationsManager *)animationsManager
 {
@@ -28,7 +28,7 @@
 @implementation REASwizzledUIManager
 
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager
-            withAnimatioinManager:(REAAnimationsManager *)animationsManager
+             withAnimationManager:(REAAnimationsManager *)animationsManager
 {
   if (self = [super init]) {
     [uiManager setAnimationsManager:animationsManager];
@@ -82,10 +82,10 @@
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
   BOOL containerIsRootOfViewController = NO;
-  RCTUIManager *_self = (RCTUIManager *)self;
+  RCTUIManager *originalSelf = (RCTUIManager *)self;
   if (isLayoutAnimationEnabled) {
     container = registry[containerTag];
-    permanentlyRemovedChildren = [_self _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+    permanentlyRemovedChildren = [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
 
     if ([container isKindOfClass:[UIView class]]) {
       UIViewController *controller = ((UIView *)container).reactViewController;
@@ -97,12 +97,12 @@
     // of some view controller. In that case, we skip running exiting animations
     // in its children, to prevent issues with RN Screens.
     if (containerIsRootOfViewController) {
-      NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [_self _childrenToRemoveFromContainer:container
-                                                                                          atIndices:removeAtIndices];
+      NSArray<id<RCTComponent>> *permanentlyRemovedChildren =
+          [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
       for (UIView *view in permanentlyRemovedChildren) {
-        [_self.animationsManager endAnimationsRecursive:view];
+        [originalSelf.animationsManager endAnimationsRecursive:view];
       }
-      [_self.animationsManager removeAnimationsFromSubtree:(UIView *)container];
+      [originalSelf.animationsManager removeAnimationsFromSubtree:(UIView *)container];
     }
   }
 
@@ -133,9 +133,9 @@
         return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
       }];
 
-  [_self.animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
-                                        toContainer:container
-                                          atIndices:removeAtIndices];
+  [originalSelf.animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
+                                               toContainer:container
+                                                 atIndices:removeAtIndices];
 }
 
 - (RCTViewManagerUIBlock)reanimated_uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView
@@ -144,7 +144,7 @@
     return [self reanimated_uiBlockWithLayoutUpdateForRootView:rootShadowView];
   }
 
-  RCTUIManager *_self = (RCTUIManager *)self;
+  RCTUIManager *originalSelf = (RCTUIManager *)self;
   NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 
@@ -258,7 +258,8 @@
       }
 
       // Reanimated changes /start
-      REASnapshot *snapshotBefore = isNew ? nil : [_self.animationsManager prepareSnapshotBeforeMountForView:view];
+      REASnapshot *snapshotBefore =
+          isNew ? nil : [originalSelf.animationsManager prepareSnapshotBeforeMountForView:view];
       snapshotsBefore[reactTag] = snapshotBefore;
       // Reanimated changes /end
 
@@ -319,7 +320,7 @@
       REASnapshot *snapshotBefore = snapshotsBefore[reactTag];
 
       if (isNew || snapshotBefore != nil) {
-        [_self.animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
+        [originalSelf.animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
       }
     }
 
@@ -328,7 +329,7 @@
     // private field
     [uiManager setNextLayoutAnimationGroup:nil];
 
-    [_self.animationsManager viewsDidLayout];
+    [originalSelf.animationsManager viewsDidLayout];
     // Reanimated changes /end
   };
 }

@@ -2,5 +2,5 @@
 
 @interface REASwizzledUIManager : NSObject
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager
-            withAnimatioinManager:(REAAnimationsManager *)animationsManager;
+             withAnimationManager:(REAAnimationsManager *)animationsManager;
 @end

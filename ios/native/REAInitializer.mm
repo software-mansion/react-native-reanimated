@@ -10,7 +10,12 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     RCTBridge *bridge,
     JSIExecutor::RuntimeInstaller runtimeInstallerToWrap)
 {
-  return runtimeInstallerToWrap;
+  const auto runtimeInstaller = [runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
+    if (runtimeInstallerToWrap) {
+      runtimeInstallerToWrap(runtime);
+    }
+  };
+  return runtimeInstaller;
 }
 
 #endif // REACT_NATIVE_MINOR_VERSION <= 71

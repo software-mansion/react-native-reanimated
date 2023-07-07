@@ -73,7 +73,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
     }
     _sharedTransitionManager = [[REASharedTransitionManager alloc] initWithAnimationsManager:self];
-    _reaSwizzledUIManager = [[REASwizzledUIManager alloc] initWithUIManager:uiManager withAnimatioinManager:self];
+    _reaSwizzledUIManager = [[REASwizzledUIManager alloc] initWithUIManager:uiManager withAnimationManager:self];
   }
   return self;
 }
