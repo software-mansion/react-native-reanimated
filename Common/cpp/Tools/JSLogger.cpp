@@ -4,6 +4,7 @@
 #include <memory>
 
 namespace reanimated {
+
 JSLogger::JSLogger(const std::shared_ptr<JSRuntimeHelper> &runtimeHelper)
     : runtimeHelper_(runtimeHelper) {}
 
@@ -16,6 +17,7 @@ void JSLogger::warnOnJS(const std::string &warning) const {
         warn.call(rt, jsi::String::createFromUtf8(rt, warning));
       });
 }
+
 } // namespace reanimated
 
 #endif // DEBUG

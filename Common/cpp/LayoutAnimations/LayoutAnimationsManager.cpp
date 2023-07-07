@@ -38,7 +38,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   const auto &pair = viewsScreenSharedTagMap_[tag];
   screenSharedTagSet_.erase(pair);
   viewsScreenSharedTagMap_.erase(tag);
-#endif
+#endif // DEBUG
 
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
@@ -133,8 +133,8 @@ bool LayoutAnimationsManager::hasDuplicateSharedTag(
   if (!viewTagToSharedTag_.count(viewTag)) {
     return false;
   }
-  auto sharedTag = viewTagToSharedTag_[viewTag];
-  auto pair = getScreenSharedTagPairString(screenTag, sharedTag);
+  const auto &sharedTag = viewTagToSharedTag_[viewTag];
+  const auto &pair = getScreenSharedTagPairString(screenTag, sharedTag);
   bool hasDuplicate = screenSharedTagSet_.count(pair);
   if (hasDuplicate) {
     jsLogger_->warnOnJS(
