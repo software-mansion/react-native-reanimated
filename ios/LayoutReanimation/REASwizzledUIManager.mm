@@ -7,7 +7,7 @@
 #import <React/RCTUIManager.h>
 #import <objc/runtime.h>
 
-@interface RCTUIManager (REA)
+@interface RCTUIManager (Reanimated)
 @property REAAnimationsManager *animationsManager;
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
