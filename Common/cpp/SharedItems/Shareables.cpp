@@ -1,7 +1,5 @@
 #include "Shareables.h"
 
-#include <iostream>
-
 using namespace facebook;
 
 namespace reanimated {
@@ -23,7 +21,6 @@ CoreFunction::CoreFunction(
 }
 
 std::unique_ptr<jsi::Function> &CoreFunction::getFunction(jsi::Runtime &rt) {
-  //  std::cerr << functionBody_ << std::endl;
   if (runtimeHelper_->isRNRuntime(rt)) {
     // running on the main RN runtime
     return rnFunction_;
@@ -82,43 +79,14 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
     auto key = propertyNames.getValueAtIndex(rt, i).asString(rt);
-    auto keycpp = key.utf8(rt);
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
-    data_.emplace_back(keycpp, value);
+    data_.emplace_back(key.utf8(rt), value);
   }
 }
 
 std::shared_ptr<Shareable> Shareable::undefined() {
   static auto undefined = std::make_shared<ShareableScalar>();
   return undefined;
-}
-
-jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
-  jsi::Value obj = ShareableObject::toJSValue(rt);
-  assert(this->data_.size() > 0); // worklet needs to have `__workletHash`
-  assert(runtimeHelper_->valueUnpacker != nullptr);
-  return runtimeHelper_->valueUnpacker->call(rt, obj);
-}
-
-jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
-  auto obj = jsi::Object(rt);
-  for (size_t i = 0, size = data_.size(); i < size; i++) {
-    obj.setProperty(
-        rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
-  }
-  return obj;
-}
-
-ShareableWorklet::ShareableWorklet(
-    const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-    jsi::Runtime &rt,
-    const jsi::Object &worklet)
-    : ShareableObject(rt, worklet), runtimeHelper_(runtimeHelper) {
-  assert(runtimeHelper != nullptr);
-  assert(
-      this->data_.size() >
-      0); // a worklet needs to have at least `__workletHash`
-  valueType_ = WorkletType;
 }
 
 } /* namespace reanimated */

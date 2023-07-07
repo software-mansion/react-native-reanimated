@@ -253,7 +253,14 @@ class ShareableArray : public Shareable {
 class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    auto obj = jsi::Object(rt);
+    for (size_t i = 0, size = data_.size(); i < size; i++) {
+      obj.setProperty(
+          rt, data_[i].first.c_str(), data_[i].second->getJSValue(rt));
+    }
+    return obj;
+  }
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
@@ -303,8 +310,16 @@ class ShareableWorklet : public ShareableObject {
   ShareableWorklet(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       jsi::Runtime &rt,
-      const jsi::Object &worklet);
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+      const jsi::Object &worklet)
+      : ShareableObject(rt, worklet), runtimeHelper_(runtimeHelper) {
+    valueType_ = WorkletType;
+  }
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    jsi::Value obj = ShareableObject::toJSValue(rt);
+    assert(this->data_.size() > 0); // `__initData`, `__workletHash` etc.
+    assert(runtimeHelper_->valueUnpacker != nullptr);
+    return runtimeHelper_->valueUnpacker->call(rt, obj);
+  }
 };
 
 class ShareableRemoteFunction
