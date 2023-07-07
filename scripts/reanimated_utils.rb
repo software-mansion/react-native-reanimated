@@ -25,6 +25,10 @@ def find_config()
   if custom_react_native_node_modules_dir.nil?
     react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
   else
+    unless File.exist? custom_react_native_node_modules_dir
+      raise "[RNReanimated] The given React Native lookup path #{custom_react_native_node_modules_dir} does not exist"
+    end
+
     react_native_node_modules_dir = custom_react_native_node_modules_dir
   end
 
