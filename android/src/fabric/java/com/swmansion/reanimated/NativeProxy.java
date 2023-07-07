@@ -93,7 +93,7 @@ public class NativeProxy extends NativeProxyCommon {
             public void cancelAnimation(int tag, int type, boolean cancelled, boolean removeView) {}
 
             @Override
-            public void checkDuplicateSharedTag(int viewTag, int screenTag) { return false; }
+            public void checkDuplicateSharedTag(int viewTag, int screenTag) { return; }
         };
     }
 }
