@@ -4,6 +4,7 @@ export {
   useEvent,
   useHandler,
   useWorkletCallback,
+  useReducedMotion,
 } from './Hooks';
 export { useSharedValue } from './useSharedValue';
 export { useAnimatedStyle } from './useAnimatedStyle';
