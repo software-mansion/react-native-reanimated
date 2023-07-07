@@ -1,12 +1,12 @@
 import { withTiming, withSpring } from '../../animation';
-import {
+import type {
   AnimationFunction,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
 } from './commonTypes';
-import { EasingFn } from '../../Easing';
+import type { EasingFn } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
-import { StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   easingV?: EasingFn;
@@ -20,110 +20,132 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   restSpeedThresholdV?: number;
   initialValues?: StyleProps;
 
-  static createInstance: () => ComplexAnimationBuilder;
+  static createInstance: <T extends typeof BaseAnimationBuilder>(
+    this: T
+  ) => InstanceType<T>;
 
-  static easing(easingFunction: EasingFn): ComplexAnimationBuilder {
+  static easing<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    easingFunction: EasingFn
+  ) {
     const instance = this.createInstance();
     return instance.easing(easingFunction);
   }
 
-  easing(easingFunction: EasingFn): ComplexAnimationBuilder {
+  easing(easingFunction: EasingFn): this {
     this.easingV = easingFunction;
     return this;
   }
 
-  static rotate(degree: string): ComplexAnimationBuilder {
+  static rotate<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    degree: string
+  ) {
     const instance = this.createInstance();
     return instance.rotate(degree);
   }
 
-  rotate(degree: string): ComplexAnimationBuilder {
+  rotate(degree: string): this {
     this.rotateV = degree;
     return this;
   }
 
-  static springify(): ComplexAnimationBuilder {
+  static springify<T extends typeof ComplexAnimationBuilder>(
+    this: T
+  ): ComplexAnimationBuilder {
     const instance = this.createInstance();
     return instance.springify();
   }
 
-  springify(): ComplexAnimationBuilder {
+  springify(): this {
     this.type = withSpring as AnimationFunction;
     return this;
   }
 
-  static damping(damping: number): ComplexAnimationBuilder {
+  static damping<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    damping: number
+  ) {
     const instance = this.createInstance();
     return instance.damping(damping);
   }
 
-  damping(damping: number): ComplexAnimationBuilder {
+  damping(damping: number): this {
     this.dampingV = damping;
     return this;
   }
 
-  static mass(mass: number): ComplexAnimationBuilder {
+  static mass<T extends typeof ComplexAnimationBuilder>(this: T, mass: number) {
     const instance = this.createInstance();
     return instance.mass(mass);
   }
 
-  mass(mass: number): ComplexAnimationBuilder {
+  mass(mass: number): this {
     this.massV = mass;
     return this;
   }
 
-  static stiffness(stiffness: number): ComplexAnimationBuilder {
+  static stiffness<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    stiffness: number
+  ) {
     const instance = this.createInstance();
     return instance.stiffness(stiffness);
   }
 
-  stiffness(stiffness: number): ComplexAnimationBuilder {
+  stiffness(stiffness: number): this {
     this.stiffnessV = stiffness;
     return this;
   }
 
-  static overshootClamping(overshootClamping: number): ComplexAnimationBuilder {
+  static overshootClamping<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    overshootClamping: number
+  ) {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(overshootClamping: number): ComplexAnimationBuilder {
+  overshootClamping(overshootClamping: number): this {
     this.overshootClampingV = overshootClamping;
     return this;
   }
 
-  static restDisplacementThreshold(
+  static restDisplacementThreshold<T extends typeof ComplexAnimationBuilder>(
+    this: T,
     restDisplacementThreshold: number
-  ): ComplexAnimationBuilder {
+  ) {
     const instance = this.createInstance();
     return instance.restDisplacementThreshold(restDisplacementThreshold);
   }
 
-  restDisplacementThreshold(
-    restDisplacementThreshold: number
-  ): ComplexAnimationBuilder {
+  restDisplacementThreshold(restDisplacementThreshold: number) {
     this.restDisplacementThresholdV = restDisplacementThreshold;
     return this;
   }
 
-  static restSpeedThreshold(
+  static restSpeedThreshold<T extends typeof ComplexAnimationBuilder>(
+    this: T,
     restSpeedThreshold: number
-  ): ComplexAnimationBuilder {
+  ) {
     const instance = this.createInstance();
     return instance.restSpeedThreshold(restSpeedThreshold);
   }
 
-  restSpeedThreshold(restSpeedThreshold: number): ComplexAnimationBuilder {
+  restSpeedThreshold(restSpeedThreshold: number): this {
     this.restSpeedThresholdV = restSpeedThreshold;
     return this;
   }
 
-  static withInitialValues(values: StyleProps): BaseAnimationBuilder {
+  static withInitialValues<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    values: StyleProps
+  ) {
     const instance = this.createInstance();
     return instance.withInitialValues(values);
   }
 
-  withInitialValues(values: StyleProps): BaseAnimationBuilder {
+  withInitialValues(values: StyleProps): this {
     this.initialValues = values;
     return this;
   }

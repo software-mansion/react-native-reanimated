@@ -106,11 +106,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void onRender(double timestampMs);
 
-  void onEvent(
-      double eventTimestamp,
-      const std::string &eventName,
-      const jsi::Value &payload);
-
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
@@ -118,6 +113,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   bool handleEvent(
       const std::string &eventName,
+      const int emitterReactTag,
       const jsi::Value &payload,
       double currentTime);
 
@@ -126,7 +122,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
 
-  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &tag);
+  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
 
   void performOperations();
 

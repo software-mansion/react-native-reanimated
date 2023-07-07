@@ -1,16 +1,18 @@
-import { NodePath } from '@babel/core';
-import {
+import type { NodePath } from '@babel/core';
+import type {
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
+  Expression,
+} from '@babel/types';
+import {
   isIdentifier,
   isCallExpression,
-  Expression,
   isMemberExpression,
   isExpression,
 } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
-import { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass } from './types';
 
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts

@@ -1,5 +1,6 @@
+import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
-import {
+import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
@@ -8,8 +9,10 @@ export class PinwheelIn
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): PinwheelIn {
-    return new PinwheelIn();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new PinwheelIn() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -19,7 +22,7 @@ export class PinwheelIn
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -55,8 +58,10 @@ export class PinwheelOut
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): PinwheelOut {
-    return new PinwheelOut();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new PinwheelOut() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -66,7 +71,7 @@ export class PinwheelOut
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    return (_values) => {
+    return () => {
       'worklet';
       return {
         animations: {

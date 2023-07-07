@@ -1,6 +1,6 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import { ComplexWorkletFunction } from './commonTypes';
+import type { ComplexWorkletFunction } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -167,7 +167,9 @@ export function runOnJS<A extends any[], R>(
   return (...args) => {
     _scheduleOnJS(
       fun,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+      args.length > 0
+        ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+        : undefined
     );
   };
 }

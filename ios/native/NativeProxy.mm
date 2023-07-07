@@ -275,14 +275,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   scheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
 
-  [reaModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
+  [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
-    std::string eventName = [eventNameNSString UTF8String];
+    std::string eventName = [event.eventName UTF8String];
+    int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
     jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
     jsi::Value payload = convertObjCObjectToJSIValue(rt, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
-    nativeReanimatedModule->handleEvent(eventName, payload, currentTime);
+    nativeReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
   }];
 
   std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
@@ -295,8 +296,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
   // Layout Animation callbacks setup
   [animationsManager
-      setAnimationStartingBlock:^(
-          NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values, NSNumber *depth) {
+      setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
         auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
         if (nativeReanimatedModule == nullptr) {
           return;

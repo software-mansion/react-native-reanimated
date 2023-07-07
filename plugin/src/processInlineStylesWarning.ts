@@ -1,11 +1,14 @@
-import { NodePath } from '@babel/core';
-import {
+import type { NodePath } from '@babel/core';
+import type {
   MemberExpression,
+  ObjectExpression,
+  JSXAttribute,
+  ObjectProperty,
+} from '@babel/types';
+import {
   callExpression,
   arrowFunctionExpression,
   isArrayExpression,
-  ObjectExpression,
-  JSXAttribute,
   isJSXExpressionContainer,
   identifier,
   stringLiteral,
@@ -13,11 +16,10 @@ import {
   memberExpression,
   returnStatement,
   blockStatement,
-  ObjectProperty,
   isIdentifier,
 } from '@babel/types';
 import { isRelease } from './utils';
-import { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass } from './types';
 import { strict as assert } from 'assert';
 
 function generateInlineStylesWarning(path: NodePath<MemberExpression>) {

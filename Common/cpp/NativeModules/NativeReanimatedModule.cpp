@@ -95,10 +95,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, operations);
   };
 
-  auto removeFromPropsRegistry = [this](
-                                     jsi::Runtime &rt, const jsi::Value &tag) {
-    this->removeFromPropsRegistry(rt, tag);
-  };
+  auto removeFromPropsRegistry =
+      [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
+        this->removeFromPropsRegistry(rt, viewTags);
+      };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
@@ -410,14 +410,6 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
   return jsi::Value::undefined();
 }
 
-void NativeReanimatedModule::onEvent(
-    double eventTimestamp,
-    const std::string &eventName,
-    const jsi::Value &payload) {
-  eventHandlerRegistry->processEvent(
-      *runtimeManager_->runtime, eventTimestamp, eventName, payload);
-}
-
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
     std::string eventName) {
   return eventHandlerRegistry->isAnyHandlerWaitingForEvent(eventName);
@@ -483,9 +475,15 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
+    const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
-  onEvent(currentTime, eventName, payload);
+  eventHandlerRegistry->processEvent(
+      *runtimeManager_->runtime,
+      currentTime,
+      eventName,
+      emitterReactTag,
+      payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -512,11 +510,10 @@ bool NativeReanimatedModule::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  std::string eventName = std::to_string(tag) + eventType;
   jsi::Runtime &rt = *runtimeManager_->runtime.get();
   jsi::Value payload = payloadFactory(rt);
 
-  auto res = handleEvent(eventName, std::move(payload), currentTime);
+  auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to be
@@ -634,8 +631,6 @@ void NativeReanimatedModule::performOperations() {
             }
           }
 
-          shadowTreeCloner.updateYogaChildren();
-
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
 
           // skip ReanimatedCommitHook for this ShadowTree
@@ -649,8 +644,11 @@ void NativeReanimatedModule::performOperations() {
 
 void NativeReanimatedModule::removeFromPropsRegistry(
     jsi::Runtime &rt,
-    const jsi::Value &tag) {
-  tagsToRemove_.push_back(tag.asNumber());
+    const jsi::Value &viewTags) {
+  auto array = viewTags.asObject(rt).asArray(rt);
+  for (size_t i = 0, size = array.size(rt); i < size; ++i) {
+    tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
+  }
 }
 
 void NativeReanimatedModule::dispatchCommand(

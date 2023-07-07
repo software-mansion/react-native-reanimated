@@ -1,38 +1,36 @@
-import {
-  BabelFileResult,
-  NodePath,
-  transformSync,
-  PluginItem,
-} from '@babel/core';
+import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
+import { transformSync } from '@babel/core';
 import generate from '@babel/generator';
-import {
-  ObjectMethod,
-  isObjectMethod,
+import type {
+  ArrowFunctionExpression,
+  File as BabelFile,
+  ExpressionStatement,
   FunctionDeclaration,
   FunctionExpression,
-  ArrowFunctionExpression,
-  identifier,
   Identifier,
-  objectProperty,
-  isArrowFunctionExpression,
-  variableDeclaration,
-  variableDeclarator,
-  isBlockStatement,
-  functionExpression,
-  isFunctionDeclaration,
+  ObjectMethod,
   VariableDeclaration,
-  ExpressionStatement,
-  isProgram,
-  memberExpression,
-  File as BabelFile,
-  objectPattern,
-  thisExpression,
+} from '@babel/types';
+import {
+  functionExpression,
+  identifier,
+  isArrowFunctionExpression,
+  isBlockStatement,
   isExpression,
   isExpressionStatement,
+  isFunctionDeclaration,
+  isObjectMethod,
+  isProgram,
+  memberExpression,
+  objectPattern,
+  objectProperty,
+  thisExpression,
+  variableDeclaration,
+  variableDeclarator,
 } from '@babel/types';
-import * as fs from 'fs';
-import * as convertSourceMap from 'convert-source-map';
 import { strict as assert } from 'assert';
+import * as convertSourceMap from 'convert-source-map';
+import * as fs from 'fs';
 import { isRelease } from './utils';
 
 export function buildWorkletString(

@@ -1,9 +1,10 @@
-import {
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
-import { EasingFn, Easing } from '../../Easing';
+import type { EasingFn } from '../../Easing';
+import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
 
 export class CurvedTransition
@@ -14,8 +15,11 @@ export class CurvedTransition
   easingYV: EasingFn = Easing.out(Easing.ease);
   easingWidthV: EasingFn = Easing.in(Easing.exp);
   easingHeightV: EasingFn = Easing.out(Easing.exp);
-  static createInstance(): CurvedTransition {
-    return new CurvedTransition();
+
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new CurvedTransition() as InstanceType<T>;
   }
 
   static easingX(easing: EasingFn): CurvedTransition {

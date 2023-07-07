@@ -10,7 +10,7 @@ import {
 } from './Colors';
 import { makeMutable } from './core';
 import { interpolate } from './interpolation';
-import { SharedValue } from './commonTypes';
+import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
 
 export const Extrapolate = {
@@ -175,13 +175,29 @@ const getInterpolateHSV = (
   return { h, s, v, a };
 };
 
-export const interpolateColor = (
+export function interpolateColor(
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly string[],
+  colorSpace?: 'RGB' | 'HSV',
+  options?: InterpolationOptions
+): string;
+
+export function interpolateColor(
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly number[],
+  colorSpace?: 'RGB' | 'HSV',
+  options?: InterpolationOptions
+): number;
+
+export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly (string | number)[],
   colorSpace: 'RGB' | 'HSV' = 'RGB',
   options: InterpolationOptions = {}
-): string | number => {
+): string | number {
   'worklet';
   if (colorSpace === 'HSV') {
     return interpolateColorsHSV(
@@ -201,7 +217,7 @@ export const interpolateColor = (
   throw new Error(
     `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
   );
-};
+}
 
 export enum ColorSpace {
   RGB = 0,
