@@ -1,4 +1,5 @@
 #ifdef DEBUG
+
 #pragma once
 
 #include "LayoutAnimationType.h"
@@ -11,13 +12,13 @@ namespace reanimated {
 
 class JSLogger {
  public:
-  JSLogger();
   explicit JSLogger(const std::shared_ptr<JSRuntimeHelper> &runtimeHelper);
-  void warnOnJs(std::string warning) const;
+  void warnOnJs(const std::string &warning) const;
 
  private:
-  const std::shared_ptr<JSRuntimeHelper> runtimeHelper;
+  const std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
 };
 
 } // namespace reanimated
-#endif
+
+#endif // DEBUG

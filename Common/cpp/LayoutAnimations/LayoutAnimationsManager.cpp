@@ -35,9 +35,9 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
 #ifdef DEBUG
-  auto pair = viewsScreenSharedTagMap[tag];
-  screenSharedTagSet.erase(pair);
-  viewsScreenSharedTagMap.erase(tag);
+  const auto &pair = viewsScreenSharedTagMap_[tag];
+  screenSharedTagSet_.erase(pair);
+  viewsScreenSharedTagMap_.erase(tag);
 #endif
 
   sharedTransitionAnimations_.erase(tag);
@@ -122,36 +122,36 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
 
 #ifdef DEBUG
 std::string LayoutAnimationsManager::getScreenSharedTagPairString(
-    int screenTag,
-    std::string sharedTag) {
+    const int screenTag,
+    const std::string &sharedTag) {
   return std::to_string(screenTag) + ":" + sharedTag;
 }
 
 bool LayoutAnimationsManager::hasDuplicateSharedTag(
-    int viewTag,
-    int screenTag) {
+    const int viewTag,
+    const int screenTag) {
   if (!viewTagToSharedTag_.count(viewTag)) {
     return false;
   }
   auto sharedTag = viewTagToSharedTag_[viewTag];
   auto pair = getScreenSharedTagPairString(screenTag, sharedTag);
-  bool hasDuplicate = screenSharedTagSet.count(pair);
+  bool hasDuplicate = screenSharedTagSet_.count(pair);
   if (hasDuplicate) {
-    jsLogger->warnOnJs(
-        "Reanimated: Found duplicate shared tag on the same screen.\nOffendening tag is: " +
-        sharedTag);
+    jsLogger_->warnOnJs(
+        "[Reanimated] Duplicate shared tag \"" + sharedTag +
+        "\" on the same screen");
     return true;
   }
-  viewsScreenSharedTagMap[viewTag] = pair;
-  screenSharedTagSet.insert(pair);
+  viewsScreenSharedTagMap_[viewTag] = pair;
+  screenSharedTagSet_.insert(pair);
   return false;
 }
 
 void LayoutAnimationsManager::initializeJSLogger(
     const std::shared_ptr<JSLogger> &jsLogger) {
-  this->jsLogger = jsLogger;
+  jsLogger_ = jsLogger;
 }
-#endif
+#endif // DEBUG
 
 std::unordered_map<int, std::shared_ptr<Shareable>>
     &LayoutAnimationsManager::getConfigsForType(LayoutAnimationType type) {

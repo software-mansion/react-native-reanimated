@@ -149,12 +149,7 @@ function Screen4({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
 
 export default function DuplicateTagsExample() {
   return (
-    <Stack.Navigator
-      screenOptions={
-        {
-          // animation: 'none',
-        }
-      }>
+    <Stack.Navigator>
       <Stack.Screen
         name="Screen1"
         component={Screen1}

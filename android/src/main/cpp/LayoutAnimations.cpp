@@ -54,7 +54,7 @@ void LayoutAnimations::setHasAnimationBlock(
 #ifdef DEBUG
 void LayoutAnimations::setHasDuplicateSharedTag(
     HasDuplicateSharedTag hasDuplicateSharedTag) {
-  this->hasDuplicateSharedTag_ = hasDuplicateSharedTag;
+  hasDuplicateSharedTag_ = hasDuplicateSharedTag;
 }
 
 bool LayoutAnimations::hasDuplicateSharedTag(int viewTag, int screenTag) {

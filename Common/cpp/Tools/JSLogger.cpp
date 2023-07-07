@@ -1,19 +1,21 @@
 #ifdef DEBUG
+
 #include "JSLogger.h"
 #include <memory>
 
 namespace reanimated {
-JSLogger::JSLogger() {}
 JSLogger::JSLogger(const std::shared_ptr<JSRuntimeHelper> &runtimeHelper)
-    : runtimeHelper(runtimeHelper) {}
+    : runtimeHelper_(runtimeHelper) {}
 
-void JSLogger::warnOnJs(std::string warning) const {
-  runtimeHelper->scheduleOnJS([=]() {
-    jsi::Runtime &rt = *(runtimeHelper->rnRuntime());
-    auto console = rt.global().getPropertyAsObject(rt, "console");
-    auto warn = console.getPropertyAsFunction(rt, "warn");
-    warn.call(rt, warning.c_str());
-  });
+void JSLogger::warnOnJs(const std::string &warning) const {
+  runtimeHelper_->scheduleOnJS(
+      [warning = warning, &runtimeHelper_ = runtimeHelper_]() {
+        jsi::Runtime &rt = *(runtimeHelper_->rnRuntime());
+        auto console = rt.global().getPropertyAsObject(rt, "console");
+        auto warn = console.getPropertyAsFunction(rt, "warn");
+        warn.call(rt, jsi::String::createFromUtf8(rt, warning));
+      });
 }
 } // namespace reanimated
-#endif
+
+#endif // DEBUG

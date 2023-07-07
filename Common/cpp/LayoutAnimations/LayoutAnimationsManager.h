@@ -45,9 +45,9 @@ class LayoutAnimationsManager {
   int findPrecedingViewTagForTransition(int tag);
 #ifdef DEBUG
   std::string getScreenSharedTagPairString(
-      int screenTag,
-      std::string sharedTag);
-  bool hasDuplicateSharedTag(int viewTag, int screenTag);
+      const int screenTag,
+      const std::string &sharedTag);
+  bool hasDuplicateSharedTag(const int viewTag, const int screenTag);
   void initializeJSLogger(const std::shared_ptr<JSLogger> &jsLogger);
 #endif
 
@@ -56,12 +56,12 @@ class LayoutAnimationsManager {
       LayoutAnimationType type);
 
 #ifdef DEBUG
-  std::shared_ptr<JSLogger> jsLogger;
+  std::shared_ptr<JSLogger> jsLogger_;
   // This set's function is to detect duplicate sharedTags on a single screen
-  //     it contains strings in form: "reactScreenTag:sharedTag"
-  std::unordered_set<std::string> screenSharedTagSet;
+  // it contains strings in form: "reactScreenTag:sharedTag"
+  std::unordered_set<std::string> screenSharedTagSet_;
   // And this map is to remove collected pairs on SET removal
-  std::unordered_map<int, std::string> viewsScreenSharedTagMap;
+  std::unordered_map<int, std::string> viewsScreenSharedTagMap_;
 #endif
 
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;

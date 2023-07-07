@@ -19,11 +19,14 @@
 
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
-#include "JSLogger.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
+
+#ifdef DEBUG
+#include "JSLogger.h"
+#endif
 
 using namespace facebook;
 
@@ -166,10 +169,10 @@ void NativeReanimatedModule::installCoreFunctions(
   runtimeHelper->valueUnpacker =
       std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
 #ifdef DEBUG
-  // We initialize jsLogger here because I needed runtimeHelper
-  // to be initialized already (probably it's not necessary)
-  jsLogger = std::make_shared<JSLogger>(runtimeHelper);
-  layoutAnimationsManager_.initializeJSLogger(jsLogger);
+  // We initialize jsLogger_ here because we need runtimeHelper
+  // to be initialized already
+  jsLogger_ = std::make_shared<JSLogger>(runtimeHelper);
+  layoutAnimationsManager_.initializeJSLogger(jsLogger_);
 #endif
 }
 
