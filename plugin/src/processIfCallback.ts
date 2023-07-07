@@ -1,5 +1,5 @@
-import { NodePath } from '@babel/core';
-import {
+import type { NodePath } from '@babel/core';
+import type {
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
@@ -7,7 +7,7 @@ import {
 import { isGestureHandlerEventCallback } from './isGestureHandlerEventCallback';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { isLayoutAnimationCallback } from './isLayoutAnimationCallback';
-import { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass } from './types';
 
 export function processIfCallback(
   path: NodePath<

@@ -1,11 +1,13 @@
-import { NodePath } from '@babel/core';
-import {
+import type { NodePath } from '@babel/core';
+import type {
   FunctionDeclaration,
   FunctionExpression,
   ArrowFunctionExpression,
+  Expression,
+} from '@babel/types';
+import {
   isIdentifier,
   isCallExpression,
-  Expression,
   isMemberExpression,
   isExpression,
 } from '@babel/types';

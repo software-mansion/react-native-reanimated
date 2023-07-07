@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 export {};
 
 declare global {
@@ -14,8 +15,8 @@ const INLINE_STYLE_WARNING_REGEX =
   /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
 
 expect.extend({
-  toHaveWorkletData(received: string, expectedMatchCount: number = 1) {
-    const receivedMatchCount = received.match(WORKLET_REGEX)?.length || 0;
+  toHaveWorkletData(received: string, expectedMatchCount = 1) {
+    const receivedMatchCount = received.match(WORKLET_REGEX)?.length;
 
     if (receivedMatchCount === expectedMatchCount) {
       return {
@@ -33,7 +34,7 @@ expect.extend({
 });
 
 expect.extend({
-  toHaveInlineStyleWarning(received: string, expectedMatchCount: number = 1) {
+  toHaveInlineStyleWarning(received: string, expectedMatchCount = 1) {
     const receivedMatchCount = received.match(
       INLINE_STYLE_WARNING_REGEX
     )?.length;

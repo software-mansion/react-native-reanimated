@@ -1,20 +1,22 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import {
+import type {
   SpringConfig,
-  initialCalculations,
-  calcuateNewMassToMatchDuration,
   SpringAnimation,
   InnerSpringAnimation,
+  SpringConfigInner,
+} from './springUtils';
+import {
+  initialCalculations,
+  calcuateNewMassToMatchDuration,
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
-  SpringConfigInner,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.

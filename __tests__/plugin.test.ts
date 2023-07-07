@@ -70,7 +70,6 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input, {});
-
     expect(code).toContain(`f.__version = "${packageVersion}";`);
   });
 

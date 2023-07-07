@@ -153,9 +153,9 @@ var require_buildWorkletString = __commonJS({
     var core_1 = require("@babel/core");
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_1 = require("@babel/types");
-    var fs = __importStar(require("fs"));
-    var convertSourceMap = __importStar(require("convert-source-map"));
     var assert_1 = require("assert");
+    var convertSourceMap = __importStar(require("convert-source-map"));
+    var fs = __importStar(require("fs"));
     var utils_1 = require_utils();
     function buildWorkletString(fun, closureVariables, name, inputMap) {
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
@@ -248,11 +248,11 @@ var require_makeWorklet = __commonJS({
     var core_1 = require("@babel/core");
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_1 = require("@babel/types");
-    var utils_1 = require_utils();
     var assert_1 = require("assert");
-    var commonObjects_12 = require_commonObjects();
     var path_1 = require("path");
     var buildWorkletString_1 = require_buildWorkletString();
+    var commonObjects_12 = require_commonObjects();
+    var utils_1 = require_utils();
     var version = require("../../package.json").version;
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);

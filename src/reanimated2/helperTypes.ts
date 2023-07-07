@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
 This file is a legacy remainder of manual types from react-native-reanimated.d.ts file. 
 I wasn't able to get rid of all of them from the code. 
@@ -20,6 +21,7 @@ import type {
   SharedValue,
 } from '.';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import type { DependencyList } from './hook/commonTypes';
 
 type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
 
@@ -48,8 +50,14 @@ export type AnimateStyle<S> = {
     : S[K] | SharedValue<AnimatableValue>;
 };
 
+// provided types can either be their original types (like backgroundColor: pink)
+// or inline shared values/derived values
+type MaybeSharedValue<S> = {
+  [K in keyof S]: S[K] | Readonly<SharedValue<Extract<S[K], AnimatableValue>>>;
+};
+
 type StylesOrDefault<T> = 'style' extends keyof T
-  ? T['style']
+  ? MaybeSharedValue<T['style']>
   : Record<string, unknown>;
 
 type EntryOrExitLayoutType =
@@ -58,18 +66,72 @@ type EntryOrExitLayoutType =
   | EntryExitAnimationFunction
   | ReanimatedKeyframe;
 
-export type AnimateProps<P extends object> = {
-  [K in keyof Omit<P, 'style'>]: P[K] | SharedValue<P[K]>;
-} & {
+/* 
+  Style type properties (properties that extends StyleProp<ViewStyle>)
+  can be defined with other property names than "style". For example `contentContainerStyle` in FlatList.
+  Type definition for all style type properties should act similarly, hence we
+  pick keys with 'Style' substring with the use of this utility type.
+*/
+type PickStyleProps<T> = Pick<
+  T,
+  {
+    [Key in keyof T]-?: Key extends `${string}Style` ? Key : never;
+  }[keyof T]
+>;
+
+type StyleAnimatedProps<P extends object> = {
+  [K in keyof PickStyleProps<P>]: StyleProp<AnimateStyle<P[K]>>;
+};
+
+type JustStyleAnimatedProp<P extends object> = {
   style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
-} & {
-  animatedProps?: Partial<AnimateProps<P>>;
+};
+
+type NonStyleAnimatedProps<P extends object> = {
+  [K in keyof Omit<P, keyof PickStyleProps<P> | 'style'>]:
+    | P[K]
+    | SharedValue<P[K]>;
+};
+
+type LayoutProps = {
   layout?:
     | BaseAnimationBuilder
     | LayoutAnimationFunction
     | typeof BaseAnimationBuilder;
   entering?: EntryOrExitLayoutType;
   exiting?: EntryOrExitLayoutType;
+};
+
+type SharedTransitionProps = {
   sharedTransitionTag?: string;
   sharedTransitionStyle?: ILayoutAnimationBuilder;
 };
+
+type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &
+  JustStyleAnimatedProp<P> &
+  StyleAnimatedProps<P> &
+  LayoutProps &
+  SharedTransitionProps;
+
+export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
+  JustStyleAnimatedProp<P> &
+  StyleAnimatedProps<P> &
+  LayoutProps &
+  SharedTransitionProps & {
+    animatedProps?: Partial<AnimatedPropsProp<P>>;
+  };
+
+export type AnimatedProps<P extends object> = AnimateProps<P>;
+
+export type AnimatedPropsAdapterFunction = (
+  props: Record<string, unknown>
+) => void;
+
+export type useAnimatedPropsType = <T extends object>(
+  updater: () => Partial<T>,
+  deps?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null
+) => Partial<T>;
