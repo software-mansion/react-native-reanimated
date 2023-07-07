@@ -5,7 +5,7 @@ function createProgressTransitionManager() {
   'worklet';
   const progressAnimations = new Map<number, ProgressAnimation>();
   const snapshots = new Map<number, any>();
-  const currentTransition = new Set<number>();
+  const currentTransitions = new Set<number>();
   const toRemove = new Set<number>();
 
   const progressTransitionManager = {
@@ -25,22 +25,22 @@ function createProgressTransitionManager() {
     },
     onTransitionStart: (viewTag: number, snapshot: any) => {
       snapshots.set(viewTag, snapshot);
-      currentTransition.add(viewTag);
+      currentTransitions.add(viewTag);
       // set initial style for re-parented components
       progressTransitionManager.frame(0);
     },
     frame: (progress: number) => {
-      for (const viewTag of currentTransition) {
+      for (const viewTag of currentTransitions) {
         const progressAnimation = progressAnimations.get(viewTag);
         const snapshot = snapshots.get(viewTag);
         progressAnimation!(viewTag, snapshot, progress);
       }
     },
     onTransitionEnd: (removeViews = false) => {
-      for (const viewTag of currentTransition) {
+      for (const viewTag of currentTransitions) {
         _notifyAboutEnd(viewTag, false, removeViews);
       }
-      currentTransition.clear();
+      currentTransitions.clear();
       snapshots.clear();
       if (toRemove.size > 0) {
         for (const viewTag of toRemove) {

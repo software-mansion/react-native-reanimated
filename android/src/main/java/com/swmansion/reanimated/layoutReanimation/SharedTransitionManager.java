@@ -631,6 +631,8 @@ public class SharedTransitionManager {
   }
 
   void orderByAnimationTypes(List<SharedElement> sharedElements) {
+    mSharedElementsWithProgress.clear();
+    mSharedElementsWithAnimation.clear();
     for (SharedElement sharedElement : sharedElements) {
       int viewTag = sharedElement.sourceView.getId();
       boolean viewHasProgressAnimation =

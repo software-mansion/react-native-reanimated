@@ -9,7 +9,6 @@ import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
-import com.swmansion.reanimated.layoutReanimation.SharedTransitionManager;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 
 import java.lang.ref.WeakReference;

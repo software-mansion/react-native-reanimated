@@ -290,7 +290,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
       targetViewSnapshot = _snapshotRegistry[viewTarget.reactTag];
       if (targetViewSnapshot == nil) {
         targetViewSnapshot = [[REASnapshot alloc] initWithAbsolutePosition:viewTarget];
-        NSLog(@"[Reanimated] Unable to find view style snapshot. It looks like you try to animate an unmounted view.");
       }
     }
 
@@ -428,7 +427,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (bool)isInteractiveScreenChange:(UIView *)screen
 {
-  return [[[screen.reactViewController valueForKey:@"transitionCoordinator"] valueForKey:@"interactive"] boolValue];
+  return screen.reactViewController.transitionCoordinator.interactive;
 }
 
 - (void)makeSnapshotForScreenViews:(UIView *)screen
