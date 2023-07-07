@@ -1,5 +1,8 @@
 def try_to_parse_react_native_package_json(node_modules_dir)
   react_native_package_json_path = File.join(node_modules_dir, 'react-native/package.json')
+
+  puts "[RNReanimated] Looking for React Native configs at #{react_native_package_json_path}..."
+
   if !File.exist?(react_native_package_json_path)
     return nil
   end
