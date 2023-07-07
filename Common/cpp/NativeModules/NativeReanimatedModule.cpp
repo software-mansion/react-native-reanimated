@@ -99,10 +99,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, operations);
   };
 
-  auto removeFromPropsRegistry = [this](
-                                     jsi::Runtime &rt, const jsi::Value &tag) {
-    this->removeFromPropsRegistry(rt, tag);
-  };
+  auto removeFromPropsRegistry =
+      [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
+        this->removeFromPropsRegistry(rt, viewTags);
+      };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
@@ -654,8 +654,11 @@ void NativeReanimatedModule::performOperations() {
 
 void NativeReanimatedModule::removeFromPropsRegistry(
     jsi::Runtime &rt,
-    const jsi::Value &tag) {
-  tagsToRemove_.push_back(tag.asNumber());
+    const jsi::Value &viewTags) {
+  auto array = viewTags.asObject(rt).asArray(rt);
+  for (size_t i = 0, size = array.size(rt); i < size; ++i) {
+    tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
+  }
 }
 
 void NativeReanimatedModule::dispatchCommand(
