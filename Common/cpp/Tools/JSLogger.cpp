@@ -7,7 +7,7 @@ namespace reanimated {
 JSLogger::JSLogger(const std::shared_ptr<JSRuntimeHelper> &runtimeHelper)
     : runtimeHelper_(runtimeHelper) {}
 
-void JSLogger::warnOnJs(const std::string &warning) const {
+void JSLogger::warnOnJS(const std::string &warning) const {
   runtimeHelper_->scheduleOnJS(
       [warning = warning, &runtimeHelper_ = runtimeHelper_]() {
         jsi::Runtime &rt = *(runtimeHelper_->rnRuntime());

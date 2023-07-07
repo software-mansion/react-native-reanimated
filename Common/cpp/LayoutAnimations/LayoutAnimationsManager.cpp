@@ -137,7 +137,7 @@ bool LayoutAnimationsManager::hasDuplicateSharedTag(
   auto pair = getScreenSharedTagPairString(screenTag, sharedTag);
   bool hasDuplicate = screenSharedTagSet_.count(pair);
   if (hasDuplicate) {
-    jsLogger_->warnOnJs(
+    jsLogger_->warnOnJS(
         "[Reanimated] Duplicate shared tag \"" + sharedTag +
         "\" on the same screen");
     return true;

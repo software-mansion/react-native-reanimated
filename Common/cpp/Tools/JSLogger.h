@@ -13,7 +13,7 @@ namespace reanimated {
 class JSLogger {
  public:
   explicit JSLogger(const std::shared_ptr<JSRuntimeHelper> &runtimeHelper);
-  void warnOnJs(const std::string &warning) const;
+  void warnOnJS(const std::string &warning) const;
 
  private:
   const std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
