@@ -17,7 +17,6 @@ import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
-  runOnUI,
   startMapper,
   stopMapper,
 } from './reanimated2/core';
@@ -53,6 +52,7 @@ import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
+import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -361,11 +361,7 @@ export default function createAnimatedComponent(
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (global._IS_FABRIC) {
-          const viewTag = this._viewTag;
-          // TODO: batching
-          runOnUI(() => {
-            _removeFromPropsRegistry!(viewTag);
-          })();
+          removeFromPropsRegistry(this._viewTag);
         }
       }
     }
