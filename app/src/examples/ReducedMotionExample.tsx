@@ -10,17 +10,17 @@ import Animated, {
 
 const duration = 2000;
 
-export default function App() {
-  const defaultAnim = useSharedValue(100);
+export default function ReducedMotionExample() {
+  const hookExample = useSharedValue(100);
   const shouldReduceMotion = useReducedMotion();
 
-  const animatedDefault = useAnimatedStyle(() => ({
-    transform: [{ translateX: shouldReduceMotion ? 0 : defaultAnim.value }],
+  const hookExampleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shouldReduceMotion ? 0 : hookExample.value }],
   }));
 
   React.useEffect(() => {
-    defaultAnim.value = withRepeat(
-      withTiming(-defaultAnim.value, {
+    hookExample.value = withRepeat(
+      withTiming(-hookExample.value, {
         duration,
       }),
       -1,
@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, animatedDefault]}>
+      <Animated.View style={[styles.box, hookExampleStyle]}>
         <Text style={styles.text}>useReducedMotion()</Text>
       </Animated.View>
     </View>
