@@ -35,11 +35,18 @@ function call(...args: unknown[]): string {
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
 
-// matchers use RegExp objects which needs to be created separately on JS and on
-// the UI thread. We keep separate cache of Regexes for UI and JS using the below
-// objects, then pick the right cache in getMatchers() method.
+type Matchers = {
+  rgb: RegExp;
+  rgba: RegExp;
+  hsl: RegExp;
+  hsla: RegExp;
+  hex3: RegExp;
+  hex4: RegExp;
+  hex6: RegExp;
+  hex8: RegExp;
+};
 
-function createMatchers() {
+function createMatchers(): Matchers {
   'worklet';
   return {
     rgb: new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER)),
@@ -53,12 +60,12 @@ function createMatchers() {
   };
 }
 
-const uiMatchers = makeShareableCloneRecursive({
+const UIMATCHERS = makeShareableCloneRecursive({
   __init: createMatchers,
 });
 
 const MATCHERS = createMatchers();
-registerShareableMapping(MATCHERS, uiMatchers);
+registerShareableMapping(MATCHERS, UIMATCHERS);
 
 function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
@@ -312,7 +319,7 @@ function normalizeColor(color: unknown): number | null {
   let match: RegExpExecArray | null | undefined;
 
   // Ordered based on occurrences on Facebook codebase
-  if ((match = MATCHERS.hex6?.exec(color))) {
+  if ((match = MATCHERS.hex6.exec(color))) {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
@@ -320,7 +327,7 @@ function normalizeColor(color: unknown): number | null {
     return names[color];
   }
 
-  if ((match = MATCHERS.rgb?.exec(color))) {
+  if ((match = MATCHERS.rgb.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -331,7 +338,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = MATCHERS.rgba?.exec(color))) {
+  if ((match = MATCHERS.rgba.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -342,7 +349,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = MATCHERS.hex3?.exec(color))) {
+  if ((match = MATCHERS.hex3.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -358,11 +365,11 @@ function normalizeColor(color: unknown): number | null {
   }
 
   // https://drafts.csswg.org/css-color-4/#hex-notation
-  if ((match = MATCHERS.hex8?.exec(color))) {
+  if ((match = MATCHERS.hex8.exec(color))) {
     return Number.parseInt(match[1], 16) >>> 0;
   }
 
-  if ((match = MATCHERS.hex4?.exec(color))) {
+  if ((match = MATCHERS.hex4.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -378,7 +385,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = MATCHERS.hsl?.exec(color))) {
+  if ((match = MATCHERS.hsl.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h
@@ -390,7 +397,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = MATCHERS.hsla?.exec(color))) {
+  if ((match = MATCHERS.hsla.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h
