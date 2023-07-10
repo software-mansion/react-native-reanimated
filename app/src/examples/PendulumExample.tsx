@@ -3,8 +3,8 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { StyleSheet, TextInput, Text } from 'react-native';
-import { View, Button } from 'react-native';
+import { StyleSheet, TextInput, Text, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import {
   Gesture,
@@ -13,6 +13,9 @@ import {
   GestureStateManager,
   GestureTouchEvent,
 } from 'react-native-gesture-handler';
+
+const NAVY = '#001A72';
+const LIGHT_NAVY = '#C1C6E5';
 
 type FieldDefinition = [string, number, Dispatch<SetStateAction<number>>];
 
@@ -27,16 +30,7 @@ function InputField({
 }) {
   return (
     <View style={styles.row} key={fieldName}>
-      <Text
-        style={[
-          styles.inputDescription,
-          {
-            textDecorationLine: fieldName === 'Duration' ? 'underline' : 'none',
-            fontWeight: fieldName === 'Duration' ? 'bold' : undefined,
-          },
-        ]}>
-        {fieldName}
-      </Text>
+      <Text style={[styles.inputDescription]}>{fieldName}</Text>
       <TextInput
         key={fieldName}
         value={`${value}`}
@@ -93,8 +87,7 @@ export default function SpringExample(): React.ReactElement {
         y: e.y,
       };
       pendulumSwing.value =
-        (Math.atan2(-offset.value.x + 140 / 2, offset.value.y - 60) * 180) /
-        Math.PI;
+        (Math.atan2(-offset.value.x + 140 / 2, offset.value.y) * 180) / Math.PI;
     })
     .onFinalize(() => {
       pendulumSwing.value = withSpring(0, config);
@@ -118,6 +111,40 @@ export default function SpringExample(): React.ReactElement {
 
   return (
     <GestureHandlerRootView style={styles.container}>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={
+            useConfigWithDuration
+              ? styles.selectedButton
+              : styles.notSelectedButton
+          }
+          onPress={() => setUseConfigWithDuration(true)}>
+          <Text
+            style={
+              useConfigWithDuration
+                ? styles.selectedButtonText
+                : styles.notSelectedButtonText
+            }>
+            with duration
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={
+            !useConfigWithDuration
+              ? styles.selectedButton
+              : styles.notSelectedButton
+          }
+          onPress={() => setUseConfigWithDuration(false)}>
+          <Text
+            style={
+              !useConfigWithDuration
+                ? styles.selectedButtonText
+                : styles.notSelectedButtonText
+            }>
+            without duration
+          </Text>
+        </TouchableOpacity>
+      </View>
       <GestureDetector gesture={gesture}>
         <View style={styles.pendulumContainer}>
           <Animated.View style={[styles.pendulum, style]}>
@@ -126,27 +153,15 @@ export default function SpringExample(): React.ReactElement {
               style={{
                 textAlign: 'center',
                 fontSize: useConfigWithDuration
-                  ? 20
+                  ? 50
                   : Math.min(0.75 * mass, 40) + 10,
               }}>
               {/* Using here view with border radius would be more natural, but views with border radius and rotation are bugged on android */}
-              🟤
+              🟣
             </Text>
           </Animated.View>
         </View>
       </GestureDetector>
-      <View style={styles.row}>
-        <Button
-          title="with duration"
-          onPress={() => setUseConfigWithDuration(true)}
-          color={useConfigWithDuration ? 'blue' : 'gray'}
-        />
-        <Button
-          title="without duration"
-          onPress={() => setUseConfigWithDuration(false)}
-          color={!useConfigWithDuration ? 'blue' : 'gray'}
-        />
-      </View>
       <React.Fragment>
         {fields.map((item) => {
           return (
@@ -168,25 +183,31 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  row: { flexDirection: 'row' },
+  row: {
+    flexDirection: 'row',
+    paddingHorizontal: 30,
+    paddingVertical: 5,
+  },
   input: {
-    flex: 0.5,
+    flex: 0.4,
     padding: 10,
-    borderColor: 'cornflowerblue',
-    borderWidth: 2,
+    borderColor: NAVY,
+    borderWidth: 1,
     textAlign: 'left',
+    backgroundColor: 'white',
   },
   inputDescription: {
-    flex: 0.5,
-    padding: 10,
-    backgroundColor: 'cornflowerblue',
-    textAlign: 'right',
+    flex: 0.6,
+    fontSize: 20,
+    alignSelf: 'center',
+    color: NAVY,
   },
   pendulumContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     alignContent: 'center',
     padding: 50,
+    paddingTop: 0,
     width: 140,
   },
   pendulum: {
@@ -195,14 +216,44 @@ const styles = StyleSheet.create({
   },
   rope: {
     alignSelf: 'center',
-    backgroundColor: 'black',
+    backgroundColor: LIGHT_NAVY,
     width: 2,
     height: 160,
+    marginBottom: -5,
   },
   ball: {
     alignSelf: 'center',
     backgroundColor: 'grey',
     borderWidth: 2,
     borderColor: 'black',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    height: 40,
+    width: '80%',
+    margin: 20,
+    marginBottom: 0,
+    borderWidth: 2,
+    borderColor: NAVY,
+  },
+  selectedButton: {
+    backgroundColor: NAVY,
+    width: '50%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notSelectedButton: {
+    backgroundColor: 'white',
+    width: '50%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedButtonText: {
+    color: 'white',
+    fontSize: 20,
+  },
+  notSelectedButtonText: {
+    color: NAVY,
+    fontSize: 20,
   },
 });
