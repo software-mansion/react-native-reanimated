@@ -206,7 +206,7 @@ using namespace facebook::react;
   }
 #endif
 
-  RCTExecuteOnMainQueue(^void() {
+  RCTExecuteOnMainQueue(^() {
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
