@@ -24,10 +24,11 @@
   NSMutableDictionary<NSNumber *, NSNumber *> *_disableCleaningForView;
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
+  BOOL _isStackDropped;
   BOOL _isSharedProgressTransition;
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
-  BOOL _isStackDropped;
+  BOOL _clearScreen;
 }
 
 /*
@@ -390,6 +391,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)screenRemovedFromStack:(UIView *)screen
 {
+  _isStackDropped = NO;
   UIView *stack = [REAScreensHelper getStackForView:screen];
   bool isModal = [REAScreensHelper isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
@@ -449,11 +451,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)clearConfigForStackNow:(UIView *)stack
 {
-  for (UIView *child in stack.reactSubviews) {
-    REANodeFind(child, ^int(id<RCTComponent> _Nonnull view) {
-      [self clearAllSharedConfigsForViewTag:view.reactTag];
-      return false;
-    });
+  for (UIView *screen in stack.reactSubviews) {
+    [self clearConfigForScreen:screen];
   }
 }
 
@@ -501,11 +500,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
   BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews];
   if (startedAnimation) {
     _removedViews = removedViews;
+  } else if (![self isInteractiveScreenChange:screen]) {
+    [self clearConfigForScreen:screen];
   } else {
-    REANodeFind(screen, ^int(id<RCTComponent> _Nonnull view) {
-      [self clearAllSharedConfigsForViewTag:view.reactTag];
-      return false;
-    });
+    _clearScreen = YES;
   }
 }
 
@@ -718,10 +716,23 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack
 {
-  if (_isStackDropped) {
+  if (_isStackDropped && screen != nil) {
+    // to clear config from stack after swipe back
     [self clearConfigForStackNow:stack];
     _isStackDropped = NO;
+  } else if (_clearScreen) {
+    // to clear config from screen after swipe back
+    [self clearConfigForScreen:screen];
+    _clearScreen = NO;
   }
+}
+
+- (void)clearConfigForScreen:(UIView *)screen
+{
+  REANodeFind(screen, ^int(id<RCTComponent> _Nonnull view) {
+    [self clearAllSharedConfigsForViewTag:view.reactTag];
+    return false;
+  });
 }
 
 @end
