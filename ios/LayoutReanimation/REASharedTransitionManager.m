@@ -25,7 +25,6 @@
   NSMutableSet<NSNumber *> *_layoutedSharedViewsTags;
   NSMutableDictionary<NSNumber *, REAFrame *> *_layoutedSharedViewsFrame;
   BOOL _isStackDropped;
-  BOOL _isSharedProgressTransition;
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
   BOOL _clearScreen;
@@ -58,7 +57,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     _layoutedSharedViewsTags = [NSMutableSet new];
     _layoutedSharedViewsFrame = [NSMutableDictionary new];
     _isAsyncSharedTransitionConfigured = NO;
-    _isSharedProgressTransition = NO;
     _isConfigured = NO;
     [self swizzleScreensMethods];
   }
@@ -119,7 +117,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   if ([views count] > 0) {
     NSArray *sharedViews = [self sortViewsByTags:views];
     _sharedElements = [self getSharedElementForCurrentTransition:sharedViews withNewElements:YES];
-    [self orderByAnimationTypes:_sharedElements];
+    [self orderByAnimationTypes:_sharedElements isInteractive:NO];
     _isAsyncSharedTransitionConfigured = YES;
   }
 }
@@ -166,16 +164,15 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [self startSharedTransition:sharedElementToRestart type:SHARED_ELEMENT_TRANSITION];
 }
 
-- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views
+- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views isInteractive:(BOOL)isInteractive
 {
   NSArray *sharedViews = [self sortViewsByTags:views];
   NSArray<REASharedElement *> *sharedElements = [self getSharedElementForCurrentTransition:sharedViews
                                                                            withNewElements:NO];
   if ([sharedElements count] == 0) {
-    _isSharedProgressTransition = NO;
     return NO;
   }
-  [self orderByAnimationTypes:sharedElements];
+  [self orderByAnimationTypes:sharedElements isInteractive:isInteractive];
   [self configureTransitionContainer];
   [self reparentSharedViewsForCurrentTransition:sharedElements];
   [self startSharedTransition:_sharedElementsWithAnimation type:SHARED_ELEMENT_TRANSITION];
@@ -403,9 +400,8 @@ static REASharedTransitionManager *_sharedTransitionManager;
     bool isTriggeredByGoBackButton = [self isScreen:screen onTopOfStack:stack];
     bool shouldRunTransition = (isScreenRemovedFromReactTree || isTriggeredByGoBackButton) &&
         !(isInteractive && [_currentSharedTransitionViews count] > 0);
-    _isSharedProgressTransition = isInteractive && shouldRunTransition ? YES : NO;
     if (shouldRunTransition) {
-      [self runSharedTransitionForSharedViewsOnScreen:screen];
+      [self runSharedTransitionForSharedViewsOnScreen:screen isInteractive:isInteractive];
     } else {
       [self makeSnapshotForScreenViews:screen];
     }
@@ -488,7 +484,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return NO;
 }
 
-- (void)runSharedTransitionForSharedViewsOnScreen:(UIView *)screen
+- (void)runSharedTransitionForSharedViewsOnScreen:(UIView *)screen isInteractive:(BOOL)isInteractive
 {
   NSMutableArray<UIView *> *removedViews = [NSMutableArray new];
   REANodeFind(screen, ^int(id<RCTComponent> view) {
@@ -497,7 +493,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
     return false;
   });
-  BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews];
+  BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews isInteractive:isInteractive];
   if (startedAnimation) {
     _removedViews = removedViews;
   } else if (![self isInteractiveScreenChange:screen]) {
@@ -686,7 +682,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
   }
 }
 
-- (void)orderByAnimationTypes:(NSArray<REASharedElement *> *)sharedElements
+- (void)orderByAnimationTypes:(NSArray<REASharedElement *> *)sharedElements isInteractive:(BOOL)isInteractive
 {
   [_sharedElementsWithProgress removeAllObjects];
   [_sharedElementsWithAnimation removeAllObjects];
@@ -694,7 +690,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     NSNumber *viewTag = sharedElement.sourceView.reactTag;
     bool viewHasProgressAnimation = [self->_animationManager hasAnimationForTag:viewTag
                                                                            type:SHARED_ELEMENT_TRANSITION_PROGRESS];
-    if (viewHasProgressAnimation || _isSharedProgressTransition) {
+    if (viewHasProgressAnimation || isInteractive) {
       [_sharedElementsWithProgress addObject:sharedElement];
     } else {
       [_sharedElementsWithAnimation addObject:sharedElement];
