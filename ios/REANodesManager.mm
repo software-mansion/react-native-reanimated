@@ -191,15 +191,6 @@ using namespace facebook::react;
       // no-op
     };
   }
-
-  RCTExecuteOnMainQueue(^void() {
-    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
-    _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-    [_displayLink setPaused:true];
-  });
-  return self;
-}
 #else
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
 {
@@ -213,6 +204,8 @@ using namespace facebook::react;
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
     _shouldFlushUpdateBuffer = false;
   }
+#endif
+
   RCTExecuteOnMainQueue(^void() {
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
@@ -221,7 +214,6 @@ using namespace facebook::react;
   });
   return self;
 }
-#endif
 
 - (void)invalidate
 {
