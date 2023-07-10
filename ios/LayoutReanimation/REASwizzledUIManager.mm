@@ -1,91 +1,91 @@
-#import <Foundation/Foundation.h>
 #import <RNReanimated/FeaturesConfig.h>
-#import <RNReanimated/REAIOSScheduler.h>
-#import <RNReanimated/REAUIManager.h>
-#import <RNReanimated/Scheduler.h>
-#import <React/RCTComponentData.h>
+#import <RNReanimated/REASwizzledUIManager.h>
 #import <React/RCTLayoutAnimation.h>
 #import <React/RCTLayoutAnimationGroup.h>
-#import <React/RCTModalHostView.h>
 #import <React/RCTRootShadowView.h>
 #import <React/RCTRootViewInternal.h>
-#import <React/RCTUIManagerObserverCoordinator.h>
+#import <React/RCTUIManager.h>
+#import <objc/runtime.h>
 
-#if __has_include(<RNScreens/RNSScreen.h>)
-#import <RNScreens/RNSScreen.h>
-#endif
-
-@interface RCTUIManager (REA)
-- (void)_manageChildren:(NSNumber *)containerTag
-        moveFromIndices:(NSArray<NSNumber *> *)moveFromIndices
-          moveToIndices:(NSArray<NSNumber *> *)moveToIndices
-      addChildReactTags:(NSArray<NSNumber *> *)addChildReactTags
-           addAtIndices:(NSArray<NSNumber *> *)addAtIndices
-        removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
-               registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry;
-
-- (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
-
+@interface RCTUIManager (Reanimated)
+@property REAAnimationsManager *animationsManager;
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
 
-@implementation REAUIManager {
-  NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *_toBeRemovedRegister;
-  NSMutableDictionary<NSNumber *, NSNumber *> *_parentMapper;
-  REAAnimationsManager *_animationsManager;
-  std::weak_ptr<reanimated::Scheduler> _scheduler;
-}
-
-+ (NSString *)moduleName
+@implementation RCTUIManager (Reanimated)
+@dynamic animationsManager;
+- (void)setAnimationsManager:(REAAnimationsManager *)animationsManager
 {
-  return NSStringFromClass([RCTUIManager class]);
+  objc_setAssociatedObject(self, @selector(animationsManager), animationsManager, OBJC_ASSOCIATION_RETAIN);
 }
-
-- (void)invalidate
+- (id)animationsManager
 {
-  [_animationsManager invalidate];
-  [super invalidate];
+  return objc_getAssociatedObject(self, @selector(animationsManager));
 }
+@end
 
-- (void)setBridge:(RCTBridge *)bridge
+@implementation REASwizzledUIManager
+
+- (instancetype)initWithUIManager:(RCTUIManager *)uiManager
+             withAnimationManager:(REAAnimationsManager *)animationsManager
 {
-  if (!_blockSetter) {
-    _blockSetter = true;
-
-    self.bridge = bridge;
-    [super setValue:bridge forKey:@"_bridge"];
-    [self setValue:[bridge.uiManager valueForKey:@"_shadowViewRegistry"] forKey:@"_shadowViewRegistry"];
-    [self setValue:[bridge.uiManager valueForKey:@"_viewRegistry"] forKey:@"_viewRegistry"];
-    [self setValue:[bridge.uiManager valueForKey:@"_nativeIDRegistry"] forKey:@"_nativeIDRegistry"];
-    [self setValue:[bridge.uiManager valueForKey:@"_shadowViewsWithUpdatedProps"]
-            forKey:@"_shadowViewsWithUpdatedProps"];
-    [self setValue:[bridge.uiManager valueForKey:@"_shadowViewsWithUpdatedChildren"]
-            forKey:@"_shadowViewsWithUpdatedChildren"];
-    [self setValue:[bridge.uiManager valueForKey:@"_pendingUIBlocks"] forKey:@"_pendingUIBlocks"];
-    [self setValue:[bridge.uiManager valueForKey:@"_rootViewTags"] forKey:@"_rootViewTags"];
-    [self setValue:[bridge.uiManager valueForKey:@"_observerCoordinator"] forKey:@"_observerCoordinator"];
-    [self setValue:[bridge.uiManager valueForKey:@"_componentDataByName"] forKey:@"_componentDataByName"];
-
-    _blockSetter = false;
+  if (self = [super init]) {
+    [uiManager setAnimationsManager:animationsManager];
+    [self swizzleMethods];
   }
+  return self;
 }
 
-- (void)_manageChildren:(NSNumber *)containerTag
-        moveFromIndices:(NSArray<NSNumber *> *)moveFromIndices
-          moveToIndices:(NSArray<NSNumber *> *)moveToIndices
-      addChildReactTags:(NSArray<NSNumber *> *)addChildReactTags
-           addAtIndices:(NSArray<NSNumber *> *)addAtIndices
-        removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
-               registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
+- (void)swizzleMethods
+{
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    [self swizzleMethod:@selector(uiBlockWithLayoutUpdateForRootView:)
+               forClass:[RCTUIManager class]
+                   with:@selector(reanimated_uiBlockWithLayoutUpdateForRootView:)
+              fromClass:[self class]];
+    SEL manageChildrenOriginal = @selector
+        (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    SEL manageChildrenReanimated =
+        @selector(reanimated_manageChildren:
+                            moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    [self swizzleMethod:manageChildrenOriginal
+               forClass:[RCTUIManager class]
+                   with:manageChildrenReanimated
+              fromClass:[self class]];
+  });
+}
+
+- (void)swizzleMethod:(SEL)originalSelector
+             forClass:(Class)originalClass
+                 with:(SEL)newSelector
+            fromClass:(Class)newClass
+{
+  Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
+  Method newMethod = class_getInstanceMethod(newClass, newSelector);
+  IMP originalImplementation = method_getImplementation(originalMethod);
+  IMP newImplementation = method_getImplementation(newMethod);
+  class_replaceMethod(originalClass, newSelector, originalImplementation, method_getTypeEncoding(originalMethod));
+  class_replaceMethod(originalClass, originalSelector, newImplementation, method_getTypeEncoding(newMethod));
+}
+
+- (void)reanimated_manageChildren:(NSNumber *)containerTag
+                  moveFromIndices:(NSArray<NSNumber *> *)moveFromIndices
+                    moveToIndices:(NSArray<NSNumber *> *)moveToIndices
+                addChildReactTags:(NSArray<NSNumber *> *)addChildReactTags
+                     addAtIndices:(NSArray<NSNumber *> *)addAtIndices
+                  removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
+                         registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
   bool isLayoutAnimationEnabled = reanimated::FeaturesConfig::isLayoutAnimationEnabled();
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
   BOOL containerIsRootOfViewController = NO;
+  RCTUIManager *originalSelf = (RCTUIManager *)self;
   if (isLayoutAnimationEnabled) {
     container = registry[containerTag];
-    permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+    permanentlyRemovedChildren = [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
 
     if ([container isKindOfClass:[UIView class]]) {
       UIViewController *controller = ((UIView *)container).reactViewController;
@@ -97,23 +97,25 @@
     // of some view controller. In that case, we skip running exiting animations
     // in its children, to prevent issues with RN Screens.
     if (containerIsRootOfViewController) {
-      NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [self _childrenToRemoveFromContainer:container
-                                                                                         atIndices:removeAtIndices];
+      NSArray<id<RCTComponent>> *permanentlyRemovedChildren =
+          [originalSelf _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
       for (UIView *view in permanentlyRemovedChildren) {
-        [_animationsManager endAnimationsRecursive:view];
+        [originalSelf.animationsManager endAnimationsRecursive:view];
       }
-      [_animationsManager removeAnimationsFromSubtree:(UIView *)container];
-      [_animationsManager onScreenRemoval:(UIView *)permanentlyRemovedChildren[0] stack:(UIView *)container];
+      [originalSelf.animationsManager removeAnimationsFromSubtree:(UIView *)container];
+      [originalSelf.animationsManager onScreenRemoval:(UIView *)permanentlyRemovedChildren[0]
+                                                stack:(UIView *)container];
     }
   }
 
-  [super _manageChildren:containerTag
-         moveFromIndices:moveFromIndices
-           moveToIndices:moveToIndices
-       addChildReactTags:addChildReactTags
-            addAtIndices:addAtIndices
-         removeAtIndices:removeAtIndices
-                registry:registry];
+  // call original method
+  [self reanimated_manageChildren:containerTag
+                  moveFromIndices:moveFromIndices
+                    moveToIndices:moveToIndices
+                addChildReactTags:addChildReactTags
+                     addAtIndices:addAtIndices
+                  removeAtIndices:removeAtIndices
+                         registry:registry];
 
   if (!isLayoutAnimationEnabled) {
     return;
@@ -133,27 +135,18 @@
         return [(NSNumber *)obj1[0] compare:(NSNumber *)obj2[0]];
       }];
 
-  [_animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
-                                   toContainer:container
-                                     atIndices:removeAtIndices];
+  [originalSelf.animationsManager reattachAnimatedChildren:permanentlyRemovedChildren
+                                               toContainer:container
+                                                 atIndices:removeAtIndices];
 }
 
-- (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag
-{
-  _parentMapper[view.reactTag] = parentTag;
-
-  for (UIView *subView in view.reactSubviews) {
-    [self callAnimationForTree:subView parentTag:view.reactTag];
-  }
-}
-
-// Overrided https://github.com/facebook/react-native/blob/v0.65.0/React/Modules/RCTUIManager.m#L530
-- (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView
+- (RCTViewManagerUIBlock)reanimated_uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView
 {
   if (!reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
-    return [super uiBlockWithLayoutUpdateForRootView:rootShadowView];
+    return [self reanimated_uiBlockWithLayoutUpdateForRootView:rootShadowView];
   }
 
+  RCTUIManager *originalSelf = (RCTUIManager *)self;
   NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 
@@ -267,7 +260,8 @@
       }
 
       // Reanimated changes /start
-      REASnapshot *snapshotBefore = isNew ? nil : [self->_animationsManager prepareSnapshotBeforeMountForView:view];
+      REASnapshot *snapshotBefore =
+          isNew ? nil : [originalSelf.animationsManager prepareSnapshotBeforeMountForView:view];
       snapshotsBefore[reactTag] = snapshotBefore;
       // Reanimated changes /end
 
@@ -328,7 +322,7 @@
       REASnapshot *snapshotBefore = snapshotsBefore[reactTag];
 
       if (isNew || snapshotBefore != nil) {
-        [self->_animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
+        [originalSelf.animationsManager viewDidMount:view withBeforeSnapshot:snapshotBefore withNewFrame:frame];
       }
     }
 
@@ -337,52 +331,9 @@
     // private field
     [uiManager setNextLayoutAnimationGroup:nil];
 
-    [self->_animationsManager viewsDidLayout];
+    [originalSelf.animationsManager viewsDidLayout];
     // Reanimated changes /end
   };
-}
-
-- (Class)class
-{
-  return [RCTUIManager class];
-}
-
-+ (Class)class
-{
-  return [RCTUIManager class];
-}
-
-- (void)setUp:(REAAnimationsManager *)animationsManager
-{
-  _animationsManager = animationsManager;
-  _toBeRemovedRegister = [[NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> alloc] init];
-  _parentMapper = [[NSMutableDictionary<NSNumber *, NSNumber *> alloc] init];
-}
-
-- (void)unregisterView:(id<RCTComponent>)view
-{
-  NSNumber *tag = _parentMapper[view.reactTag];
-  if (tag == nil) {
-    return;
-  }
-
-  [_toBeRemovedRegister[tag] removeObject:view];
-  if (_toBeRemovedRegister[tag].count == 0) {
-    [_toBeRemovedRegister removeObjectForKey:tag];
-  }
-  NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
-  [view.reactSuperview removeReactSubview:view];
-  id<RCTComponent> parentView = viewRegistry[tag];
-  @try {
-    [parentView removeReactSubview:view];
-  } @catch (id anException) {
-  }
-#if __has_include(<RNScreens/RNSScreen.h>)
-  if ([view isKindOfClass:[RNSScreenView class]]) {
-    [parentView didUpdateReactSubviews];
-  }
-#endif
-  [viewRegistry removeObjectForKey:view.reactTag];
 }
 
 @end
