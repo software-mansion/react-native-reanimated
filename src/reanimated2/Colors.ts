@@ -60,6 +60,7 @@ function createMatchers(): Matchers {
   };
 }
 
+isConfigured();
 const UIMATCHERS = makeShareableCloneRecursive({
   __init: createMatchers,
 });
