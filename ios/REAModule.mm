@@ -196,6 +196,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _operations = [NSMutableArray new];
 
   [bridge.uiManager.observerCoordinator addObserver:self];
+  _animationsManager = [[REAAnimationsManager alloc] initWithUIManager:bridge.uiManager];
 }
 
 #pragma mark-- Batch handling
