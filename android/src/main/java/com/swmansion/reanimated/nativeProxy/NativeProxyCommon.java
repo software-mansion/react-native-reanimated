@@ -206,6 +206,7 @@ public abstract class NativeProxyCommon {
     animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
   }
 
+  @DoNotStrip
   public boolean getIsReducedMotion() {
     ContentResolver mContentResolver = mContext.get().getContentResolver();
     String rawValue =

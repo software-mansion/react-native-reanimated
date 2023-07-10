@@ -170,9 +170,9 @@ void NativeProxy::performOperations() {
 #endif
 }
 
-void NativeProxy::setIsReducedMotion(bool isReducedMotion) {
-  runtime_->global().setProperty(
-      *runtime_, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
+bool NativeProxy::getIsReducedMotion() {
+  static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
+  return method(javaPart_.get());
 }
 
 void NativeProxy::registerNatives() {
@@ -182,9 +182,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations),
-       makeNativeMethod(
-           "setIsReducedMotion", NativeProxy::setIsReducedMotion)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations)});
 }
 
 void NativeProxy::requestRender(
@@ -496,6 +494,10 @@ void NativeProxy::setGlobalProperties(
 
   auto version = getReanimatedVersionString(jsRuntime);
   jsRuntime.global().setProperty(jsRuntime, "_REANIMATED_VERSION_CPP", version);
+
+  auto isReducedMotion = getIsReducedMotion();
+  jsRuntime.global().setProperty(
+      jsRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
 
 void NativeProxy::setupLayoutAnimations() {
