@@ -51,9 +51,11 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 - (void)runUpdater
 {
   if (!_displayLink) {
-    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
-    _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    RCTExecuteOnMainQueue(^() {
+      _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(updateKeyboardFrame)];
+      _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+      [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    })
   }
   _displayLink.paused = NO;
   [self updateKeyboardFrame];
