@@ -68,8 +68,8 @@ export const withDecay = function (
     }
 
     const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
+    const DERIVATIVE_EPS = 0.1;
     const SLOPE_FACTOR = 0.1;
-    const EPS = 0.1;
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
@@ -89,7 +89,7 @@ export const withDecay = function (
           derivative = current - config.clamp![clampIndex];
         }
 
-        if (Math.abs(derivative) > EPS) {
+        if (Math.abs(derivative) > DERIVATIVE_EPS) {
           animation.springActive = true;
         } else if (animation.springActive) {
           animation.current = config.clamp![clampIndex];
@@ -103,7 +103,7 @@ export const withDecay = function (
             ) -
           derivative * config.rubberBandFactor;
 
-        if (Math.abs(v) < EPS) {
+        if (Math.abs(v) < VELOCITY_EPS) {
           return true;
         }
 
