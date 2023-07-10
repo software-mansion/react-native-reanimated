@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
+import type { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -83,7 +83,6 @@ export function makeMutable<T>(
     set value(newValue) {
       if (NativeReanimatedModule.native) {
         runOnUI(() => {
-          'worklet';
           mutable.value = newValue;
         })();
       } else {
@@ -117,7 +116,6 @@ export function makeMutable<T>(
     },
     modify: (modifier: (value: T) => T) => {
       runOnUI(() => {
-        'worklet';
         mutable.value = modifier(mutable.value);
       })();
     },

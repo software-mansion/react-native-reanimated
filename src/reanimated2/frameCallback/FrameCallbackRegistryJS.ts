@@ -1,5 +1,6 @@
 import { runOnUI } from '../core';
-import { FrameInfo, prepareUIRegistry } from './FrameCallbackRegistryUI';
+import type { FrameInfo } from './FrameCallbackRegistryUI';
+import { prepareUIRegistry } from './FrameCallbackRegistryUI';
 
 export default class FrameCallbackRegistryJS {
   private nextCallbackId = 0;
@@ -17,7 +18,6 @@ export default class FrameCallbackRegistryJS {
     this.nextCallbackId++;
 
     runOnUI(() => {
-      'worklet';
       global._frameCallbackRegistry.registerFrameCallback(callback, callbackId);
     })();
 
@@ -26,14 +26,12 @@ export default class FrameCallbackRegistryJS {
 
   unregisterFrameCallback(callbackId: number): void {
     runOnUI(() => {
-      'worklet';
       global._frameCallbackRegistry.unregisterFrameCallback(callbackId);
     })();
   }
 
   manageStateFrameCallback(callbackId: number, state: boolean): void {
     runOnUI(() => {
-      'worklet';
       global._frameCallbackRegistry.manageStateFrameCallback(callbackId, state);
     })();
   }

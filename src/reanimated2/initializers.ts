@@ -1,6 +1,6 @@
 import { reportFatalErrorOnJS } from './errors';
 import NativeReanimatedModule from './NativeReanimated';
-import { isJest } from './PlatformChecker';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 import {
   runOnJS,
   setupMicrotasks,
@@ -140,6 +140,8 @@ export function initializeUIRuntime() {
   NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);
 
   const IS_JEST = isJest();
+  const IS_CHROME_DEBUGGER = isChromeDebugger();
+  const IS_NATIVE = !shouldBeUseWeb();
 
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
@@ -168,18 +170,20 @@ export function initializeUIRuntime() {
       },
     };
 
-    // setup console
-    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-    global.console = {
-      assert: runOnJS(capturableConsole.assert),
-      debug: runOnJS(capturableConsole.debug),
-      log: runOnJS(capturableConsole.log),
-      warn: runOnJS(capturableConsole.warn),
-      error: runOnJS(capturableConsole.error),
-      info: runOnJS(capturableConsole.info),
-    };
+    if (!IS_CHROME_DEBUGGER) {
+      // setup console
+      // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
+      global.console = {
+        assert: runOnJS(capturableConsole.assert),
+        debug: runOnJS(capturableConsole.debug),
+        log: runOnJS(capturableConsole.log),
+        warn: runOnJS(capturableConsole.warn),
+        error: runOnJS(capturableConsole.error),
+        info: runOnJS(capturableConsole.info),
+      };
+    }
 
-    if (!IS_JEST) {
+    if (IS_NATIVE) {
       setupMicrotasks();
       setupRequestAnimationFrame();
     }

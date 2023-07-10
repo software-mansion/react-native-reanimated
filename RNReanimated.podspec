@@ -15,6 +15,7 @@ boost_compiler_flags = '-Wno-documentation'
 fabric_flags = fabric_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
+using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
 
 Pod::Spec.new do |s|
   
@@ -90,10 +91,18 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
+  if using_hermes && !config[:is_tvos_target] && config[:react_native_minor_version] >= 70
+    s.dependency 'React-hermes'
+    s.dependency 'hermes-engine'
+  end
 
   if config[:react_native_minor_version] == 62
     s.dependency 'ReactCommon/callinvoker'
   else
     s.dependency 'React-callinvoker'
+  end
+
+  if config[:react_native_minor_version] >= 72 && !fabric_enabled
+    s.dependency 'React-RCTAppDelegate'
   end
 end

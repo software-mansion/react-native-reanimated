@@ -1,4 +1,4 @@
-import { NativeEvent } from './commonTypes';
+import type { NativeEvent } from './commonTypes';
 import NativeReanimatedModule from './NativeReanimated';
 import { registerEventHandler, unregisterEventHandler } from './core';
 
@@ -52,6 +52,10 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
         registerEventHandler(viewTag + fallbackEventName, this.worklet)
       );
     }
+  }
+
+  registerForEventByName(eventName: string) {
+    this.registrations.push(registerEventHandler(eventName, this.worklet));
   }
 
   unregisterFromEvents(): void {

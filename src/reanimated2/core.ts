@@ -1,8 +1,11 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
-import {
+import type {
   AnimatedKeyboardOptions,
   BasicWorkletFunction,
+  SensorConfig,
+  SensorType,
+  SharedValue,
   Value3D,
   ValueRotation,
 } from './commonTypes';
@@ -15,11 +18,12 @@ import {
   makeMutable as makeMutableUnwrapped,
   makeRemote as makeRemoteUnwrapped,
 } from './mutables';
-import {
+import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
+import { SensorContainer } from './SensorContainer';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
@@ -113,6 +117,13 @@ export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   });
 }
 
+export function getSensorContainer(): SensorContainer {
+  if (!global.__sensorContainer) {
+    global.__sensorContainer = new SensorContainer();
+  }
+  return global.__sensorContainer;
+}
+
 export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
@@ -159,24 +170,32 @@ export function unsubscribeFromKeyboardEvents(listenerId: number): void {
 }
 
 export function registerSensor(
-  sensorType: number,
-  interval: number,
-  iosReferenceFrame: number,
+  sensorType: SensorType,
+  config: SensorConfig,
   eventHandler: (
     data: Value3D | ValueRotation,
     orientationDegrees: number
   ) => void
 ): number {
-  return NativeReanimatedModule.registerSensor(
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.registerSensor(
     sensorType,
-    interval,
-    iosReferenceFrame,
+    config,
     makeShareableCloneRecursive(eventHandler)
   );
 }
 
-export function unregisterSensor(listenerId: number): void {
-  return NativeReanimatedModule.unregisterSensor(listenerId);
+export function initializeSensor(
+  sensorType: SensorType,
+  config: SensorConfig
+): SharedValue<Value3D | ValueRotation> {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.initializeSensor(sensorType, config);
+}
+
+export function unregisterSensor(sensorId: number): void {
+  const sensorContainer = getSensorContainer();
+  return sensorContainer.unregisterSensor(sensorId);
 }
 
 // initialize UI runtime if applicable

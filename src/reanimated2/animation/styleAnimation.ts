@@ -1,5 +1,5 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Timestamp,
   AnimatableValue,
   AnimationObject,
@@ -8,7 +8,7 @@ import {
   NestedObject,
   NestedObjectValues,
 } from '../commonTypes';
-import { StyleLayoutAnimation } from './commonTypes';
+import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { ColorProperties } from '../UpdateProps';
 import { processColor } from '../Colors';
@@ -198,7 +198,7 @@ export function withStyleAnimation(
             currentAnimation = withTiming(
               currentEntry.value as AnimatableValue,
               { duration: 0 }
-            );
+            ) as AnimationObject; // TODO TYPESCRIPT this temporary cast is to get rid of .d.ts file.
             setPath(
               animation.styleAnimations,
               currentEntry.path,

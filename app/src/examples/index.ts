@@ -1,4 +1,5 @@
 import AboutExample from './AboutExample';
+import AnimatableRefExample from './AnimatableRefExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import AnimatedSensorExample from './AnimatedSensorExample';
@@ -39,6 +40,7 @@ import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import LettersExample from './LettersExample';
 import LightBoxExample from './LightBoxExample';
 import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
@@ -53,12 +55,14 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
+import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PagerExample from './CustomHandler/PagerExample';
 import PinExample from './PinExample';
+import RainbowExample from './RainbowExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
@@ -75,12 +79,14 @@ import SvgExample from './SvgExample';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
+import UpdatePropsPerfExample from './UpdatePropsPerfExample';
 import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
 import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
+import VolumeExample from './VolumeExample';
 
 interface Example {
   icon?: string;
@@ -144,9 +150,24 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Article progress',
     screen: ArticleProgressExample,
   },
+  LettersExample: {
+    icon: '📖',
+    title: 'Letters',
+    screen: LettersExample,
+  },
+  UpdatePropsPerfExample: {
+    icon: '🏎️',
+    title: 'Update props performance',
+    screen: UpdatePropsPerfExample,
+  },
 
   // Basic examples
 
+  AnimatableRefExample: {
+    icon: '⏬',
+    title: 'Animate inner component',
+    screen: AnimatableRefExample,
+  },
   AnimatedTextInputExample: {
     icon: '🎰',
     title: 'Counter',
@@ -237,6 +258,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Layout props',
     screen: WidthExample,
   },
+  NonLayoutPropAndRenderExample: {
+    icon: '🎭',
+    title: 'Non-layout prop and render example',
+    screen: NonLayoutPropAndRenderExample,
+  },
   RefExample: {
     icon: '🦑',
     title: 'forwardRef & useImperativeHandle',
@@ -257,6 +283,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Conditional',
     screen: NewestShadowNodesRegistryRemoveExample,
   },
+  RainbowExample: {
+    icon: '🌈',
+    title: 'Rainbow',
+    screen: RainbowExample,
+  },
   WithoutBabelPluginExample: {
     icon: '🔌',
     title: 'Without Babel plugin',
@@ -271,6 +302,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🙆‍♂️',
     title: 'Profiles',
     screen: ProfilesExample,
+  },
+  VolumeExample: {
+    icon: '🎧',
+    title: 'Volume slider & sensor',
+    screen: VolumeExample,
   },
   EmptyExample: {
     icon: '👻',

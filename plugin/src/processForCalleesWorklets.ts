@@ -1,10 +1,7 @@
-import { NodePath } from '@babel/core';
-import {
-  CallExpression,
-  isSequenceExpression,
-  ObjectExpression,
-} from '@babel/types';
-import { ReanimatedPluginPass } from './types';
+import type { NodePath } from '@babel/core';
+import type { CallExpression, ObjectExpression } from '@babel/types';
+import { isSequenceExpression } from '@babel/types';
+import type { ReanimatedPluginPass } from './types';
 import { processWorkletObjectMethod } from './processWorkletObjectMethod';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 import { strict as assert } from 'assert';
@@ -23,6 +20,8 @@ const functionArgsToWorkletize = new Map([
   ['withSpring', [2]],
   ['withDecay', [1]],
   ['withRepeat', [3]],
+  // scheduling functions
+  ['runOnUI', [0]],
 ]);
 
 const objectHooks = new Set([
@@ -79,7 +78,6 @@ function processObjectHook(
       processWorkletObjectMethod(property, state);
     } else if (property.isObjectProperty()) {
       const value = property.get('value');
-      assert(!Array.isArray(value), "'value' is an array'");
       processIfWorkletFunction(value, state);
     } else {
       throw new Error(

@@ -1,4 +1,4 @@
-import { BabelFile } from '@babel/core';
+import type { BabelFile } from '@babel/core';
 
 export interface ReanimatedPluginPass {
   file: BabelFile;

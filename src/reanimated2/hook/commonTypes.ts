@@ -1,4 +1,4 @@
-import { Context, ShadowNodeWrapper } from '../commonTypes';
+import type { Context, ShadowNodeWrapper } from '../commonTypes';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -15,5 +15,10 @@ export interface Descriptor {
 
 export interface RefObjectFunction<T> {
   current: T | null;
-  (component?: T): number | ShadowNodeWrapper;
+  (component?: T):
+    | number // Paper
+    | ShadowNodeWrapper // Fabric
+    | HTMLElement; // web
 }
+
+export type AnimatedRef<T> = RefObjectFunction<T>;

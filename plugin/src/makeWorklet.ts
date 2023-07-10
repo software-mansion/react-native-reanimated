@@ -1,47 +1,51 @@
-import { NodePath, transformSync, traverse } from '@babel/core';
+/* eslint-disable @typescript-eslint/no-var-requires */
+import type { NodePath } from '@babel/core';
+import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
-import {
-  ObjectMethod,
-  isObjectMethod,
+import type {
+  ArrowFunctionExpression,
+  File as BabelFile,
+  ExpressionStatement,
   FunctionDeclaration,
   FunctionExpression,
-  ArrowFunctionExpression,
-  identifier,
   Identifier,
-  objectProperty,
-  variableDeclaration,
-  variableDeclarator,
-  cloneNode,
-  isBlockStatement,
-  functionExpression,
-  objectExpression,
-  stringLiteral,
-  isFunctionDeclaration,
-  VariableDeclaration,
-  ExpressionStatement,
+  ObjectMethod,
   ReturnStatement,
-  isProgram,
-  isObjectProperty,
-  isMemberExpression,
-  isObjectExpression,
-  expressionStatement,
-  assignmentExpression,
-  memberExpression,
-  numericLiteral,
+  VariableDeclaration,
+} from '@babel/types';
+import {
   arrayExpression,
-  newExpression,
-  returnStatement,
+  assignmentExpression,
   blockStatement,
+  cloneNode,
+  expressionStatement,
+  functionExpression,
+  identifier,
+  isBlockStatement,
+  isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
-  File as BabelFile,
+  isMemberExpression,
+  isObjectExpression,
+  isObjectMethod,
+  isObjectProperty,
+  isProgram,
+  memberExpression,
+  newExpression,
+  numericLiteral,
+  objectExpression,
+  objectProperty,
+  returnStatement,
+  stringLiteral,
+  variableDeclaration,
+  variableDeclarator,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './types';
-import { isRelease } from './utils';
 import { strict as assert } from 'assert';
-import { globals } from './commonObjects';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
+import { globals } from './commonObjects';
+import type { ReanimatedPluginPass } from './types';
+import { isRelease } from './utils';
 
 const version = require('../../package.json').version;
 
@@ -86,13 +90,16 @@ export function makeWorklet(
 
   const transformed = transformSync(codeObject.code, {
     filename: state.file.opts.filename,
-    presets: ['@babel/preset-typescript'],
+    presets: [require.resolve('@babel/preset-typescript')],
     plugins: [
-      '@babel/plugin-transform-shorthand-properties',
-      '@babel/plugin-transform-arrow-functions',
-      '@babel/plugin-proposal-optional-chaining',
-      '@babel/plugin-proposal-nullish-coalescing-operator',
-      ['@babel/plugin-transform-template-literals', { loose: true }],
+      require.resolve('@babel/plugin-transform-shorthand-properties'),
+      require.resolve('@babel/plugin-transform-arrow-functions'),
+      require.resolve('@babel/plugin-proposal-optional-chaining'),
+      require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
+      [
+        require.resolve('@babel/plugin-transform-template-literals'),
+        { loose: true },
+      ],
     ],
     ast: true,
     babelrc: false,

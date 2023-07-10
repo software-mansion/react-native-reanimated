@@ -1,15 +1,18 @@
-import {
+import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
 } from '../animationBuilder/commonTypes';
+import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class StretchInX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): StretchInX {
-    return new StretchInX();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new StretchInX() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -39,8 +42,10 @@ export class StretchInY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): StretchInY {
-    return new StretchInY();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new StretchInY() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -70,8 +75,10 @@ export class StretchOutX
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): StretchOutX {
-    return new StretchOutX();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new StretchOutX() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {
@@ -101,8 +108,10 @@ export class StretchOutY
   extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder
 {
-  static createInstance(): StretchOutY {
-    return new StretchOutY();
+  static createInstance<T extends typeof BaseAnimationBuilder>(
+    this: T
+  ): InstanceType<T> {
+    return new StretchOutY() as InstanceType<T>;
   }
 
   build = (): EntryExitAnimationFunction => {

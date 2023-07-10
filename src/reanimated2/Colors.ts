@@ -7,12 +7,12 @@
  */
 
 /* eslint no-bitwise: 0 */
-import { Platform } from 'react-native';
-import { makeRemote, makeShareable, isConfigured } from './core';
+import { makeShareable, isConfigured } from './core';
 import {
   makeShareableCloneRecursive,
   registerShareableMapping,
 } from './shareables';
+import { isAndroid, isWeb } from './PlatformChecker';
 
 interface RGB {
   r: number;
@@ -38,19 +38,6 @@ function call(...args: unknown[]): string {
 // matchers use RegExp objects which needs to be created separately on JS and on
 // the UI thread. We keep separate cache of Regexes for UI and JS using the below
 // objects, then pick the right cache in getMatchers() method.
-const jsCachedMatchers: Matchers = {};
-const uiCachedMatchers: Matchers = !isConfigured() ? {} : makeRemote({});
-type Matchers = {
-  rgb?: RegExp;
-  rgba?: RegExp;
-  hsl?: RegExp;
-  hsla?: RegExp;
-  hex3?: RegExp;
-  hex4?: RegExp;
-  hex5?: RegExp;
-  hex6?: RegExp;
-  hex8?: RegExp;
-};
 
 function createMatchers() {
   'worklet';
@@ -438,6 +425,9 @@ export const blue = (c: number): number => {
   return c & 255;
 };
 
+const IS_WEB = isWeb();
+const IS_ANDROID = isAndroid();
+
 export const rgbaColor = (
   r: number,
   g: number,
@@ -445,7 +435,7 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  if (Platform.OS === 'web' || !_WORKLET) {
+  if (IS_WEB || !_WORKLET) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
@@ -454,7 +444,7 @@ export const rgbaColor = (
     Math.round(r) * (1 << 16) +
     Math.round(g) * (1 << 8) +
     Math.round(b);
-  if (Platform.OS === 'android') {
+  if (IS_ANDROID) {
     // on Android color is represented as signed 32 bit int
     return c < (1 << 31) >>> 0 ? c : c - 4294967296; // 4294967296 == Math.pow(2, 32);
   }
@@ -617,7 +607,7 @@ export function processColor(color: unknown): number | null | undefined {
     return null;
   }
 
-  if (Platform.OS === 'android') {
+  if (IS_ANDROID) {
     // Android use 32 bit *signed* integer to represent the color
     // We utilize the fact that bitwise operations in JS also operates on
     // signed 32 bit integers, so that we can use those to convert from

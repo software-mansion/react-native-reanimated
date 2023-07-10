@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { SensorType, useAnimatedSensor, Value3D, ValueRotation } from '../src/';
+import type { SensorConfig, Value3D, ValueRotation } from '../src/';
+import { SensorType, useAnimatedSensor } from '../src/';
 
 let eventHandler: (data: Value3D | ValueRotation) => void;
 
@@ -11,8 +12,7 @@ jest.mock('../src/reanimated2/core', () => {
     ...originalModule,
     registerSensor: (
       sensorType: number,
-      interval: number,
-      iosReferenceFrame: number,
+      config: SensorConfig,
       _eventHandler: (data: Value3D | ValueRotation) => void
     ) => {
       eventHandler = _eventHandler;
