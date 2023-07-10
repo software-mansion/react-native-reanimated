@@ -109,9 +109,24 @@ export default function CardExample() {
   );
 }
 const styles = StyleSheet.create({
-  flexOne: { flex: 1 },
-  open: { height: 500, marginTop: 50, backgroundColor: 'green' },
-  closed: { height: 120, marginTop: 20, backgroundColor: 'green' },
-  text: { width: '100%', height: 20 },
-  fullWidth: { width: '100%' },
+  flexOne: {
+    flex: 1,
+  },
+  open: {
+    height: 500,
+    marginTop: 50,
+    backgroundColor: 'green',
+  },
+  closed: {
+    height: 120,
+    marginTop: 20,
+    backgroundColor: 'green',
+  },
+  text: {
+    width: '100%',
+    height: 20,
+  },
+  fullWidth: {
+    width: '100%',
+  },
 });
