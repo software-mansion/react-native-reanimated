@@ -1,13 +1,13 @@
-import { NodePath } from '@babel/core';
+import type { NodePath } from '@babel/core';
+import type { ObjectMethod } from '@babel/types';
 import {
-  ObjectMethod,
   identifier,
   isIdentifier,
   isFunctionParent,
   objectProperty,
   callExpression,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
 export function processWorkletObjectMethod(

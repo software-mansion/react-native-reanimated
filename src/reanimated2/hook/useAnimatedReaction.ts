@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
+import type { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
-import { DependencyList } from './commonTypes';
+import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 

@@ -1,5 +1,5 @@
-import { Context, WorkletFunction, NativeEvent } from '../commonTypes';
-import { DependencyList } from './commonTypes';
+import type { Context, WorkletFunction, NativeEvent } from '../commonTypes';
+import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {

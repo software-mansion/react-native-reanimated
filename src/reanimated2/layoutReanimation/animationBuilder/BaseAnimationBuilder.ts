@@ -1,5 +1,5 @@
 import { withDelay } from '../../animation';
-import {
+import type {
   EntryExitAnimationFunction,
   AnimationFunction,
   LayoutAnimationFunction,

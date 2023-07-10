@@ -1,11 +1,11 @@
-import {
+import type {
   HigherOrderAnimation,
   NextAnimation,
   StyleLayoutAnimation,
 } from './commonTypes';
 /* global _WORKLET */
+import type { ParsedColorArray } from '../Colors';
 import {
-  ParsedColorArray,
   isColor,
   convertToRGBA,
   rgbaArrayToRGBAColor,
@@ -13,7 +13,7 @@ import {
   toLinearSpace,
 } from '../Colors';
 
-import {
+import type {
   AnimatedStyle,
   SharedValue,
   AnimatableValue,

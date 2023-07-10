@@ -25,7 +25,7 @@ using SynchronouslyUpdateUIPropsFunction =
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using RemoveFromPropsRegistryFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &tag)>;
+    std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
