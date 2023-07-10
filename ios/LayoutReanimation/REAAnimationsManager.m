@@ -574,4 +574,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _startAnimationForTag(tag, type, yogaValues);
 }
 
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack
+{
+  [_sharedTransitionManager onScreenRemoval:screen stack:stack];
+}
+
 @end

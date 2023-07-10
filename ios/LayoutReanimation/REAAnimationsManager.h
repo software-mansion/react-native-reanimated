@@ -55,6 +55,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));
 - (BOOL)hasAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type;
 - (void)clearAnimationConfigForTag:(NSNumber *)tag;
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues;
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack;
 
 @end
 

@@ -14,6 +14,6 @@
 - (UIView *)getTransitioningView:(NSNumber *)tag;
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
                            targetValues:(NSMutableDictionary *)targetValues;
-- (void)screenDidDisappear;
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack;
 
 @end

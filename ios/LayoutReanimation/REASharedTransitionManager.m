@@ -27,7 +27,7 @@
   BOOL _isSharedProgressTransition;
   BOOL _isAsyncSharedTransitionConfigured;
   BOOL _isConfigured;
-  UIView *_droppedStack;
+  BOOL _isStackDropped;
 }
 
 /*
@@ -337,12 +337,10 @@ static REASharedTransitionManager *_sharedTransitionManager;
   dispatch_once(&onceToken, ^{
     SEL viewDidLayoutSubviewsSelector = @selector(viewDidLayoutSubviews);
     SEL notifyWillDisappearSelector = @selector(notifyWillDisappear);
-    SEL notifyDisappearSelector = @selector(notifyDisappear);
     Class screenClass = [RNSScreen class];
     Class screenViewClass = [RNSScreenView class];
     BOOL allSelectorsAreAvailable = [RNSScreen instancesRespondToSelector:viewDidLayoutSubviewsSelector] &&
-        [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector] &&
-        [RNSScreenView instancesRespondToSelector:notifyDisappearSelector];
+        [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector];
 
     if (allSelectorsAreAvailable) {
       [self swizzleMethod:viewDidLayoutSubviewsSelector
@@ -351,7 +349,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
       [self swizzleMethod:notifyWillDisappearSelector
                      with:@selector(swizzled_notifyWillDisappear)
                  forClass:screenViewClass];
-      [self swizzleMethod:notifyDisappearSelector with:@selector(swizzled_notifyDisappear) forClass:screenViewClass];
       _isConfigured = YES;
     }
   });
@@ -384,13 +381,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
   [_sharedTransitionManager screenRemovedFromStack:(UIView *)self];
 }
 
-- (void)swizzled_notifyDisappear
-{
-  // call original method from react-native-screens, self == RNSScreen
-  [self swizzled_notifyDisappear];
-  [_sharedTransitionManager screenDidDisappear];
-}
-
 - (void)screenAddedToStack:(UIView *)screen
 {
   if (screen.superview != nil) {
@@ -400,7 +390,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)screenRemovedFromStack:(UIView *)screen
 {
-  _droppedStack = nil;
   UIView *stack = [REAScreensHelper getStackForView:screen];
   bool isModal = [REAScreensHelper isScreenModal:screen];
   bool isRemovedInParentStack = [self isRemovedFromHigherStack:screen];
@@ -421,7 +410,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
     [self restoreViewsVisibility];
   } else {
     // removed stack
-    [self maybeClearConfigForStack:stack isInteractive:[self isInteractiveScreenChange:screen]];
+    if (![self isInteractiveScreenChange:screen]) {
+      [self clearConfigForStackNow:stack];
+    } else {
+      _isStackDropped = YES;
+    }
   }
 }
 
@@ -452,15 +445,6 @@ static REASharedTransitionManager *_sharedTransitionManager;
     view.hidden = NO;
   }
   [_viewsToHide removeAllObjects];
-}
-
-- (void)maybeClearConfigForStack:(UIView *)stack isInteractive:(bool)isInteractive
-{
-  if (isInteractive) {
-    _droppedStack = stack;
-  } else {
-    [self clearConfigForStackNow:stack];
-  }
 }
 
 - (void)clearConfigForStackNow:(UIView *)stack
@@ -517,6 +501,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
   BOOL startedAnimation = [self configureAndStartSharedTransitionForViews:removedViews];
   if (startedAnimation) {
     _removedViews = removedViews;
+  } else {
+    REANodeFind(screen, ^int(id<RCTComponent> _Nonnull view) {
+      [self clearAllSharedConfigsForViewTag:view.reactTag];
+      return false;
+    });
   }
 }
 
@@ -727,11 +716,11 @@ static REASharedTransitionManager *_sharedTransitionManager;
   return workletValues;
 }
 
-- (void)screenDidDisappear
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack
 {
-  if (_droppedStack) {
-    [self clearConfigForStackNow:_droppedStack];
-    _droppedStack = nil;
+  if (_isStackDropped) {
+    [self clearConfigForStackNow:stack];
+    _isStackDropped = NO;
   }
 }
 

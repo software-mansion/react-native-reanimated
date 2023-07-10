@@ -103,6 +103,7 @@
         [_animationsManager endAnimationsRecursive:view];
       }
       [_animationsManager removeAnimationsFromSubtree:(UIView *)container];
+      [_animationsManager onScreenRemoval:(UIView *)permanentlyRemovedChildren[0] stack:(UIView *)container];
     }
   }
 
