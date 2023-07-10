@@ -13,6 +13,7 @@ import {
   registerShareableMapping,
 } from './shareables';
 import { isAndroid, isWeb } from './PlatformChecker';
+import type { ShareableRef } from './commonTypes';
 
 interface RGB {
   r: number;
@@ -60,13 +61,14 @@ function createMatchers(): Matchers {
   };
 }
 
-isConfigured();
-const UIMATCHERS = makeShareableCloneRecursive({
-  __init: createMatchers,
-});
-
 const MATCHERS = createMatchers();
-registerShareableMapping(MATCHERS, UIMATCHERS);
+let UI_MATCHERS: Matchers | ShareableRef<Matchers>;
+if (isConfigured()) {
+  UI_MATCHERS = makeShareableCloneRecursive({ __init: createMatchers });
+  registerShareableMapping(MATCHERS, UI_MATCHERS);
+} else {
+  UI_MATCHERS = MATCHERS;
+}
 
 function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
