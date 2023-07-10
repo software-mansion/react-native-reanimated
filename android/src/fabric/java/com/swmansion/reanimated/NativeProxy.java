@@ -44,6 +44,7 @@ public class NativeProxy extends NativeProxyCommon {
         prepareLayoutAnimations(LayoutAnimations);
         ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
         installJSIBindings(messageQueueThread, fabricUIManager);
+        setIsReducedMotion(getIsReducedMotion());
     }
 
     private native HybridData initHybrid(
@@ -60,6 +61,8 @@ public class NativeProxy extends NativeProxyCommon {
     public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
     public native void performOperations();
+
+    public native void setIsReducedMotion(boolean isReducedMotion);
 
     @Override
     protected HybridData getHybridData() {

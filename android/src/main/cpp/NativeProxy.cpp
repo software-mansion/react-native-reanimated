@@ -170,6 +170,11 @@ void NativeProxy::performOperations() {
 #endif
 }
 
+void NativeProxy::setIsReducedMotion(bool isReducedMotion) {
+  runtime_->global().setProperty(
+      *runtime_, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
+}
+
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
@@ -177,7 +182,9 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod(
+           "setIsReducedMotion", NativeProxy::setIsReducedMotion)});
 }
 
 void NativeProxy::requestRender(
