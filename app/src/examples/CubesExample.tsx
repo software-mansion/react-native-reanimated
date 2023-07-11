@@ -320,12 +320,6 @@ const componentStyle = StyleSheet.create({
   cubesContainer: {
     flexDirection: 'row',
   },
-  square: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'black',
-    margin: 30,
-  },
   box: {
     width: 100,
     height: 100,
@@ -333,15 +327,6 @@ const componentStyle = StyleSheet.create({
     top: 0,
     left: 0,
     backfaceVisibility: 'hidden',
-  },
-  red: {
-    backgroundColor: 'red',
-  },
-  green: {
-    backgroundColor: 'green',
-  },
-  blue: {
-    backgroundColor: 'blue',
   },
   compass: {
     backgroundColor: 'black',
