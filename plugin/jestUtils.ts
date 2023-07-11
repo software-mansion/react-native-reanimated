@@ -15,8 +15,6 @@ const WORKLET_REGEX = /var _worklet_[0-9]+_init_data/g;
 const INLINE_STYLE_WARNING_REGEX =
   /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
 
-expect.extend({});
-
 expect.extend({
   toHaveWorkletData(received: string, expectedMatchCount = 1) {
     const receivedMatchCount = received.match(WORKLET_REGEX)?.length;

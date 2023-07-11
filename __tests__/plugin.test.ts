@@ -6,14 +6,14 @@ import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
 import { version as packageVersion } from '../package.json';
 
-const mockLocation = '/dev/null';
+const MOCK_LOCATION = '/dev/null';
 
 function runPlugin(input: string, opts = {}) {
   const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
     // Our babel presets require us to specify a filename here
     // but it is never used so we put in '/dev/null'
     // as a safe fallback.
-    filename: mockLocation,
+    filename: MOCK_LOCATION,
     compact: false,
     plugins: [plugin],
     ...opts,
@@ -1137,7 +1137,7 @@ describe('babel plugin', () => {
     </script>`;
 
     const { code } = runPlugin(input);
-    expect(code).toHaveLocation(mockLocation);
+    expect(code).toHaveLocation(MOCK_LOCATION);
     expect(code).toMatchSnapshot();
   });
 
@@ -1153,7 +1153,7 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input, {});
     process.env.BABEL_ENV = current;
 
-    expect(code).not.toHaveLocation(mockLocation);
+    expect(code).not.toHaveLocation(MOCK_LOCATION);
     expect(code).toMatchSnapshot();
   });
 });
