@@ -15,6 +15,7 @@ import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { UpdatePropsManager } from './UpdateProps';
+import type { WorkletRuntime } from './runtimes';
 
 declare global {
   var _WORKLET: boolean | undefined;
@@ -22,6 +23,11 @@ declare global {
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
+  // TODO: move to NativeReanimatedModule?
+  var _createWorkletRuntime: (
+    name: string,
+    valueUnpackerCode: string
+  ) => WorkletRuntime;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;

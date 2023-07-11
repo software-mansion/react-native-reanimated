@@ -9,7 +9,7 @@ import {
 } from './threads';
 
 // callGuard is only used with debug builds
-function callGuardDEV<T extends Array<any>, U>(
+export function callGuardDEV<T extends Array<any>, U>(
   fn: (...args: T) => U,
   ...args: T
 ): void {
@@ -25,7 +25,7 @@ function callGuardDEV<T extends Array<any>, U>(
   }
 }
 
-function valueUnpacker(objectToUnpack: any, category?: string): any {
+export function valueUnpacker(objectToUnpack: any, category?: string): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;

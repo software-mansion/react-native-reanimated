@@ -14,31 +14,7 @@ using namespace facebook;
 
 namespace reanimated {
 
-class JSRuntimeHelper;
-
-// Core functions are not allowed to capture outside variables, otherwise they'd
-// try to access _closure variable which is something we want to avoid for
-// simplicity reasons.
-class CoreFunction {
- private:
-  std::unique_ptr<jsi::Function> rnFunction_;
-  std::unique_ptr<jsi::Function> uiFunction_;
-  std::string functionBody_;
-  std::string location_;
-  JSRuntimeHelper
-      *runtimeHelper_; // runtime helper holds core function references, so we
-                       // use normal pointer here to avoid ref cycles.
-  std::unique_ptr<jsi::Function> &getFunction(jsi::Runtime &rt);
-
- public:
-  CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
-  template <typename... Args>
-  jsi::Value call(jsi::Runtime &rt, Args &&...args) {
-    auto result = getFunction(rt)->call(rt, args...);
-    uiFunction_ = nullptr; // reset the pointer to call jsi::Value::~Value
-    return result;
-  }
-};
+class CoreFunction;
 
 class JSRuntimeHelper {
  private:
@@ -98,6 +74,38 @@ class JSRuntimeHelper {
     // #else
     function.asObject(rt).asFunction(rt).call(rt, args...);
     // #endif
+  }
+};
+
+// Core functions are not allowed to capture outside variables, otherwise they'd
+// try to access _closure variable which is something we want to avoid for
+// simplicity reasons.
+class CoreFunction {
+ private:
+  std::unique_ptr<jsi::Function> rnFunction_;
+  std::unique_ptr<jsi::Function> uiFunction_;
+  std::string functionBody_;
+  std::string location_;
+  JSRuntimeHelper
+      *runtimeHelper_; // runtime helper holds core function references, so we
+                       // use normal pointer here to avoid ref cycles.
+
+ public:
+  CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
+  template <typename... Args>
+  jsi::Value call(jsi::Runtime &rt, Args &&...args) {
+    if (runtimeHelper_->isRNRuntime(rt)) {
+      // running on the main RN runtime
+      return rnFunction_->call(rt, args...);
+    } else {
+      // TODO: memoize function
+      auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
+          "(" + functionBody_ + "\n)");
+      auto function = rt.evaluateJavaScript(codeBuffer, location_)
+                          .asObject(rt)
+                          .asFunction(rt);
+      return function.call(rt, args...);
+    }
   }
 };
 
@@ -314,9 +322,14 @@ class ShareableWorklet : public ShareableObject {
       : ShareableObject(rt, worklet), runtimeHelper_(runtimeHelper) {
     valueType_ = WorkletType;
   }
+  // TODO: mark toJSValue as const?
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     jsi::Value obj = ShareableObject::toJSValue(rt);
     assert(this->data_.size() > 0); // `__initData`, `__workletHash` etc.
+    auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
+    if (valueUnpacker.isObject()) {
+      return valueUnpacker.getObject(rt).getFunction(rt).call(rt, obj);
+    }
     assert(runtimeHelper_->valueUnpacker != nullptr);
     return runtimeHelper_->valueUnpacker->call(rt, obj);
   }

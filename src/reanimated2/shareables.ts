@@ -114,6 +114,7 @@ export function makeShareableCloneRecursive<T>(
   const isTypeObject = type === 'object';
   const isTypeFunction = type === 'function';
   if ((isTypeObject || isTypeFunction) && value !== null) {
+    // TODO: improve cache or make sure that shareables aren't runtime-specific
     const cached = _shareableCache.get(value);
     if (cached === _shareableFlag) {
       return value;
@@ -158,7 +159,7 @@ export function makeShareableCloneRecursive<T>(
             true,
             depth + 1
           );
-          delete value.__initData;
+          // delete value.__initData;
         }
 
         for (const [key, element] of Object.entries(value)) {

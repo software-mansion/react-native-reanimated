@@ -20,29 +20,6 @@ CoreFunction::CoreFunction(
           workletObject.getProperty(rt, "__workletHash").getNumber()));
 }
 
-std::unique_ptr<jsi::Function> &CoreFunction::getFunction(jsi::Runtime &rt) {
-  if (runtimeHelper_->isRNRuntime(rt)) {
-    // running on the main RN runtime
-    return rnFunction_;
-  } else {
-    auto name = "__reanimatedCoreFunction_" + location_;
-    if (rt.global().getProperty(rt, name.c_str()).isUndefined()) {
-      auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
-          "(" + functionBody_ + "\n)");
-      rt.global().setProperty(
-          rt,
-          name.c_str(),
-          rt.evaluateJavaScript(codeBuffer, location_)
-              .asObject(rt)
-              .asFunction(rt));
-    }
-    uiFunction_ = std::make_unique<jsi::Function>(
-        rt.global().getPropertyAsFunction(rt, name.c_str()));
-    return uiFunction_;
-    // TODO: don't use uiFunction_
-  }
-}
-
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

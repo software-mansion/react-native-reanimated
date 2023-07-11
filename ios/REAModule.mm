@@ -21,6 +21,7 @@
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
+#import <RNReanimated/WorkletRuntime.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -295,6 +296,19 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         runtime,
         jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(runtime, nativeReanimatedModule));
+
+    auto createWorkletRuntime =
+        [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+      auto name = args[0].asString(rt).utf8(rt);
+      auto valueUnpackerCode = args[1].asString(rt).utf8(rt);
+      auto ho = std::make_shared<WorkletRuntime>(name, valueUnpackerCode);
+      return jsi::Object::createFromHostObject(rt, ho);
+    };
+    runtime.global().setProperty(
+        runtime,
+        "_createWorkletRuntime",
+        jsi::Function::createFromHostFunction(
+            runtime, jsi::PropNameID::forAscii(runtime, "_createWorkletRuntime"), 2, createWorkletRuntime));
 
 #ifdef RCT_NEW_ARCH_ENABLED
     weakNativeReanimatedModule_ = nativeReanimatedModule;

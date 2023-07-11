@@ -27,6 +27,7 @@ import { SensorContainer } from './SensorContainer';
 
 export { stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
+export { createWorkletRuntime, WorkletRuntime } from './runtimes';
 
 export type ReanimatedConsole = Pick<
   Console,
