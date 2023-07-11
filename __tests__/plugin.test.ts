@@ -6,12 +6,14 @@ import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
 import { version as packageVersion } from '../package.json';
 
+const MOCK_LOCATION = '/dev/null';
+
 function runPlugin(input: string, opts = {}) {
   const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
     // Our babel presets require us to specify a filename here
     // but it is never used so we put in '/dev/null'
     // as a safe fallback.
-    filename: '/dev/null',
+    filename: MOCK_LOCATION,
     compact: false,
     plugins: [plugin],
     ...opts,
@@ -1124,5 +1126,34 @@ describe('babel plugin', () => {
       );
     </script>`;
     expect(resultIsIdempotent(input9)).toBe(true);
+  });
+
+  // location
+  it('does inject location for worklets in dev builds', () => {
+    const input = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const x = 1;
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveLocation(MOCK_LOCATION);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't inject location for worklets in production builds", () => {
+    const input = html`<script>
+      const foo = useAnimatedStyle(() => {
+        const x = 1;
+      });
+    </script>`;
+
+    const current = process.env.BABEL_ENV;
+    process.env.BABEL_ENV = 'production';
+    const { code } = runPlugin(input, {});
+    process.env.BABEL_ENV = current;
+
+    expect(code).not.toHaveLocation(MOCK_LOCATION);
+    expect(code).toMatchSnapshot();
   });
 });
