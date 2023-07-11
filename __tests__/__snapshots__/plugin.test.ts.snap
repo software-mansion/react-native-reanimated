@@ -27,6 +27,24 @@ var f = function () {
 }();"
 `;
 
+exports[`babel plugin does inject location for worklets in dev builds 1`] = `
+"var _worklet_1852213185147_init_data = {
+  code: "function anonymous(){const x=1;}",
+  location: "/dev/null"
+};
+var foo = useAnimatedStyle(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    var x = 1;
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1852213185147_init_data;
+  _f.__workletHash = 1852213185147;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
 exports[`babel plugin doesn't bother other Directive Literals 1`] = `
 "function foo() {
   'foobar';
@@ -51,6 +69,21 @@ var f = function () {
   _f.__stackDetails = _e;
   return _f;
 }();"
+`;
+
+exports[`babel plugin doesn't inject location for worklets in production builds 1`] = `
+"var _worklet_1852213185147_init_data = {
+  code: "function anonymous(){const x=1;}"
+};
+var foo = useAnimatedStyle(function () {
+  var _f = function _f() {
+    var x = 1;
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1852213185147_init_data;
+  _f.__workletHash = 1852213185147;
+  return _f;
+}());"
 `;
 
 exports[`babel plugin doesn't nest worklets for other threads 1`] = `

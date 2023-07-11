@@ -1,5 +1,5 @@
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { Button, View } from 'react-native';
+import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 
 export default function KeyframeAnimation(): React.ReactElement {
@@ -43,29 +43,38 @@ export default function KeyframeAnimation(): React.ReactElement {
     },
   }).duration(2000);
   return (
-    <View style={{ flexDirection: 'column-reverse' }}>
+    <View style={styles.columnReverse}>
       <Button
         title="animate"
         onPress={() => {
           setShow((last) => !last);
         }}
       />
-      <View
-        style={{ height: 400, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={styles.blueBoxContainer}>
         {show && (
           <Animated.View
             entering={enteringAnimation}
             exiting={exitingAnimation}
-            style={{
-              height: 100,
-              width: 200,
-              backgroundColor: 'blue',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            style={styles.blueBox}
           />
         )}
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  columnReverse: { flexDirection: 'column-reverse' },
+  blueBoxContainer: {
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blueBox: {
+    height: 100,
+    width: 200,
+    backgroundColor: 'blue',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

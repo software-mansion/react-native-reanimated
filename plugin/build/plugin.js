@@ -296,10 +296,6 @@ var require_makeWorklet = __commonJS({
       const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
       (0, assert_1.strict)(funString, "'funString' is undefined");
       const workletHash = hash(funString);
-      let location = state.file.opts.filename;
-      if (state.opts.relativeSourceLocation) {
-        location = (0, path_1.relative)(state.cwd, location);
-      }
       let lineOffset = 1;
       if (variables.length > 0) {
         lineOffset -= variables.length + 2;
@@ -309,9 +305,16 @@ var require_makeWorklet = __commonJS({
       (0, assert_1.strict)(pathForStringDefinitions.parentPath, "'pathForStringDefinitions.parentPath' is null");
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
       const initDataObjectExpression = (0, types_1.objectExpression)([
-        (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString)),
-        (0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location))
+        (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString))
       ]);
+      const shouldInjectLocation = !(0, utils_1.isRelease)();
+      if (shouldInjectLocation) {
+        let location = state.file.opts.filename;
+        if (state.opts.relativeSourceLocation) {
+          location = (0, path_1.relative)(state.cwd, location);
+        }
+        initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location)));
+      }
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("sourceMap"), (0, types_1.stringLiteral)(sourceMapString)));
       }

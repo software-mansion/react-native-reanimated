@@ -43,15 +43,14 @@ function SWMLogo() {
 export default function MountingUnmounting(): React.ReactElement {
   const [show, setShow] = useState(false);
   return (
-    <View style={{ flexDirection: 'column-reverse' }}>
+    <View style={styles.columnReverse}>
       <Button
         title="toggle"
         onPress={() => {
           setShow((last) => !last);
         }}
       />
-      <View
-        style={{ height: 400, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={styles.logoContainer}>
         {show && <SWMLogo key={Math.random().toString()} />}
       </View>
     </View>
@@ -59,6 +58,14 @@ export default function MountingUnmounting(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  columnReverse: {
+    flexDirection: 'column-reverse',
+  },
+  logoContainer: {
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   animatedView: {
     height: 100,
     width: 200,
