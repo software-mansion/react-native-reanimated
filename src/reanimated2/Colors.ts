@@ -8,12 +8,7 @@
 
 /* eslint no-bitwise: 0 */
 import { makeShareable, isConfigured } from './core';
-import {
-  makeShareableCloneRecursive,
-  registerShareableMapping,
-} from './shareables';
 import { isAndroid, isWeb } from './PlatformChecker';
-import type { ShareableRef } from './commonTypes';
 
 interface RGB {
   r: number;
@@ -36,39 +31,16 @@ function call(...args: unknown[]): string {
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
 
-type Matchers = {
-  rgb: RegExp;
-  rgba: RegExp;
-  hsl: RegExp;
-  hsla: RegExp;
-  hex3: RegExp;
-  hex4: RegExp;
-  hex6: RegExp;
-  hex8: RegExp;
+const MATCHERS = {
+  rgb: new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER)),
+  rgba: new RegExp('rgba' + call(NUMBER, NUMBER, NUMBER, NUMBER)),
+  hsl: new RegExp('hsl' + call(NUMBER, PERCENTAGE, PERCENTAGE)),
+  hsla: new RegExp('hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER)),
+  hex3: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+  hex4: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+  hex6: /^#([0-9a-fA-F]{6})$/,
+  hex8: /^#([0-9a-fA-F]{8})$/,
 };
-
-function createMatchers(): Matchers {
-  'worklet';
-  return {
-    rgb: new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER)),
-    rgba: new RegExp('rgba' + call(NUMBER, NUMBER, NUMBER, NUMBER)),
-    hsl: new RegExp('hsl' + call(NUMBER, PERCENTAGE, PERCENTAGE)),
-    hsla: new RegExp('hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER)),
-    hex3: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
-    hex4: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
-    hex6: /^#([0-9a-fA-F]{6})$/,
-    hex8: /^#([0-9a-fA-F]{8})$/,
-  };
-}
-
-const MATCHERS = createMatchers();
-let UI_MATCHERS: Matchers | ShareableRef<Matchers>;
-if (isConfigured()) {
-  UI_MATCHERS = makeShareableCloneRecursive({ __init: createMatchers });
-  registerShareableMapping(MATCHERS, UI_MATCHERS);
-} else {
-  UI_MATCHERS = MATCHERS;
-}
 
 function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
