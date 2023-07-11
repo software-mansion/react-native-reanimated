@@ -200,6 +200,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 
 #ifdef DEBUG
+  std::shared_ptr<JSLogger> jsLogger_;
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

@@ -88,6 +88,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
 
 interface Example {
   icon?: string;
@@ -515,5 +516,9 @@ export const EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+  },
+  DuplicateTagsExample: {
+    title: '[SET] Duplicate Tags',
+    screen: DuplicateTagsExample,
   },
 } as const;

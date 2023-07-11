@@ -551,6 +551,19 @@ void NativeProxy::setupLayoutAnimations() {
         tag, static_cast<LayoutAnimationType>(type));
   });
 
+#ifdef DEBUG
+  layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
+      [weakNativeReanimatedModule](int viewTag, int screenTag) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
+          return;
+        }
+
+        nativeReanimatedModule->layoutAnimationsManager()
+            .checkDuplicateSharedTag(viewTag, screenTag);
+      });
+#endif
+
   layoutAnimations_->cthis()->setClearAnimationConfigBlock(
       [weakNativeReanimatedModule](int tag) {
         auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
