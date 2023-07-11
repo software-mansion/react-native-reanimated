@@ -1,3 +1,4 @@
+import type { Component } from 'react';
 import type { Context, ShadowNodeWrapper } from '../commonTypes';
 
 export type DependencyList = Array<unknown> | undefined;
@@ -13,7 +14,7 @@ export interface Descriptor {
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
-export interface RefObjectFunction<T> {
+export interface RefObjectFunction<T extends Component> {
   current: T | null;
   (component?: T):
     | number // Paper
@@ -21,4 +22,4 @@ export interface RefObjectFunction<T> {
     | HTMLElement; // web
 }
 
-export type AnimatedRef<T> = RefObjectFunction<T>;
+export type AnimatedRef<T extends Component> = RefObjectFunction<T>;
