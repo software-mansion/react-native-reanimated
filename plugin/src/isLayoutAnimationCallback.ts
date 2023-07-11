@@ -10,6 +10,7 @@ import {
   isCallExpression,
   isMemberExpression,
   isExpression,
+  isNewExpression,
 } from '@babel/types';
 
 const EntryExitAnimations = new Set([
@@ -166,21 +167,26 @@ function isLayoutAnimationCallbackMethod(exp: Expression) {
     isMemberExpression(exp) &&
     isIdentifier(exp.property) &&
     LayoutAnimationsCallbacks.has(exp.property.name) &&
-    containsLayoutAnimationChainable(exp.object)
+    isLayoutAnimationsChainableOrNewOperator(exp.object)
   );
 }
 
-function containsLayoutAnimationChainable(exp: Expression) {
+function isLayoutAnimationsChainableOrNewOperator(exp: Expression) {
   if (isIdentifier(exp) && LayoutAnimations.has(exp.name)) {
     return true;
+  } else if (
+    isNewExpression(exp) &&
+    isIdentifier(exp.callee) &&
+    LayoutAnimations.has(exp.callee.name)
+  ) {
+    return true;
   }
-
   if (
     isCallExpression(exp) &&
     isMemberExpression(exp.callee) &&
     isIdentifier(exp.callee.property) &&
     LayoutAnimationsChainableMethods.has(exp.callee.property.name) &&
-    containsLayoutAnimationChainable(exp.callee.object)
+    isLayoutAnimationsChainableOrNewOperator(exp.callee.object)
   ) {
     return true;
   }

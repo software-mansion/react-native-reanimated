@@ -839,13 +839,15 @@ var require_isLayoutAnimationCallback = __commonJS({
     }
     exports2.isLayoutAnimationCallback = isLayoutAnimationCallback;
     function isLayoutAnimationCallbackMethod(exp) {
-      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && LayoutAnimationsCallbacks.has(exp.property.name) && containsLayoutAnimationChainable(exp.object);
+      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && LayoutAnimationsCallbacks.has(exp.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.object);
     }
-    function containsLayoutAnimationChainable(exp) {
+    function isLayoutAnimationsChainableOrNewOperator(exp) {
       if ((0, types_1.isIdentifier)(exp) && LayoutAnimations.has(exp.name)) {
         return true;
+      } else if ((0, types_1.isNewExpression)(exp) && (0, types_1.isIdentifier)(exp.callee) && LayoutAnimations.has(exp.callee.name)) {
+        return true;
       }
-      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.property) && LayoutAnimationsChainableMethods.has(exp.callee.property.name) && containsLayoutAnimationChainable(exp.callee.object)) {
+      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.property) && LayoutAnimationsChainableMethods.has(exp.callee.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.callee.object)) {
         return true;
       }
       return false;

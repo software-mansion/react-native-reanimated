@@ -1139,9 +1139,33 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  it('workletizes unchained callback functions automatically with new keyword', () => {
+    const input = html`<script>
+      new FadeIn().withCallback(() => {
+        console.log('FadeIn');
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(1);
+    expect(code).toMatchSnapshot();
+  });
+
   it("doesn't workletize callback functions on unknown objects", () => {
     const input = html`<script>
       AmogusIn.withCallback(() => {
+        console.log('AmogusIn');
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't workletize callback functions on unknown objects with new keyword", () => {
+    const input = html`<script>
+      new AmogusIn().withCallback(() => {
         console.log('AmogusIn');
       });
     </script>`;
@@ -1163,12 +1187,36 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  it('workletizes callback functions on known chained methods before with new keyword', () => {
+    const input = html`<script>
+      new FadeIn().build().withCallback(() => {
+        console.log('FadeIn with build before');
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(1);
+    expect(code).toMatchSnapshot();
+  });
+
   it("doesn't workletize callback functions on unknown objects on known chained methods before", () => {
     const input = html`<script>
       AmogusIn.build().withCallback(() => {
         console.log('AmogusIn with build before');
       });
     </script>`;
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't workletize callback functions on unknown objects on known chained methods before with new keyword", () => {
+    const input = html`<script>
+      new AmogusIn().build().withCallback(() => {
+        console.log('AmogusIn with build before');
+      });
+    </script>`;
+
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData(0);
     expect(code).toMatchSnapshot();
@@ -1186,9 +1234,35 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  it('workletizes callback functions on known chained methods after with new keyword', () => {
+    const input = html`<script>
+      new FadeIn()
+        .withCallback(() => {
+          console.log('FadeIn with build after');
+        })
+        .build();
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(1);
+    expect(code).toMatchSnapshot();
+  });
+
   it("doesn't workletize callback functions on unknown chained methods before", () => {
     const input = html`<script>
       FadeIn.AmogusIn().withCallback(() => {
+        console.log('FadeIn with AmogusIn before');
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't workletize callback functions on unknown chained methods before with new keyword", () => {
+    const input = html`<script>
+      new FadeIn().AmogusIn().withCallback(() => {
         console.log('FadeIn with AmogusIn before');
       });
     </script>`;
@@ -1210,11 +1284,37 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  it("doesn't workletize callback functions on unknown objects chained with known objects with new keyword", () => {
+    const input = html`<script>
+      new AmogusIn().FadeIn().withCallback(() => {
+        console.log('AmogusIn with FadeIn after');
+      });
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
   it('workletizes callback functions on unknown objects chained after', () => {
     const input = html`<script>
       FadeIn.withCallback(() => {
         console.log('FadeIn with AmogusIn after');
       }).AmogusIn();
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(1);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes callback functions on unknown objects chained after with new keyword', () => {
+    const input = html`<script>
+      new FadeIn()
+        .withCallback(() => {
+          console.log('FadeIn with AmogusIn after');
+        })
+        .AmogusIn();
     </script>`;
 
     const { code } = runPlugin(input);
@@ -1234,9 +1334,37 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
+  it("doesn't workletize callback functions on unknown objects with known object chained after with new keyword", () => {
+    const input = html`<script>
+      new AmogusIn()
+        .withCallback(() => {
+          console.log('AmogusIn with FadeIn before');
+        })
+        .FadeIn();
+    </script>`;
+
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(0);
+    expect(code).toMatchSnapshot();
+  });
+
   it('workletizes callback functions on longer chains of known objects', () => {
     const input = html`<script>
       FadeIn.build()
+        .duration()
+        .withCallback(() => {
+          console.log('FadeIn with build');
+        });
+    </script>`;
+    const { code } = runPlugin(input);
+    expect(code).toHaveWorkletData(1);
+    expect(code).toMatchSnapshot();
+  });
+
+  it('workletizes callback functions on longer chains of known objects with new keyword', () => {
+    const input = html`<script>
+      new FadeIn()
+        .build()
         .duration()
         .withCallback(() => {
           console.log('FadeIn with build');
