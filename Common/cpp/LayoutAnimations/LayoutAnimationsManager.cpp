@@ -123,7 +123,7 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
 #ifdef DEBUG
 std::string LayoutAnimationsManager::getScreenSharedTagPairString(
     const int screenTag,
-    const std::string &sharedTag) {
+    const std::string &sharedTag) const {
   return std::to_string(screenTag) + ":" + sharedTag;
 }
 
@@ -145,7 +145,7 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
   screenSharedTagSet_.insert(pair);
 }
 
-void LayoutAnimationsManager::initializeJSLogger(
+void LayoutAnimationsManager::setJSLogger(
     const std::shared_ptr<JSLogger> &jsLogger) {
   jsLogger_ = jsLogger;
 }

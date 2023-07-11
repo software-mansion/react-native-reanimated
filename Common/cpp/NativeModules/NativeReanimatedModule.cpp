@@ -172,7 +172,7 @@ void NativeReanimatedModule::installCoreFunctions(
   // We initialize jsLogger_ here because we need runtimeHelper
   // to be initialized already
   jsLogger_ = std::make_shared<JSLogger>(runtimeHelper);
-  layoutAnimationsManager_.initializeJSLogger(jsLogger_);
+  layoutAnimationsManager_.setJSLogger(jsLogger_);
 #endif
 }
 
