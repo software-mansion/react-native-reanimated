@@ -226,9 +226,7 @@ using namespace facebook::react;
 - (void)invalidate
 {
   _eventHandler = nil;
-  if (_displayLink) {
-    [_displayLink invalidate];
-  }
+  [_displayLink invalidate];
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -240,7 +238,7 @@ using namespace facebook::react;
 
 - (void)operationsBatchDidComplete
 {
-  if (_displayLink && ![_displayLink isPaused]) {
+  if (![_displayLink isPaused]) {
     // if display link is set it means some of the operations that have run as a part of the batch
     // requested updates. We want updates to be run in the same frame as in which operations have
     // been scheduled as it may mean the new view has just been mounted and expects its initial
@@ -272,16 +270,12 @@ using namespace facebook::react;
 
 - (void)startUpdatingOnAnimationFrame
 {
-  if (_displayLink) {
-    [_displayLink setPaused:false];
-  }
+  [_displayLink setPaused:false];
 }
 
 - (void)stopUpdatingOnAnimationFrame
 {
-  if (_displayLink) {
-    [_displayLink setPaused:true];
-  }
+  [_displayLink setPaused:true];
 }
 
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
@@ -556,7 +550,7 @@ using namespace facebook::react;
 
 - (void)maybeFlushUIUpdatesQueue
 {
-  if (_displayLink && [_displayLink isPaused]) {
+  if ([_displayLink isPaused]) {
     [self performOperations];
   }
 }

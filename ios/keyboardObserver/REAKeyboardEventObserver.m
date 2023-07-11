@@ -63,11 +63,11 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
       strongSelf->_displayLink.preferredFramesPerSecond =
           120; // will fallback to 60 fps for devices without Pro Motion display
       [strongSelf->_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-      strongSelf->_displayLink.paused = NO;
+      [strongSelf->_displayLink setPaused:false];
     });
 
   } else {
-    _displayLink.paused = NO;
+    [_displayLink setPaused:false];
   }
 
   [self updateKeyboardFrame];
@@ -86,9 +86,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
       _state = _state == OPENING ? OPEN : CLOSED;
     }
     // stop display link updates if no animation is running
-    if (_displayLink) {
-      _displayLink.paused = YES;
-    }
+    [_displayLink setPaused:true];
   }
 
   for (NSString *key in _listeners.allKeys) {
@@ -160,10 +158,8 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 {
   RCTUnsafeExecuteOnMainQueueSync(^() {
     [self->_listeners removeAllObjects];
-    if (_displayLink) {
-      [self->_displayLink invalidate];
-      self->_displayLink = nil;
-    };
+    [self->_displayLink invalidate];
+    self->_displayLink = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
   });
 }
