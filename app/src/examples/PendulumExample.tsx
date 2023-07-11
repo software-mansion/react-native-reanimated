@@ -17,17 +17,13 @@ import {
 const NAVY = '#001A72';
 const LIGHT_NAVY = '#C1C6E5';
 
-type FieldDefinition = [string, number, Dispatch<SetStateAction<number>>];
-
-function InputField({
-  fieldName,
-  value,
-  setValue,
-}: {
+interface FieldDefinition {
   fieldName: string;
   value: number;
   setValue: Dispatch<SetStateAction<number>>;
-}) {
+}
+
+function InputField({ fieldName, value, setValue }: FieldDefinition) {
   return (
     <View style={styles.row} key={fieldName}>
       <Text style={[styles.inputDescription]}>{fieldName}</Text>
@@ -38,6 +34,8 @@ function InputField({
           const parsedInput = Number.parseFloat(s);
           if (parsedInput) {
             setValue(parsedInput);
+          } else {
+            setValue(0);
           }
         }}
         autoCapitalize="none"
@@ -97,16 +95,20 @@ export default function SpringExample(): React.ReactElement {
     });
 
   const fields: Array<FieldDefinition> = [
-    ['Stiffness', stiffness, setStiffness],
+    { fieldName: 'Stiffness', value: stiffness, setValue: setStiffness },
     ...(useConfigWithDuration
-      ? ([
-          ['Duration', duration, setDuration],
-          ['Damping Ratio', dampingRatio, setDampingRatio],
-        ] as Array<FieldDefinition>)
-      : ([
-          ['Mass', mass, setMass],
-          ['Damping', damping, setDamping],
-        ] as Array<FieldDefinition>)),
+      ? [
+          { fieldName: 'Duration', value: duration, setValue: setDuration },
+          {
+            fieldName: 'Damping Ratio',
+            value: dampingRatio,
+            setValue: setDampingRatio,
+          },
+        ]
+      : [
+          { fieldName: 'Mass', value: mass, setValue: setMass },
+          { fieldName: 'Damping', value: damping, setValue: setDamping },
+        ]),
   ];
 
   return (
@@ -166,10 +168,12 @@ export default function SpringExample(): React.ReactElement {
         {fields.map((item) => {
           return (
             <InputField
-              fieldName={item[0]}
-              value={item[1]}
-              setValue={item[2]}
-              key={item[0]}
+              fieldName={item.fieldName}
+              value={item.value}
+              setValue={(value) => {
+                item.setValue(value);
+              }}
+              key={item.fieldName}
             />
           );
         })}
