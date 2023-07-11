@@ -310,6 +310,42 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         jsi::Function::createFromHostFunction(
             runtime, jsi::PropNameID::forAscii(runtime, "_createWorkletRuntime"), 2, createWorkletRuntime));
 
+    auto scheduleOnJS =
+        [nativeReanimatedModule](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+      nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
+      return jsi::Value::undefined();
+    };
+    runtime.global().setProperty(
+        runtime,
+        "_scheduleOnJS",
+        jsi::Function::createFromHostFunction(
+            runtime, jsi::PropNameID::forAscii(runtime, "_scheduleOnJS"), 2, scheduleOnJS));
+
+    auto makeShareableClone =
+        [nativeReanimatedModule](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+      return nativeReanimatedModule->makeShareableClone(rt, args[0], jsi::Value::undefined());
+    };
+    runtime.global().setProperty(
+        runtime,
+        "_makeShareableClone",
+        jsi::Function::createFromHostFunction(
+            runtime, jsi::PropNameID::forAscii(runtime, "_makeShareableClone"), 1, makeShareableClone));
+
+    auto runOnRuntime =
+        [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+      jsi::Runtime &rt2 = *runtimeFromValue(rt, args[0]);
+      auto worklet = extractShareableOrThrow<ShareableWorklet>(rt, args[1]);
+      worklet->getJSValue(rt2).asObject(rt2).asFunction(rt2).call(rt2);
+      return jsi::Value::undefined();
+    };
+    runtime.global().setProperty(
+        runtime,
+        "_runOnRuntime",
+        jsi::Function::createFromHostFunction(
+            runtime, jsi::PropNameID::forAscii(runtime, "_runOnRuntime"), 2, runOnRuntime));
+
 #ifdef RCT_NEW_ARCH_ENABLED
     weakNativeReanimatedModule_ = nativeReanimatedModule;
     if (_surfacePresenter != nil) {

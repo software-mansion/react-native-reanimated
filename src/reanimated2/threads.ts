@@ -165,6 +165,7 @@ export function runOnJS<A extends any[], R>(
     fun = fun.__remoteFunction;
   }
   return (...args) => {
+    // TODO: add global.?
     _scheduleOnJS(
       fun,
       args.length > 0

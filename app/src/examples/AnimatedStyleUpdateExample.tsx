@@ -3,9 +3,12 @@ import Animated, {
   withTiming,
   useAnimatedStyle,
   Easing,
+  runOnUI,
+  runOnJS,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
+import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
 
 export default function AnimatedStyleUpdateExample(): React.ReactElement {
   const randomWidth = useSharedValue(10);
@@ -37,6 +40,16 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
         title="toggle"
         onPress={() => {
           randomWidth.value = Math.random() * 350;
+          const func = () => console.log('xd1');
+          runOnUI(() => {
+            'worklet';
+            runOnJS(func)();
+          })();
+          global._scheduleOnJS(
+            makeShareableCloneRecursive(console.log),
+            makeShareableCloneRecursive(['xd2'])
+          );
+          console.log(global._makeShareableClone);
         }}
       />
     </View>

@@ -28,6 +28,10 @@ declare global {
     name: string,
     valueUnpackerCode: string
   ) => WorkletRuntime;
+  var _runOnRuntime: (
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<ComplexWorkletFunction<[], void>>
+  ) => void;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;
