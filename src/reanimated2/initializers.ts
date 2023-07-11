@@ -8,6 +8,10 @@ import {
   runOnUIImmediately,
 } from './threads';
 
+const IS_JEST = isJest();
+const IS_NATIVE = !shouldBeUseWeb();
+const IS_CHROME_DEBUGGER = isChromeDebugger();
+
 // callGuard is only used with debug builds
 export function callGuardDEV<T extends Array<any>, U>(
   fn: (...args: T) => U,
@@ -92,6 +96,38 @@ Possible solutions are:
   }
 }
 
+export function setupErrorHandler() {
+  'worklet';
+  global.__ErrorUtils = {
+    reportFatalError: (error: Error) => {
+      runOnJS(reportFatalErrorOnJS)({
+        message: error.message,
+        stack: error.stack,
+      });
+    },
+  };
+}
+
+// We really have to create a copy of console here. Function runOnJS we use on elements inside
+// this object makes it not configurable
+const capturableConsole = { ...console };
+
+export function setupConsole() {
+  'worklet';
+  if (!IS_CHROME_DEBUGGER) {
+    // setup console
+    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
+    global.console = {
+      assert: runOnJS(capturableConsole.assert),
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
+    };
+  }
+}
+
 function setupRequestAnimationFrame() {
   'worklet';
 
@@ -139,10 +175,6 @@ function setupRequestAnimationFrame() {
 export function initializeUIRuntime() {
   NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);
 
-  const IS_JEST = isJest();
-  const IS_CHROME_DEBUGGER = isChromeDebugger();
-  const IS_NATIVE = !shouldBeUseWeb();
-
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
     // the method directly using setTimeout, therefore the callback doesn't get the
@@ -155,34 +187,10 @@ export function initializeUIRuntime() {
     };
   }
 
-  // We really have to create a copy of console here. Function runOnJS we use on elements inside
-  // this object makes it not configurable
-  const capturableConsole = { ...console };
   runOnUIImmediately(() => {
     'worklet';
-    // setup error handler
-    global.__ErrorUtils = {
-      reportFatalError: (error: Error) => {
-        runOnJS(reportFatalErrorOnJS)({
-          message: error.message,
-          stack: error.stack,
-        });
-      },
-    };
-
-    if (!IS_CHROME_DEBUGGER) {
-      // setup console
-      // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-      global.console = {
-        assert: runOnJS(capturableConsole.assert),
-        debug: runOnJS(capturableConsole.debug),
-        log: runOnJS(capturableConsole.log),
-        warn: runOnJS(capturableConsole.warn),
-        error: runOnJS(capturableConsole.error),
-        info: runOnJS(capturableConsole.info),
-      };
-    }
-
+    setupErrorHandler();
+    setupConsole();
     if (IS_NATIVE) {
       setupMicrotasks();
       setupRequestAnimationFrame();

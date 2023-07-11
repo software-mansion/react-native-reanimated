@@ -1,15 +1,10 @@
-import { isChromeDebugger } from './PlatformChecker';
 import type { ComplexWorkletFunction } from './commonTypes';
-import { reportFatalErrorOnJS } from './errors';
-import { valueUnpacker } from './initializers';
+import { setupConsole, setupErrorHandler, valueUnpacker } from './initializers';
 import { makeShareableCloneRecursive } from './shareables';
-import { runOnJS } from './threads';
 
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: true;
 };
-
-const IS_CHROME_DEBUGGER = isChromeDebugger();
 
 export function createWorkletRuntime(name: string) {
   // @ts-ignore valueUnpacker is a worklet
@@ -22,37 +17,13 @@ export function createWorkletRuntime(name: string) {
     _scheduleOnJS: scheduleOnJS,
   } = global;
 
-  // TODO: unify with initializers.ts
-  const capturableConsole = { ...console };
-
   runOnRuntimeSync(runtime, () => {
     'worklet';
-
     global._scheduleOnJS = scheduleOnJS;
     global._makeShareableClone = makeShareableClone;
 
-    // setup error handler
-    global.__ErrorUtils = {
-      reportFatalError: (error: Error) => {
-        runOnJS(reportFatalErrorOnJS)({
-          message: error.message,
-          stack: error.stack,
-        });
-      },
-    };
-
-    if (!IS_CHROME_DEBUGGER) {
-      // setup console
-      // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-      global.console = {
-        assert: runOnJS(capturableConsole.assert),
-        debug: runOnJS(capturableConsole.debug),
-        log: runOnJS(capturableConsole.log),
-        warn: runOnJS(capturableConsole.warn),
-        error: runOnJS(capturableConsole.error),
-        info: runOnJS(capturableConsole.info),
-      };
-    }
+    setupErrorHandler();
+    setupConsole();
 
     // TODO: call user-defined initializer worklet
   });
