@@ -14,4 +14,6 @@ public interface NativeMethodsHolder {
   boolean isLayoutAnimationEnabled();
 
   int findPrecedingViewTagForTransition(int tag);
+
+  void checkDuplicateSharedTag(int viewTag, int screenTag);
 }
