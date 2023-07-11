@@ -172,11 +172,8 @@ export function subtractMatrices<T extends AffineMatrixFlat | AffineMatrix>(
   const a: AffineMatrixFlat = maybeFlattenMatrix(maybeFlatA);
   const b: AffineMatrixFlat = maybeFlattenMatrix(maybeFlatB);
 
-  a.forEach((_, i) => {
-    a[i] -= b[i];
-  });
-
-  return isFlatOnStart ? (a as T) : (unflatten(a) as T);
+  const c = a.map((_, i) => a[i] - b[i]) as AffineMatrixFlat;
+  return isFlatOnStart ? (c as T) : (unflatten(c) as T);
 }
 
 export function addMatrices<T extends AffineMatrixFlat | AffineMatrix>(
@@ -185,14 +182,11 @@ export function addMatrices<T extends AffineMatrixFlat | AffineMatrix>(
 ): T {
   'worklet';
   const isFlatOnStart = isAffineMatrixFlat(maybeFlatA);
-  const a: AffineMatrixFlat = maybeFlattenMatrix(maybeFlatA);
-  const b: AffineMatrixFlat = maybeFlattenMatrix(maybeFlatB);
+  const a = maybeFlattenMatrix(maybeFlatA);
+  const b = maybeFlattenMatrix(maybeFlatB);
 
-  a.forEach((_, i) => {
-    a[i] += b[i];
-  });
-
-  return isFlatOnStart ? (a as T) : (unflatten(a) as T);
+  const c = a.map((_, i) => a[i] + b[i]) as AffineMatrixFlat;
+  return isFlatOnStart ? (c as T) : (unflatten(c) as T);
 }
 
 export function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
@@ -202,8 +196,8 @@ export function scaleMatrix<T extends AffineMatrixFlat | AffineMatrix>(
   'worklet';
   const isFlatOnStart = isAffineMatrixFlat(maybeFlatA);
   const a = maybeFlattenMatrix(maybeFlatA);
-  const b = a.map((x) => x * scalar) as AffineMatrixFlat;
 
+  const b = a.map((x) => x * scalar) as AffineMatrixFlat;
   return isFlatOnStart ? (b as T) : (unflatten(b) as T);
 }
 
@@ -258,7 +252,7 @@ function transposeMatrix(matrix: AffineMatrix): AffineMatrix {
 function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
   if (__DEV__ && a.length !== b.length) {
     throw new Error(
-      `Cannot calculate inner product of two vectors of different length. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
+      `Cannot calculate inner product of two vectors of cerent length. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
     );
   }
 }
@@ -333,7 +327,7 @@ function gramSchmidtAlgorithm(matrix: AffineMatrix): {
     [0, 0, innerProduct(e2, a2), innerProduct(e2, a3)],
     [0, 0, 0, innerProduct(e3, a3)],
   ];
-  return { rotationMatrix, skewMatrix };
+  return {rotationMatrix: transposeMatrix(rotationMatrix), skewMatrix:transposeMatrix(skewMatrix) };
 }
 
 export function decomposeMatrix(
@@ -379,8 +373,8 @@ export function decomposeMatrix(
   return {
     translationMatrix,
     scaleMatrix,
-    rotationMatrix: transposeMatrix(rotationMatrix),
-    skewMatrix: transposeMatrix(skewMatrix),
+    rotationMatrix,
+    skewMatrix,
   };
 }
 
