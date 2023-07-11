@@ -53,13 +53,13 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
   static springify<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    duration: number
+    duration?: number
   ): ComplexAnimationBuilder {
     const instance = this.createInstance();
     return instance.springify(duration);
   }
 
-  springify(duration: number): this {
+  springify(duration?: number): this {
     this.durationV = duration;
     this.type = withSpring as AnimationFunction;
     return this;
