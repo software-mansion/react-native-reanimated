@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   withSpring,
@@ -62,18 +62,21 @@ export default function DragAndSnapExample(): React.ReactElement {
   });
 
   return (
-    <View style={{ flex: 1, margin: 50 }}>
+    <View style={styles.container}>
       <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View
-          style={[
-            {
-              width: 40,
-              height: 40,
-            },
-            stylez,
-          ]}
-        />
+        <Animated.View style={[styles.box, stylez]} />
       </PanGestureHandler>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    margin: 50,
+  },
+  box: {
+    width: 40,
+    height: 40,
+  },
+});
