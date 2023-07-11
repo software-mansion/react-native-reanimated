@@ -56,12 +56,7 @@ function HomeScreen({
         <Animated.Image
           sharedTransitionTag={'countryside'}
           source={gallery.countryside.image}
-          style={{
-            width: '100%',
-            height: 160,
-            marginTop: 20,
-            borderRadius: 15,
-          }}
+          style={styles.imageOne}
         />
       </Pressable>
       <View style={styles.row}>
@@ -69,29 +64,18 @@ function HomeScreen({
           <Animated.Image
             sharedTransitionTag={'florence'}
             source={gallery.florence.image}
-            style={{
-              width: width / 2 - 35,
-              height: 250,
-              marginTop: 20,
-              borderRadius: 15,
-            }}
+            style={[{ width: width / 2 - 35 }, styles.imageTwo]}
           />
         </Pressable>
         <Pressable onPress={() => goToDetails('dawn')}>
           <Animated.Image
             sharedTransitionTag={'dawn'}
             source={gallery.dawn.image}
-            style={{
-              width: width / 2 - 35,
-              height: 250,
-              marginTop: 20,
-              marginLeft: 20,
-              borderRadius: 15,
-            }}
+            style={[{ width: width / 2 - 35 }, styles.imageThree]}
           />
         </Pressable>
       </View>
-      <Text style={{ ...styles.header, fontSize: 40 }}>Tuscany</Text>
+      <Text style={styles.header}>Tuscany</Text>
       <View style={styles.row}>
         {chips.map((chip) => (
           <Text key={chip} style={styles.chip}>
@@ -124,7 +108,7 @@ function DetailsScreen({
       <View style={styles.wrapper}>
         <Animated.Text
           entering={FadeIn.delay(150).duration(1000)}
-          style={{ ...styles.header, fontSize: 28 }}>
+          style={[styles.header, styles.font28]}>
           {gallery[tag].title}
         </Animated.Text>
         <Animated.Text
@@ -183,6 +167,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 8,
   },
+  font28: {
+    fontSize: 28,
+  },
   chip: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -214,5 +201,22 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  imageOne: {
+    width: '100%',
+    height: 160,
+    marginTop: 20,
+    borderRadius: 15,
+  },
+  imageTwo: {
+    height: 250,
+    marginTop: 20,
+    borderRadius: 15,
+  },
+  imageThree: {
+    height: 250,
+    marginTop: 20,
+    marginLeft: 20,
+    borderRadius: 15,
   },
 });

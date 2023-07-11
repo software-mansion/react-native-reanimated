@@ -64,6 +64,7 @@ import PagerExample from './CustomHandler/PagerExample';
 import PinExample from './PinExample';
 import RainbowExample from './RainbowExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
+import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
@@ -312,6 +313,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  ReducedMotionExample: {
+    icon: '⏸️',
+    title: 'Reduced Motion',
+    screen: ReducedMotionExample,
   },
 
   // Old examples
