@@ -1358,6 +1358,7 @@ describe('babel plugin', () => {
           console.log('FadeIn with build');
         });
     </script>`;
+
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData(1);
     expect(code).toMatchSnapshot();
@@ -1372,8 +1373,10 @@ describe('babel plugin', () => {
           console.log('FadeIn with build');
         });
     </script>`;
+
     const { code } = runPlugin(input);
     expect(code).toHaveWorkletData(1);
+    expect(code).toMatchSnapshot();
   });
 
   // location
@@ -1400,7 +1403,6 @@ describe('babel plugin', () => {
     process.env.BABEL_ENV = 'production';
     const { code } = runPlugin(input, {});
     process.env.BABEL_ENV = current;
-
     expect(code).not.toHaveLocation(MOCK_LOCATION);
     expect(code).toMatchSnapshot();
   });
