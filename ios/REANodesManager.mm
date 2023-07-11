@@ -272,13 +272,6 @@ using namespace facebook::react;
 
 - (void)startUpdatingOnAnimationFrame
 {
-  // Setting _currentAnimationTimestamp here is connected with manual triggering of performOperations
-  // in operationsBatchDidComplete. If new node has been created and clock has not been started,
-  // _displayLink won't be initialized soon enough and _displayLink.timestamp will be 0.
-  // However, CADisplayLink is using CACurrentMediaTime so if there's need to perform one more
-  // evaluation, it could be used it here. In usual case, CACurrentMediaTime is not being used in
-  // favor of setting it with _displayLink.timestamp in onAnimationFrame method.
-  _currentAnimationTimestamp = CACurrentMediaTime();
   if (_displayLink) {
     [_displayLink setPaused:false];
   }
@@ -293,10 +286,6 @@ using namespace facebook::react;
 
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
 {
-  if (_displayLink) {
-    _currentAnimationTimestamp = _displayLink.timestamp;
-  }
-
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
 
