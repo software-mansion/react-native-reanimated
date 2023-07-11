@@ -170,6 +170,17 @@ export function makeShareableCloneRecursive<T>(
             depth + 1
           );
         }
+      } else if (value instanceof RegExp) {
+        const pattern = value.source;
+        const flags = value.flags;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            return new RegExp(pattern, flags);
+          },
+        });
+        registerShareableMapping(value, handle);
+        return handle as ShareableRef<T>;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
         // We don't support such objects from being transferred as shareables to
