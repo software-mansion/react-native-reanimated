@@ -565,64 +565,6 @@ var require_processIfWorkletNode = __commonJS({
   }
 });
 
-// lib/processIfGestureHandlerEventCallbackFunctionNode.js
-var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
-  "lib/processIfGestureHandlerEventCallbackFunctionNode.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processIfGestureHandlerEventCallbackFunctionNode = void 0;
-    var types_1 = require("@babel/types");
-    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
-    var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
-      "Tap",
-      "Pan",
-      "Pinch",
-      "Rotation",
-      "Fling",
-      "LongPress",
-      "ForceTouch",
-      "Native",
-      "Manual",
-      "Race",
-      "Simultaneous",
-      "Exclusive"
-    ]);
-    var gestureHandlerBuilderMethods = /* @__PURE__ */ new Set([
-      "onBegin",
-      "onStart",
-      "onEnd",
-      "onFinalize",
-      "onUpdate",
-      "onChange",
-      "onTouchesDown",
-      "onTouchesMove",
-      "onTouchesUp",
-      "onTouchesCancelled"
-    ]);
-    function processIfGestureHandlerEventCallbackFunctionNode(path, state) {
-      if ((0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee)) {
-        (0, processIfWorkletFunction_1.processIfWorkletFunction)(path, state);
-      }
-    }
-    exports2.processIfGestureHandlerEventCallbackFunctionNode = processIfGestureHandlerEventCallbackFunctionNode;
-    function isGestureObjectEventCallbackMethod(exp) {
-      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && gestureHandlerBuilderMethods.has(exp.property.name) && containsGestureObject(exp.object);
-    }
-    function containsGestureObject(exp) {
-      if (isGestureObject(exp)) {
-        return true;
-      }
-      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && containsGestureObject(exp.callee.object)) {
-        return true;
-      }
-      return false;
-    }
-    function isGestureObject(exp) {
-      return (0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.object) && exp.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(exp.callee.property) && gestureHandlerGestureObjects.has(exp.callee.property.name);
-    }
-  }
-});
-
 // lib/processInlineStylesWarning.js
 var require_processInlineStylesWarning = __commonJS({
   "lib/processInlineStylesWarning.js"(exports2) {
@@ -704,13 +646,243 @@ var require_processInlineStylesWarning = __commonJS({
   }
 });
 
+// lib/isGestureHandlerEventCallback.js
+var require_isGestureHandlerEventCallback = __commonJS({
+  "lib/isGestureHandlerEventCallback.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isGestureHandlerEventCallback = void 0;
+    var types_1 = require("@babel/types");
+    var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
+      "Tap",
+      "Pan",
+      "Pinch",
+      "Rotation",
+      "Fling",
+      "LongPress",
+      "ForceTouch",
+      "Native",
+      "Manual",
+      "Race",
+      "Simultaneous",
+      "Exclusive"
+    ]);
+    var gestureHandlerBuilderMethods = /* @__PURE__ */ new Set([
+      "onBegin",
+      "onStart",
+      "onEnd",
+      "onFinalize",
+      "onUpdate",
+      "onChange",
+      "onTouchesDown",
+      "onTouchesMove",
+      "onTouchesUp",
+      "onTouchesCancelled"
+    ]);
+    function isGestureHandlerEventCallback(path) {
+      return (0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee);
+    }
+    exports2.isGestureHandlerEventCallback = isGestureHandlerEventCallback;
+    function isGestureObjectEventCallbackMethod(exp) {
+      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && gestureHandlerBuilderMethods.has(exp.property.name) && containsGestureObject(exp.object);
+    }
+    function containsGestureObject(exp) {
+      if (isGestureObject(exp)) {
+        return true;
+      }
+      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && containsGestureObject(exp.callee.object)) {
+        return true;
+      }
+      return false;
+    }
+    function isGestureObject(exp) {
+      return (0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.object) && exp.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(exp.callee.property) && gestureHandlerGestureObjects.has(exp.callee.property.name);
+    }
+  }
+});
+
+// lib/isLayoutAnimationCallback.js
+var require_isLayoutAnimationCallback = __commonJS({
+  "lib/isLayoutAnimationCallback.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isLayoutAnimationCallback = void 0;
+    var types_1 = require("@babel/types");
+    var EntryExitAnimations = /* @__PURE__ */ new Set([
+      "BounceIn",
+      "BounceInDown",
+      "BounceInLeft",
+      "BounceInRight",
+      "BounceInUp",
+      "BounceOut",
+      "BounceOutDown",
+      "BounceOutLeft",
+      "BounceOutRight",
+      "BounceOutUp",
+      "FadeIn",
+      "FadeInDown",
+      "FadeInLeft",
+      "FadeInRight",
+      "FadeInUp",
+      "FadeOut",
+      "FadeOutDown",
+      "FadeOutLeft",
+      "FadeOutRight",
+      "FadeOutUp",
+      "FlipInEasyX",
+      "FlipInEasyY",
+      "FlipInXDown",
+      "FlipInXUp",
+      "FlipInYLeft",
+      "FlipInYRight",
+      "FlipOutEasyX",
+      "FlipOutEasyY",
+      "FlipOutXDown",
+      "FlipOutXUp",
+      "FlipOutYLeft",
+      "FlipOutYRight",
+      "LightSpeedInLeft",
+      "LightSpeedInRight",
+      "LightSpeedOutLeft",
+      "LightSpeedOutRight",
+      "PinwheelIn",
+      "PinwheelOut",
+      "RollInLeft",
+      "RollInRight",
+      "RollOutLeft",
+      "RollOutRight",
+      "RotateInDownLeft",
+      "RotateInDownRight",
+      "RotateInUpLeft",
+      "RotateInUpRight",
+      "RotateOutDownLeft",
+      "RotateOutDownRight",
+      "RotateOutUpLeft",
+      "RotateOutUpRight",
+      "SlideInDown",
+      "SlideInLeft",
+      "SlideInRight",
+      "SlideInUp",
+      "SlideOutDown",
+      "SlideOutLeft",
+      "SlideOutRight",
+      "SlideOutUp",
+      "StretchInX",
+      "StretchInY",
+      "StretchOutX",
+      "StretchOutY",
+      "ZoomIn",
+      "ZoomInDown",
+      "ZoomInEasyDown",
+      "ZoomInEasyUp",
+      "ZoomInLeft",
+      "ZoomInRight",
+      "ZoomInRotate",
+      "ZoomInUp",
+      "ZoomOut",
+      "ZoomOutDown",
+      "ZoomOutEasyDown",
+      "ZoomOutEasyUp",
+      "ZoomOutLeft",
+      "ZoomOutRight",
+      "ZoomOutRotate",
+      "ZoomOutUp"
+    ]);
+    var LayoutTransitions = /* @__PURE__ */ new Set([
+      "Layout",
+      "SequencedTransition",
+      "FadingTransition",
+      "JumpingTransition",
+      "CurvedTransition",
+      "EntryExitTransition"
+    ]);
+    var LayoutAnimations = /* @__PURE__ */ new Set([
+      ...EntryExitAnimations,
+      ...LayoutTransitions
+    ]);
+    var BaseAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      "build",
+      "duration",
+      "delay",
+      "getDuration",
+      "randomDelay",
+      "getDelay",
+      "getDelayFunction"
+    ]);
+    var ComplexAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      "easing",
+      "rotate",
+      "springify",
+      "damping",
+      "mass",
+      "stiffness",
+      "overshootClamping",
+      "restDisplacementThreshold",
+      "restSpeedThreshold",
+      "withInitialValues",
+      "getAnimationAndConfig"
+    ]);
+    var DefaultTransitionChainableMethods = /* @__PURE__ */ new Set([
+      "easingX",
+      "easingY",
+      "easingWidth",
+      "easingHeight",
+      "entering",
+      "exiting",
+      "reverse"
+    ]);
+    var LayoutAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      ...BaseAnimationsChainableMethods,
+      ...ComplexAnimationsChainableMethods,
+      ...DefaultTransitionChainableMethods
+    ]);
+    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set(["withCallback"]);
+    function isLayoutAnimationCallback(path) {
+      return (0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isLayoutAnimationCallbackMethod(path.parent.callee);
+    }
+    exports2.isLayoutAnimationCallback = isLayoutAnimationCallback;
+    function isLayoutAnimationCallbackMethod(exp) {
+      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && LayoutAnimationsCallbacks.has(exp.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.object);
+    }
+    function isLayoutAnimationsChainableOrNewOperator(exp) {
+      if ((0, types_1.isIdentifier)(exp) && LayoutAnimations.has(exp.name)) {
+        return true;
+      } else if ((0, types_1.isNewExpression)(exp) && (0, types_1.isIdentifier)(exp.callee) && LayoutAnimations.has(exp.callee.name)) {
+        return true;
+      }
+      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.property) && LayoutAnimationsChainableMethods.has(exp.callee.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.callee.object)) {
+        return true;
+      }
+      return false;
+    }
+  }
+});
+
+// lib/processIfCallback.js
+var require_processIfCallback = __commonJS({
+  "lib/processIfCallback.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfCallback = void 0;
+    var isGestureHandlerEventCallback_1 = require_isGestureHandlerEventCallback();
+    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
+    var isLayoutAnimationCallback_1 = require_isLayoutAnimationCallback();
+    function processIfCallback(path, state) {
+      if ((0, isGestureHandlerEventCallback_1.isGestureHandlerEventCallback)(path) || (0, isLayoutAnimationCallback_1.isLayoutAnimationCallback)(path)) {
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(path, state);
+      }
+    }
+    exports2.processIfCallback = processIfCallback;
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var commonObjects_1 = require_commonObjects();
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
-var processIfGestureHandlerEventCallbackFunctionNode_1 = require_processIfGestureHandlerEventCallbackFunctionNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
+var processIfCallback_1 = require_processIfCallback();
 module.exports = function() {
   return {
     pre() {
@@ -729,7 +901,7 @@ module.exports = function() {
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
         enter(path, state) {
           (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
-          (0, processIfGestureHandlerEventCallbackFunctionNode_1.processIfGestureHandlerEventCallbackFunctionNode)(path, state);
+          (0, processIfCallback_1.processIfCallback)(path, state);
         }
       },
       JSXAttribute: {
