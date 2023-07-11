@@ -1,6 +1,9 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: './tsconfig.json',
+  },
   extends: [
     'standard',
     'plugin:@typescript-eslint/recommended',
@@ -34,9 +37,8 @@ module.exports = {
     ],
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-var-requires': 'warn',
-    '@typescript-eslint/consistent-type-imports': [
-      'error',
-      { prefer: 'type-imports' },
-    ],
+    '@typescript-eslint/no-duplicate-type-constituents': 'error',
+    eqeqeq: 'error',
+    'no-unreachable': 'error',
   },
 };
