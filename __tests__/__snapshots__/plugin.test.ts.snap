@@ -170,6 +170,66 @@ var foo = function () {
 
 exports[`babel plugin doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function () {});"`;
 
+exports[`babel plugin doesn't workletize callback functions on unknown chained methods before 1`] = `
+"FadeIn.AmogusIn().withCallback(function () {
+  console.log('FadeIn with AmogusIn before');
+});"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown chained methods before with new keyword 1`] = `
+"new FadeIn().AmogusIn().withCallback(function () {
+  console.log('FadeIn with AmogusIn before');
+});"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects 1`] = `
+"AmogusIn.withCallback(function () {
+  console.log('AmogusIn');
+});"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects chained with known objects 1`] = `
+"AmogusIn.FadeIn().withCallback(function () {
+  console.log('AmogusIn with FadeIn after');
+});"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects chained with known objects with new keyword 1`] = `
+"new AmogusIn().FadeIn().withCallback(function () {
+  console.log('AmogusIn with FadeIn after');
+});"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects on known chained methods before 1`] = `
+"AmogusIn.build().withCallback(function () {
+  console.log('AmogusIn with build before');
+});"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects on known chained methods before with new keyword 1`] = `
+"new AmogusIn().build().withCallback(function () {
+  console.log('AmogusIn with build before');
+});"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects with known object chained after 1`] = `
+"AmogusIn.withCallback(function () {
+  console.log('AmogusIn with FadeIn before');
+}).FadeIn();"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects with known object chained after with new keyword 1`] = `
+"new AmogusIn().withCallback(function () {
+  console.log('AmogusIn with FadeIn before');
+}).FadeIn();"
+`;
+
+exports[`babel plugin doesn't workletize callback functions on unknown objects with new keyword 1`] = `
+"new AmogusIn().withCallback(function () {
+  console.log('AmogusIn');
+});"
+`;
+
 exports[`babel plugin doesn't workletize irrelevant chained gesture object callback functions 1`] = `"var foo = Gesture.Tap().toString();"`;
 
 exports[`babel plugin removes "worklet"; directive from worklets 1`] = `
@@ -784,6 +844,150 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin workletizes callback functions on known chained methods after 1`] = `
+"var _worklet_9297685979719_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build after');}",
+  location: "/dev/null"
+};
+FadeIn.withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build after');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_9297685979719_init_data;
+  _f.__workletHash = 9297685979719;
+  _f.__stackDetails = _e;
+  return _f;
+}()).build();"
+`;
+
+exports[`babel plugin workletizes callback functions on known chained methods after with new keyword 1`] = `
+"var _worklet_9297685979719_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build after');}",
+  location: "/dev/null"
+};
+new FadeIn().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build after');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_9297685979719_init_data;
+  _f.__workletHash = 9297685979719;
+  _f.__stackDetails = _e;
+  return _f;
+}()).build();"
+`;
+
+exports[`babel plugin workletizes callback functions on known chained methods before 1`] = `
+"var _worklet_7455148134810_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build before');}",
+  location: "/dev/null"
+};
+FadeIn.build().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build before');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_7455148134810_init_data;
+  _f.__workletHash = 7455148134810;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin workletizes callback functions on known chained methods before with new keyword 1`] = `
+"var _worklet_7455148134810_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build before');}",
+  location: "/dev/null"
+};
+new FadeIn().build().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build before');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_7455148134810_init_data;
+  _f.__workletHash = 7455148134810;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin workletizes callback functions on longer chains of known objects 1`] = `
+"var _worklet_1134777276323_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build');}",
+  location: "/dev/null"
+};
+FadeIn.build().duration().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1134777276323_init_data;
+  _f.__workletHash = 1134777276323;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin workletizes callback functions on longer chains of known objects with new keyword 1`] = `
+"var _worklet_1134777276323_init_data = {
+  code: "function anonymous(){console.log('FadeIn with build');}",
+  location: "/dev/null"
+};
+new FadeIn().build().duration().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with build');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1134777276323_init_data;
+  _f.__workletHash = 1134777276323;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin workletizes callback functions on unknown objects chained after 1`] = `
+"var _worklet_5878665076948_init_data = {
+  code: "function anonymous(){console.log('FadeIn with AmogusIn after');}",
+  location: "/dev/null"
+};
+FadeIn.withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with AmogusIn after');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_5878665076948_init_data;
+  _f.__workletHash = 5878665076948;
+  _f.__stackDetails = _e;
+  return _f;
+}()).AmogusIn();"
+`;
+
+exports[`babel plugin workletizes callback functions on unknown objects chained after with new keyword 1`] = `
+"var _worklet_5878665076948_init_data = {
+  code: "function anonymous(){console.log('FadeIn with AmogusIn after');}",
+  location: "/dev/null"
+};
+new FadeIn().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn with AmogusIn after');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_5878665076948_init_data;
+  _f.__workletHash = 5878665076948;
+  _f.__stackDetails = _e;
+  return _f;
+}()).AmogusIn();"
+`;
+
 exports[`babel plugin workletizes class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
@@ -1120,6 +1324,42 @@ var Foo = function () {
   }]);
   return Foo;
 }();"
+`;
+
+exports[`babel plugin workletizes unchained callback functions automatically 1`] = `
+"var _worklet_7606417127287_init_data = {
+  code: "function anonymous(){console.log('FadeIn');}",
+  location: "/dev/null"
+};
+FadeIn.withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_7606417127287_init_data;
+  _f.__workletHash = 7606417127287;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
+`;
+
+exports[`babel plugin workletizes unchained callback functions automatically with new keyword 1`] = `
+"var _worklet_7606417127287_init_data = {
+  code: "function anonymous(){console.log('FadeIn');}",
+  location: "/dev/null"
+};
+new FadeIn().withCallback(function () {
+  var _e = [new global.Error(), 1, -27];
+  var _f = function _f() {
+    console.log('FadeIn');
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_7606417127287_init_data;
+  _f.__workletHash = 7606417127287;
+  _f.__stackDetails = _e;
+  return _f;
+}());"
 `;
 
 exports[`babel plugin workletizes unnamed FunctionExpression 1`] = `
