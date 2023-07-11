@@ -55,7 +55,7 @@ const INACCESSIBLE_OBJECT = {
     return new Proxy(
       {},
       {
-        get: (_: any, prop: string) => {
+        get: (_: any, prop: string | symbol) => {
           if (prop === '_isReanimatedSharedValue') {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSharedValue check
@@ -67,7 +67,9 @@ const INACCESSIBLE_OBJECT = {
             return false;
           }
           throw new Error(
-            `Trying to access property \`${prop}\` of an object which cannot be sent to the UI runtime.`
+            `Trying to access property \`${String(
+              prop
+            )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
