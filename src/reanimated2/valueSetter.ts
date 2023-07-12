@@ -21,9 +21,8 @@ export function valueSetter(sv: any, value: any): void {
         : (value as AnimationObject);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
-    // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
-    // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
-    if (sv._value === animation.current && !animation.isHigherOrder) {
+    // this happens when the animation's target (animation.toValue) is set to the same value as a current one(this._value)
+    if (sv._value === animation.toValue && !animation.isHigherOrder) {
       animation.callback && animation.callback(true);
       return;
     }
