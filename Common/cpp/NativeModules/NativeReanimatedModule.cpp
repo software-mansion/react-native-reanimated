@@ -394,7 +394,7 @@ jsi::Value NativeReanimatedModule::configureProps(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
-  (void)uiProps; // unused variable for fabric
+  (void)uiProps; // unused variable on Fabric
   jsi::Array array = nativeProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < array.size(rt); ++i) {
     std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
