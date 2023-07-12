@@ -1,4 +1,9 @@
-import { NodePath, Node } from '@babel/core';
+import type { NodePath, Node } from '@babel/core';
+import type {
+  FunctionDeclaration,
+  FunctionExpression,
+  ArrowFunctionExpression,
+} from '@babel/types';
 import {
   callExpression,
   isScopable,
@@ -6,7 +11,7 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
-import { ExplicitWorklet, ReanimatedPluginPass } from './types';
+import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
 // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression

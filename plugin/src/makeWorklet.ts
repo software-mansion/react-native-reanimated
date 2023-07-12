@@ -1,44 +1,48 @@
-import { NodePath, transformSync, traverse } from '@babel/core';
+/* eslint-disable @typescript-eslint/no-var-requires */
+import type { NodePath } from '@babel/core';
+import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
-import {
-  isObjectMethod,
-  FunctionExpression,
-  identifier,
-  Identifier,
-  objectProperty,
-  variableDeclaration,
-  variableDeclarator,
-  cloneNode,
-  isBlockStatement,
-  functionExpression,
-  objectExpression,
-  stringLiteral,
-  isFunctionDeclaration,
-  VariableDeclaration,
+import type {
+  File as BabelFile,
   ExpressionStatement,
+  FunctionExpression,
+  Identifier,
   ReturnStatement,
-  isProgram,
-  isObjectProperty,
-  isMemberExpression,
-  isObjectExpression,
-  expressionStatement,
-  assignmentExpression,
-  memberExpression,
-  numericLiteral,
+  VariableDeclaration,
+} from '@babel/types';
+import {
   arrayExpression,
-  newExpression,
-  returnStatement,
+  assignmentExpression,
   blockStatement,
+  cloneNode,
+  expressionStatement,
+  functionExpression,
+  identifier,
+  isBlockStatement,
+  isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
-  File as BabelFile,
+  isMemberExpression,
+  isObjectExpression,
+  isObjectMethod,
+  isObjectProperty,
+  isProgram,
+  memberExpression,
+  newExpression,
+  numericLiteral,
+  objectExpression,
+  objectProperty,
+  returnStatement,
+  stringLiteral,
+  variableDeclaration,
+  variableDeclarator,
 } from '@babel/types';
-import { ReanimatedPluginPass, WorkletizableFunction } from './types';
-import { isRelease } from './utils';
 import { strict as assert } from 'assert';
-import { globals } from './commonObjects';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
+import { globals } from './commonObjects';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { isRelease } from './utils';
 
 const version = require('../../package.json').version;
 
@@ -108,11 +112,6 @@ export function makeWorklet(
   assert(funString, "'funString' is undefined");
   const workletHash = hash(funString);
 
-  let location = state.file.opts.filename;
-  if (state.opts.relativeSourceLocation) {
-    location = relative(state.cwd, location);
-  }
-
   let lineOffset = 1;
   if (variables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
@@ -139,8 +138,22 @@ export function makeWorklet(
 
   const initDataObjectExpression = objectExpression([
     objectProperty(identifier('code'), stringLiteral(funString)),
-    objectProperty(identifier('location'), stringLiteral(location)),
   ]);
+
+  // When testing with jest I noticed that environment variables are set later
+  // than some functions are evaluated. E.g. this cannot be above this function
+  // because it would always evaluate to true.
+  const shouldInjectLocation = !isRelease();
+  if (shouldInjectLocation) {
+    let location = state.file.opts.filename;
+    if (state.opts.relativeSourceLocation) {
+      location = relative(state.cwd, location);
+    }
+
+    initDataObjectExpression.properties.push(
+      objectProperty(identifier('location'), stringLiteral(location))
+    );
+  }
 
   if (sourceMapString) {
     initDataObjectExpression.properties.push(

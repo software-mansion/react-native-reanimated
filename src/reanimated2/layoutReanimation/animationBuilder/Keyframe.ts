@@ -1,12 +1,13 @@
-import { Easing, EasingFn } from '../../Easing';
+import type { EasingFn } from '../../Easing';
+import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
-import {
+import type {
   AnimationFunction,
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
 } from './commonTypes';
-import { TransformProperty, StyleProps } from '../../commonTypes';
+import type { TransformProperty, StyleProps } from '../../commonTypes';
 export interface KeyframePoint {
   duration: number;
   value: number | string;

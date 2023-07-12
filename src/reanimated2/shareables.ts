@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { ShareableRef } from './commonTypes';
+import type { ShareableRef } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
@@ -55,7 +55,7 @@ const INACCESSIBLE_OBJECT = {
     return new Proxy(
       {},
       {
-        get: (_: any, prop: string) => {
+        get: (_: any, prop: string | symbol) => {
           if (prop === '_isReanimatedSharedValue') {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSharedValue check
@@ -67,7 +67,9 @@ const INACCESSIBLE_OBJECT = {
             return false;
           }
           throw new Error(
-            `Trying to access property \`${prop}\` of an object which cannot be sent to the UI runtime.`
+            `Trying to access property \`${String(
+              prop
+            )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
@@ -168,6 +170,17 @@ export function makeShareableCloneRecursive<T>(
             depth + 1
           );
         }
+      } else if (value instanceof RegExp) {
+        const pattern = value.source;
+        const flags = value.flags;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            return new RegExp(pattern, flags);
+          },
+        });
+        registerShareableMapping(value, handle);
+        return handle as ShareableRef<T>;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
         // We don't support such objects from being transferred as shareables to

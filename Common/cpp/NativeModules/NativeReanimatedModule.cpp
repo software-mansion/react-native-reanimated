@@ -24,6 +24,10 @@
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
 
+#ifdef DEBUG
+#include "JSLogger.h"
+#endif
+
 using namespace facebook;
 
 namespace reanimated {
@@ -95,10 +99,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, operations);
   };
 
-  auto removeFromPropsRegistry = [this](
-                                     jsi::Runtime &rt, const jsi::Value &tag) {
-    this->removeFromPropsRegistry(rt, tag);
-  };
+  auto removeFromPropsRegistry =
+      [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
+        this->removeFromPropsRegistry(rt, viewTags);
+      };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
@@ -164,6 +168,12 @@ void NativeReanimatedModule::installCoreFunctions(
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
   runtimeHelper->valueUnpacker =
       std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
+#ifdef DEBUG
+  // We initialize jsLogger_ here because we need runtimeHelper
+  // to be initialized already
+  jsLogger_ = std::make_shared<JSLogger>(runtimeHelper);
+  layoutAnimationsManager_.setJSLogger(jsLogger_);
+#endif
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
@@ -631,8 +641,6 @@ void NativeReanimatedModule::performOperations() {
             }
           }
 
-          shadowTreeCloner.updateYogaChildren();
-
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
 
           // skip ReanimatedCommitHook for this ShadowTree
@@ -646,8 +654,11 @@ void NativeReanimatedModule::performOperations() {
 
 void NativeReanimatedModule::removeFromPropsRegistry(
     jsi::Runtime &rt,
-    const jsi::Value &tag) {
-  tagsToRemove_.push_back(tag.asNumber());
+    const jsi::Value &viewTags) {
+  auto array = viewTags.asObject(rt).asArray(rt);
+  for (size_t i = 0, size = array.size(rt); i < size; ++i) {
+    tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
+  }
 }
 
 void NativeReanimatedModule::dispatchCommand(

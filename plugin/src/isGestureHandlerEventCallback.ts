@@ -1,13 +1,12 @@
-import { NodePath } from '@babel/core';
+import type { NodePath } from '@babel/core';
+import type { Expression } from '@babel/types';
 import {
   isIdentifier,
   isCallExpression,
-  Expression,
   isMemberExpression,
   isExpression,
 } from '@babel/types';
-import { processIfWorkletFunction } from './processIfWorkletFunction';
-import { ExplicitWorklet, ReanimatedPluginPass } from './types';
+import { ExplicitWorklet } from './types';
 
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
@@ -85,17 +84,12 @@ const gestureHandlerBuilderMethods = new Set([
     arguments: [fun3]
   )
   */
-export function processIfGestureHandlerEventCallbackFunctionNode(
-  path: NodePath<ExplicitWorklet>,
-  state: ReanimatedPluginPass
-) {
-  if (
+export function isGestureHandlerEventCallback(path: NodePath<ExplicitWorklet>) {
+  return (
     isCallExpression(path.parent) &&
     isExpression(path.parent.callee) &&
     isGestureObjectEventCallbackMethod(path.parent.callee)
-  ) {
-    processIfWorkletFunction(path, state);
-  }
+  );
 }
 
 function isGestureObjectEventCallbackMethod(exp: Expression) {

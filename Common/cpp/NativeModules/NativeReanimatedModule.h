@@ -122,7 +122,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
 
-  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &tag);
+  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
 
   void performOperations();
 
@@ -200,6 +200,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 
 #ifdef DEBUG
+  std::shared_ptr<JSLogger> jsLogger_;
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

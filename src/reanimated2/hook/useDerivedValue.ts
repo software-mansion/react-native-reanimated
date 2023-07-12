@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { initialUpdaterRun } from '../animation';
-import { BasicWorkletFunction, SharedValue } from '../commonTypes';
+import type { BasicWorkletFunction, SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
-import { DependencyList } from './commonTypes';
+import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<T> = Readonly<SharedValue<T>>;

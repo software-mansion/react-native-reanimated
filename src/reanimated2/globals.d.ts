@@ -21,6 +21,7 @@ declare global {
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
+  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
@@ -64,7 +65,7 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _removeFromPropsRegistry: (tag: number) => void | undefined;
+  var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
   var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
   var _measureFabric:
     | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)

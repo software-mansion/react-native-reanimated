@@ -123,7 +123,7 @@ function ScrollableView({
   });
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flexOne}>
       <PanGestureHandler onGestureEvent={handler}>
         <Animated.View style={animatedStyles}>
           <View onLayout={onLayout}>{children}</View>
@@ -134,16 +134,7 @@ function ScrollableView({
 }
 
 function Box({ color }: { color: string }) {
-  return (
-    <View
-      style={{
-        backgroundColor: color,
-        height: boxHeight,
-        borderBottomWidth: 1,
-        borderBottomColor: 'gray',
-      }}
-    />
-  );
+  return <View style={[{ backgroundColor: color }, styles.box]} />;
 }
 
 export default function ScrollableViewExample(): React.ReactElement {
@@ -164,6 +155,14 @@ export default function ScrollableViewExample(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+  },
+  box: {
+    height: boxHeight,
+    borderBottomWidth: 1,
+    borderBottomColor: 'gray',
+  },
   wrapper: {
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },

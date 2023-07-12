@@ -1,12 +1,12 @@
-import { NodePath } from '@babel/core';
+/* eslint-disable @typescript-eslint/no-var-requires */
+import type { NodePath } from '@babel/core';
+import type { DirectiveLiteral, FunctionDeclaration } from '@babel/types';
 import {
-  DirectiveLiteral,
-  expressionStatement,
   assignmentExpression,
-  memberExpression,
+  expressionStatement,
   identifier,
+  memberExpression,
   stringLiteral,
-  FunctionDeclaration,
 } from '@babel/types';
 
 export function injectVersion(path: NodePath<DirectiveLiteral>) {

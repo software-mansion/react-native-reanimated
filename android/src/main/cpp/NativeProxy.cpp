@@ -53,11 +53,10 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
   RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
-  std::shared_ptr<UIManager> uiManager =
-      binding->getScheduler()->getUIManager();
+  uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
-  uiManager->registerCommitHook(*commitHook_);
+      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  uiManager_->registerCommitHook(*commitHook_);
 #endif
 }
 
@@ -69,6 +68,9 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   nativeReanimatedModule_->cleanupSensors();
+#ifdef RCT_NEW_ARCH_ENABLED
+  uiManager_->unregisterCommitHook(*commitHook_);
+#endif // RCT_NEW_ARCH_ENABLED
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -166,6 +168,11 @@ void NativeProxy::performOperations() {
 #ifdef RCT_NEW_ARCH_ENABLED
   nativeReanimatedModule_->performOperations();
 #endif
+}
+
+bool NativeProxy::getIsReducedMotion() {
+  static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
+  return method(javaPart_.get());
 }
 
 void NativeProxy::registerNatives() {
@@ -487,6 +494,10 @@ void NativeProxy::setGlobalProperties(
 
   auto version = getReanimatedVersionString(jsRuntime);
   jsRuntime.global().setProperty(jsRuntime, "_REANIMATED_VERSION_CPP", version);
+
+  auto isReducedMotion = getIsReducedMotion();
+  jsRuntime.global().setProperty(
+      jsRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
 
 void NativeProxy::setupLayoutAnimations() {
@@ -539,6 +550,19 @@ void NativeProxy::setupLayoutAnimations() {
     return nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation(
         tag, static_cast<LayoutAnimationType>(type));
   });
+
+#ifdef DEBUG
+  layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
+      [weakNativeReanimatedModule](int viewTag, int screenTag) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
+          return;
+        }
+
+        nativeReanimatedModule->layoutAnimationsManager()
+            .checkDuplicateSharedTag(viewTag, screenTag);
+      });
+#endif
 
   layoutAnimations_->cthis()->setClearAnimationConfigBlock(
       [weakNativeReanimatedModule](int tag) {

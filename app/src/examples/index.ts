@@ -64,6 +64,7 @@ import PagerExample from './CustomHandler/PagerExample';
 import PinExample from './PinExample';
 import RainbowExample from './RainbowExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
+import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
@@ -87,6 +88,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
 
 interface Example {
   icon?: string;
@@ -313,6 +315,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
+  ReducedMotionExample: {
+    icon: '⏸️',
+    title: 'Reduced Motion',
+    screen: ReducedMotionExample,
+  },
 
   // Old examples
 
@@ -509,5 +516,9 @@ export const EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+  },
+  DuplicateTagsExample: {
+    title: '[SET] Duplicate Tags',
+    screen: DuplicateTagsExample,
   },
 } as const;
