@@ -23,6 +23,8 @@
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 
+#import <UIKit/UIAccessibility.h>
+
 using namespace facebook::react;
 using namespace reanimated;
 
@@ -196,6 +198,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _operations = [NSMutableArray new];
 
   [bridge.uiManager.observerCoordinator addObserver:self];
+  _animationsManager = [[REAAnimationsManager alloc] initWithUIManager:bridge.uiManager];
 }
 
 #pragma mark-- Batch handling
@@ -291,6 +294,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     auto version = getReanimatedVersionString(runtime);
     runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
+
+    auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
+    runtime.global().setProperty(runtime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 
     runtime.global().setProperty(
         runtime,

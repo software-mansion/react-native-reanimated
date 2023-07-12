@@ -23,6 +23,7 @@ declare global {
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
+  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
   var __valueUnpacker: typeof valueUnpacker | undefined;
   var __callGuardDEV: typeof callGuardDEV | undefined;

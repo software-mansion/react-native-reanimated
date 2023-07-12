@@ -24,6 +24,10 @@
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
 
+#ifdef DEBUG
+#include "JSLogger.h"
+#endif
+
 using namespace facebook;
 
 namespace reanimated {
@@ -159,6 +163,13 @@ void NativeReanimatedModule::installCoreFunctions(
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, runtimeManager_->scheduler);
   }
+
+#ifdef DEBUG
+  // We initialize jsLogger_ here because we need runtimeHelper
+  // to be initialized already
+  jsLogger_ = std::make_shared<JSLogger>(runtimeHelper);
+  layoutAnimationsManager_.setJSLogger(jsLogger_);
+#endif // DEBUG
 
   // initialize value unpacker on the UI runtime synchronously on the JS thread
   jsi::Runtime &uiRuntime = *runtimeManager_->runtime;

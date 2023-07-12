@@ -7,7 +7,7 @@ import Animated, {
   runOnJS,
   createWorkletRuntime,
 } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
 import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
 import { runOnRuntimeSync } from '../../../src/reanimated2/runtimes';
@@ -74,17 +74,8 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
-      <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
-        ]}
-      />
+    <View style={styles.container}>
+      <Animated.View style={[styles.box, style]} />
       <Button
         title="toggle"
         onPress={() => {
@@ -99,3 +90,16 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  box: {
+    width: 100,
+    height: 80,
+    backgroundColor: 'black',
+    margin: 30,
+  },
+});
