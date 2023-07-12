@@ -14,7 +14,38 @@ using namespace facebook;
 
 namespace reanimated {
 
-class CoreFunction;
+jsi::Function getValueUnpacker(jsi::Runtime &rt) {
+  auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
+  assert(valueUnpacker.isObject());
+  return valueUnpacker.asObject(rt).asFunction(rt);
+}
+
+#ifdef DEBUG
+
+auto callGuardLambda = [](facebook::jsi::Runtime &rt,
+                          const facebook::jsi::Value &thisVal,
+                          const facebook::jsi::Value *args,
+                          size_t count) {
+  try {
+    return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
+  } catch (std::exception &e) {
+    assert(false);
+  }
+};
+
+jsi::Function getCallGuard(jsi::Runtime &rt) {
+  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
+  if (callGuard.isObject()) {
+    // use JS-based implementation if available
+    return callGuard.asObject(rt).asFunction(rt);
+  }
+  // fallback to C++ JSI implementation
+  // this is necessary to install __callGuardDEV itself
+  return jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
+}
+
+#endif // DEBUG
 
 class JSRuntimeHelper {
  private:
@@ -32,8 +63,6 @@ class JSRuntimeHelper {
         scheduler_(scheduler) {}
 
   volatile bool uiRuntimeDestroyed = false;
-  std::unique_ptr<CoreFunction> callGuard;
-  std::unique_ptr<CoreFunction> valueUnpacker;
 
   //  inline jsi::Runtime *uiRuntime() const {
   //    return uiRuntime_;
@@ -58,56 +87,23 @@ class JSRuntimeHelper {
   void scheduleOnJS(std::function<void()> job) {
     scheduler_->scheduleOnJS(job);
   }
-
-  template <typename... Args>
-  inline void runOnRuntimeGuarded(
-      jsi::Runtime &rt,
-      const jsi::Value &function,
-      Args &&...args) {
-    // We only use callGuard in debug mode, otherwise we call the provided
-    // function directly. CallGuard provides a way of capturing exceptions in
-    // JavaScript and propagating them to the main React Native thread such that
-    // they can be presented using RN's LogBox.
-    //    jsi::Runtime &rt = *uiRuntime_;
-    // #ifdef DEBUG
-    //    callGuard->call(rt, function, args...);
-    // #else
-    function.asObject(rt).asFunction(rt).call(rt, args...);
-    // #endif
-  }
 };
 
-// Core functions are not allowed to capture outside variables, otherwise they'd
-// try to access _closure variable which is something we want to avoid for
-// simplicity reasons.
-class CoreFunction {
- private:
-  std::unique_ptr<jsi::Function> rnFunction_;
-  std::unique_ptr<jsi::Function> uiFunction_;
-  std::string functionBody_;
-  std::string location_;
-  JSRuntimeHelper
-      *runtimeHelper_; // runtime helper holds core function references, so we
-                       // use normal pointer here to avoid ref cycles.
-
- public:
-  CoreFunction(JSRuntimeHelper *runtimeHelper, const jsi::Value &workletObject);
-  template <typename... Args>
-  jsi::Value call(jsi::Runtime &rt, Args &&...args) {
-    if (runtimeHelper_->isRNRuntime(rt)) {
-      // running on the main RN runtime
-      return rnFunction_->call(rt, args...);
-    } else {
-      // TODO: memoize function
-      auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
-          "(" + functionBody_ + "\n)");
-      auto function = rt.evaluateJavaScript(codeBuffer, location_)
-                          .asObject(rt)
-                          .asFunction(rt);
-      return function.call(rt, args...);
-    }
-  }
-};
+template <typename... Args>
+inline void runOnRuntimeGuarded(
+    jsi::Runtime &rt,
+    const jsi::Value &function,
+    Args &&...args) {
+  // We only use callGuard in debug mode, otherwise we call the provided
+  // function directly. CallGuard provides a way of capturing exceptions in
+  // JavaScript and propagating them to the main React Native thread such that
+  // they can be presented using RN's LogBox.
+#ifdef DEBUG
+  getCallGuard(rt).call(rt, function, args...);
+#else
+  function.asObject(rt).asFunction(rt).call(rt, args...);
+#endif
+}
 
 class Shareable {
  protected:
@@ -326,12 +322,7 @@ class ShareableWorklet : public ShareableObject {
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     jsi::Value obj = ShareableObject::toJSValue(rt);
     assert(this->data_.size() > 0); // `__initData`, `__workletHash` etc.
-    auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
-    if (valueUnpacker.isObject()) {
-      return valueUnpacker.getObject(rt).getFunction(rt).call(rt, obj);
-    }
-    assert(runtimeHelper_->valueUnpacker != nullptr);
-    return runtimeHelper_->valueUnpacker->call(rt, obj);
+    return getValueUnpacker(rt).call(rt, obj);
   }
 };
 
@@ -352,14 +343,14 @@ class ShareableRemoteFunction
         runtimeHelper_(runtimeHelper) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (!runtimeHelper_->isRNRuntime(rt)) {
-      // #ifdef DEBUG
-      //       return runtimeHelper_->valueUnpacker->call(
-      //           rt,
-      //           ShareableJSRef::newHostObject(rt, shared_from_this()),
-      //           jsi::String::createFromAscii(rt, "RemoteFunction"));
-      // #else
+#ifdef DEBUG
+      return getValueUnpacker(rt).call(
+          rt,
+          ShareableJSRef::newHostObject(rt, shared_from_this()),
+          jsi::String::createFromAscii(rt, "RemoteFunction"));
+#else
       return ShareableJSRef::newHostObject(rt, shared_from_this());
-      // #endif
+#endif
     } else {
       return jsi::Value(rt, function_);
     }
@@ -406,8 +397,8 @@ class ShareableHandle : public Shareable {
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (initializer_ != nullptr) {
       auto initObj = initializer_->getJSValue(rt);
-      remoteValue_ = std::make_unique<jsi::Value>(
-          runtimeHelper_->valueUnpacker->call(rt, initObj));
+      remoteValue_ =
+          std::make_unique<jsi::Value>(getValueUnpacker(rt).call(rt, initObj));
       initializer_ = nullptr; // we can release ref to initializer as this
                               // method should be called at most once
     }

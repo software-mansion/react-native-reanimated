@@ -337,7 +337,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
       jsi::Runtime &rt2 = *runtimeFromValue(rt, args[0]);
       auto worklet = extractShareableOrThrow<ShareableWorklet>(rt, args[1]);
-      worklet->getJSValue(rt2).asObject(rt2).asFunction(rt2).call(rt2);
+      runOnRuntimeGuarded(rt2, worklet->getJSValue(rt2));
       return jsi::Value::undefined();
     };
     runtime.global().setProperty(

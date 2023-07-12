@@ -96,6 +96,12 @@ Possible solutions are:
   }
 }
 
+export function setupCallGuard() {
+  'worklet';
+  global.__callGuardDEV = callGuardDEV;
+}
+
+// TODO: merge with setupCallGuard
 export function setupErrorHandler() {
   'worklet';
   global.__ErrorUtils = {
@@ -173,7 +179,9 @@ function setupRequestAnimationFrame() {
 }
 
 export function initializeUIRuntime() {
-  NativeReanimatedModule.installCoreFunctions(callGuardDEV, valueUnpacker);
+  // @ts-ignore valueUnpacker is a worklet
+  const valueUnpackerCode = valueUnpacker.__initData.code;
+  NativeReanimatedModule.installCoreFunctions(valueUnpackerCode);
 
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
@@ -189,6 +197,7 @@ export function initializeUIRuntime() {
 
   runOnUIImmediately(() => {
     'worklet';
+    setupCallGuard();
     setupErrorHandler();
     setupConsole();
     if (IS_NATIVE) {

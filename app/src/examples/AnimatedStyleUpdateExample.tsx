@@ -5,10 +5,12 @@ import Animated, {
   Easing,
   runOnUI,
   runOnJS,
+  createWorkletRuntime,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
 import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
+import { runOnRuntimeSync } from '../../../src/reanimated2/runtimes';
 
 export default function AnimatedStyleUpdateExample(): React.ReactElement {
   const randomWidth = useSharedValue(10);
@@ -23,6 +25,53 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
       width: withTiming(randomWidth.value, config),
     };
   });
+
+  const handlePress1 = () => {
+    const func = () => console.log('xd1');
+    runOnUI(() => {
+      'worklet';
+      runOnJS(func)();
+    })();
+  };
+
+  const handlePress2 = () => {
+    global._scheduleOnJS(
+      makeShareableCloneRecursive(console.log),
+      makeShareableCloneRecursive(['xd2'])
+    );
+  };
+
+  const handlePress3 = () => {
+    const runtime = createWorkletRuntime('foo');
+    console.log(runtime);
+    console.log(`${runtime}`);
+    console.log(String(runtime));
+  };
+
+  const handlePress4 = () => {
+    const runtime = createWorkletRuntime('foo');
+    runOnRuntimeSync(runtime, () => {
+      'worklet';
+      console.log('Hello from runtime');
+    });
+  };
+
+  const handlePress5 = () => {
+    const runtime = createWorkletRuntime('foo');
+    function bar() {
+      'worklet';
+      throw new Error('Hello world!');
+    }
+    function foo() {
+      'worklet';
+      bar();
+    }
+    runOnRuntimeSync(runtime, () => {
+      'worklet';
+      foo();
+    });
+    // TODO: fix missing stack trace
+  };
 
   return (
     <View
@@ -40,18 +89,13 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
         title="toggle"
         onPress={() => {
           randomWidth.value = Math.random() * 350;
-          const func = () => console.log('xd1');
-          runOnUI(() => {
-            'worklet';
-            runOnJS(func)();
-          })();
-          global._scheduleOnJS(
-            makeShareableCloneRecursive(console.log),
-            makeShareableCloneRecursive(['xd2'])
-          );
-          console.log(global._makeShareableClone);
         }}
       />
+      <Button title="runOnUI / runOnJS" onPress={handlePress1} />
+      <Button title="_scheduleOnJS" onPress={handlePress2} />
+      <Button title="createWorkletRuntime" onPress={handlePress3} />
+      <Button title="runOnRuntimeSync" onPress={handlePress4} />
+      <Button title="throw new Error" onPress={handlePress5} />
     </View>
   );
 }

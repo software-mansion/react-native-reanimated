@@ -34,7 +34,7 @@ export interface JSReanimated {
   pushFrame(frame: (timestamp: Timestamp) => void): void;
   maybeRequestRender(): void;
   _onRender(timestampMs: number): void;
-  installCoreFunctions(valueSetter: <T>(value: T) => void): void;
+  installCoreFunctions(): void;
   makeShareable<T>(value: T): T;
   makeMutable<T>(value: T): MutableValue<T>;
   makeRemote<T>(object: Record<string, any>): T;

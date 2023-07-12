@@ -24,8 +24,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  public:
   virtual void installCoreFunctions(
       jsi::Runtime &rt,
-      const jsi::Value &callGuard,
-      const jsi::Value &valueUnpacker) = 0;
+      const jsi::Value &valueUnpackerCode) = 0;
 
   // SharedValue
   virtual jsi::Value makeShareableClone(

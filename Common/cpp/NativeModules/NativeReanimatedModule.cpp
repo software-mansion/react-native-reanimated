@@ -65,8 +65,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   auto requestAnimationFrame = [=](jsi::Runtime &rt, const jsi::Value &fn) {
     auto jsFunction = std::make_shared<jsi::Value>(rt, fn);
     frameCallbacks.push_back([=, &rt](double timestamp) {
-      runtimeHelper->runOnRuntimeGuarded(
-          rt, *jsFunction, jsi::Value(timestamp));
+      runOnRuntimeGuarded(rt, *jsFunction, jsi::Value(timestamp));
     });
     maybeRequestRender();
   };
@@ -153,24 +152,28 @@ NativeReanimatedModule::NativeReanimatedModule(
 
 void NativeReanimatedModule::installCoreFunctions(
     jsi::Runtime &rt,
-    const jsi::Value &callGuard,
-    const jsi::Value &valueUnpacker) {
+    const jsi::Value &valueUnpackerCode) {
   if (!runtimeHelper) {
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper =
         std::make_shared<JSRuntimeHelper>(&rt, runtimeManager_->scheduler);
   }
-  runtimeHelper->callGuard =
-      std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
-  runtimeHelper->valueUnpacker =
-      std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
+
+  // initialize value unpacker on the UI runtime synchronously on the JS thread
+  jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
+
+  auto valueUnpackerCodeString = valueUnpackerCode.asString(rt).utf8(rt);
+  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
+      "(" + valueUnpackerCodeString + "\n)");
+  auto valueUnpacker = uiRuntime.evaluateJavaScript(codeBuffer, "nowhere")
+                           .asObject(uiRuntime)
+                           .asFunction(uiRuntime);
+  uiRuntime.global().setProperty(uiRuntime, "__valueUnpacker", valueUnpacker);
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
   if (runtimeHelper) {
-    runtimeHelper->callGuard = nullptr;
-    runtimeHelper->valueUnpacker = nullptr;
     // event handler registry and frame callbacks store some JSI values from UI
     // runtime, so they have to go away before we tear down the runtime
     eventHandlerRegistry.reset();
@@ -191,7 +194,7 @@ void NativeReanimatedModule::scheduleOnUI(
   runtimeManager_->scheduler->scheduleOnUI([=] {
     jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
     auto workletValue = shareableWorklet->getJSValue(uiRuntime);
-    runtimeHelper->runOnRuntimeGuarded(uiRuntime, workletValue);
+    runOnRuntimeGuarded(uiRuntime, workletValue);
   });
 }
 
@@ -727,7 +730,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
       [=](int keyboardState, int height) {
         jsi::Runtime &rt = *runtimeManager_->runtime;
         auto handler = shareableHandler->getJSValue(rt);
-        runtimeHelper->runOnRuntimeGuarded(
+        runOnRuntimeGuarded(
             rt, handler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool());

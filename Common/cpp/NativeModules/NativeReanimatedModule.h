@@ -52,8 +52,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void installCoreFunctions(
       jsi::Runtime &rt,
-      const jsi::Value &callGuard,
-      const jsi::Value &valueUnpacker) override;
+      const jsi::Value &valueUnpackerCode) override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,

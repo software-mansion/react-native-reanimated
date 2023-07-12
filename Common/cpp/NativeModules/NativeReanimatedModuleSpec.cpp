@@ -12,7 +12,7 @@ static jsi::Value SPEC_PREFIX(installCoreFunctions)(
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->installCoreFunctions(rt, std::move(args[0]), std::move(args[1]));
+      ->installCoreFunctions(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -170,7 +170,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["installCoreFunctions"] =
-      MethodMetadata{2, SPEC_PREFIX(installCoreFunctions)};
+      MethodMetadata{1, SPEC_PREFIX(installCoreFunctions)};
 
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};

@@ -1,5 +1,10 @@
 import type { ComplexWorkletFunction } from './commonTypes';
-import { setupConsole, setupErrorHandler, valueUnpacker } from './initializers';
+import {
+  setupCallGuard,
+  setupConsole,
+  setupErrorHandler,
+  valueUnpacker,
+} from './initializers';
 import { makeShareableCloneRecursive } from './shareables';
 
 export type WorkletRuntime = {
@@ -22,6 +27,7 @@ export function createWorkletRuntime(name: string) {
     global._scheduleOnJS = scheduleOnJS;
     global._makeShareableClone = makeShareableClone;
 
+    setupCallGuard();
     setupErrorHandler();
     setupConsole();
 
@@ -31,9 +37,10 @@ export function createWorkletRuntime(name: string) {
   return runtime;
 }
 
-function runOnRuntimeSync(
+export function runOnRuntimeSync(
   runtime: WorkletRuntime,
   worklet: ComplexWorkletFunction<[], void>
 ) {
+  // TODO: fix error when function is not a worklet
   global._runOnRuntime(runtime, makeShareableCloneRecursive(worklet));
 }

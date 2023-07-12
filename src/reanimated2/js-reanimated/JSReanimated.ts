@@ -17,13 +17,7 @@ export default class JSReanimated extends NativeReanimated {
     return { __hostObjectShareableJSRef: value };
   }
 
-  installCoreFunctions(
-    _callGuard: <T extends Array<any>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    _valueUnpacker: <T>(value: T) => T
-  ): void {
+  installCoreFunctions(): void {
     // noop
   }
 

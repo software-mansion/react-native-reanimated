@@ -16,6 +16,7 @@ import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { UpdatePropsManager } from './UpdateProps';
 import type { WorkletRuntime } from './runtimes';
+import type { callGuardDEV, valueUnpacker } from './initializers';
 
 declare global {
   var _WORKLET: boolean | undefined;
@@ -23,6 +24,8 @@ declare global {
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
+  var __valueUnpacker: typeof valueUnpacker | undefined;
+  var __callGuardDEV: typeof callGuardDEV | undefined;
   // TODO: move to NativeReanimatedModule?
   var _createWorkletRuntime: (
     name: string,

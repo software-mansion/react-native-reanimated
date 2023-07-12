@@ -22,10 +22,6 @@ WorkletRuntime::WorkletRuntime(
   auto valueUnpacker =
       rt.evaluateJavaScript(codeBuffer, "nowhere").asObject(rt).asFunction(rt);
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
-
-  // TODO: install callGuardDEV
-  // TODO: install _makeShareableClone
-  // TODO: install _scheduleOnJS
 }
 
 jsi::Value WorkletRuntime::get(

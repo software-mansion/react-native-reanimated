@@ -35,17 +35,8 @@ export class NativeReanimated {
     }
   }
 
-  installCoreFunctions(
-    callGuard: <T extends Array<any>, U>(
-      fn: (...args: T) => U,
-      ...args: T
-    ) => void,
-    valueUnpacker: <T>(value: T) => T
-  ): void {
-    return this.InnerNativeModule.installCoreFunctions(
-      callGuard,
-      valueUnpacker
-    );
+  installCoreFunctions(valueUnpacker: <T>(value: T) => T): void {
+    return this.InnerNativeModule.installCoreFunctions(valueUnpacker);
   }
 
   makeShareableClone<T>(

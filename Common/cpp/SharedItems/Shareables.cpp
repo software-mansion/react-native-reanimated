@@ -4,22 +4,6 @@ using namespace facebook;
 
 namespace reanimated {
 
-CoreFunction::CoreFunction(
-    JSRuntimeHelper *runtimeHelper,
-    const jsi::Value &workletValue)
-    : runtimeHelper_(runtimeHelper) {
-  jsi::Runtime &rt = *runtimeHelper->rnRuntime();
-  auto workletObject = workletValue.asObject(rt);
-  rnFunction_ = std::make_unique<jsi::Function>(workletObject.asFunction(rt));
-  functionBody_ = workletObject.getPropertyAsObject(rt, "__initData")
-                      .getProperty(rt, "code")
-                      .asString(rt)
-                      .utf8(rt);
-  location_ = "worklet_" +
-      std::to_string(static_cast<uint64_t>(
-          workletObject.getProperty(rt, "__workletHash").getNumber()));
-}
-
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
