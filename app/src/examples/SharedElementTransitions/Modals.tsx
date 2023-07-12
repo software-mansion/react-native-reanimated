@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { TouchableNativeFeedback } from 'react-native';
+import { TouchableNativeFeedback, StyleSheet } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -48,17 +48,17 @@ function Card({
         sharedTransitionTag={transitionTag + '1'}>
         <Animated.Text
           sharedTransitionTag={transitionTag + '2'}
-          style={{ width: '100%', height: 20 }}>
+          style={[styles.fullWidth, { height: 20 }]}>
           {title}
         </Animated.Text>
         <Animated.Image
           sharedTransitionTag={transitionTag + '3'}
           source={photo}
-          style={{ width: '100%', height: isOpen ? 300 : 100 }}
+          style={[styles.fullWidth, { height: isOpen ? 300 : 100 }]}
         />
         <Animated.Text
           sharedTransitionTag={transitionTag + '4'}
-          style={{ width: '100%', height: isOpen ? 100 : 0 }}>
+          style={[styles.fullWidth, { height: isOpen ? 100 : 0 }]}>
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid,
           earum non, dignissimos fugit rerum exercitationem ab consequatur,
           error animi veritatis delectus. Nostrum sapiente distinctio possimus
@@ -71,7 +71,7 @@ function Card({
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <Animated.ScrollView style={{ flex: 1 }}>
+    <Animated.ScrollView style={styles.flexOne}>
       {[...Array(6)].map((_, i) => (
         <Card
           key={i}
@@ -166,3 +166,12 @@ export default function ModalsExample() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+});

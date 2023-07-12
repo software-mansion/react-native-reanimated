@@ -4,4 +4,4 @@ module.exports = {
   rules: {
     'curly': 'error',
   },
-};
+  ignorePatterns: ['**/*.d.ts','jestUtils.ts']};

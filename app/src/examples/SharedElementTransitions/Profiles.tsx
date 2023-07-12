@@ -311,11 +311,6 @@ const homeStyles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 25,
   },
-  header: {
-    fontSize: 40,
-    fontFamily: 'Poppins-Medium',
-    color: '#1e293b',
-  },
   pressable: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -527,10 +522,6 @@ export default function ProfilesExample() {
 }
 
 const commonStyles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    marginHorizontal: 25,
-  },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',

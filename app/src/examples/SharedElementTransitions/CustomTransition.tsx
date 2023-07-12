@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Button } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -44,15 +44,9 @@ const transition = new SharedElementTransition()
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <Animated.ScrollView style={{ flex: 1 }}>
+    <Animated.ScrollView style={styles.flexOne}>
       <Animated.View
-        style={{
-          width: 150,
-          height: 150,
-          marginLeft: 20,
-          marginTop: 50,
-          backgroundColor: 'green',
-        }}
+        style={styles.greenBoxScreenOne}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
       />
@@ -66,15 +60,9 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flexOne}>
       <Animated.View
-        style={{
-          width: 200,
-          height: 300,
-          marginLeft: 60,
-          marginTop: 100,
-          backgroundColor: 'green',
-        }}
+        style={styles.greenBoxScreenTwo}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
       />
@@ -99,3 +87,21 @@ export default function CustomTransitionExample() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
+  greenBoxScreenOne: {
+    width: 150,
+    height: 150,
+    marginLeft: 20,
+    marginTop: 50,
+    backgroundColor: 'green',
+  },
+  greenBoxScreenTwo: {
+    width: 200,
+    height: 300,
+    marginLeft: 60,
+    marginTop: 100,
+    backgroundColor: 'green',
+  },
+});

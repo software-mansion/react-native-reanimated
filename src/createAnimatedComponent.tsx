@@ -672,6 +672,7 @@ export default function createAnimatedComponent(
               if (this._isFirstRender) {
                 this.initialStyle = {
                   ...style.initial.value,
+                  ...this.initialStyle,
                   ...initialUpdaterRun<StyleProps>(style.initial.updater),
                 };
               }

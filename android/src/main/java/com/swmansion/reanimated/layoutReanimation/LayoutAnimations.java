@@ -40,6 +40,8 @@ public class LayoutAnimations {
 
   public native boolean hasAnimationForTag(int tag, int type);
 
+  public native void checkDuplicateSharedTag(int viewTag, int screenTag);
+
   public native void clearAnimationConfigForTag(int tag);
 
   public native void cancelAnimationForTag(

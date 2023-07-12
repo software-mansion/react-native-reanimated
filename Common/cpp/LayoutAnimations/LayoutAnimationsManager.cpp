@@ -2,7 +2,10 @@
 #include "CollectionUtils.h"
 #include "Shareables.h"
 
+#ifdef DEBUG
 #include <utility>
+#include "JSLogger.h"
+#endif
 
 namespace reanimated {
 
@@ -42,6 +45,11 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
+#ifdef DEBUG
+  const auto &pair = viewsScreenSharedTagMap_[tag];
+  screenSharedTagSet_.erase(pair);
+  viewsScreenSharedTagMap_.erase(tag);
+#endif // DEBUG
 
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
@@ -127,6 +135,38 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(int tag) {
   }
   return -1;
 }
+
+#ifdef DEBUG
+std::string LayoutAnimationsManager::getScreenSharedTagPairString(
+    const int screenTag,
+    const std::string &sharedTag) const {
+  return std::to_string(screenTag) + ":" + sharedTag;
+}
+
+void LayoutAnimationsManager::checkDuplicateSharedTag(
+    const int viewTag,
+    const int screenTag) {
+  if (!viewTagToSharedTag_.count(viewTag)) {
+    return;
+  }
+  const auto &sharedTag = viewTagToSharedTag_[viewTag];
+  const auto &pair = getScreenSharedTagPairString(screenTag, sharedTag);
+  bool hasDuplicate = screenSharedTagSet_.count(pair);
+  if (hasDuplicate) {
+    assert(jsLogger_ != nullptr);
+    jsLogger_->warnOnJS(
+        "[Reanimated] Duplicate shared tag \"" + sharedTag +
+        "\" on the same screen");
+  }
+  viewsScreenSharedTagMap_[viewTag] = pair;
+  screenSharedTagSet_.insert(pair);
+}
+
+void LayoutAnimationsManager::setJSLogger(
+    const std::shared_ptr<JSLogger> &jsLogger) {
+  jsLogger_ = jsLogger;
+}
+#endif // DEBUG
 
 std::unordered_map<int, std::shared_ptr<Shareable>>
     &LayoutAnimationsManager::getConfigsForType(LayoutAnimationType type) {

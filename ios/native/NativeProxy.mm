@@ -14,12 +14,16 @@
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
+#ifdef DEBUG
+#import <RNReanimated/REAScreensHelper.h>
+#endif
+
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <React-Fabric/react/renderer/core/ShadowNode.h>
-#import <React-Fabric/react/renderer/uimanager/primitives.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
+#import <react/renderer/core/ShadowNode.h>
+#import <react/renderer/uimanager/primitives.h>
 #else
 #import <folly/json.h>
 #endif
@@ -358,6 +362,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
     return nil;
   }];
+#ifdef DEBUG
+  [animationsManager setCheckDuplicateSharedTagBlock:^(UIView *view, NSNumber *_Nonnull viewTag) {
+    UIView *screen = [REAScreensHelper getScreenForView:(UIView *)view];
+    auto screenTag = [screen.reactTag intValue];
+    // Here we check if there are duplicate tags (we don't use return bool value currently)
+    nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
+  }];
+#endif // DEBUG
+
 #endif
 
   return nativeReanimatedModule;

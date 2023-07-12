@@ -127,11 +127,6 @@ export function makeWorklet(
   assert(funString, "'funString' is undefined");
   const workletHash = hash(funString);
 
-  let location = state.file.opts.filename;
-  if (state.opts.relativeSourceLocation) {
-    location = relative(state.cwd, location);
-  }
-
   let lineOffset = 1;
   if (variables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
@@ -158,8 +153,22 @@ export function makeWorklet(
 
   const initDataObjectExpression = objectExpression([
     objectProperty(identifier('code'), stringLiteral(funString)),
-    objectProperty(identifier('location'), stringLiteral(location)),
   ]);
+
+  // When testing with jest I noticed that environment variables are set later
+  // than some functions are evaluated. E.g. this cannot be above this function
+  // because it would always evaluate to true.
+  const shouldInjectLocation = !isRelease();
+  if (shouldInjectLocation) {
+    let location = state.file.opts.filename;
+    if (state.opts.relativeSourceLocation) {
+      location = relative(state.cwd, location);
+    }
+
+    initDataObjectExpression.properties.push(
+      objectProperty(identifier('location'), stringLiteral(location))
+    );
+  }
 
   if (sourceMapString) {
     initDataObjectExpression.properties.push(
