@@ -61,7 +61,7 @@ export class SharedElementTransition {
     onSwipeDismiss: -1,
   };
 
-  public animation(
+  public custom(
     customAnimationFactory: AnimationFactory
   ): SharedElementTransition {
     this._customAnimationFactory = customAnimationFactory;
@@ -88,6 +88,10 @@ export class SharedElementTransition {
     transitionType: SharedTransitionType
   ): SharedElementTransition {
     this._defaultTransitionType = transitionType;
+    return this;
+  }
+
+  public getInstance(): SharedElementTransition {
     return this;
   }
 
@@ -297,5 +301,35 @@ export class SharedElementTransition {
       }
       _notifyAboutProgress(viewTag, newStyles, true);
     };
+  }
+
+  // static builder methods
+
+  public static custom(
+    customAnimationFactory: AnimationFactory
+  ): SharedElementTransition {
+    return new SharedElementTransition().custom(customAnimationFactory);
+  }
+
+  public static duration(duration: number): SharedElementTransition {
+    return new SharedElementTransition().duration(duration);
+  }
+
+  public static progressAnimation(
+    progressAnimationCallback: CustomProgressAnimation
+  ): SharedElementTransition {
+    return new SharedElementTransition().progressAnimation(
+      progressAnimationCallback
+    );
+  }
+
+  public static defaultTransitionType(
+    transitionType: SharedTransitionType
+  ): SharedElementTransition {
+    return new SharedElementTransition().defaultTransitionType(transitionType);
+  }
+
+  public static getInstance(): SharedElementTransition {
+    return new SharedElementTransition();
   }
 }

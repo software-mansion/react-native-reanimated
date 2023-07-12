@@ -13,9 +13,8 @@ import Animated, {
 
 const Stack = createNativeStackNavigator();
 
-const transition = new SharedElementTransition()
-  .duration(1000)
-  .animation((values) => {
+const transition = SharedElementTransition.duration(1000)
+  .custom((values) => {
     'worklet';
     return {
       width: withSpring(values.targetWidth),

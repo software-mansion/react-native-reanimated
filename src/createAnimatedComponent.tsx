@@ -641,7 +641,8 @@ export default function createAnimatedComponent(
           }
           if (sharedTransitionTag) {
             const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? new SharedElementTransition();
+              this.props.sharedTransitionStyle?.getInstance() ??
+              new SharedElementTransition();
             sharedElementTransition.registerTransition(
               tag,
               sharedTransitionTag
