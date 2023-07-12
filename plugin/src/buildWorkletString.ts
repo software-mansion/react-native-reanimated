@@ -2,13 +2,10 @@ import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
 import { transformSync } from '@babel/core';
 import generate from '@babel/generator';
 import type {
-  ArrowFunctionExpression,
   File as BabelFile,
   ExpressionStatement,
   FunctionDeclaration,
-  FunctionExpression,
   Identifier,
-  ObjectMethod,
   VariableDeclaration,
 } from '@babel/types';
 import {
@@ -32,6 +29,7 @@ import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
 import { isRelease } from './utils';
+import { WorkletizableFunction } from './types';
 
 export function buildWorkletString(
   fun: BabelFile,
@@ -125,12 +123,7 @@ function shouldGenerateSourceMap() {
 }
 
 function prependClosure(
-  path: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ArrowFunctionExpression
-    | ObjectMethod
-  >,
+  path: NodePath<WorkletizableFunction>,
   closureVariables: Array<Identifier>,
   closureDeclaration: VariableDeclaration
 ) {
@@ -143,14 +136,7 @@ function prependClosure(
   }
 }
 
-function prependRecursiveDeclaration(
-  path: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ArrowFunctionExpression
-    | ObjectMethod
-  >
-) {
+function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
   if (
     isProgram(path.parent) &&
     !isArrowFunctionExpression(path.node) &&
@@ -195,14 +181,7 @@ function prependClosureVariablesIfNecessary(
   return {
     visitor: {
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod':
-        (
-          path: NodePath<
-            | FunctionDeclaration
-            | FunctionExpression
-            | ArrowFunctionExpression
-            | ObjectMethod
-          >
-        ) => {
+        (path: NodePath<WorkletizableFunction>) => {
           prependClosure(path, closureVariables, closureDeclaration);
           prependRecursiveDeclaration(path);
         },

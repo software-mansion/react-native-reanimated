@@ -1,13 +1,8 @@
 import type { PluginItem, NodePath } from '@babel/core';
 import { globals } from './commonObjects';
-import type {
-  CallExpression,
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-} from '@babel/types';
+import type { CallExpression } from '@babel/types';
 import { processForCalleesWorklets } from './processForCalleesWorklets';
-import type { ReanimatedPluginPass } from './types';
+import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 import { processIfWorkletNode } from './processIfWorkletNode';
 import { processInlineStylesWarning } from './processInlineStylesWarning';
 import { processIfCallback } from './processIfCallback';
@@ -29,12 +24,7 @@ module.exports = function (): PluginItem {
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
-        enter(
-          path: NodePath<
-            FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-          >,
-          state: ReanimatedPluginPass
-        ) {
+        enter(path: NodePath<ExplicitWorklet>, state: ReanimatedPluginPass) {
           processIfWorkletNode(path, state);
           processIfCallback(path, state);
         },
