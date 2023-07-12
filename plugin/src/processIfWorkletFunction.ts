@@ -1,9 +1,4 @@
 import type { NodePath, Node } from '@babel/core';
-import type {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-} from '@babel/types';
 import {
   callExpression,
   isScopable,

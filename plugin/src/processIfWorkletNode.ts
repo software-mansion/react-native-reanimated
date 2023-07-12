@@ -1,9 +1,4 @@
 import type { NodePath } from '@babel/core';
-import type {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-} from '@babel/types';
 import { isBlockStatement, isDirectiveLiteral } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
 import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
