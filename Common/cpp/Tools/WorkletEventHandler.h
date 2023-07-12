@@ -27,7 +27,10 @@ class WorkletEventHandler {
         handlerFunction_(std::move(handlerFunction)),
         handlerId_(handlerId),
         eventName_(eventName) {}
-  void process(double eventTimestamp, const jsi::Value &eventValue) const;
+  void process(
+      jsi::Runtime &uiRuntime,
+      double eventTimestamp,
+      const jsi::Value &eventValue) const;
   uint64_t getHandlerId() const;
   const std::string &getEventName() const;
 };

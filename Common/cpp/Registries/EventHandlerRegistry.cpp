@@ -54,7 +54,7 @@ void EventHandlerRegistry::processEvent(
   eventPayload.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
   for (auto handler : handlersForEvent) {
-    handler->process(eventTimestamp, eventPayload);
+    handler->process(rt, eventTimestamp, eventPayload);
   }
 }
 
