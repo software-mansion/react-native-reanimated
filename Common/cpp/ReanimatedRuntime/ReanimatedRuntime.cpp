@@ -24,7 +24,7 @@ using namespace facebook;
 using namespace react;
 
 std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
-    jsi::Runtime *rnRuntime,
+    jsi::Runtime *,
     std::shared_ptr<MessageQueueThread> jsQueue) {
 #if JS_RUNTIME_HERMES
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =

@@ -347,7 +347,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 }
 
 void NativeReanimatedModule::unregisterEventHandler(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   runtimeManager_->scheduler->scheduleOnUI(
@@ -383,7 +383,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
 }
 
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
@@ -394,8 +394,9 @@ jsi::Value NativeReanimatedModule::configureProps(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
+  (void)uiProps; // unused variable for fabric
   jsi::Array array = nativeProps.asObject(rt).asArray(rt);
-  for (int i = 0; i < array.size(rt); ++i) {
+  for (size_t i = 0; i < array.size(rt); ++i) {
     std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     nativePropNames_.insert(name);
   }
@@ -456,7 +457,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
 }
 
 void NativeReanimatedModule::unregisterSensor(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
 }
@@ -743,7 +744,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
 }
