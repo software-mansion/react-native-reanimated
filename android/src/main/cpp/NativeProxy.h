@@ -100,7 +100,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
     size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       array[i] = elements[i];
     }
     callback_(array, orientationDegrees);

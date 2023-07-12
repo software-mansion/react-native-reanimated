@@ -237,7 +237,7 @@ class ShareableObject : public Shareable {
 class ShareableHostObject : public Shareable {
  public:
   ShareableHostObject(
-      jsi::Runtime &rt,
+      jsi::Runtime &,
       const std::shared_ptr<jsi::HostObject> &hostObject)
       : Shareable(HostObjectType), hostObject_(hostObject) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
@@ -430,7 +430,7 @@ class ShareableScalar : public Shareable {
   ShareableScalar() : Shareable(UndefinedType) {}
   explicit ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
+  jsi::Value toJSValue(jsi::Runtime &) override {
     switch (valueType_) {
       case Shareable::UndefinedType:
         return jsi::Value();

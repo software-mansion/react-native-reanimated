@@ -70,6 +70,7 @@ var require_commonObjects = __commonJS({
       "Proxy",
       "WeakRef",
       "Set",
+      "Intl",
       "_log",
       "_scheduleOnJS",
       "_makeShareableClone",

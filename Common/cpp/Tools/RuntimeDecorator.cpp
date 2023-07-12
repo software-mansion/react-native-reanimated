@@ -128,10 +128,10 @@ void RuntimeDecorator::decorateUIRuntime(
       rt, "_updateDataSynchronously", updateDataSynchronously);
 
   auto performanceNow = [getCurrentTime](
-                            jsi::Runtime &rt,
-                            const jsi::Value &thisValue,
-                            const jsi::Value *args,
-                            size_t count) -> jsi::Value {
+                            jsi::Runtime &,
+                            const jsi::Value &,
+                            const jsi::Value *,
+                            size_t) -> jsi::Value {
     return jsi::Value(getCurrentTime());
   };
   jsi::Object performance(rt);

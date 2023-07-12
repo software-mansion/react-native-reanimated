@@ -10,7 +10,7 @@ static jsi::Value SPEC_PREFIX(installCoreFunctions)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->installCoreFunctions(rt, std::move(args[0]));
   return jsi::Value::undefined();
@@ -22,7 +22,7 @@ static jsi::Value SPEC_PREFIX(makeShareableClone)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->makeShareableClone(rt, std::move(args[0]), std::move(args[1]));
 }
@@ -33,7 +33,7 @@ static jsi::Value SPEC_PREFIX(makeSynchronizedDataHolder)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->makeSynchronizedDataHolder(rt, std::move(args[0]));
 }
@@ -42,7 +42,7 @@ static jsi::Value SPEC_PREFIX(getDataSynchronously)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->getDataSynchronously(rt, std::move(args[0]));
 }
@@ -53,7 +53,7 @@ static jsi::Value SPEC_PREFIX(scheduleOnUI)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->scheduleOnUI(rt, std::move(args[0]));
   return jsi::Value::undefined();
@@ -63,7 +63,7 @@ static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->registerEventHandler(rt, std::move(args[0]), std::move(args[1]));
 }
@@ -72,7 +72,7 @@ static jsi::Value SPEC_PREFIX(unregisterEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->unregisterEventHandler(rt, std::move(args[0]));
   return jsi::Value::undefined();
@@ -82,7 +82,7 @@ static jsi::Value SPEC_PREFIX(getViewProp)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->getViewProp(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
@@ -93,7 +93,7 @@ static jsi::Value SPEC_PREFIX(enableLayoutAnimations)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->enableLayoutAnimations(rt, std::move(args[0]));
   return jsi::Value::undefined();
@@ -103,7 +103,7 @@ static jsi::Value SPEC_PREFIX(registerSensor)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->registerSensor(
           rt,
@@ -117,7 +117,7 @@ static jsi::Value SPEC_PREFIX(unregisterSensor)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->unregisterSensor(rt, std::move(args[0]));
   return jsi::Value::undefined();
@@ -127,7 +127,7 @@ static jsi::Value SPEC_PREFIX(configureProps)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->configureProps(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
@@ -137,7 +137,7 @@ static jsi::Value SPEC_PREFIX(subscribeForKeyboardEvents)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->subscribeForKeyboardEvents(rt, std::move(args[0]), std::move(args[1]));
 }
@@ -146,7 +146,7 @@ static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->unsubscribeFromKeyboardEvents(rt, std::move(args[0]));
   return jsi::Value::undefined();
@@ -156,7 +156,7 @@ static jsi::Value SPEC_PREFIX(configureLayoutAnimation)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
-    size_t count) {
+    size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->configureLayoutAnimation(
           rt,
