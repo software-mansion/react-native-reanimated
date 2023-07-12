@@ -443,6 +443,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
   return animatedSensorModule.registerSensor(
       rt,
       runtimeHelper,
+      runtimeManager_,
       sensorType,
       interval,
       iosReferenceFrame,
