@@ -273,11 +273,16 @@ class ShareableWorklet : public ShareableObject {
  public:
   ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
       : ShareableObject(rt, worklet) {
+    assert(
+        std::any_of(
+            data_.cbegin(),
+            data_.cend(),
+            [](const auto &item) { return item.first == "__workletHash"; }) &&
+        "Cannot construct `ShareableWorklet` without `__workletHash` property");
     valueType_ = WorkletType;
   }
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     jsi::Value obj = ShareableObject::toJSValue(rt);
-    assert(this->data_.size() > 0); // `__initData`, `__workletHash` etc.
     return getValueUnpacker(rt).call(rt, obj);
   }
 };
