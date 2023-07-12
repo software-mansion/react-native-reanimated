@@ -19,8 +19,8 @@
 #endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <React-Fabric/react/renderer/core/ShadowNode.h>
-#import <React-Fabric/react/renderer/uimanager/primitives.h>
+#import <react/renderer/core/ShadowNode.h>
+#import <react/renderer/uimanager/primitives.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
