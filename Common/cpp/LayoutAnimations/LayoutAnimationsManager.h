@@ -5,7 +5,6 @@
 #include "Shareables.h"
 
 #ifdef DEBUG
-#include <unordered_set>
 #include "JSLogger.h"
 #endif
 

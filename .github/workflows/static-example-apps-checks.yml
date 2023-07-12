@@ -37,6 +37,9 @@ jobs:
       - name: Install ${{ matrix.working-directory }} app node dependencies
         working-directory: ${{ matrix.working-directory }}
         run: yarn
+      - name: Generate react-native-screens.d.ts # just temporary solution, until next release of react-native-screens
+        working-directory: ${{ matrix.working-directory }}/node_modules/react-native-screens
+        run: yarn tsc
       - name: Check types
         working-directory: ${{ matrix.working-directory }}
         run: yarn tsc --noEmit
