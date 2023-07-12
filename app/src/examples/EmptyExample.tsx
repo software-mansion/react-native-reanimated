@@ -6,7 +6,6 @@ import React from 'react';
 export default function EmptyExample() {
   const handlePress = () => {
     const runtime = createWorkletRuntime('background');
-    // TODO: implement toString
     console.log(runtime);
     console.log(`${runtime}`);
     console.log(String(runtime));
