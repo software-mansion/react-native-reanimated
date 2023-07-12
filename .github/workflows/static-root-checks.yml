@@ -27,8 +27,6 @@ jobs:
           cache: 'yarn'
       - name: Install node dependencies
         run: yarn
-      - name: Generate react-native-screens.d.ts # just temporary solution, until next release of react-native-screens
-        run: cd node_modules/react-native-screens && yarn tsc
       - name: Check types
         run: yarn tsc --noEmit
       - name: Check api
