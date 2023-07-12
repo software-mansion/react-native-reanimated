@@ -50,31 +50,19 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
 class JSRuntimeHelper {
  private:
   jsi::Runtime *rnRuntime_; // React-Native's main JS runtime
-  //  jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
   std::shared_ptr<Scheduler> scheduler_;
 
  public:
   JSRuntimeHelper(
       jsi::Runtime *rnRuntime,
-      //      jsi::Runtime *uiRuntime,
       const std::shared_ptr<Scheduler> &scheduler)
-      : rnRuntime_(rnRuntime),
-        // uiRuntime_(uiRuntime),
-        scheduler_(scheduler) {}
+      : rnRuntime_(rnRuntime), scheduler_(scheduler) {}
 
   volatile bool uiRuntimeDestroyed = false;
-
-  //  inline jsi::Runtime *uiRuntime() const {
-  //    return uiRuntime_;
-  //  }
 
   inline jsi::Runtime *rnRuntime() const {
     return rnRuntime_;
   }
-
-  //  inline bool isUIRuntime(const jsi::Runtime &rt) const {
-  //    return &rt == uiRuntime_;
-  //  }
 
   inline bool isRNRuntime(const jsi::Runtime &rt) const {
     return &rt == rnRuntime_;
@@ -148,17 +136,16 @@ class Shareable {
 template <typename BaseClass>
 class RetainingShareable : virtual public BaseClass {
  private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
+  jsi::Runtime *originalRuntime_;
+  jsi::Runtime *retainingRuntime_;
   std::unique_ptr<jsi::Value> remoteValue_;
 
  public:
   template <typename... Args>
-  RetainingShareable(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      Args &&...args)
-      : BaseClass(std::forward<Args>(args)...), runtimeHelper_(runtimeHelper) {}
+  explicit RetainingShareable(jsi::Runtime &rt, Args &&...args)
+      : BaseClass(rt, std::forward<Args>(args)...), originalRuntime_(&rt) {}
   jsi::Value getJSValue(jsi::Runtime &rt) {
-    if (runtimeHelper_->isRNRuntime(rt)) {
+    if (&rt == originalRuntime_) {
       // TODO: it is suboptimal to generate new object every time getJS is
       // called on host runtime – the objects we are generating already exists
       // and we should possibly just grab a hold of such object and use it here
@@ -166,15 +153,21 @@ class RetainingShareable : virtual public BaseClass {
       // only case where it can be realistically called this way is when a
       // shared value is created and then accessed on the same runtime
       return BaseClass::toJSValue(rt);
-    } else if (remoteValue_ == nullptr) {
-      //      auto value = BaseClass::toJSValue(rt);
-      //      remoteValue_ = std::make_unique<jsi::Value>(rt, value);
-      return BaseClass::toJSValue(rt);
     }
-    return jsi::Value(rt, *remoteValue_);
+    if (remoteValue_ == nullptr) {
+      auto value = BaseClass::toJSValue(rt);
+      remoteValue_ = std::make_unique<jsi::Value>(rt, value);
+      retainingRuntime_ = &rt;
+      return value;
+    }
+    if (&rt == retainingRuntime_) {
+      return jsi::Value(rt, *remoteValue_);
+    }
+    return BaseClass::toJSValue(rt);
   }
   ~RetainingShareable() {
-    if (runtimeHelper_->uiRuntimeDestroyed) {
+    // TODO: check if runtime destroyed
+    if (false) {
       // The below use of unique_ptr.release prevents the smart pointer from
       // calling the destructor of the kept object. This effectively results in
       // leaking some memory. We do this on purpose, as sometimes we would keep
@@ -273,7 +266,6 @@ class ShareableObject : public Shareable {
 class ShareableHostObject : public Shareable {
  public:
   ShareableHostObject(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       jsi::Runtime &rt,
       const std::shared_ptr<jsi::HostObject> &hostObject)
       : Shareable(HostObjectType), hostObject_(hostObject) {}
@@ -307,18 +299,11 @@ class ShareableHostFunction : public Shareable {
 };
 
 class ShareableWorklet : public ShareableObject {
- private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
-
  public:
-  ShareableWorklet(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      jsi::Runtime &rt,
-      const jsi::Object &worklet)
-      : ShareableObject(rt, worklet), runtimeHelper_(runtimeHelper) {
+  ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
+      : ShareableObject(rt, worklet) {
     valueType_ = WorkletType;
   }
-  // TODO: mark toJSValue as const?
   jsi::Value toJSValue(jsi::Runtime &rt) override {
     jsi::Value obj = ShareableObject::toJSValue(rt);
     assert(this->data_.size() > 0); // `__initData`, `__workletHash` etc.
@@ -330,19 +315,18 @@ class ShareableRemoteFunction
     : public Shareable,
       public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
+  jsi::Runtime *runtime_;
   jsi::Function function_;
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
 
  public:
-  ShareableRemoteFunction(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      jsi::Runtime &rt,
-      jsi::Function &&function)
+  ShareableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
       : Shareable(RemoteFunctionType),
-        function_(std::move(function)),
-        runtimeHelper_(runtimeHelper) {}
+        runtime_(&rt),
+        function_(std::move(function)) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
-    if (!runtimeHelper_->isRNRuntime(rt)) {
+    if (&rt == runtime_) {
+      return jsi::Value(rt, function_);
+    } else {
 #ifdef DEBUG
       return getValueUnpacker(rt).call(
           rt,
@@ -351,28 +335,23 @@ class ShareableRemoteFunction
 #else
       return ShareableJSRef::newHostObject(rt, shared_from_this());
 #endif
-    } else {
-      return jsi::Value(rt, function_);
     }
   }
 };
 
 class ShareableHandle : public Shareable {
  private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
   std::unique_ptr<ShareableObject> initializer_;
   std::unique_ptr<jsi::Value> remoteValue_;
 
  public:
-  ShareableHandle(
-      const std::shared_ptr<JSRuntimeHelper> runtimeHelper,
-      jsi::Runtime &rt,
-      const jsi::Object &initializerObject)
-      : Shareable(HandleType), runtimeHelper_(runtimeHelper) {
+  ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
+      : Shareable(HandleType) {
     initializer_ = std::make_unique<ShareableObject>(rt, initializerObject);
   }
   ~ShareableHandle() {
-    if (runtimeHelper_->uiRuntimeDestroyed) {
+    // TODO: check if runtime destroyed
+    if (false) {
       // The below use of unique_ptr.release prevents the smart pointer from
       // calling the destructor of the kept object. This effectively results in
       // leaking some memory. We do this on purpose, as sometimes we would keep
@@ -410,7 +389,7 @@ class ShareableSynchronizedDataHolder
     : public Shareable,
       public std::enable_shared_from_this<ShareableSynchronizedDataHolder> {
  private:
-  std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
+  jsi::Runtime *rnRuntime_;
   std::shared_ptr<Shareable> data_;
   std::shared_ptr<jsi::Value> uiValue_;
   std::shared_ptr<jsi::Value> rnValue_;
@@ -418,30 +397,29 @@ class ShareableSynchronizedDataHolder
 
  public:
   ShareableSynchronizedDataHolder(
-      std::shared_ptr<JSRuntimeHelper> runtimeHelper,
       jsi::Runtime &rt,
       const jsi::Value &initialValue)
       : Shareable(SynchronizedDataHolder),
-        runtimeHelper_(runtimeHelper),
+        rnRuntime_(&rt),
         data_(extractShareableOrThrow(rt, initialValue)) {}
 
   jsi::Value get(jsi::Runtime &rt) {
     std::unique_lock<std::mutex> read_lock(dataAccessMutex_);
-    if (!runtimeHelper_->isRNRuntime(rt)) {
-      if (uiValue_ == nullptr) {
-        auto value = data_->getJSValue(rt);
-        uiValue_ = std::make_shared<jsi::Value>(rt, value);
-        return value;
-      } else {
-        return jsi::Value(rt, *uiValue_);
-      }
-    } else {
+    if (&rt == rnRuntime_) {
       if (rnValue_ == nullptr) {
         auto value = data_->getJSValue(rt);
         rnValue_ = std::make_shared<jsi::Value>(rt, value);
         return value;
       } else {
         return jsi::Value(rt, *rnValue_);
+      }
+    } else {
+      if (uiValue_ == nullptr) {
+        auto value = data_->getJSValue(rt);
+        uiValue_ = std::make_shared<jsi::Value>(rt, value);
+        return value;
+      } else {
+        return jsi::Value(rt, *uiValue_);
       }
     }
   }

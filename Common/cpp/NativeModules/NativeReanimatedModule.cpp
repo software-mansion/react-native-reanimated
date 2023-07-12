@@ -244,8 +244,8 @@ void NativeReanimatedModule::scheduleOnJS(
 jsi::Value NativeReanimatedModule::makeSynchronizedDataHolder(
     jsi::Runtime &rt,
     const jsi::Value &initialShareable) {
-  auto dataHolder = std::make_shared<ShareableSynchronizedDataHolder>(
-      runtimeHelper, rt, initialShareable);
+  auto dataHolder =
+      std::make_shared<ShareableSynchronizedDataHolder>(rt, initialShareable);
   return dataHolder->getJSValue(rt);
 }
 
@@ -274,32 +274,32 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      shareable = std::make_shared<ShareableWorklet>(runtimeHelper, rt, object);
+      shareable = std::make_shared<ShareableWorklet>(rt, object);
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      shareable = std::make_shared<ShareableHandle>(runtimeHelper, rt, object);
+      shareable = std::make_shared<ShareableHandle>(rt, object);
     } else if (object.isFunction(rt)) {
       auto function = object.asFunction(rt);
       if (function.isHostFunction(rt)) {
         shareable =
             std::make_shared<ShareableHostFunction>(rt, std::move(function));
       } else {
-        shareable = std::make_shared<ShareableRemoteFunction>(
-            runtimeHelper, rt, std::move(function));
+        shareable =
+            std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
       }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableArray>>(
-            runtimeHelper, rt, object.asArray(rt));
+            rt, object.asArray(rt));
       } else {
         shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
       }
     } else if (object.isHostObject(rt)) {
-      shareable = std::make_shared<ShareableHostObject>(
-          runtimeHelper, rt, object.getHostObject(rt));
+      shareable =
+          std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
-            runtimeHelper, rt, object);
+        shareable =
+            std::make_shared<RetainingShareable<ShareableObject>>(rt, object);
       } else {
         shareable = std::make_shared<ShareableObject>(rt, object);
       }
