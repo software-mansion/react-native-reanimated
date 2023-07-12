@@ -52,7 +52,6 @@ NativeProxy::NativeProxy(
 {
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
-  RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
@@ -187,7 +186,7 @@ void NativeProxy::registerNatives() {
 
 void NativeProxy::requestRender(
     std::function<void(double)> onRender,
-    jsi::Runtime &rt) {
+    jsi::Runtime &) {
   static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(
@@ -306,7 +305,7 @@ void NativeProxy::synchronouslyUpdateUIProps(
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
-    int iosReferenceFrame,
+    int,
     std::function<void(double[], int)> setter) {
   static const auto method =
       getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");

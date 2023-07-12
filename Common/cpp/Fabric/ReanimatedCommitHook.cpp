@@ -10,8 +10,8 @@ using namespace facebook::react;
 namespace reanimated {
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
-    ShadowTree const &shadowTree,
-    RootShadowNode::Shared const &oldRootShadowNode,
+    ShadowTree const &,
+    RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
   if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
     // ShadowTree commited by Reanimated, no need to apply updates from
