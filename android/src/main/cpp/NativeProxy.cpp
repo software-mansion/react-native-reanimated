@@ -9,7 +9,6 @@
 #include <memory>
 #include <string>
 
-#include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
 #include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
@@ -113,14 +112,10 @@ void NativeProxy::installJSIBindings(
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       ReanimatedRuntime::make(runtime_, jsQueue);
 
-  std::shared_ptr<ErrorHandler> errorHandler =
-      std::make_shared<AndroidErrorHandler>(scheduler_);
-
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
       animatedRuntime,
-      errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -511,8 +506,6 @@ void NativeProxy::setupLayoutAnimations() {
           return;
         }
         auto &rt = *nativeReanimatedModule->runtimeManager_->runtime;
-        auto errorHandler =
-            nativeReanimatedModule->runtimeManager_->errorHandler;
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -530,8 +523,7 @@ void NativeProxy::setupLayoutAnimations() {
               yogaValues.setProperty(rt, key, value);
             }
           } catch (std::invalid_argument e) {
-            errorHandler->setError("Failed to convert value to number");
-            errorHandler->raise();
+            throw std::runtime_error("Failed to convert value to number");
           }
         }
 
