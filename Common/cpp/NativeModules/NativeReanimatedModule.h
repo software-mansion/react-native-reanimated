@@ -16,8 +16,13 @@
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
-#include "Scheduler.h"
 #include "SingleInstanceChecker.h"
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
+#include "Scheduler.h"
+#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
