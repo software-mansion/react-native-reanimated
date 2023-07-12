@@ -13,6 +13,5 @@
     "declaration": true,
     "declarationDir": "types"
   },
-  "files": ["src/plugin.ts"],
-  "include":["src/**/*"]
+  "include": ["src/**/*"]
 }
