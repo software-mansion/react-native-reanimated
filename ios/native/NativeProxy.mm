@@ -19,11 +19,11 @@
 #endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <react/renderer/core/ShadowNode.h>
-#import <react/renderer/uimanager/primitives.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
+#import <react/renderer/core/ShadowNode.h>
+#import <react/renderer/uimanager/primitives.h>
 #else
 #import <folly/json.h>
 #endif
