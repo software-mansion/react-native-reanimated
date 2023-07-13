@@ -3,7 +3,12 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include "RuntimeDecorator.h"
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
 #include "Scheduler.h"
+#endif
 
 namespace reanimated {
 
