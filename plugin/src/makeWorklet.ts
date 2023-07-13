@@ -3,13 +3,10 @@ import type { NodePath } from '@babel/core';
 import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
-  ArrowFunctionExpression,
   File as BabelFile,
   ExpressionStatement,
-  FunctionDeclaration,
   FunctionExpression,
   Identifier,
-  ObjectMethod,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
@@ -44,18 +41,13 @@ import { strict as assert } from 'assert';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
 import { globals } from './commonObjects';
-import type { ReanimatedPluginPass } from './types';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { isRelease } from './utils';
 
 const version = require('../../package.json').version;
 
 export function makeWorklet(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >,
+  fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
@@ -63,14 +55,7 @@ export function makeWorklet(
 
   const functionName = makeWorkletName(fun);
 
-  // remove 'worklet'; directive before generating string
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
-  });
+  removeWorkletDirective(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -273,6 +258,16 @@ export function makeWorklet(
   return newFun;
 }
 
+function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
+      }
+    },
+  });
+}
+
 function shouldInjectVersion() {
   // We don't inject version in release since cache is reset there anyway
   if (isRelease()) {
@@ -305,14 +300,7 @@ function hash(str: string) {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
-) {
+function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
   if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
@@ -327,12 +315,7 @@ function makeWorkletName(
 
 function makeArrayFromCapturedBindings(
   ast: BabelFile,
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
+  fun: NodePath<WorkletizableFunction>
 ) {
   const closure = new Map<string, Identifier>();
 
