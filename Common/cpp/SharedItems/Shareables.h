@@ -143,7 +143,7 @@ class RetainingShareable : virtual public BaseClass {
   }
   ~RetainingShareable() {
     // TODO: check if runtime destroyed
-    if (false) {
+    if (true) {
       // The below use of unique_ptr.release prevents the smart pointer from
       // calling the destructor of the kept object. This effectively results in
       // leaking some memory. We do this on purpose, as sometimes we would keep
@@ -332,7 +332,7 @@ class ShareableHandle : public Shareable {
   }
   ~ShareableHandle() {
     // TODO: check if runtime destroyed
-    if (false) {
+    if (true) {
       // The below use of unique_ptr.release prevents the smart pointer from
       // calling the destructor of the kept object. This effectively results in
       // leaking some memory. We do this on purpose, as sometimes we would keep
