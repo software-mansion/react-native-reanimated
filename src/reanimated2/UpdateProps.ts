@@ -7,7 +7,7 @@ import type {
   SharedValue,
   StyleProps,
 } from './commonTypes';
-import { makeShareable, isConfigured } from './core';
+import { makeShareable } from './core';
 import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
@@ -32,7 +32,7 @@ export const colorProps = [
   'overlayColor',
 ];
 
-export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
+export const ColorProperties = makeShareable(colorProps);
 
 export let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
