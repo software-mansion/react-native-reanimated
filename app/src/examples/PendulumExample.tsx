@@ -26,7 +26,7 @@ interface FieldDefinition {
 function InputField({ fieldName, value, setValue }: FieldDefinition) {
   return (
     <View style={styles.row} key={fieldName}>
-      <Text style={[styles.inputDescription]}>{fieldName}</Text>
+      <Text style={styles.inputDescription}>{fieldName}</Text>
       <TextInput
         key={fieldName}
         value={`${value}`}
@@ -40,7 +40,7 @@ function InputField({ fieldName, value, setValue }: FieldDefinition) {
         }}
         autoCapitalize="none"
         inputMode="numeric"
-        style={[styles.input]}
+        style={styles.input}
       />
     </View>
   );
@@ -152,12 +152,14 @@ export default function SpringExample(): React.ReactElement {
           <Animated.View style={[styles.pendulum, style]}>
             <View style={styles.rope} />
             <Text
-              style={{
-                textAlign: 'center',
-                fontSize: useConfigWithDuration
-                  ? 50
-                  : Math.min(0.75 * mass, 40) + 10,
-              }}>
+              style={[
+                styles.center,
+                {
+                  fontSize: useConfigWithDuration
+                    ? 50
+                    : Math.min(0.75 * mass, 40) + 10,
+                },
+              ]}>
               {/* Using here view with border radius would be more natural, but views with border radius and rotation are bugged on android */}
               🟣
             </Text>
@@ -186,6 +188,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+  },
+  center: {
+    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',
@@ -224,12 +229,6 @@ const styles = StyleSheet.create({
     width: 2,
     height: 160,
     marginBottom: -5,
-  },
-  ball: {
-    alignSelf: 'center',
-    backgroundColor: 'grey',
-    borderWidth: 2,
-    borderColor: 'black',
   },
   buttonRow: {
     flexDirection: 'row',
