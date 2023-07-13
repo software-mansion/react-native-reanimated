@@ -205,7 +205,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setGlobalProperties(
       jsi::Runtime &jsRuntime,
-      const std::shared_ptr<jsi::Runtime> &reanimatedRuntime);
+      const std::shared_ptr<jsi::Runtime> &uiRuntime);
   void setupLayoutAnimations();
 
   double getCurrentTime();
