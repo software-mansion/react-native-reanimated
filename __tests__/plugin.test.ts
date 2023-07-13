@@ -75,6 +75,20 @@ describe('babel plugin', () => {
       expect(code).toContain(`f.__version = "${packageVersion}";`);
     });
 
+    it('injects source maps', () => {
+      delete process.env.REANIMATED_JEST_MOCK_SOURCEMAP;
+
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, { sourceMaps: true });
+      expect(code).toContain('{\\"version\\":3');
+    });
+
     it('removes comments from worklets', () => {
       const input = html`<script>
         const f = () => {
