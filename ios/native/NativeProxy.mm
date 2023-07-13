@@ -12,6 +12,7 @@
 #import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
+#import <RNReanimated/WorkletRuntimeCollector.h>
 
 #ifdef DEBUG
 #import <RNReanimated/REAScreensHelper.h>
@@ -149,8 +150,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-  auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-  std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
+  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
+  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
+  WorkletRuntimeCollector::install(rnRuntime);
+  WorkletRuntimeCollector::install(*uiRuntime);
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
@@ -186,13 +189,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
-  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
 
   auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    NSDictionary *propsDict = convertJSIObjectToNSDictionary(*wrt.lock(), newStyle);
-    [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
-                                                     forTag:@(tag)
-                                         isSharedTransition:isSharedTransition];
+    if (auto runtime = weakUiRuntime.lock()) {
+      jsi::Runtime &rt = *runtime;
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, newStyle);
+      [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
+                                                       forTag:@(tag)
+                                           isSharedTransition:isSharedTransition];
+    }
   };
 
   auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
@@ -266,7 +272,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsInvoker,
       scheduler,
-      animatedRuntime,
+      uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -302,8 +308,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
         if (nativeReanimatedModule == nullptr) {
           return;
         }
-
-        jsi::Runtime &rt = *wrt.lock();
+        auto runtime = weakUiRuntime.lock();
+        if (runtime == nullptr) {
+          return;
+        }
+        jsi::Runtime &rt = *runtime;
         jsi::Object yogaValues(rt);
         for (NSString *key in values.allKeys) {
           NSObject *value = values[key];
@@ -343,7 +352,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager
       setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          if (auto runtime = wrt.lock()) {
+          if (auto runtime = weakUiRuntime.lock()) {
             jsi::Runtime &rt = *runtime;
             nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(
                 rt, [tag intValue], type, cancelled == YES, removeView == YES);

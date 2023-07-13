@@ -9,6 +9,7 @@
 #include "JSRuntimeHelper.h"
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
+#include "WorkletRuntimeRegistry.h"
 
 #ifdef __APPLE__
 #include <RNReanimated/Scheduler.h>
@@ -143,7 +144,7 @@ class RetainingShareable : virtual public BaseClass {
   }
   ~RetainingShareable() {
     // TODO: check if runtime destroyed
-    if (true) {
+    if (!WorkletRuntimeRegistry::isRuntimeAlive(retainingRuntime_)) {
       // The below use of unique_ptr.release prevents the smart pointer from
       // calling the destructor of the kept object. This effectively results in
       // leaking some memory. We do this on purpose, as sometimes we would keep
@@ -324,15 +325,17 @@ class ShareableHandle : public Shareable {
  private:
   std::unique_ptr<ShareableObject> initializer_;
   std::unique_ptr<jsi::Value> remoteValue_;
+  jsi::Runtime *runtime_;
 
  public:
   ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
       : Shareable(HandleType) {
     initializer_ = std::make_unique<ShareableObject>(rt, initializerObject);
+    runtime_ = &rt;
   }
   ~ShareableHandle() {
     // TODO: check if runtime destroyed
-    if (true) {
+    if (!WorkletRuntimeRegistry::isRuntimeAlive(runtime_)) {
       // The below use of unique_ptr.release prevents the smart pointer from
       // calling the destructor of the kept object. This effectively results in
       // leaking some memory. We do this on purpose, as sometimes we would keep
