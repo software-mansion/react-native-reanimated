@@ -150,9 +150,9 @@ export function makeShareableCloneRecursive<T>(
             );
             delete value.__stackDetails;
           } else if (value.__stackDetails) {
-            // Detected debug version of the worklet in your release bundle. This
+            // Detected debug version of the worklet in release bundle. This
             // might lead to unexpected issues or errors. Probably one of user
-            // dependencies provided transpile code with debug version of the
+            // dependencies provided transpiled code with debug version of the
             // Reanimated plugin.
             delete value.__stackDetails;
           }
