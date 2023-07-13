@@ -45,7 +45,7 @@ const dummyWorklet = () => {
   // noop
 };
 
-export class SharedElementTransition {
+export class SharedTransition {
   private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
   private _transitionDuration = 500;
@@ -61,16 +61,14 @@ export class SharedElementTransition {
     onSwipeDismiss: -1,
   };
 
-  public custom(
-    customAnimationFactory: AnimationFactory
-  ): SharedElementTransition {
+  public custom(customAnimationFactory: AnimationFactory): SharedTransition {
     this._customAnimationFactory = customAnimationFactory;
     return this;
   }
 
   public progressAnimation(
     progressAnimationCallback: CustomProgressAnimation
-  ): SharedElementTransition {
+  ): SharedTransition {
     this._customProgressAnimation = (viewTag, values, progress) => {
       'worklet';
       const newStyles = progressAnimationCallback(values, progress);
@@ -79,19 +77,19 @@ export class SharedElementTransition {
     return this;
   }
 
-  public duration(duration: number): SharedElementTransition {
+  public duration(duration: number): SharedTransition {
     this._transitionDuration = duration;
     return this;
   }
 
   public defaultTransitionType(
     transitionType: SharedTransitionType
-  ): SharedElementTransition {
+  ): SharedTransition {
     this._defaultTransitionType = transitionType;
     return this;
   }
 
-  public getInstance(): SharedElementTransition {
+  public getInstance(): SharedTransition {
     return this;
   }
 
@@ -131,9 +129,9 @@ export class SharedElementTransition {
   }
 
   public unregisterTransition(viewTag: number): void {
-    SharedElementTransition._sharedElementCount--;
-    if (SharedElementTransition._sharedElementCount === 0) {
-      const eventHandler = SharedElementTransition._eventHandler;
+    SharedTransition._sharedElementCount--;
+    if (SharedTransition._sharedElementCount === 0) {
+      const eventHandler = SharedTransition._eventHandler;
       eventHandler.isRegistered = false;
       if (eventHandler.onTransitionProgress !== -1) {
         unregisterEventHandler(eventHandler.onTransitionProgress);
@@ -159,8 +157,8 @@ export class SharedElementTransition {
   }
 
   private registerEventHandlers() {
-    SharedElementTransition._sharedElementCount++;
-    const eventHandler = SharedElementTransition._eventHandler;
+    SharedTransition._sharedElementCount++;
+    const eventHandler = SharedTransition._eventHandler;
     if (!eventHandler.isRegistered) {
       eventHandler.isRegistered = true;
       const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
@@ -307,29 +305,27 @@ export class SharedElementTransition {
 
   public static custom(
     customAnimationFactory: AnimationFactory
-  ): SharedElementTransition {
-    return new SharedElementTransition().custom(customAnimationFactory);
+  ): SharedTransition {
+    return new SharedTransition().custom(customAnimationFactory);
   }
 
-  public static duration(duration: number): SharedElementTransition {
-    return new SharedElementTransition().duration(duration);
+  public static duration(duration: number): SharedTransition {
+    return new SharedTransition().duration(duration);
   }
 
   public static progressAnimation(
     progressAnimationCallback: CustomProgressAnimation
-  ): SharedElementTransition {
-    return new SharedElementTransition().progressAnimation(
-      progressAnimationCallback
-    );
+  ): SharedTransition {
+    return new SharedTransition().progressAnimation(progressAnimationCallback);
   }
 
   public static defaultTransitionType(
     transitionType: SharedTransitionType
-  ): SharedElementTransition {
-    return new SharedElementTransition().defaultTransitionType(transitionType);
+  ): SharedTransition {
+    return new SharedTransition().defaultTransitionType(transitionType);
   }
 
-  public static getInstance(): SharedElementTransition {
-    return new SharedElementTransition();
+  public static getInstance(): SharedTransition {
+    return new SharedTransition();
   }
 }

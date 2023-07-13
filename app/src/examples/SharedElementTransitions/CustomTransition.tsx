@@ -6,14 +6,14 @@ import {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import Animated, {
-  SharedElementTransition,
+  SharedTransition,
   withSpring,
   SharedTransitionType,
 } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 
-const transition = SharedElementTransition.duration(1000)
+const transition = SharedTransition.duration(1000)
   .custom((values) => {
     'worklet';
     return {

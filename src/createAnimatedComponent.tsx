@@ -34,7 +34,7 @@ import type {
   LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
-  SharedElementTransition,
+  SharedTransition,
   LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import type {
@@ -234,7 +234,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedElementTransition;
+  sharedTransitionStyle?: SharedTransition;
 };
 
 type Options<P> = {
@@ -285,7 +285,7 @@ export default function createAnimatedComponent(
     _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
-    _sharedElementTransition: SharedElementTransition | null = null;
+    _sharedElementTransition: SharedTransition | null = null;
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -642,7 +642,7 @@ export default function createAnimatedComponent(
           if (sharedTransitionTag) {
             const sharedElementTransition =
               this.props.sharedTransitionStyle?.getInstance() ??
-              new SharedElementTransition();
+              new SharedTransition();
             sharedElementTransition.registerTransition(
               tag,
               sharedTransitionTag

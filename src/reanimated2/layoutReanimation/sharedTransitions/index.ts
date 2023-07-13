@@ -1,2 +1,2 @@
-export * from './SharedElementTransition';
+export * from './SharedTransition';
 export * from './ProgressTransitionManager';
