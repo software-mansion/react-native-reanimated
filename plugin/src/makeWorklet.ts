@@ -162,6 +162,16 @@ export function makeWorklet(
     );
   }
 
+  const shouldInjectVersion = !isRelease();
+  if (shouldInjectVersion) {
+    initDataObjectExpression.properties.push(
+      objectProperty(
+        identifier('version'),
+        stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
+      )
+    );
+  }
+
   pathForStringDefinitions.insertBefore(
     variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
@@ -236,15 +246,6 @@ export function makeWorklet(
             false
           ),
           identifier('_e')
-        )
-      )
-    );
-    statements.push(
-      expressionStatement(
-        assignmentExpression(
-          '=',
-          memberExpression(privateFunctionId, identifier('__version'), false),
-          stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
         )
       )
     );
