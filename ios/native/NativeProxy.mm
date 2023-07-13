@@ -2,7 +2,6 @@
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REAIOSErrorHandler.h>
 #import <RNReanimated/REAIOSScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
@@ -154,7 +153,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<jsi::Runtime> animatedRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
-  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
 
   auto nodesManager = reaModule.nodesManager;
@@ -269,7 +267,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       jsInvoker,
       scheduler,
       animatedRuntime,
-      errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else

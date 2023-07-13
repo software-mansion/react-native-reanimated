@@ -36,7 +36,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<Scheduler> &scheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
-    const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -45,11 +44,8 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      runtimeManager_(std::make_shared<RuntimeManager>(
-          rt,
-          errorHandler,
-          scheduler,
-          RuntimeType::UI)),
+      runtimeManager_(
+          std::make_shared<RuntimeManager>(rt, scheduler, RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
