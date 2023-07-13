@@ -88,6 +88,7 @@ export interface BaseLayoutAnimationConfig {
   easing?: EasingFn;
   type?: AnimationFunction;
   damping?: number;
+  dampingRatio?: number;
   mass?: number;
   stiffness?: number;
   overshootClamping?: number;
