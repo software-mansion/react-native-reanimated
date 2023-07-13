@@ -254,7 +254,8 @@ var require_makeWorklet = __commonJS({
     var buildWorkletString_1 = require_buildWorkletString();
     var commonObjects_12 = require_commonObjects();
     var utils_1 = require_utils();
-    var version = require("../../package.json").version;
+    var REAL_VERSION = require("../../package.json").version;
+    var MOCK_VERSION = "x.y.z";
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
       removeWorkletDirective(fun);
@@ -335,9 +336,7 @@ var require_makeWorklet = __commonJS({
           ]))
         ]));
         statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
-        if (shouldInjectVersion()) {
-          statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__version"), false), (0, types_1.stringLiteral)(version))));
-        }
+        statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__version"), false), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION))));
       }
       statements.push((0, types_1.returnStatement)(privateFunctionId));
       const newFun = (0, types_1.functionExpression)(void 0, [], (0, types_1.blockStatement)(statements));
@@ -353,14 +352,8 @@ var require_makeWorklet = __commonJS({
         }
       });
     }
-    function shouldInjectVersion() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_VERSION === "jest") {
-        return false;
-      }
-      return true;
+    function shouldMockVersion() {
+      return process.env.REANIMATED_JEST_MOCK_VERSION === "jest";
     }
     function hash(str) {
       let i = str.length;

@@ -29,6 +29,7 @@ var foo = function () {
   _f.__initData = _worklet_9810417751380_init_data;
   _f.__workletHash = 9810417751380;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -47,6 +48,7 @@ var foo = function () {
   _f.__initData = _worklet_4679479961836_init_data;
   _f.__workletHash = 4679479961836;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -65,6 +67,7 @@ var foo = function () {
   _f.__initData = _worklet_4679479961836_init_data;
   _f.__workletHash = 4679479961836;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -143,6 +146,7 @@ FadeIn.withCallback(function () {
   _f.__initData = _worklet_9297685979719_init_data;
   _f.__workletHash = 9297685979719;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }()).build();"
 `;
@@ -161,6 +165,7 @@ new FadeIn().withCallback(function () {
   _f.__initData = _worklet_9297685979719_init_data;
   _f.__workletHash = 9297685979719;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }()).build();"
 `;
@@ -179,6 +184,7 @@ FadeIn.build().withCallback(function () {
   _f.__initData = _worklet_7455148134810_init_data;
   _f.__workletHash = 7455148134810;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -197,6 +203,7 @@ new FadeIn().build().withCallback(function () {
   _f.__initData = _worklet_7455148134810_init_data;
   _f.__workletHash = 7455148134810;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -215,6 +222,7 @@ FadeIn.build().duration().withCallback(function () {
   _f.__initData = _worklet_1134777276323_init_data;
   _f.__workletHash = 1134777276323;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -233,6 +241,7 @@ new FadeIn().build().duration().withCallback(function () {
   _f.__initData = _worklet_1134777276323_init_data;
   _f.__workletHash = 1134777276323;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -251,6 +260,7 @@ FadeIn.withCallback(function () {
   _f.__initData = _worklet_5878665076948_init_data;
   _f.__workletHash = 5878665076948;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }()).AmogusIn();"
 `;
@@ -269,6 +279,7 @@ new FadeIn().withCallback(function () {
   _f.__initData = _worklet_5878665076948_init_data;
   _f.__workletHash = 5878665076948;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }()).AmogusIn();"
 `;
@@ -287,6 +298,7 @@ FadeIn.withCallback(function () {
   _f.__initData = _worklet_7606417127287_init_data;
   _f.__workletHash = 7606417127287;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -305,6 +317,7 @@ new FadeIn().withCallback(function () {
   _f.__initData = _worklet_7606417127287_init_data;
   _f.__workletHash = 7606417127287;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -329,6 +342,7 @@ var Foo = (0, _createClass2.default)(function Foo() {
     _f.__initData = _worklet_16347365292089_init_data;
     _f.__workletHash = 16347365292089;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }());
 });"
@@ -354,6 +368,7 @@ var Foo = (0, _createClass2.default)(function () {
   _f.__initData = _worklet_14658848071366_init_data;
   _f.__workletHash = 14658848071366;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -383,6 +398,7 @@ var Foo = function () {
       _f.__initData = _worklet_10436985806815_init_data;
       _f.__workletHash = 10436985806815;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }]);
@@ -413,6 +429,7 @@ var Foo = function () {
       _f.__initData = _worklet_16974800582491_init_data;
       _f.__workletHash = 16974800582491;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }]);
@@ -443,6 +460,7 @@ var Foo = function () {
       _f.__initData = _worklet_6451428689423_init_data;
       _f.__workletHash = 6451428689423;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }]);
@@ -471,6 +489,7 @@ var _worklet_16347365292089_init_data = {
   _f.__initData = _worklet_16347365292089_init_data;
   _f.__workletHash = 16347365292089;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -498,6 +517,7 @@ var Foo = function () {
       _f.__initData = _worklet_16974800582491_init_data;
       _f.__workletHash = 16974800582491;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }]);
@@ -528,6 +548,7 @@ var f = function () {
   _f.__initData = _worklet_5359970077727_init_data;
   _f.__workletHash = 5359970077727;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -546,6 +567,7 @@ var f = function () {
   _f.__initData = _worklet_13298016111221_init_data;
   _f.__workletHash = 13298016111221;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -564,6 +586,7 @@ var foo = useAnimatedStyle(function () {
   _f.__initData = _worklet_1852213185147_init_data;
   _f.__workletHash = 1852213185147;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -597,6 +620,7 @@ var foo = function () {
   _f.__initData = _worklet_16347365292089_init_data;
   _f.__workletHash = 16347365292089;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -615,6 +639,7 @@ var foo = function () {
   _f.__initData = _worklet_4679479961836_init_data;
   _f.__workletHash = 4679479961836;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -633,6 +658,7 @@ var foo = function () {
   _f.__initData = _worklet_4679479961836_init_data;
   _f.__workletHash = 4679479961836;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -651,6 +677,7 @@ var foo = function () {
   _f.__initData = _worklet_16347365292089_init_data;
   _f.__workletHash = 16347365292089;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -671,6 +698,7 @@ var animatedStyle = useAnimatedStyle(function () {
   _f.__initData = _worklet_9645206935615_init_data;
   _f.__workletHash = 9645206935615;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -691,6 +719,7 @@ var animatedStyle = useAnimatedStyle(function () {
   _f.__initData = _worklet_6275510763626_init_data;
   _f.__workletHash = 6275510763626;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -711,6 +740,7 @@ var animatedStyle = useAnimatedStyle(function () {
   _f.__initData = _worklet_9645206935615_init_data;
   _f.__workletHash = 9645206935615;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -788,6 +818,7 @@ useAnimatedScrollHandler(function () {
   _f.__initData = _worklet_1022605193782_init_data;
   _f.__workletHash = 1022605193782;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -813,6 +844,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_14892326408241_init_data;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }(),
   onUpdate: function () {
@@ -822,6 +854,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_14892326408241_init_data2;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }(),
   onEnd: function () {
@@ -831,6 +864,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_14892326408241_init_data3;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -865,6 +899,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_14892326408241_init_data;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }(),
   onBeginDrag: function () {
@@ -874,6 +909,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_14892326408241_init_data2;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }(),
   onEndDrag: function () {
@@ -883,6 +919,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_14892326408241_init_data3;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }(),
   onMomentumBegin: function () {
@@ -892,6 +929,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_14892326408241_init_data4;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }(),
   onMomentumEnd: function () {
@@ -901,6 +939,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_14892326408241_init_data5;
     _f.__workletHash = 14892326408241;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -920,6 +959,7 @@ useAnimatedScrollHandler(function () {
   _f.__initData = _worklet_14540236792163_init_data;
   _f.__workletHash = 14540236792163;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -938,6 +978,7 @@ useAnimatedScrollHandler(function () {
   _f.__initData = _worklet_1022605193782_init_data;
   _f.__workletHash = 1022605193782;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -957,6 +998,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_1022605193782_init_data;
     _f.__workletHash = 1022605193782;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -977,6 +1019,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_338158776260_init_data;
     _f.__workletHash = 338158776260;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -997,6 +1040,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_338158776260_init_data;
     _f.__workletHash = 338158776260;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -1017,6 +1061,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_1022605193782_init_data;
     _f.__workletHash = 1022605193782;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -1037,6 +1082,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_1022605193782_init_data;
     _f.__workletHash = 1022605193782;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -1057,6 +1103,7 @@ useAnimatedGestureHandler({
     _f.__initData = _worklet_947458829673_init_data;
     _f.__workletHash = 947458829673;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -1077,6 +1124,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_947458829673_init_data;
     _f.__workletHash = 947458829673;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -1097,6 +1145,7 @@ useAnimatedScrollHandler({
     _f.__initData = _worklet_1022605193782_init_data;
     _f.__workletHash = 1022605193782;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }()
 });"
@@ -1144,6 +1193,7 @@ var foo = function () {
   _f.__initData = _worklet_3161057533258_init_data;
   _f.__workletHash = 3161057533258;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1165,6 +1215,7 @@ var foo = function () {
   _f.__initData = _worklet_9866931756941_init_data;
   _f.__workletHash = 9866931756941;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1186,6 +1237,7 @@ var foo = function () {
   _f.__initData = _worklet_2015887751437_init_data;
   _f.__workletHash = 2015887751437;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1213,6 +1265,7 @@ var foo = function () {
   _f.__initData = _worklet_792186851025_init_data;
   _f.__workletHash = 792186851025;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1239,6 +1292,7 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   _f.__initData = _worklet_15393478329680_init_data;
   _f.__workletHash = 15393478329680;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }()).onStart(function () {
   var _e = [new global.Error(), 1, -27];
@@ -1249,6 +1303,7 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   _f.__initData = _worklet_12748187344900_init_data;
   _f.__workletHash = 12748187344900;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }()).onEnd(function () {
   var _e = [new global.Error(), 1, -27];
@@ -1259,6 +1314,7 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   _f.__initData = _worklet_232586479291_init_data;
   _f.__workletHash = 232586479291;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }());"
 `;
@@ -1277,6 +1333,7 @@ runOnUI(function () {
   _f.__initData = _worklet_15854903236968_init_data;
   _f.__workletHash = 15854903236968;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }())();"
 `;
@@ -1295,6 +1352,7 @@ runOnUI(function () {
   _f.__initData = _worklet_5662051517689_init_data;
   _f.__workletHash = 5662051517689;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }())();"
 `;
@@ -1313,6 +1371,7 @@ runOnUI(function () {
   _f.__initData = _worklet_15854903236968_init_data;
   _f.__workletHash = 15854903236968;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }())();"
 `;
@@ -1339,6 +1398,7 @@ function App() {
       _f.__initData = _worklet_4434179069699_init_data;
       _f.__workletHash = 4434179069699;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }, []);
@@ -1359,6 +1419,7 @@ function App() {
       _f.__initData = _worklet_4434179069699_init_data;
       _f.__workletHash = 4434179069699;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }, []);
@@ -1379,6 +1440,7 @@ function App() {
       _f.__initData = _worklet_4434179069699_init_data;
       _f.__workletHash = 4434179069699;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }, []);
@@ -1407,6 +1469,7 @@ function App() {
       _f.__initData = _worklet_16676723780973_init_data;
       _f.__workletHash = 16676723780973;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }()
   }, []);
@@ -1434,6 +1497,7 @@ var foo = function () {
       _f.__initData = _worklet_16974800582491_init_data;
       _f.__workletHash = 16974800582491;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }();
     return bar(x) + 1;
@@ -1442,6 +1506,7 @@ var foo = function () {
   _f.__initData = _worklet_1678749606628_init_data;
   _f.__workletHash = 1678749606628;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1467,6 +1532,7 @@ var foo = function () {
       _f.__initData = _worklet_16974800582491_init_data;
       _f.__workletHash = 16974800582491;
       _f.__stackDetails = _e;
+      _f.__version = "x.y.z";
       return _f;
     }();
     return bar(x) + 1;
@@ -1475,6 +1541,7 @@ var foo = function () {
   _f.__initData = _worklet_1678749606628_init_data;
   _f.__workletHash = 1678749606628;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1493,6 +1560,7 @@ var f = function () {
   _f.__initData = _worklet_235615426006_init_data;
   _f.__workletHash = 235615426006;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1516,6 +1584,7 @@ var foo = function () {
   _f.__initData = _worklet_2022702330805_init_data;
   _f.__workletHash = 2022702330805;
   _f.__stackDetails = _e;
+  _f.__version = "x.y.z";
   return _f;
 }();"
 `;
@@ -1545,6 +1614,7 @@ function Box() {
     _f.__initData = _worklet_16669311443114_init_data;
     _f.__workletHash = 16669311443114;
     _f.__stackDetails = _e;
+    _f.__version = "x.y.z";
     return _f;
   }());
   return React.createElement(React.Fragment, null, React.createElement(_reactNativeReanimated.default.View, {

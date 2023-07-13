@@ -24,7 +24,7 @@ function runPlugin(input: string, opts = {}) {
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.REANIMATED_JEST_DISABLE_SOURCEMAP = 'jest';
-    process.env.REANIMATED_JEST_DISABLE_VERSION = 'jest';
+    process.env.REANIMATED_JEST_MOCK_VERSION = 'jest';
   });
 
   describe('generally', () => {
@@ -62,7 +62,7 @@ describe('babel plugin', () => {
     });
 
     it('injects its version', () => {
-      delete process.env.REANIMATED_JEST_DISABLE_VERSION;
+      delete process.env.REANIMATED_JEST_MOCK_VERSION;
 
       const input = html`<script>
         function foo() {
