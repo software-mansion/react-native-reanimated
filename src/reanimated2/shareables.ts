@@ -149,6 +149,11 @@ export function makeShareableCloneRecursive<T>(
               value.__stackDetails
             );
             delete value.__stackDetails;
+          } else if (value.__stackDetails) {
+            delete value.__stackDetails;
+            console.warn(
+              `[Reanimated] Detected debug version of worklet in your release bundle. This might lead to unexpected issues or errors. Probably one of you dependencies provided transpiled code with debug version of Reanimated plugin.`
+            );
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means
