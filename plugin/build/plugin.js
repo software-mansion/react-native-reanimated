@@ -257,13 +257,7 @@ var require_makeWorklet = __commonJS({
     var version = require("../../package.json").version;
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
-      fun.traverse({
-        DirectiveLiteral(path) {
-          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
-            path.parentPath.remove();
-          }
-        }
-      });
+      removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "'state.file.opts.filename' is undefined");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
@@ -350,6 +344,15 @@ var require_makeWorklet = __commonJS({
       return newFun;
     }
     exports2.makeWorklet = makeWorklet;
+    function removeWorkletDirective(fun) {
+      fun.traverse({
+        DirectiveLiteral(path) {
+          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
+            path.parentPath.remove();
+          }
+        }
+      });
+    }
     function shouldInjectVersion() {
       if ((0, utils_1.isRelease)()) {
         return false;

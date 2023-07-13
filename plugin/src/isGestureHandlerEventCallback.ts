@@ -1,16 +1,12 @@
 import type { NodePath } from '@babel/core';
-import type {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-  Expression,
-} from '@babel/types';
+import type { Expression } from '@babel/types';
 import {
   isIdentifier,
   isCallExpression,
   isMemberExpression,
   isExpression,
 } from '@babel/types';
+import { ExplicitWorklet } from './types';
 
 const gestureHandlerGestureObjects = new Set([
   // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
@@ -88,11 +84,7 @@ const gestureHandlerBuilderMethods = new Set([
     arguments: [fun3]
   )
   */
-export function isGestureHandlerEventCallback(
-  path: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >
-) {
+export function isGestureHandlerEventCallback(path: NodePath<ExplicitWorklet>) {
   return (
     isCallExpression(path.parent) &&
     isExpression(path.parent.callee) &&
