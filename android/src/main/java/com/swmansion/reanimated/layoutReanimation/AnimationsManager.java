@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import com.facebook.react.BuildConfig;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -22,6 +23,7 @@ import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.Scheduler;
+import com.swmansion.reanimated.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -177,6 +179,26 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (hasAnimationForTag(view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       mSharedTransitionManager.notifyAboutNewView(view);
     }
+    if (BuildConfig.DEBUG) {
+      checkDuplicateSharedTag(view);
+    }
+  }
+
+  private void checkDuplicateSharedTag(View view) {
+    int viewTag = view.getId();
+
+    ViewParent parent = view.getParent();
+    while (parent != null) {
+      if (parent.getClass().getSimpleName().equals("Screen")) {
+        break;
+      }
+      parent = (ViewParent) parent.getParent();
+    }
+
+    if (parent != null) {
+      int screenTag = ((View) parent).getId();
+      mNativeMethodsHolder.checkDuplicateSharedTag(viewTag, screenTag);
+    }
   }
 
   public void progressLayoutAnimation(
@@ -270,7 +292,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
       keys = Snapshot.currentKeysToTransform;
     }
     for (String key : keys) {
-      preparedValues.put(key, PixelUtil.toDIPFromPixel((int) values.get(key)));
+      Object value = values.get(key);
+      float pixelsValue = Utils.convertToFloat(value);
+      float dipValue = PixelUtil.toDIPFromPixel(pixelsValue);
+      preparedValues.put(key, dipValue);
     }
 
     if (addTransform) {
@@ -501,7 +526,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         View child = viewGroup.getChildAt(i);
         if (removeOrAnimateExitRecursive(child, shouldRemove)) {
           hasAnimatedChildren = true;
-        } else if (shouldRemove) {
+        } else if (shouldRemove && child.getId() != -1) {
           toBeRemoved.add(child);
         }
       }
@@ -527,6 +552,13 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     if (hasAnimatedChildren) {
+      if (tag == -1) {
+        // View tags are used to identify react views, therefore native-only views
+        // don't have any view tag and view.getId returns -1
+        // We shouldn't manage lifetime of non-react components.
+        cancelAnimationsRecursive(view);
+        return false;
+      }
       mAncestorsToRemove.add(tag);
     }
 

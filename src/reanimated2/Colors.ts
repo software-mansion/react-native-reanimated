@@ -7,7 +7,7 @@
  */
 
 /* eslint no-bitwise: 0 */
-import { makeRemote, makeShareable, isConfigured } from './core';
+import { makeShareable, isConfigured } from './core';
 import { isAndroid, isWeb } from './PlatformChecker';
 
 interface RGB {
@@ -31,50 +31,16 @@ function call(...args: unknown[]): string {
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
 
-// matchers use RegExp objects which needs to be created separately on JS and on
-// the UI thread. We keep separate cache of Regexes for UI and JS using the below
-// objects, then pick the right cache in getMatchers() method.
-const jsCachedMatchers: Matchers = {};
-const uiCachedMatchers: Matchers = !isConfigured() ? {} : makeRemote({});
-type Matchers = {
-  rgb?: RegExp;
-  rgba?: RegExp;
-  hsl?: RegExp;
-  hsla?: RegExp;
-  hex3?: RegExp;
-  hex4?: RegExp;
-  hex5?: RegExp;
-  hex6?: RegExp;
-  hex8?: RegExp;
+const MATCHERS = {
+  rgb: new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER)),
+  rgba: new RegExp('rgba' + call(NUMBER, NUMBER, NUMBER, NUMBER)),
+  hsl: new RegExp('hsl' + call(NUMBER, PERCENTAGE, PERCENTAGE)),
+  hsla: new RegExp('hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER)),
+  hex3: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+  hex4: /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+  hex6: /^#([0-9a-fA-F]{6})$/,
+  hex8: /^#([0-9a-fA-F]{8})$/,
 };
-function getMatchers(): Matchers {
-  'worklet';
-  const cachedMatchers: Matchers = _WORKLET
-    ? uiCachedMatchers
-    : jsCachedMatchers;
-  if (cachedMatchers.rgb === undefined) {
-    cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
-    cachedMatchers.rgba = new RegExp(
-      'rgba' + call(NUMBER, NUMBER, NUMBER, NUMBER)
-    );
-    cachedMatchers.hsl = new RegExp(
-      'hsl' + call(NUMBER, PERCENTAGE, PERCENTAGE)
-    );
-    cachedMatchers.hsla = new RegExp(
-      'hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER)
-    );
-    cachedMatchers.hex3 = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
-    cachedMatchers.hex4 =
-      /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
-    cachedMatchers.hex6 = /^#([0-9a-fA-F]{6})$/;
-    cachedMatchers.hex8 = /^#([0-9a-fA-F]{8})$/;
-  }
-  return cachedMatchers;
-}
-// cachedMatchers is lazy loaded and it is frozen when worklet is being created,
-// it is possible to call getMatchers() when the object is frozen, then cachedMatchers
-// has no assigned regexes
-getMatchers();
 
 function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
@@ -325,12 +291,10 @@ function normalizeColor(color: unknown): number | null {
     return null;
   }
 
-  const matchers = getMatchers();
-
   let match: RegExpExecArray | null | undefined;
 
   // Ordered based on occurrences on Facebook codebase
-  if ((match = matchers?.hex6?.exec(color))) {
+  if ((match = MATCHERS.hex6.exec(color))) {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
@@ -338,7 +302,7 @@ function normalizeColor(color: unknown): number | null {
     return names[color];
   }
 
-  if ((match = matchers?.rgb?.exec(color))) {
+  if ((match = MATCHERS.rgb.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -349,7 +313,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.rgba?.exec(color))) {
+  if ((match = MATCHERS.rgba.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -360,7 +324,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.hex3?.exec(color))) {
+  if ((match = MATCHERS.hex3.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -376,11 +340,11 @@ function normalizeColor(color: unknown): number | null {
   }
 
   // https://drafts.csswg.org/css-color-4/#hex-notation
-  if ((match = matchers?.hex8?.exec(color))) {
+  if ((match = MATCHERS.hex8.exec(color))) {
     return Number.parseInt(match[1], 16) >>> 0;
   }
 
-  if ((match = matchers?.hex4?.exec(color))) {
+  if ((match = MATCHERS.hex4.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -396,7 +360,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.hsl?.exec(color))) {
+  if ((match = MATCHERS.hsl.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h
@@ -408,7 +372,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers?.hsla?.exec(color))) {
+  if ((match = MATCHERS.hsla.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h

@@ -1,12 +1,19 @@
 import { withTiming } from '../../animation';
-import {
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   LayoutAnimationsValues,
 } from '../animationBuilder/commonTypes';
-import { StyleProps } from '../../commonTypes';
+import type { StyleProps } from '../../commonTypes';
 
-const supportedProps = ['width', 'height', 'originX', 'originY', 'transform'];
+const supportedProps = [
+  'width',
+  'height',
+  'originX',
+  'originY',
+  'transform',
+  'borderRadius',
+];
 
 type AnimationFactoryType = (values: LayoutAnimationsValues) => StyleProps;
 

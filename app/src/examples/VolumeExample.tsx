@@ -204,9 +204,4 @@ const styles = StyleSheet.create({
     color: secondaryColor,
     fontFamily: 'Poppins-Bold',
   },
-  subHeader: {
-    fontSize: 24,
-    color: secondaryColor,
-    fontFamily: 'Poppins-Bold',
-  },
 });

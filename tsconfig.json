@@ -13,6 +13,9 @@
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "react-native-reanimated": ["./src"]
+    },
     "resolveJsonModule": true
   },
   "include": ["src"]

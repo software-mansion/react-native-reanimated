@@ -11,14 +11,18 @@
 #include <vector>
 
 #include "AnimatedSensorModule.h"
-#include "ErrorHandler.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
-#include "Scheduler.h"
 #include "SingleInstanceChecker.h"
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
+#include "Scheduler.h"
+#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
@@ -36,7 +40,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<Scheduler> &scheduler,
       const std::shared_ptr<jsi::Runtime> &rt,
-      const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -106,11 +109,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void onRender(double timestampMs);
 
-  void onEvent(
-      double eventTimestamp,
-      const std::string &eventName,
-      const jsi::Value &payload);
-
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
@@ -118,6 +116,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   bool handleEvent(
       const std::string &eventName,
+      const int emitterReactTag,
       const jsi::Value &payload,
       double currentTime);
 
@@ -126,7 +125,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
 
-  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &tag);
+  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
 
   void performOperations();
 
@@ -204,6 +203,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 
 #ifdef DEBUG
+  std::shared_ptr<JSLogger> jsLogger_;
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

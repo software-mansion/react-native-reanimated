@@ -51,6 +51,17 @@ void LayoutAnimations::setHasAnimationBlock(
   this->hasAnimationBlock_ = hasAnimationBlock;
 }
 
+#ifdef DEBUG
+void LayoutAnimations::setCheckDuplicateSharedTag(
+    CheckDuplicateSharedTag checkDuplicateSharedTag) {
+  checkDuplicateSharedTag_ = checkDuplicateSharedTag;
+}
+
+void LayoutAnimations::checkDuplicateSharedTag(int viewTag, int screenTag) {
+  checkDuplicateSharedTag_(viewTag, screenTag);
+}
+#endif
+
 bool LayoutAnimations::hasAnimationForTag(int tag, int type) {
   return hasAnimationBlock_(tag, type);
 }
@@ -110,6 +121,10 @@ void LayoutAnimations::registerNatives() {
       makeNativeMethod(
           "findPrecedingViewTagForTransition",
           LayoutAnimations::findPrecedingViewTagForTransition),
+#ifdef DEBUG
+      makeNativeMethod(
+          "checkDuplicateSharedTag", LayoutAnimations::checkDuplicateSharedTag),
+#endif
   });
 }
 }; // namespace reanimated

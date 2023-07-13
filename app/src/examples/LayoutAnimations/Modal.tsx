@@ -79,20 +79,14 @@ function AnimatedView() {
 export default function Modal(): React.ReactElement {
   const [show, setShow] = useState(true);
   return (
-    <View style={{ flexDirection: 'column-reverse' }}>
+    <View style={styles.container}>
       <Button
         title="toggle"
         onPress={() => {
           setShow((last) => !last);
         }}
       />
-      <View
-        style={{
-          height: 400,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-        }}>
+      <View style={styles.animatedViewContainer}>
         {show && <AnimatedView />}
       </View>
     </View>
@@ -100,6 +94,15 @@ export default function Modal(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'column-reverse',
+  },
+  animatedViewContainer: {
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
   animatedView: {
     height: 300,
     width: 200,

@@ -1,4 +1,4 @@
-import { SharedValue } from './commonTypes';
+import type { SharedValue } from './commonTypes';
 import { isJest } from './PlatformChecker';
 import { runOnUI } from './threads';
 import { isSharedValue } from './utils';

@@ -1,57 +1,53 @@
-import { NodePath, transformSync, traverse } from '@babel/core';
+/* eslint-disable @typescript-eslint/no-var-requires */
+import type { NodePath } from '@babel/core';
+import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
-import {
-  ObjectMethod,
-  isObjectMethod,
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-  identifier,
-  Identifier,
-  objectProperty,
-  variableDeclaration,
-  variableDeclarator,
-  cloneNode,
-  isBlockStatement,
-  functionExpression,
-  objectExpression,
-  stringLiteral,
-  isFunctionDeclaration,
-  VariableDeclaration,
+import type {
+  File as BabelFile,
   ExpressionStatement,
+  FunctionExpression,
+  Identifier,
   ReturnStatement,
-  isProgram,
-  isObjectProperty,
-  isMemberExpression,
-  isObjectExpression,
-  expressionStatement,
-  assignmentExpression,
-  memberExpression,
-  numericLiteral,
+  VariableDeclaration,
+} from '@babel/types';
+import {
   arrayExpression,
-  newExpression,
-  returnStatement,
+  assignmentExpression,
   blockStatement,
+  cloneNode,
+  expressionStatement,
+  functionExpression,
+  identifier,
+  isBlockStatement,
+  isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
-  File as BabelFile,
+  isMemberExpression,
+  isObjectExpression,
+  isObjectMethod,
+  isObjectProperty,
+  isProgram,
+  memberExpression,
+  newExpression,
+  numericLiteral,
+  objectExpression,
+  objectProperty,
+  returnStatement,
+  stringLiteral,
+  variableDeclaration,
+  variableDeclarator,
 } from '@babel/types';
-import { ReanimatedPluginPass } from './types';
-import { isRelease } from './utils';
 import { strict as assert } from 'assert';
-import { globals } from './commonObjects';
 import { relative } from 'path';
 import { buildWorkletString } from './buildWorkletString';
+import { globals } from './commonObjects';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { isRelease } from './utils';
 
 const version = require('../../package.json').version;
 
 export function makeWorklet(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >,
+  fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): FunctionExpression {
   // Returns a new FunctionExpression which is a workletized version of provided
@@ -59,14 +55,7 @@ export function makeWorklet(
 
   const functionName = makeWorkletName(fun);
 
-  // remove 'worklet'; directive before generating string
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
-  });
+  removeWorkletDirective(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -123,11 +112,6 @@ export function makeWorklet(
   assert(funString, "'funString' is undefined");
   const workletHash = hash(funString);
 
-  let location = state.file.opts.filename;
-  if (state.opts.relativeSourceLocation) {
-    location = relative(state.cwd, location);
-  }
-
   let lineOffset = 1;
   if (variables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
@@ -154,8 +138,22 @@ export function makeWorklet(
 
   const initDataObjectExpression = objectExpression([
     objectProperty(identifier('code'), stringLiteral(funString)),
-    objectProperty(identifier('location'), stringLiteral(location)),
   ]);
+
+  // When testing with jest I noticed that environment variables are set later
+  // than some functions are evaluated. E.g. this cannot be above this function
+  // because it would always evaluate to true.
+  const shouldInjectLocation = !isRelease();
+  if (shouldInjectLocation) {
+    let location = state.file.opts.filename;
+    if (state.opts.relativeSourceLocation) {
+      location = relative(state.cwd, location);
+    }
+
+    initDataObjectExpression.properties.push(
+      objectProperty(identifier('location'), stringLiteral(location))
+    );
+  }
 
   if (sourceMapString) {
     initDataObjectExpression.properties.push(
@@ -260,6 +258,16 @@ export function makeWorklet(
   return newFun;
 }
 
+function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
+      }
+    },
+  });
+}
+
 function shouldInjectVersion() {
   // We don't inject version in release since cache is reset there anyway
   if (isRelease()) {
@@ -292,14 +300,7 @@ function hash(str: string) {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
-) {
+function makeWorkletName(fun: NodePath<WorkletizableFunction>) {
   if (isObjectMethod(fun.node) && 'name' in fun.node.key) {
     return fun.node.key.name;
   }
@@ -314,12 +315,7 @@ function makeWorkletName(
 
 function makeArrayFromCapturedBindings(
   ast: BabelFile,
-  fun: NodePath<
-    | FunctionDeclaration
-    | FunctionExpression
-    | ObjectMethod
-    | ArrowFunctionExpression
-  >
+  fun: NodePath<WorkletizableFunction>
 ) {
   const closure = new Map<string, Identifier>();
 

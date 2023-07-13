@@ -24,6 +24,10 @@
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
 
+#ifdef DEBUG
+#include "JSLogger.h"
+#endif
+
 using namespace facebook;
 
 namespace reanimated {
@@ -32,7 +36,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<Scheduler> &scheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
-    const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -41,11 +44,8 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      runtimeManager_(std::make_shared<RuntimeManager>(
-          rt,
-          errorHandler,
-          scheduler,
-          RuntimeType::UI)),
+      runtimeManager_(
+          std::make_shared<RuntimeManager>(rt, scheduler, RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -95,10 +95,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->updateProps(rt, operations);
   };
 
-  auto removeFromPropsRegistry = [this](
-                                     jsi::Runtime &rt, const jsi::Value &tag) {
-    this->removeFromPropsRegistry(rt, tag);
-  };
+  auto removeFromPropsRegistry =
+      [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
+        this->removeFromPropsRegistry(rt, viewTags);
+      };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
@@ -164,6 +164,12 @@ void NativeReanimatedModule::installCoreFunctions(
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
   runtimeHelper->valueUnpacker =
       std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
+#ifdef DEBUG
+  // We initialize jsLogger_ here because we need runtimeHelper
+  // to be initialized already
+  jsLogger_ = std::make_shared<JSLogger>(runtimeHelper);
+  layoutAnimationsManager_.setJSLogger(jsLogger_);
+#endif
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
@@ -337,7 +343,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 }
 
 void NativeReanimatedModule::unregisterEventHandler(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   runtimeManager_->scheduler->scheduleOnUI(
@@ -373,7 +379,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
 }
 
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
@@ -384,8 +390,9 @@ jsi::Value NativeReanimatedModule::configureProps(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
+  (void)uiProps; // unused variable on Fabric
   jsi::Array array = nativeProps.asObject(rt).asArray(rt);
-  for (int i = 0; i < array.size(rt); ++i) {
+  for (size_t i = 0; i < array.size(rt); ++i) {
     std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     nativePropNames_.insert(name);
   }
@@ -408,14 +415,6 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
       sharedTransitionTag.asString(rt).utf8(rt),
       extractShareableOrThrow(rt, config));
   return jsi::Value::undefined();
-}
-
-void NativeReanimatedModule::onEvent(
-    double eventTimestamp,
-    const std::string &eventName,
-    const jsi::Value &payload) {
-  eventHandlerRegistry->processEvent(
-      *runtimeManager_->runtime, eventTimestamp, eventName, payload);
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
@@ -454,7 +453,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
 }
 
 void NativeReanimatedModule::unregisterSensor(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
 }
@@ -483,9 +482,15 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
 
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
+    const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
-  onEvent(currentTime, eventName, payload);
+  eventHandlerRegistry->processEvent(
+      *runtimeManager_->runtime,
+      currentTime,
+      eventName,
+      emitterReactTag,
+      payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -512,11 +517,10 @@ bool NativeReanimatedModule::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  std::string eventName = std::to_string(tag) + eventType;
   jsi::Runtime &rt = *runtimeManager_->runtime.get();
   jsi::Value payload = payloadFactory(rt);
 
-  auto res = handleEvent(eventName, std::move(payload), currentTime);
+  auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to be
@@ -634,8 +638,6 @@ void NativeReanimatedModule::performOperations() {
             }
           }
 
-          shadowTreeCloner.updateYogaChildren();
-
           auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
 
           // skip ReanimatedCommitHook for this ShadowTree
@@ -649,8 +651,11 @@ void NativeReanimatedModule::performOperations() {
 
 void NativeReanimatedModule::removeFromPropsRegistry(
     jsi::Runtime &rt,
-    const jsi::Value &tag) {
-  tagsToRemove_.push_back(tag.asNumber());
+    const jsi::Value &viewTags) {
+  auto array = viewTags.asObject(rt).asArray(rt);
+  for (size_t i = 0, size = array.size(rt); i < size; ++i) {
+    tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
+  }
 }
 
 void NativeReanimatedModule::dispatchCommand(
@@ -735,7 +740,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
 }

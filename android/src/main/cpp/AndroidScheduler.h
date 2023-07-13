@@ -6,7 +6,12 @@
 #include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JMessageQueueThread.h>
 #include <memory>
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
 #include "Scheduler.h"
+#endif
 
 namespace reanimated {
 

@@ -1,5 +1,5 @@
-import { EasingFn } from '../../Easing';
-import { StyleProps } from '../../commonTypes';
+import type { EasingFn } from '../../Easing';
+import type { StyleProps } from '../../commonTypes';
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFn;
@@ -36,9 +36,10 @@ export interface ExitAnimationsValues {
   windowHeight: number;
 }
 
-export type EntryExitAnimationFunction = (
-  targetValues: EntryAnimationsValues | ExitAnimationsValues
-) => LayoutAnimation;
+export type EntryExitAnimationFunction =
+  | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
+  | ((targetValues: ExitAnimationsValues) => LayoutAnimation)
+  | (() => LayoutAnimation);
 
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
@@ -87,6 +88,7 @@ export interface BaseLayoutAnimationConfig {
   easing?: EasingFn;
   type?: AnimationFunction;
   damping?: number;
+  dampingRatio?: number;
   mass?: number;
   stiffness?: number;
   overshootClamping?: number;
@@ -114,3 +116,7 @@ export interface IEntryAnimationBuilder {
 export interface IExitAnimationBuilder {
   build: () => AnimationConfigFunction<ExitAnimationsValues>;
 }
+
+export type EntryExitAnimationsValues =
+  | EntryAnimationsValues
+  | ExitAnimationsValues;

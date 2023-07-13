@@ -37,6 +37,7 @@ export const globals = new Set([
   'Proxy',
   'WeakRef',
   'Set',
+  'Intl',
   '_log',
   '_scheduleOnJS',
   '_makeShareableClone',
