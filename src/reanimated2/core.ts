@@ -1,8 +1,7 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
+import { nativeShouldBeMock, isWeb } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
-  BasicWorkletFunction,
   SensorConfig,
   SensorType,
   SharedValue,
@@ -33,62 +32,10 @@ export type ReanimatedConsole = Pick<
   'debug' | 'log' | 'warn' | 'info' | 'error'
 >;
 
-const testWorklet: BasicWorkletFunction<void> = () => {
-  'worklet';
-};
-
-const throwUninitializedReanimatedException = () => {
-  throw new Error(
-    "Failed to initialize react-native-reanimated library, make sure you followed installation steps here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation/ \n1) Make sure reanimated's babel plugin is installed in your babel.config.js (you should have 'react-native-reanimated/plugin' listed there - also see the above link for details) \n2) Make sure you reset build cache after updating the config, run: yarn start --reset-cache"
-  );
-};
-
-export const checkPluginState: (throwError: boolean) => boolean = (
-  throwError = true
-) => {
-  if (!testWorklet.__workletHash && !shouldBeUseWeb()) {
-    if (throwError) {
-      throwUninitializedReanimatedException();
-    }
-    return false;
-  }
-  return true;
-};
-
-export const isConfigured: (throwError?: boolean) => boolean = (
-  throwError = false
-) => {
-  return checkPluginState(throwError);
-};
-
-export const isConfiguredCheck: () => void = () => {
-  checkPluginState(true);
-};
-
-const configurationCheckWrapper = __DEV__
-  ? <T extends Array<any>, U>(fn: (...args: T) => U) => {
-      return (...args: T): U => {
-        isConfigured(true);
-        return fn(...args);
-      };
-    }
-  : <T extends Array<any>, U>(fn: (...args: T) => U) => fn;
-
-export const startMapper = __DEV__
-  ? configurationCheckWrapper(startMapperUnwrapped)
-  : startMapperUnwrapped;
-
-export const makeShareable = __DEV__
-  ? configurationCheckWrapper(makeShareableUnwrapped)
-  : makeShareableUnwrapped;
-
-export const makeMutable = __DEV__
-  ? configurationCheckWrapper(makeMutableUnwrapped)
-  : makeMutableUnwrapped;
-
-export const makeRemote = __DEV__
-  ? configurationCheckWrapper(makeRemoteUnwrapped)
-  : makeRemoteUnwrapped;
+export const startMapper = startMapperUnwrapped;
+export const makeShareable = makeShareableUnwrapped;
+export const makeMutable = makeMutableUnwrapped;
+export const makeRemote = makeRemoteUnwrapped;
 
 global._WORKLET = false;
 global._log = function (s: string) {
@@ -198,8 +145,7 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-// initialize UI runtime if applicable
-if (!isWeb() && isConfigured()) {
+if (!isWeb()) {
   initializeUIRuntime();
 }
 
