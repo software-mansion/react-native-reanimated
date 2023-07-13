@@ -115,8 +115,8 @@ export function buildWorkletString(
 }
 
 function shouldMockSourceMap() {
-  // We want to detect this, so we can disable source maps (because they break
-  // snapshot tests with jest).
+  // We don't want to pollute tests with source maps so we mock it
+  // for all tests (except one)
   return process.env.REANIMATED_JEST_MOCK_SOURCEMAP === 'jest';
 }
 
