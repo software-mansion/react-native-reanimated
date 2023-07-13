@@ -8,15 +8,7 @@ import type {
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import {
-  makeShareableCloneRecursive,
-  makeShareable as makeShareableUnwrapped,
-} from './shareables';
-import { startMapper as startMapperUnwrapped } from './mappers';
-import {
-  makeMutable as makeMutableUnwrapped,
-  makeRemote as makeRemoteUnwrapped,
-} from './mutables';
+import { makeShareableCloneRecursive } from './shareables';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
@@ -24,18 +16,15 @@ import type {
 import { initializeUIRuntime } from './initializers';
 import { SensorContainer } from './SensorContainer';
 
-export { stopMapper } from './mappers';
+export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
+export { makeShareable } from './shareables';
+export { makeMutable, makeRemote } from './mutables';
 
 export type ReanimatedConsole = Pick<
   Console,
   'debug' | 'log' | 'warn' | 'info' | 'error'
 >;
-
-export const startMapper = startMapperUnwrapped;
-export const makeShareable = makeShareableUnwrapped;
-export const makeMutable = makeMutableUnwrapped;
-export const makeRemote = makeRemoteUnwrapped;
 
 global._WORKLET = false;
 global._log = function (s: string) {
