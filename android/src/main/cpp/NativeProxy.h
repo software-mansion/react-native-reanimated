@@ -22,7 +22,12 @@
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
 #include "NativeReanimatedModule.h"
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
 #include "Scheduler.h"
+#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
@@ -100,7 +105,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
     size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       array[i] = elements[i];
     }
     callback_(array, orientationDegrees);
@@ -200,7 +205,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setGlobalProperties(
       jsi::Runtime &jsRuntime,
-      const std::shared_ptr<jsi::Runtime> &reanimatedRuntime);
+      const std::shared_ptr<jsi::Runtime> &uiRuntime);
   void setupLayoutAnimations();
 
   double getCurrentTime();

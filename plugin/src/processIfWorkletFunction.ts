@@ -1,9 +1,4 @@
 import type { NodePath, Node } from '@babel/core';
-import type {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-} from '@babel/types';
 import {
   callExpression,
   isScopable,
@@ -11,7 +6,7 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
-import type { ReanimatedPluginPass } from './types';
+import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 import { makeWorklet } from './makeWorklet';
 
 // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
@@ -31,9 +26,7 @@ export function processIfWorkletFunction(
 }
 
 function processWorkletFunction(
-  path: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >,
+  path: NodePath<ExplicitWorklet>,
   state: ReanimatedPluginPass
 ) {
   const newFun = makeWorklet(path, state);

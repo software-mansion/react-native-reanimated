@@ -17,7 +17,7 @@ const INLINE_STYLE_WARNING_REGEX =
 
 expect.extend({
   toHaveWorkletData(received: string, expectedMatchCount = 1) {
-    const receivedMatchCount = received.match(WORKLET_REGEX)?.length;
+    const receivedMatchCount = received.match(WORKLET_REGEX)?.length || 0;
 
     if (receivedMatchCount === expectedMatchCount) {
       return {
@@ -33,9 +33,8 @@ expect.extend({
     };
   },
   toHaveInlineStyleWarning(received: string, expectedMatchCount = 1) {
-    const receivedMatchCount = received.match(
-      INLINE_STYLE_WARNING_REGEX
-    )?.length;
+    const receivedMatchCount =
+      received.match(INLINE_STYLE_WARNING_REGEX)?.length || 0;
 
     if (receivedMatchCount === expectedMatchCount) {
       return {
