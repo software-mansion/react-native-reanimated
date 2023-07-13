@@ -109,13 +109,13 @@ void NativeProxy::installJSIBindings(
 #endif
     /**/) {
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
+  std::shared_ptr<jsi::Runtime> uiRuntime =
       ReanimatedRuntime::make(runtime_, jsQueue);
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
-      animatedRuntime,
+      uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -144,7 +144,7 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto &rt = *runtime_;
-  setGlobalProperties(rt, animatedRuntime);
+  setGlobalProperties(rt, uiRuntime);
   registerEventHandler();
   setupLayoutAnimations();
 
@@ -464,7 +464,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
 void NativeProxy::setGlobalProperties(
     jsi::Runtime &jsRuntime,
-    const std::shared_ptr<jsi::Runtime> &reanimatedRuntime) {
+    const std::shared_ptr<jsi::Runtime> &uiRuntime) {
   auto workletRuntimeValue =
       jsRuntime.global()
           .getPropertyAsObject(jsRuntime, "ArrayBuffer")
@@ -473,7 +473,7 @@ void NativeProxy::setGlobalProperties(
   uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
       workletRuntimeValue.getObject(jsRuntime).getArrayBuffer(jsRuntime).data(
           jsRuntime));
-  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedRuntime.get());
+  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(uiRuntime.get());
 
   jsRuntime.global().setProperty(
       jsRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);

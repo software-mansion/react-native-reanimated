@@ -192,8 +192,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
 
   auto progressLayoutAnimation = [=](int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    if (auto runtime = weakUiRuntime.lock()) {
-      jsi::Runtime &rt = *runtime;
+    if (auto uiRuntime = weakUiRuntime.lock()) {
+      jsi::Runtime &rt = *uiRuntime;
       NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, newStyle);
       [weakAnimationsManager progressLayoutAnimationWithStyle:propsDict
                                                        forTag:@(tag)
@@ -308,11 +308,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
         if (nativeReanimatedModule == nullptr) {
           return;
         }
-        auto runtime = weakUiRuntime.lock();
-        if (runtime == nullptr) {
+        auto uiRuntime = weakUiRuntime.lock();
+        if (uiRuntime == nullptr) {
           return;
         }
-        jsi::Runtime &rt = *runtime;
+        jsi::Runtime &rt = *uiRuntime;
         jsi::Object yogaValues(rt);
         for (NSString *key in values.allKeys) {
           NSObject *value = values[key];
@@ -352,8 +352,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   [animationsManager
       setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          if (auto runtime = weakUiRuntime.lock()) {
-            jsi::Runtime &rt = *runtime;
+          if (auto uiRuntime = weakUiRuntime.lock()) {
+            jsi::Runtime &rt = *uiRuntime;
             nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(
                 rt, [tag intValue], type, cancelled == YES, removeView == YES);
           }
