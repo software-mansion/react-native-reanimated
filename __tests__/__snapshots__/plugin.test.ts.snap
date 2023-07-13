@@ -17,7 +17,8 @@ exports[`babel plugin for DirectiveLiterals doesn't transform functions without 
 exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
 "var _worklet_9810417751380_init_data = {
   code: "function foo(x){const bar='worklet';const baz=\\"worklet\\";}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -37,7 +38,8 @@ var foo = function () {
 exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: "function foo(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -56,7 +58,8 @@ var foo = function () {
 exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: "function foo(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -135,7 +138,8 @@ exports[`babel plugin for Layout Animations doesn't workletize callback function
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `
 "var _worklet_9297685979719_init_data = {
   code: "function anonymous(){console.log('FadeIn with build after');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 FadeIn.withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -154,7 +158,8 @@ FadeIn.withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `
 "var _worklet_9297685979719_init_data = {
   code: "function anonymous(){console.log('FadeIn with build after');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 new FadeIn().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -173,7 +178,8 @@ new FadeIn().withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `
 "var _worklet_7455148134810_init_data = {
   code: "function anonymous(){console.log('FadeIn with build before');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 FadeIn.build().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -192,7 +198,8 @@ FadeIn.build().withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `
 "var _worklet_7455148134810_init_data = {
   code: "function anonymous(){console.log('FadeIn with build before');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 new FadeIn().build().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -211,7 +218,8 @@ new FadeIn().build().withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `
 "var _worklet_1134777276323_init_data = {
   code: "function anonymous(){console.log('FadeIn with build');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 FadeIn.build().duration().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -230,7 +238,8 @@ FadeIn.build().duration().withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `
 "var _worklet_1134777276323_init_data = {
   code: "function anonymous(){console.log('FadeIn with build');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 new FadeIn().build().duration().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -249,7 +258,8 @@ new FadeIn().build().duration().withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `
 "var _worklet_5878665076948_init_data = {
   code: "function anonymous(){console.log('FadeIn with AmogusIn after');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 FadeIn.withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -268,7 +278,8 @@ FadeIn.withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `
 "var _worklet_5878665076948_init_data = {
   code: "function anonymous(){console.log('FadeIn with AmogusIn after');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 new FadeIn().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -287,7 +298,8 @@ new FadeIn().withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `
 "var _worklet_7606417127287_init_data = {
   code: "function anonymous(){console.log('FadeIn');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 FadeIn.withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -306,7 +318,8 @@ FadeIn.withCallback(function () {
 exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `
 "var _worklet_7606417127287_init_data = {
   code: "function anonymous(){console.log('FadeIn');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 new FadeIn().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
@@ -329,7 +342,8 @@ var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/cl
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 var _worklet_16347365292089_init_data = {
   code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var Foo = (0, _createClass2.default)(function Foo() {
   (0, _classCallCheck2.default)(this, Foo);
@@ -354,7 +368,8 @@ var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/creat
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _worklet_14658848071366_init_data = {
   code: "function Foo(x){const Foo=this._recur;const{_classCallCheck}=this._closure;_classCallCheck(this,Foo);this.x=x;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var Foo = (0, _createClass2.default)(function () {
   var _e = [new global.Error(), -2, -27];
@@ -379,7 +394,8 @@ var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/cl
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _worklet_10436985806815_init_data = {
   code: "function get(){const{x}=this._closure;return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var Foo = function () {
   function Foo() {
@@ -412,7 +428,8 @@ var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/cl
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _worklet_16974800582491_init_data = {
   code: "function bar(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var Foo = function () {
   function Foo() {
@@ -443,7 +460,8 @@ var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/cl
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _worklet_6451428689423_init_data = {
   code: "function set(x){this.x=x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var Foo = function () {
   function Foo() {
@@ -478,7 +496,8 @@ var Foo = (0, _createClass2.default)(function Foo() {
 });
 var _worklet_16347365292089_init_data = {
   code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 (0, _defineProperty2.default)(Foo, "bar", function () {
   var _e = [new global.Error(), 1, -27];
@@ -500,7 +519,8 @@ var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/cl
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _worklet_16974800582491_init_data = {
   code: "function bar(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var Foo = function () {
   function Foo() {
@@ -532,7 +552,8 @@ var objX = {
 };
 var _worklet_5359970077727_init_data = {
   code: "function f(){const{x,objX}=this._closure;return{res:x+objX.x};}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var f = function () {
   var _e = [new global.Error(), -3, -27];
@@ -556,7 +577,8 @@ var f = function () {
 exports[`babel plugin for closure capturing doesn't capture globals 1`] = `
 "var _worklet_13298016111221_init_data = {
   code: "function f(){console.log('test');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
@@ -575,7 +597,8 @@ var f = function () {
 exports[`babel plugin for debugging does inject location for worklets in dev builds 1`] = `
 "var _worklet_1852213185147_init_data = {
   code: "function anonymous(){const x=1;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
@@ -609,7 +632,8 @@ var foo = useAnimatedStyle(function () {
 exports[`babel plugin for explicit worklets workletizes ArrowFunctionExpression 1`] = `
 "var _worklet_16347365292089_init_data = {
   code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -628,7 +652,8 @@ var foo = function () {
 exports[`babel plugin for explicit worklets workletizes FunctionDeclaration 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: "function foo(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -647,7 +672,8 @@ var foo = function () {
 exports[`babel plugin for explicit worklets workletizes named FunctionExpression 1`] = `
 "var _worklet_4679479961836_init_data = {
   code: "function foo(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -666,7 +692,8 @@ var foo = function () {
 exports[`babel plugin for explicit worklets workletizes unnamed FunctionExpression 1`] = `
 "var _worklet_16347365292089_init_data = {
   code: "function anonymous(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -685,7 +712,8 @@ var foo = function () {
 exports[`babel plugin for function hooks workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_9645206935615_init_data = {
   code: "function anonymous(){return{width:50};}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
@@ -706,7 +734,8 @@ var animatedStyle = useAnimatedStyle(function () {
 exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_6275510763626_init_data = {
   code: "function foo(){return{width:50};}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
@@ -727,7 +756,8 @@ var animatedStyle = useAnimatedStyle(function () {
 exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_9645206935615_init_data = {
   code: "function anonymous(){return{width:50};}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
@@ -807,7 +837,8 @@ exports[`babel plugin for object hooks supports empty object in useAnimatedScrol
 exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
@@ -826,15 +857,18 @@ useAnimatedScrollHandler(function () {
 exports[`babel plugin for object hooks transforms each object property in useAnimatedGestureHandler 1`] = `
 "var _worklet_14892326408241_init_data = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_14892326408241_init_data2 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_14892326408241_init_data3 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -873,23 +907,28 @@ useAnimatedGestureHandler({
 exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
 "var _worklet_14892326408241_init_data = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_14892326408241_init_data2 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_14892326408241_init_data3 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_14892326408241_init_data4 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_14892326408241_init_data5 = {
   code: "function anonymous(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedScrollHandler({
   onScroll: function () {
@@ -948,7 +987,8 @@ useAnimatedScrollHandler({
 exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
 "var _worklet_14540236792163_init_data = {
   code: "function foo(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
@@ -967,7 +1007,8 @@ useAnimatedScrollHandler(function () {
 exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
@@ -986,7 +1027,8 @@ useAnimatedScrollHandler(function () {
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -1007,7 +1049,8 @@ useAnimatedGestureHandler({
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically 1`] = `
 "var _worklet_338158776260_init_data = {
   code: "function onStart(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -1028,7 +1071,8 @@ useAnimatedGestureHandler({
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_338158776260_init_data = {
   code: "function onStart(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -1049,7 +1093,8 @@ useAnimatedGestureHandler({
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedGestureHandler({
   onStart: function () {
@@ -1070,7 +1115,8 @@ useAnimatedGestureHandler({
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedScrollHandler({
   onScroll: function () {
@@ -1091,7 +1137,8 @@ useAnimatedScrollHandler({
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
 "var _worklet_947458829673_init_data = {
   code: "function onScroll(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedGestureHandler({
   onScroll: function () {
@@ -1112,7 +1159,8 @@ useAnimatedGestureHandler({
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
 "var _worklet_947458829673_init_data = {
   code: "function onScroll(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedScrollHandler({
   onScroll: function () {
@@ -1133,7 +1181,8 @@ useAnimatedScrollHandler({
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
 "var _worklet_1022605193782_init_data = {
   code: "function anonymous(event){console.log(event);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 useAnimatedScrollHandler({
   onScroll: function () {
@@ -1181,7 +1230,8 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for arrays 1`] = `
 "var _worklet_3161057533258_init_data = {
   code: "function foo(){const bar=[4,5];const baz=[1,...[2,3],...bar];}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -1201,7 +1251,8 @@ var foo = function () {
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function arguments 1`] = `
 "var _worklet_9866931756941_init_data = {
   code: "function foo(...args){console.log(args);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -1225,7 +1276,8 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
 var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
 var _worklet_2015887751437_init_data = {
   code: "function foo(arg){console.log(...arg);}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -1245,7 +1297,8 @@ var foo = function () {
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for objects 1`] = `
 "var _worklet_792186851025_init_data = {
   code: "function foo(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -1273,15 +1326,18 @@ var foo = function () {
 exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
 "var _worklet_15393478329680_init_data = {
   code: "function anonymous(){console.log('onBegin');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_12748187344900_init_data = {
   code: "function anonymous(_event){console.log('onStart');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_232586479291_init_data = {
   code: "function anonymous(_event,_success){console.log('onEnd');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _e = [new global.Error(), 1, -27];
@@ -1322,7 +1378,8 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
 exports[`babel plugin for runOnUI workletizes ArrowFunctionExpression inside runOnUI automatically 1`] = `
 "var _worklet_15854903236968_init_data = {
   code: "function anonymous(){console.log('Hello from the UI thread!');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 runOnUI(function () {
   var _e = [new global.Error(), 1, -27];
@@ -1341,7 +1398,8 @@ runOnUI(function () {
 exports[`babel plugin for runOnUI workletizes named FunctionExpression inside runOnUI automatically 1`] = `
 "var _worklet_5662051517689_init_data = {
   code: "function hello(){console.log('Hello from the UI thread!');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 runOnUI(function () {
   var _e = [new global.Error(), 1, -27];
@@ -1360,7 +1418,8 @@ runOnUI(function () {
 exports[`babel plugin for runOnUI workletizes unnamed FunctionExpression inside runOnUI automatically 1`] = `
 "var _worklet_15854903236968_init_data = {
   code: "function anonymous(){console.log('Hello from the UI thread!');}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 runOnUI(function () {
   var _e = [new global.Error(), 1, -27];
@@ -1387,7 +1446,8 @@ exports[`babel plugin for sequence expressions supports SequenceExpression 1`] =
 exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
 "var _worklet_4434179069699_init_data = {
   code: "function onStart(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 function App() {
   (0, 3, fun)({
@@ -1408,7 +1468,8 @@ function App() {
 exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
 "var _worklet_4434179069699_init_data = {
   code: "function onStart(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 function App() {
   (0, useAnimatedGestureHandler)({
@@ -1429,7 +1490,8 @@ function App() {
 exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
 "var _worklet_4434179069699_init_data = {
   code: "function onStart(){}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 function App() {
   (0, fun)({
@@ -1450,7 +1512,8 @@ function App() {
 exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet closure 1`] = `
 "var _worklet_16676723780973_init_data = {
   code: "function onStart(){const{obj}=this._closure;const a=obj.a;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 function App() {
   var obj = {
@@ -1479,11 +1542,13 @@ function App() {
 exports[`babel plugin for worklet nesting doesn't nest worklets for other threads 1`] = `
 "var _worklet_1678749606628_init_data = {
   code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_16974800582491_init_data = {
   code: "function bar(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -1514,11 +1579,13 @@ var foo = function () {
 exports[`babel plugin for worklet nesting transforms nested worklets for JS thread 1`] = `
 "var _worklet_1678749606628_init_data = {
   code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var _worklet_16974800582491_init_data = {
   code: "function bar(x){return x+2;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
@@ -1549,7 +1616,8 @@ var foo = function () {
 exports[`babel plugin generally removes comments from worklets 1`] = `
 "var _worklet_235615426006_init_data = {
   code: "function anonymous(){return true;}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
@@ -1569,7 +1637,8 @@ exports[`babel plugin generally supports recursive calls 1`] = `
 "var a = 1;
 var _worklet_2022702330805_init_data = {
   code: "function foo(t){const foo=this._recur;const{a}=this._closure;if(t>0){return a+foo(t-1);}}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 var foo = function () {
   var _e = [new global.Error(), -2, -27];
@@ -1595,7 +1664,8 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 var _worklet_16669311443114_init_data = {
   code: "function anonymous(){const{offset}=this._closure;return{transform:[{translateX:offset.value*255}]};}",
-  location: "/dev/null"
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
 };
 function Box() {
   var offset = (0, _reactNativeReanimated.useSharedValue)(0);

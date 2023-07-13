@@ -158,6 +158,7 @@ var require_buildWorkletString = __commonJS({
     var convertSourceMap = __importStar(require("convert-source-map"));
     var fs = __importStar(require("fs"));
     var utils_1 = require_utils();
+    var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, closureVariables, name, inputMap) {
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
@@ -167,7 +168,7 @@ var require_buildWorkletString = __commonJS({
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
-      const includeSourceMap = shouldGenerateSourceMap();
+      const includeSourceMap = !(0, utils_1.isRelease)();
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
@@ -176,7 +177,7 @@ var require_buildWorkletString = __commonJS({
       }
       const transformed = (0, core_1.transformSync)(code, {
         plugins: [prependClosureVariablesIfNecessary(closureVariables)],
-        compact: !includeSourceMap,
+        compact: true,
         sourceMaps: includeSourceMap,
         inputSourceMap: inputMap,
         ast: false,
@@ -187,20 +188,18 @@ var require_buildWorkletString = __commonJS({
       (0, assert_1.strict)(transformed, "'transformed' is null");
       let sourceMap;
       if (includeSourceMap) {
-        sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-        delete sourceMap.sourcesContent;
+        if (shouldMockSourceMap()) {
+          sourceMap = MOCK_SOURCE_MAP;
+        } else {
+          sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+          delete sourceMap.sourcesContent;
+        }
       }
       return [transformed.code, JSON.stringify(sourceMap)];
     }
     exports2.buildWorkletString = buildWorkletString;
-    function shouldGenerateSourceMap() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_SOURCEMAP === "jest") {
-        return false;
-      }
-      return true;
+    function shouldMockSourceMap() {
+      return process.env.REANIMATED_JEST_MOCK_SOURCEMAP === "jest";
     }
     function prependClosure(path, closureVariables, closureDeclaration) {
       if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {

@@ -23,7 +23,7 @@ function runPlugin(input: string, opts = {}) {
 }
 describe('babel plugin', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_DISABLE_SOURCEMAP = 'jest';
+    process.env.REANIMATED_JEST_MOCK_SOURCEMAP = 'jest';
     process.env.REANIMATED_JEST_MOCK_VERSION = 'jest';
   });
 
