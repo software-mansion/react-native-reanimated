@@ -13,6 +13,9 @@
 #import <RNReanimated/ReanimatedRuntime.h>
 #import <RNReanimated/ReanimatedSensorContainer.h>
 
+#import <React-Fabric/react/renderer/core/ShadowNode.h>
+#import <React-Fabric/react/renderer/uimanager/primitives.h>
+
 #ifdef DEBUG
 #import <RNReanimated/REAScreensHelper.h>
 #endif
