@@ -51,7 +51,7 @@ jobs:
 
       - name: Install app node_modules
         working-directory: ${{ matrix.working-directory }}
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile && yarn remove react-native-box2d
 
       - name: Restore Pods from cache
         uses: actions/cache@v3
