@@ -25,7 +25,7 @@ flipper_config = ENV['NO_FLIPPER'] == "1" ? FlipperConfiguration.disabled : Flip
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  # use_frameworks! :linkage => linkage.to_sym
+  use_frameworks! :linkage => linkage.to_sym
 end
 
 # Force pods to match minimum iOS version for React Native
@@ -48,7 +48,7 @@ target 'FabricExample' do
 
   # Flags change depending on the env values.
   flags = get_default_flags()
-  use_frameworks! :linkage => :static
+  # use_frameworks! :linkage => :static
   use_react_native!(
     :path => config[:reactNativePath],
     # Hermes is now enabled by default. Disable by setting this flag to false.
