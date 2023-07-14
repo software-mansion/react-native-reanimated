@@ -98,7 +98,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
 void LayoutAnimationsManager::cancelLayoutAnimation(
     jsi::Runtime &rt,
     int tag,
-    LayoutAnimationType type,
+    LayoutAnimationType,
     bool cancelled = true,
     bool removeView = true) {
   jsi::Value layoutAnimationRepositoryAsValue =
