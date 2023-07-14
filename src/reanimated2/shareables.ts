@@ -154,7 +154,9 @@ export function makeShareableCloneRecursive<T>(
             // might lead to unexpected issues or errors. Probably one of user
             // dependencies provided transpiled code with debug version of the
             // Reanimated plugin.
-            throw new Error('[Reanimated] Using dev bundle in a release app build is not supported');
+            throw new Error(
+              '[Reanimated] Using dev bundle in a release app build is not supported.'
+            );
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means
