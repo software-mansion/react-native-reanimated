@@ -13,24 +13,19 @@ REAIOSScheduler::REAIOSScheduler(std::shared_ptr<CallInvoker> jsInvoker)
 
 void REAIOSScheduler::scheduleOnUI(std::function<void()> job)
 {
-  if (runtimeManager.lock() == nullptr) {
+  const auto runtimeManagerExpired = runtimeManager.expired();
+  if (runtimeManagerExpired) {
     return;
   }
 
   if ([NSThread isMainThread]) {
-    if (runtimeManager.lock()) {
+    if (!runtimeManagerExpired) {
       job();
     }
     return;
   }
 
   Scheduler::scheduleOnUI(job);
-  if ([NSThread isMainThread]) {
-    if (runtimeManager.lock()) {
-      triggerUI();
-    }
-    return;
-  }
 
   if (!this->scheduledOnUI) {
     __block std::weak_ptr<RuntimeManager> blockRuntimeManager = runtimeManager;
