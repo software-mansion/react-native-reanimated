@@ -40,11 +40,6 @@ type TransitionProgressEvent = {
   target: number;
 };
 
-const dummyWorklet = () => {
-  'worklet';
-  // noop
-};
-
 export class SharedTransition {
   private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
@@ -106,17 +101,15 @@ export class SharedTransition {
         this._defaultTransitionType = SharedTransitionType.PROGRESS_ANIMATION;
       }
     }
+    const layoutAnimationType =
+      this._defaultTransitionType === SharedTransitionType.ANIMATION
+        ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+        : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS;
     configureLayoutAnimations(
       viewTag,
-      LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+      layoutAnimationType,
       transitionAnimation,
       sharedTransitionTag
-    );
-    configureLayoutAnimations(
-      viewTag,
-      LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
-      dummyWorklet,
-      this._defaultTransitionType
     );
     runOnUIImmediately(() => {
       'worklet';

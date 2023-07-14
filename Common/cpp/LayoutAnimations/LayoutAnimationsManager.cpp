@@ -9,23 +9,22 @@
 
 namespace reanimated {
 
-constexpr auto STANDARD_ANIMATION = "animation";
-
 void LayoutAnimationsManager::configureAnimation(
     int tag,
     LayoutAnimationType type,
     const std::string &sharedTransitionTag,
     std::shared_ptr<Shareable> config) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  getConfigsForType(type)[tag] = config;
-  if (type == SHARED_ELEMENT_TRANSITION) {
+  if (type == SHARED_ELEMENT_TRANSITION ||
+      type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
-  } else if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
-    const std::string &defaultAnimationType = sharedTransitionTag;
-    if (defaultAnimationType == STANDARD_ANIMATION) {
+    getConfigsForType(SHARED_ELEMENT_TRANSITION)[tag] = config;
+    if (type == SHARED_ELEMENT_TRANSITION) {
       ignoreProgressAnimationForTag_.insert(tag);
     }
+  } else {
+    getConfigsForType(type)[tag] = config;
   }
 }
 
@@ -65,7 +64,6 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
     sharedTransitionGroups_.erase(groupName);
   }
   viewTagToSharedTag_.erase(tag);
-  sharedTransitionProgressAnimations_.erase(tag);
   ignoreProgressAnimationForTag_.erase(tag);
 }
 
@@ -178,9 +176,8 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
     case LAYOUT:
       return layoutAnimations_;
     case SHARED_ELEMENT_TRANSITION:
-      return sharedTransitionAnimations_;
     case SHARED_ELEMENT_TRANSITION_PROGRESS:
-      return sharedTransitionProgressAnimations_;
+      return sharedTransitionAnimations_;
     default:
       assert(false);
   }
