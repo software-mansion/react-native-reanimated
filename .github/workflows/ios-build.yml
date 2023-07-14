@@ -64,7 +64,7 @@ jobs:
 
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
-        run: pod install
+        run: USE_FRAMEWORKS=static && pod install
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v3
