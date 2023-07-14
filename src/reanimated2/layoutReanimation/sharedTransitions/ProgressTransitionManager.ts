@@ -1,7 +1,120 @@
 import { runOnUIImmediately } from '../../threads';
 import type { ProgressAnimation } from '../animationBuilder/commonTypes';
+import { registerEventHandler, unregisterEventHandler } from '../../core';
+import { Platform } from 'react-native';
 
-function createProgressTransitionManager() {
+type TransitionProgressEvent = {
+  closing: number;
+  goingForward: number;
+  eventName: string;
+  progress: number;
+  target: number;
+};
+
+export class ProgressTransitionManager {
+  private _sharedElementCount = 0;
+  private _eventHandler = {
+    isRegistered: false,
+    onTransitionProgress: -1,
+    onAppear: -1,
+    onDisappear: -1,
+    onSwipeDismiss: -1,
+  };
+
+  public addProgressAnimation(
+    viewTag: number,
+    progressAnimation: ProgressAnimation
+  ) {
+    runOnUIImmediately(() => {
+      'worklet';
+      global.ProgressTransitionRegister.addProgressAnimation(
+        viewTag,
+        progressAnimation
+      );
+    })();
+    this.registerEventHandlers();
+  }
+
+  public removeProgressAnimation(viewTag: number) {
+    this.unregisterEventHandlers();
+    runOnUIImmediately(() => {
+      'worklet';
+      global.ProgressTransitionRegister.removeProgressAnimation(viewTag);
+    })();
+  }
+
+  private registerEventHandlers() {
+    this._sharedElementCount++;
+    const eventHandler = this._eventHandler;
+    if (!eventHandler.isRegistered) {
+      eventHandler.isRegistered = true;
+      const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
+      let lastProgressValue = -1;
+      eventHandler.onTransitionProgress = registerEventHandler(
+        eventPrefix + 'TransitionProgress',
+        (event: TransitionProgressEvent) => {
+          'worklet';
+          const progress = event.progress;
+          if (progress === lastProgressValue) {
+            // During screen transition, handler receives two events with the same progress
+            // value for both screens, but for modals, there is only one event. To optimize
+            // performance and avoid unnecessary worklet calls, let's skip the second event.
+            return;
+          }
+          lastProgressValue = progress;
+          global.ProgressTransitionRegister.frame(progress);
+        }
+      );
+      eventHandler.onAppear = registerEventHandler(
+        eventPrefix + 'Appear',
+        () => {
+          'worklet';
+          global.ProgressTransitionRegister.onTransitionEnd();
+        }
+      );
+      if (Platform.OS === 'ios') {
+        // required by modals
+        eventHandler.onDisappear = registerEventHandler('topDisappear', () => {
+          'worklet';
+          global.ProgressTransitionRegister.onTransitionEnd(true);
+        });
+        eventHandler.onSwipeDismiss = registerEventHandler(
+          'topGestureCancel',
+          () => {
+            'worklet';
+            global.ProgressTransitionRegister.onTransitionEnd();
+          }
+        );
+      }
+    }
+  }
+
+  private unregisterEventHandlers(): void {
+    this._sharedElementCount--;
+    if (this._sharedElementCount === 0) {
+      const eventHandler = this._eventHandler;
+      eventHandler.isRegistered = false;
+      if (eventHandler.onTransitionProgress !== -1) {
+        unregisterEventHandler(eventHandler.onTransitionProgress);
+        eventHandler.onTransitionProgress = -1;
+      }
+      if (eventHandler.onAppear !== -1) {
+        unregisterEventHandler(eventHandler.onAppear);
+        eventHandler.onAppear = -1;
+      }
+      if (eventHandler.onDisappear !== -1) {
+        unregisterEventHandler(eventHandler.onDisappear);
+        eventHandler.onDisappear = -1;
+      }
+      if (eventHandler.onSwipeDismiss !== -1) {
+        unregisterEventHandler(eventHandler.onSwipeDismiss);
+        eventHandler.onSwipeDismiss = -1;
+      }
+    }
+  }
+}
+
+function createProgressTransitionRegister() {
   'worklet';
   const progressAnimations = new Map<number, ProgressAnimation>();
   const snapshots = new Map<number, any>();
@@ -55,9 +168,9 @@ function createProgressTransitionManager() {
 
 runOnUIImmediately(() => {
   'worklet';
-  global.ProgressTransitionManager = createProgressTransitionManager();
+  global.ProgressTransitionRegister = createProgressTransitionRegister();
 })();
 
-export type ProgressTransitionManager = ReturnType<
-  typeof createProgressTransitionManager
+export type ProgressTransitionRegister = ReturnType<
+  typeof createProgressTransitionRegister
 >;

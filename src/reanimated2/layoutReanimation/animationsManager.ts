@@ -47,7 +47,7 @@ function createLayoutAnimationManager() {
       config: LayoutAnimationFunction
     ) {
       if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
-        global.ProgressTransitionManager.onTransitionStart(tag, yogaValues);
+        global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
         return;
       }
 

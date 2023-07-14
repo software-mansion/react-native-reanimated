@@ -14,7 +14,7 @@ import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegis
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
-import type { ProgressTransitionManager } from './layoutReanimation/sharedTransitions';
+import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
@@ -96,5 +96,5 @@ declare global {
   var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
-  var ProgressTransitionManager: ProgressTransitionManager;
+  var ProgressTransitionRegister: ProgressTransitionRegister;
 }

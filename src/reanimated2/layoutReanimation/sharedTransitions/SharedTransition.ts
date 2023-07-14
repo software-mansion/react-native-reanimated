@@ -10,14 +10,8 @@ import {
   SharedTransitionType,
 } from '../animationBuilder/commonTypes';
 import type { StyleProps } from '../../commonTypes';
-import {
-  configureLayoutAnimations,
-  registerEventHandler,
-  unregisterEventHandler,
-} from '../../core';
-import { Platform } from 'react-native';
-import { runOnUIImmediately } from '../../threads';
-import './ProgressTransitionManager';
+import { configureLayoutAnimations } from '../../core';
+import { ProgressTransitionManager } from './ProgressTransitionManager';
 
 const supportedProps = [
   'width',
@@ -32,14 +26,6 @@ type AnimationFactory = (
   values: SharedTransitionAnimationsValues
 ) => StyleProps;
 
-type TransitionProgressEvent = {
-  closing: number;
-  goingForward: number;
-  eventName: string;
-  progress: number;
-  target: number;
-};
-
 export class SharedTransition {
   private _customAnimationFactory: AnimationFactory | null = null;
   private _animation: SharedTransitionAnimationsFunction | null = null;
@@ -47,14 +33,7 @@ export class SharedTransition {
   private _customProgressAnimation?: ProgressAnimation = undefined;
   private _progressAnimation?: ProgressAnimation = undefined;
   private _defaultTransitionType?: SharedTransitionType = undefined;
-  private static _sharedElementCount = 0;
-  private static _eventHandler = {
-    isRegistered: false,
-    onTransitionProgress: -1,
-    onAppear: -1,
-    onDisappear: -1,
-    onSwipeDismiss: -1,
-  };
+  private static _progressTransitionManager = new ProgressTransitionManager();
 
   public custom(customAnimationFactory: AnimationFactory): SharedTransition {
     this._customAnimationFactory = customAnimationFactory;
@@ -107,88 +86,16 @@ export class SharedTransition {
       transitionAnimation,
       sharedTransitionTag
     );
-    runOnUIImmediately(() => {
-      'worklet';
-      global.ProgressTransitionManager.addProgressAnimation(
-        viewTag,
-        progressAnimation
-      );
-    })();
-    this.registerEventHandlers();
+    SharedTransition._progressTransitionManager.addProgressAnimation(
+      viewTag,
+      progressAnimation
+    );
   }
 
   public unregisterTransition(viewTag: number): void {
-    SharedTransition._sharedElementCount--;
-    if (SharedTransition._sharedElementCount === 0) {
-      const eventHandler = SharedTransition._eventHandler;
-      eventHandler.isRegistered = false;
-      if (eventHandler.onTransitionProgress !== -1) {
-        unregisterEventHandler(eventHandler.onTransitionProgress);
-        eventHandler.onTransitionProgress = -1;
-      }
-      if (eventHandler.onAppear !== -1) {
-        unregisterEventHandler(eventHandler.onAppear);
-        eventHandler.onAppear = -1;
-      }
-      if (eventHandler.onDisappear !== -1) {
-        unregisterEventHandler(eventHandler.onDisappear);
-        eventHandler.onDisappear = -1;
-      }
-      if (eventHandler.onSwipeDismiss !== -1) {
-        unregisterEventHandler(eventHandler.onSwipeDismiss);
-        eventHandler.onSwipeDismiss = -1;
-      }
-    }
-    runOnUIImmediately(() => {
-      'worklet';
-      global.ProgressTransitionManager.removeProgressAnimation(viewTag);
-    })();
-  }
-
-  private registerEventHandlers() {
-    SharedTransition._sharedElementCount++;
-    const eventHandler = SharedTransition._eventHandler;
-    if (!eventHandler.isRegistered) {
-      eventHandler.isRegistered = true;
-      const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
-      let lastProgressValue = -1;
-      eventHandler.onTransitionProgress = registerEventHandler(
-        eventPrefix + 'TransitionProgress',
-        (event: TransitionProgressEvent) => {
-          'worklet';
-          const progress = event.progress;
-          if (progress === lastProgressValue) {
-            // During screen transition, handler receives two events with the same progress
-            // value for both screens, but for modals, there is only one event. To optimize
-            // performance and avoid unnecessary worklet calls, let's skip the second event.
-            return;
-          }
-          lastProgressValue = progress;
-          global.ProgressTransitionManager.frame(progress);
-        }
-      );
-      eventHandler.onAppear = registerEventHandler(
-        eventPrefix + 'Appear',
-        () => {
-          'worklet';
-          global.ProgressTransitionManager.onTransitionEnd();
-        }
-      );
-      if (Platform.OS === 'ios') {
-        // required by modals
-        eventHandler.onDisappear = registerEventHandler('topDisappear', () => {
-          'worklet';
-          global.ProgressTransitionManager.onTransitionEnd(true);
-        });
-        eventHandler.onSwipeDismiss = registerEventHandler(
-          'topGestureCancel',
-          () => {
-            'worklet';
-            global.ProgressTransitionManager.onTransitionEnd();
-          }
-        );
-      }
-    }
+    SharedTransition._progressTransitionManager.removeProgressAnimation(
+      viewTag
+    );
   }
 
   private getTransitionAnimation(): SharedTransitionAnimationsFunction {
