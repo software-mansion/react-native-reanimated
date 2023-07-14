@@ -17,7 +17,7 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
   reattachNeeded: boolean;
   listeners: Record<string, (event: T) => void>;
   viewTag: number | undefined;
-  registrations: string[];
+  registrations: number[];
   constructor(worklet: (event: T) => void, eventNames: string[] = []) {
     this.worklet = worklet;
     this.eventNames = eventNames;

@@ -16,11 +16,11 @@ import type {
   AnimatableValue,
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
-  ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   SharedValue,
 } from '.';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 import type { DependencyList } from './hook/commonTypes';
 
 type Adaptable<T> = T | ReadonlyArray<T | ReadonlyArray<T>> | SharedValue<T>;
@@ -104,7 +104,7 @@ type LayoutProps = {
 
 type SharedTransitionProps = {
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: ILayoutAnimationBuilder;
+  sharedTransitionStyle?: SharedTransition;
 };
 
 type AnimatedPropsProp<P extends object> = NonStyleAnimatedProps<P> &

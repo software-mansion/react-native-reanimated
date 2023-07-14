@@ -158,7 +158,6 @@ export default function ModalsExample() {
   return (
     <Stack.Navigator
       screenOptions={{
-        animation: 'none',
         presentation: 'transparentModal',
         headerShown: false,
       }}>

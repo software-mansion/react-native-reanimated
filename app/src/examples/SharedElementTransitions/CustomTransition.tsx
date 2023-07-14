@@ -8,19 +8,38 @@ import {
 import Animated, {
   SharedTransition,
   withSpring,
+  SharedTransitionType,
 } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 
-const transition = SharedTransition.custom((values) => {
-  'worklet';
-  return {
-    width: withSpring(values.targetWidth),
-    height: withSpring(values.targetHeight),
-    originX: withSpring(values.targetOriginX),
-    originY: withSpring(values.targetOriginY),
-  };
-});
+const transition = SharedTransition.duration(1000)
+  .custom((values) => {
+    'worklet';
+    return {
+      width: withSpring(values.targetWidth),
+      height: withSpring(values.targetHeight),
+      originX: withSpring(values.targetOriginX),
+      originY: withSpring(values.targetOriginY),
+    };
+  })
+  .progressAnimation((values, progress) => {
+    'worklet';
+    const getValue = (
+      progress: number,
+      target: number,
+      current: number
+    ): number => {
+      return progress * (target - current) + current;
+    };
+    return {
+      width: getValue(progress, values.targetWidth, values.currentWidth),
+      height: getValue(progress, values.targetHeight, values.currentHeight),
+      originX: getValue(progress, values.targetOriginX, values.currentOriginX),
+      originY: getValue(progress, values.targetOriginY, values.currentOriginY),
+    };
+  })
+  .defaultTransitionType(SharedTransitionType.ANIMATION);
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
