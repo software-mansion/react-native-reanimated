@@ -155,7 +155,7 @@ export function makeShareableCloneRecursive<T>(
             // dependencies provided transpiled code with debug version of the
             // Reanimated plugin.
             throw new Error(
-              '[Reanimated] Using dev bundle in a release app build is not supported.'
+              '[Reanimated] Using dev bundle in a release app build is not supported. Visit https://github.com/software-mansion/react-native-reanimated/issues/4737 to find more information on how to fix this issue.'
             );
           }
           // to save on transferring static __initData field of worklet structure
