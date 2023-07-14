@@ -84,10 +84,6 @@ export class SharedTransition {
     return this;
   }
 
-  public getInstance(): SharedTransition {
-    return this;
-  }
-
   public registerTransition(
     viewTag: number,
     sharedTransitionTag: string
@@ -316,9 +312,5 @@ export class SharedTransition {
     transitionType: SharedTransitionType
   ): SharedTransition {
     return new SharedTransition().defaultTransitionType(transitionType);
-  }
-
-  public static getInstance(): SharedTransition {
-    return new SharedTransition();
   }
 }
