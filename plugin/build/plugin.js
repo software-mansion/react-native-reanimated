@@ -104,7 +104,7 @@ var require_utils = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isRelease = void 0;
     function isRelease() {
-      return process.env.BABEL_ENV && ["production", "release"].includes(process.env.BABEL_ENV);
+      return !!process.env.BABEL_ENV && ["production", "release"].includes(process.env.BABEL_ENV);
     }
     exports2.isRelease = isRelease;
   }
@@ -158,6 +158,7 @@ var require_buildWorkletString = __commonJS({
     var convertSourceMap = __importStar(require("convert-source-map"));
     var fs = __importStar(require("fs"));
     var utils_1 = require_utils();
+    var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, closureVariables, name, inputMap) {
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
@@ -167,7 +168,7 @@ var require_buildWorkletString = __commonJS({
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
-      const includeSourceMap = shouldGenerateSourceMap();
+      const includeSourceMap = !(0, utils_1.isRelease)();
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
@@ -176,7 +177,7 @@ var require_buildWorkletString = __commonJS({
       }
       const transformed = (0, core_1.transformSync)(code, {
         plugins: [prependClosureVariablesIfNecessary(closureVariables)],
-        compact: !includeSourceMap,
+        compact: true,
         sourceMaps: includeSourceMap,
         inputSourceMap: inputMap,
         ast: false,
@@ -187,20 +188,18 @@ var require_buildWorkletString = __commonJS({
       (0, assert_1.strict)(transformed, "'transformed' is null");
       let sourceMap;
       if (includeSourceMap) {
-        sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-        delete sourceMap.sourcesContent;
+        if (shouldMockSourceMap()) {
+          sourceMap = MOCK_SOURCE_MAP;
+        } else {
+          sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+          delete sourceMap.sourcesContent;
+        }
       }
       return [transformed.code, JSON.stringify(sourceMap)];
     }
     exports2.buildWorkletString = buildWorkletString;
-    function shouldGenerateSourceMap() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_SOURCEMAP === "jest") {
-        return false;
-      }
-      return true;
+    function shouldMockSourceMap() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
     function prependClosure(path, closureVariables, closureDeclaration) {
       if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
@@ -254,7 +253,8 @@ var require_makeWorklet = __commonJS({
     var buildWorkletString_1 = require_buildWorkletString();
     var commonObjects_12 = require_commonObjects();
     var utils_1 = require_utils();
-    var version = require("../../package.json").version;
+    var REAL_VERSION = require("../../package.json").version;
+    var MOCK_VERSION = "x.y.z";
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
       removeWorkletDirective(fun);
@@ -313,6 +313,10 @@ var require_makeWorklet = __commonJS({
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("sourceMap"), (0, types_1.stringLiteral)(sourceMapString)));
       }
+      const shouldInjectVersion = !(0, utils_1.isRelease)();
+      if (shouldInjectVersion) {
+        initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
+      }
       pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
       ]));
@@ -335,9 +339,6 @@ var require_makeWorklet = __commonJS({
           ]))
         ]));
         statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
-        if (shouldInjectVersion()) {
-          statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__version"), false), (0, types_1.stringLiteral)(version))));
-        }
       }
       statements.push((0, types_1.returnStatement)(privateFunctionId));
       const newFun = (0, types_1.functionExpression)(void 0, [], (0, types_1.blockStatement)(statements));
@@ -353,14 +354,8 @@ var require_makeWorklet = __commonJS({
         }
       });
     }
-    function shouldInjectVersion() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_VERSION === "jest") {
-        return false;
-      }
-      return true;
+    function shouldMockVersion() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function hash(str) {
       let i = str.length;

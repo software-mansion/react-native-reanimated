@@ -44,7 +44,8 @@ import { globals } from './commonObjects';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { isRelease } from './utils';
 
-const version = require('../../package.json').version;
+const REAL_VERSION = require('../../package.json').version;
+const MOCK_VERSION = 'x.y.z';
 
 export function makeWorklet(
   fun: NodePath<WorkletizableFunction>,
@@ -161,6 +162,16 @@ export function makeWorklet(
     );
   }
 
+  const shouldInjectVersion = !isRelease();
+  if (shouldInjectVersion) {
+    initDataObjectExpression.properties.push(
+      objectProperty(
+        identifier('version'),
+        stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
+      )
+    );
+  }
+
   pathForStringDefinitions.insertBefore(
     variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
@@ -238,17 +249,6 @@ export function makeWorklet(
         )
       )
     );
-    if (shouldInjectVersion()) {
-      statements.push(
-        expressionStatement(
-          assignmentExpression(
-            '=',
-            memberExpression(privateFunctionId, identifier('__version'), false),
-            stringLiteral(version)
-          )
-        )
-      );
-    }
   }
 
   statements.push(returnStatement(privateFunctionId));
@@ -268,19 +268,10 @@ function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
   });
 }
 
-function shouldInjectVersion() {
-  // We don't inject version in release since cache is reset there anyway
-  if (isRelease()) {
-    return false;
-  }
-
-  // We don't want to pollute tests with current version number so we disable it
+function shouldMockVersion() {
+  // We don't want to pollute tests with current version number so we mock it
   // for all tests (except one)
-  if (process.env.REANIMATED_JEST_DISABLE_VERSION === 'jest') {
-    return false;
-  }
-
-  return true;
+  return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === '1';
 }
 
 function hash(str: string) {

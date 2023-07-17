@@ -1,6 +1,6 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { transform } from '@babel/core';
+import { TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
@@ -8,23 +8,23 @@ import { version as packageVersion } from '../package.json';
 
 const MOCK_LOCATION = '/dev/null';
 
-function runPlugin(input: string, opts = {}) {
-  const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
+function runPlugin(input: string, transformOpts: TransformOptions = {}) {
+  const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
     // Our babel presets require us to specify a filename here
     // but it is never used so we put in '/dev/null'
     // as a safe fallback.
     filename: MOCK_LOCATION,
     compact: false,
     plugins: [plugin],
-    ...opts,
+    ...transformOpts,
   });
   assert(transformed);
   return transformed;
 }
 describe('babel plugin', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_DISABLE_SOURCEMAP = 'jest';
-    process.env.REANIMATED_JEST_DISABLE_VERSION = 'jest';
+    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
+    process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
   });
 
   describe('generally', () => {
@@ -62,8 +62,7 @@ describe('babel plugin', () => {
     });
 
     it('injects its version', () => {
-      delete process.env.REANIMATED_JEST_DISABLE_VERSION;
-
+      process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '0'; // don't mock version
       const input = html`<script>
         function foo() {
           'worklet';
@@ -71,8 +70,25 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {});
-      expect(code).toContain(`f.__version = "${packageVersion}";`);
+      const { code } = runPlugin(input);
+      expect(code).toContain(`version: "${packageVersion}"`);
+    });
+
+    it('injects source maps', () => {
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('sourceMap: "{');
+      // this non-mocked source map is hard-coded, feel free to update it accordingly
+      expect(code).toContain(
+        '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
+      );
     });
 
     it('removes comments from worklets', () => {
@@ -119,7 +135,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {});
+      const { code } = runPlugin(input);
       expect(code).toContain('foobar');
       expect(code).toMatchSnapshot();
     });
@@ -1405,9 +1421,24 @@ describe('babel plugin', () => {
 
       const current = process.env.BABEL_ENV;
       process.env.BABEL_ENV = 'production';
-      const { code } = runPlugin(input, {});
+      const { code } = runPlugin(input);
       process.env.BABEL_ENV = current;
       expect(code).not.toHaveLocation(MOCK_LOCATION);
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't inject version for worklets in production builds", () => {
+      const input = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      </script>`;
+
+      const current = process.env.BABEL_ENV;
+      process.env.BABEL_ENV = 'production';
+      const { code } = runPlugin(input);
+      process.env.BABEL_ENV = current;
+      expect(code).not.toContain('version: ');
       expect(code).toMatchSnapshot();
     });
   });

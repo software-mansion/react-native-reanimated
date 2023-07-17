@@ -35,12 +35,12 @@ export default class JSReanimated extends NativeReanimated {
   registerEventHandler<T>(
     _eventHash: string,
     _eventHandler: ShareableRef<T>
-  ): string {
+  ): number {
     // noop
-    return '';
+    return -1;
   }
 
-  unregisterEventHandler(_: string): void {
+  unregisterEventHandler(_: number): void {
     // noop
   }
 
