@@ -140,8 +140,9 @@ export function makeShareableCloneRecursive<T>(
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
           if (__DEV__) {
-            if (value.__version !== jsVersion) {
-              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${value.__version}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
+            const babelVersion = value.__initData.version;
+            if (babelVersion !== jsVersion) {
+              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
               \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.`);
             }
             registerWorkletStackDetails(
