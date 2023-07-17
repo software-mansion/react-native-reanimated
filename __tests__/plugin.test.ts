@@ -85,6 +85,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('sourceMap: "{');
+      // this non-mocked source map is hard-coded, feel free to update it accordingly
       expect(code).toContain(
         '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
       );
