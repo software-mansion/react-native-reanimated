@@ -186,6 +186,11 @@ class ShareableJSRef : public jsi::HostObject {
   }
 };
 
+jsi::Value makeShareableClone(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

@@ -266,61 +266,7 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote) {
-  std::shared_ptr<Shareable> shareable;
-  if (value.isObject()) {
-    auto object = value.asObject(rt);
-    if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      shareable = std::make_shared<ShareableWorklet>(rt, object);
-    } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      shareable = std::make_shared<ShareableHandle>(rt, object);
-    } else if (object.isFunction(rt)) {
-      auto function = object.asFunction(rt);
-      if (function.isHostFunction(rt)) {
-        shareable =
-            std::make_shared<ShareableHostFunction>(rt, std::move(function));
-      } else {
-        shareable =
-            std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
-      }
-    } else if (object.isArray(rt)) {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable = std::make_shared<RetainingShareable<ShareableArray>>(
-            rt, object.asArray(rt));
-      } else {
-        shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
-      }
-    } else if (object.isHostObject(rt)) {
-      shareable =
-          std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
-    } else {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableObject>>(rt, object);
-      } else {
-        shareable = std::make_shared<ShareableObject>(rt, object);
-      }
-    }
-  } else if (value.isString()) {
-    shareable = std::make_shared<ShareableString>(value.asString(rt).utf8(rt));
-  } else if (value.isUndefined()) {
-    shareable = std::make_shared<ShareableScalar>();
-  } else if (value.isNull()) {
-    shareable = std::make_shared<ShareableScalar>(nullptr);
-  } else if (value.isBool()) {
-    shareable = std::make_shared<ShareableScalar>(value.getBool());
-  } else if (value.isNumber()) {
-    shareable = std::make_shared<ShareableScalar>(value.getNumber());
-  } else if (value.isSymbol()) {
-    // TODO: this is only a placeholder implementation, here we replace symbols
-    // with strings in order to make certain objects to be captured. There isn't
-    // yet any usecase for using symbols on the UI runtime so it is fine to keep
-    // it like this for now.
-    shareable =
-        std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
-  } else {
-    throw std::runtime_error("attempted to convert an unsupported value type");
-  }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return reanimated::makeShareableClone(rt, value, shouldRetainRemote);
 }
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
