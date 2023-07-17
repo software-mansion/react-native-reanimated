@@ -271,7 +271,7 @@ function removeWorkletDirective(fun: NodePath<WorkletizableFunction>) {
 function shouldMockVersion() {
   // We don't want to pollute tests with current version number so we mock it
   // for all tests (except one)
-  return process.env.REANIMATED_JEST_MOCK_VERSION === 'jest';
+  return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === '1';
 }
 
 function hash(str: string) {

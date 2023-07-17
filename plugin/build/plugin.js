@@ -199,7 +199,7 @@ var require_buildWorkletString = __commonJS({
     }
     exports2.buildWorkletString = buildWorkletString;
     function shouldMockSourceMap() {
-      return process.env.REANIMATED_JEST_MOCK_SOURCEMAP === "jest";
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCEMAP === "1";
     }
     function prependClosure(path, closureVariables, closureDeclaration) {
       if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
@@ -355,7 +355,7 @@ var require_makeWorklet = __commonJS({
       });
     }
     function shouldMockVersion() {
-      return process.env.REANIMATED_JEST_MOCK_VERSION === "jest";
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function hash(str) {
       let i = str.length;
