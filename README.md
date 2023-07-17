@@ -11,10 +11,23 @@ comes to gesture based interactions.
 
 ### Nightly CI state
 
-|CI state|
-|---|
-|[![Nightly npm package](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml)|
-|[![Nightly monorepo test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml)|
+<table>
+<tr>
+  <td>
+    <a href="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml">
+      <img src="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml/badge.svg" />
+    </a>
+  </td>
+</tr>
+<tr>
+  <td>
+    <a href="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml">
+      <img src="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml/badge.svg" />
+    </a>
+  </td>
+</tr>
+</table>
+
 ## Installation
 
 Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) section of our docs for the detailed installation instructions.
