@@ -1,5 +1,9 @@
-import { defineAnimation } from './util';
-import type { NextAnimation, SequenceAnimation } from './commonTypes';
+import { defineAnimation, shouldReduceMotion } from './util';
+import type {
+  NextAnimation,
+  ReducedMotionConfig,
+  SequenceAnimation,
+} from './commonTypes';
 import type {
   Animation,
   AnimatableValue,
@@ -7,10 +11,15 @@ import type {
   Timestamp,
 } from '../commonTypes';
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type withSequenceType = <T extends AnimatableValue>(...animations: T[]) => T;
+export function withSequence<T extends AnimatableValue>(
+  _reduceMotion: ReducedMotionConfig,
+  ...animations: T[]
+): T;
 
-export const withSequence = function (
+export function withSequence<T extends AnimatableValue>(...animations: T[]): T;
+
+export function withSequence(
+  _reduceMotion: ReducedMotionConfig | NextAnimation<AnimationObject>,
   ..._animations: NextAnimation<AnimationObject>[]
 ): Animation<SequenceAnimation> {
   'worklet';
@@ -18,12 +27,32 @@ export const withSequence = function (
     _animations[0] as SequenceAnimation,
     () => {
       'worklet';
+      let reduceMotion: ReducedMotionConfig | undefined;
+
+      if (typeof _reduceMotion === 'string') {
+        reduceMotion = _reduceMotion as ReducedMotionConfig;
+      } else {
+        _animations.unshift(_reduceMotion as NextAnimation<AnimationObject>);
+      }
+
       const animations = _animations.map((a) => {
         const result = typeof a === 'function' ? a() : a;
         result.finished = false;
         return result;
       });
-      const firstAnimation = animations[0];
+
+      function nextIndex(index: number, animation: SequenceAnimation) {
+        while (
+          index < animations.length - 1 &&
+          ((animation.reduceMotion &&
+            animations[index].reduceMotion === undefined) ||
+            animations[index].reduceMotion)
+        ) {
+          index += 1;
+        }
+
+        return index;
+      }
 
       const callback = (finished: boolean): void => {
         if (finished) {
@@ -49,9 +78,15 @@ export const withSequence = function (
             currentAnim.callback(true /* finished */);
           }
           currentAnim.finished = true;
-          animation.animationIndex += 1;
+          animation.animationIndex = nextIndex(
+            animation.animationIndex + 1,
+            animation
+          );
           if (animation.animationIndex < animations.length) {
             const nextAnim = animations[animation.animationIndex];
+            if (nextAnim.reduceMotion === undefined) {
+              nextAnim.reduceMotion = animation.reduceMotion;
+            }
             nextAnim.onStart(nextAnim, currentAnim.current, now, currentAnim);
             return false;
           }
@@ -66,13 +101,22 @@ export const withSequence = function (
         now: Timestamp,
         previousAnimation: SequenceAnimation
       ): void {
-        animation.animationIndex = 0;
+        if (animation.reduceMotion === undefined) {
+          animation.reduceMotion = shouldReduceMotion('system');
+        }
+        animation.animationIndex = nextIndex(0, animation);
         if (previousAnimation === undefined) {
           previousAnimation = animations[
             animations.length - 1
           ] as SequenceAnimation;
         }
-        firstAnimation.onStart(firstAnimation, value, now, previousAnimation);
+
+        const currentAnim = animations[animation.animationIndex];
+        if (currentAnim.reduceMotion === undefined) {
+          currentAnim.reduceMotion = animation.reduceMotion;
+        }
+
+        currentAnim.onStart(currentAnim, value, now, previousAnimation);
       }
 
       return {
@@ -80,9 +124,10 @@ export const withSequence = function (
         onFrame: sequence,
         onStart,
         animationIndex: 0,
-        current: firstAnimation.current,
+        current: animations[0].current,
         callback,
+        reduceMotion: shouldReduceMotion(reduceMotion),
       } as SequenceAnimation;
     }
   );
-} as withSequenceType;
+}

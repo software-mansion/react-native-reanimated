@@ -1,6 +1,7 @@
 import type {
   HigherOrderAnimation,
   NextAnimation,
+  ReducedMotionConfig,
   StyleLayoutAnimation,
 } from './commonTypes';
 /* global _WORKLET */
@@ -23,8 +24,11 @@ import type {
   AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
+import { isWeb } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
+
+const IS_WEB = isWeb();
 
 export type UserUpdater = () => AnimatedStyle;
 
@@ -60,6 +64,20 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   } else {
     return { strippedValue: value };
   }
+}
+
+export function shouldReduceMotion(config?: ReducedMotionConfig) {
+  'worklet';
+  if (config === undefined) {
+    return undefined;
+  }
+  if (IS_WEB) {
+    return !window.matchMedia('(prefers-reduced-motion: no-preference)')
+      .matches;
+  }
+  return config === 'system'
+    ? _REANIMATED_IS_REDUCED_MOTION ?? false
+    : config === 'always';
 }
 
 function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
@@ -270,6 +288,17 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp,
     previousAnimation: Animation<AnimationObject>
   ) => {
+    if (animation.reduceMotion === undefined) {
+      animation.reduceMotion = shouldReduceMotion('system');
+    }
+    if (animation.reduceMotion) {
+      animation.current = animation.toValue;
+      animation.startTime = 0;
+      animation.onFrame = (_: Animation<AnimationObject>, __: Timestamp) => {
+        return true;
+      };
+      return;
+    }
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;

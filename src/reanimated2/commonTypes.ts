@@ -146,6 +146,7 @@ export interface AnimationObject {
   finished?: boolean;
   strippedCurrent?: number;
   cancelled?: boolean;
+  reduceMotion?: boolean;
 
   __prefix?: string;
   __suffix?: string;

@@ -1,4 +1,4 @@
-import { defineAnimation } from './util';
+import { defineAnimation, shouldReduceMotion } from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -7,12 +7,14 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import { isWeb } from '../PlatformChecker';
+import { ReducedMotionConfig } from './commonTypes';
 
 interface DecayConfig {
   deceleration?: number;
   velocityFactor?: number;
   clamp?: number[];
   velocity?: number;
+  reduceMotion?: ReducedMotionConfig;
 }
 
 interface DefaultDecayConfig {
@@ -20,6 +22,7 @@ interface DefaultDecayConfig {
   velocityFactor: number;
   clamp?: number[];
   velocity: number;
+  reduceMotion?: ReducedMotionConfig;
   rubberBandEffect?: boolean;
   rubberBandFactor: number;
 }
@@ -192,6 +195,7 @@ export const withDecay = function (
       current: 0,
       lastTimestamp: 0,
       startTimestamp: 0,
+      reduceMotion: shouldReduceMotion(config.reduceMotion),
     } as DecayAnimation;
   });
 } as unknown as withDecayType;

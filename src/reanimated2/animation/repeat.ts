@@ -1,4 +1,4 @@
-import { defineAnimation } from './util';
+import { defineAnimation, shouldReduceMotion } from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -6,13 +6,14 @@ import type {
   Timestamp,
   AnimationObject,
 } from '../commonTypes';
-import type { RepeatAnimation } from './commonTypes';
+import type { ReducedMotionConfig, RepeatAnimation } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withRepeatType = <T extends AnimatableValue>(
   animation: T,
   numberOfReps?: number,
   reverse?: boolean,
+  reduceMotion?: ReducedMotionConfig,
   callback?: AnimationCallback
 ) => T;
 
@@ -20,6 +21,7 @@ export const withRepeat = function <T extends AnimationObject>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,
   reverse = false,
+  _reduceMotion?: ReducedMotionConfig,
   callback?: AnimationCallback
 ): Animation<RepeatAnimation> {
   'worklet';
@@ -34,7 +36,13 @@ export const withRepeat = function <T extends AnimationObject>(
           ? _nextAnimation()
           : _nextAnimation;
 
+      const isEven = reverse && (numberOfReps <= 0 || numberOfReps % 2 === 0);
+
       function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
+        if (animation.reduceMotion && isEven) {
+          return true;
+        }
+
         const finished = nextAnimation.onFrame(nextAnimation, now);
         animation.current = nextAnimation.current;
         if (finished) {
@@ -44,7 +52,10 @@ export const withRepeat = function <T extends AnimationObject>(
           if (nextAnimation.callback) {
             nextAnimation.callback(true /* finished */, animation.current);
           }
-          if (numberOfReps > 0 && animation.reps >= numberOfReps) {
+          if (
+            animation.reduceMotion ||
+            (numberOfReps > 0 && animation.reps >= numberOfReps)
+          ) {
             return true;
           }
 
@@ -82,9 +93,21 @@ export const withRepeat = function <T extends AnimationObject>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
+        if (animation.reduceMotion === undefined) {
+          animation.reduceMotion = shouldReduceMotion('system');
+        }
         animation.startValue = value;
         animation.reps = 0;
-        nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
+
+        if (nextAnimation.reduceMotion === undefined) {
+          nextAnimation.reduceMotion = animation.reduceMotion;
+        }
+
+        if (animation.reduceMotion && isEven) {
+          animation.current = animation.startValue;
+        } else {
+          nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
+        }
       }
 
       return {
@@ -95,6 +118,7 @@ export const withRepeat = function <T extends AnimationObject>(
         current: nextAnimation.current,
         callback: repCallback,
         startValue: 0,
+        reduceMotion: shouldReduceMotion(_reduceMotion),
       };
     }
   );

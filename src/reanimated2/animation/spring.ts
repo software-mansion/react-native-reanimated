@@ -1,4 +1,4 @@
-import { defineAnimation } from './util';
+import { defineAnimation, shouldReduceMotion } from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -45,6 +45,7 @@ export const withSpring = ((
       velocity: 0,
       duration: 2000,
       dampingRatio: 0.5,
+      reduceMotion: undefined,
     } as const;
 
     const config: Record<keyof SpringConfig, any> & SpringConfigInner = {
@@ -233,6 +234,7 @@ export const withSpring = ((
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      reduceMotion: shouldReduceMotion(config.reduceMotion),
     } as SpringAnimation;
   });
 }) as withSpringType;

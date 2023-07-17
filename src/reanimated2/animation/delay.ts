@@ -1,21 +1,23 @@
-import { defineAnimation } from './util';
+import { defineAnimation, shouldReduceMotion } from './util';
 import type {
   Animation,
   Timestamp,
   AnimatableValue,
   AnimationObject,
 } from '../commonTypes';
-import type { DelayAnimation } from './commonTypes';
+import type { DelayAnimation, ReducedMotionConfig } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDelayType = <T extends AnimatableValue>(
   delayMs: number,
-  delayedAnimation: T
+  delayedAnimation: T,
+  reduceMotion?: ReducedMotionConfig
 ) => T;
 
 export const withDelay = function <T extends AnimationObject>(
   delayMs: number,
-  _nextAnimation: T | (() => T)
+  _nextAnimation: T | (() => T),
+  reduceMotion?: ReducedMotionConfig
 ): Animation<DelayAnimation> {
   'worklet';
   return defineAnimation<DelayAnimation, T>(
@@ -31,7 +33,7 @@ export const withDelay = function <T extends AnimationObject>(
         const { startTime, started, previousAnimation } = animation;
         const current: AnimatableValue = animation.current;
 
-        if (now - startTime > delayMs) {
+        if (now - startTime > delayMs || animation.reduceMotion) {
           if (!started) {
             nextAnimation.onStart(
               nextAnimation,
@@ -63,6 +65,9 @@ export const withDelay = function <T extends AnimationObject>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
+        if (animation.reduceMotion === undefined) {
+          animation.reduceMotion = shouldReduceMotion('system');
+        }
         animation.startTime = now;
         animation.started = false;
         animation.current = value;
@@ -70,6 +75,9 @@ export const withDelay = function <T extends AnimationObject>(
           animation.previousAnimation = previousAnimation.previousAnimation;
         } else {
           animation.previousAnimation = previousAnimation;
+        }
+        if (nextAnimation.reduceMotion === undefined) {
+          nextAnimation.reduceMotion = animation.reduceMotion;
         }
       }
 
@@ -88,6 +96,7 @@ export const withDelay = function <T extends AnimationObject>(
         previousAnimation: null,
         startTime: 0,
         started: false,
+        reduceMotion: shouldReduceMotion(reduceMotion),
       };
     }
   );
