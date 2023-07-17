@@ -25,7 +25,7 @@ void Scheduler::triggerUI() {
   // JSI objects and hence it allows for such objects to be garbage collected
   // much sooner.
   // Apparently the scope API is only supported on Hermes at the moment.
-  auto scope = jsi::Scope(*weakRuntimeManager.lock()->runtime);
+  auto scope = jsi::Scope(*weakRuntimeManager_.lock()->runtime);
 #endif
   while (uiJobs.getSize()) {
     auto job = uiJobs.pop();
@@ -40,7 +40,7 @@ void Scheduler::setJSCallInvoker(
 
 void Scheduler::setRuntimeManager(
     std::shared_ptr<RuntimeManager> runtimeManager) {
-  weakRuntimeManager = runtimeManager;
+  weakRuntimeManager_ = runtimeManager;
 }
 
 Scheduler::~Scheduler() {}
