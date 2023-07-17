@@ -1,6 +1,6 @@
 import { html } from 'code-tag';
 import plugin from '../plugin';
-import { transform } from '@babel/core';
+import { TransformOptions, transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
@@ -8,15 +8,15 @@ import { version as packageVersion } from '../package.json';
 
 const MOCK_LOCATION = '/dev/null';
 
-function runPlugin(input: string, opts = {}) {
-  const transformed = transform(input.replace(/<\/?script[^>]*>/g, ''), {
+function runPlugin(input: string, transformOpts: TransformOptions = {}) {
+  const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
     // Our babel presets require us to specify a filename here
     // but it is never used so we put in '/dev/null'
     // as a safe fallback.
     filename: MOCK_LOCATION,
     compact: false,
     plugins: [plugin],
-    ...opts,
+    ...transformOpts,
   });
   assert(transformed);
   return transformed;
@@ -62,8 +62,7 @@ describe('babel plugin', () => {
     });
 
     it('injects its version', () => {
-      delete process.env.REANIMATED_JEST_MOCK_VERSION;
-
+      delete process.env.REANIMATED_JEST_MOCK_VERSION; // don't mock version
       const input = html`<script>
         function foo() {
           'worklet';
@@ -76,8 +75,7 @@ describe('babel plugin', () => {
     });
 
     it('injects source maps', () => {
-      delete process.env.REANIMATED_JEST_MOCK_SOURCEMAP;
-
+      delete process.env.REANIMATED_JEST_MOCK_SOURCEMAP; // don't mock source maps
       const input = html`<script>
         function foo() {
           'worklet';
