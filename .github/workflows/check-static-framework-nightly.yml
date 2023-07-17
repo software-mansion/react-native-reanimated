@@ -4,7 +4,7 @@ on:
     paths:
       - .github/workflows/check-static-framework-nightly.yml
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '37 19 * * *'
   workflow_dispatch:
 
 jobs:
@@ -22,8 +22,7 @@ jobs:
         run: npx react-native init app
       - name: Install dependencies
         working-directory: app
-        # run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
-        run: yarn add github:software-mansion/react-native-reanimated#@piaskowyk/ci-static-framework
+        run: yarn add github:software-mansion/react-native-reanimated#${{ github.ref }}
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
