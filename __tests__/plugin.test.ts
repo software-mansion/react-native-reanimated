@@ -86,7 +86,10 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, { sourceMaps: true });
-      expect(code).toContain('{\\"version\\":3');
+      expect(code).toContain('sourceMap: "{');
+      expect(code).toContain(
+        '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
+      );
     });
 
     it('removes comments from worklets', () => {
