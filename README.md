@@ -9,6 +9,10 @@ low level abstraction for the Animated library API to be built
 on top of and hence allow for much greater flexibility especially when it
 comes to gesture based interactions.
 
+### Nightly CI state
+
+[![Build nightly npm package](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml) [![Run nightly monorepo test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml)
+
 ## Installation
 
 Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) section of our docs for the detailed installation instructions.

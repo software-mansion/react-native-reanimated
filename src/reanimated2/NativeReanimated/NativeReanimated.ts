@@ -91,11 +91,11 @@ export class NativeReanimated {
   registerEventHandler<T>(
     eventHash: string,
     eventHandler: ShareableRef<T>
-  ): string {
+  ): number {
     return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
   }
 
-  unregisterEventHandler(id: string): void {
+  unregisterEventHandler(id: number): void {
     return this.InnerNativeModule.unregisterEventHandler(id);
   }
 

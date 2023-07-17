@@ -14,6 +14,10 @@ import type {
   LayoutAnimationType,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
+import type {
+  ProgressAnimationCallback,
+  SharedTransitionAnimationsFunction,
+} from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
@@ -64,7 +68,7 @@ export function getSensorContainer(): SensorContainer {
 export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
-): string {
+): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
     global.__frameTimestamp = eventTimestamp;
@@ -78,7 +82,7 @@ export function registerEventHandler<T>(
   );
 }
 
-export function unregisterEventHandler(id: string): void {
+export function unregisterEventHandler(id: number): void {
   return NativeReanimatedModule.unregisterEventHandler(id);
 }
 
@@ -171,7 +175,11 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: LayoutAnimationType,
-  config: LayoutAnimationFunction | Keyframe,
+  config:
+    | LayoutAnimationFunction
+    | Keyframe
+    | SharedTransitionAnimationsFunction
+    | ProgressAnimationCallback,
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(
