@@ -23,32 +23,18 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
-    jsi::Runtime &rnRuntime,
-    std::shared_ptr<MessageQueueThread> jsQueue) {
+std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(jsi::Runtime &rnRuntime) {
   (void)rnRuntime; // used only for V8
 #if JS_RUNTIME_HERMES
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
       facebook::hermes::makeHermesRuntime();
-
-  // We don't call `jsQueue->quitSynchronous()` here, since it will be done
-  // later in ReanimatedHermesRuntime
-
-  return std::make_shared<ReanimatedHermesRuntime>(std::move(runtime), jsQueue);
+  return std::make_shared<ReanimatedHermesRuntime>(std::move(runtime));
 #elif JS_RUNTIME_V8
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before.
-  jsQueue->quitSynchronous();
-
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = false;
   config->appName = "reanimated";
   return rnv8::createSharedV8Runtime(rnRuntime, std::move(config));
 #else
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before
-  jsQueue->quitSynchronous();
-
   return facebook::jsc::makeJSCRuntime();
 #endif
 }

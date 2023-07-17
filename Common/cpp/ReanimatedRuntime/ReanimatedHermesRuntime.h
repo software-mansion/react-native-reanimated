@@ -114,9 +114,8 @@ struct ReanimatedReentrancyCheck {
 class ReanimatedHermesRuntime
     : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
  public:
-  ReanimatedHermesRuntime(
-      std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
-      std::shared_ptr<MessageQueueThread> jsQueue);
+  explicit ReanimatedHermesRuntime(
+      std::unique_ptr<facebook::hermes::HermesRuntime> runtime);
   ~ReanimatedHermesRuntime();
 
  private:

@@ -31,16 +31,11 @@ using namespace react;
 class HermesExecutorRuntimeAdapter
     : public facebook::hermes::inspector::RuntimeAdapter {
  public:
-  HermesExecutorRuntimeAdapter(
-      facebook::hermes::HermesRuntime &hermesRuntime,
-      std::shared_ptr<MessageQueueThread> thread)
-      : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
+  explicit HermesExecutorRuntimeAdapter(
+      facebook::hermes::HermesRuntime &hermesRuntime)
+      : hermesRuntime_(hermesRuntime) {}
 
-  virtual ~HermesExecutorRuntimeAdapter() {
-    // This is required by iOS, because there is an assertion in the destructor
-    // that the thread was indeed `quit` before
-    thread_->quitSynchronous();
-  }
+  virtual ~HermesExecutorRuntimeAdapter() {}
 
 #if REACT_NATIVE_MINOR_VERSION >= 71
   facebook::hermes::HermesRuntime &getRuntime() override {
@@ -64,21 +59,18 @@ class HermesExecutorRuntimeAdapter
 
  public:
   facebook::hermes::HermesRuntime &hermesRuntime_;
-  std::shared_ptr<MessageQueueThread> thread_;
 };
 
 #endif // HERMES_ENABLE_DEBUGGER
 
 ReanimatedHermesRuntime::ReanimatedHermesRuntime(
-    std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
-    std::shared_ptr<MessageQueueThread> jsQueue)
+    std::unique_ptr<facebook::hermes::HermesRuntime> runtime)
     : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
           *runtime,
           reentrancyCheck_),
       runtime_(std::move(runtime)) {
 #if HERMES_ENABLE_DEBUGGER
-  auto adapter =
-      std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
+  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_);
 #if REACT_NATIVE_MINOR_VERSION >= 71
   debugToken_ = facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
@@ -86,11 +78,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   facebook::hermes::inspector::chrome::enableDebugging(
       std::move(adapter), "Reanimated Runtime");
 #endif // REACT_NATIVE_MINOR_VERSION
-#else
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before
-  jsQueue->quitSynchronous();
-#endif
+#endif // HERMES_ENABLE_DEBUGGER
 
 #ifdef DEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();

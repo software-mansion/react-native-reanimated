@@ -147,11 +147,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 #endif
 
-  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
+  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime);
   WorkletRuntimeCollector::install(rnRuntime);
   WorkletRuntimeCollector::install(*uiRuntime);
 
