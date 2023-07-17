@@ -64,7 +64,8 @@ class HermesExecutorRuntimeAdapter
 #endif // HERMES_ENABLE_DEBUGGER
 
 ReanimatedHermesRuntime::ReanimatedHermesRuntime(
-    std::unique_ptr<facebook::hermes::HermesRuntime> runtime)
+    std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
+    const std::string &name)
     : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
           *runtime,
           reentrancyCheck_),
@@ -73,10 +74,10 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_);
 #if REACT_NATIVE_MINOR_VERSION >= 71
   debugToken_ = facebook::hermes::inspector::chrome::enableDebugging(
-      std::move(adapter), "Reanimated Runtime");
+      std::move(adapter), name);
 #else
   facebook::hermes::inspector::chrome::enableDebugging(
-      std::move(adapter), "Reanimated Runtime");
+      std::move(adapter), name);
 #endif // REACT_NATIVE_MINOR_VERSION
 #endif // HERMES_ENABLE_DEBUGGER
 

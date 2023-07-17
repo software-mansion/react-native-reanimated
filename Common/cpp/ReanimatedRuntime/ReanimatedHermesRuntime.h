@@ -17,6 +17,7 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 #include <thread>
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
@@ -114,8 +115,9 @@ struct ReanimatedReentrancyCheck {
 class ReanimatedHermesRuntime
     : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
  public:
-  explicit ReanimatedHermesRuntime(
-      std::unique_ptr<facebook::hermes::HermesRuntime> runtime);
+  ReanimatedHermesRuntime(
+      std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
+      const std::string &name);
   ~ReanimatedHermesRuntime();
 
  private:

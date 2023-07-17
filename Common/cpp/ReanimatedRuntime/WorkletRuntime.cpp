@@ -6,9 +6,7 @@ WorkletRuntime::WorkletRuntime(
     const std::string &name,
     const std::string &valueUnpackerCode)
     : name_(name) {
-  // TODO: decorate runtime
-  // TODO: support JSC/Hermes/V8
-  runtime_ = facebook::hermes::makeHermesRuntime();
+  runtime_ = ReanimatedRuntime::make(name);
 
   jsi::Runtime &rt = *runtime_;
 

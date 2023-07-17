@@ -7,7 +7,7 @@ import Animated, {
   runOnJS,
   createWorkletRuntime,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet } from 'react-native';
+import { View, Button, StyleSheet, Alert } from 'react-native';
 import React from 'react';
 import { makeShareableCloneRecursive } from 'react-native-reanimated/src/reanimated2/shareables';
 import { runOnRuntimeSync } from '../../../src/reanimated2/runtimes';
@@ -84,7 +84,20 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
       'worklet';
       foo();
     });
-    // TODO: fix missing stack trace
+    // TODO: fix missing stack trace - inject evalWithSourceMap
+  };
+
+  const handlePress7 = () => {
+    Alert.prompt('Enter label of runtime', '', (label) => {
+      global.runtime = createWorkletRuntime(label);
+    });
+  };
+
+  const handlePress8 = () => {
+    runOnRuntimeSync(global.runtime, () => {
+      'worklet';
+      console.log('xd');
+    });
   };
 
   return (
@@ -102,6 +115,8 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
       <Button title="runOnRuntimeSync" onPress={handlePress4} />
       <Button title="throw new Error UI" onPress={handlePress5} />
       <Button title="throw new Error new" onPress={handlePress6} />
+      <Button title="spawn new runtime" onPress={handlePress7} />
+      <Button title="invoke new runtime" onPress={handlePress8} />
     </View>
   );
 }

@@ -12,6 +12,7 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated {
 
@@ -20,7 +21,7 @@ using namespace react;
 
 class ReanimatedRuntime {
  public:
-  static std::shared_ptr<jsi::Runtime> make();
+  static std::shared_ptr<jsi::Runtime> make(const std::string &name);
 };
 
 } // namespace reanimated
