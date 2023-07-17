@@ -11,22 +11,7 @@ comes to gesture based interactions.
 
 ### Nightly CI state
 
-<table>
-<tr>
-  <td>
-    <a href="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml">
-      <img src="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml/badge.svg" />
-    </a>
-  </td>
-</tr>
-<tr>
-  <td>
-    <a href="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml">
-      <img src="https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml/badge.svg" />
-    </a>
-  </td>
-</tr>
-</table>
+[![Build nightly npm package](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml) [![Run nightly monorepo test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml)
 
 ## Installation
 
