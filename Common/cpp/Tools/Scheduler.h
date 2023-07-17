@@ -83,7 +83,7 @@ class Scheduler {
   std::atomic<bool> scheduledOnUI{};
   Queue<std::function<void()>> uiJobs;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
-  std::weak_ptr<RuntimeManager> runtimeManager;
+  std::weak_ptr<RuntimeManager> weakRuntimeManager;
 };
 
 } // namespace reanimated
