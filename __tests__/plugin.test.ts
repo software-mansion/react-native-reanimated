@@ -71,7 +71,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {});
+      const { code } = runPlugin(input);
       expect(code).toContain(`version: "${packageVersion}"`);
     });
 
@@ -85,7 +85,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, { sourceMaps: true });
+      const { code } = runPlugin(input);
       expect(code).toContain('sourceMap: "{');
       expect(code).toContain(
         '\\"mappings\\":\\"AACQ,SAAAA,GAASA,CAAA,CAAG,CAEV,GAAI,CAAAA,GAAG,CAAG,KAAK,CACjB\\"'
@@ -136,7 +136,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(input, {});
+      const { code } = runPlugin(input);
       expect(code).toContain('foobar');
       expect(code).toMatchSnapshot();
     });
@@ -1422,7 +1422,7 @@ describe('babel plugin', () => {
 
       const current = process.env.BABEL_ENV;
       process.env.BABEL_ENV = 'production';
-      const { code } = runPlugin(input, {});
+      const { code } = runPlugin(input);
       process.env.BABEL_ENV = current;
       expect(code).not.toHaveLocation(MOCK_LOCATION);
       expect(code).toMatchSnapshot();
