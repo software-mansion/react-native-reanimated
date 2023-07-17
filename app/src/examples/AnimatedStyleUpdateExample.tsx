@@ -57,6 +57,20 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
   };
 
   const handlePress5 = () => {
+    function bar() {
+      'worklet';
+      throw new Error('Hello world!');
+    }
+    function foo() {
+      'worklet';
+      bar();
+    }
+    runOnUI(() => {
+      foo();
+    })();
+  };
+
+  const handlePress6 = () => {
     const runtime = createWorkletRuntime('foo');
     function bar() {
       'worklet';
@@ -86,7 +100,8 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
       <Button title="_scheduleOnJS" onPress={handlePress2} />
       <Button title="createWorkletRuntime" onPress={handlePress3} />
       <Button title="runOnRuntimeSync" onPress={handlePress4} />
-      <Button title="throw new Error" onPress={handlePress5} />
+      <Button title="throw new Error UI" onPress={handlePress5} />
+      <Button title="throw new Error new" onPress={handlePress6} />
     </View>
   );
 }
