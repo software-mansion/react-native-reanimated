@@ -93,9 +93,9 @@ const styles = StyleSheet.create({
   },
   circleIcon: {
     position: 'absolute',
-    width: width,
+    width: tabWidth,
     top: -8,
-    left: width / 2,
+    left: tabWidth / 2,
     height: 64,
     justifyContent: 'center',
     alignItems: 'center',
