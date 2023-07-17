@@ -161,11 +161,10 @@ function createProgressTransitionRegister() {
       }
     },
     onAndroidFinishTransitioning: () => {
-      if (toRemove.size === 0) {
+      if (toRemove.size > 0) {
         // it should be ran only on modal closing
-        return;
+        progressTransitionManager.onTransitionEnd();
       }
-      progressTransitionManager.onTransitionEnd();
     },
     onTransitionEnd: (removeViews = false) => {
       for (const viewTag of currentTransitions) {
