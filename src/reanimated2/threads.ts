@@ -61,7 +61,7 @@ export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && !IS_WEB && ReanimatedIsUIRuntime) {
     throw new Error(
       'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
@@ -123,7 +123,7 @@ export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && !IS_WEB && ReanimatedIsUIRuntime) {
     throw new Error(
       'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );

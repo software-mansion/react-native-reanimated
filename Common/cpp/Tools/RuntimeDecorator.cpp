@@ -40,6 +40,7 @@ void RuntimeDecorator::decorateRuntime(
   // This property will be used to find out if a runtime is a custom worklet
   // runtime (e.g. UI, VisionCamera frame processor, ...)
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
+  rt.global().setProperty(rt, "ReanimatedIsUIRuntime", jsi::Value(true));
   // This property will be used for debugging
   rt.global().setProperty(
       rt, "_LABEL", jsi::String::createFromAscii(rt, label));

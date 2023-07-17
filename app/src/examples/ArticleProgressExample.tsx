@@ -1,4 +1,3 @@
-/* global _WORKLET */
 import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import Animated, {
@@ -14,7 +13,7 @@ export default function ArticleProgressExample() {
   const scrollHandler = useScrollViewOffset(scrollViewRef);
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
-    if (!_WORKLET) {
+    if (!ReanimatedIsUIRuntime) {
       return { width: 0 };
     }
 

@@ -1,4 +1,3 @@
-/* global _WORKLET */
 import Animated, {
   runOnJS,
   runOnUI,
@@ -24,7 +23,7 @@ import React from 'react';
 function RunOnUIDemo() {
   const someWorklet = (x: number) => {
     'worklet';
-    console.log(_WORKLET, x); // _WORKLET should be true
+    console.log(ReanimatedIsUIRuntime, x); // should be true
   };
 
   const handlePress = () => {
@@ -36,12 +35,12 @@ function RunOnUIDemo() {
 
 function RunOnUIRunOnJSDemo() {
   const someFunction = (x: number) => {
-    console.log(_WORKLET, x); // _WORKLET should be false
+    console.log(ReanimatedIsUIRuntime, x); // should be false
   };
 
   const someWorklet = (x: number) => {
     'worklet';
-    console.log(_WORKLET, x); // _WORKLET should be true
+    console.log(ReanimatedIsUIRuntime, x); // should be true
     runOnJS(someFunction)(x);
   };
 
@@ -56,11 +55,11 @@ function UseDerivedValueRunOnJSDemo() {
   const sv = useSharedValue(0);
 
   const someFunction = (x: number) => {
-    console.log(_WORKLET, x); // _WORKLET should be false
+    console.log(ReanimatedIsUIRuntime, x); // should be false
   };
 
   useDerivedValue(() => {
-    console.log(_WORKLET, sv.value);
+    console.log(ReanimatedIsUIRuntime, sv.value);
     runOnJS(someFunction)(sv.value);
   });
 
@@ -118,7 +117,7 @@ function ThrowErrorFromUseAnimatedStyleDemo() {
   const sv = useSharedValue(0);
 
   useAnimatedStyle(() => {
-    if (!_WORKLET || sv.value === 0) {
+    if (!ReanimatedIsUIRuntime || sv.value === 0) {
       return {}; // prevent throwing error on first render or from JS context
     }
     throw new Error('Hello world from useAnimatedStyle!');
@@ -137,7 +136,7 @@ function ThrowErrorFromUseDerivedValueDemo() {
   const sv = useSharedValue(0);
 
   useDerivedValue(() => {
-    if (!_WORKLET || sv.value === 0) {
+    if (!ReanimatedIsUIRuntime || sv.value === 0) {
       return {}; // prevent throwing error on first render or from JS context
     }
     throw new Error('Hello world from useDerivedValue!');
@@ -227,7 +226,7 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
   const offset = useScrollViewOffset(aref);
 
   useAnimatedStyle(() => {
-    if (_WORKLET && offset.value > 0) {
+    if (ReanimatedIsUIRuntime && offset.value > 0) {
       throw Error('Hello world from useScrollViewOffset');
     }
     return {};

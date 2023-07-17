@@ -21,7 +21,7 @@ in the UI runtime. (...)
 That's because in React Native apps, `useAnimatedStyle` worklet is first evaluated on the JS context during the first render, thus before rendering has been completed in native. This is safe to ignore, but if you don't want this warning to appear then wrap the call like this:
 
 ```js
-if (_WORKLET || isWeb) {
+if (ReanimatedIsUIRuntime || isWeb) {
   const measured = measure(animatedRef);
   if (measured !== null) {
     // ...

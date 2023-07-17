@@ -1,4 +1,3 @@
-/* global _WORKLET */
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { StyleSheet, Text } from 'react-native';
 
@@ -6,7 +5,7 @@ import React from 'react';
 
 export default function ScrollViewExample() {
   const scrollHandler = useAnimatedScrollHandler((event) => {
-    console.log(_WORKLET, event.contentOffset.y);
+    console.log(ReanimatedIsUIRuntime, event.contentOffset.y);
   });
 
   return (

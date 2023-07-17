@@ -284,6 +284,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     runtime.global().setProperty(runtime, "_WORKLET", false);
 
+    runtime.global().setProperty(runtime, "ReanimatedIsUIRuntime", false);
+
 #ifdef RCT_NEW_ARCH_ENABLED
     runtime.global().setProperty(runtime, "_IS_FABRIC", true);
 #else

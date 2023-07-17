@@ -1,4 +1,3 @@
-/* global _WORKLET */
 /**
  * Copied from:
  * react-native/Libraries/StyleSheet/normalizeColor.js
@@ -415,7 +414,7 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  if (IS_WEB || !_WORKLET) {
+  if (IS_WEB || !ReanimatedIsUIRuntime) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 

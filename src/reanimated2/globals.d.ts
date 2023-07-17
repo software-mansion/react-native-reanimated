@@ -18,11 +18,10 @@ import type { ProgressTransitionRegister } from './layoutReanimation/sharedTrans
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
-  var _WORKLET: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
+  var _WORKLET_RUNTIME: ArrayBuffer;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
-  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)

@@ -28,6 +28,7 @@ export const globals = new Set([
   'setImmediate',
   'queueMicrotask',
   '_WORKLET',
+  'ReanimatedIsUIRuntime',
   'arguments',
   'Boolean',
   'parseInt',

@@ -3,7 +3,6 @@ import type {
   NextAnimation,
   StyleLayoutAnimation,
 } from './commonTypes';
-/* global _WORKLET */
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
@@ -315,7 +314,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !IS_NATIVE) {
+  if (ReanimatedIsUIRuntime || !IS_NATIVE) {
     return create();
   }
   // @ts-ignore: eslint-disable-line
@@ -336,7 +335,7 @@ export function withStartValue(
   'worklet';
   return defineAnimation(startValue, () => {
     'worklet';
-    if (!_WORKLET && typeof animation === 'function') {
+    if (!ReanimatedIsUIRuntime && typeof animation === 'function') {
       animation = animation();
     }
     (animation as Animation<AnimationObject>).current = startValue;

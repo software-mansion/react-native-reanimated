@@ -480,6 +480,8 @@ void NativeProxy::setGlobalProperties(
 
   jsRuntime.global().setProperty(jsRuntime, "_WORKLET", false);
 
+      jsRuntime.global().setProperty(jsRuntime, "ReanimatedIsUIRuntime", false);
+
 #ifdef RCT_NEW_ARCH_ENABLED
   jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", true);
 #else

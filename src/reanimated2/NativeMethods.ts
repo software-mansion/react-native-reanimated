@@ -40,7 +40,7 @@ if (isWeb()) {
 } else if (IS_NATIVE) {
   measure = (animatedRef) => {
     'worklet';
-    if (!_WORKLET) {
+    if (!ReanimatedIsUIRuntime) {
       return null;
     }
 
@@ -94,7 +94,7 @@ export let dispatchCommand: (
 if (IS_NATIVE && global._IS_FABRIC) {
   dispatchCommand = (animatedRef, commandName, args) => {
     'worklet';
-    if (!_WORKLET) {
+    if (!ReanimatedIsUIRuntime) {
       return;
     }
 
@@ -153,7 +153,7 @@ if (isWeb()) {
 } else if (IS_NATIVE) {
   scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
-    if (!_WORKLET) {
+    if (!ReanimatedIsUIRuntime) {
       return;
     }
 
@@ -185,7 +185,7 @@ export let setGestureState: (handlerTag: number, newState: number) => void;
 if (IS_NATIVE) {
   setGestureState = (handlerTag, newState) => {
     'worklet';
-    if (!_WORKLET) {
+    if (!ReanimatedIsUIRuntime) {
       console.warn(
         '[Reanimated] You can not use setGestureState in non-worklet function.'
       );

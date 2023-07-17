@@ -61,6 +61,7 @@ var require_commonObjects = __commonJS({
       "setImmediate",
       "queueMicrotask",
       "_WORKLET",
+      "ReanimatedIsUIRuntime",
       "arguments",
       "Boolean",
       "parseInt",
