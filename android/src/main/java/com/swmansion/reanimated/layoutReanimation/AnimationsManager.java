@@ -569,13 +569,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return true;
   }
 
-  public void clearAnimationConfigForTag(int tag) {
-    View view = resolveView(tag);
-    if (view != null) {
-      clearAnimationConfigRecursive(view);
-    }
-  }
-
   public void clearAnimationConfigRecursive(View view) {
     mNativeMethodsHolder.clearAnimationConfig(view.getId());
     if (view instanceof ViewGroup) {
