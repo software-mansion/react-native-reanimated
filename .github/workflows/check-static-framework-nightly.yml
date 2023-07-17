@@ -1,4 +1,4 @@
-name: Check static framework build
+name: Check static framework nightly build
 on:
   pull_request:
     paths:
