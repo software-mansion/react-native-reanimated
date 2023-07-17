@@ -148,8 +148,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime);
   WorkletRuntimeCollector::install(rnRuntime);
+
+  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make();
   WorkletRuntimeCollector::install(*uiRuntime);
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);

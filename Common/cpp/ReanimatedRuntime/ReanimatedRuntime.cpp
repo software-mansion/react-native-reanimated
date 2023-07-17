@@ -23,17 +23,17 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(jsi::Runtime &rnRuntime) {
-  (void)rnRuntime; // used only for V8
+std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make() {
 #if JS_RUNTIME_HERMES
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime =
       facebook::hermes::makeHermesRuntime();
   return std::make_shared<ReanimatedHermesRuntime>(std::move(runtime));
 #elif JS_RUNTIME_V8
-  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
-  config->enableInspector = false;
-  config->appName = "reanimated";
-  return rnv8::createSharedV8Runtime(rnRuntime, std::move(config));
+#error "V8 runtime is not supported yet"
+//  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
+//  config->enableInspector = false;
+//  config->appName = "reanimated";
+//  return rnv8::createSharedV8Runtime(rnRuntime, std::move(config));
 #else
   return facebook::jsc::makeJSCRuntime();
 #endif
