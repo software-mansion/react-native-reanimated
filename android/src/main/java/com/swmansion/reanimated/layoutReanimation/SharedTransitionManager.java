@@ -35,8 +35,8 @@ public class SharedTransitionManager {
   private final Set<Integer> mViewTagsToHide = new HashSet<>();
   private final Map<Integer, Integer> mDisableCleaningForViewTag = new HashMap<>();
   private List<SharedElement> mSharedElements = new ArrayList<>();
-  private List<SharedElement> mSharedElementsWithProgress = new ArrayList<>();
-  private List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
+  private final List<SharedElement> mSharedElementsWithProgress = new ArrayList<>();
+  private final List<SharedElement> mSharedElementsWithAnimation = new ArrayList<>();
   private final Map<Integer, View> mViewsWithCanceledAnimation = new HashMap<>();
 
   public SharedTransitionManager(AnimationsManager animationsManager) {
