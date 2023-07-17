@@ -199,7 +199,7 @@ var require_buildWorkletString = __commonJS({
     }
     exports2.buildWorkletString = buildWorkletString;
     function shouldMockSourceMap() {
-      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCEMAP === "1";
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
     function prependClosure(path, closureVariables, closureDeclaration) {
       if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {

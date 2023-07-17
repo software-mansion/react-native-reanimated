@@ -23,7 +23,7 @@ function runPlugin(input: string, transformOpts: TransformOptions = {}) {
 }
 describe('babel plugin', () => {
   beforeEach(() => {
-    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCEMAP = '1';
+    process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '1';
     process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION = '1';
   });
 
@@ -75,7 +75,7 @@ describe('babel plugin', () => {
     });
 
     it('injects source maps', () => {
-      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCEMAP = '0'; // don't mock source maps
+      process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP = '0'; // don't mock source maps
       const input = html`<script>
         function foo() {
           'worklet';

@@ -117,7 +117,7 @@ export function buildWorkletString(
 function shouldMockSourceMap() {
   // We don't want to pollute tests with source maps so we mock it
   // for all tests (except one)
-  return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCEMAP === '1';
+  return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === '1';
 }
 
 function prependClosure(
