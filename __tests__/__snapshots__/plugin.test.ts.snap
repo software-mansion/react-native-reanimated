@@ -629,6 +629,21 @@ var foo = useAnimatedStyle(function () {
 }());"
 `;
 
+exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
+"var _worklet_1852213185147_init_data = {
+  code: "function anonymous(){const x=1;}"
+};
+var foo = useAnimatedStyle(function () {
+  var _f = function _f() {
+    var x = 1;
+  };
+  _f._closure = {};
+  _f.__initData = _worklet_1852213185147_init_data;
+  _f.__workletHash = 1852213185147;
+  return _f;
+}());"
+`;
+
 exports[`babel plugin for explicit worklets workletizes ArrowFunctionExpression 1`] = `
 "var _worklet_16347365292089_init_data = {
   code: "function anonymous(x){return x+2;}",

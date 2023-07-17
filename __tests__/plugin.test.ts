@@ -1426,5 +1426,20 @@ describe('babel plugin', () => {
       expect(code).not.toHaveLocation(MOCK_LOCATION);
       expect(code).toMatchSnapshot();
     });
+
+    it("doesn't inject version for worklets in production builds", () => {
+      const input = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      </script>`;
+
+      const current = process.env.BABEL_ENV;
+      process.env.BABEL_ENV = 'production';
+      const { code } = runPlugin(input);
+      process.env.BABEL_ENV = current;
+      expect(code).not.toContain('version: ');
+      expect(code).toMatchSnapshot();
+    });
   });
 });
