@@ -1,8 +1,3 @@
 export function isRelease() {
-  return (
-    !!process.env.BABEL_ENV &&
-    ['prod', 'release', 'stag'].some(
-      process.env.BABEL_ENV?.toLowerCase().includes
-    )
-  );
+  return !!process.env.BABEL_ENV?.match(/(prod|release|stag[ei])/i);
 }

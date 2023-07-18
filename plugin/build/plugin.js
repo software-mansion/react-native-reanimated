@@ -105,7 +105,7 @@ var require_utils = __commonJS({
     exports2.isRelease = void 0;
     function isRelease() {
       var _a;
-      return !!process.env.BABEL_ENV && ["prod", "release", "stag"].some((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.toLowerCase().includes);
+      return !!((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(/(prod|release|stag[ei])/i));
     }
     exports2.isRelease = isRelease;
   }
