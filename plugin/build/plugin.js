@@ -104,7 +104,8 @@ var require_utils = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isRelease = void 0;
     function isRelease() {
-      return !!process.env.BABEL_ENV && ["production", "release"].includes(process.env.BABEL_ENV);
+      var _a;
+      return !!((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(/(prod|release|stag[ei])/i));
     }
     exports2.isRelease = isRelease;
   }
