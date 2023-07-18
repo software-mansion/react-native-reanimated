@@ -72,8 +72,19 @@ export class ProgressTransitionManager {
           global.ProgressTransitionRegister.onTransitionEnd();
         }
       );
-      if (Platform.OS === 'ios') {
-        // required by modals
+
+      if (Platform.OS === 'android') {
+        // onFinishTransitioning event is available only on Android and
+        // is used to handle closing modals
+        eventHandler.onDisappear = registerEventHandler(
+          'onFinishTransitioning',
+          () => {
+            'worklet';
+            global.ProgressTransitionRegister.onAndroidFinishTransitioning();
+          }
+        );
+      } else if (Platform.OS === 'ios') {
+        // topDisappear event is required to handle closing modals on iOS
         eventHandler.onDisappear = registerEventHandler('topDisappear', () => {
           'worklet';
           global.ProgressTransitionRegister.onTransitionEnd(true);
@@ -147,6 +158,12 @@ function createProgressTransitionRegister() {
         const progressAnimation = progressAnimations.get(viewTag);
         const snapshot = snapshots.get(viewTag);
         progressAnimation!(viewTag, snapshot, progress);
+      }
+    },
+    onAndroidFinishTransitioning: () => {
+      if (toRemove.size > 0) {
+        // it should be ran only on modal closing
+        progressTransitionManager.onTransitionEnd();
       }
     },
     onTransitionEnd: (removeViews = false) => {
