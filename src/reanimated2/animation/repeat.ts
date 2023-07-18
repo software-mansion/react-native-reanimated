@@ -93,9 +93,6 @@ export const withRepeat = function <T extends AnimationObject>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
-        if (animation.reduceMotion === undefined) {
-          animation.reduceMotion = shouldReduceMotion('system');
-        }
         animation.startValue = value;
         animation.reps = 0;
 

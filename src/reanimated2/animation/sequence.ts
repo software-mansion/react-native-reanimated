@@ -41,12 +41,10 @@ export function withSequence(
         return result;
       });
 
-      function nextIndex(index: number, animation: SequenceAnimation) {
+      function nextIndex(index: number) {
         while (
           index < animations.length - 1 &&
-          ((animation.reduceMotion &&
-            animations[index].reduceMotion === undefined) ||
-            animations[index].reduceMotion)
+          animations[index].reduceMotion
         ) {
           index += 1;
         }
@@ -78,15 +76,9 @@ export function withSequence(
             currentAnim.callback(true /* finished */);
           }
           currentAnim.finished = true;
-          animation.animationIndex = nextIndex(
-            animation.animationIndex + 1,
-            animation
-          );
+          animation.animationIndex = nextIndex(animation.animationIndex + 1);
           if (animation.animationIndex < animations.length) {
             const nextAnim = animations[animation.animationIndex];
-            if (nextAnim.reduceMotion === undefined) {
-              nextAnim.reduceMotion = animation.reduceMotion;
-            }
             nextAnim.onStart(nextAnim, currentAnim.current, now, currentAnim);
             return false;
           }
@@ -101,10 +93,13 @@ export function withSequence(
         now: Timestamp,
         previousAnimation: SequenceAnimation
       ): void {
-        if (animation.reduceMotion === undefined) {
-          animation.reduceMotion = shouldReduceMotion('system');
-        }
-        animation.animationIndex = nextIndex(0, animation);
+        animations.forEach((anim) => {
+          if (anim.reduceMotion === undefined) {
+            anim.reduceMotion = animation.reduceMotion;
+          }
+        });
+        animation.animationIndex = nextIndex(0);
+
         if (previousAnimation === undefined) {
           previousAnimation = animations[
             animations.length - 1
@@ -112,10 +107,6 @@ export function withSequence(
         }
 
         const currentAnim = animations[animation.animationIndex];
-        if (currentAnim.reduceMotion === undefined) {
-          currentAnim.reduceMotion = animation.reduceMotion;
-        }
-
         currentAnim.onStart(currentAnim, value, now, previousAnimation);
       }
 

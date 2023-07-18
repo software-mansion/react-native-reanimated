@@ -65,9 +65,6 @@ export const withDelay = function <T extends AnimationObject>(
         now: Timestamp,
         previousAnimation: Animation<any> | null
       ): void {
-        if (animation.reduceMotion === undefined) {
-          animation.reduceMotion = shouldReduceMotion('system');
-        }
         animation.startTime = now;
         animation.started = false;
         animation.current = value;

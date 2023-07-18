@@ -28,7 +28,9 @@ import { isWeb } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
 
-const IS_WEB = isWeb();
+const IS_REDUCED_MOTION = isWeb()
+  ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+  : _REANIMATED_IS_REDUCED_MOTION ?? false;
 
 export type UserUpdater = () => AnimatedStyle;
 
@@ -71,25 +73,32 @@ export function shouldReduceMotion(config?: ReducedMotionConfig) {
   if (config === undefined) {
     return undefined;
   }
-  if (IS_WEB) {
-    return !window.matchMedia('(prefers-reduced-motion: no-preference)')
-      .matches;
-  }
-  return config === 'system'
-    ? _REANIMATED_IS_REDUCED_MOTION ?? false
-    : config === 'always';
+
+  return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
 }
 
 function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   animation: T
 ): void {
   'worklet';
+  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
+  const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
+
   if ((animation as HigherOrderAnimation).isHigherOrder) {
+    animation.onStart = (
+      animation: Animation<AnimationObject>,
+      value: number,
+      timestamp: Timestamp,
+      previousAnimation: Animation<AnimationObject>
+    ) => {
+      if (animation.reduceMotion === undefined) {
+        animation.reduceMotion = shouldReduceMotion('system');
+      }
+      return baseOnStart(animation, value, timestamp, previousAnimation);
+    };
     return;
   }
 
-  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
-  const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
   const animationCopy = Object.assign({}, animation);
   delete animationCopy.callback;
 
