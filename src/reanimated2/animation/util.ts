@@ -3,7 +3,6 @@ import type {
   NextAnimation,
   StyleLayoutAnimation,
 } from './commonTypes';
-/* global _WORKLET */
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
