@@ -1,7 +1,7 @@
 #pragma once
 
 #include "JSScheduler.h"
-#include "Scheduler.h"
+#include "UIScheduler.h"
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -14,16 +14,16 @@ namespace reanimated {
 class JSRuntimeHelper {
  private:
   jsi::Runtime *rnRuntime_; // React-Native's main JS runtime
-  std::shared_ptr<Scheduler> scheduler_;
+  std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<JSScheduler> jsScheduler_;
 
  public:
   JSRuntimeHelper(
       jsi::Runtime *rnRuntime,
-      const std::shared_ptr<Scheduler> &scheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<JSScheduler> &jsScheduler)
       : rnRuntime_(rnRuntime),
-        scheduler_(scheduler),
+        uiScheduler_(uiScheduler),
         jsScheduler_(jsScheduler) {}
 
   volatile bool uiRuntimeDestroyed = false;
@@ -36,8 +36,8 @@ class JSRuntimeHelper {
     return &rt == rnRuntime_;
   }
 
-  void scheduleOnUI(std::function<void()> job) {
-    scheduler_->scheduleOnUI(job);
+  void scheduleOnUI(std::function<void()> &&job) {
+    uiScheduler_->scheduleOnUI(std::move(job));
   }
 
   void scheduleOnJS(std::function<void()> &&job) {

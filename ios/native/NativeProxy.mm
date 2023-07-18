@@ -2,7 +2,7 @@
 #import <RNReanimated/NativeMethods.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REAIOSScheduler.h>
+#import <RNReanimated/REAIOSUIScheduler.h>
 #import <RNReanimated/REAJSIUtils.h>
 #import <RNReanimated/REAKeyboardEventObserver.h>
 #import <RNReanimated/REAMessageThread.h>
@@ -153,7 +153,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make("Reanimated UI runtime");
   WorkletRuntimeCollector::install(*uiRuntime);
 
-  std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsCallInvoker);
+  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(jsCallInvoker);
 
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
@@ -186,7 +186,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
 #else
   // Layout Animations start
-  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
+  __block std::weak_ptr<UIScheduler> weakUiScheduler = uiScheduler;
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
@@ -271,7 +271,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker,
-      scheduler,
+      uiScheduler,
       jsScheduler,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -281,7 +281,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       platformDepMethodsHolder);
 
-  scheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+  uiScheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

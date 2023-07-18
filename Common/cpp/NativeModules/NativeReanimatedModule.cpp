@@ -35,7 +35,7 @@ namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    const std::shared_ptr<Scheduler> &scheduler,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -48,7 +48,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     : NativeReanimatedModuleSpec(jsInvoker),
       runtimeManager_(std::make_shared<RuntimeManager>(
           rt,
-          scheduler,
+          uiScheduler,
           jsScheduler,
           RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
@@ -162,7 +162,7 @@ void NativeReanimatedModule::installCoreFunctions(
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper = std::make_shared<JSRuntimeHelper>(
-        &rt, runtimeManager_->scheduler, runtimeManager_->jsScheduler_);
+        &rt, runtimeManager_->uiScheduler_, runtimeManager_->jsScheduler_);
   }
 
 #ifdef DEBUG
@@ -203,7 +203,7 @@ void NativeReanimatedModule::scheduleOnUI(
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  runtimeManager_->scheduler->scheduleOnUI([=] {
+  runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &uiRuntime = *runtimeManager_->runtime;
     auto workletValue = shareableWorklet->getJSValue(uiRuntime);
     runOnRuntimeGuarded(uiRuntime, workletValue);
@@ -284,7 +284,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   auto eventName = eventHash.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
 
-  runtimeManager_->scheduler->scheduleOnUI([=] {
+  runtimeManager_->uiScheduler_->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeManager_->runtime;
     auto handlerFunction = handlerShareable->getJSValue(rt);
     auto handler = std::make_shared<WorkletEventHandler>(
@@ -302,7 +302,7 @@ void NativeReanimatedModule::unregisterEventHandler(
     jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  runtimeManager_->scheduler->scheduleOnUI(
+  runtimeManager_->uiScheduler_->scheduleOnUI(
       [=] { eventHandlerRegistry->unregisterEventHandler(id); });
 }
 
@@ -317,7 +317,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
   std::shared_ptr<jsi::Function> funPtr =
       std::make_shared<jsi::Function>(std::move(fun));
 
-  runtimeManager_->scheduler->scheduleOnUI(
+  runtimeManager_->uiScheduler_->scheduleOnUI(
       [&rt, viewTagInt, funPtr, this, propNameStr]() {
         const jsi::String propNameValue =
             jsi::String::createFromUtf8(rt, propNameStr);
