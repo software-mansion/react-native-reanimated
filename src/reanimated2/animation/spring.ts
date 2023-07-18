@@ -149,6 +149,7 @@ export const withSpring = ((
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.lastTimestamp &&
         previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&

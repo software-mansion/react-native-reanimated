@@ -88,6 +88,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import MatrixTransform from './MatrixTransform';
 import PendulumExample from './PendulumExample';
 import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
 
@@ -315,6 +316,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  MatrixExample: {
+    icon: '🧮',
+    title: 'useAnimatedStyle with matrix',
+    screen: MatrixTransform,
   },
   SpringExample: {
     icon: '🕰',
