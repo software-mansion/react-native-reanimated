@@ -4,6 +4,39 @@ using namespace facebook;
 
 namespace reanimated {
 
+jsi::Function getValueUnpacker(jsi::Runtime &rt) {
+  auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
+  assert(valueUnpacker.isObject());
+  return valueUnpacker.asObject(rt).asFunction(rt);
+}
+
+#ifdef DEBUG
+
+auto callGuardLambda = [](facebook::jsi::Runtime &rt,
+                          const facebook::jsi::Value &thisVal,
+                          const facebook::jsi::Value *args,
+                          size_t count) {
+  try {
+    return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
+  } catch (std::exception &e) {
+    assert(false);
+  }
+};
+
+jsi::Function getCallGuard(jsi::Runtime &rt) {
+  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
+  if (callGuard.isObject()) {
+    // use JS-based implementation if available
+    return callGuard.asObject(rt).asFunction(rt);
+  }
+  // fallback to C++ JSI implementation
+  // this is necessary to install __callGuardDEV itself
+  return jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
+}
+
+#endif // DEBUG
+
 jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,

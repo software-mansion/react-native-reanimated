@@ -16,6 +16,8 @@
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
 #include "ReanimatedVersion.h"
+#include "WorkletRuntime.h"
+#include "WorkletRuntimeCollector.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
@@ -29,7 +31,7 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    jsi::Runtime *rt,
+    jsi::Runtime *rnRuntime,
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
     std::shared_ptr<Scheduler> scheduler,
     jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
@@ -40,7 +42,7 @@ NativeProxy::NativeProxy(
 #endif
     )
     : javaPart_(jni::make_global(jThis)),
-      runtime_(rt),
+      rnRuntime_(rnRuntime),
       jsCallInvoker_(jsCallInvoker),
       layoutAnimations_(std::move(_layoutAnimations)),
       scheduler_(scheduler)
@@ -108,9 +110,11 @@ void NativeProxy::installJSIBindings(
         fabricUIManager
 #endif
     /**/) {
-  auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
+  WorkletRuntimeCollector::install(*rnRuntime_);
+
   std::shared_ptr<jsi::Runtime> uiRuntime =
-      ReanimatedRuntime::make(runtime_, jsQueue);
+      ReanimatedRuntime::make("Reanimated UI runtime");
+  WorkletRuntimeCollector::install(*uiRuntime);
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -143,7 +147,7 @@ void NativeProxy::installJSIBindings(
 //  reactScheduler_->addEventListener(eventListener_);
 #endif
 
-  auto &rt = *runtime_;
+  auto &rt = *rnRuntime_;
   setGlobalProperties(rt, uiRuntime);
   registerEventHandler();
   setupLayoutAnimations();
@@ -152,6 +156,70 @@ void NativeProxy::installJSIBindings(
       rt,
       jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
       jsi::Object::createFromHostObject(rt, nativeReanimatedModule));
+
+  auto createWorkletRuntime = [](jsi::Runtime &rt,
+                                 const jsi::Value &thisValue,
+                                 const jsi::Value *args,
+                                 size_t count) -> jsi::Value {
+    auto name = args[0].asString(rt).utf8(rt);
+    auto valueUnpackerCode = args[1].asString(rt).utf8(rt);
+    auto ho = std::make_shared<WorkletRuntime>(name, valueUnpackerCode);
+    return jsi::Object::createFromHostObject(rt, ho);
+  };
+  rt.global().setProperty(
+      rt,
+      "_createWorkletRuntime",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_createWorkletRuntime"),
+          2,
+          createWorkletRuntime));
+
+  auto scheduleOnJS = [nativeReanimatedModule](
+                          jsi::Runtime &rt,
+                          const jsi::Value &thisValue,
+                          const jsi::Value *args,
+                          size_t count) -> jsi::Value {
+    nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
+    return jsi::Value::undefined();
+  };
+  rt.global().setProperty(
+      rt,
+      "_scheduleOnJS",
+      jsi::Function::createFromHostFunction(
+          rt, jsi::PropNameID::forAscii(rt, "_scheduleOnJS"), 2, scheduleOnJS));
+
+  auto makeShareableClone = [nativeReanimatedModule](
+                                jsi::Runtime &rt,
+                                const jsi::Value &thisValue,
+                                const jsi::Value *args,
+                                size_t count) -> jsi::Value {
+    return nativeReanimatedModule->makeShareableClone(
+        rt, args[0], jsi::Value::undefined());
+  };
+  rt.global().setProperty(
+      rt,
+      "_makeShareableClone",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_makeShareableClone"),
+          1,
+          makeShareableClone));
+
+  auto runOnRuntime = [](jsi::Runtime &rt,
+                         const jsi::Value &thisValue,
+                         const jsi::Value *args,
+                         size_t count) -> jsi::Value {
+    jsi::Runtime &rt2 = *runtimeFromValue(rt, args[0]);
+    auto worklet = extractShareableOrThrow<ShareableWorklet>(rt, args[1]);
+    runOnRuntimeGuarded(rt2, worklet->getJSValue(rt2));
+    return jsi::Value::undefined();
+  };
+  rt.global().setProperty(
+      rt,
+      "_runOnRuntime",
+      jsi::Function::createFromHostFunction(
+          rt, jsi::PropNameID::forAscii(rt, "_runOnRuntime"), 2, runOnRuntime));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
