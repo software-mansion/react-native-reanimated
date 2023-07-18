@@ -1,24 +1,45 @@
 import type {
   WorkletClosure,
-  WorkletFunction,
   NativeEvent,
+  DevWorkletBase,
+  ReleaseWorkletBase,
 } from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-interface Handler<T, TContext extends WorkletClosure> extends WorkletFunction {
+interface DevGestureInnerHandler<T, TContext extends WorkletClosure>
+  extends DevWorkletBase {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
 }
 
-export interface GestureHandlers<T, TContext extends WorkletClosure> {
-  [key: string]: Handler<T, TContext> | undefined;
-  onStart?: Handler<T, TContext>;
-  onActive?: Handler<T, TContext>;
-  onEnd?: Handler<T, TContext>;
-  onFail?: Handler<T, TContext>;
-  onCancel?: Handler<T, TContext>;
-  onFinish?: Handler<T, TContext>;
+interface ReleaseGestureInnerHandler<T, TContext extends WorkletClosure>
+  extends ReleaseWorkletBase {
+  (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
 }
+
+interface DevGestureHandlers<T, TContext extends WorkletClosure> {
+  [key: string]: DevGestureInnerHandler<T, TContext> | undefined;
+  onStart?: DevGestureInnerHandler<T, TContext>;
+  onActive?: DevGestureInnerHandler<T, TContext>;
+  onEnd?: DevGestureInnerHandler<T, TContext>;
+  onFail?: DevGestureInnerHandler<T, TContext>;
+  onCancel?: DevGestureInnerHandler<T, TContext>;
+  onFinish?: DevGestureInnerHandler<T, TContext>;
+}
+
+interface ReleaseGestureHandlers<T, TContext extends WorkletClosure> {
+  [key: string]: ReleaseGestureInnerHandler<T, TContext> | undefined;
+  onStart?: ReleaseGestureInnerHandler<T, TContext>;
+  onActive?: ReleaseGestureInnerHandler<T, TContext>;
+  onEnd?: ReleaseGestureInnerHandler<T, TContext>;
+  onFail?: ReleaseGestureInnerHandler<T, TContext>;
+  onCancel?: ReleaseGestureInnerHandler<T, TContext>;
+  onFinish?: ReleaseGestureInnerHandler<T, TContext>;
+}
+
+export type GestureHandlers<T, TContext extends WorkletClosure> =
+  | ReleaseGestureHandlers<T, TContext>
+  | DevGestureHandlers<T, TContext>;
 
 export const EventType = {
   UNDETERMINED: 0,

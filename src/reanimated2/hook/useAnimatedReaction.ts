@@ -9,13 +9,16 @@ import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export interface DevAnimatedReactionWorkletFunction<T> extends DevWorkletBase {
+interface DevAnimatedReactionWorkletFunction<T> extends DevWorkletBase {
   (prepared: T, previous: T | null): void;
 }
-export interface ReleaseAnimatedReactionWorkletFunction<T>
-  extends ReleaseWorkletBase {
+interface ReleaseAnimatedReactionWorkletFunction<T> extends ReleaseWorkletBase {
   (prepared: T, previous: T | null): void;
 }
+
+export type AnimatedReactionWorkletFunction<T> =
+  | DevAnimatedReactionWorkletFunction<T>
+  | ReleaseAnimatedReactionWorkletFunction<T>;
 /**
  * @param prepare - worklet used for data preparation for the second parameter
  * @param react - worklet which takes data prepared by the one in the first parameter and performs certain actions
@@ -24,9 +27,7 @@ export interface ReleaseAnimatedReactionWorkletFunction<T>
  */
 export function useAnimatedReaction<T>(
   prepare: WorkletFunction<T>,
-  react:
-    | DevAnimatedReactionWorkletFunction<T>
-    | ReleaseAnimatedReactionWorkletFunction<T>,
+  react: AnimatedReactionWorkletFunction<T>,
   dependencies?: DependencyList
 ): void {
   const previous = useSharedValue<T | null>(null, true);

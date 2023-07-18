@@ -130,9 +130,9 @@ export const runOnUI = (<A extends any[], R>(
 /**
  * Schedule a worklet to execute on the UI runtime skipping batching mechanism.
  */
-export function runOnUIImmediately<A extends any[], R>(
+export const runOnUIImmediately = (<A extends any[], R>(
   worklet: WorkletFunctionWithRemoteFunction<R>
-): (...args: A) => void {
+): ((...args: A) => void) => {
   'worklet';
   if (__DEV__ && !IS_WEB && _WORKLET) {
     throw new Error(
@@ -150,7 +150,9 @@ export function runOnUIImmediately<A extends any[], R>(
       })
     );
   };
-}
+}) as unknown as <A extends unknown[], R>(
+  worklet: WorkletizableFunction<A, R>
+) => (...args: A) => void;
 
 if (__DEV__ && !IS_WEB) {
   const f = () => {

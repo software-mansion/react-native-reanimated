@@ -3,16 +3,26 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type {
   WorkletClosure,
   NativeEvent,
-  WorkletFunction,
+  ReleaseWorkletBase,
+  DevWorkletBase,
 } from '../commonTypes';
 import type WorkletEventHandler from '../WorkletEventHandler';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-export interface ScrollHandler<TContext extends WorkletClosure>
-  extends WorkletFunction {
+interface ReleaseScrollHandler<TContext extends WorkletClosure>
+  extends ReleaseWorkletBase {
   (event: NativeScrollEvent, context?: TContext): void;
 }
+
+interface DevScrollHandler<TContext extends WorkletClosure>
+  extends DevWorkletBase {
+  (event: NativeScrollEvent, context?: TContext): void;
+}
+
+export type ScrollHandler<TContext extends WorkletClosure> =
+  | ReleaseScrollHandler<TContext>
+  | DevScrollHandler<TContext>;
 
 export interface ScrollEvent
   extends NativeScrollEvent,

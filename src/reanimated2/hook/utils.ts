@@ -3,21 +3,33 @@ import { useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
 import type {
   AnimatedStyle,
-  WorkletClosure,
   NativeEvent,
   NestedObjectValues,
-  WorkletFunction,
   AnimationObject,
+  WorkletClosure,
+  DevWorkletBase,
+  WorkletBase,
+  ReleaseWorkletBase,
 } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import type { ContextWithDependencies, DependencyList } from './commonTypes';
+import type { DependencyList } from './commonTypes';
 import type { NativeSyntheticEvent } from 'react-native';
-interface Handler<T, TContext extends WorkletClosure> extends WorkletFunction {
+
+interface ReleaseHandler<T, TContext extends WorkletClosure>
+  extends ReleaseWorkletBase {
   (event: T, context: TContext): void;
 }
+
+interface DevHandler<T, TContext extends WorkletClosure>
+  extends DevWorkletBase {
+  (event: T, context: TContext): void;
+}
+type Handler<T, TContext extends WorkletClosure> =
+  | ReleaseHandler<T, TContext>
+  | DevHandler<T, TContext>;
 
 interface Handlers<T, TContext extends WorkletClosure> {
   [key: string]: Handler<T, TContext> | undefined;
@@ -61,6 +73,11 @@ type useHandlerType = <
   deps?: DependencyList
 ) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
 
+export interface ContextWithDependencies<TContext extends WorkletClosure> {
+  context: TContext;
+  savedDependencies: DependencyList;
+}
+
 export const useHandler = function <T, TContext extends WorkletClosure>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
@@ -96,10 +113,10 @@ export const useHandler = function <T, TContext extends WorkletClosure>(
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
-  handlers: Record<string, WorkletFunction> | Array<WorkletFunction>
+  handlers: Record<string, WorkletBase> | Array<WorkletBase>
 ): string {
   return Object.values(handlers).reduce(
-    (acc: string, worklet: WorkletFunction) =>
+    (acc: string, worklet: WorkletBase) =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       acc + worklet.__workletHash!.toString(),
     ''
@@ -109,11 +126,11 @@ export function buildWorkletsHash(
 // builds dependencies array for gesture handlers
 export function buildDependencies(
   dependencies: DependencyList,
-  handlers: Record<string, WorkletFunction | undefined>
+  handlers: Record<string, WorkletBase | undefined>
 ): Array<unknown> {
-  const handlersList: WorkletFunction[] = Object.values(handlers).filter(
+  const handlersList: WorkletBase[] = Object.values(handlers).filter(
     (handler) => handler !== undefined
-  ) as WorkletFunction[];
+  ) as WorkletBase[];
   if (!dependencies) {
     dependencies = handlersList.map((handler) => {
       return {
