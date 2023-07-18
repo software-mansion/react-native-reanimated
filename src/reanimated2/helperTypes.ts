@@ -81,7 +81,7 @@ type PickStyleProps<T> = Pick<
 
 type StyleAnimatedProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: StyleProp<
-    AnimateStyle<P[K]> | AnimateStyle<MaybeSharedValue<P[K]>>
+    AnimateStyle<P[K] | MaybeSharedValue<P[K]>>
   >;
 };
 
