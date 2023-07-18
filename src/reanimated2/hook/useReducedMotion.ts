@@ -1,3 +1,5 @@
+import { IS_REDUCED_MOTION } from '../utils';
+
 export function useReducedMotion() {
-  return global._REANIMATED_IS_REDUCED_MOTION ?? false;
+  return IS_REDUCED_MOTION;
 }

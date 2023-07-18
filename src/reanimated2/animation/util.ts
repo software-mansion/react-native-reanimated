@@ -24,13 +24,9 @@ import type {
   AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
-import { isWeb } from '../PlatformChecker';
+import { IS_REDUCED_MOTION } from '../utils';
 
 let IN_STYLE_UPDATER = false;
-
-const IS_REDUCED_MOTION = isWeb()
-  ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
-  : global._REANIMATED_IS_REDUCED_MOTION ?? false;
 
 export type UserUpdater = () => AnimatedStyle;
 
