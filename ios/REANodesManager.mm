@@ -173,6 +173,17 @@ using namespace facebook::react;
 #endif
 }
 
+- (CADisplayLink *)getDisplayLink
+{
+  RCTAssertMainQueue();
+
+  if (!_displayLink) {
+    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+    _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+  }
+  return _displayLink;
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                                 bridge:(RCTBridge *)bridge
@@ -205,28 +216,16 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
+  [[self getDisplayLink] addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  [[self getDisplayLink] setPaused:true];
 
-  __weak __typeof__(self) weakSelf = self;
-
-  RCTExecuteOnMainQueue(^void() {
-    __typeof__(self) strongSelf = weakSelf;
-    if (strongSelf == nil) {
-      return;
-    }
-
-    strongSelf->_displayLink = [CADisplayLink displayLinkWithTarget:strongSelf selector:@selector(onAnimationFrame:)];
-    strongSelf->_displayLink.preferredFramesPerSecond =
-        120; // will fallback to 60 fps for devices without Pro Motion display
-    [strongSelf->_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-    [strongSelf->_displayLink setPaused:true];
-  });
   return self;
 }
 
 - (void)invalidate
 {
   _eventHandler = nil;
-  [_displayLink invalidate];
+  [[self getDisplayLink] invalidate];
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -238,7 +237,7 @@ using namespace facebook::react;
 
 - (void)operationsBatchDidComplete
 {
-  if (![_displayLink isPaused]) {
+  if (![[self getDisplayLink] isPaused]) {
     // if display link is set it means some of the operations that have run as a part of the batch
     // requested updates. We want updates to be run in the same frame as in which operations have
     // been scheduled as it may mean the new view has just been mounted and expects its initial
@@ -270,12 +269,12 @@ using namespace facebook::react;
 
 - (void)startUpdatingOnAnimationFrame
 {
-  [_displayLink setPaused:false];
+  [[self getDisplayLink] setPaused:false];
 }
 
 - (void)stopUpdatingOnAnimationFrame
 {
-  [_displayLink setPaused:true];
+  [[self getDisplayLink] setPaused:true];
 }
 
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
@@ -550,7 +549,7 @@ using namespace facebook::react;
 
 - (void)maybeFlushUIUpdatesQueue
 {
-  if ([_displayLink isPaused]) {
+  if ([[self getDisplayLink] isPaused]) {
     [self performOperations];
   }
 }
