@@ -10,7 +10,7 @@ export function checkCppVersion() {
   const ok = matchVersion(jsVersion, cppVersion);
   if (!ok) {
     throw new Error(
-      `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (js version: ${jsVersion} vs. native version: ${cppVersion}). Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must downgrade to ${cppVersion} which is bundled into Expo SDK.`
+      `[Reanimated] Mismatch between JavaScript part (${jsVersion}) and native part of Reanimated (${cppVersion}). Did you forget to re-build the app after upgrading react-native-reanimated? If you use Expo Go, you must downgrade to ${cppVersion} which is bundled into Expo SDK.`
     );
   }
 }
