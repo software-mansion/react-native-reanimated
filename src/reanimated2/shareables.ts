@@ -141,9 +141,13 @@ export function makeShareableCloneRecursive<T>(
           // we are converting a worklet
           if (__DEV__) {
             const babelVersion = value.__initData.version;
-            if (babelVersion !== jsVersion) {
+            if (babelVersion === undefined) {
+              throw new Error(
+                '[Reanimated] Unknown version of Reanimated Babel plugin. Using release bundle with debug build of the app is not supported. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.'
+              );
+            } else if (babelVersion !== jsVersion) {
               throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
-              \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.`);
+              \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.`);
             }
             registerWorkletStackDetails(
               value.__workletHash,
