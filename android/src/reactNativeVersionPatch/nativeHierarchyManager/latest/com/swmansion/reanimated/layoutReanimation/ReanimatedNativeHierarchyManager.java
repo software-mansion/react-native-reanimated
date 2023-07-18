@@ -198,7 +198,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
 
-    Class clazz = this.getClass().getSuperclass();
+    Class<?> clazz = this.getClass().getSuperclass();
     if (clazz == null) {
       Log.e("reanimated", "unable to resolve super class of ReanimatedNativeHierarchyManager");
       return;
@@ -252,7 +252,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   }
 
   private boolean isLayoutAnimationDisabled() {
-    return !initOk || !((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled();
+    return !initOk || !mReaLayoutAnimator.isLayoutAnimationEnabled();
   }
 
   public synchronized void updateLayout(
@@ -338,7 +338,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
-      HashSet<Integer> tagsToRemove = new HashSet<Integer>();
+      HashSet<Integer> tagsToRemove = new HashSet<>();
       for (View childToRemove : childrenToBeRemoved) {
         tagsToRemove.add(childToRemove.getId());
       }
@@ -357,10 +357,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         toBeRemoved.put(tag, new ArrayList<>());
       }
       ArrayList<View> toBeRemovedChildren = toBeRemoved.get(tag);
-      for (Integer childtag : tagsToDelete) {
+      for (Integer childTag : tagsToDelete) {
         View view;
         try {
-          view = resolveView(childtag);
+          view = resolveView(childTag);
         } catch (IllegalViewOperationException e) {
           // (IllegalViewOperationException) == (vm == null)
           e.printStackTrace();

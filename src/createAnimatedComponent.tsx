@@ -34,7 +34,7 @@ import type {
   LayoutAnimationFunction,
 } from './reanimated2/layoutReanimation';
 import {
-  DefaultSharedTransition,
+  SharedTransition,
   LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import type {
@@ -234,7 +234,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: ILayoutAnimationBuilder;
+  sharedTransitionStyle?: SharedTransition;
 };
 
 type Options<P> = {
@@ -285,6 +285,7 @@ export default function createAnimatedComponent(
     _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
+    _sharedElementTransition: SharedTransition | null = null;
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -298,6 +299,7 @@ export default function createAnimatedComponent(
       this._detachNativeEvents();
       this._detachStyles();
       this._detachInlineProps();
+      this._sharedElementTransition?.unregisterTransition(this._viewTag);
     }
 
     componentDidMount() {
@@ -639,13 +641,12 @@ export default function createAnimatedComponent(
           }
           if (sharedTransitionTag) {
             const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
-            configureLayoutAnimations(
+              this.props.sharedTransitionStyle ?? new SharedTransition();
+            sharedElementTransition.registerTransition(
               tag,
-              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-              maybeBuild(sharedElementTransition),
               sharedTransitionTag
             );
+            this._sharedElementTransition = sharedElementTransition;
           }
         }
 

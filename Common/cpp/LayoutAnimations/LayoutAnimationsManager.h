@@ -4,7 +4,6 @@
 #include "Shareables.h"
 
 #ifdef DEBUG
-#include <unordered_set>
 #include "JSLogger.h"
 #endif
 
@@ -15,6 +14,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -68,6 +68,7 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>>
       sharedTransitionAnimations_;
+  std::unordered_set<int> ignoreProgressAnimationForTag_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
   std::unordered_map<int, std::string> viewTagToSharedTag_;
   mutable std::mutex

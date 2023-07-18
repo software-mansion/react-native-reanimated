@@ -14,14 +14,14 @@ import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegis
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
+import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
-  var _WORKLET: boolean | undefined;
+  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
-  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
@@ -30,7 +30,7 @@ declare global {
   var _log: (s: string) => void;
   var _notifyAboutProgress: (
     tag: number,
-    value: number,
+    value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
   var _notifyAboutEnd: (
@@ -95,4 +95,5 @@ declare global {
   var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
+  var ProgressTransitionRegister: ProgressTransitionRegister;
 }
