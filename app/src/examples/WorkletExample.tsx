@@ -23,7 +23,7 @@ import React from 'react';
 function RunOnUIDemo() {
   const someWorklet = (x: number) => {
     'worklet';
-    console.log(_WORKLET, x); // should be true
+    console.log(_WORKLET, x); // _WORKLET should be true
   };
 
   const handlePress = () => {
@@ -35,12 +35,12 @@ function RunOnUIDemo() {
 
 function RunOnUIRunOnJSDemo() {
   const someFunction = (x: number) => {
-    console.log(_WORKLET, x); // should be false
+    console.log(_WORKLET, x); // _WORKLET should be false
   };
 
   const someWorklet = (x: number) => {
     'worklet';
-    console.log(_WORKLET, x); // should be true
+    console.log(_WORKLET, x); // _WORKLET should be true
     runOnJS(someFunction)(x);
   };
 
@@ -55,7 +55,7 @@ function UseDerivedValueRunOnJSDemo() {
   const sv = useSharedValue(0);
 
   const someFunction = (x: number) => {
-    console.log(_WORKLET, x); // should be false
+    console.log(_WORKLET, x); // _WORKLET should be false
   };
 
   useDerivedValue(() => {
