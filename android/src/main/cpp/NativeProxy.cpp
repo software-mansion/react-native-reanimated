@@ -133,14 +133,14 @@ void NativeProxy::installJSIBindings(
   nativeReanimatedModule->setUIManager(uiManager);
   nativeReanimatedModule->setPropsRegistry(propsRegistry_);
   propsRegistry_ = nullptr;
-//  removed temporary, new event listener mechanism need fix on the RN side
-//  eventListener_ = std::make_shared<EventListener>(
-//      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
-//        return nativeReanimatedModule->handleRawEvent(rawEvent,
-//        getCurrentTime());
-//      });
-//  reactScheduler_ = binding->getScheduler();
-//  reactScheduler_->addEventListener(eventListener_);
+  //  removed temporary, new event listener mechanism need fix on the RN side
+  //  eventListener_ = std::make_shared<EventListener>(
+  //      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+  //        return nativeReanimatedModule->handleRawEvent(rawEvent,
+  //        getCurrentTime());
+  //      });
+  //  reactScheduler_ = binding->getScheduler();
+  //  reactScheduler_->addEventListener(eventListener_);
 #endif
 
   auto &rt = *runtime_;

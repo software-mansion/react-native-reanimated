@@ -1,4 +1,3 @@
-/* global _updatePropsPaper _updatePropsFabric */
 import type { MutableRefObject } from 'react';
 import { processColor } from './Colors';
 import type {
