@@ -15,10 +15,16 @@ void LayoutAnimationsManager::configureAnimation(
     const std::string &sharedTransitionTag,
     std::shared_ptr<Shareable> config) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-  getConfigsForType(type)[tag] = config;
-  if (type == SHARED_ELEMENT_TRANSITION) {
+  if (type == SHARED_ELEMENT_TRANSITION ||
+      type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
     viewTagToSharedTag_[tag] = sharedTransitionTag;
+    getConfigsForType(SHARED_ELEMENT_TRANSITION)[tag] = config;
+    if (type == SHARED_ELEMENT_TRANSITION) {
+      ignoreProgressAnimationForTag_.insert(tag);
+    }
+  } else {
+    getConfigsForType(type)[tag] = config;
   }
 }
 
@@ -26,6 +32,10 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     int tag,
     LayoutAnimationType type) {
   auto lock = std::unique_lock<std::mutex>(animationsMutex_);
+  if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    auto end = ignoreProgressAnimationForTag_.end();
+    return ignoreProgressAnimationForTag_.find(tag) == end;
+  }
   return collection::contains(getConfigsForType(type), tag);
 }
 
@@ -42,6 +52,9 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
 
   sharedTransitionAnimations_.erase(tag);
   auto const &groupName = viewTagToSharedTag_[tag];
+  if (groupName.empty()) {
+    return;
+  }
   auto &group = sharedTransitionGroups_[groupName];
   auto position = std::find(group.begin(), group.end(), tag);
   if (position != group.end()) {
@@ -51,6 +64,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(int tag) {
     sharedTransitionGroups_.erase(groupName);
   }
   viewTagToSharedTag_.erase(tag);
+  ignoreProgressAnimationForTag_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
@@ -162,6 +176,7 @@ std::unordered_map<int, std::shared_ptr<Shareable>>
     case LAYOUT:
       return layoutAnimations_;
     case SHARED_ELEMENT_TRANSITION:
+    case SHARED_ELEMENT_TRANSITION_PROGRESS:
       return sharedTransitionAnimations_;
     default:
       assert(false);

@@ -11,6 +11,7 @@
   _sourceViewSnapshot = sourceViewSnapshot;
   _targetView = targetView;
   _targetViewSnapshot = targetViewSnapshot;
+  _animationType = SHARED_ELEMENT_TRANSITION;
   return self;
 }
 @end

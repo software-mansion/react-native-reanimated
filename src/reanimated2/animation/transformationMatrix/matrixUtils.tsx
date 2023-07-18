@@ -327,7 +327,10 @@ function gramSchmidtAlgorithm(matrix: AffineMatrix): {
     [0, 0, innerProduct(e2, a2), innerProduct(e2, a3)],
     [0, 0, 0, innerProduct(e3, a3)],
   ];
-  return {rotationMatrix: transposeMatrix(rotationMatrix), skewMatrix:transposeMatrix(skewMatrix) };
+  return {
+    rotationMatrix: transposeMatrix(rotationMatrix),
+    skewMatrix: transposeMatrix(skewMatrix),
+  };
 }
 
 export function decomposeMatrix(

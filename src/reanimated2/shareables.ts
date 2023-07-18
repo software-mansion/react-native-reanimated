@@ -140,8 +140,9 @@ export function makeShareableCloneRecursive<T>(
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
           if (__DEV__) {
-            if (value.__version !== jsVersion) {
-              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${value.__version}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
+            const babelVersion = value.__initData.version;
+            if (babelVersion !== jsVersion) {
+              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
               \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.`);
             }
             registerWorkletStackDetails(
@@ -149,6 +150,14 @@ export function makeShareableCloneRecursive<T>(
               value.__stackDetails
             );
             delete value.__stackDetails;
+          } else if (value.__stackDetails) {
+            // Detected debug version of the worklet in release bundle. This
+            // might lead to unexpected issues or errors. Probably one of user
+            // dependencies provided transpiled code with debug version of the
+            // Reanimated plugin.
+            throw new Error(
+              '[Reanimated] Using dev bundle in a release app build is not supported. Visit https://github.com/software-mansion/react-native-reanimated/issues/4737 to find more information on how to fix this issue.'
+            );
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means

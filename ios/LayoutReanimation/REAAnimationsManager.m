@@ -141,7 +141,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self endAnimationsRecursive:view];
     [view removeFromSuperview];
   }
-  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag]];
+  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag] removeView:removeView];
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
@@ -585,6 +585,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues
 {
   _startAnimationForTag(tag, type, yogaValues);
+}
+
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack
+{
+  [_sharedTransitionManager onScreenRemoval:screen stack:stack];
 }
 
 @end

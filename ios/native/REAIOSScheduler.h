@@ -13,7 +13,6 @@ class REAIOSScheduler : public Scheduler {
  public:
   REAIOSScheduler(std::shared_ptr<CallInvoker> jsInvoker);
   void scheduleOnUI(std::function<void()> job) override;
-  virtual ~REAIOSScheduler();
 };
 
 } // namespace reanimated
