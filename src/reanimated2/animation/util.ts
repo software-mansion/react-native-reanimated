@@ -30,7 +30,7 @@ let IN_STYLE_UPDATER = false;
 
 const IS_REDUCED_MOTION = isWeb()
   ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
-  : _REANIMATED_IS_REDUCED_MOTION ?? false;
+  : global._REANIMATED_IS_REDUCED_MOTION ?? false;
 
 export type UserUpdater = () => AnimatedStyle;
 
