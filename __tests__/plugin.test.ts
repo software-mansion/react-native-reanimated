@@ -1414,23 +1414,7 @@ describe('babel plugin', () => {
   });
 
   describe('for worklet nesting', () => {
-    it("doesn't nest worklets for other threads when disabled", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-      const { code } = runPlugin(input);
-      expect(code).toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transforms nested worklets for JS thread when disabled', () => {
+    it("doesn't process nested worklets when disabled", () => {
       const input = html`<script>
         function foo(x) {
           'worklet';
@@ -1444,6 +1428,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(2);
+      expect(code).toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
 
@@ -1459,13 +1444,7 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(
-        input,
-        {},
-        {
-          processNestedWorklets: true,
-        }
-      );
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
     });
@@ -1485,13 +1464,7 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(
-        input,
-        {},
-        {
-          processNestedWorklets: true,
-        }
-      );
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1507,13 +1480,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(
-        input,
-        {},
-        {
-          processNestedWorklets: true,
-        }
-      );
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
 
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
@@ -1532,13 +1499,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(
-        input,
-        {},
-        {
-          processNestedWorklets: true,
-        }
-      );
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1559,13 +1520,7 @@ describe('babel plugin', () => {
           runOnJS(func)();
         })();
       </script>`;
-      const { code } = runPlugin(
-        input,
-        {},
-        {
-          processNestedWorklets: true,
-        }
-      );
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
