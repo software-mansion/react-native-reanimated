@@ -1,6 +1,9 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import type { ComplexWorkletFunction } from './commonTypes';
+import type {
+  WorkletFunctionWithRemoteFunction,
+  WorkletizableFunction,
+} from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -9,7 +12,7 @@ import {
 const IS_JEST = isJest();
 const IS_WEB = shouldBeUseWeb();
 
-let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
+let _runOnUIQueue: Array<[WorkletFunctionWithRemoteFunction<any>, any[]]> = [];
 
 export function setupMicrotasks() {
   'worklet';
@@ -57,9 +60,10 @@ export const callMicrotasks = shouldBeUseWeb()
  * waits for other worklets to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
  * at once making sure they will run within the same frame boundaries on the UI thread.
  */
-export function runOnUI<A extends any[], R>(
-  worklet: ComplexWorkletFunction<A, R>
-): (...args: A) => void {
+
+export const runOnUI = (<A extends any[], R>(
+  worklet: WorkletFunctionWithRemoteFunction<R>
+): ((...args: A) => void) => {
   'worklet';
   if (__DEV__ && !IS_WEB && _WORKLET) {
     throw new Error(
@@ -114,13 +118,20 @@ export function runOnUI<A extends any[], R>(
       });
     }
   };
-}
+}) as unknown as <A extends unknown[], R>(
+  worklet: WorkletizableFunction<A, R>
+) => (...args: A) => void;
+// This cast is necessary (and very smart B])
+// since worklet is a different object
+// when you type TypeScript code and a different object
+// once Reanimated Babel Plugin has transpiled it
+// and runOnUI is in execution.
 
 /**
  * Schedule a worklet to execute on the UI runtime skipping batching mechanism.
  */
 export function runOnUIImmediately<A extends any[], R>(
-  worklet: ComplexWorkletFunction<A, R>
+  worklet: WorkletFunctionWithRemoteFunction<R>
 ): (...args: A) => void {
   'worklet';
   if (__DEV__ && !IS_WEB && _WORKLET) {
@@ -154,7 +165,7 @@ if (__DEV__ && !IS_WEB) {
 }
 
 export function runOnJS<A extends any[], R>(
-  fun: ComplexWorkletFunction<A, R>
+  fun: WorkletFunctionWithRemoteFunction<R>
 ): (...args: A) => void {
   'worklet';
   if (fun.__remoteFunction) {
@@ -162,7 +173,9 @@ export function runOnJS<A extends any[], R>(
     // such that when someone accidently calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we purt the
     // reference to the original remote function in the `__remoteFunction` property.
-    fun = fun.__remoteFunction;
+    fun = fun.__remoteFunction as any;
+    // TODO TYPESCRIPT: this is obviously wrong since __remoteFunction
+    // is not a worklet function (or is it?)
   }
   return (...args) => {
     _scheduleOnJS(

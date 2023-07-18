@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
 import type {
   AnimatedStyle,
-  Context,
+  WorkletClosure,
   NativeEvent,
   NestedObjectValues,
   WorkletFunction,
@@ -15,15 +15,15 @@ import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import type { ContextWithDependencies, DependencyList } from './commonTypes';
 import type { NativeSyntheticEvent } from 'react-native';
-interface Handler<T, TContext extends Context> extends WorkletFunction {
+interface Handler<T, TContext extends WorkletClosure> extends WorkletFunction {
   (event: T, context: TContext): void;
 }
 
-interface Handlers<T, TContext extends Context> {
+interface Handlers<T, TContext extends WorkletClosure> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-export interface UseHandlerContext<TContext extends Context> {
+export interface UseHandlerContext<TContext extends WorkletClosure> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
@@ -53,12 +53,15 @@ export const useEvent = function <T extends NativeEvent<T>>(
 } as unknown as useEventType;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useHandlerType = <T, TContext extends Context = Record<string, never>>(
+type useHandlerType = <
+  T,
+  TContext extends WorkletClosure = Record<string, never>
+>(
   handlers: Handlers<T, TContext>,
   deps?: DependencyList
 ) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
 
-export const useHandler = function <T, TContext extends Context>(
+export const useHandler = function <T, TContext extends WorkletClosure>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
 ): UseHandlerContext<TContext> {

@@ -94,28 +94,67 @@ export type MapperRegistry = {
   stop: (mapperID: number) => void;
 };
 
-export type Context = Record<string, unknown>;
+type WorkletClosure = Record<string, unknown>;
 
-export interface WorkletFunction {
-  _closure?: Context;
-  __workletHash?: number;
+interface ReleaseInitData {
+  code: string;
 }
 
-export interface BasicWorkletFunction<T> extends WorkletFunction {
-  (): T;
+interface DevInitData {
+  code: string;
+  location: string;
+  sourceMap: string;
+  version: string;
+}
+export interface ReleaseWorkletBase {
+  _closure: WorkletClosure;
+  __initData: ReleaseInitData;
+  __workletHash: number;
 }
 
-export interface BasicWorkletFunctionOptional<T> extends WorkletFunction {
-  (): Partial<T>;
+export interface DevWorkletBase {
+  _closure: WorkletClosure;
+  __initData: DevInitData;
+  __workletHash: number;
+  __stackDetails: Error;
 }
+
+type ReleaseWorkletFunction<R> = ReleaseWorkletBase &
+  (
+    | {
+        (...args: unknown[]): R;
+      }
+    | {
+        (): R;
+      }
+  );
+
+type DevWorkletFunction<T> = DevWorkletBase &
+  (
+    | {
+        (...args: unknown[]): T;
+      }
+    | {
+        (): T;
+      }
+  );
+
+export type WorkletFunction<T> =
+  | ReleaseWorkletFunction<T>
+  | DevWorkletFunction<T>;
+
+export type WorkletFunctionWithRemoteFunction<T> = WorkletFunction<T> &
+  (
+    | {
+        __remoteFunction: (...args: unknown[]) => T;
+      }
+    | { __remoteFunction: () => T }
+  );
+
+export type WorkletizableFunction<A extends unknown[], R> = (...args: A) => R;
 
 export interface NativeEvent<T> {
   nativeEvent: T;
-}
-export interface ComplexWorkletFunction<A extends any[], R>
-  extends WorkletFunction {
-  (...args: A): R;
-  __remoteFunction?: (...args: A) => R;
 }
 
 export interface NestedObject<T> {
@@ -127,9 +166,17 @@ export type NestedObjectValues<T> =
   | Array<NestedObjectValues<T>>
   | NestedObject<T>;
 
-export interface AdapterWorkletFunction extends WorkletFunction {
+interface ReleaseAdapterWorkletFunction extends DevWorkletBase {
   (value: NestedObject<string | number | AnimationObject>): void;
 }
+
+interface DevAdapterWorkletFunction extends DevWorkletBase {
+  (value: NestedObject<string | number | AnimationObject>): void;
+}
+
+export type AdapterWorkletFunction =
+  | ReleaseAdapterWorkletFunction
+  | DevAdapterWorkletFunction;
 
 type Animatable = number | string | Array<number>;
 

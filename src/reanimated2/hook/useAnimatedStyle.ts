@@ -21,11 +21,10 @@ import type {
   Timestamp,
   AdapterWorkletFunction,
   AnimatedStyle,
-  BasicWorkletFunction,
-  BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  WorkletFunction,
 } from '../commonTypes';
 import type {
   ImageStyle,
@@ -181,7 +180,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle>,
+  updater: WorkletFunction<AnimatedStyle>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>
@@ -269,7 +268,7 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: BasicWorkletFunction<AnimatedStyle>,
+  updater: WorkletFunction<AnimatedStyle>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
@@ -413,7 +412,7 @@ type useAnimatedStyleType = <
 
 export const useAnimatedStyle = function <T extends AnimatedStyle>(
   // animated style cannot be an array
-  updater: BasicWorkletFunction<T extends Array<unknown> ? never : T>,
+  updater: WorkletFunction<T extends Array<unknown> ? never : T>,
   dependencies?: DependencyList,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
 ): AnimatedStyleResult {
@@ -479,16 +478,18 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater as BasicWorkletFunctionOptional<T>;
+    let updaterFn = updater;
     if (adapters) {
-      updaterFn = () => {
+      updaterFn = (() => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
           adapter(newValues);
         });
         return newValues;
-      };
+      }) as WorkletFunction<T extends Array<unknown> ? never : T>;
+      // TODO TYPESCRIPT this cast is necessary since this function is wrongly typed
+      // and it should be getting a Workletizable Function, not a WorkletFunction
     }
 
     if (isJest()) {

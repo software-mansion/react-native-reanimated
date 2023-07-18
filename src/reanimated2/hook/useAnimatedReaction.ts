@@ -1,11 +1,19 @@
 import { useEffect } from 'react';
-import type { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
+import type {
+  WorkletFunction,
+  ReleaseWorkletBase,
+  DevWorkletBase,
+} from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
+export interface DevAnimatedReactionWorkletFunction<T> extends DevWorkletBase {
+  (prepared: T, previous: T | null): void;
+}
+export interface ReleaseAnimatedReactionWorkletFunction<T>
+  extends ReleaseWorkletBase {
   (prepared: T, previous: T | null): void;
 }
 /**
@@ -15,8 +23,10 @@ export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
 export function useAnimatedReaction<T>(
-  prepare: BasicWorkletFunction<T>,
-  react: AnimatedReactionWorkletFunction<T>,
+  prepare: WorkletFunction<T>,
+  react:
+    | DevAnimatedReactionWorkletFunction<T>
+    | ReleaseAnimatedReactionWorkletFunction<T>,
   dependencies?: DependencyList
 ): void {
   const previous = useSharedValue<T | null>(null, true);

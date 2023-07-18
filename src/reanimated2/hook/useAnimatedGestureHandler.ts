@@ -1,12 +1,16 @@
-import type { Context, WorkletFunction, NativeEvent } from '../commonTypes';
+import type {
+  WorkletClosure,
+  WorkletFunction,
+  NativeEvent,
+} from '../commonTypes';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-interface Handler<T, TContext extends Context> extends WorkletFunction {
+interface Handler<T, TContext extends WorkletClosure> extends WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
 }
 
-export interface GestureHandlers<T, TContext extends Context> {
+export interface GestureHandlers<T, TContext extends WorkletClosure> {
   [key: string]: Handler<T, TContext> | undefined;
   onStart?: Handler<T, TContext>;
   onActive?: Handler<T, TContext>;
@@ -43,7 +47,7 @@ type InferArgument<T> = T extends GestureHandlerEvent<infer E>
 
 export function useAnimatedGestureHandler<
   T extends GestureHandlerEvent<any>,
-  TContext extends Context = Context,
+  TContext extends WorkletClosure = WorkletClosure,
   Payload = InferArgument<T>
 >(
   handlers: GestureHandlers<Payload, TContext>,
