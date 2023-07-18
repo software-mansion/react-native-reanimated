@@ -94,7 +94,7 @@ export default function FrameCallbackExample() {
     <View>
       <Animated.View style={[styles.box, animatedStyle]} />
       <Button
-        title={'Start/stop'}
+        title="Start/stop"
         onPress={() => frameCallback.setActive(!frameCallback.isActive)}
       />
     </View>
