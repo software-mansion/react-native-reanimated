@@ -133,14 +133,14 @@ void NativeProxy::installJSIBindings(
   nativeReanimatedModule->setUIManager(uiManager);
   nativeReanimatedModule->setPropsRegistry(propsRegistry_);
   propsRegistry_ = nullptr;
-//  removed temporary, new event listener mechanism need fix on the RN side
-//  eventListener_ = std::make_shared<EventListener>(
-//      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
-//        return nativeReanimatedModule->handleRawEvent(rawEvent,
-//        getCurrentTime());
-//      });
-//  reactScheduler_ = binding->getScheduler();
-//  reactScheduler_->addEventListener(eventListener_);
+  //  removed temporary, new event listener mechanism need fix on the RN side
+  //  eventListener_ = std::make_shared<EventListener>(
+  //      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+  //        return nativeReanimatedModule->handleRawEvent(rawEvent,
+  //        getCurrentTime());
+  //      });
+  //  reactScheduler_ = binding->getScheduler();
+  //  reactScheduler_->addEventListener(eventListener_);
 #endif
 
   auto &rt = *runtime_;
@@ -479,8 +479,6 @@ void NativeProxy::setGlobalProperties(
       jsRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
   jsRuntime.global().setProperty(jsRuntime, "_WORKLET", false);
-
-  jsRuntime.global().setProperty(jsRuntime, "ReanimatedIsUIRuntime", false);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", true);

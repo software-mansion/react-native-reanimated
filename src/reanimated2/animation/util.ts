@@ -314,7 +314,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (ReanimatedIsUIRuntime || !IS_NATIVE) {
+  if (_WORKLET || !IS_NATIVE) {
     return create();
   }
   // @ts-ignore: eslint-disable-line
@@ -335,7 +335,7 @@ export function withStartValue(
   'worklet';
   return defineAnimation(startValue, () => {
     'worklet';
-    if (!ReanimatedIsUIRuntime && typeof animation === 'function') {
+    if (!_WORKLET && typeof animation === 'function') {
       animation = animation();
     }
     (animation as Animation<AnimationObject>).current = startValue;

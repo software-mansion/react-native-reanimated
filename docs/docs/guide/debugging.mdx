@@ -30,27 +30,27 @@ These are the debugging tools we checked for compatibility with React Native
 apps using the Reanimated library:
 
 - [**Chrome debugger**](https://reactnative.dev/docs/debugging#chrome-developer-tools)
-(also known as the _React Native Debugger_) is a simple tool that creates a web
-worker inside your preferred browser which executes your app's JavaScript code. It works
-with all the runtimes available in React Native.
+  (also known as the _React Native Debugger_) is a simple tool that creates a web
+  worker inside your preferred browser which executes your app's JavaScript code. It works
+  with all the runtimes available in React Native.
 
 - [**Chrome DevTools**](https://reactnative.dev/docs/hermes#debugging-js-on-hermes-using-google-chromes-devtools)
-(unavailable for JSC) is Chrome's built-in feature that allows for connecting to a
-remote JavaScript runtime. This means that the code you are debugging actually
-runs on the device itself and behaves the same way as it would with DevTools detached.
+  (unavailable for JSC) is Chrome's built-in feature that allows for connecting to a
+  remote JavaScript runtime. This means that the code you are debugging actually
+  runs on the device itself and behaves the same way as it would with DevTools detached.
 
 - [**Flipper**](https://fbflipper.com/) (Hermes debugger) is an app created by
-Facebook that makes it easy to use the _Chrome DevTools_ while providing additional tools for
-UI inspection and debugging.
+  Facebook that makes it easy to use the _Chrome DevTools_ while providing additional tools for
+  UI inspection and debugging.
 
 - [**Safari DevTools**](https://reactnative.dev/docs/debugging#safari-developer-tools)
-is Safari's built-in feature that is only available for iOS devices running JSC. It works
-very similarly to Chrome DevTools - it allows you to connect to a remote runtime
-and keep code execution on device.
+  is Safari's built-in feature that is only available for iOS devices running JSC. It works
+  very similarly to Chrome DevTools - it allows you to connect to a remote runtime
+  and keep code execution on device.
 
 - [**React Developer Tools**](https://reactnative.dev/docs/debugging#react-developer-tools)
-are a standalone app that allows debugging UI through the inspector, as well as monitoring
-performance and profiling your app.
+  are a standalone app that allows debugging UI through the inspector, as well as monitoring
+  performance and profiling your app.
 
 ### The JS context vs. the UI context
 
@@ -96,7 +96,7 @@ means that this piece of code:
 ```js
 function runWorklet() {
   'worklet';
-  console.log('worklet:', ReanimatedIsUIRuntime);
+  console.log('worklet:', _WORKLET);
 }
 runOnUI(runWorklet)();
 ```
@@ -154,20 +154,20 @@ experience.
 If you still want to use Chrome DevTools then follow these steps:
 
 1. Add the `patch-package` to your project and set it up to run as a `post-install` task.
-More details can be found [here](https://www.npmjs.com/package/patch-package).
+   More details can be found [here](https://www.npmjs.com/package/patch-package).
 
 2. Add the necessary patches to the `patches/` folder:
 
 - [this](/content/metro-inspector-proxy+0.72.1.patch) patch for `metro-inspector-proxy`,
 - [this](/content/react-native-gesture-handler+2.5.0.patch) one for `react-native-gesture-handler`
-(not necessary for `react-native-gesture-handler` 2.7.0 or newer).
+  (not necessary for `react-native-gesture-handler` 2.7.0 or newer).
 
 *Warnings about mismatched patch versions can be safely ignored if the patch was successfully applied.*
 
 3. Open [chrome://inspect](chrome://inspect) in a Google Chrome browser.
 
 4. Select the Reanimated runtime from the list. The list should look something
-like this:
+   like this:
 
 ![Screenshot showing Chrome DevTools target selection](/img/debugging/ChromeDevToolsList.png)
 
@@ -184,15 +184,15 @@ cache once again._
 Known issues include:
 
 - Reloads don't work - if a debugger is connected to the Reanimated runtime while
-the reload is performed, the app will crash (both on Android and iOS)
+  the reload is performed, the app will crash (both on Android and iOS)
 
 - On iOS, a breakpoint can't be set in a line where a breakpoint was previously
-set and then removed
+  set and then removed
 
 - On iOS, breakpoint labels are not visible
 
 - The profiler does not work (it is not possible to stop the recording) - this is an issue with Hermes and is not related
-to Reanimated and has been already fixed in this [PR](https://github.com/facebook/react-native/pull/34129)
+  to Reanimated and has been already fixed in this [PR](https://github.com/facebook/react-native/pull/34129)
 
 - The console is unresponsive if there are no animations running (this will be fixed in the near future)
 
@@ -220,13 +220,13 @@ Worklet debugging is now available in Reanimated apps as an early experimental
 feature. If you want to try it out follow these steps:
 
 1. Add the `patch-package` to your project and set it up to run as a `post-install` task.
-More details can be found [here](https://www.npmjs.com/package/patch-package);
+   More details can be found [here](https://www.npmjs.com/package/patch-package);
 
 2. Add the necessary patches to the `patches/` folder:
 
 - [this](/content/metro-inspector-proxy+0.72.1.patch) patch for `metro-inspector-proxy`,
 - [this](/content/react-native-gesture-handler+2.5.0.patch) one for `react-native-gesture-handler`
-(not necessary for `react-native-gesture-handler` 2.7.0 or newer).
+  (not necessary for `react-native-gesture-handler` 2.7.0 or newer).
 
 *Warnings about mismatched patch versions can be safely ignored if the patch was successfully applied.*
 
@@ -236,7 +236,7 @@ More details can be found [here](https://www.npmjs.com/package/patch-package);
 ![Screenshot showing where the install button for plugins is](/img/debugging/flipper2.png)
 
 4. Select the plugin from the side menu (it might be disabled) and you should
-be good to go!
+   be good to go!
 
 ![Screenshot showing the plugin working](/img/debugging/flipper3.png)
 
@@ -250,17 +250,17 @@ cache once again._
 Known issues include:
 
 - Reloads don't work - if a debugger is connected to the Reanimated runtime while
-the reload is performed, the app will crash (both on Android and iOS)
+  the reload is performed, the app will crash (both on Android and iOS)
 
 - Breakpoints might not be active after a reload even though they look as if they
-were
+  were
 
 - Android app crashes after the Flipper client is closed and will crash on startup
-after that. This is a known Flipper issue ([link](https://github.com/facebook/flipper/issues/3026))
-and is not related to Reanimated.
+  after that. This is a known Flipper issue ([link](https://github.com/facebook/flipper/issues/3026))
+  and is not related to Reanimated.
 
 - The profiler does not work (it is not possible to stop the recording) - this is an issue with Hermes and is not related
-to Reanimated and has been already fixed in this [PR](https://github.com/facebook/react-native/pull/34129)
+  to Reanimated and has been already fixed in this [PR](https://github.com/facebook/react-native/pull/34129)
 
 - The console is unresponsive if there are no animations running (this will be fixed in the near future)
 

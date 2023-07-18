@@ -32,7 +32,6 @@ export type ReanimatedConsole = Pick<
 
 // this is for web implementation
 global._WORKLET = false;
-global.ReanimatedIsUIRuntime = false;
 global._log = function (s: string) {
   console.log(s);
 };

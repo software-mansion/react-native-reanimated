@@ -414,7 +414,7 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  if (IS_WEB || !ReanimatedIsUIRuntime) {
+  if (IS_WEB || !_WORKLET) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
