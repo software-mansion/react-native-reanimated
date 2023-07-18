@@ -29,6 +29,8 @@ export function withSequence(
       'worklet';
       let reduceMotion: ReducedMotionConfig | undefined;
 
+      // the first argument is either a config or an animation
+      // this is done to allow the reduce motion config prop to be optional
       if (typeof _reduceMotion === 'string') {
         reduceMotion = _reduceMotion as ReducedMotionConfig;
       } else {
