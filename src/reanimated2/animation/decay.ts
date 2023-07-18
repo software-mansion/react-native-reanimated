@@ -184,6 +184,16 @@ export const withDecay = function (
       animation.startTimestamp = now;
       animation.initialVelocity = config.velocity;
       validateConfig();
+
+      if (!animation.reduceMotion || !config.clamp) {
+        return;
+      }
+
+      if (value < config.clamp[0]) {
+        animation.current = config.clamp[0];
+      } else if (value > config.clamp[1]) {
+        animation.current = config.clamp[1];
+      }
     }
 
     return {

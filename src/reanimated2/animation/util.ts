@@ -297,7 +297,12 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       animation.reduceMotion = shouldReduceMotion('system');
     }
     if (animation.reduceMotion) {
-      animation.current = animation.toValue;
+      if (animation.toValue) {
+        animation.current = animation.toValue;
+      } else {
+        // if there is no toValue, then the base function is responsible for setting the current value
+        baseOnStart(animation, value, timestamp, previousAnimation);
+      }
       animation.startTime = 0;
       animation.onFrame = (_: Animation<AnimationObject>, __: Timestamp) => {
         return true;
