@@ -10,7 +10,7 @@ declare global {
   // mainly for backward compatibility reasons for our users.
   var _WORKLET: boolean | undefined;
 
-  // This is simply an address of UI Runtime and it's type stems from
+  // This is simply an address of UI Runtime. Its type stems from
   // the need to be able to pass it from the native side to JS
   // when it's a 64-bit address value.
   var _WORKLET_RUNTIME: ArrayBuffer;
