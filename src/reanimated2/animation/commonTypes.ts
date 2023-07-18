@@ -51,4 +51,9 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
   callback?: AnimationCallback;
 }
 
+/**
+ * - `system` - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * - `always` - Disable the animation.
+ * - `never` - Enable the animation.
+ */
 export type ReducedMotionConfig = 'system' | 'always' | 'never';
