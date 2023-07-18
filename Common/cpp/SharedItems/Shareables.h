@@ -8,7 +8,12 @@
 
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
 #include "Scheduler.h"
+#endif
 
 using namespace facebook;
 
@@ -262,8 +267,8 @@ class ShareableObject : public Shareable {
 class ShareableHostObject : public Shareable {
  public:
   ShareableHostObject(
-      const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      jsi::Runtime &rt,
+      const std::shared_ptr<JSRuntimeHelper> &,
+      jsi::Runtime &,
       const std::shared_ptr<jsi::HostObject> &hostObject)
       : Shareable(HostObjectType), hostObject_(hostObject) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {
@@ -323,7 +328,7 @@ class ShareableRemoteFunction
  public:
   ShareableRemoteFunction(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
-      jsi::Runtime &rt,
+      jsi::Runtime &,
       jsi::Function &&function)
       : Shareable(RemoteFunctionType),
         function_(std::move(function)),
@@ -468,7 +473,7 @@ class ShareableScalar : public Shareable {
   ShareableScalar() : Shareable(UndefinedType) {}
   explicit ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override {
+  jsi::Value toJSValue(jsi::Runtime &) override {
     switch (valueType_) {
       case Shareable::UndefinedType:
         return jsi::Value();

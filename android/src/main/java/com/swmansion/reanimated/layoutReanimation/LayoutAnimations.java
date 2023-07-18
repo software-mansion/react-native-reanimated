@@ -14,6 +14,7 @@ public class LayoutAnimations {
     static final int EXITING = 2;
     static final int LAYOUT = 3;
     static final int SHARED_ELEMENT_TRANSITION = 4;
+    static final int SHARED_ELEMENT_TRANSITION_PROGRESS = 5;
   }
 
   static {
@@ -38,6 +39,8 @@ public class LayoutAnimations {
   public native void startAnimationForTag(int tag, int type, Map<String, String> values);
 
   public native boolean hasAnimationForTag(int tag, int type);
+
+  public native void checkDuplicateSharedTag(int viewTag, int screenTag);
 
   public native void clearAnimationConfigForTag(int tag);
 

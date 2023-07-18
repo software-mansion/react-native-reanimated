@@ -17,7 +17,7 @@ jsi::Array convertStringToArray(
       std::back_inserter(transformMatrixList));
   assert(transformMatrixList.size() == expectedSize);
   jsi::Array matrix(rt, expectedSize);
-  for (int i = 0; i < expectedSize; i++) {
+  for (unsigned int i = 0; i < expectedSize; i++) {
     matrix.setValueAtIndex(rt, i, transformMatrixList[i]);
   }
   return matrix;

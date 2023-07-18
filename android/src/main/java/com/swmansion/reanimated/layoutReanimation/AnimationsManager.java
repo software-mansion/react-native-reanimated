@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import com.facebook.react.BuildConfig;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -177,6 +178,26 @@ public class AnimationsManager implements ViewHierarchyObserver {
   public void maybeRegisterSharedView(View view) {
     if (hasAnimationForTag(view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       mSharedTransitionManager.notifyAboutNewView(view);
+    }
+    if (BuildConfig.DEBUG) {
+      checkDuplicateSharedTag(view);
+    }
+  }
+
+  private void checkDuplicateSharedTag(View view) {
+    int viewTag = view.getId();
+
+    ViewParent parent = view.getParent();
+    while (parent != null) {
+      if (parent.getClass().getSimpleName().equals("Screen")) {
+        break;
+      }
+      parent = (ViewParent) parent.getParent();
+    }
+
+    if (parent != null) {
+      int screenTag = ((View) parent).getId();
+      mNativeMethodsHolder.checkDuplicateSharedTag(viewTag, screenTag);
     }
   }
 
@@ -546,13 +567,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     return true;
-  }
-
-  public void clearAnimationConfigForTag(int tag) {
-    View view = resolveView(tag);
-    if (view != null) {
-      clearAnimationConfigRecursive(view);
-    }
   }
 
   public void clearAnimationConfigRecursive(View view) {

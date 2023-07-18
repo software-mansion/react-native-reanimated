@@ -86,13 +86,7 @@ export default function ExtrapolationExample(): React.ReactElement {
   return (
     <>
       <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View
-          style={[
-            styles.circle,
-            { zIndex: 1, backgroundColor: '#001a72' },
-            stylez,
-          ]}
-        />
+        <Animated.View style={[styles.circle, stylez]} />
       </PanGestureHandler>
       <Animated.View style={[styles.circle, button1Style]} />
       <Animated.View style={[styles.circle, button2Style]} />
@@ -109,6 +103,7 @@ const styles = StyleSheet.create({
     top: 400,
     alignSelf: 'center',
     borderRadius: 25,
-    backgroundColor: 'red',
+    zIndex: 1,
+    backgroundColor: '#001a72',
   },
 });

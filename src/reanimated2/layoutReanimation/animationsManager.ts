@@ -1,18 +1,18 @@
 import { withStyleAnimation } from '../animation/styleAnimation';
-import { SharedValue } from '../commonTypes';
+import type { SharedValue } from '../commonTypes';
 import { makeUIMutable } from '../mutables';
-import {
+import type {
   LayoutAnimationFunction,
-  LayoutAnimationType,
   LayoutAnimationsValues,
 } from './animationBuilder';
+import { LayoutAnimationType } from './animationBuilder';
 import { runOnUIImmediately } from '../threads';
 
 const TAG_OFFSET = 1e9;
 
 function startObservingProgress(
   tag: number,
-  sharedValue: SharedValue<number>,
+  sharedValue: SharedValue<Record<string, unknown>>,
   animationType: LayoutAnimationType
 ): void {
   'worklet';
@@ -46,6 +46,11 @@ function createLayoutAnimationManager() {
       yogaValues: LayoutAnimationsValues,
       config: LayoutAnimationFunction
     ) {
+      if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
+        global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
+        return;
+      }
+
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 

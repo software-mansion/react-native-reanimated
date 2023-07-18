@@ -1,7 +1,7 @@
-import { Component } from 'react';
+import type { Component } from 'react';
 import { measure } from './NativeMethods';
-import { AnimatedRef } from './hook/commonTypes';
-import { SharedValue } from './commonTypes';
+import type { AnimatedRef } from './hook/commonTypes';
+import type { SharedValue } from './commonTypes';
 
 export interface ComponentCoords {
   x: number;

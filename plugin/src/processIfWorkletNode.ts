@@ -1,14 +1,8 @@
-import { NodePath } from '@babel/core';
-import {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-  isBlockStatement,
-  isDirectiveLiteral,
-  BlockStatement,
-} from '@babel/types';
+import type { NodePath } from '@babel/core';
+import { isBlockStatement, isDirectiveLiteral } from '@babel/types';
+import type { BlockStatement } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
-import { ReanimatedPluginPass } from './types';
+import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
 
 function hasWorkletDirective(directives: BlockStatement['directives']) {
   return (
@@ -23,9 +17,7 @@ function hasWorkletDirective(directives: BlockStatement['directives']) {
 }
 
 export function processIfWorkletNode(
-  fun: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >,
+  fun: NodePath<ExplicitWorklet>,
   state: ReanimatedPluginPass
 ) {
   let shouldBeProcessed = false;

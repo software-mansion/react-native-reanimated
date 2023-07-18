@@ -1,4 +1,10 @@
 import { BabelFile } from '@babel/core';
+import {
+  FunctionDeclaration,
+  FunctionExpression,
+  ObjectMethod,
+  ArrowFunctionExpression,
+} from '@babel/types';
 
 export interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
@@ -16,3 +22,10 @@ export interface ReanimatedPluginPass {
   set(key: unknown, value: unknown): void;
   [key: string]: unknown;
 }
+
+export type ExplicitWorklet =
+  | FunctionDeclaration
+  | FunctionExpression
+  | ArrowFunctionExpression;
+
+export type WorkletizableFunction = ExplicitWorklet | ObjectMethod;

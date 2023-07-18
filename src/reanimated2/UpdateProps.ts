@@ -1,17 +1,17 @@
 /* global _updatePropsPaper _updatePropsFabric */
-import { MutableRefObject } from 'react';
+import type { MutableRefObject } from 'react';
 import { processColor } from './Colors';
-import {
+import type {
   AnimatedStyle,
   ShadowNodeWrapper,
   SharedValue,
   StyleProps,
 } from './commonTypes';
-import { makeShareable, isConfigured } from './core';
-import { Descriptor } from './hook/commonTypes';
+import { makeShareable } from './core';
+import type { Descriptor } from './hook/commonTypes';
 import { _updatePropsJS } from './js-reanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { ViewRefSet } from './ViewDescriptorsSet';
+import type { ViewRefSet } from './ViewDescriptorsSet';
 import { runOnUIImmediately } from './threads';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
@@ -32,7 +32,7 @@ export const colorProps = [
   'overlayColor',
 ];
 
-export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
+export const ColorProperties = makeShareable(colorProps);
 
 export let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,

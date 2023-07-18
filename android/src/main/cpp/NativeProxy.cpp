@@ -9,7 +9,6 @@
 #include <memory>
 #include <string>
 
-#include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
 #include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
@@ -52,7 +51,6 @@ NativeProxy::NativeProxy(
 {
 #ifdef RCT_NEW_ARCH_ENABLED
   Binding *binding = fabricUIManager->getBinding();
-  RuntimeExecutor runtimeExecutor = getRuntimeExecutorFromBinding(binding);
   uiManager_ = binding->getScheduler()->getUIManager();
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
@@ -111,17 +109,13 @@ void NativeProxy::installJSIBindings(
 #endif
     /**/) {
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
-  std::shared_ptr<jsi::Runtime> animatedRuntime =
+  std::shared_ptr<jsi::Runtime> uiRuntime =
       ReanimatedRuntime::make(runtime_, jsQueue);
-
-  std::shared_ptr<ErrorHandler> errorHandler =
-      std::make_shared<AndroidErrorHandler>(scheduler_);
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
-      animatedRuntime,
-      errorHandler,
+      uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -150,7 +144,7 @@ void NativeProxy::installJSIBindings(
 #endif
 
   auto &rt = *runtime_;
-  setGlobalProperties(rt, animatedRuntime);
+  setGlobalProperties(rt, uiRuntime);
   registerEventHandler();
   setupLayoutAnimations();
 
@@ -170,6 +164,11 @@ void NativeProxy::performOperations() {
 #endif
 }
 
+bool NativeProxy::getIsReducedMotion() {
+  static const auto method = getJniMethod<jboolean()>("getIsReducedMotion");
+  return method(javaPart_.get());
+}
+
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
@@ -182,7 +181,7 @@ void NativeProxy::registerNatives() {
 
 void NativeProxy::requestRender(
     std::function<void(double)> onRender,
-    jsi::Runtime &rt) {
+    jsi::Runtime &) {
   static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(
@@ -301,7 +300,7 @@ void NativeProxy::synchronouslyUpdateUIProps(
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
-    int iosReferenceFrame,
+    int,
     std::function<void(double[], int)> setter) {
   static const auto method =
       getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
@@ -465,7 +464,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
 void NativeProxy::setGlobalProperties(
     jsi::Runtime &jsRuntime,
-    const std::shared_ptr<jsi::Runtime> &reanimatedRuntime) {
+    const std::shared_ptr<jsi::Runtime> &uiRuntime) {
   auto workletRuntimeValue =
       jsRuntime.global()
           .getPropertyAsObject(jsRuntime, "ArrayBuffer")
@@ -474,7 +473,7 @@ void NativeProxy::setGlobalProperties(
   uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
       workletRuntimeValue.getObject(jsRuntime).getArrayBuffer(jsRuntime).data(
           jsRuntime));
-  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedRuntime.get());
+  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(uiRuntime.get());
 
   jsRuntime.global().setProperty(
       jsRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
@@ -489,6 +488,10 @@ void NativeProxy::setGlobalProperties(
 
   auto version = getReanimatedVersionString(jsRuntime);
   jsRuntime.global().setProperty(jsRuntime, "_REANIMATED_VERSION_CPP", version);
+
+  auto isReducedMotion = getIsReducedMotion();
+  jsRuntime.global().setProperty(
+      jsRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
 
 void NativeProxy::setupLayoutAnimations() {
@@ -503,8 +506,6 @@ void NativeProxy::setupLayoutAnimations() {
           return;
         }
         auto &rt = *nativeReanimatedModule->runtimeManager_->runtime;
-        auto errorHandler =
-            nativeReanimatedModule->runtimeManager_->errorHandler;
 
         jsi::Object yogaValues(rt);
         for (const auto &entry : *values) {
@@ -522,8 +523,7 @@ void NativeProxy::setupLayoutAnimations() {
               yogaValues.setProperty(rt, key, value);
             }
           } catch (std::invalid_argument e) {
-            errorHandler->setError("Failed to convert value to number");
-            errorHandler->raise();
+            throw std::runtime_error("Failed to convert value to number");
           }
         }
 
@@ -541,6 +541,19 @@ void NativeProxy::setupLayoutAnimations() {
     return nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation(
         tag, static_cast<LayoutAnimationType>(type));
   });
+
+#ifdef DEBUG
+  layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
+      [weakNativeReanimatedModule](int viewTag, int screenTag) {
+        auto nativeReanimatedModule = weakNativeReanimatedModule.lock();
+        if (nativeReanimatedModule == nullptr) {
+          return;
+        }
+
+        nativeReanimatedModule->layoutAnimationsManager()
+            .checkDuplicateSharedTag(viewTag, screenTag);
+      });
+#endif
 
   layoutAnimations_->cthis()->setClearAnimationConfigBlock(
       [weakNativeReanimatedModule](int tag) {

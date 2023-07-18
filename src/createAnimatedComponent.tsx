@@ -1,4 +1,4 @@
-import React, {
+import type {
   Component,
   ComponentClass,
   ComponentType,
@@ -6,6 +6,7 @@ import React, {
   MutableRefObject,
   Ref,
 } from 'react';
+import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
@@ -16,7 +17,6 @@ import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import {
   configureLayoutAnimations,
   enableLayoutAnimations,
-  runOnUI,
   startMapper,
   stopMapper,
 } from './reanimated2/core';
@@ -27,30 +27,32 @@ import {
   isWeb,
 } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
-import {
+import type {
   BaseAnimationBuilder,
-  DefaultSharedTransition,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
-  Keyframe,
   LayoutAnimationFunction,
-  LayoutAnimationType,
 } from './reanimated2/layoutReanimation';
 import {
+  SharedTransition,
+  LayoutAnimationType,
+} from './reanimated2/layoutReanimation';
+import type {
   SharedValue,
   StyleProps,
   ShadowNodeWrapper,
 } from './reanimated2/commonTypes';
-import {
-  makeViewDescriptorsSet,
+import type {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from './reanimated2/ViewDescriptorsSet';
 import { getShadowNodeWrapperFromRef } from './reanimated2/fabricUtils';
 import updateProps from './reanimated2/UpdateProps';
 import NativeReanimatedModule from './reanimated2/NativeReanimated';
 import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
+import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -232,7 +234,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | EntryExitAnimationFunction
     | Keyframe;
   sharedTransitionTag?: string;
-  sharedTransitionStyle?: ILayoutAnimationBuilder;
+  sharedTransitionStyle?: SharedTransition;
 };
 
 type Options<P> = {
@@ -283,6 +285,7 @@ export default function createAnimatedComponent(
     _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
     _inlinePropsMapperId: number | null = null;
     _inlineProps: StyleProps = {};
+    _sharedElementTransition: SharedTransition | null = null;
     static displayName: string;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -296,6 +299,7 @@ export default function createAnimatedComponent(
       this._detachNativeEvents();
       this._detachStyles();
       this._detachInlineProps();
+      this._sharedElementTransition?.unregisterTransition(this._viewTag);
     }
 
     componentDidMount() {
@@ -357,11 +361,7 @@ export default function createAnimatedComponent(
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
         if (global._IS_FABRIC) {
-          const viewTag = this._viewTag;
-          // TODO: batching
-          runOnUI(() => {
-            _removeFromPropsRegistry!(viewTag);
-          })();
+          removeFromPropsRegistry(this._viewTag);
         }
       }
     }
@@ -641,13 +641,12 @@ export default function createAnimatedComponent(
           }
           if (sharedTransitionTag) {
             const sharedElementTransition =
-              this.props.sharedTransitionStyle ?? DefaultSharedTransition;
-            configureLayoutAnimations(
+              this.props.sharedTransitionStyle ?? new SharedTransition();
+            sharedElementTransition.registerTransition(
               tag,
-              LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-              maybeBuild(sharedElementTransition),
               sharedTransitionTag
             );
+            this._sharedElementTransition = sharedElementTransition;
           }
         }
 
@@ -673,6 +672,7 @@ export default function createAnimatedComponent(
               if (this._isFirstRender) {
                 this.initialStyle = {
                   ...style.initial.value,
+                  ...this.initialStyle,
                   ...initialUpdaterRun<StyleProps>(style.initial.updater),
                 };
               }
