@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <memory>
+#include "JSScheduler.h"
 #include "RuntimeDecorator.h"
 
 #ifdef __APPLE__
@@ -22,8 +23,9 @@ class RuntimeManager {
   RuntimeManager(
       std::shared_ptr<jsi::Runtime> runtime,
       std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<JSScheduler> jsScheduler,
       RuntimeType runtimeType = RuntimeType::Worklet)
-      : runtime(runtime), scheduler(scheduler) {
+      : runtime(runtime), scheduler(scheduler), jsScheduler_(jsScheduler) {
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
 
@@ -36,6 +38,8 @@ class RuntimeManager {
    React-JS Thread.
    */
   std::shared_ptr<Scheduler> scheduler;
+
+  std::shared_ptr<JSScheduler> jsScheduler_;
 };
 
 } // namespace reanimated

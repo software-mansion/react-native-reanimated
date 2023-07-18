@@ -92,7 +92,7 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    std::shared_ptr<CallInvoker> jsInvoker)
+    std::shared_ptr<CallInvoker> jsCallInvoker)
 {
   REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
 
@@ -153,7 +153,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make("Reanimated UI runtime");
   WorkletRuntimeCollector::install(*uiRuntime);
 
-  std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
+  std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsCallInvoker);
+  std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(jsCallInvoker);
+
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
 
   auto nodesManager = reaModule.nodesManager;
@@ -268,8 +270,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      jsInvoker,
+      jsCallInvoker,
       scheduler,
+      jsScheduler,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing

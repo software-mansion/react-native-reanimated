@@ -19,6 +19,7 @@
 
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
+#include "JSScheduler.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "Shareables.h"
@@ -35,6 +36,7 @@ namespace reanimated {
 NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<Scheduler> &scheduler,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
@@ -44,8 +46,11 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      runtimeManager_(
-          std::make_shared<RuntimeManager>(rt, scheduler, RuntimeType::UI)),
+      runtimeManager_(std::make_shared<RuntimeManager>(
+          rt,
+          scheduler,
+          jsScheduler,
+          RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -156,8 +161,8 @@ void NativeReanimatedModule::installCoreFunctions(
   if (!runtimeHelper) {
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
-    runtimeHelper =
-        std::make_shared<JSRuntimeHelper>(&rt, runtimeManager_->scheduler);
+    runtimeHelper = std::make_shared<JSRuntimeHelper>(
+        &rt, runtimeManager_->scheduler, runtimeManager_->jsScheduler_);
   }
 
 #ifdef DEBUG
@@ -217,7 +222,7 @@ void NativeReanimatedModule::scheduleOnJS(
       ? nullptr
       : extractShareableOrThrow(rt, argsValue);
   auto jsRuntime = this->runtimeHelper->rnRuntime();
-  runtimeManager_->scheduler->scheduleOnJS([=] {
+  runtimeManager_->jsScheduler_->scheduleOnJS([=] {
     jsi::Runtime &rt = *jsRuntime;
     auto remoteFun = shareableRemoteFun->getJSValue(rt);
     if (shareableArgs == nullptr) {
@@ -319,7 +324,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
         jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
         std::string resultStr = result.asString(rt).utf8(rt);
 
-        runtimeManager_->scheduler->scheduleOnJS([&rt, resultStr, funPtr]() {
+        runtimeManager_->jsScheduler_->scheduleOnJS([&rt, resultStr, funPtr]() {
           const jsi::String resultValue =
               jsi::String::createFromUtf8(rt, resultStr);
           funPtr->call(rt, resultValue);

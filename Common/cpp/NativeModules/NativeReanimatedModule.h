@@ -39,6 +39,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   NativeReanimatedModule(
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<Scheduler> &scheduler,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
