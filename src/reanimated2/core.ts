@@ -31,6 +31,7 @@ export type ReanimatedConsole = Pick<
   'debug' | 'log' | 'warn' | 'info' | 'error'
 >;
 
+// this is for web implementation
 global._WORKLET = false;
 global._log = function (s: string) {
   console.log(s);

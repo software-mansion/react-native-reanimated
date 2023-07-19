@@ -168,7 +168,7 @@ function createProgressTransitionRegister() {
     },
     onTransitionEnd: (removeViews = false) => {
       for (const viewTag of currentTransitions) {
-        _notifyAboutEnd(viewTag, false, removeViews);
+        _notifyAboutEnd(viewTag, removeViews);
       }
       currentTransitions.clear();
       snapshots.clear();

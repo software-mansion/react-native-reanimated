@@ -6,12 +6,12 @@ import {
   shouldBeUseWeb,
 } from './PlatformChecker';
 import type { AnimatedRef } from './hook/commonTypes';
-import type { Component, RefObject } from 'react';
+import type { Component } from 'react';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
-export let measure: (
-  animatedRef: RefObject<Component>
+export let measure: <T extends Component>(
+  animatedRef: AnimatedRef<T>
 ) => MeasuredDimensions | null;
 
 if (isWeb()) {
@@ -85,8 +85,8 @@ if (isWeb()) {
   };
 }
 
-export let dispatchCommand: (
-  animatedRef: AnimatedRef<Component>,
+export let dispatchCommand: <T extends Component>(
+  animatedRef: AnimatedRef<T>,
   commandName: string,
   args: Array<unknown>
 ) => void;
@@ -131,8 +131,8 @@ if (IS_NATIVE && global._IS_FABRIC) {
   };
 }
 
-export let scrollTo: (
-  animatedRef: RefObject<Component>,
+export let scrollTo: <T extends Component>(
+  animatedRef: AnimatedRef<T>,
   x: number,
   y: number,
   animated: boolean

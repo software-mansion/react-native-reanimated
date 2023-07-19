@@ -20,11 +20,10 @@ import type { WorkletRuntime } from './runtimes';
 import type { callGuardDEV, valueUnpacker } from './initializers';
 
 declare global {
-  var _WORKLET: boolean | undefined;
+  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
-  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
   var __valueUnpacker: typeof valueUnpacker | undefined;
   var __callGuardDEV: typeof callGuardDEV | undefined;
@@ -47,11 +46,7 @@ declare global {
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
-  var _notifyAboutEnd: (
-    tag: number,
-    finished: boolean,
-    removeView: boolean
-  ) => void;
+  var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (

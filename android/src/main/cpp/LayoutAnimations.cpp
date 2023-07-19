@@ -36,14 +36,10 @@ void LayoutAnimations::progressLayoutAnimation(
   method(javaPart_.get(), tag, updates.get(), isSharedTransition);
 }
 
-void LayoutAnimations::endLayoutAnimation(
-    int tag,
-    bool cancelled,
-    bool removeView) {
+void LayoutAnimations::endLayoutAnimation(int tag, bool removeView) {
   static const auto method =
-      javaPart_->getClass()->getMethod<void(int, bool, bool)>(
-          "endLayoutAnimation");
-  method(javaPart_.get(), tag, cancelled, removeView);
+      javaPart_->getClass()->getMethod<void(int, bool)>("endLayoutAnimation");
+  method(javaPart_.get(), tag, removeView);
 }
 
 void LayoutAnimations::setHasAnimationBlock(
@@ -80,12 +76,8 @@ void LayoutAnimations::setCancelAnimationForTag(
   this->cancelAnimationBlock_ = cancelAnimationBlock;
 }
 
-void LayoutAnimations::cancelAnimationForTag(
-    int tag,
-    int type,
-    jboolean cancelled,
-    jboolean removeView) {
-  this->cancelAnimationBlock_(tag, type, cancelled, removeView);
+void LayoutAnimations::cancelAnimationForTag(int tag) {
+  this->cancelAnimationBlock_(tag);
 }
 
 bool LayoutAnimations::isLayoutAnimationEnabled() {

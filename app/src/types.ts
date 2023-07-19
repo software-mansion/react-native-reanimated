@@ -23,7 +23,3 @@ declare module 'react' {
     ): void;
   }
 }
-
-declare global {
-  const _WORKLET: boolean;
-}

@@ -1,11 +1,12 @@
 #pragma once
 
+#include <jsi/jsi.h>
+
+#include <memory>
+#include <string>
+
 #include "JSScheduler.h"
 #include "UIScheduler.h"
-
-#include <jsi/jsi.h>
-#include <memory>
-#include <utility>
 
 using namespace facebook;
 

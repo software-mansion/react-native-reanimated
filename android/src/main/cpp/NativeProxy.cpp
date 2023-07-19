@@ -112,10 +112,9 @@ void NativeProxy::installJSIBindings(
     /**/) {
   WorkletRuntimeCollector::install(*rnRuntime_);
 
-  std::shared_ptr<jsi::Runtime> uiRuntime =
-      ReanimatedRuntime::make("Reanimated UI runtime");
+  std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make("Reanimated UI runtime");
   WorkletRuntimeCollector::install(*uiRuntime);
-
+  
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       scheduler_,
@@ -137,14 +136,14 @@ void NativeProxy::installJSIBindings(
   nativeReanimatedModule->setUIManager(uiManager);
   nativeReanimatedModule->setPropsRegistry(propsRegistry_);
   propsRegistry_ = nullptr;
-//  removed temporary, new event listener mechanism need fix on the RN side
-//  eventListener_ = std::make_shared<EventListener>(
-//      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
-//        return nativeReanimatedModule->handleRawEvent(rawEvent,
-//        getCurrentTime());
-//      });
-//  reactScheduler_ = binding->getScheduler();
-//  reactScheduler_->addEventListener(eventListener_);
+  //  removed temporary, new event listener mechanism need fix on the RN side
+  //  eventListener_ = std::make_shared<EventListener>(
+  //      [nativeReanimatedModule, getCurrentTime](const RawEvent &rawEvent) {
+  //        return nativeReanimatedModule->handleRawEvent(rawEvent,
+  //        getCurrentTime());
+  //      });
+  //  reactScheduler_ = binding->getScheduler();
+  //  reactScheduler_->addEventListener(eventListener_);
 #endif
 
   auto &rt = *rnRuntime_;
@@ -500,9 +499,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(
-        tag, isCancelled, removeView);
+  auto endLayoutAnimation = [this](int tag, bool removeView) {
+    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
@@ -635,17 +633,11 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(
-      [weakNativeReanimatedModule](
-          int tag, int type, jboolean cancelled, jboolean removeView) {
+      [weakNativeReanimatedModule](int tag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
           jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
           nativeReanimatedModule->layoutAnimationsManager()
-              .cancelLayoutAnimation(
-                  rt,
-                  tag,
-                  static_cast<LayoutAnimationType>(type),
-                  cancelled,
-                  removeView);
+              .cancelLayoutAnimation(rt, tag);
         }
       });
 
