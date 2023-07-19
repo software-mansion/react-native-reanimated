@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-#include "AndroidScheduler.h"
+#include "AndroidUIScheduler.h"
 #include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
@@ -32,8 +32,8 @@ using namespace react;
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
     jsi::Runtime *rnRuntime,
-    std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
-    std::shared_ptr<Scheduler> scheduler,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
@@ -45,7 +45,7 @@ NativeProxy::NativeProxy(
       rnRuntime_(rnRuntime),
       jsCallInvoker_(jsCallInvoker),
       layoutAnimations_(std::move(_layoutAnimations)),
-      scheduler_(scheduler)
+      uiScheduler_(uiScheduler)
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       propsRegistry_(std::make_shared<PropsRegistry>())
@@ -78,7 +78,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
-    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
+    jni::alias_ref<AndroidUIScheduler::javaobject> androidUIScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
@@ -87,13 +87,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #endif
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto scheduler = androidScheduler->cthis()->getScheduler();
-  scheduler->setJSCallInvoker(jsCallInvoker);
+  auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
-      scheduler,
+      uiScheduler,
       make_global(layoutAnimations)
 #ifdef RCT_NEW_ARCH_ENABLED
           ,
@@ -116,9 +115,12 @@ void NativeProxy::installJSIBindings(
       ReanimatedRuntime::make("Reanimated UI runtime");
   WorkletRuntimeCollector::install(*uiRuntime);
 
+  auto jsScheduler = std::make_shared<JSScheduler>(jsCallInvoker_);
+
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
-      scheduler_,
+      uiScheduler_,
+      jsScheduler,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
@@ -127,7 +129,7 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  scheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+  uiScheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
   nativeReanimatedModule_ = nativeReanimatedModule;
 
 #ifdef RCT_NEW_ARCH_ENABLED

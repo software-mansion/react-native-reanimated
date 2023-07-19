@@ -17,7 +17,7 @@ import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
-import com.swmansion.reanimated.Scheduler;
+import com.swmansion.reanimated.UIScheduler;
 import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
@@ -37,7 +37,7 @@ public abstract class NativeProxyCommon {
 
   protected NodesManager mNodesManager;
   protected final WeakReference<ReactApplicationContext> mContext;
-  protected Scheduler mScheduler;
+  protected UIScheduler mUIScheduler;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
@@ -45,7 +45,7 @@ public abstract class NativeProxyCommon {
   private boolean slowAnimationsEnabled = false;
 
   protected NativeProxyCommon(ReactApplicationContext context) {
-    mScheduler = new Scheduler(context);
+    mUIScheduler = new UIScheduler(context);
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     reanimatedKeyboardEventListener = new ReanimatedKeyboardEventListener(mContext);
@@ -64,8 +64,8 @@ public abstract class NativeProxyCommon {
     gestureHandlerStateManager = tempHandlerStateManager;
   }
 
-  public Scheduler getScheduler() {
-    return mScheduler;
+  public UIScheduler getUIScheduler() {
+    return mUIScheduler;
   }
 
   private void toggleSlowAnimations() {
@@ -185,7 +185,7 @@ public abstract class NativeProxyCommon {
   protected abstract HybridData getHybridData();
 
   public void onCatalystInstanceDestroy() {
-    mScheduler.deactivate();
+    mUIScheduler.deactivate();
     getHybridData().resetNative();
   }
 
