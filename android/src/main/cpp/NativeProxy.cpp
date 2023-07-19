@@ -566,17 +566,11 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(
-      [weakNativeReanimatedModule](
-          int tag, int type, jboolean cancelled, jboolean removeView) {
+      [weakNativeReanimatedModule](int tag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
           jsi::Runtime &rt = *nativeReanimatedModule->runtimeManager_->runtime;
           nativeReanimatedModule->layoutAnimationsManager()
-              .cancelLayoutAnimation(
-                  rt,
-                  tag,
-                  static_cast<LayoutAnimationType>(type),
-                  cancelled,
-                  removeView);
+              .cancelLayoutAnimation(rt, tag);
         }
       });
 

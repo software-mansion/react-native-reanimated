@@ -346,16 +346,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
-  [animationsManager
-      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
-        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          if (auto uiRuntime = weakUiRuntime.lock()) {
-            jsi::Runtime &rt = *uiRuntime;
-            nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(
-                rt, [tag intValue], type, cancelled == YES, removeView == YES);
-          }
-        }
-      }];
+  [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      if (auto uiRuntime = weakUiRuntime.lock()) {
+        jsi::Runtime &rt = *uiRuntime;
+        nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
+      }
+    }
+  }];
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {

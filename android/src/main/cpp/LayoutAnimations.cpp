@@ -76,12 +76,8 @@ void LayoutAnimations::setCancelAnimationForTag(
   this->cancelAnimationBlock_ = cancelAnimationBlock;
 }
 
-void LayoutAnimations::cancelAnimationForTag(
-    int tag,
-    int type,
-    jboolean cancelled,
-    jboolean removeView) {
-  this->cancelAnimationBlock_(tag, type, cancelled, removeView);
+void LayoutAnimations::cancelAnimationForTag(int tag) {
+  this->cancelAnimationBlock_(tag);
 }
 
 bool LayoutAnimations::isLayoutAnimationEnabled() {
