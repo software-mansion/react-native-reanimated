@@ -33,8 +33,8 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
-      - run: |
-          scripts/clear-annotations.sh
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
 
       - name: Install root node dependencies
         run: yarn
