@@ -29,7 +29,7 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    jsi::Runtime *rt,
+    jsi::Runtime *rnRuntime,
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
     std::shared_ptr<Scheduler> scheduler,
     jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
@@ -40,7 +40,7 @@ NativeProxy::NativeProxy(
 #endif
     )
     : javaPart_(jni::make_global(jThis)),
-      runtime_(rt),
+      rnRuntime_(rnRuntime),
       jsCallInvoker_(jsCallInvoker),
       layoutAnimations_(std::move(_layoutAnimations)),
       scheduler_(scheduler)
@@ -110,7 +110,7 @@ void NativeProxy::installJSIBindings(
     /**/) {
   auto jsQueue = std::make_shared<JMessageQueueThread>(messageQueueThread);
   std::shared_ptr<jsi::Runtime> uiRuntime =
-      ReanimatedRuntime::make(runtime_, jsQueue);
+      ReanimatedRuntime::make(rnRuntime_, jsQueue);
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -143,7 +143,7 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_->addEventListener(eventListener_);
 #endif
 
-  auto &rt = *runtime_;
+  auto &rt = *rnRuntime_;
   setGlobalProperties(rt, uiRuntime);
   registerEventHandler();
   setupLayoutAnimations();
