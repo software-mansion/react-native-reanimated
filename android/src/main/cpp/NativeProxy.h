@@ -203,9 +203,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
-  void setGlobalProperties(
-      jsi::Runtime &jsRuntime,
-      const std::shared_ptr<jsi::Runtime> &uiRuntime);
   void setupLayoutAnimations();
 
   double getCurrentTime();
