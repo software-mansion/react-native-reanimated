@@ -328,7 +328,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   uint64_t newRegistrationId = EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
-  int id = emitterReactTag.asNumber();
+  int emitterReactTagInt = emitterReactTag.asNumber();
 
   runtimeManager_->scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
@@ -337,7 +337,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
         runtimeHelper,
         newRegistrationId,
         eventNameStr,
-        id,
+        emitterReactTagInt,
         std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
