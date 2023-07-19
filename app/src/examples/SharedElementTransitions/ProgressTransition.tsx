@@ -17,8 +17,6 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 
-import { useNavigation } from '@react-navigation/native';
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const BACKGROUND = '#fff';
@@ -185,10 +183,7 @@ function DetailsScreen({
         <Animated.Image
           sharedTransitionTag={tag}
           source={source}
-          style={{
-            width: 270,
-            height: 270,
-          }}
+          style={detailStyles.image}
         />
       </Animated.View>
       <View style={detailStyles.container}>
@@ -222,7 +217,7 @@ function DetailsScreen({
               ]}>
               Small
             </Text>
-            <Text style={[detailStyles.pickerItem]}>Medium</Text>
+            <Text style={detailStyles.pickerItem}>Medium</Text>
             <Text style={detailStyles.pickerItem}>Large</Text>
           </Animated.View>
           <AnimatedPressable
@@ -249,9 +244,9 @@ const detailStyles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: ACCENT_BACKGROUND,
   },
-  text: {
-    fontSize: 25,
-    color: TEXT,
+  image: {
+    width: 270,
+    height: 270,
   },
   header: {
     fontSize: 46,
