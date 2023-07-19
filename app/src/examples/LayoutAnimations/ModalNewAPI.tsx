@@ -60,7 +60,7 @@ function AnimatedView() {
   return (
     <Animated.View
       ref={ref}
-      style={[styles.animatedView]}
+      style={styles.animatedView}
       {...{ entering, exiting, layout: Layout }}>
       <Text> kk </Text>
     </Animated.View>
@@ -70,20 +70,14 @@ function AnimatedView() {
 export default function ModalNewAPI(): React.ReactElement {
   const [show, setShow] = useState(false);
   return (
-    <View style={{ flexDirection: 'column-reverse' }}>
+    <View style={styles.reverse}>
       <Button
         title="toggle"
         onPress={() => {
           setShow((last) => !last);
         }}
       />
-      <View
-        style={{
-          height: 400,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-        }}>
+      <View style={styles.animatedViewContainer}>
         {show && <AnimatedView />}
       </View>
     </View>
@@ -91,6 +85,15 @@ export default function ModalNewAPI(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  reverse: {
+    flexDirection: 'column-reverse',
+  },
+  animatedViewContainer: {
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
   animatedView: {
     height: 300,
     width: 200,

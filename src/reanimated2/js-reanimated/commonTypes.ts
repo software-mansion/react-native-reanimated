@@ -1,5 +1,5 @@
-import { Timestamp, NestedObjectValues } from '../commonTypes';
-import MutableValue from './MutableValue';
+import type { Timestamp, NestedObjectValues } from '../commonTypes';
+import type MutableValue from './MutableValue';
 
 export interface Mapper<T> {
   MAPPER_ID?: number;

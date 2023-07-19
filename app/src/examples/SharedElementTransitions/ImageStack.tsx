@@ -10,6 +10,7 @@ import {
   Pressable,
   ScrollView,
   Button,
+  StyleSheet,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -33,7 +34,7 @@ export function ImageStack({
   }
 
   return (
-    <View style={{ alignItems: 'center' }}>
+    <View style={styles.center}>
       {images.map((image, index) => {
         let size: number;
         if (!collapsed) {
@@ -44,16 +45,18 @@ export function ImageStack({
         const marginTop = index === 0 || !collapsed ? 20 : -size + 20;
         return (
           <View
-            style={{ zIndex: -index, alignItems: 'center' }}
+            style={[{ zIndex: -index }, styles.center]}
             key={`${image}@${index}`}>
             <Animated.Image
               source={image}
-              style={{
-                height: size,
-                width: size,
-                marginTop,
-                borderRadius: 15,
-              }}
+              style={[
+                {
+                  height: size,
+                  width: size,
+                  marginTop,
+                },
+                styles.roundedBorder,
+              ]}
               sharedTransitionTag={`${image}@${index}`}
             />
             <Animated.Text
@@ -77,10 +80,8 @@ export function ScreenOne({
   navigation,
 }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Animated.Text
-        sharedTransitionTag="t1"
-        style={{ fontSize: 16, fontWeight: 'bold' }}>
+    <View style={styles.container}>
+      <Animated.Text sharedTransitionTag="t1" style={styles.text}>
         Florence
       </Animated.Text>
       <Animated.Text sharedTransitionTag="t2">Or something</Animated.Text>
@@ -99,10 +100,8 @@ export function ScreenTwo({
   navigation,
 }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <Animated.Text
-        sharedTransitionTag="t1"
-        style={{ fontSize: 16, fontWeight: 'bold' }}>
+    <ScrollView style={styles.flexOne}>
+      <Animated.Text sharedTransitionTag="t1" style={styles.text}>
         Florence
       </Animated.Text>
       <Animated.Text sharedTransitionTag="t2">Or something</Animated.Text>
@@ -123,14 +122,10 @@ export function ScreenThree({
 }: NativeStackScreenProps<ParamListBase>) {
   const { image, index } = route.params as any;
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.flexOne}>
       <Animated.Image
         source={image}
-        style={{
-          width: '100%',
-          height: 400,
-          marginTop: 0,
-        }}
+        style={styles.image}
         sharedTransitionTag={`${image}@${index}`}
       />
       <Button onPress={() => navigation.popToTop()} title="Go home" />
@@ -142,12 +137,32 @@ export default function ImageStackExample() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Screen1" component={ScreenOne} />
-      <Stack.Screen
-        name="Screen2"
-        component={ScreenTwo}
-        options={{ animation: 'none' }}
-      />
+      <Stack.Screen name="Screen2" component={ScreenTwo} />
       <Stack.Screen name="Screen3" component={ScreenThree} />
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
+  center: {
+    alignItems: 'center',
+  },
+  roundedBorder: {
+    borderRadius: 15,
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  image: {
+    width: '100%',
+    height: 400,
+    marginTop: 0,
+  },
+});

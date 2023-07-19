@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import FrameCallbackRegistryJS from '../frameCallback/FrameCallbackRegistryJS';
-import { FrameInfo } from '../frameCallback/FrameCallbackRegistryUI';
+import type { FrameInfo } from '../frameCallback/FrameCallbackRegistryUI';
 
 export type FrameCallback = {
   setActive: (isActive: boolean) => void;

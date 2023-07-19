@@ -23,11 +23,7 @@ export default function WobbleExample() {
   });
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
+    <View style={styles.container}>
       <Animated.View style={[styles.box, style]} />
       <Button
         title="start"
@@ -54,6 +50,10 @@ export default function WobbleExample() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+  },
   box: {
     width: 80,
     height: 80,

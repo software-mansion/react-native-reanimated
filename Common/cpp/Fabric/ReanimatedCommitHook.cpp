@@ -10,8 +10,8 @@ using namespace facebook::react;
 namespace reanimated {
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
-    ShadowTree const &shadowTree,
-    RootShadowNode::Shared const &oldRootShadowNode,
+    ShadowTree const &,
+    RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
   if (propsRegistry_->isLastReanimatedRoot(newRootShadowNode)) {
     // ShadowTree commited by Reanimated, no need to apply updates from
@@ -44,8 +44,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
       rootNode = newRootNode;
     });
   }
-
-  shadowTreeCloner.updateYogaChildren();
 
   // request Reanimated to skip one commit so that React Native can mount the
   // changes instead of failing 1024 times and crashing the app

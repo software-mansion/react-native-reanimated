@@ -1,6 +1,6 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import { ComplexWorkletFunction } from './commonTypes';
+import type { ComplexWorkletFunction } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,

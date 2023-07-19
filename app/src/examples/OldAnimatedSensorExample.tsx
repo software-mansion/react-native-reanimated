@@ -21,7 +21,7 @@ export default function OldAnimatedSensorExample() {
         title={'log data'}
         onPress={() => console.log(animatedSensor.sensor.value)}
       />
-      <Animated.View style={[componentStyle.rect]}>
+      <Animated.View style={componentStyle.rect}>
         <Animated.View style={[componentStyle.square, style]} />
       </Animated.View>
     </View>

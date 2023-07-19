@@ -14,10 +14,11 @@ import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegis
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
+import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
-  var _WORKLET: boolean | undefined;
+  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
@@ -29,14 +30,10 @@ declare global {
   var _log: (s: string) => void;
   var _notifyAboutProgress: (
     tag: number,
-    value: number,
+    value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
-  var _notifyAboutEnd: (
-    tag: number,
-    finished: boolean,
-    removeView: boolean
-  ) => void;
+  var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (
@@ -64,7 +61,7 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _removeFromPropsRegistry: (tag: number) => void | undefined;
+  var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
   var _measurePaper: ((viewTag: number) => MeasuredDimensions) | undefined;
   var _measureFabric:
     | ((shadowNodeWrapper: ShadowNodeWrapper) => MeasuredDimensions)
@@ -94,4 +91,5 @@ declare global {
   var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
+  var ProgressTransitionRegister: ProgressTransitionRegister;
 }

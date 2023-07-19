@@ -1,6 +1,6 @@
-import { NestedObjectValues } from '../commonTypes';
+import type { NestedObjectValues } from '../commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
-import { JSReanimated } from './commonTypes';
+import type { JSReanimated } from './commonTypes';
 import MutableValue from './MutableValue';
 
 export default class Mapper<T> {

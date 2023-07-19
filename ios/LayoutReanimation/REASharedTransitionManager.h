@@ -6,8 +6,7 @@
 - (void)notifyAboutNewView:(UIView *)view;
 - (void)notifyAboutViewLayout:(UIView *)view withViewFrame:(CGRect)frame;
 - (void)viewsDidLayout;
-- (BOOL)configureAndStartSharedTransitionForViews:(NSArray<UIView *> *)views;
-- (void)finishSharedAnimation:(UIView *)view;
+- (void)finishSharedAnimation:(UIView *)view removeView:(BOOL)removeView;
 - (void)setFindPrecedingViewTagForTransitionBlock:
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock;
@@ -15,5 +14,6 @@
 - (UIView *)getTransitioningView:(NSNumber *)tag;
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues
                            targetValues:(NSMutableDictionary *)targetValues;
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack;
 
 @end
