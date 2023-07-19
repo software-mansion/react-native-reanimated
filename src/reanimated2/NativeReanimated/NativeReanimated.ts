@@ -102,13 +102,6 @@ export class NativeReanimated {
     eventName: string,
     emitterReactTag?: number
   ): number {
-    if (emitterReactTag === undefined) {
-      return this.InnerNativeModule.registerEventHandler(
-        eventHandler,
-        eventName,
-        -1
-      );
-    }
     return this.InnerNativeModule.registerEventHandler(
       eventHandler,
       eventName,
