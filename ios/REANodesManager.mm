@@ -217,7 +217,7 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
-  [[self getDisplayLink] setPaused:true];
+  [[self getDisplayLink] setPaused:YES];
 
   return self;
 }
@@ -274,7 +274,7 @@ using namespace facebook::react;
 
 - (void)stopUpdatingOnAnimationFrame
 {
-  [[self getDisplayLink] setPaused:true];
+  [[self getDisplayLink] setPaused:YES];
 }
 
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
