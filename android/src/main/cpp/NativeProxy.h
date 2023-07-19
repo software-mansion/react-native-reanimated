@@ -176,7 +176,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
-  jsi::Runtime *runtime_;
+  jsi::Runtime *rnRuntime_;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
