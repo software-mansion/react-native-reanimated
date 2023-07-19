@@ -23,7 +23,7 @@ interface Handlers<T, TContext extends Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-export interface UseHandlerContext<TContext extends Context> {
+interface UseHandlerContext<TContext extends Context> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
@@ -104,7 +104,7 @@ export function buildWorkletsHash(
 }
 
 // builds dependencies array for gesture handlers
-export function buildDependencies(
+function buildDependencies(
   dependencies: DependencyList,
   handlers: Record<string, WorkletFunction | undefined>
 ): Array<unknown> {
@@ -126,7 +126,7 @@ export function buildDependencies(
 }
 
 // this is supposed to work as useEffect comparison
-export function areDependenciesEqual(
+function areDependenciesEqual(
   nextDeps: DependencyList,
   prevDeps: DependencyList
 ): boolean {

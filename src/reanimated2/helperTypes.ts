@@ -123,8 +123,6 @@ export type AnimateProps<P extends object> = NonStyleAnimatedProps<P> &
     animatedProps?: Partial<AnimatedPropsProp<P>>;
   };
 
-export type AnimatedProps<P extends object> = AnimateProps<P>;
-
 export type AnimatedPropsAdapterFunction = (
   props: Record<string, unknown>
 ) => void;

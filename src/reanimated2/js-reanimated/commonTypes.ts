@@ -1,7 +1,7 @@
 import type { Timestamp, NestedObjectValues } from '../commonTypes';
 import type MutableValue from './MutableValue';
 
-export interface Mapper<T> {
+interface Mapper<T> {
   MAPPER_ID?: number;
   id: number;
   inputs: MutableValue<T>[];
@@ -14,7 +14,7 @@ export interface Mapper<T> {
   ): MutableValue<T>[];
 }
 
-export interface MapperRegistry<T> {
+interface MapperRegistry<T> {
   sortedMappers: Mapper<T>[];
   mappers: Map<number, Mapper<T>>;
   _module: JSReanimated;

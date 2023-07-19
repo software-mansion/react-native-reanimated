@@ -33,7 +33,7 @@ export const colorProps = [
 
 export const ColorProperties = makeShareable(colorProps);
 
-export let updateProps: (
+let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle,
   maybeViewRef: ViewRefSet<any> | undefined
