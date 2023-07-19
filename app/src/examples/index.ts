@@ -313,9 +313,9 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Volume slider & sensor',
     screen: VolumeExample,
   },
-  TransitionProgressExample: {
+  ProgressTransitionExample: {
     icon: '☕',
-    title: 'Progress transition example',
+    title: 'Progress transition',
     screen: ProgressTransitionExample,
   },
   EmptyExample: {
