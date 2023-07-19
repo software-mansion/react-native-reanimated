@@ -98,8 +98,8 @@ export class NativeReanimated {
   }
 
   registerEventHandler<T>(
-    eventName: string,
     eventHandler: ShareableRef<T>,
+    eventName: string,
     emitterReactTag?: number
   ): number {
     if (emitterReactTag === undefined) {

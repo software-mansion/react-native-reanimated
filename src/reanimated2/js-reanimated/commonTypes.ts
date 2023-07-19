@@ -45,9 +45,9 @@ export interface JSReanimated {
   ): number;
   stopMapper(mapperId: number): void;
   registerEventHandler<T>(
-    _: string,
-    __: (event: T) => void,
-    ___: number
+    eventHandler: (event: T) => void,
+    eventName: string,
+    emitterReactTag?: number
   ): string;
   unregisterEventHandler(_: string): void;
   enableLayoutAnimations(): void;

@@ -51,7 +51,6 @@ export class ProgressTransitionManager {
       const eventPrefix = Platform.OS === 'android' ? 'on' : 'top';
       let lastProgressValue = -1;
       eventHandler.onTransitionProgress = registerEventHandler(
-        eventPrefix + 'TransitionProgress',
         (event: TransitionProgressEvent) => {
           'worklet';
           const progress = event.progress;
@@ -63,39 +62,31 @@ export class ProgressTransitionManager {
           }
           lastProgressValue = progress;
           global.ProgressTransitionRegister.frame(progress);
-        }
+        },
+        eventPrefix + 'TransitionProgress'
       );
-      eventHandler.onAppear = registerEventHandler(
-        eventPrefix + 'Appear',
-        () => {
-          'worklet';
-          global.ProgressTransitionRegister.onTransitionEnd();
-        }
-      );
+      eventHandler.onAppear = registerEventHandler(() => {
+        'worklet';
+        global.ProgressTransitionRegister.onTransitionEnd();
+      }, eventPrefix + 'Appear');
 
       if (Platform.OS === 'android') {
         // onFinishTransitioning event is available only on Android and
         // is used to handle closing modals
-        eventHandler.onDisappear = registerEventHandler(
-          'onFinishTransitioning',
-          () => {
-            'worklet';
-            global.ProgressTransitionRegister.onAndroidFinishTransitioning();
-          }
-        );
+        eventHandler.onDisappear = registerEventHandler(() => {
+          'worklet';
+          global.ProgressTransitionRegister.onAndroidFinishTransitioning();
+        }, 'onFinishTransitioning');
       } else if (Platform.OS === 'ios') {
         // topDisappear event is required to handle closing modals on iOS
-        eventHandler.onDisappear = registerEventHandler('topDisappear', () => {
+        eventHandler.onDisappear = registerEventHandler(() => {
           'worklet';
           global.ProgressTransitionRegister.onTransitionEnd(true);
-        });
-        eventHandler.onSwipeDismiss = registerEventHandler(
-          'topGestureCancel',
-          () => {
-            'worklet';
-            global.ProgressTransitionRegister.onTransitionEnd();
-          }
-        );
+        }, 'topDisappear');
+        eventHandler.onSwipeDismiss = registerEventHandler(() => {
+          'worklet';
+          global.ProgressTransitionRegister.onTransitionEnd();
+        }, 'topGestureCancel');
       }
     }
   }
