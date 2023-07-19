@@ -180,6 +180,7 @@ using namespace facebook::react;
   if (!_displayLink) {
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return _displayLink;
 }
@@ -216,7 +217,6 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
-  [[self getDisplayLink] addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   [[self getDisplayLink] setPaused:true];
 
   return self;
@@ -269,7 +269,7 @@ using namespace facebook::react;
 
 - (void)startUpdatingOnAnimationFrame
 {
-  [[self getDisplayLink] setPaused:false];
+  [[self getDisplayLink] setPaused:NO];
 }
 
 - (void)stopUpdatingOnAnimationFrame
