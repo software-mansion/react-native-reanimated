@@ -62,12 +62,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 
 - (void)runUpdater
 {
-  if (![self getDisplayLink]) {
-    [[self getDisplayLink] setPaused:YES];
-  } else {
-    [[self getDisplayLink] setPaused:NO];
-  }
-
+  [[self getDisplayLink] setPaused:NO];
   [self updateKeyboardFrame];
 }
 
