@@ -500,7 +500,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
     int tag = view.getId();
     ViewManager viewManager = resolveViewManager(tag);
 
-    if (viewManager != null && viewManager.getName().equals("RNSScreenStack")) {
+    if (
+      viewManager != null && (
+      viewManager.getName().equals("RCTModalHostView") ||
+      viewManager.getName().equals("RNSScreen") ||
+      viewManager.getName().equals("RNSScreenStack")
+    )) {
       cancelAnimationsRecursive(view);
       return false;
     }
