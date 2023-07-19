@@ -177,7 +177,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     // noop
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
     // noop
   };
 
