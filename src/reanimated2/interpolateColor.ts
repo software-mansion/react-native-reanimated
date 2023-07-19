@@ -10,7 +10,7 @@ import {
 } from './Colors';
 import { makeMutable } from './core';
 import { interpolate } from './interpolation';
-import { SharedValue } from './commonTypes';
+import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
 
 export const Extrapolate = {
@@ -175,22 +175,29 @@ const getInterpolateHSV = (
   return { h, s, v, a };
 };
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type interpolateColorType = <T extends string | number>(
+export function interpolateColor(
   value: number,
   inputRange: readonly number[],
-  outputRange: readonly T[],
+  outputRange: readonly string[],
   colorSpace?: 'RGB' | 'HSV',
   options?: InterpolationOptions
-) => T;
+): string;
 
-export const interpolateColor = ((
+export function interpolateColor(
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly number[],
+  colorSpace?: 'RGB' | 'HSV',
+  options?: InterpolationOptions
+): number;
+
+export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly (string | number)[],
   colorSpace: 'RGB' | 'HSV' = 'RGB',
   options: InterpolationOptions = {}
-): string | number => {
+): string | number {
   'worklet';
   if (colorSpace === 'HSV') {
     return interpolateColorsHSV(
@@ -210,9 +217,7 @@ export const interpolateColor = ((
   throw new Error(
     `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
   );
-  // TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file,
-  // seems easy to fix that.
-}) as interpolateColorType;
+}
 
 export enum ColorSpace {
   RGB = 0,

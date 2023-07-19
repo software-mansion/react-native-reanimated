@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { ShareableRef } from './commonTypes';
+import type { ShareableRef } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
@@ -56,7 +56,7 @@ const INACCESSIBLE_OBJECT = {
     return new Proxy(
       {},
       {
-        get: (_: any, prop: string) => {
+        get: (_: any, prop: string | symbol) => {
           if (prop === '_isReanimatedSharedValue') {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSharedValue check
@@ -68,7 +68,9 @@ const INACCESSIBLE_OBJECT = {
             return false;
           }
           throw new Error(
-            `Trying to access property \`${prop}\` of an object which cannot be sent to the UI runtime.`
+            `Trying to access property \`${String(
+              prop
+            )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
@@ -139,15 +141,28 @@ export function makeShareableCloneRecursive<T>(
         if (value.__workletHash !== undefined) {
           // we are converting a worklet
           if (__DEV__) {
-            if (value.__version !== jsVersion) {
-              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${value.__version}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
-              \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.`);
+            const babelVersion = value.__initData.version;
+            if (babelVersion === undefined) {
+              throw new Error(
+                '[Reanimated] Unknown version of Reanimated Babel plugin. Using release bundle with debug build of the app is not supported. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.'
+              );
+            } else if (babelVersion !== jsVersion) {
+              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
+              \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.`);
             }
             registerWorkletStackDetails(
               value.__workletHash,
               value.__stackDetails
             );
             delete value.__stackDetails;
+          } else if (value.__stackDetails) {
+            // Detected debug version of the worklet in release bundle. This
+            // might lead to unexpected issues or errors. Probably one of user
+            // dependencies provided transpiled code with debug version of the
+            // Reanimated plugin.
+            throw new Error(
+              '[Reanimated] Using dev bundle in a release app build is not supported. Visit https://github.com/software-mansion/react-native-reanimated/issues/4737 to find more information on how to fix this issue.'
+            );
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means
@@ -169,6 +184,17 @@ export function makeShareableCloneRecursive<T>(
             depth + 1
           );
         }
+      } else if (value instanceof RegExp) {
+        const pattern = value.source;
+        const flags = value.flags;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            return new RegExp(pattern, flags);
+          },
+        });
+        registerShareableMapping(value, handle);
+        return handle as ShareableRef<T>;
       } else {
         // This is reached for object types that are not of plain Object.prototype.
         // We don't support such objects from being transferred as shareables to

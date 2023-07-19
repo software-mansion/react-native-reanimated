@@ -11,7 +11,7 @@ import Animated, {
   SequencedTransition,
   combineTransition,
 } from 'react-native-reanimated';
-import { Image, LayoutChangeEvent, Text, View } from 'react-native';
+import { Image, LayoutChangeEvent, Text, View, StyleSheet } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 
@@ -80,7 +80,13 @@ export function WaterfallGrid({
     if (dims.width === 0 || dims.height === 0) {
       return;
     }
-    const poks = [];
+    const poks: {
+      ratio: number;
+      address: string;
+      key: number;
+      color: string;
+    }[] = [];
+
     for (let i = 0; i < pokemons; i++) {
       const ratio = 1 + Math.random();
       poks.push({
@@ -109,16 +115,16 @@ export function WaterfallGrid({
           exiting={BounceOut}
           layout={layoutTransition}
           key={pok.address}
-          style={{
-            width: width,
-            height: pokHeight,
-            alignItems: 'center',
-            backgroundColor: pok.color,
-            justifyContent: 'center',
-            position: 'absolute',
-            left: cur * width + (cur + 1) * margin,
-            top: heights[cur] - pokHeight,
-          }}>
+          style={[
+            {
+              width: width,
+              height: pokHeight,
+              backgroundColor: pok.color,
+              left: cur * width + (cur + 1) * margin,
+              top: heights[cur] - pokHeight,
+            },
+            styles.pok,
+          ]}>
           <TapGestureHandler
             onHandlerStateChange={() => {
               setPoks(poks.filter((it) => it.key !== pok.key));
@@ -135,7 +141,7 @@ export function WaterfallGrid({
     return [cardsResult, Math.max(...heights) + margin / 2];
   }, [poks, columns, transition, width]);
   return (
-    <View onLayout={handleOnLayout} style={{ flex: 1 }}>
+    <View onLayout={handleOnLayout} style={styles.flexOne}>
       {cardsMemo.length === 0 && <Text> Loading </Text>}
       {cardsMemo.length !== 0 && (
         <ScrollView>
@@ -150,18 +156,12 @@ export default function WaterfallGridExample() {
     'SequencedTransition'
   );
   return (
-    <View style={{ flex: 1 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'center',
-          height: 60,
-          padding: 10,
-        }}>
+    <View style={styles.flexOne}>
+      <View style={styles.pickerContainer}>
         <Picker
           mode="dropdown"
           selectedValue={selectedTransition}
-          style={{ height: 50, width: 250 }}
+          style={styles.picker}
           itemStyle={{ height: 50 }}
           onValueChange={(itemValue) => {
             setSelectedTransition(itemValue as string);
@@ -187,3 +187,24 @@ export default function WaterfallGridExample() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+  },
+  pok: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    height: 60,
+    padding: 10,
+  },
+  picker: {
+    height: 50,
+    width: 250,
+  },
+});

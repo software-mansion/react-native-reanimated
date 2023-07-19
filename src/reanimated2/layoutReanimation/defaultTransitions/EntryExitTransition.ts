@@ -1,4 +1,4 @@
-import {
+import type {
   ILayoutAnimationBuilder,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
@@ -6,7 +6,7 @@ import {
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
-import {
+import type {
   StyleProps,
   TransformProperty,
   AnimationObject,
@@ -182,7 +182,6 @@ export class EntryExitTransition
           } else {
             return { [transformProp]: 1 } as unknown as TransformProperty;
           }
-          return value;
         })
       );
 

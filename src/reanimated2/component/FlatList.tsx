@@ -1,15 +1,12 @@
-import React, { Component, ForwardedRef, forwardRef } from 'react';
-import {
-  FlatList,
-  FlatListProps,
-  LayoutChangeEvent,
-  StyleSheet,
-} from 'react-native';
+import type { ForwardedRef } from 'react';
+import React, { Component, forwardRef } from 'react';
+import type { FlatListProps, LayoutChangeEvent } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
 import { AnimatedView } from './View';
 import createAnimatedComponent from '../../createAnimatedComponent';
-import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
-import { StyleProps } from '../commonTypes';
-import { AnimateProps } from '../helperTypes';
+import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
+import type { StyleProps } from '../commonTypes';
+import type { AnimateProps } from '../helperTypes';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 

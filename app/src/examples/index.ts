@@ -53,6 +53,7 @@ import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
@@ -64,6 +65,7 @@ import PagerExample from './CustomHandler/PagerExample';
 import PinExample from './PinExample';
 import RainbowExample from './RainbowExample';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
+import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import ScreenStackExample from './ScreenStackExample';
@@ -87,6 +89,9 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import MatrixTransform from './MatrixTransform';
+import PendulumExample from './PendulumExample';
+import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
 
 interface Example {
   icon?: string;
@@ -308,10 +313,30 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Volume slider & sensor',
     screen: VolumeExample,
   },
+  ProgressTransitionExample: {
+    icon: '☕',
+    title: 'Progress transition',
+    screen: ProgressTransitionExample,
+  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  MatrixExample: {
+    icon: '🧮',
+    title: 'useAnimatedStyle with matrix',
+    screen: MatrixTransform,
+  },
+  SpringExample: {
+    icon: '🕰',
+    title: 'Pendulum example',
+    screen: PendulumExample,
+  },
+  ReducedMotionExample: {
+    icon: '⏸️',
+    title: 'Reduced Motion',
+    screen: ReducedMotionExample,
   },
 
   // Old examples
@@ -509,5 +534,9 @@ export const EXAMPLES: Record<string, Example> = {
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+  },
+  DuplicateTagsExample: {
+    title: '[SET] Duplicate Tags',
+    screen: DuplicateTagsExample,
   },
 } as const;

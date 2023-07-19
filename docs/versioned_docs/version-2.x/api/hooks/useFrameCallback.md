@@ -61,18 +61,20 @@ import Animated, {
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
-import {Button, View} from 'react-native';
+import {Button, StyleSheet, View} from 'react-native';
 
 import React from 'react';
 
 export default function FrameCallbackExample() {
   const x = useSharedValue(0);
 
-  const frameCallback = useFrameCallback((frameInfo) => {
+  const frameCallback = useFrameCallback(frameInfo => {
     if (frameInfo.timeSincePreviousFrame === null) {
       console.log('First frame!');
     } else {
-      console.log(`${frameInfo.duration} ms have passed since the previous frame`);
+      console.log(
+        `${frameInfo.timeSincePreviousFrame} ms have passed since the previous frame`,
+      );
     }
     // Move the box by one pixel on every frame
     x.value += 1;
@@ -83,16 +85,27 @@ export default function FrameCallbackExample() {
       transform: [
         {
           translateX: x.value,
-        }
+        },
       ],
     };
   });
 
   return (
     <View>
-      <Animated.View style={[styles.box, animatedStyle1]} />
-      <Button title={'Start/stop'} onPress={() => frameCallback.setActive(!frameCallback.isActive)}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+      <Button
+        title="Start/stop"
+        onPress={() => frameCallback.setActive(!frameCallback.isActive)}
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  box: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'red',
+  },
+});
 ```

@@ -1,20 +1,22 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import {
+import type {
   SpringConfig,
-  initialCalculations,
-  calcuateNewMassToMatchDuration,
   SpringAnimation,
   InnerSpringAnimation,
+  SpringConfigInner,
+} from './springUtils';
+import {
+  initialCalculations,
+  calculateNewMassToMatchDuration,
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
-  SpringConfigInner,
 } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -147,6 +149,7 @@ export const withSpring = ((
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.lastTimestamp &&
         previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
@@ -189,7 +192,7 @@ export const withSpring = ((
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
         if (config.useDuration) {
-          const acutalDuration = triggeredTwice
+          const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
               duration -
@@ -197,8 +200,8 @@ export const withSpring = ((
                 (previousAnimation?.startTimestamp || 0))
             : duration;
 
-          config.duration = acutalDuration;
-          mass = calcuateNewMassToMatchDuration(
+          config.duration = actualDuration;
+          mass = calculateNewMassToMatchDuration(
             x0 as number,
             config,
             animation.velocity

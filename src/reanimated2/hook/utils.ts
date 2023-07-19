@@ -1,6 +1,7 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import type { MutableRefObject } from 'react';
+import { useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
-import {
+import type {
   AnimatedStyle,
   Context,
   NativeEvent,
@@ -12,8 +13,8 @@ import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { ContextWithDependencies, DependencyList } from './commonTypes';
-import { NativeSyntheticEvent } from 'react-native';
+import type { ContextWithDependencies, DependencyList } from './commonTypes';
+import type { NativeSyntheticEvent } from 'react-native';
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext): void;
 }

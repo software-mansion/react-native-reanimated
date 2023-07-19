@@ -22,7 +22,12 @@
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
 #include "NativeReanimatedModule.h"
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
 #include "Scheduler.h"
+#endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "PropsRegistry.h"
@@ -100,7 +105,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
     size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       array[i] = elements[i];
     }
     callback_(array, orientationDegrees);
@@ -171,7 +176,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
-  jsi::Runtime *runtime_;
+  jsi::Runtime *rnRuntime_;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
@@ -200,12 +205,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setGlobalProperties(
       jsi::Runtime &jsRuntime,
-      const std::shared_ptr<jsi::Runtime> &reanimatedRuntime);
+      const std::shared_ptr<jsi::Runtime> &uiRuntime);
   void setupLayoutAnimations();
 
   double getCurrentTime();
   bool isAnyHandlerWaitingForEvent(std::string);
   void performOperations();
+  bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
@@ -266,7 +272,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rt,
+      jsi::Runtime *rnRuntime,
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations

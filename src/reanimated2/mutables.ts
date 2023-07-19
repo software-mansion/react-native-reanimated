@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
+import type { SharedValue, ShareableSyncDataHolderRef } from './commonTypes';
 import {
   ShareableClone,
   makeShareableCloneOnUIRecursive,
