@@ -19,8 +19,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using CheckDuplicateSharedTag = std::function<void(int, int)>;
 #endif
   using ClearAnimationConfigBlock = std::function<void(int)>;
-  using CancelAnimationBlock =
-      std::function<void(int, int, jboolean, jboolean)>;
+  using CancelAnimationBlock = std::function<void(int)>;
   using FindPrecedingViewTagForTransitionBlock = std::function<int(int)>;
 
  public:
@@ -57,11 +56,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       bool isSharedTransition);
   void endLayoutAnimation(int tag, bool removeView);
   void clearAnimationConfigForTag(int tag);
-  void cancelAnimationForTag(
-      int tag,
-      int type,
-      jboolean cancelled,
-      jboolean removeView);
+  void cancelAnimationForTag(int tag);
   int findPrecedingViewTagForTransition(int tag);
 
  private:

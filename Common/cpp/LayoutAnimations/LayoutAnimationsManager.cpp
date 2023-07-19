@@ -93,12 +93,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
       config->getJSValue(rt));
 }
 
-void LayoutAnimationsManager::cancelLayoutAnimation(
-    jsi::Runtime &rt,
-    int tag,
-    LayoutAnimationType,
-    bool cancelled = true,
-    bool removeView = true) {
+void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, int tag) {
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
@@ -106,15 +101,7 @@ void LayoutAnimationsManager::cancelLayoutAnimation(
   jsi::Function cancelLayoutAnimation =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
           rt, "stop");
-  std::shared_ptr<Shareable> config;
-  {
-    auto lock = std::unique_lock<std::mutex>(animationsMutex_);
-    config = sharedTransitionAnimations_[tag];
-  }
-  if (config != nullptr) {
-    cancelLayoutAnimation.call(
-        rt, jsi::Value(tag), config->getJSValue(rt), cancelled, removeView);
-  }
+  cancelLayoutAnimation.call(rt, jsi::Value(tag));
 }
 
 /*

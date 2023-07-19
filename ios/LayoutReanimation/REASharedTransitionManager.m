@@ -639,7 +639,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)cancelAnimation:(NSNumber *)viewTag
 {
-  _cancelLayoutAnimation(viewTag, SHARED_ELEMENT_TRANSITION, YES, YES);
+  _cancelLayoutAnimation(viewTag);
 }
 
 - (void)disableCleaningForViewTag:(NSNumber *)viewTag
