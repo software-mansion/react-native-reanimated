@@ -11,9 +11,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-
 import type {
-  AnimatedStyle,
   SharedValue,
   AnimatableValue,
   Animation,
@@ -36,8 +34,6 @@ import {
 } from './transformationMatrix/matrixUtils';
 
 let IN_STYLE_UPDATER = false;
-
-export type UserUpdater = () => AnimatedStyle;
 
 export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;
@@ -451,6 +447,7 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
 }
 
 // TODO it should work only if there was no animation before.
+// ts-prune-ignore-next
 export function withStartValue(
   startValue: AnimatableValue,
   animation: NextAnimation<AnimationObject>

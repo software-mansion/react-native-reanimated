@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
-      - name: Install node dependencies
+      - name: Install node dependencies 🧶
         run: yarn
       - name: Check types
         run: yarn tsc --noEmit
@@ -33,7 +33,9 @@ jobs:
         run: yarn type:check-api
       - name: Lint
         run: yarn lint:js
-      - name: Finding circular dependencies
+      - name: Find unused code
+        run: yarn ind-unused-code:js
+      - name: Find circular dependencies
         run: yarn circular_dependency_check
-      - name: Jest test:unit
+      - name: Run jest unit tests
         run: yarn test:unit

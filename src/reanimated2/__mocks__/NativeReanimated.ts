@@ -6,6 +6,7 @@ const NOOP = () => {
   // noop
 };
 
+// ts-prune-ignore-next
 export default {
   installCoreFunctions: NOOP,
   makeShareable: (worklet) => worklet,

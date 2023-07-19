@@ -1,6 +1,5 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
-import { processColor } from '../Colors';
 import type {
   AnimatedStyle,
   Context,
@@ -11,7 +10,6 @@ import type {
 } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
-import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import type { ContextWithDependencies, DependencyList } from './commonTypes';
 import type { NativeSyntheticEvent } from 'react-native';
@@ -154,30 +152,6 @@ function areDependenciesEqual(
   }
 
   return areHookInputsEqual(nextDeps, prevDeps);
-}
-
-export function hasColorProps(updates: AnimatedStyle): boolean {
-  const colorPropsSet = new Set(colorProps);
-  for (const key in updates) {
-    if (colorPropsSet.has(key)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export function parseColors(updates: AnimatedStyle): void {
-  'worklet';
-  for (const key in updates) {
-    if (colorProps.indexOf(key) !== -1) {
-      // value could be an animation in which case processColor will recognize it and will return undefined
-      // -> in such a case we don't want to override style of that key
-      const processedColor = processColor(updates[key]);
-      if (processedColor !== undefined) {
-        updates[key] = processedColor;
-      }
-    }
-  }
 }
 
 export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {

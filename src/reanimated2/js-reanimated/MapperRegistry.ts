@@ -1,6 +1,7 @@
 import type { JSReanimated } from './commonTypes';
 import type Mapper from './Mapper';
 
+// ts-prune-ignore-next
 export default class MapperRegistry<T> {
   sortedMappers: Mapper<T>[] = [];
   mappers: Map<number, Mapper<T>> = new Map();
