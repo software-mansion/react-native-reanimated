@@ -98,21 +98,21 @@ export class NativeReanimated {
   }
 
   registerEventHandler<T>(
-    eventHash: string,
+    eventName: string,
     eventHandler: ShareableRef<T>,
-    eventTag?: number
+    emitterReactTag?: number
   ): number {
-    if (eventTag === undefined) {
+    if (emitterReactTag === undefined) {
       return this.InnerNativeModule.registerEventHandler(
-        eventHash,
+        eventName,
         eventHandler,
         -1
       );
     }
     return this.InnerNativeModule.registerEventHandler(
-      eventHash,
+      eventName,
       eventHandler,
-      eventTag
+      emitterReactTag
     );
   }
 

@@ -65,9 +65,9 @@ export function getSensorContainer(): SensorContainer {
 }
 
 export function registerEventHandler<T>(
-  eventHash: string,
+  eventName: string,
   eventHandler: (event: T) => void,
-  eventTag?: number
+  emitterReactTag?: number
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
@@ -77,9 +77,9 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return NativeReanimatedModule.registerEventHandler(
-    eventHash,
+    eventName,
     makeShareableCloneRecursive(handleAndFlushAnimationFrame),
-    eventTag
+    emitterReactTag
   );
 }
 

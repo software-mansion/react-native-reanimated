@@ -320,15 +320,15 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
     jsi::Runtime &rt,
-    const jsi::Value &eventHash,
+    const jsi::Value &eventName,
     const jsi::Value &worklet,
-    const jsi::Value &eventTag) {
+    const jsi::Value &emitterReactTag) {
   static uint64_t EVENT_HANDLER_ID = 1;
 
   uint64_t newRegistrationId = EVENT_HANDLER_ID++;
-  auto eventName = eventHash.asString(rt).utf8(rt);
+  auto eventNameStr = eventName.asString(rt).utf8(rt);
   auto handlerShareable = extractShareableOrThrow(rt, worklet);
-  int id = eventTag.asNumber();
+  int id = emitterReactTag.asNumber();
 
   runtimeManager_->scheduler->scheduleOnUI([=] {
     jsi::Runtime &rt = *runtimeHelper->uiRuntime();
@@ -336,7 +336,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
     auto handler = std::make_shared<WorkletEventHandler>(
         runtimeHelper,
         newRegistrationId,
-        eventName,
+        eventNameStr,
         id,
         std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(std::move(handler));

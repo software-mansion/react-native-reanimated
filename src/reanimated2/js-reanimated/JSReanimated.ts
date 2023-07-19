@@ -33,9 +33,9 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   registerEventHandler<T>(
-    _eventHash: string,
+    _eventName: string,
     _eventHandler: ShareableRef<T>,
-    _eventTag: number
+    _emitterReactTag: number
   ): number {
     // noop
     return -1;
