@@ -2,14 +2,13 @@
 
 #include <ReactCommon/CallInvoker.h>
 
+#include "RuntimeManager.h"
 #include "ThreadSafeQueue.h"
 
 #include <memory>
 #include <utility>
 
 namespace reanimated {
-
-class RuntimeManager;
 
 class UIScheduler {
  public:

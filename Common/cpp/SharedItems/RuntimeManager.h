@@ -6,11 +6,12 @@
 
 #include "JSScheduler.h"
 #include "RuntimeDecorator.h"
-#include "UIScheduler.h"
+
+using namespace facebook;
 
 namespace reanimated {
 
-using namespace facebook;
+class UIScheduler;
 
 /**
  A class that manages a jsi::Runtime apart from the React-JS runtime.

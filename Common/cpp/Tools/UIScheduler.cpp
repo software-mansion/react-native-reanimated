@@ -16,8 +16,8 @@ void UIScheduler::triggerUI() {
   // much sooner.
   // Apparently the scope API is only supported on Hermes at the moment.
   // TODO: restore jsi::Scope
-//  const auto runtimeManager = weakRuntimeManager_.lock();
-//  const auto scope = jsi::Scope(*runtimeManager->runtime);
+  const auto runtimeManager = weakRuntimeManager_.lock();
+  const auto scope = jsi::Scope(*runtimeManager->runtime);
 #endif
   while (uiJobs_.getSize()) {
     const auto job = uiJobs_.pop();
