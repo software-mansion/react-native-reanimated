@@ -2,11 +2,8 @@ import reanimatedJS from '../js-reanimated';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import { NativeReanimated } from './NativeReanimated';
 
-let exportedModule;
-if (shouldBeUseWeb()) {
-  exportedModule = reanimatedJS;
-} else {
-  exportedModule = new NativeReanimated();
-}
+const NativeReanimatedModule = (
+  shouldBeUseWeb() ? reanimatedJS : new NativeReanimated()
+) as NativeReanimated;
 
-export default exportedModule as NativeReanimated;
+export default NativeReanimatedModule;
