@@ -34,10 +34,7 @@ jobs:
           node-version: 16
           cache: 'yarn'
       - run: |
-          echo "::remove-matcher owner=eslint-compact::"
-          echo "::remove-matcher owner=eslint-stylish::"
-      - run: |
-          echo "::remove-matcher owner=tsc::"
+          scripts/clear-annotations.sh
 
       - name: Install root node dependencies
         run: yarn
