@@ -41,7 +41,7 @@ type StackParamList = {
   Details: { tag: string };
 };
 
-const data = [
+const DATA = [
   {
     id: 'coffee',
     label: 'Caffè crema',
@@ -71,7 +71,7 @@ function HomeScreen({
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Home'>) {
   return (
-    <Animated.View style={[homeStyles.background, { paddingTop: 64 }]}>
+    <Animated.View style={homeStyles.background}>
       <StatusBar barStyle="dark-content" animated />
       <Animated.Text
         style={homeStyles.headline}
@@ -79,7 +79,7 @@ function HomeScreen({
         Choose your adventure
       </Animated.Text>
       <View style={homeStyles.wrapper}>
-        {data.map((item, i) => (
+        {DATA.map((item, i) => (
           <Pressable
             key={item.id}
             style={homeStyles.container}
@@ -122,6 +122,7 @@ const homeStyles = StyleSheet.create({
   background: {
     backgroundColor: BACKGROUND,
     flex: 1,
+    paddingTop: 64,
   },
   wrapper: {
     marginHorizontal: 16,
@@ -169,7 +170,7 @@ function DetailsScreen({
 }: NativeStackScreenProps<StackParamList, 'Details'>) {
   const { tag } = route.params;
 
-  const item = data.find((item) => item.id === tag);
+  const item = DATA.find((item) => item.id === tag);
 
   const source = item?.source;
   const label = item?.label;
