@@ -272,7 +272,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rt,
+      jsi::Runtime *rnRuntime,
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
