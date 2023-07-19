@@ -47,11 +47,6 @@ export function buildWorkletString(
 
   assert(draftExpression, "'draftExpression' is undefined");
 
-  let x = 0;
-  let y = 0;
-  x = y;
-  y = x;
-
   const expression = isFunctionDeclaration(draftExpression)
     ? draftExpression
     : draftExpression.expression;
