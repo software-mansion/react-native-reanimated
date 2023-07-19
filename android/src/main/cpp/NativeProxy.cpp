@@ -15,7 +15,6 @@
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
-#include "ReanimatedVersion.h"
 #include "WorkletRuntime.h"
 #include "WorkletRuntimeCollector.h"
 
@@ -148,16 +147,17 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
 #endif
+  auto &rnRuntime = *rnRuntime_;
+  auto isReducedMotion = getIsReducedMotion();
+  RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
-  auto &rt = *rnRuntime_;
-  setGlobalProperties(rt, uiRuntime);
   registerEventHandler();
   setupLayoutAnimations();
 
-  rt.global().setProperty(
-      rt,
-      jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(rt, nativeReanimatedModule));
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
+      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 
   auto createWorkletRuntime = [](jsi::Runtime &rt,
                                  const jsi::Value &thisValue,
@@ -168,12 +168,12 @@ void NativeProxy::installJSIBindings(
     auto ho = std::make_shared<WorkletRuntime>(name, valueUnpackerCode);
     return jsi::Object::createFromHostObject(rt, ho);
   };
-  rt.global().setProperty(
-      rt,
+  rnRuntime.global().setProperty(
+      rnRuntime,
       "_createWorkletRuntime",
       jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "_createWorkletRuntime"),
+          rnRuntime,
+          jsi::PropNameID::forAscii(rnRuntime, "_createWorkletRuntime"),
           2,
           createWorkletRuntime));
 
@@ -185,11 +185,14 @@ void NativeProxy::installJSIBindings(
     nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
     return jsi::Value::undefined();
   };
-  rt.global().setProperty(
-      rt,
+  rnRuntime.global().setProperty(
+      rnRuntime,
       "_scheduleOnJS",
       jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "_scheduleOnJS"), 2, scheduleOnJS));
+          rnRuntime,
+          jsi::PropNameID::forAscii(rnRuntime, "_scheduleOnJS"),
+          2,
+          scheduleOnJS));
 
   auto makeShareableClone = [nativeReanimatedModule](
                                 jsi::Runtime &rt,
@@ -199,12 +202,12 @@ void NativeProxy::installJSIBindings(
     return nativeReanimatedModule->makeShareableClone(
         rt, args[0], jsi::Value::undefined());
   };
-  rt.global().setProperty(
-      rt,
+  rnRuntime.global().setProperty(
+      rnRuntime,
       "_makeShareableClone",
       jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "_makeShareableClone"),
+          rnRuntime,
+          jsi::PropNameID::forAscii(rnRuntime, "_makeShareableClone"),
           1,
           makeShareableClone));
 
@@ -217,11 +220,14 @@ void NativeProxy::installJSIBindings(
     runOnRuntimeGuarded(rt2, worklet->getJSValue(rt2));
     return jsi::Value::undefined();
   };
-  rt.global().setProperty(
-      rt,
+  rnRuntime.global().setProperty(
+      rnRuntime,
       "_runOnRuntime",
       jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "_runOnRuntime"), 2, runOnRuntime));
+          rnRuntime,
+          jsi::PropNameID::forAscii(rnRuntime, "_runOnRuntime"),
+          2,
+          runOnRuntime));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
@@ -529,38 +535,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
   };
-}
-
-void NativeProxy::setGlobalProperties(
-    jsi::Runtime &jsRuntime,
-    const std::shared_ptr<jsi::Runtime> &uiRuntime) {
-  auto workletRuntimeValue =
-      jsRuntime.global()
-          .getPropertyAsObject(jsRuntime, "ArrayBuffer")
-          .asFunction(jsRuntime)
-          .callAsConstructor(jsRuntime, {static_cast<double>(sizeof(void *))});
-  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
-      workletRuntimeValue.getObject(jsRuntime).getArrayBuffer(jsRuntime).data(
-          jsRuntime));
-  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(uiRuntime.get());
-
-  jsRuntime.global().setProperty(
-      jsRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
-
-  jsRuntime.global().setProperty(jsRuntime, "_WORKLET", false);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-  jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", true);
-#else
-  jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", false);
-#endif
-
-  auto version = getReanimatedVersionString(jsRuntime);
-  jsRuntime.global().setProperty(jsRuntime, "_REANIMATED_VERSION_CPP", version);
-
-  auto isReducedMotion = getIsReducedMotion();
-  jsRuntime.global().setProperty(
-      jsRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
 
 void NativeProxy::setupLayoutAnimations() {

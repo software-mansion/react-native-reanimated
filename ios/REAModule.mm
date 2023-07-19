@@ -269,39 +269,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       : nullptr;
 
   if (jsiRuntime) {
-    jsi::Runtime &runtime = *jsiRuntime;
-
     auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
-    auto workletRuntimeValue = runtime.global()
-                                   .getProperty(runtime, "ArrayBuffer")
-                                   .asObject(runtime)
-                                   .asFunction(runtime)
-                                   .callAsConstructor(runtime, {static_cast<double>(sizeof(void *))});
-    uintptr_t *workletRuntimeData =
-        reinterpret_cast<uintptr_t *>(workletRuntimeValue.getObject(runtime).getArrayBuffer(runtime).data(runtime));
-    workletRuntimeData[0] = reinterpret_cast<uintptr_t>(nativeReanimatedModule->runtimeManager_->runtime.get());
-
-    runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
-
-    runtime.global().setProperty(runtime, "_WORKLET", false);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-    runtime.global().setProperty(runtime, "_IS_FABRIC", true);
-#else
-    runtime.global().setProperty(runtime, "_IS_FABRIC", false);
-#endif // RCT_NEW_ARCH_ENABLED
-
-    auto version = getReanimatedVersionString(runtime);
-    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
+    jsi::Runtime &rnRuntime = *jsiRuntime;
+    auto uiRuntime = nativeReanimatedModule->runtimeManager_->runtime;
 
     auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
-    runtime.global().setProperty(runtime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
+    RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
-    runtime.global().setProperty(
-        runtime,
-        jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(runtime, nativeReanimatedModule));
+    rnRuntime.global().setProperty(
+        rnRuntime,
+        jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 
     auto createWorkletRuntime =
         [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
@@ -310,11 +289,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       auto ho = std::make_shared<WorkletRuntime>(name, valueUnpackerCode);
       return jsi::Object::createFromHostObject(rt, ho);
     };
-    runtime.global().setProperty(
-        runtime,
+    rnRuntime.global().setProperty(
+        rnRuntime,
         "_createWorkletRuntime",
         jsi::Function::createFromHostFunction(
-            runtime, jsi::PropNameID::forAscii(runtime, "_createWorkletRuntime"), 2, createWorkletRuntime));
+            rnRuntime, jsi::PropNameID::forAscii(rnRuntime, "_createWorkletRuntime"), 2, createWorkletRuntime));
 
     auto scheduleOnJS =
         [nativeReanimatedModule](
@@ -322,22 +301,22 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       nativeReanimatedModule->scheduleOnJS(rt, args[0], args[1]);
       return jsi::Value::undefined();
     };
-    runtime.global().setProperty(
-        runtime,
+    rnRuntime.global().setProperty(
+        rnRuntime,
         "_scheduleOnJS",
         jsi::Function::createFromHostFunction(
-            runtime, jsi::PropNameID::forAscii(runtime, "_scheduleOnJS"), 2, scheduleOnJS));
+            rnRuntime, jsi::PropNameID::forAscii(rnRuntime, "_scheduleOnJS"), 2, scheduleOnJS));
 
     auto makeShareableClone =
         [nativeReanimatedModule](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
       return nativeReanimatedModule->makeShareableClone(rt, args[0], jsi::Value::undefined());
     };
-    runtime.global().setProperty(
-        runtime,
+    rnRuntime.global().setProperty(
+        rnRuntime,
         "_makeShareableClone",
         jsi::Function::createFromHostFunction(
-            runtime, jsi::PropNameID::forAscii(runtime, "_makeShareableClone"), 1, makeShareableClone));
+            rnRuntime, jsi::PropNameID::forAscii(rnRuntime, "_makeShareableClone"), 1, makeShareableClone));
 
     auto runOnRuntime =
         [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
@@ -346,17 +325,17 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       runOnRuntimeGuarded(rt2, worklet->getJSValue(rt2));
       return jsi::Value::undefined();
     };
-    runtime.global().setProperty(
-        runtime,
+    rnRuntime.global().setProperty(
+        rnRuntime,
         "_runOnRuntime",
         jsi::Function::createFromHostFunction(
-            runtime, jsi::PropNameID::forAscii(runtime, "_runOnRuntime"), 2, runOnRuntime));
+            rnRuntime, jsi::PropNameID::forAscii(rnRuntime, "_runOnRuntime"), 2, runOnRuntime));
 
 #ifdef RCT_NEW_ARCH_ENABLED
     weakNativeReanimatedModule_ = nativeReanimatedModule;
     if (_surfacePresenter != nil) {
       // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
-      [self injectDependencies:runtime];
+      [self injectDependencies:rnRuntime];
     }
 #endif // RCT_NEW_ARCH_ENABLED
   }
