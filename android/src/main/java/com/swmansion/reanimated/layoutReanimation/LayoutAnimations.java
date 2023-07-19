@@ -51,12 +51,12 @@ public class LayoutAnimations {
 
   public native int findPrecedingViewTagForTransition(int tag);
 
-  private void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
+  private void endLayoutAnimation(int tag, boolean removeView) {
     AnimationsManager animationsManager = getAnimationsManager();
     if (animationsManager == null) {
       return;
     }
-    animationsManager.endLayoutAnimation(tag, cancelled, removeView);
+    animationsManager.endLayoutAnimation(tag, removeView);
   }
 
   private void progressLayoutAnimation(

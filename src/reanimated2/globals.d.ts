@@ -33,11 +33,7 @@ declare global {
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
-  var _notifyAboutEnd: (
-    tag: number,
-    finished: boolean,
-    removeView: boolean
-  ) => void;
+  var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (

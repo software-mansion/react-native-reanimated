@@ -432,9 +432,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool isCancelled, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(
-        tag, isCancelled, removeView);
+  auto endLayoutAnimation = [this](int tag, bool removeView) {
+    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =

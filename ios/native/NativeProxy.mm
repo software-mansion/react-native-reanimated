@@ -177,7 +177,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     // noop
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
     // noop
   };
 
@@ -198,8 +198,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
-    [weakAnimationsManager endLayoutAnimationForTag:@(tag) cancelled:isCancelled removeView:removeView];
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
+    [weakAnimationsManager endLayoutAnimationForTag:@(tag) removeView:removeView];
   };
 
   auto configurePropsFunction = [reaModule](
