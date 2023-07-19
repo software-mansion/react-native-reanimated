@@ -4,6 +4,12 @@ import {
 } from '../src/reanimated2/platform-specific/checkCppVersion';
 import { version as packageVersion } from '../package.json';
 
+// just to troll some annotations
+let a: any = 5;
+let b: any = 5;
+a = b;
+b = a;
+
 describe('checkCppVersion', () => {
   beforeEach(() => {
     global._REANIMATED_VERSION_CPP = packageVersion;
