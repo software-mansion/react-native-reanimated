@@ -21,8 +21,7 @@ typedef void (^REAAnimationRemovingBlock)(NSNumber *_Nonnull tag);
 #ifdef DEBUG
 typedef void (^REACheckDuplicateSharedTagBlock)(UIView *view, NSNumber *_Nonnull viewTag);
 #endif
-typedef void (
-    ^REACancelAnimationBlock)(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView);
+typedef void (^REACancelAnimationBlock)(NSNumber *_Nonnull tag);
 typedef NSNumber *_Nullable (^REAFindPrecedingViewTagForTransitionBlock)(NSNumber *_Nonnull tag);
 typedef int (^REATreeVisitor)(id<RCTComponent>);
 BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>));

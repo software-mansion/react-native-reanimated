@@ -53,6 +53,7 @@ import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
@@ -311,6 +312,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎧',
     title: 'Volume slider & sensor',
     screen: VolumeExample,
+  },
+  ProgressTransitionExample: {
+    icon: '☕',
+    title: 'Progress transition',
+    screen: ProgressTransitionExample,
   },
   EmptyExample: {
     icon: '👻',

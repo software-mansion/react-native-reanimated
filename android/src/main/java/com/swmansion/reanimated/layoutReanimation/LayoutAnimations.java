@@ -44,8 +44,7 @@ public class LayoutAnimations {
 
   public native void clearAnimationConfigForTag(int tag);
 
-  public native void cancelAnimationForTag(
-      int tag, int type, boolean cancelled, boolean removeView);
+  public native void cancelAnimationForTag(int tag);
 
   public native boolean isLayoutAnimationEnabled();
 
