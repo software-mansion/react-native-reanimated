@@ -339,7 +339,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
         eventName,
         id,
         std::move(handlerFunction));
-    eventHandlerRegistry->registerEventHandler(std::move(handler), id);
+    eventHandlerRegistry->registerEventHandler(std::move(handler));
   });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
