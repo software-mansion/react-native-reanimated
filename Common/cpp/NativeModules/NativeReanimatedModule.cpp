@@ -320,8 +320,8 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
 
 jsi::Value NativeReanimatedModule::registerEventHandler(
     jsi::Runtime &rt,
-    const jsi::Value &eventName,
     const jsi::Value &worklet,
+    const jsi::Value &eventName,
     const jsi::Value &emitterReactTag) {
   static uint64_t EVENT_HANDLER_ID = 1;
 
