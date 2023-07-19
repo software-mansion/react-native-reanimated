@@ -22,7 +22,7 @@ import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.UIScheduler;
+import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class AnimationsManager implements ViewHierarchyObserver {
-  private WeakReference<UIScheduler> mUIScheduler;
+  private WeakReference<AndroidUIScheduler> mAndroidUIScheduler;
   private ReactContext mContext;
   private UIManagerModule mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
@@ -56,8 +56,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return mReanimatedNativeHierarchyManager;
   }
 
-  public void setUIScheduler(UIScheduler uiScheduler) {
-    mUIScheduler = new WeakReference<>(uiScheduler);
+  public void setAndroidUIScheduler(AndroidUIScheduler androidUIScheduler) {
+    mAndroidUIScheduler = new WeakReference<>(androidUIScheduler);
   }
 
   public AnimationsManager(ReactContext context, UIManagerModule uiManagerModule) {
@@ -102,10 +102,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    UIScheduler strongUIScheduler = mUIScheduler.get();
-    if (strongUIScheduler != null) {
-      strongUIScheduler.triggerUI();
+    AndroidUIScheduler strongAndroidUIScheduler = mAndroidUIScheduler.get();
+    if (strongAndroidUIScheduler != null) {
+      strongAndroidUIScheduler.triggerUI();
     }
+
     int tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
 

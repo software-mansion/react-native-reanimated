@@ -15,7 +15,7 @@ using namespace facebook;
 class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/UIScheduler;";
+      "Lcom/swmansion/reanimated/AndroidUIScheduler;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();

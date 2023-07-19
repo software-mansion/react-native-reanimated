@@ -17,7 +17,7 @@ import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
-import com.swmansion.reanimated.UIScheduler;
+import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.keyboardObserver.ReanimatedKeyboardEventListener;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
@@ -37,7 +37,7 @@ public abstract class NativeProxyCommon {
 
   protected NodesManager mNodesManager;
   protected final WeakReference<ReactApplicationContext> mContext;
-  protected UIScheduler mUIScheduler;
+  protected AndroidUIScheduler mAndroidUIScheduler;
   private ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private ReanimatedKeyboardEventListener reanimatedKeyboardEventListener;
@@ -45,7 +45,7 @@ public abstract class NativeProxyCommon {
   private boolean slowAnimationsEnabled = false;
 
   protected NativeProxyCommon(ReactApplicationContext context) {
-    mUIScheduler = new UIScheduler(context);
+    mAndroidUIScheduler = new AndroidUIScheduler(context);
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     reanimatedKeyboardEventListener = new ReanimatedKeyboardEventListener(mContext);
@@ -64,8 +64,8 @@ public abstract class NativeProxyCommon {
     gestureHandlerStateManager = tempHandlerStateManager;
   }
 
-  public UIScheduler getUIScheduler() {
-    return mUIScheduler;
+  public AndroidUIScheduler getAndroidUIScheduler() {
+    return mAndroidUIScheduler;
   }
 
   private void toggleSlowAnimations() {
@@ -185,7 +185,7 @@ public abstract class NativeProxyCommon {
   protected abstract HybridData getHybridData();
 
   public void onCatalystInstanceDestroy() {
-    mUIScheduler.deactivate();
+    mAndroidUIScheduler.deactivate();
     getHybridData().resetNative();
   }
 

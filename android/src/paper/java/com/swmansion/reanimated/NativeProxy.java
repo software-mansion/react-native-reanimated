@@ -28,7 +28,7 @@ public class NativeProxy extends NativeProxyCommon {
                 initHybrid(
                         context.getJavaScriptContextHolder().get(),
                         holder,
-                        mUIScheduler,
+                        mAndroidUIScheduler,
                         LayoutAnimations);
         prepareLayoutAnimations(LayoutAnimations);
         ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
@@ -38,7 +38,7 @@ public class NativeProxy extends NativeProxyCommon {
     private native HybridData initHybrid(
             long jsContext,
             CallInvokerHolderImpl jsCallInvokerHolder,
-            UIScheduler uiScheduler,
+            AndroidUIScheduler androidUIScheduler,
             LayoutAnimations LayoutAnimations);
 
     private native void installJSIBindings(MessageQueueThread messageQueueThread);
