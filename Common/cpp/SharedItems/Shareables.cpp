@@ -12,10 +12,10 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
 
 #ifdef DEBUG
 
-auto callGuardLambda = [](facebook::jsi::Runtime &rt,
-                          const facebook::jsi::Value &thisVal,
-                          const facebook::jsi::Value *args,
-                          size_t count) {
+static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
+                                       const facebook::jsi::Value &thisVal,
+                                       const facebook::jsi::Value *args,
+                                       size_t count) {
   try {
     return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
   } catch (std::exception &e) {
