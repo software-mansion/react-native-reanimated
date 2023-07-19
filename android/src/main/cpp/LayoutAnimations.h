@@ -55,7 +55,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       int tag,
       const jni::local_ref<JNIHelper::PropsMap> &updates,
       bool isSharedTransition);
-  void endLayoutAnimation(int tag, bool cancelled, bool removeView);
+  void endLayoutAnimation(int tag, bool removeView);
   void clearAnimationConfigForTag(int tag);
   void cancelAnimationForTag(
       int tag,

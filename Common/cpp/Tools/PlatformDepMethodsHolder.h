@@ -50,7 +50,7 @@ using TimeProviderFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
     std::function<void(int, jsi::Object newProps, bool isSharedTransition)>;
-using EndLayoutAnimationFunction = std::function<void(int, bool, bool)>;
+using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
 using RegisterSensorFunction =
     std::function<int(int, int, int, std::function<void(double[], int)>)>;
