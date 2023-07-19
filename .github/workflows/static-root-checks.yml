@@ -34,7 +34,7 @@ jobs:
       - name: Lint
         run: yarn lint:js
       - name: Find unused code
-        run: yarn ind-unused-code:js
+        run: yarn find-unused-code:js
       - name: Find circular dependencies
         run: yarn circular_dependency_check
       - name: Run jest unit tests
