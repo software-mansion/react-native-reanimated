@@ -6,11 +6,11 @@
 namespace reanimated {
 
 void EventHandlerRegistry::registerEventHandler(
-    std::shared_ptr<WorkletEventHandler> eventHandler,
-    const int id) {
+    std::shared_ptr<WorkletEventHandler> eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto &eventName = eventHandler->getEventName();
-  const auto eventHash = std::make_pair(id, eventName);
+  const auto emitterReactTag = eventHandler->getEmitterReactTag();
+  const auto eventHash = std::make_pair(emitterReactTag, eventName);
   auto handlerId = eventHandler->getHandlerId();
   eventMappings[eventHash][handlerId] = eventHandler;
   eventHandlers[handlerId] = eventHandler;
