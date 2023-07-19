@@ -22,6 +22,12 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
+      - run: |
+          echo "::remove-matcher owner=eslint-compact::"
+          echo "::remove-matcher owner=eslint-stylish::"
+      - run: |
+          echo "::remove-matcher owner=tsc::"
+
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
