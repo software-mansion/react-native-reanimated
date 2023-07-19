@@ -107,7 +107,7 @@ export function initialCalculations(
   }
 }
 
-export function calcuateNewMassToMatchDuration(
+export function calculateNewMassToMatchDuration(
   x0: number,
   config: Record<keyof SpringConfig, any> & SpringConfigInner,
   v0: number

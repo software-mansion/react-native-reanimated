@@ -13,7 +13,7 @@ import type {
 } from './springUtils';
 import {
   initialCalculations,
-  calcuateNewMassToMatchDuration,
+  calculateNewMassToMatchDuration,
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
@@ -201,7 +201,7 @@ export const withSpring = ((
             : duration;
 
           config.duration = acutalDuration;
-          mass = calcuateNewMassToMatchDuration(
+          mass = calculateNewMassToMatchDuration(
             x0 as number,
             config,
             animation.velocity
