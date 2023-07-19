@@ -83,7 +83,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &eventHash,
-      const jsi::Value &worklet) override;
+      const jsi::Value &worklet,
+      const jsi::Value &eventTag) override;
   void unregisterEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &registrationId) override;

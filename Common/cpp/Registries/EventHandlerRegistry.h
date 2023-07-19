@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 using namespace facebook;
@@ -17,14 +18,16 @@ class WorkletEventHandler;
 
 class EventHandlerRegistry {
   std::map<
-      std::string,
+      std::pair<int, std::string>,
       std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
       eventMappings;
   std::map<uint64_t, std::shared_ptr<WorkletEventHandler>> eventHandlers;
   std::mutex instanceMutex;
 
  public:
-  void registerEventHandler(std::shared_ptr<WorkletEventHandler> eventHandler);
+  void registerEventHandler(
+      std::shared_ptr<WorkletEventHandler> eventHandler,
+      const int id);
   void unregisterEventHandler(uint64_t id);
 
   void processEvent(

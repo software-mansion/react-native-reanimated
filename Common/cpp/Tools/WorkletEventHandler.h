@@ -16,20 +16,24 @@ class WorkletEventHandler {
   const jsi::Value handlerFunction_;
   const uint64_t handlerId_;
   const std::string eventName_;
+  const uint64_t emitterReactTag_;
 
  public:
   WorkletEventHandler(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       const uint64_t handlerId,
       const std::string &eventName,
+      const uint64_t emitterReactTag,
       jsi::Value &&handlerFunction)
       : runtimeHelper_(runtimeHelper),
         handlerFunction_(std::move(handlerFunction)),
         handlerId_(handlerId),
-        eventName_(eventName) {}
+        eventName_(eventName),
+        emitterReactTag_(emitterReactTag) {}
   void process(double eventTimestamp, const jsi::Value &eventValue) const;
   uint64_t getHandlerId() const;
   const std::string &getEventName() const;
+  uint64_t getEmitterReactTag() const;
 };
 
 } // namespace reanimated

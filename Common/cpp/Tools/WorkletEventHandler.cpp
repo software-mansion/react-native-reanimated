@@ -17,4 +17,8 @@ const std::string &WorkletEventHandler::getEventName() const {
   return eventName_;
 }
 
+uint64_t WorkletEventHandler::getEmitterReactTag() const {
+  return emitterReactTag_;
+}
+
 } // namespace reanimated

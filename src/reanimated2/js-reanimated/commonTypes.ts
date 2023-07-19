@@ -44,7 +44,11 @@ export interface JSReanimated {
     outputs: NestedObjectValues<MutableValue<unknown>>[]
   ): number;
   stopMapper(mapperId: number): void;
-  registerEventHandler<T>(_: string, __: (event: T) => void): string;
+  registerEventHandler<T>(
+    _: string,
+    __: (event: T) => void,
+    ___: number
+  ): string;
   unregisterEventHandler(_: string): void;
   enableLayoutAnimations(): void;
 }

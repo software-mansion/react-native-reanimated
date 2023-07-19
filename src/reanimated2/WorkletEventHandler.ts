@@ -45,11 +45,11 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
     this.viewTag = viewTag;
     this.registrations = this.eventNames.map((eventName) =>
-      registerEventHandler(viewTag + eventName, this.worklet)
+      registerEventHandler(eventName, this.worklet, viewTag)
     );
     if (this.registrations.length === 0 && fallbackEventName) {
       this.registrations.push(
-        registerEventHandler(viewTag + fallbackEventName, this.worklet)
+        registerEventHandler(fallbackEventName, this.worklet, viewTag)
       );
     }
   }

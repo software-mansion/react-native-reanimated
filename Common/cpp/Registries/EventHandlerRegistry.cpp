@@ -1,14 +1,18 @@
 #include "EventHandlerRegistry.h"
 #include "WorkletEventHandler.h"
 
+#include <utility>
+
 namespace reanimated {
 
 void EventHandlerRegistry::registerEventHandler(
-    std::shared_ptr<WorkletEventHandler> eventHandler) {
+    std::shared_ptr<WorkletEventHandler> eventHandler,
+    const int id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto &eventName = eventHandler->getEventName();
+  const auto eventHash = std::make_pair(id, eventName);
   auto handlerId = eventHandler->getHandlerId();
-  eventMappings[eventName][handlerId] = eventHandler;
+  eventMappings[eventHash][handlerId] = eventHandler;
   eventHandlers[handlerId] = eventHandler;
 }
 
@@ -17,7 +21,10 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
     const auto &eventName = handlerIt->second->getEventName();
-    auto eventMappingIt = eventMappings.find(eventName);
+    const auto emitterReactTag = handlerIt->second->getEmitterReactTag();
+    const auto eventHash = std::make_pair(emitterReactTag, eventName);
+
+    auto eventMappingIt = eventMappings.find(eventHash);
     auto &handlersMap = eventMappingIt->second;
     handlersMap.erase(id);
     if (handlersMap.empty()) {
@@ -36,13 +43,14 @@ void EventHandlerRegistry::processEvent(
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);
-    auto handlersIt = eventMappings.find(eventName);
+    auto eventHash = std::make_pair(-1, eventName);
+    auto handlersIt = eventMappings.find(eventHash);
     if (handlersIt != eventMappings.end()) {
       for (auto handler : handlersIt->second) {
         handlersForEvent.push_back(handler.second);
       }
     }
-    auto eventHash = std::to_string(emitterReactTag) + eventName;
+    eventHash = std::make_pair(emitterReactTag, eventName);
     handlersIt = eventMappings.find(eventHash);
     if (handlersIt != eventMappings.end()) {
       for (auto handler : handlersIt->second) {
@@ -61,7 +69,9 @@ void EventHandlerRegistry::processEvent(
 bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(
     const std::string &eventName) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
-  auto it = eventMappings.find(eventName);
+  // TODO : this doesnt work, just pass reacttag as param
+  auto eventHash = std::make_pair(-1, eventName);
+  auto it = eventMappings.find(eventHash);
   return (it != eventMappings.end()) && (!(it->second).empty());
 }
 

@@ -99,9 +99,21 @@ export class NativeReanimated {
 
   registerEventHandler<T>(
     eventHash: string,
-    eventHandler: ShareableRef<T>
+    eventHandler: ShareableRef<T>,
+    eventTag?: number
   ): number {
-    return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
+    if (eventTag === undefined) {
+      return this.InnerNativeModule.registerEventHandler(
+        eventHash,
+        eventHandler,
+        -1
+      );
+    }
+    return this.InnerNativeModule.registerEventHandler(
+      eventHash,
+      eventHandler,
+      eventTag
+    );
   }
 
   unregisterEventHandler(id: number): void {
