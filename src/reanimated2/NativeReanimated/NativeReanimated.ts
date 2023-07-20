@@ -40,11 +40,11 @@ export interface NativeReanimatedModule {
     callback?: (result: T) => void
   ): Promise<T>;
   enableLayoutAnimations(flag: boolean): void;
-  registerSensor<T>(
+  registerSensor(
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number;
   unregisterSensor(sensorId: number): void;
   configureProps(uiProps: string[], nativeProps: string[]): void;
@@ -114,11 +114,11 @@ export class NativeReanimated {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
-  registerSensor<T>(
+  registerSensor(
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ) {
     return this.InnerNativeModule.registerSensor(
       sensorType,

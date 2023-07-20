@@ -75,7 +75,7 @@ export default class JSReanimated {
     sensorType: SensorType,
     interval: number,
     _iosReferenceFrame: number,
-    eventHandler: (data: Value3D | ValueRotation) => void
+    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number {
     if (this.platform === undefined) {
       this.detectPlatform();
@@ -120,7 +120,7 @@ export default class JSReanimated {
           2.0 * (qx * qy + qw * qz),
           qw * qw + qx * qx - qy * qy - qz * qz
         );
-        eventHandler({
+        (eventHandler as any)({
           qw,
           qx,
           qy,
@@ -136,7 +136,7 @@ export default class JSReanimated {
         let { x, y, z } = sensor;
         [x, y, z] =
           this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
-        eventHandler({ x, y, z, interfaceOrientation: 0 });
+        (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
       };
     }
     sensor.addEventListener('reading', callback);
