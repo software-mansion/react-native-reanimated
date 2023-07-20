@@ -297,7 +297,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       animation.reduceMotion = shouldReduceMotion('system');
     }
     if (animation.reduceMotion) {
-      if (animation.toValue) {
+      if (animation.toValue !== undefined) {
         animation.current = animation.toValue;
       } else {
         // if there is no toValue, then the base function is responsible for setting the current value
