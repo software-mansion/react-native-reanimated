@@ -1,10 +1,5 @@
 import type { ComplexWorkletFunction } from './commonTypes';
-import {
-  setupCallGuard,
-  setupConsole,
-  setupErrorHandler,
-  valueUnpacker,
-} from './initializers';
+import { setupCallGuard, setupConsole, valueUnpacker } from './initializers';
 import { makeShareableCloneRecursive } from './shareables';
 
 export type WorkletRuntime = {
@@ -27,9 +22,8 @@ export function createWorkletRuntime(name: string) {
     global._scheduleOnJS = scheduleOnJS;
     global._makeShareableClone = makeShareableClone;
 
-    setupCallGuard();
-    setupErrorHandler();
     setupConsole();
+    setupCallGuard();
 
     // TODO: call user-defined initializer worklet
   });

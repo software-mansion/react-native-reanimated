@@ -99,11 +99,6 @@ Possible solutions are:
 export function setupCallGuard() {
   'worklet';
   global.__callGuardDEV = callGuardDEV;
-}
-
-// TODO: merge with setupCallGuard
-export function setupErrorHandler() {
-  'worklet';
   global.__ErrorUtils = {
     reportFatalError: (error: Error) => {
       runOnJS(reportFatalErrorOnJS)({
@@ -197,9 +192,8 @@ export function initializeUIRuntime() {
 
   runOnUIImmediately(() => {
     'worklet';
-    setupCallGuard();
-    setupErrorHandler();
     setupConsole();
+    setupCallGuard();
     if (IS_NATIVE) {
       setupMicrotasks();
       setupRequestAnimationFrame();
