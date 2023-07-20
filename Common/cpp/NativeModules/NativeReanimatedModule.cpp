@@ -124,6 +124,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
+      platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
       scheduleOnJS,
