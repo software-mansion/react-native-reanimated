@@ -35,12 +35,7 @@ class LayoutAnimationsManager {
       LayoutAnimationType type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(int tag);
-  void cancelLayoutAnimation(
-      jsi::Runtime &rt,
-      int tag,
-      LayoutAnimationType type,
-      bool cancelled /* = true */,
-      bool removeView /* = true */);
+  void cancelLayoutAnimation(jsi::Runtime &rt, int tag);
   int findPrecedingViewTagForTransition(int tag);
 #ifdef DEBUG
   std::string getScreenSharedTagPairString(

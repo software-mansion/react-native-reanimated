@@ -2,7 +2,7 @@
 #import <RNReanimated/REAScreensHelper.h>
 #import <RNReanimated/REASharedElement.h>
 #import <RNReanimated/REASharedTransitionManager.h>
-#import <objc/runtime.h>
+#import <RNReanimated/REAUtils.h>
 
 @implementation REASharedTransitionManager {
   NSMutableDictionary<NSNumber *, UIView *> *_sharedTransitionParent;
@@ -336,41 +336,32 @@ static REASharedTransitionManager *_sharedTransitionManager;
         [RNSScreenView instancesRespondToSelector:notifyWillDisappearSelector];
 
     if (allSelectorsAreAvailable) {
-      [self swizzleMethod:viewDidLayoutSubviewsSelector
-                     with:@selector(swizzled_viewDidLayoutSubviews)
-                 forClass:screenClass];
-      [self swizzleMethod:notifyWillDisappearSelector
-                     with:@selector(swizzled_notifyWillDisappear)
-                 forClass:screenViewClass];
+      [REAUtils swizzleMethod:viewDidLayoutSubviewsSelector
+                     forClass:screenClass
+                         with:@selector(reanimated_viewDidLayoutSubviews)
+                    fromClass:[self class]];
+      [REAUtils swizzleMethod:notifyWillDisappearSelector
+                     forClass:screenViewClass
+                         with:@selector(reanimated_notifyWillDisappear)
+                    fromClass:[self class]];
       _isConfigured = YES;
     }
   });
 #endif
 }
 
-- (void)swizzleMethod:(SEL)originalSelector with:(SEL)swizzledSelector forClass:(Class)originalClass
-{
-  Class selfClass = [self class];
-  Method originalMethod = class_getInstanceMethod(originalClass, originalSelector);
-  Method swizzledMethod = class_getInstanceMethod(selfClass, swizzledSelector);
-  IMP originalImp = method_getImplementation(originalMethod);
-  IMP swizzledImp = method_getImplementation(swizzledMethod);
-  class_replaceMethod(originalClass, swizzledSelector, originalImp, method_getTypeEncoding(originalMethod));
-  class_replaceMethod(originalClass, originalSelector, swizzledImp, method_getTypeEncoding(swizzledMethod));
-}
-
-- (void)swizzled_viewDidLayoutSubviews
+- (void)reanimated_viewDidLayoutSubviews
 {
   // call original method from react-native-screens, self == RNScreen
-  [self swizzled_viewDidLayoutSubviews];
+  [self reanimated_viewDidLayoutSubviews];
   UIView *screen = [self valueForKey:@"screenView"];
   [_sharedTransitionManager screenAddedToStack:screen];
 }
 
-- (void)swizzled_notifyWillDisappear
+- (void)reanimated_notifyWillDisappear
 {
   // call original method from react-native-screens, self == RNSScreenView
-  [self swizzled_notifyWillDisappear];
+  [self reanimated_notifyWillDisappear];
   [_sharedTransitionManager screenRemovedFromStack:(UIView *)self];
 }
 
@@ -648,7 +639,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
 
 - (void)cancelAnimation:(NSNumber *)viewTag
 {
-  _cancelLayoutAnimation(viewTag, SHARED_ELEMENT_TRANSITION, YES, YES);
+  _cancelLayoutAnimation(viewTag);
 }
 
 - (void)disableCleaningForViewTag:(NSNumber *)viewTag

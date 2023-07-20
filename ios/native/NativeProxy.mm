@@ -38,6 +38,12 @@
 - (void *)runtime;
 @end
 
+@interface RCTUIManager (DispatchCommand)
+- (void)dispatchViewManagerCommand:(nonnull NSNumber *)reactTag
+                         commandID:(id /*(NSString or NSNumber) */)commandID
+                       commandArgs:(NSArray<id> *)commandArgs;
+@end
+
 namespace reanimated {
 
 using namespace facebook;
@@ -123,6 +129,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
     scrollTo(viewTag, uiManager, x, y, animated);
   };
+
+  auto dispatchCommandFunction =
+      [uiManager](
+          jsi::Runtime &rt, const int tag, const jsi::Value &commandNameValue, const jsi::Value &argsValue) -> void {
+    NSNumber *viewTag = [NSNumber numberWithInt:tag];
+    NSString *commandID = [NSString stringWithCString:commandNameValue.asString(rt).utf8(rt).c_str()
+                                             encoding:[NSString defaultCStringEncoding]];
+    NSArray *commandArgs = convertJSIArrayToNSArray(rt, argsValue.asObject(rt).asArray(rt));
+    RCTExecuteOnUIManagerQueue(^{
+      [uiManager dispatchViewManagerCommand:viewTag commandID:commandID commandArgs:commandArgs];
+    });
+  };
+
 #endif
 
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
@@ -177,7 +196,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     // noop
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
     // noop
   };
 
@@ -198,8 +217,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
-  auto endLayoutAnimation = [=](int tag, bool isCancelled, bool removeView) {
-    [weakAnimationsManager endLayoutAnimationForTag:@(tag) cancelled:isCancelled removeView:removeView];
+  auto endLayoutAnimation = [=](int tag, bool removeView) {
+    [weakAnimationsManager endLayoutAnimationForTag:@(tag) removeView:removeView];
   };
 
   auto configurePropsFunction = [reaModule](
@@ -252,6 +271,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
       updatePropsFunction,
       scrollToFunction,
+      dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
 #endif
@@ -346,16 +366,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
   }];
 
-  [animationsManager
-      setCancelAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, BOOL cancelled, BOOL removeView) {
-        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          if (auto uiRuntime = weakUiRuntime.lock()) {
-            jsi::Runtime &rt = *uiRuntime;
-            nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(
-                rt, [tag intValue], type, cancelled == YES, removeView == YES);
-          }
-        }
-      }];
+  [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
+    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+      if (auto uiRuntime = weakUiRuntime.lock()) {
+        jsi::Runtime &rt = *uiRuntime;
+        nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
+      }
+    }
+  }];
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
     if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {

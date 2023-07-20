@@ -18,11 +18,10 @@ import type { ProgressTransitionRegister } from './layoutReanimation/sharedTrans
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
-  var _WORKLET: boolean | undefined;
+  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
-  var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var __reanimatedModuleProxy: NativeReanimated | undefined;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
@@ -34,11 +33,7 @@ declare global {
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
-  var _notifyAboutEnd: (
-    tag: number,
-    finished: boolean,
-    removeView: boolean
-  ) => void;
+  var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: (value: any) => any;
   var _updateDataSynchronously: (
@@ -73,6 +68,9 @@ declare global {
     | undefined;
   var _scrollToPaper:
     | ((viewTag: number, x: number, y: number, animated: boolean) => void)
+    | undefined;
+  var _dispatchCommandPaper:
+    | ((viewTag: number, commandName: string, args: Array<unknown>) => void)
     | undefined;
   var _dispatchCommandFabric:
     | ((

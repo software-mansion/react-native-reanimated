@@ -27,6 +27,7 @@ import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
@@ -53,6 +54,7 @@ import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
 import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
@@ -88,6 +90,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import ProfilesExample from './SharedElementTransitions/Profiles';
 import VolumeExample from './VolumeExample';
+import MatrixTransform from './MatrixTransform';
 import PendulumExample from './PendulumExample';
 import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
 
@@ -241,6 +244,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useScrollViewOffset',
     screen: ScrollViewOffsetExample,
   },
+  DispatchCommandExample: {
+    icon: '🫡',
+    title: 'Dispatch command',
+    screen: DispatchCommandExample,
+  },
   MeasureExample: {
     icon: '📐',
     title: 'measure',
@@ -311,10 +319,20 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Volume slider & sensor',
     screen: VolumeExample,
   },
+  ProgressTransitionExample: {
+    icon: '☕',
+    title: 'Progress transition',
+    screen: ProgressTransitionExample,
+  },
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  MatrixExample: {
+    icon: '🧮',
+    title: 'useAnimatedStyle with matrix',
+    screen: MatrixTransform,
   },
   SpringExample: {
     icon: '🕰',

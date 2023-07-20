@@ -4,7 +4,6 @@ import type {
   ReducedMotionConfig,
   StyleLayoutAnimation,
 } from './commonTypes';
-/* global _WORKLET */
 import type { ParsedColorArray } from '../Colors';
 import {
   isColor,
@@ -25,6 +24,18 @@ import type {
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
 import { IS_REDUCED_MOTION } from '../utils';
+import {
+  AffineMatrixFlat,
+  AffineMatrix,
+  flatten,
+  multiplyMatrices,
+  scaleMatrix,
+  addMatrices,
+  decomposeMatrixIntoMatricesAndAngles,
+  isAffineMatrixFlat,
+  subtractMatrices,
+  getRotationMatrix,
+} from './transformationMatrix/matrixUtils';
 
 let IN_STYLE_UPDATER = false;
 
@@ -71,6 +82,20 @@ export function shouldReduceMotion(config?: ReducedMotionConfig) {
   }
 
   return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
+}
+
+function applyProgressToMatrix(
+  progress: number,
+  a: AffineMatrix,
+  b: AffineMatrix
+) {
+  'worklet';
+  return addMatrices(a, scaleMatrix(subtractMatrices(b, a), progress));
+}
+
+function applyProgressToNumber(progress: number, a: number, b: number) {
+  'worklet';
+  return a + progress * (b - a);
 }
 
 function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
@@ -211,6 +236,94 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return finished;
   };
 
+  const transformationMatrixOnStart = (
+    animation: Animation<AnimationObject>,
+    value: AffineMatrixFlat,
+    timestamp: Timestamp,
+    previousAnimation: Animation<AnimationObject>
+  ): void => {
+    const toValue = animation.toValue as AffineMatrixFlat;
+
+    animation.startMatrices = decomposeMatrixIntoMatricesAndAngles(value);
+    animation.stopMatrices = decomposeMatrixIntoMatricesAndAngles(toValue);
+
+    // We create an animation copy to animate single value between 0 and 100
+    // We set limits from 0 to 100 (instead of 0-1) to make spring look good
+    // with default thresholds.
+
+    animation[0] = Object.assign({}, animationCopy);
+    animation[0].current = 0;
+    animation[0].toValue = 100;
+    animation[0].onStart(
+      animation[0],
+      0,
+      timestamp,
+      previousAnimation ? previousAnimation[0] : undefined
+    );
+
+    animation.current = value;
+  };
+
+  const transformationMatrixOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: Timestamp
+  ): boolean => {
+    let finished = true;
+    const result = animation[0].onFrame(animation[0], timestamp);
+    // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
+    finished &&= result;
+
+    const progress = animation[0].current / 100;
+
+    const transforms = ['translationMatrix', 'scaleMatrix', 'skewMatrix'];
+    const mappedTransforms: Array<AffineMatrix> = [];
+
+    transforms.forEach((key, _) =>
+      mappedTransforms.push(
+        applyProgressToMatrix(
+          progress,
+          animation.startMatrices[key],
+          animation.stopMatrices[key]
+        )
+      )
+    );
+
+    const [currentTranslation, currentScale, skewMatrix] = mappedTransforms;
+
+    const rotations: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
+    const mappedRotations: Array<AffineMatrix> = [];
+
+    rotations.forEach((key, _) => {
+      const angle = applyProgressToNumber(
+        progress,
+        animation.startMatrices['r' + key],
+        animation.stopMatrices['r' + key]
+      );
+      mappedRotations.push(getRotationMatrix(angle, key));
+    });
+
+    const [rotationMatrixX, rotationMatrixY, rotationMatrixZ] = mappedRotations;
+
+    const rotationMatrix = multiplyMatrices(
+      rotationMatrixX,
+      multiplyMatrices(rotationMatrixY, rotationMatrixZ)
+    );
+
+    const updated = flatten(
+      multiplyMatrices(
+        multiplyMatrices(
+          currentScale,
+          multiplyMatrices(skewMatrix, rotationMatrix)
+        ),
+        currentTranslation
+      )
+    );
+
+    animation.current = updated;
+
+    return finished;
+  };
+
   const arrayOnStart = (
     animation: Animation<AnimationObject>,
     value: Array<number>,
@@ -312,6 +425,15 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
+      return;
+    } else if (isAffineMatrixFlat(value)) {
+      transformationMatrixOnStart(
+        animation,
+        value,
+        timestamp,
+        previousAnimation
+      );
+      animation.onFrame = transformationMatrixOnFrame;
       return;
     } else if (Array.isArray(value)) {
       arrayOnStart(animation, value, timestamp, previousAnimation);

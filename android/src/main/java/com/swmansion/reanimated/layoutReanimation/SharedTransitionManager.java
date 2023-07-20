@@ -605,8 +605,7 @@ public class SharedTransitionManager {
 
   private void cancelAnimation(View view) {
     int viewTag = view.getId();
-    mNativeMethodsHolder.cancelAnimation(
-        viewTag, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION, true, true);
+    mNativeMethodsHolder.cancelAnimation(viewTag);
   }
 
   private void disableCleaningForViewTag(int viewTag) {

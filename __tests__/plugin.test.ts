@@ -5,17 +5,22 @@ import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 import '../plugin/jestUtils';
 import { version as packageVersion } from '../package.json';
+import { ReanimatedPluginOptions } from '../plugin/src/types';
 
 const MOCK_LOCATION = '/dev/null';
 
-function runPlugin(input: string, transformOpts: TransformOptions = {}) {
+function runPlugin(
+  input: string,
+  transformOpts: TransformOptions = {},
+  pluginOpts: ReanimatedPluginOptions = {}
+) {
   const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
     // Our babel presets require us to specify a filename here
     // but it is never used so we put in '/dev/null'
     // as a safe fallback.
     filename: MOCK_LOCATION,
     compact: false,
-    plugins: [plugin],
+    plugins: [[plugin, pluginOpts]],
     ...transformOpts,
   });
   assert(transformed);
@@ -190,41 +195,6 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toContain("bar = 'worklet';");
       expect(code).toContain('baz = "worklet";');
-      expect(code).toMatchSnapshot();
-    });
-  });
-
-  describe('for worklet nesting', () => {
-    it("doesn't nest worklets for other threads", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-      const { code } = runPlugin(input);
-      expect(code).toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transforms nested worklets for JS thread', () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
     });
   });
@@ -1439,6 +1409,120 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       process.env.BABEL_ENV = current;
       expect(code).not.toContain('version: ');
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for worklet nesting', () => {
+    it("doesn't process nested worklets when disabled", () => {
+      const input = html`<script>
+        function foo(x) {
+          'worklet';
+          function bar(x) {
+            'worklet';
+            return x + 2;
+          }
+          return bar(x) + 1;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(2);
+      expect(code).toContain("'worklet';");
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets when enabled', () => {
+      const input = html`<script>
+        const foo = () => {
+          'worklet';
+          const bar = () => {
+            'worklet';
+            console.log('bar');
+          };
+          bar();
+        };
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      expect(code).toHaveWorkletData(2);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets when enabled with depth 3', () => {
+      const input = html`<script>
+        const foo = () => {
+          'worklet';
+          const bar = () => {
+            'worklet';
+            const foobar = () => {
+              'worklet';
+              console.log('foobar');
+            };
+          };
+          bar();
+        };
+      </script>`;
+
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(3);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets embedded in runOnJS in runOnUI', () => {
+      const input = html`<script>
+        runOnUI(() => {
+          console.log('Hello from UI thread');
+          runOnJS(() => {
+            'worklet';
+            console.log('Hello from JS thread');
+          })();
+        })();
+      </script>`;
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(2);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI', () => {
+      const input = html`<script>
+        runOnUI(() => {
+          console.log('Hello from UI thread');
+          runOnJS(() => {
+            'worklet';
+            console.log('Hello from JS thread');
+            runOnUI(() => {
+              console.log('Hello from UI thread again');
+            })();
+          })();
+        })();
+      </script>`;
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(3);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('transpiles worklets with functions defined on UI thread to run them on JS', () => {
+      const input = html`<script>
+        runOnUI(() => {
+          const a = () => {
+            'worklet';
+            console.log('Good morning from JS thread!');
+          };
+          const b = () => {
+            'worklet';
+            console.log('Good afternoon from JS thread');
+          };
+          const func = Math.random() < 0.5 ? a : b;
+          runOnJS(func)();
+        })();
+      </script>`;
+      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+
+      expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
     });
   });

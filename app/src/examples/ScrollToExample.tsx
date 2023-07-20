@@ -1,4 +1,3 @@
-/* global _WORKLET */
 import Animated, {
   runOnUI,
   scrollTo,

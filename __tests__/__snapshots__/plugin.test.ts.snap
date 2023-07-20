@@ -1554,7 +1554,7 @@ function App() {
 }"
 `;
 
-exports[`babel plugin for worklet nesting doesn't nest worklets for other threads 1`] = `
+exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
 "var _worklet_1678749606628_init_data = {
   code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
   location: "/dev/null",
@@ -1591,41 +1591,256 @@ var foo = function () {
 }();"
 `;
 
-exports[`babel plugin for worklet nesting transforms nested worklets for JS thread 1`] = `
-"var _worklet_1678749606628_init_data = {
-  code: "function foo(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `
+"var _worklet_6089568337582_init_data = {
+  code: "function anonymous(){const{runOnJS}=this._closure;console.log('Hello from UI thread');runOnJS(function(){'worklet';console.log('Hello from JS thread');})();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_16974800582491_init_data = {
-  code: "function bar(x){return x+2;}",
+var _worklet_13427774179957_init_data = {
+  code: "function anonymous(){console.log('Hello from JS thread');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
+    console.log('Hello from UI thread');
+    runOnJS(function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {
+        console.log('Hello from JS thread');
+      };
+      _f._closure = {};
+      _f.__initData = _worklet_13427774179957_init_data;
+      _f.__workletHash = 13427774179957;
+      _f.__stackDetails = _e;
+      return _f;
+    }())();
+  };
+  _f._closure = {
+    runOnJS: runOnJS
+  };
+  _f.__initData = _worklet_6089568337582_init_data;
+  _f.__workletHash = 6089568337582;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
+"var _worklet_15767142258877_init_data = {
+  code: "function anonymous(){const{runOnJS,runOnUI}=this._closure;console.log('Hello from UI thread');runOnJS(function(){'worklet';console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();})();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_5874431369737_init_data = {
+  code: "function anonymous(){const{runOnUI}=this._closure;console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_12364489264272_init_data = {
+  code: "function anonymous(){console.log('Hello from UI thread again');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), -3, -27];
+  var _f = function _f() {
+    console.log('Hello from UI thread');
+    runOnJS(function () {
+      var _e = [new global.Error(), -2, -27];
+      var _f = function _f() {
+        console.log('Hello from JS thread');
+        runOnUI(function () {
+          var _e = [new global.Error(), 1, -27];
+          var _f = function _f() {
+            console.log('Hello from UI thread again');
+          };
+          _f._closure = {};
+          _f.__initData = _worklet_12364489264272_init_data;
+          _f.__workletHash = 12364489264272;
+          _f.__stackDetails = _e;
+          return _f;
+        }())();
+      };
+      _f._closure = {
+        runOnUI: runOnUI
+      };
+      _f.__initData = _worklet_5874431369737_init_data;
+      _f.__workletHash = 5874431369737;
+      _f.__stackDetails = _e;
+      return _f;
+    }())();
+  };
+  _f._closure = {
+    runOnJS: runOnJS,
+    runOnUI: runOnUI
+  };
+  _f.__initData = _worklet_15767142258877_init_data;
+  _f.__workletHash = 15767142258877;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets when enabled 1`] = `
+"var _worklet_14052814262791_init_data = {
+  code: "function anonymous(){console.log('bar');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_15899532129780_init_data = {
+  code: "function anonymous(){const{_worklet_14052814262791_init_data}=this._closure;const bar=function(){const _e=[new global.Error(),1,-27];const _f=function(){console.log('bar');};_f._closure={};_f.__initData=_worklet_14052814262791_init_data;_f.__workletHash=14052814262791;_f.__stackDetails=_e;return _f;}();bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _f = function _f(x) {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
     var bar = function () {
       var _e = [new global.Error(), 1, -27];
-      var _f = function _f(x) {
-        return x + 2;
+      var _f = function _f() {
+        console.log('bar');
       };
       _f._closure = {};
-      _f.__initData = _worklet_16974800582491_init_data;
-      _f.__workletHash = 16974800582491;
+      _f.__initData = _worklet_14052814262791_init_data;
+      _f.__workletHash = 14052814262791;
       _f.__stackDetails = _e;
       return _f;
     }();
-    return bar(x) + 1;
+    bar();
   };
-  _f._closure = {};
-  _f.__initData = _worklet_1678749606628_init_data;
-  _f.__workletHash = 1678749606628;
+  _f._closure = {
+    _worklet_14052814262791_init_data: _worklet_14052814262791_init_data
+  };
+  _f.__initData = _worklet_15899532129780_init_data;
+  _f.__workletHash = 15899532129780;
   _f.__stackDetails = _e;
   return _f;
 }();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets when enabled with depth 3 1`] = `
+"var _worklet_744555119489_init_data = {
+  code: "function anonymous(){console.log('foobar');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_5646432605687_init_data = {
+  code: "function anonymous(){const{_worklet_744555119489_init_data}=this._closure;const foobar=function(){const _e=[new global.Error(),1,-27];const _f=function(){console.log('foobar');};_f._closure={};_f.__initData=_worklet_744555119489_init_data;_f.__workletHash=744555119489;_f.__stackDetails=_e;return _f;}();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_7938568766631_init_data = {
+  code: "function anonymous(){const{_worklet_744555119489_init_data,_worklet_5646432605687_init_data}=this._closure;const bar=function(){const _e=[new global.Error(),-2,-27];const _f=function(){const foobar=function(){const _e=[new global.Error(),1,-27];const _f=function(){console.log('foobar');};_f._closure={};_f.__initData=_worklet_744555119489_init_data;_f.__workletHash=744555119489;_f.__stackDetails=_e;return _f;}();};_f._closure={_worklet_744555119489_init_data:_worklet_744555119489_init_data};_f.__initData=_worklet_5646432605687_init_data;_f.__workletHash=5646432605687;_f.__stackDetails=_e;return _f;}();bar();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -3, -27];
+  var _f = function _f() {
+    var bar = function () {
+      var _e = [new global.Error(), -2, -27];
+      var _f = function _f() {
+        var foobar = function () {
+          var _e = [new global.Error(), 1, -27];
+          var _f = function _f() {
+            console.log('foobar');
+          };
+          _f._closure = {};
+          _f.__initData = _worklet_744555119489_init_data;
+          _f.__workletHash = 744555119489;
+          _f.__stackDetails = _e;
+          return _f;
+        }();
+      };
+      _f._closure = {
+        _worklet_744555119489_init_data: _worklet_744555119489_init_data
+      };
+      _f.__initData = _worklet_5646432605687_init_data;
+      _f.__workletHash = 5646432605687;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    bar();
+  };
+  _f._closure = {
+    _worklet_744555119489_init_data: _worklet_744555119489_init_data,
+    _worklet_5646432605687_init_data: _worklet_5646432605687_init_data
+  };
+  _f.__initData = _worklet_7938568766631_init_data;
+  _f.__workletHash = 7938568766631;
+  _f.__stackDetails = _e;
+  return _f;
+}();"
+`;
+
+exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `
+"var _worklet_14189682636711_init_data = {
+  code: "function anonymous(){const{runOnJS}=this._closure;const a=function(){'worklet';console.log('Good morning from JS thread!');};const b=function(){'worklet';console.log('Good afternoon from JS thread');};const func=Math.random()<0.5?a:b;runOnJS(func)();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_2310082662475_init_data = {
+  code: "function anonymous(){console.log('Good morning from JS thread!');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _worklet_9108102051728_init_data = {
+  code: "function anonymous(){console.log('Good afternoon from JS thread');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+runOnUI(function () {
+  var _e = [new global.Error(), -2, -27];
+  var _f = function _f() {
+    var a = function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {
+        console.log('Good morning from JS thread!');
+      };
+      _f._closure = {};
+      _f.__initData = _worklet_2310082662475_init_data;
+      _f.__workletHash = 2310082662475;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    var b = function () {
+      var _e = [new global.Error(), 1, -27];
+      var _f = function _f() {
+        console.log('Good afternoon from JS thread');
+      };
+      _f._closure = {};
+      _f.__initData = _worklet_9108102051728_init_data;
+      _f.__workletHash = 9108102051728;
+      _f.__stackDetails = _e;
+      return _f;
+    }();
+    var func = Math.random() < 0.5 ? a : b;
+    runOnJS(func)();
+  };
+  _f._closure = {
+    runOnJS: runOnJS
+  };
+  _f.__initData = _worklet_14189682636711_init_data;
+  _f.__workletHash = 14189682636711;
+  _f.__stackDetails = _e;
+  return _f;
+}())();"
 `;
 
 exports[`babel plugin generally removes comments from worklets 1`] = `
