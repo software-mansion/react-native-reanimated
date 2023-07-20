@@ -137,7 +137,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSString *commandID = [NSString stringWithCString:commandNameValue.asString(rt).utf8(rt).c_str()
                                              encoding:[NSString defaultCStringEncoding]];
     NSArray *commandArgs = convertJSIArrayToNSArray(rt, argsValue.asObject(rt).asArray(rt));
-    RCTUnsafeExecuteOnUIManagerQueueSync(^{
+    RCTExecuteOnUIManagerQueue(^{
       [uiManager dispatchViewManagerCommand:viewTag commandID:commandID commandArgs:commandArgs];
     });
   };
