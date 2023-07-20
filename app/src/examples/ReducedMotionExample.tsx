@@ -56,6 +56,33 @@ const REPEAT_EXAMPLES = [
   },
 ];
 
+const CONFIG_EXAMPLES = [
+  {
+    animation: withTiming(toValue, { reduceMotion: 'always', duration }),
+    text: 'always\nreduce',
+  },
+  {
+    animation: withTiming(toValue, { reduceMotion: 'never', duration }),
+    text: 'never\nreduce',
+  },
+  {
+    animation: withTiming(toValue, { reduceMotion: 'system', duration }),
+    text: 'system\nreduce',
+  },
+  {
+    animation: withSequence(
+      'always',
+      withTiming(initialValue + (toValue - initialValue) / 3, { duration }),
+      withTiming(initialValue + (2 * (toValue - initialValue)) / 3, {
+        reduceMotion: 'system',
+        duration,
+      }),
+      withTiming(toValue, { reduceMotion: 'never', duration })
+    ),
+    text: 'nested',
+  },
+];
+
 const EXAMPLES = [
   {
     title: 'Simple',
@@ -73,6 +100,10 @@ const EXAMPLES = [
   {
     title: 'Decay',
     component: <DecayExample />,
+  },
+  {
+    title: 'Config',
+    component: mapExamples(CONFIG_EXAMPLES),
   },
 ];
 
