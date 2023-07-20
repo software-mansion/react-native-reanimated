@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -19,17 +19,18 @@ import {
 
 const duration = 2000;
 const toValue = 100;
+const initialValue = -100;
 
 const SIMPLE_EXAMPLES = [
   { animation: withTiming(toValue, { duration }), text: 'withTiming' },
   { animation: withSpring(toValue, { duration }), text: 'withSpring' },
   {
-    animation: withDelay(1000, withTiming(toValue, { duration: 1000 })),
+    animation: withDelay(1000, withTiming(toValue, { duration })),
     text: 'withDelay',
   },
   {
     animation: withSequence(
-      withTiming(toValue / 2, { duration }),
+      withTiming((toValue + initialValue) / 2, { duration }),
       withSpring(toValue, { duration })
     ),
     text: 'withSequence',
@@ -51,7 +52,7 @@ const REPEAT_EXAMPLES = [
   },
   {
     animation: withRepeat(withTiming(toValue, { duration }), 4, false),
-    text: 'withRepeat (no reverse)',
+    text: 'withRepeat\n(no reverse)',
   },
 ];
 
@@ -89,7 +90,7 @@ export default function App() {
 }
 
 function HookExample() {
-  const sv = useSharedValue(-100);
+  const sv = useSharedValue(initialValue);
   const shouldReduceMotion = useReducedMotion();
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -116,17 +117,18 @@ function mapExamples(examples) {
 }
 
 function Example(props: { animation: number; text: string }) {
-  const sv = useSharedValue(-100);
+  const sv = useSharedValue(initialValue);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: sv.value }],
   }));
 
-  useEffect(() => {
+  const handlePress = () => {
     sv.value = props.animation;
-  });
+  };
 
   return (
     <Animated.View style={[styles.box, animatedStyle]}>
+      <Button onPress={handlePress} title="Run animation" />
       <Text style={styles.text}>{props.text}</Text>
     </Animated.View>
   );
@@ -142,7 +144,7 @@ function DecayExample() {
     .onFinalize((event) => {
       offset.value = withDecay({
         velocity: event.velocityX,
-        clamp: [-(350 / 2) + WIDTH / 2, 350 / 2 - WIDTH / 2],
+        clamp: [initialValue, toValue],
       });
     });
 
@@ -155,7 +157,7 @@ function DecayExample() {
       <View style={styles.wrapper}>
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.box, animatedStyles]}>
-            <Text style={styles.text}>withDecay</Text>
+            <Text style={styles.text}>withDecay{'\n'}(drag around)</Text>
           </Animated.View>
         </GestureDetector>
       </View>
@@ -164,7 +166,7 @@ function DecayExample() {
 }
 
 const WIDTH = 150;
-const HEIGHT = 65;
+const HEIGHT = 80;
 
 const styles = StyleSheet.create({
   container: {
@@ -177,7 +179,7 @@ const styles = StyleSheet.create({
   box: {
     height: HEIGHT,
     width: WIDTH,
-    margin: 20,
+    margin: 10,
     borderWidth: 1,
     borderColor: '#b58df1',
     borderRadius: 10,
@@ -187,6 +189,7 @@ const styles = StyleSheet.create({
   text: {
     color: '#b58df1',
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   wrapper: {
     flex: 1,
