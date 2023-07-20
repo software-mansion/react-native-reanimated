@@ -44,7 +44,7 @@ export const AnimatedScrollView: AnimatedScrollView = forwardRef(
     // Set default scrollEventThrottle, because user expects
     // to have continuous scroll events.
     // We set it to 1 so we have peace until
-    // there are 960FPS screens.
+    // there are 960 fps screens.
     if (!('scrollEventThrottle' in restProps)) {
       restProps.scrollEventThrottle = 1;
     }
