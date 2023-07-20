@@ -11,7 +11,7 @@ import type {
   ComplexWorkletFunction,
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type { NativeReanimatedModule } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
@@ -22,7 +22,7 @@ declare global {
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
-  var __reanimatedModuleProxy: NativeReanimated | undefined;
+  var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;
