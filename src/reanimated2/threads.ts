@@ -7,7 +7,7 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
-const IS_WEB = shouldBeUseWeb();
+const IS_NATIVE = !shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
@@ -46,11 +46,11 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
-export const callMicrotasks = shouldBeUseWeb()
-  ? () => {
+export const callMicrotasks = IS_NATIVE
+  ? callMicrotasksOnUIThread
+  : () => {
       // on web flushing is a noop as immediates are handled by the browser
-    }
-  : callMicrotasksOnUIThread;
+    };
 
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
@@ -61,12 +61,12 @@ export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
       'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
     throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
@@ -123,12 +123,12 @@ export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
       'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
     throw new Error('runOnUIImmediately() can only be used on worklets');
   }
   return (...args) => {
@@ -141,7 +141,7 @@ export function runOnUIImmediately<A extends any[], R>(
   };
 }
 
-if (__DEV__ && !IS_WEB) {
+if (__DEV__ && IS_NATIVE) {
   const f = () => {
     'worklet';
   };
