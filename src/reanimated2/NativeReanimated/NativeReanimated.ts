@@ -88,34 +88,29 @@ export class NativeReanimated {
       ...args: T
     ) => void,
     valueUnpacker: <T>(value: T) => T
-  ): void {
+  ) {
     return this.InnerNativeModule.installCoreFunctions(
       callGuard,
       valueUnpacker
     );
   }
 
-  makeShareableClone<T>(
-    value: T,
-    shouldPersistRemote: boolean
-  ): ShareableRef<T> {
+  makeShareableClone<T>(value: T, shouldPersistRemote: boolean) {
     return this.InnerNativeModule.makeShareableClone(
       value,
       shouldPersistRemote
     );
   }
 
-  makeSynchronizedDataHolder<T>(
-    valueRef: ShareableRef<T>
-  ): ShareableSyncDataHolderRef<T> {
+  makeSynchronizedDataHolder<T>(valueRef: ShareableRef<T>) {
     return this.InnerNativeModule.makeSynchronizedDataHolder(valueRef);
   }
 
-  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>): T {
+  getDataSynchronously<T>(ref: ShareableSyncDataHolderRef<T>) {
     return this.InnerNativeModule.getDataSynchronously(ref);
   }
 
-  scheduleOnUI<T>(shareable: ShareableRef<T>): void {
+  scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.InnerNativeModule.scheduleOnUI(shareable);
   }
 
@@ -124,7 +119,7 @@ export class NativeReanimated {
     interval: number,
     iosReferenceFrame: number,
     handler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
-  ): number {
+  ) {
     return this.InnerNativeModule.registerSensor(
       sensorType,
       interval,
@@ -133,18 +128,15 @@ export class NativeReanimated {
     );
   }
 
-  unregisterSensor(sensorId: number): void {
+  unregisterSensor(sensorId: number) {
     return this.InnerNativeModule.unregisterSensor(sensorId);
   }
 
-  registerEventHandler<T>(
-    eventHash: string,
-    eventHandler: ShareableRef<T>
-  ): number {
+  registerEventHandler<T>(eventHash: string, eventHandler: ShareableRef<T>) {
     return this.InnerNativeModule.registerEventHandler(eventHash, eventHandler);
   }
 
-  unregisterEventHandler(id: number): void {
+  unregisterEventHandler(id: number) {
     return this.InnerNativeModule.unregisterEventHandler(id);
   }
 
@@ -152,7 +144,7 @@ export class NativeReanimated {
     viewTag: string,
     propName: string,
     callback?: (result: T) => void
-  ): Promise<T> {
+  ) {
     return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
@@ -161,7 +153,7 @@ export class NativeReanimated {
     type: LayoutAnimationType,
     sharedTransitionTag: string,
     config: ShareableRef<Keyframe | LayoutAnimationFunction>
-  ): void {
+  ) {
     this.InnerNativeModule.configureLayoutAnimation(
       viewTag,
       type,
@@ -170,25 +162,25 @@ export class NativeReanimated {
     );
   }
 
-  enableLayoutAnimations(flag: boolean): void {
+  enableLayoutAnimations(flag: boolean) {
     this.InnerNativeModule.enableLayoutAnimations(flag);
   }
 
-  configureProps(uiProps: string[], nativeProps: string[]): void {
+  configureProps(uiProps: string[], nativeProps: string[]) {
     this.InnerNativeModule.configureProps(uiProps, nativeProps);
   }
 
   subscribeForKeyboardEvents(
     handler: ShareableRef<number>,
     isStatusBarTranslucent: boolean
-  ): number {
+  ) {
     return this.InnerNativeModule.subscribeForKeyboardEvents(
       handler,
       isStatusBarTranslucent
     );
   }
 
-  unsubscribeFromKeyboardEvents(listenerId: number): void {
+  unsubscribeFromKeyboardEvents(listenerId: number) {
     this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
   }
 }
