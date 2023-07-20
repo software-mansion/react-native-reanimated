@@ -82,7 +82,7 @@ void RuntimeDecorator::decorateUIRuntime(
 #endif
     const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
-    // nothing
+// nothing
 #else
     const ScrollToFunction scrollTo,
 #endif
