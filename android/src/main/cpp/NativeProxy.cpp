@@ -259,6 +259,28 @@ void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
   method(javaPart_.get(), viewTag, x, y, animated);
 }
 
+inline jni::local_ref<ReadableArray::javaobject> castReadableArray(
+    jni::local_ref<ReadableNativeArray::javaobject> const &nativeArray) {
+  return make_local(
+      reinterpret_cast<ReadableArray::javaobject>(nativeArray.get()));
+}
+
+void NativeProxy::dispatchCommand(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue) {
+  static const auto method = getJniMethod<void(
+      int, jni::local_ref<JString>, jni::local_ref<ReadableArray::javaobject>)>(
+      "dispatchCommand");
+  local_ref<JString> commandId =
+      jni::make_jstring(commandNameValue.asString(rt).utf8(rt).c_str());
+  jni::local_ref<ReadableArray::javaobject> commandArgs =
+      castReadableArray(ReadableNativeArray::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, argsValue)));
+  method(javaPart_.get(), viewTag, commandId, commandArgs);
+}
+
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   static const auto method =
       getJniMethod<local_ref<JArrayFloat>(int)>("measure");
@@ -405,6 +427,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto measureFunction = bindThis(&NativeProxy::measure);
 
   auto scrollToFunction = bindThis(&NativeProxy::scrollTo);
+
+  auto dispatchCommandFunction = bindThis(&NativeProxy::dispatchCommand);
 #endif
 
   auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
@@ -446,6 +470,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 #else
       updatePropsFunction,
       scrollToFunction,
+      dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
 #endif
