@@ -55,6 +55,8 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
+    // mUIManager.dispatchCommand must be called from native modules queue thread
+    // because of an assert in ShadowNodeRegistry.getNode
     mContext.runOnNativeModulesQueueThread(
         new GuardedRunnable(mContext.getExceptionHandler()) {
           @Override
