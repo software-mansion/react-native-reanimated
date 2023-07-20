@@ -108,7 +108,12 @@ function HookExample() {
   );
 }
 
-function mapExamples(examples) {
+function mapExamples(
+  examples: {
+    animation: number;
+    text: string;
+  }[]
+) {
   return examples.map((example, i) => {
     return (
       <Example key={i} animation={example.animation} text={example.text} />
