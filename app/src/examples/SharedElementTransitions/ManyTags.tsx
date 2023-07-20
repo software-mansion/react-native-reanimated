@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, View, Text } from 'react-native';
+import { Button, View, Text, StyleSheet } from 'react-native';
 import { ParamListBase } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -13,32 +13,21 @@ const AnimatedButton = Animated.createAnimatedComponent(Button);
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <Animated.ScrollView style={{ flex: 1 }}>
-      <View style={{ display: 'flex', flexDirection: 'column' }}>
+    <Animated.ScrollView style={styles.flexOne}>
+      <View style={styles.container}>
         <View>
           <Animated.View
             sharedTransitionTag="placeholder1"
-            style={{
-              width: 30,
-              height: 30,
-              margin: 5,
-              marginTop: 50,
-              backgroundColor: 'green',
-            }}
+            style={styles.greenBoxScreenOne}
           />
           <Animated.Image
             sharedTransitionTag="mleko"
             source={photo}
-            style={{ width: 150, height: 150, marginLeft: 50 }}
+            style={styles.imageScreenOne}
           />
           <Animated.View
             sharedTransitionTag="placeholder2"
-            style={{
-              width: 20,
-              height: 30,
-              margin: 10,
-              backgroundColor: 'red',
-            }}
+            style={styles.redBoxScreenOne}
           />
         </View>
       </View>
@@ -52,8 +41,8 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <View style={{ flex: 1 }}>
-      <Text style={{ marginTop: 10, textAlign: 'justify' }}>
+    <View style={styles.flexOne}>
+      <Text style={styles.text}>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id
         egestas nunc. Fusce molestie, libero a lacinia mollis, nisi nisi
         porttitor tortor, eget vestibulum lectus mauris id mi. Aenean imperdiet
@@ -61,21 +50,21 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
       </Text>
       <Animated.View
         sharedTransitionTag="placeholder2"
-        style={{ width: 200, height: 50, margin: 20, backgroundColor: 'red' }}
+        style={styles.redBoxScreenTwo}
       />
-      <Text style={{ textAlign: 'justify' }}>
+      <Text style={styles.justifyText}>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id
         egestas nunc.
       </Text>
       <Animated.Image
         sharedTransitionTag="mleko"
         source={photo}
-        style={{ width: '100%', height: 300 }}
+        style={styles.imageScreenTwo}
       />
       <Text>Lorem ipsum dolor sit amet</Text>
       <Animated.View
         sharedTransitionTag="placeholder1"
-        style={{ width: 100, height: 50, margin: 0, backgroundColor: 'green' }}
+        style={styles.greenBoxScreenTwo}
       />
       <AnimatedButton
         title="go back"
@@ -104,3 +93,52 @@ export default function ManyTagsExample() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
+  text: {
+    marginTop: 10,
+    textAlign: 'justify',
+  },
+  justifyText: {
+    textAlign: 'justify',
+  },
+  greenBoxScreenOne: {
+    width: 30,
+    height: 30,
+    margin: 5,
+    marginTop: 50,
+    backgroundColor: 'green',
+  },
+  greenBoxScreenTwo: {
+    width: 100,
+    height: 50,
+    margin: 0,
+    backgroundColor: 'green',
+  },
+  redBoxScreenOne: {
+    width: 20,
+    height: 30,
+    margin: 10,
+    backgroundColor: 'red',
+  },
+  redBoxScreenTwo: {
+    width: 200,
+    height: 50,
+    margin: 20,
+    backgroundColor: 'red',
+  },
+  imageScreenOne: {
+    width: 150,
+    height: 150,
+    marginLeft: 50,
+  },
+  imageScreenTwo: {
+    width: '100%',
+    height: 300,
+  },
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+});

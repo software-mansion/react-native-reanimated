@@ -1,23 +1,22 @@
-import { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
+import type { MeasuredDimensions, ShadowNodeWrapper } from './commonTypes';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
-
-import { Component } from 'react';
-import { RefObjectFunction } from './hook/commonTypes';
+import type { AnimatedRef } from './hook/commonTypes';
+import type { Component } from 'react';
 
 const IS_NATIVE = !shouldBeUseWeb();
 
-export let measure: (
-  animatedRef: RefObjectFunction<Component>
+export let measure: <T extends Component>(
+  animatedRef: AnimatedRef<T>
 ) => MeasuredDimensions | null;
 
 if (isWeb()) {
   measure = (animatedRef) => {
-    const element = animatedRef() as HTMLElement; // TODO: fix typing of animated refs on web
+    const element = (animatedRef as any)() as HTMLElement; // TODO: fix typing of animated refs on web
     const viewportOffset = element.getBoundingClientRect();
     return {
       width: element.offsetWidth,
@@ -45,7 +44,7 @@ if (isWeb()) {
       return null;
     }
 
-    const viewTag = animatedRef();
+    const viewTag = (animatedRef as any)();
     if (viewTag === -1) {
       console.warn(
         `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -86,8 +85,8 @@ if (isWeb()) {
   };
 }
 
-export let dispatchCommand: (
-  animatedRef: RefObjectFunction<Component>,
+export let dispatchCommand: <T extends Component>(
+  animatedRef: AnimatedRef<T>,
   commandName: string,
   args: Array<unknown>
 ) => void;
@@ -136,8 +135,8 @@ if (IS_NATIVE && global._IS_FABRIC) {
   };
 }
 
-export let scrollTo: (
-  animatedRef: RefObjectFunction<Component>,
+export let scrollTo: <T extends Component>(
+  animatedRef: AnimatedRef<T>,
   x: number,
   y: number,
   animated: boolean
@@ -146,14 +145,14 @@ export let scrollTo: (
 if (isWeb()) {
   scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
-    const element = animatedRef() as HTMLElement; // TODO: fix typing of animated refs on web
+    const element = (animatedRef as any)() as HTMLElement; // TODO: fix typing of animated refs on web
     // @ts-ignore same call as in react-native-web
     element.scrollTo({ x, y, animated });
   };
 } else if (IS_NATIVE && global._IS_FABRIC) {
   scrollTo = (animatedRef, x, y, animated) => {
     'worklet';
-    dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
+    dispatchCommand(animatedRef as any, 'scrollTo', [x, y, animated]);
   };
 } else if (IS_NATIVE) {
   scrollTo = (animatedRef, x, y, animated) => {
@@ -163,7 +162,7 @@ if (isWeb()) {
     }
 
     // Calling animatedRef on Paper returns a number (nativeTag)
-    const viewTag = animatedRef() as number;
+    const viewTag = (animatedRef as any)() as number;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _scrollToPaper!(viewTag, x, y, animated);
   };

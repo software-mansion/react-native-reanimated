@@ -27,6 +27,7 @@ import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
+import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -88,7 +89,7 @@ public class NodesManager implements EventDispatcherListener {
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
   private ReactApplicationContext mReactApplicationContext;
-  private RCTEventEmitter mCustomEventHandler;
+  private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
@@ -244,6 +245,8 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
+    // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
+
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
 
     if (currentFrameTimeMs > lastFrameTimeMs) {
@@ -273,6 +276,8 @@ public class NodesManager implements EventDispatcherListener {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }
+
+    // Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
   public void enqueueUpdateViewOnNativeThread(
@@ -306,10 +311,7 @@ public class NodesManager implements EventDispatcherListener {
       int viewTag = event.getViewTag();
       String key = viewTag + eventName;
 
-      shouldSaveEvent |=
-          (mCustomEventHandler != null
-              && mNativeProxy != null
-              && mNativeProxy.isAnyHandlerWaitingForEvent(key));
+      shouldSaveEvent |= mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(key);
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }
@@ -318,18 +320,11 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void handleEvent(Event event) {
-    // If the event has a different name in native, convert it to it's JS name.
-    String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
-    int viewTag = event.getViewTag();
-    if (mCustomEventHandler != null) {
-      event.dispatch(mCustomEventHandler);
-    }
+    event.dispatch(mCustomEventHandler);
   }
 
   private void handleEvent(int targetTag, String eventName, @Nullable WritableMap event) {
-    if (mCustomEventHandler != null) {
-      mCustomEventHandler.receiveEvent(targetTag, eventName, event);
-    }
+    mCustomEventHandler.receiveEvent(targetTag, eventName, event);
   }
 
   public UIManagerModule.CustomEventNamesResolver getEventNameResolver() {

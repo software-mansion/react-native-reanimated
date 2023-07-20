@@ -1,12 +1,12 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   AnimationObject,
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import { Platform } from 'react-native';
+import { isWeb } from '../PlatformChecker';
 
 interface DecayConfig {
   deceleration?: number;
@@ -38,7 +38,15 @@ export interface InnerDecayAnimation
   current: number;
 }
 
-export function withDecay(
+const IS_WEB = isWeb();
+
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type withDecayType = (
+  userConfig: DecayConfig,
+  callback?: AnimationCallback
+) => number;
+
+export const withDecay = function (
   userConfig: DecayConfig,
   callback?: AnimationCallback
 ): Animation<DecayAnimation> {
@@ -59,23 +67,22 @@ export function withDecay(
       );
     }
 
-    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
+    const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
     const SLOPE_FACTOR = 0.1;
 
     let decay: (animation: InnerDecayAnimation, now: number) => boolean;
 
     if (config.rubberBandEffect) {
       decay = (animation: InnerDecayAnimation, now: number): boolean => {
-        const {
-          lastTimestamp,
-          startTimestamp,
-          current,
-          initialVelocity,
-          velocity,
-        } = animation;
+        const { lastTimestamp, startTimestamp, current, velocity } = animation;
 
         const deltaTime = Math.min(now - lastTimestamp, 64);
-        const clampIndex = initialVelocity > 0 ? 1 : 0;
+        const clampIndex =
+          Math.abs(current - config.clamp![0]) <
+          Math.abs(current - config.clamp![1])
+            ? 0
+            : 1;
+
         let derivative = 0;
         if (current < config.clamp![0] || current > config.clamp![1]) {
           derivative = current - config.clamp![clampIndex];
@@ -187,4 +194,4 @@ export function withDecay(
       startTimestamp: 0,
     } as DecayAnimation;
   });
-}
+} as unknown as withDecayType;

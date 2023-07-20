@@ -1,12 +1,8 @@
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { isChromeDebugger, isJest, isWeb } from '../PlatformChecker';
-import {
-  SensorType,
-  ShareableRef,
-  Value3D,
-  ValueRotation,
-} from '../commonTypes';
-import { WebSensor } from './WebSensor';
+import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
+import { SensorType } from '../commonTypes';
+import type { WebSensor } from './WebSensor';
 
 export default class JSReanimated extends NativeReanimated {
   nextSensorId = 0;
@@ -39,12 +35,12 @@ export default class JSReanimated extends NativeReanimated {
   registerEventHandler<T>(
     _eventHash: string,
     _eventHandler: ShareableRef<T>
-  ): string {
+  ): number {
     // noop
-    return '';
+    return -1;
   }
 
-  unregisterEventHandler(_: string): void {
+  unregisterEventHandler(_: number): void {
     // noop
   }
 
@@ -78,7 +74,21 @@ export default class JSReanimated extends NativeReanimated {
     iosReferenceFrame: number,
     eventHandler: (data: Value3D | ValueRotation) => void
   ): number {
+    if (this.platform === undefined) {
+      this.detectPlatform();
+    }
+
     if (!(this.getSensorName(sensorType) in window)) {
+      // https://w3c.github.io/sensors/#secure-context
+      console.warn(
+        '[Reanimated] Sensor is not available.' +
+          (isWeb() && location.protocol !== 'https:'
+            ? ' Make sure you use secure origin with `npx expo start --web --https`.'
+            : '') +
+          (this.platform === Platform.WEB_IOS
+            ? ' For iOS web, you will also have to also grant permission in the browser: https://dev.to/li/how-to-requestpermission-for-devicemotion-and-deviceorientation-events-in-ios-13-46g2.'
+            : '')
+      );
       return -1;
     }
 

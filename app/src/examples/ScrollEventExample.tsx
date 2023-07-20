@@ -49,10 +49,7 @@ export default function ScrollEventExample(): React.ReactElement {
         <Animated.View style={[styles.box, stylez]} />
       </View>
       <View style={[styles.half, { height }]}>
-        <Animated.ScrollView
-          style={styles.scroll}
-          scrollEventThrottle={1}
-          onScroll={scrollHandler}>
+        <Animated.ScrollView style={styles.scroll} onScroll={scrollHandler}>
           <View style={styles.placeholder} />
           <View style={styles.placeholder} />
           <View style={styles.placeholder} />

@@ -46,8 +46,6 @@ struct SchedulerPublic : public UIManagerDelegate {
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   RuntimeExecutor runtimeExecutor_;
 };
-
-RuntimeExecutor getRuntimeExecutorFromBinding(Binding *binding);
 #endif
 
 std::shared_ptr<const ContextContainer> getContextContainerFromUIManager(

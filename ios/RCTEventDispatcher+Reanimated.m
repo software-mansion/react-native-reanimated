@@ -1,17 +1,24 @@
+#ifndef RCT_NEW_ARCH_ENABLED
+
 #import <RNReanimated/RCTEventDispatcher+Reanimated.h>
+#import <RNReanimated/REAModule.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTEventDispatcher.h>
 #import <objc/message.h>
 
 @implementation RCTEventDispatcher (Reanimated)
 
-- (void)reanimated_sentEvent:(id<RCTEvent>)event
+- (void)reanimated_sendEvent:(id<RCTEvent>)event
 {
   // Pass the event to Reanimated
-  [[[self bridge] moduleForName:@"ReanimatedModule"] eventDispatcherWillDispatchEvent:event];
+  static __weak REAModule *reaModule;
+  if (reaModule == nil) {
+    reaModule = [[self bridge] moduleForName:@"ReanimatedModule"];
+  }
+  [reaModule eventDispatcherWillDispatchEvent:event];
 
   // Pass the event to React Native by calling the original method
-  [self reanimated_sentEvent:event];
+  [self reanimated_sendEvent:event];
 }
 
 + (void)load
@@ -20,9 +27,11 @@
   dispatch_once(&onceToken, ^{
     Class class = [self class];
     Method originalMethod = class_getInstanceMethod(class, @selector(sendEvent:));
-    Method swizzledMethod = class_getInstanceMethod(class, @selector(reanimated_sentEvent:));
+    Method swizzledMethod = class_getInstanceMethod(class, @selector(reanimated_sendEvent:));
     method_exchangeImplementations(originalMethod, swizzledMethod);
   });
 }
 
 @end
+
+#endif // RCT_NEW_ARCH_ENABLED

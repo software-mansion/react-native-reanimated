@@ -95,7 +95,6 @@ export default function Test() {
       />
 
       <Animated.ScrollView
-        scrollEventThrottle={1}
         style={StyleSheet.absoluteFill}
         onScroll={scrollHandler}></Animated.ScrollView>
     </View>

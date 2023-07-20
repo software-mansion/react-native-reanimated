@@ -13,15 +13,15 @@
 #import <RNReanimated/NativeProxy.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/NewestShadowNodesRegistry.h>
 #import <RNReanimated/REAInitializerRCTFabricSurface.h>
-#import <RNReanimated/ReanimatedUIManagerBinding.h>
+#import <RNReanimated/ReanimatedCommitHook.h>
 #endif
 
 #import <RNReanimated/REAModule.h>
 #import <RNReanimated/REANodesManager.h>
 #import <RNReanimated/ReanimatedVersion.h>
 #import <RNReanimated/SingleInstanceChecker.h>
+#import <UIKit/UIAccessibility.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -44,8 +44,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry;
-  std::weak_ptr<NativeReanimatedModule> reanimatedModule_;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
+  std::shared_ptr<ReanimatedCommitHook> commitHook_;
+  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif
@@ -89,20 +90,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)injectReanimatedUIManagerBinding:(jsi::Runtime &)runtime uiManager:(std::shared_ptr<UIManager>)uiManager
-{
-  RuntimeExecutor syncRuntimeExecutor = [&](std::function<void(jsi::Runtime & runtime_)> &&callback) {
-    callback(runtime);
-  };
-  ReanimatedUIManagerBinding::createAndInstallIfNeeded(
-      runtime, syncRuntimeExecutor, uiManager, newestShadowNodesRegistry);
-}
-
 - (void)setUpNativeReanimatedModule:(std::shared_ptr<UIManager>)uiManager
 {
-  if (auto reanimatedModule = reanimatedModule_.lock()) {
-    reanimatedModule->setUIManager(uiManager);
-    reanimatedModule->setNewestShadowNodesRegistry(newestShadowNodesRegistry);
+  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
+    nativeReanimatedModule->setUIManager(uiManager);
+    nativeReanimatedModule->setPropsRegistry(propsRegistry_);
   }
 }
 
@@ -110,14 +102,15 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   auto uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  newestShadowNodesRegistry = std::make_shared<NewestShadowNodesRegistry>();
-  [self injectReanimatedUIManagerBinding:runtime uiManager:uiManager];
+  propsRegistry_ = std::make_shared<PropsRegistry>();
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager);
+  uiManager->registerCommitHook(*commitHook_);
   [self setUpNativeReanimatedModule:uiManager];
 }
 
 #pragma mark-- Initialize
 
-- (void)installReanimatedUIManagerBindingAfterReload
+- (void)installReanimatedAfterReload
 {
   // called from REAInitializerRCTFabricSurface::start
   __weak __typeof__(self) weakSelf = self;
@@ -144,16 +137,16 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     if (strongSelf == nil) {
       return;
     }
-    if (auto reanimatedModule = strongSelf->reanimatedModule_.lock()) {
+    if (auto nativeReanimatedModule = strongSelf->weakNativeReanimatedModule_.lock()) {
       auto eventListener =
-          std::make_shared<facebook::react::EventListener>([reanimatedModule](const RawEvent &rawEvent) {
+          std::make_shared<facebook::react::EventListener>([nativeReanimatedModule](const RawEvent &rawEvent) {
             if (!RCTIsMainQueue()) {
               // event listener called on the JS thread, let's ignore this event
               // as we cannot safely access worklet runtime here
               // and also we don't care about topLayout events
               return false;
             }
-            return reanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
+            return nativeReanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           });
       [scheduler addEventListener:eventListener];
     }
@@ -185,7 +178,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 #endif
 
   if (_surfacePresenter == nil) {
-    // _surfacePresenter will be set in installReanimatedUIManagerBindingAfterReload
+    // _surfacePresenter will be set in installReanimatedAfterReload
     _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:nil];
     return;
   }
@@ -203,6 +196,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _operations = [NSMutableArray new];
 
   [bridge.uiManager.observerCoordinator addObserver:self];
+  _animationsManager = [[REAAnimationsManager alloc] initWithUIManager:bridge.uiManager];
 }
 
 #pragma mark-- Batch handling
@@ -273,42 +267,24 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       : nullptr;
 
   if (jsiRuntime) {
-    jsi::Runtime &runtime = *jsiRuntime;
+    auto nativeReanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
 
-    auto reanimatedModule = reanimated::createReanimatedModule(self.bridge, self.bridge.jsCallInvoker);
+    jsi::Runtime &rnRuntime = *jsiRuntime;
+    auto uiRuntime = nativeReanimatedModule->runtimeManager_->runtime;
 
-    auto workletRuntimeValue = runtime.global()
-                                   .getProperty(runtime, "ArrayBuffer")
-                                   .asObject(runtime)
-                                   .asFunction(runtime)
-                                   .callAsConstructor(runtime, {static_cast<double>(sizeof(void *))});
-    uintptr_t *workletRuntimeData =
-        reinterpret_cast<uintptr_t *>(workletRuntimeValue.getObject(runtime).getArrayBuffer(runtime).data(runtime));
-    workletRuntimeData[0] = reinterpret_cast<uintptr_t>(reanimatedModule->runtime.get());
+    auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
+    RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
-    runtime.global().setProperty(runtime, "_WORKLET_RUNTIME", workletRuntimeValue);
-
-    runtime.global().setProperty(runtime, "_WORKLET", false);
+    rnRuntime.global().setProperty(
+        rnRuntime,
+        jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 
 #ifdef RCT_NEW_ARCH_ENABLED
-    runtime.global().setProperty(runtime, "_IS_FABRIC", true);
-#else
-    runtime.global().setProperty(runtime, "_IS_FABRIC", false);
-#endif // RCT_NEW_ARCH_ENABLED
-
-    auto version = getReanimatedVersionString(runtime);
-    runtime.global().setProperty(runtime, "_REANIMATED_VERSION_CPP", version);
-
-    runtime.global().setProperty(
-        runtime,
-        jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(runtime, reanimatedModule));
-
-#ifdef RCT_NEW_ARCH_ENABLED
-    reanimatedModule_ = reanimatedModule;
+    weakNativeReanimatedModule_ = nativeReanimatedModule;
     if (_surfacePresenter != nil) {
-      // reload, uiManager is null right now, we need to wait for `installReanimatedUIManagerBindingAfterReload`
-      [self injectDependencies:runtime];
+      // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
+      [self injectDependencies:rnRuntime];
     }
 #endif // RCT_NEW_ARCH_ENABLED
   }

@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode, RefObject, useRef } from 'react';
+import React, { ReactElement, ReactNode, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -11,13 +11,15 @@ import Animated, {
   useDerivedValue,
   useAnimatedRef,
 } from 'react-native-reanimated';
+import type { AnimatedRef } from 'react-native-reanimated';
 import {
   TapGestureHandler,
   TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
+import '../types';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
-const sectionHeaderHeight = 40;
+const SECTION_HEADER_HEIGHT = 40;
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', ''];
 const indices = [0, 1, 2, 3, 4, 5];
@@ -37,7 +39,7 @@ function createSharedVariables() {
         return (
           previousHeight.value +
           previousContentHeight.value +
-          sectionHeaderHeight +
+          SECTION_HEADER_HEIGHT +
           1
         );
       })
@@ -80,10 +82,7 @@ export default function OldMeasureExample(): React.ReactElement {
             contentHeight={contentHeights[5]}
             z={5}
             show={false}>
-            <View
-              collapsable={false}
-              style={{ height: 500, backgroundColor: 'white' }}
-            />
+            <View collapsable={false} style={styles.background} />
           </Section>
         </View>
       </SafeAreaView>
@@ -141,7 +140,7 @@ type MeasuredDimensions = {
   pageY: number;
 };
 function asyncMeasure(
-  animatedRef: RefObject<React.Component>
+  animatedRef: AnimatedRef<React.Component>
 ): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
@@ -156,7 +155,7 @@ function asyncMeasure(
 
 type SectionHeaderProps = {
   title: string;
-  animatedRef: RefObject<React.Component>;
+  animatedRef: AnimatedRef<React.Component>;
   contentHeight: Animated.SharedValue<number>;
   show: boolean;
 };
@@ -167,7 +166,9 @@ function SectionHeader({
   contentHeight,
   show,
 }: SectionHeaderProps) {
-  const applyMeasure = ({ height }: ReturnType<typeof measure>) => {
+  const applyMeasure = ({
+    height,
+  }: NonNullable<ReturnType<typeof measure>>) => {
     'worklet';
     if (contentHeight.value === 0) {
       contentHeight.value = withTiming(height, {
@@ -195,7 +196,7 @@ function SectionHeader({
   } else {
     onActiveImpl = () => {
       'worklet';
-      applyMeasure(measure(animatedRef));
+      applyMeasure(measure(animatedRef)!);
     };
   }
 
@@ -205,19 +206,12 @@ function SectionHeader({
 
   return (
     <View style={styles.sectionHeader}>
-      <View
-        style={{
-          height: sectionHeaderHeight,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
+      <View style={styles.header}>
         <Text>{title}</Text>
         {show && (
           <TapGestureHandler onHandlerStateChange={handler}>
-            <Animated.View
-              style={{ backgroundColor: 'gray', borderRadius: 10, padding: 5 }}>
-              <Text style={{ color: 'white' }}>trigger</Text>
+            <Animated.View style={styles.triggerText}>
+              <Text style={styles.white}>trigger</Text>
             </Animated.View>
           </TapGestureHandler>
         )}
@@ -245,13 +239,17 @@ function RandomElement() {
 
   return (
     <View style={[styles.randomElement, { height: randomHeight.current }]}>
-      <View style={{ flex: 1, alignItems: 'center', flexDirection: 'row' }}>
+      <View style={styles.textContainer}>
         <Text>{label.current}</Text>
       </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
+  background: {
+    height: 500,
+    backgroundColor: 'white',
+  },
   randomElement: {
     backgroundColor: '#EFEFF4',
     alignItems: 'center',
@@ -262,9 +260,20 @@ const styles = StyleSheet.create({
     borderColor: 'red',
     borderWidth: 1,
   },
+  textContainer: {
+    flex: 1,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
   section: {
     position: 'absolute',
     width: '100%',
+  },
+  header: {
+    height: SECTION_HEADER_HEIGHT,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   sectionHeader: {
     backgroundColor: 'azure',
@@ -272,5 +281,13 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     borderBottomColor: 'black',
     borderBottomWidth: 1,
+  },
+  triggerText: {
+    backgroundColor: 'gray',
+    borderRadius: 10,
+    padding: 5,
+  },
+  white: {
+    color: 'white',
   },
 });

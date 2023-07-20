@@ -99,10 +99,10 @@ public class NativeProxy extends NativeProxyCommon {
             }
 
             @Override
-            public void cancelAnimation(int tag, int type, boolean cancelled, boolean removeView) {
+            public void cancelAnimation(int tag) {
                 LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
                 if (layoutAnimations != null) {
-                    layoutAnimations.cancelAnimationForTag(tag, type, cancelled, removeView);
+                    layoutAnimations.cancelAnimationForTag(tag);
                 }
             }
 
@@ -113,6 +113,13 @@ public class NativeProxy extends NativeProxyCommon {
                     return layoutAnimations.findPrecedingViewTagForTransition(tag);
                 }
                 return -1;
+            }
+
+            public void checkDuplicateSharedTag(int viewTag, int screenTag) {
+                LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+                if (layoutAnimations != null) {
+                    layoutAnimations.checkDuplicateSharedTag(viewTag, screenTag);
+                }
             }
         };
     }

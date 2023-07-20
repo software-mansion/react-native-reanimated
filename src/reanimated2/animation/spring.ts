@@ -1,27 +1,36 @@
 import { defineAnimation } from './util';
-import {
+import type {
   Animation,
   AnimationCallback,
   AnimatableValue,
   Timestamp,
 } from '../commonTypes';
-import {
+import type {
   SpringConfig,
-  initialCalculations,
-  calcuateNewMassToMatchDuration,
   SpringAnimation,
   InnerSpringAnimation,
+  SpringConfigInner,
+} from './springUtils';
+import {
+  initialCalculations,
+  calculateNewMassToMatchDuration,
   underDampedSpringCalculations,
   criticallyDampedSpringCalculations,
   isAnimationTerminatingCalculation,
-  SpringConfigInner,
 } from './springUtils';
 
-export function withSpring(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type withSpringType = <T extends AnimatableValue>(
+  toValue: T,
+  userConfig?: SpringConfig,
+  callback?: AnimationCallback
+) => T;
+
+export const withSpring = ((
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
-): Animation<SpringAnimation> {
+): Animation<SpringAnimation> => {
   'worklet';
 
   return defineAnimation<SpringAnimation>(toValue, () => {
@@ -140,6 +149,7 @@ export function withSpring(
       animation: SpringAnimation
     ) {
       return (
+        previousAnimation?.lastTimestamp &&
         previousAnimation?.startTimestamp &&
         previousAnimation?.toValue === animation.toValue &&
         previousAnimation?.duration === animation.duration &&
@@ -164,7 +174,7 @@ export function withSpring(
       const x0 = triggeredTwice
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
-          (previousAnimation?.startValue as number)
+          previousAnimation?.startValue
         : Number(animation.toValue) - value;
 
       if (previousAnimation) {
@@ -182,7 +192,7 @@ export function withSpring(
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
         if (config.useDuration) {
-          const acutalDuration = triggeredTwice
+          const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
               duration -
@@ -190,8 +200,12 @@ export function withSpring(
                 (previousAnimation?.startTimestamp || 0))
             : duration;
 
-          config.duration = acutalDuration;
-          mass = calcuateNewMassToMatchDuration(x0, config, animation.velocity);
+          config.duration = actualDuration;
+          mass = calculateNewMassToMatchDuration(
+            x0 as number,
+            config,
+            animation.velocity
+          );
         }
 
         const { zeta, omega0, omega1 } = initialCalculations(mass, config);
@@ -222,4 +236,4 @@ export function withSpring(
       omega1: 0,
     } as SpringAnimation;
   });
-}
+}) as withSpringType;

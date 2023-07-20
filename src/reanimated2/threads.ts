@@ -1,6 +1,6 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import { ComplexWorkletFunction } from './commonTypes';
+import type { ComplexWorkletFunction } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -153,24 +153,36 @@ if (__DEV__ && !IS_WEB) {
   }
 }
 
+function runWorkletOnJS<A extends any[], R>(
+  worklet: ComplexWorkletFunction<A, R>,
+  ...args: A
+): void {
+  // remote function that calls a worklet synchronously on the JS runtime
+  worklet(...args);
+}
+
 export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
+  if (fun.__workletHash) {
+    // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
+    // and pass the worklet as a first argument followed by original arguments
+    return (...args) => runOnJS(runWorkletOnJS<A, R>)(fun, ...args);
+  }
   if (fun.__remoteFunction) {
     // in development mode the function provided as `fun` throws an error message
-    // such that when someone accidently calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we purt the
+    // such that when someone accidentally calls it directly on the UI runtime, they
+    // see that they should use `runOnJS` instead. To facilitate that we put the
     // reference to the original remote function in the `__remoteFunction` property.
     fun = fun.__remoteFunction;
-  }
-  if (!_WORKLET) {
-    return fun;
   }
   return (...args) => {
     _scheduleOnJS(
       fun,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+      args.length > 0
+        ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+        : undefined
     );
   };
 }

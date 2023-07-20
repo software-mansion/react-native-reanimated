@@ -2,7 +2,6 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
-#include "NewestShadowNodesRegistry.h"
 #endif
 
 #include <memory>
@@ -12,14 +11,22 @@
 #include <vector>
 
 #include "AnimatedSensorModule.h"
-#include "ErrorHandler.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
-#include "Scheduler.h"
 #include "SingleInstanceChecker.h"
+
+#ifdef __APPLE__
+#include <RNReanimated/Scheduler.h>
+#else
+#include "Scheduler.h"
+#endif
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include "PropsRegistry.h"
+#endif
 
 namespace reanimated {
 
@@ -27,14 +34,12 @@ using FrameCallback = std::function<void(double)>;
 
 class EventHandlerRegistry;
 
-class NativeReanimatedModule : public NativeReanimatedModuleSpec,
-                               public RuntimeManager {
+class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
       const std::shared_ptr<CallInvoker> &jsInvoker,
       const std::shared_ptr<Scheduler> &scheduler,
       const std::shared_ptr<jsi::Runtime> &rt,
-      const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
@@ -45,6 +50,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   ~NativeReanimatedModule();
 
+  std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<JSRuntimeHelper> runtimeHelper;
 
   void installCoreFunctions(
@@ -69,6 +75,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &newData);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+  void scheduleOnJS(
+      jsi::Runtime &rt,
+      const jsi::Value &remoteFun,
+      const jsi::Value &argsValue);
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -99,11 +109,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void onRender(double timestampMs);
 
-  void onEvent(
-      double eventTimestamp,
-      const std::string &eventName,
-      const jsi::Value &payload);
-
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
@@ -111,18 +116,16 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   bool handleEvent(
       const std::string &eventName,
+      const int emitterReactTag,
       const jsi::Value &payload,
       double currentTime);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
-  void updateProps(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeValue,
-      const jsi::Value &props);
+  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
 
-  void removeShadowNodeFromRegistry(jsi::Runtime &rt, const jsi::Value &tag);
+  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
 
   void performOperations();
 
@@ -136,8 +139,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void setUIManager(std::shared_ptr<UIManager> uiManager);
 
-  void setNewestShadowNodesRegistry(
-      std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry);
+  void setPropsRegistry(std::shared_ptr<PropsRegistry> propsRegistry);
 #endif
 
   jsi::Value registerSensor(
@@ -164,7 +166,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
  private:
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Value &props);
+  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry;
@@ -189,9 +191,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
-  std::shared_ptr<NewestShadowNodesRegistry> newestShadowNodesRegistry_;
+  std::shared_ptr<PropsRegistry> propsRegistry_;
 
-  std::vector<Tag> tagsToRemove_; // from newestShadowNodesRegistry_
+  std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #endif
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
@@ -201,6 +203,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 
 #ifdef DEBUG
+  std::shared_ptr<JSLogger> jsLogger_;
   SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
 #endif
 };

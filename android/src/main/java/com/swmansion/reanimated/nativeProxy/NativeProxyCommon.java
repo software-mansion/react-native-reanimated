@@ -1,6 +1,8 @@
 package com.swmansion.reanimated.nativeProxy;
 
+import android.content.ContentResolver;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -208,6 +210,15 @@ public abstract class NativeProxyCommon {
             .getAnimationsManager();
 
     animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
+  }
+
+  @DoNotStrip
+  public boolean getIsReducedMotion() {
+    ContentResolver mContentResolver = mContext.get().getContentResolver();
+    String rawValue =
+        Settings.Global.getString(mContentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE);
+    float parsedValue = rawValue != null ? Float.parseFloat(rawValue) : 1f;
+    return parsedValue == 0f;
   }
 
   @DoNotStrip

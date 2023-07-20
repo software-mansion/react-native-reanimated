@@ -1,11 +1,11 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <stdio.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include "PlatformDepMethodsHolder.h"
+#include "ReanimatedVersion.h"
 
 using namespace facebook;
 
@@ -38,9 +38,12 @@ class RuntimeDecorator {
   static void decorateUIRuntime(
       jsi::Runtime &rt,
       const UpdatePropsFunction updateProps,
+#ifdef RCT_NEW_ARCH_ENABLED
+      const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
+#endif
       const MeasureFunction measure,
 #ifdef RCT_NEW_ARCH_ENABLED
-      const RemoveShadowNodeFromRegistryFunction removeShadowNodeFromRegistry,
+      // nothing
 #else
       const ScrollToFunction scrollTo,
 #endif
@@ -54,6 +57,10 @@ class RuntimeDecorator {
       const ProgressLayoutAnimationFunction progressLayoutAnimationFunction,
       const EndLayoutAnimationFunction endLayoutAnimationFunction,
       const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction);
+  static void decorateRNRuntime(
+      jsi::Runtime &rnRuntime,
+      const std::shared_ptr<jsi::Runtime> &uiRuntime,
+      bool isReducedMotion);
 
   /**
    Returns true if the given Runtime is the Reanimated UI-Thread Runtime.

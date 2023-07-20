@@ -1,13 +1,16 @@
 import { defineAnimation } from './util';
-import { NextAnimation, SequenceAnimation } from './commonTypes';
-import {
+import type { NextAnimation, SequenceAnimation } from './commonTypes';
+import type {
   Animation,
   AnimatableValue,
   AnimationObject,
   Timestamp,
 } from '../commonTypes';
 
-export function withSequence(
+// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
+type withSequenceType = <T extends AnimatableValue>(...animations: T[]) => T;
+
+export const withSequence = function (
   ..._animations: NextAnimation<AnimationObject>[]
 ): Animation<SequenceAnimation> {
   'worklet';
@@ -82,4 +85,4 @@ export function withSequence(
       } as SequenceAnimation;
     }
   );
-}
+} as withSequenceType;

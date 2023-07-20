@@ -17,17 +17,17 @@ template <typename T>
 inline T get(jsi::Runtime &rt, const jsi::Value *value);
 
 template <>
-inline double get<double>(jsi::Runtime &rt, const jsi::Value *value) {
+inline double get<double>(jsi::Runtime &, const jsi::Value *value) {
   return value->asNumber();
 }
 
 template <>
-inline int get<int>(jsi::Runtime &rt, const jsi::Value *value) {
+inline int get<int>(jsi::Runtime &, const jsi::Value *value) {
   return value->asNumber();
 }
 
 template <>
-inline bool get<bool>(jsi::Runtime &rt, const jsi::Value *value) {
+inline bool get<bool>(jsi::Runtime &, const jsi::Value *value) {
   if (!value->isBool()) {
     throw jsi::JSINativeException("Expected a boolean");
   }
@@ -41,7 +41,7 @@ inline jsi::Object get<jsi::Object>(jsi::Runtime &rt, const jsi::Value *value) {
 
 template <>
 inline jsi::Value const &get<jsi::Value const &>(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value *value) {
   return *value;
 }
@@ -58,8 +58,8 @@ inline jsi::Value const &get<jsi::Value const &>(
 // specialization for empty `Targs` - returns an empty tuple
 template <typename... Args>
 inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>> convertArgs(
-    jsi::Runtime &rt,
-    const jsi::Value *args) {
+    jsi::Runtime &,
+    const jsi::Value *) {
   return std::make_tuple();
 }
 
@@ -80,7 +80,7 @@ inline std::tuple<T, Rest...> convertArgs(
 // native C++ types needed to call `function`
 template <typename Ret, typename... Args>
 std::tuple<Args...> getArgsForFunction(
-    std::function<Ret(Args...)> function,
+    std::function<Ret(Args...)>,
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
@@ -93,7 +93,7 @@ std::tuple<Args...> getArgsForFunction(
 // passing `rt` as the first argument
 template <typename Ret, typename... Args>
 std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
-    std::function<Ret(jsi::Runtime &, Args...)> function,
+    std::function<Ret(jsi::Runtime &, Args...)>,
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
@@ -125,7 +125,7 @@ template <typename Fun>
 jsi::HostFunctionType createHostFunction(Fun function) {
   return [function](
              jsi::Runtime &rt,
-             const jsi::Value &thisValue,
+             const jsi::Value &,
              const jsi::Value *args,
              const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);

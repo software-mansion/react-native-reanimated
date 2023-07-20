@@ -1,5 +1,5 @@
-import { EasingFn } from '../../Easing';
-import { StyleProps } from '../../commonTypes';
+import type { EasingFn } from '../../Easing';
+import type { StyleProps } from '../../commonTypes';
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFn;
@@ -36,14 +36,15 @@ export interface ExitAnimationsValues {
   windowHeight: number;
 }
 
-export type EntryExitAnimationFunction = (
-  targetValues: EntryAnimationsValues | ExitAnimationsValues
-) => LayoutAnimation;
+export type EntryExitAnimationFunction =
+  | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
+  | ((targetValues: ExitAnimationsValues) => LayoutAnimation)
+  | (() => LayoutAnimation);
 
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
 export interface LayoutAnimationsValues {
-  [key: string]: number;
+  [key: string]: number | number[];
   currentOriginX: number;
   currentOriginY: number;
   currentWidth: number;
@@ -60,11 +61,22 @@ export interface LayoutAnimationsValues {
   windowHeight: number;
 }
 
+export interface SharedTransitionAnimationsValues
+  extends LayoutAnimationsValues {
+  currentTransformMatrix: number[];
+  targetTransformMatrix: number[];
+}
+
+export type SharedTransitionAnimationsFunction = (
+  values: SharedTransitionAnimationsValues
+) => LayoutAnimation;
+
 export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
   SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 5,
 }
 
 export type LayoutAnimationFunction = (
@@ -87,6 +99,7 @@ export interface BaseLayoutAnimationConfig {
   easing?: EasingFn;
   type?: AnimationFunction;
   damping?: number;
+  dampingRatio?: number;
   mass?: number;
   stiffness?: number;
   overshootClamping?: number;
@@ -114,3 +127,28 @@ export interface IEntryAnimationBuilder {
 export interface IExitAnimationBuilder {
   build: () => AnimationConfigFunction<ExitAnimationsValues>;
 }
+
+export type ProgressAnimationCallback = (
+  viewTag: number,
+  progress: number
+) => void;
+
+export type ProgressAnimation = (
+  viewTag: number,
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => void;
+
+export type CustomProgressAnimation = (
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => StyleProps;
+
+export enum SharedTransitionType {
+  ANIMATION = 'animation',
+  PROGRESS_ANIMATION = 'progressAnimation',
+}
+
+export type EntryExitAnimationsValues =
+  | EntryAnimationsValues
+  | ExitAnimationsValues;
