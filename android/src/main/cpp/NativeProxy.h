@@ -203,9 +203,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
-  void setGlobalProperties(
-      jsi::Runtime &jsRuntime,
-      const std::shared_ptr<jsi::Runtime> &uiRuntime);
   void setupLayoutAnimations();
 
   double getCurrentTime();
@@ -272,7 +269,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rt,
+      jsi::Runtime *rnRuntime,
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
