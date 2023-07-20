@@ -1,61 +1,197 @@
-import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, Button } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withRepeat,
   useReducedMotion,
+  withDecay,
+  withDelay,
+  withSpring,
+  withSequence,
 } from 'react-native-reanimated';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 
 const duration = 2000;
+const toValue = 100;
 
-export default function ReducedMotionExample() {
-  const hookExample = useSharedValue(100);
-  const shouldReduceMotion = useReducedMotion();
+const SIMPLE_EXAMPLES = [
+  { animation: withTiming(toValue, { duration }), text: 'withTiming' },
+  { animation: withSpring(toValue, { duration }), text: 'withSpring' },
+  {
+    animation: withDelay(1000, withTiming(toValue, { duration: 1000 })),
+    text: 'withDelay',
+  },
+  {
+    animation: withSequence(
+      withTiming(toValue / 2, { duration }),
+      withSpring(toValue, { duration })
+    ),
+    text: 'withSequence',
+  },
+];
 
-  const hookExampleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shouldReduceMotion ? 0 : hookExample.value }],
-  }));
+const REPEAT_EXAMPLES = [
+  {
+    animation: withRepeat(withTiming(toValue, { duration }), -1, true),
+    text: 'withRepeat (infinite)',
+  },
+  {
+    animation: withRepeat(withTiming(toValue, { duration }), 4, true),
+    text: 'withRepeat (even)',
+  },
+  {
+    animation: withRepeat(withTiming(toValue, { duration }), 3, true),
+    text: 'withRepeat (odd)',
+  },
+  {
+    animation: withRepeat(withTiming(toValue, { duration }), 4, false),
+    text: 'withRepeat (no reverse)',
+  },
+];
 
-  React.useEffect(() => {
-    hookExample.value = withRepeat(
-      withTiming(-hookExample.value, {
-        duration,
-      }),
-      -1,
-      true
-    );
-  });
+const EXAMPLES = [
+  {
+    title: 'Simple',
+    component: (
+      <>
+        <HookExample />
+        {mapExamples(SIMPLE_EXAMPLES)}
+      </>
+    ),
+  },
+  {
+    title: 'Repeat',
+    component: mapExamples(REPEAT_EXAMPLES),
+  },
+  {
+    title: 'Decay',
+    component: <DecayExample />,
+  },
+];
+
+export default function App() {
+  const [currentExample, setCurrentExample] = useState(0);
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, hookExampleStyle]}>
-        <Text style={styles.text}>useReducedMotion()</Text>
-      </Animated.View>
+      {EXAMPLES.map((x, i) => (
+        <Button key={i} onPress={() => setCurrentExample(i)} title={x.title} />
+      ))}
+      {EXAMPLES[currentExample].component}
     </View>
   );
 }
+
+function HookExample() {
+  const sv = useSharedValue(-100);
+  const shouldReduceMotion = useReducedMotion();
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shouldReduceMotion ? 0 : sv.value }],
+  }));
+
+  React.useEffect(() => {
+    sv.value = withRepeat(withTiming(toValue, { duration }), -1, true);
+  });
+
+  return (
+    <Animated.View style={[styles.box, animatedStyle]}>
+      <Text style={styles.text}>useReducedMotion</Text>
+    </Animated.View>
+  );
+}
+
+function mapExamples(examples) {
+  return examples.map((example, i) => {
+    return (
+      <Example key={i} animation={example.animation} text={example.text} />
+    );
+  });
+}
+
+function Example(props: { animation: number; text: string }) {
+  const sv = useSharedValue(-100);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: sv.value }],
+  }));
+
+  useEffect(() => {
+    sv.value = props.animation;
+  });
+
+  return (
+    <Animated.View style={[styles.box, animatedStyle]}>
+      <Text style={styles.text}>{props.text}</Text>
+    </Animated.View>
+  );
+}
+
+function DecayExample() {
+  const offset = useSharedValue(0);
+
+  const pan = Gesture.Pan()
+    .onChange((event) => {
+      offset.value += event.changeX;
+    })
+    .onFinalize((event) => {
+      offset.value = withDecay({
+        velocity: event.velocityX,
+        clamp: [-(350 / 2) + WIDTH / 2, 350 / 2 - WIDTH / 2],
+      });
+    });
+
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value }],
+  }));
+
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <View style={styles.wrapper}>
+        <GestureDetector gesture={pan}>
+          <Animated.View style={[styles.box, animatedStyles]}>
+            <Text style={styles.text}>withDecay</Text>
+          </Animated.View>
+        </GestureDetector>
+      </View>
+    </GestureHandlerRootView>
+  );
+}
+
+const WIDTH = 150;
+const HEIGHT = 65;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    marginTop: 20,
     height: '100%',
   },
   box: {
-    height: 100,
-    width: 150,
+    height: HEIGHT,
+    width: WIDTH,
     margin: 20,
     borderWidth: 1,
     borderColor: '#b58df1',
-    borderRadius: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
     color: '#b58df1',
     fontWeight: 'bold',
+  },
+  wrapper: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
