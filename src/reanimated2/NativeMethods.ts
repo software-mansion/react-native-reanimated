@@ -5,6 +5,7 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
+
 import type { AnimatedRef } from './hook/commonTypes';
 import type { Component } from 'react';
 
@@ -88,7 +89,7 @@ if (isWeb()) {
 export let dispatchCommand: <T extends Component>(
   animatedRef: AnimatedRef<T>,
   commandName: string,
-  args: Array<unknown>
+  args?: Array<unknown>
 ) => void;
 
 if (IS_NATIVE && global._IS_FABRIC) {
