@@ -46,11 +46,11 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
-export const callMicrotasks = shouldBeUseWeb()
-  ? () => {
+export const callMicrotasks = IS_NATIVE
+  ? callMicrotasksOnUIThread
+  : () => {
       // on web flushing is a noop as immediates are handled by the browser
-    }
-  : callMicrotasksOnUIThread;
+    };
 
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
