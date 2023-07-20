@@ -1,4 +1,3 @@
-/* global _WORKLET */
 /**
  * Copied from:
  * react-native/Libraries/StyleSheet/normalizeColor.js

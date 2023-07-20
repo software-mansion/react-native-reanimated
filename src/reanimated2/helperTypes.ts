@@ -80,7 +80,9 @@ type PickStyleProps<T> = Pick<
 >;
 
 type StyleAnimatedProps<P extends object> = {
-  [K in keyof PickStyleProps<P>]: StyleProp<AnimateStyle<P[K]>>;
+  [K in keyof PickStyleProps<P>]: StyleProp<
+    AnimateStyle<P[K] | MaybeSharedValue<P[K]>>
+  >;
 };
 
 type JustStyleAnimatedProp<P extends object> = {

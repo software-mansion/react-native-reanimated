@@ -225,7 +225,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
   }
 
-  public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
+  public void endLayoutAnimation(int tag, boolean removeView) {
     View view = resolveView(tag);
 
     if (view == null) {
@@ -640,7 +640,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void cancelAnimationsRecursive(View view) {
     if (mExitingViews.containsKey(view.getId())) {
-      endLayoutAnimation(view.getId(), true, true);
+      endLayoutAnimation(view.getId(), true);
     } else if (view instanceof ViewGroup && mExitingSubviewCountMap.containsKey(view.getId())) {
       cancelAnimationsInSubviews((ViewGroup) view);
     }
@@ -655,7 +655,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
 
       if (mExitingViews.containsKey(child.getId())) {
-        endLayoutAnimation(child.getId(), true, true);
+        endLayoutAnimation(child.getId(), true);
       } else if (child instanceof ViewGroup && mExitingSubviewCountMap.containsKey(child.getId())) {
         cancelAnimationsInSubviews((ViewGroup) child);
       }
