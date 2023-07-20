@@ -13,45 +13,45 @@ import Animated, {
 
 const Stack = createNativeStackNavigator();
 
-const transition = SharedTransition.duration(1000)
-  .custom((values) => {
-    'worklet';
-    return {
-      width: withSpring(values.targetWidth),
-      height: withSpring(values.targetHeight),
-      originX: withSpring(values.targetOriginX),
-      originY: withSpring(values.targetOriginY),
-    };
-  })
-  .progressAnimation((values, progress) => {
-    'worklet';
-    const getValue = (
-      progress: number,
-      target: number,
-      current: number
-    ): number => {
-      return progress * (target - current) + current;
-    };
-    return {
-      width: getValue(progress, values.targetWidth, values.currentWidth),
-      height: getValue(progress, values.targetHeight, values.currentHeight),
-      originX: getValue(progress, values.targetOriginX, values.currentOriginX),
-      originY: getValue(progress, values.targetOriginY, values.currentOriginY),
-    };
-  })
+const transition = SharedTransition.duration(3000)
+  // .custom((values) => {
+  //   'worklet';
+  //   return {
+  //     width: withSpring(values.targetWidth),
+  //     height: withSpring(values.targetHeight),
+  //     originX: withSpring(values.targetOriginX),
+  //     originY: withSpring(values.targetOriginY),
+  //   };
+  // })
+  // .progressAnimation((values, progress) => {
+  //   'worklet';
+  //   const getValue = (
+  //     progress: number,
+  //     target: number,
+  //     current: number
+  //   ): number => {
+  //     return progress * (target - current) + current;
+  //   };
+  //   return {
+  //     width: getValue(progress, values.targetWidth, values.currentWidth),
+  //     height: getValue(progress, values.targetHeight, values.currentHeight),
+  //     originX: getValue(progress, values.targetOriginX, values.currentOriginX),
+  //     originY: getValue(progress, values.targetOriginY, values.currentOriginY),
+  //   };
+  // })
   .defaultTransitionType(SharedTransitionType.ANIMATION);
 
 function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
+      <Button
+        onPress={() => navigation.navigate('Screen2')}
+        title="go to screen2"
+      />
       <Animated.View
         style={styles.greenBoxScreenOne}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
-      />
-      <Button
-        onPress={() => navigation.navigate('Screen2')}
-        title="go to screen2"
       />
     </Animated.ScrollView>
   );
@@ -60,12 +60,12 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
+      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
       <Animated.View
         style={styles.greenBoxScreenTwo}
         sharedTransitionTag="tag"
         sharedTransitionStyle={transition}
       />
-      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
     </View>
   );
 }
@@ -76,12 +76,12 @@ export default function CustomTransitionExample() {
       <Stack.Screen
         name="Screen1"
         component={Screen1}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, animation: 'fade' }}
       />
       <Stack.Screen
         name="Screen2"
         component={Screen2}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, animation: 'fade' }}
       />
     </Stack.Navigator>
   );
@@ -101,6 +101,6 @@ const styles = StyleSheet.create({
     height: 300,
     marginLeft: 60,
     marginTop: 100,
-    backgroundColor: 'green',
+    backgroundColor: 'red',
   },
 });

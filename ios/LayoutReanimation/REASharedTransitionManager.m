@@ -155,6 +155,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
 
     [self disableCleaningForViewTag:sourceView.reactTag];
+    // mleko
     [self disableCleaningForViewTag:targetView.reactTag];
   }
   [self startSharedTransition:sharedElementToRestart];
@@ -287,6 +288,7 @@ static REASharedTransitionManager *_sharedTransitionManager;
     }
 
     [newTransitionViews addObject:viewSource];
+    //mleko
     [newTransitionViews addObject:viewTarget];
 
     REASharedElement *sharedElement = [[REASharedElement alloc] initWithSourceView:viewSource
@@ -533,12 +535,13 @@ static REASharedTransitionManager *_sharedTransitionManager;
       [_transitionContainer addSubview:viewSource];
     }
 
-    if (_sharedTransitionParent[viewTarget.reactTag] == nil) {
-      _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
-      _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
-      [viewTarget removeFromSuperview];
-      [_transitionContainer addSubview:viewTarget];
-    }
+// mleko
+//    if (_sharedTransitionParent[viewTarget.reactTag] == nil) {
+//      _sharedTransitionParent[viewTarget.reactTag] = viewTarget.superview;
+//      _sharedTransitionInParentIndex[viewTarget.reactTag] = @([viewTarget.superview.subviews indexOfObject:viewTarget]);
+//      [viewTarget removeFromSuperview];
+//      [_transitionContainer addSubview:viewTarget];
+//    }
   }
 }
 
@@ -550,10 +553,12 @@ static REASharedTransitionManager *_sharedTransitionManager;
                     before:sharedElement.sourceViewSnapshot
                      after:sharedElement.targetViewSnapshot
                       type:type];
-    [self onViewTransition:sharedElement.targetView
-                    before:sharedElement.sourceViewSnapshot
-                     after:sharedElement.targetViewSnapshot
-                      type:type];
+//    sharedElement.targetView.hidden = YES;
+// mleko
+//    [self onViewTransition:sharedElement.targetView
+//                    before:sharedElement.sourceViewSnapshot
+//                     after:sharedElement.targetViewSnapshot
+//                      type:type];
   }
 }
 
@@ -599,6 +604,14 @@ static REASharedTransitionManager *_sharedTransitionManager;
     if ([_viewsToHide containsObject:viewTag]) {
       view.hidden = YES;
     }
+    
+    for (REASharedElement *sharedElement in _sharedElements) {
+      if (sharedElement.sourceView.reactTag == viewTag) {
+        [_currentSharedTransitionViews removeObjectForKey:sharedElement.targetView.reactTag];
+        [_viewsWithCanceledAnimation removeObject:sharedElement.targetView];
+      }
+    }
+    
     [_currentSharedTransitionViews removeObjectForKey:viewTag];
     [_sharedTransitionParent removeObjectForKey:viewTag];
     [_sharedTransitionInParentIndex removeObjectForKey:viewTag];

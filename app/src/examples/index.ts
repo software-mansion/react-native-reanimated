@@ -100,6 +100,15 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  ManyScreensExample: {
+    title: '[SET] Many screens',
+    screen: ManyScreensExample,
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom transition',
+    screen: CustomTransitionExample,
+  },
+
   // About
 
   AboutExample: {
@@ -499,18 +508,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Card',
     screen: CardExample,
   },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-  },
+  
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
   },
-  ManyScreensExample: {
-    title: '[SET] Many screens',
-    screen: ManyScreensExample,
-  },
+  
   ManyTagsExample: {
     title: '[SET] Many tags',
     screen: ManyTagsExample,
