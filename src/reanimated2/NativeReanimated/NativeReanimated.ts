@@ -14,7 +14,7 @@ import { checkCppVersion } from '../platform-specific/checkCppVersion';
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
   installCoreFunctions(
-    callGuard: <T extends Array<any>, U>(
+    callGuard: <T extends Array<unknown>, U>(
       fn: (...args: T) => U,
       ...args: T
     ) => void,
@@ -83,7 +83,7 @@ export class NativeReanimated {
   }
 
   installCoreFunctions(
-    callGuard: <T extends Array<any>, U>(
+    callGuard: <T extends Array<unknown>, U>(
       fn: (...args: T) => U,
       ...args: T
     ) => void,
