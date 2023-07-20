@@ -24,7 +24,8 @@ if (isWeb()) {
 
 const reanimatedJS = new JSReanimated();
 
-global._makeShareableClone = (c) => c;
+global._makeShareableClone = <T>(value: T) => value as ShareableRef<T>;
+
 global._scheduleOnJS = (func, args) => {
   if (args) {
     queueMicrotask(() => func(...args));
