@@ -18,7 +18,7 @@ The name of the command to execute, e.g. `focus` or `scrollToEnd`.
 
 #### `args` [Array<any\>]
 
-The array of command arguments. If the command doesn't accept any arguments, you will need to pass an empty array (`[]`).
+The array of command arguments. Defaults to an empty array.
 
 ### Returns
 
@@ -42,7 +42,7 @@ export default function DispatchCommandExample() {
   const aref = useAnimatedRef<TextInput>();
 
   const gesture = Gesture.Tap().onStart(() => {
-    dispatchCommand(aref, 'focus', []);
+    dispatchCommand(aref, 'focus');
   });
 
   return (

@@ -1,11 +1,11 @@
-import { TextInput, StyleSheet, View, Button } from 'react-native';
-
-import React from 'react';
 import Animated, {
   dispatchCommand,
   runOnUI,
   useAnimatedRef,
 } from 'react-native-reanimated';
+import { Button, StyleSheet, TextInput, View } from 'react-native';
+
+import React from 'react';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -25,14 +25,14 @@ export default function DispatchCommandExample() {
   const focusFromUI = () => {
     runOnUI(() => {
       console.log(_WORKLET);
-      dispatchCommand(aref, 'focus', []);
+      dispatchCommand(aref, 'focus');
     })();
   };
 
   const blurFromUI = () => {
     runOnUI(() => {
       console.log(_WORKLET);
-      dispatchCommand(aref, 'blur', []);
+      dispatchCommand(aref, 'blur');
     })();
   };
 

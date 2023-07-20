@@ -92,7 +92,7 @@ export let dispatchCommand: <T extends Component>(
 ) => void;
 
 if (IS_NATIVE && global._IS_FABRIC) {
-  dispatchCommand = (animatedRef, commandName, args) => {
+  dispatchCommand = (animatedRef, commandName, args = []) => {
     'worklet';
     if (!_WORKLET) {
       return;
@@ -103,7 +103,7 @@ if (IS_NATIVE && global._IS_FABRIC) {
     _dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
   };
 } else if (IS_NATIVE) {
-  dispatchCommand = (animatedRef, commandName, args) => {
+  dispatchCommand = (animatedRef, commandName, args = []) => {
     'worklet';
     if (!_WORKLET) {
       return;
