@@ -300,7 +300,8 @@ public class NodesManager implements EventDispatcherListener {
       String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
       int viewTag = event.getViewTag();
 
-      shouldSaveEvent |= mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
+      shouldSaveEvent |=
+          mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }
