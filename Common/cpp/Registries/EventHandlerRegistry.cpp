@@ -67,10 +67,10 @@ void EventHandlerRegistry::processEvent(
 }
 
 bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(
-    const std::string &eventName) {
+    const std::string &eventName,
+    const int emitterReactTag) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
-  // TODO : this doesnt work, just pass reacttag as param
-  auto eventHash = std::make_pair(-1, eventName);
+  auto eventHash = std::make_pair(emitterReactTag, eventName);
   auto it = eventMappings.find(eventHash);
   return (it != eventMappings.end()) && (!(it->second).empty());
 }

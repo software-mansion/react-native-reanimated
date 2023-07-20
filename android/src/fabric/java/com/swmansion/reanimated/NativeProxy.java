@@ -57,7 +57,7 @@ public class NativeProxy extends NativeProxyCommon {
             MessageQueueThread messageQueueThread,
             FabricUIManager fabricUIManager);
 
-    public native boolean isAnyHandlerWaitingForEvent(String eventName);
+    public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
     public native void performOperations();
 

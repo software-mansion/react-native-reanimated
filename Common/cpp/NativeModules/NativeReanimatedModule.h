@@ -110,7 +110,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void onRender(double timestampMs);
 
-  bool isAnyHandlerWaitingForEvent(std::string eventName);
+  bool isAnyHandlerWaitingForEvent(
+      std::string eventName,
+      const int emitterReactTag);
 
   void maybeRequestRender();
   UpdatePropsFunction updatePropsFunction;

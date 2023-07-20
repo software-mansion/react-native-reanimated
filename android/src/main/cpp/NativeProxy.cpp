@@ -154,8 +154,11 @@ void NativeProxy::installJSIBindings(
       jsi::Object::createFromHostObject(rt, nativeReanimatedModule));
 }
 
-bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
-  return nativeReanimatedModule_->isAnyHandlerWaitingForEvent(s);
+bool NativeProxy::isAnyHandlerWaitingForEvent(
+    std::string s,
+    const int emitterReactTag) {
+  return nativeReanimatedModule_->isAnyHandlerWaitingForEvent(
+      s, emitterReactTag);
 }
 
 void NativeProxy::performOperations() {

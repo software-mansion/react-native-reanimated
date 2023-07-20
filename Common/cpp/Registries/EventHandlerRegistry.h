@@ -35,7 +35,9 @@ class EventHandlerRegistry {
       const int emitterReactTag,
       const jsi::Value &eventPayload);
 
-  bool isAnyHandlerWaitingForEvent(const std::string &eventName);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
 };
 
 } // namespace reanimated
