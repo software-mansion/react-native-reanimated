@@ -14,12 +14,14 @@ export default class JSReanimated {
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
 
-  makeShareableClone<T>(value: T): ShareableRef<T> {
-    return { __hostObjectShareableJSRef: value };
+  makeShareableClone<T>(): ShareableRef<T> {
+    throw new Error(
+      '[Reanimated] makeShareableClone should never be called in JSReanimated.'
+    );
   }
 
   installCoreFunctions(
-    _callGuard: <T extends Array<any>, U>(
+    _callGuard: <T extends Array<unknown>, U>(
       fn: (...args: T) => U,
       ...args: T
     ) => void,

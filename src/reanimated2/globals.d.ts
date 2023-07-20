@@ -35,7 +35,7 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: (value: any) => any;
+  var _makeShareableClone: <T>(value: T) => ShareableRef<T>;
   var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>
