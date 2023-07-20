@@ -45,7 +45,7 @@ export const AnimatedScrollView: AnimatedScrollView = forwardRef(
     // to have continuous scroll events.
     // We set it to 1 so we have peace until
     // there are 960FPS screens.
-    if (!restProps.scrollEventThrottle) {
+    if (!('scrollEventThrottle' in restProps)) {
       restProps.scrollEventThrottle = 1;
     }
 

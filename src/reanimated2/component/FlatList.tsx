@@ -67,7 +67,7 @@ export const ReanimatedFlatList = forwardRef(
     // react-native defaults it to 50 for FlatLists.
     // We set it to 1 so we have peace until
     // there are 960FPS screens.
-    if (!restProps.scrollEventThrottle) {
+    if (!('scrollEventThrottle' in restProps)) {
       restProps.scrollEventThrottle = 1;
     }
 
