@@ -45,7 +45,7 @@ void AndroidScheduler::triggerUI() {
 }
 
 void AndroidScheduler::scheduleTriggerOnUI() {
-  static auto method =
+  static const auto method =
       javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
   method(javaPart_.get());
 }
