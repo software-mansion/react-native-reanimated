@@ -422,7 +422,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimation(
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
-    std::string eventName,
+    const std::string &eventName,
     const int emitterReactTag) {
   return eventHandlerRegistry->isAnyHandlerWaitingForEvent(
       eventName, emitterReactTag);
