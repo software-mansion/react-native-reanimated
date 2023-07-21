@@ -133,25 +133,45 @@ export type WorkletFunction<A extends unknown[], T> =
   | ReleaseWorkletFunction<A, T>
   | DevWorkletFunction<A, T>;
 
+/**
+ * @deprecated
+ */
 export type __Context = Record<string, unknown>;
+
+/**
+ * @deprecated
+ */
 export interface __WorkletFunction {
   _closure?: __Context;
   __workletHash?: number;
 }
 
+/**
+ * @deprecated
+ */
 export interface __BasicWorkletFunction<T> extends __WorkletFunction {
   (): T;
 }
 
+/**
+ * @deprecated
+ */
 export interface __BasicWorkletFunctionOptional<T> extends __WorkletFunction {
   (): Partial<T>;
 }
 
+/**
+ * @deprecated
+ */
 export interface __ComplexWorkletFunction<A extends any[], R>
   extends __WorkletFunction {
   (...args: A): R;
   __remoteFunction?: (...args: A) => R;
 }
+
+/**
+ * @deprecated
+ */
 export interface __AdapterWorkletFunction extends __WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;
 }
