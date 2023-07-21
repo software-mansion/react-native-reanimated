@@ -11,7 +11,7 @@ import type {
   ComplexWorkletFunction,
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import type { NativeReanimatedModule } from './NativeReanimated/NativeReanimated';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
@@ -24,7 +24,7 @@ declare global {
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_BABEL_PLUGIN: string | undefined;
-  var __reanimatedModuleProxy: NativeReanimated | undefined;
+  var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
   var __valueUnpacker: typeof valueUnpacker | undefined;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   // TODO: move to NativeReanimatedModule?
@@ -48,7 +48,7 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: (value: any) => any;
+  var _makeShareableClone: <T>(value: T) => ShareableRef<T>;
   var _updateDataSynchronously: (
     dataHolder: ShareableSyncDataHolderRef<any>,
     data: ShareableRef<any>
@@ -81,6 +81,9 @@ declare global {
     | undefined;
   var _scrollToPaper:
     | ((viewTag: number, x: number, y: number, animated: boolean) => void)
+    | undefined;
+  var _dispatchCommandPaper:
+    | ((viewTag: number, commandName: string, args: Array<unknown>) => void)
     | undefined;
   var _dispatchCommandFabric:
     | ((

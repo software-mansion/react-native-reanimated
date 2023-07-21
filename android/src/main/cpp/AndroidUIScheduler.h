@@ -24,7 +24,7 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
     return uiScheduler_;
   }
 
-  void scheduleOnUI();
+  void scheduleTriggerOnUI();
 
  private:
   friend HybridBase;

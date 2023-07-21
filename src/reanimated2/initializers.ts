@@ -13,7 +13,7 @@ const IS_NATIVE = !shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
 
 // callGuard is only used with debug builds
-export function callGuardDEV<T extends Array<any>, U>(
+export function callGuardDEV<T extends Array<unknown>, U>(
   fn: (...args: T) => U,
   ...args: T
 ): void {
