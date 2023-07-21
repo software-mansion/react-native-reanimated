@@ -1,35 +1,21 @@
 import type { RefObject } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import type {
-  WorkletClosure,
-  NativeEvent,
-  ReleaseWorkletBase,
-  DevWorkletBase,
-} from '../commonTypes';
+import type { __Context, NativeEvent, __WorkletFunction } from '../commonTypes';
 import type WorkletEventHandler from '../WorkletEventHandler';
 import type { DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
 
-interface ReleaseScrollHandler<TContext extends WorkletClosure>
-  extends ReleaseWorkletBase {
+export interface ScrollHandler<TContext extends __Context>
+  extends __WorkletFunction {
   (event: NativeScrollEvent, context?: TContext): void;
 }
-
-interface DevScrollHandler<TContext extends WorkletClosure>
-  extends DevWorkletBase {
-  (event: NativeScrollEvent, context?: TContext): void;
-}
-
-export type ScrollHandler<TContext extends WorkletClosure> =
-  | ReleaseScrollHandler<TContext>
-  | DevScrollHandler<TContext>;
 
 export interface ScrollEvent
   extends NativeScrollEvent,
     NativeEvent<ScrollEvent> {
   eventName: string;
 }
-export interface ScrollHandlers<TContext extends WorkletClosure> {
+export interface ScrollHandlers<TContext extends __Context> {
   [key: string]: ScrollHandler<TContext> | undefined;
   onScroll?: ScrollHandler<TContext>;
   onBeginDrag?: ScrollHandler<TContext>;
@@ -43,15 +29,13 @@ type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 export type useAnimatedScrollHandler = <
-  TContext extends WorkletClosure = Record<string, never>
+  TContext extends __Context = Record<string, never>
 >(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   deps?: DependencyList
 ) => OnScroll;
 
-export const useAnimatedScrollHandler = function <
-  TContext extends WorkletClosure
->(
+export const useAnimatedScrollHandler = function <TContext extends __Context>(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
 ): RefObject<WorkletEventHandler<ScrollEvent>> {

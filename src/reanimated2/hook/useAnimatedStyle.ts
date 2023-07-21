@@ -19,12 +19,13 @@ import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type {
   AnimationObject,
   Timestamp,
-  AdapterWorkletFunction,
+  __AdapterWorkletFunction,
   AnimatedStyle,
+  __BasicWorkletFunction,
+  __BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
   StyleProps,
-  WorkletFunction,
 } from '../commonTypes';
 import type {
   ImageStyle,
@@ -180,7 +181,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: WorkletFunction<AnimatedStyle>,
+  updater: __BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>
@@ -268,12 +269,12 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: WorkletFunction<AnimatedStyle>,
+  updater: __BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle>,
-  adapters: AdapterWorkletFunction[] = []
+  adapters: __AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle = state.animations ?? {};
@@ -412,9 +413,9 @@ type useAnimatedStyleType = <
 
 export const useAnimatedStyle = function <T extends AnimatedStyle>(
   // animated style cannot be an array
-  updater: WorkletFunction<T extends Array<unknown> ? never : T>,
+  updater: __BasicWorkletFunction<T extends Array<unknown> ? never : T>,
   dependencies?: DependencyList,
-  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
+  adapters?: __AdapterWorkletFunction | __AdapterWorkletFunction[]
 ): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const initRef = useRef<AnimationRef>();
@@ -432,7 +433,7 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
       );
     }
   }
-  const adaptersArray: AdapterWorkletFunction[] = adapters
+  const adaptersArray: __AdapterWorkletFunction[] = adapters
     ? Array.isArray(adapters)
       ? adapters
       : [adapters]
@@ -478,18 +479,16 @@ For more, see the docs: https://docs.swmansion.com/react-native-reanimated/docs/
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater;
+    let updaterFn = updater as __BasicWorkletFunctionOptional<T>;
     if (adapters) {
-      updaterFn = (() => {
+      updaterFn = () => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
           adapter(newValues);
         });
         return newValues;
-      }) as WorkletFunction<T extends Array<unknown> ? never : T>;
-      // TODO TYPESCRIPT this cast is necessary since this function is wrongly typed
-      // and it should be getting a Workletizable Function, not a WorkletFunction
+      };
     }
 
     if (isJest()) {

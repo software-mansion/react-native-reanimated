@@ -3,39 +3,27 @@ import { useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
 import type {
   AnimatedStyle,
+  __Context,
   NativeEvent,
   NestedObjectValues,
+  __WorkletFunction,
   AnimationObject,
-  WorkletClosure,
-  DevWorkletBase,
-  WorkletBase,
-  ReleaseWorkletBase,
 } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import type { DependencyList } from './commonTypes';
+import type { ContextWithDependencies, DependencyList } from './commonTypes';
 import type { NativeSyntheticEvent } from 'react-native';
-
-interface ReleaseHandler<T, TContext extends WorkletClosure>
-  extends ReleaseWorkletBase {
+interface Handler<T, TContext extends __Context> extends __WorkletFunction {
   (event: T, context: TContext): void;
 }
 
-interface DevHandler<T, TContext extends WorkletClosure>
-  extends DevWorkletBase {
-  (event: T, context: TContext): void;
-}
-type Handler<T, TContext extends WorkletClosure> =
-  | ReleaseHandler<T, TContext>
-  | DevHandler<T, TContext>;
-
-interface Handlers<T, TContext extends WorkletClosure> {
+interface Handlers<T, TContext extends __Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
-export interface UseHandlerContext<TContext extends WorkletClosure> {
+export interface UseHandlerContext<TContext extends __Context> {
   context: TContext;
   doDependenciesDiffer: boolean;
   useWeb: boolean;
@@ -65,20 +53,12 @@ export const useEvent = function <T extends NativeEvent<T>>(
 } as unknown as useEventType;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
-type useHandlerType = <
-  T,
-  TContext extends WorkletClosure = Record<string, never>
->(
+type useHandlerType = <T, TContext extends __Context = Record<string, never>>(
   handlers: Handlers<T, TContext>,
   deps?: DependencyList
 ) => { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
 
-export interface ContextWithDependencies<TContext extends WorkletClosure> {
-  context: TContext;
-  savedDependencies: DependencyList;
-}
-
-export const useHandler = function <T, TContext extends WorkletClosure>(
+export const useHandler = function <T, TContext extends __Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
 ): UseHandlerContext<TContext> {
@@ -113,10 +93,10 @@ export const useHandler = function <T, TContext extends WorkletClosure>(
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
-  handlers: Record<string, WorkletBase> | Array<WorkletBase>
+  handlers: Record<string, __WorkletFunction> | Array<__WorkletFunction>
 ): string {
   return Object.values(handlers).reduce(
-    (acc: string, worklet: WorkletBase) =>
+    (acc: string, worklet: __WorkletFunction) =>
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       acc + worklet.__workletHash!.toString(),
     ''
@@ -126,11 +106,11 @@ export function buildWorkletsHash(
 // builds dependencies array for gesture handlers
 export function buildDependencies(
   dependencies: DependencyList,
-  handlers: Record<string, WorkletBase | undefined>
+  handlers: Record<string, __WorkletFunction | undefined>
 ): Array<unknown> {
-  const handlersList: WorkletBase[] = Object.values(handlers).filter(
+  const handlersList: __WorkletFunction[] = Object.values(handlers).filter(
     (handler) => handler !== undefined
-  ) as WorkletBase[];
+  ) as __WorkletFunction[];
   if (!dependencies) {
     dependencies = handlersList.map((handler) => {
       return {

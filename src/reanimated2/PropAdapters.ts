@@ -1,5 +1,5 @@
 import { addWhitelistedNativeProps } from '../ConfigHelper';
-import type { AdapterWorkletFunction } from './commonTypes';
+import type { __AdapterWorkletFunction } from './commonTypes';
 import type { AnimatedPropsAdapterFunction } from './helperTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
@@ -9,9 +9,9 @@ export type createAnimatedPropAdapterType = (
 ) => AnimatedPropsAdapterFunction;
 
 export const createAnimatedPropAdapter = ((
-  adapter: AdapterWorkletFunction,
+  adapter: __AdapterWorkletFunction,
   nativeProps?: string[]
-): AdapterWorkletFunction => {
+): __AdapterWorkletFunction => {
   const nativePropsToAdd: { [key: string]: boolean } = {};
   // eslint-disable-next-line no-unused-expressions
   nativeProps?.forEach((prop) => {
@@ -23,7 +23,7 @@ export const createAnimatedPropAdapter = ((
 
 // ADAPTERS
 
-export const SVGAdapter: AdapterWorkletFunction = createAnimatedPropAdapter(
+export const SVGAdapter: __AdapterWorkletFunction = createAnimatedPropAdapter(
   (props) => {
     'worklet';
     const keys = Object.keys(props);

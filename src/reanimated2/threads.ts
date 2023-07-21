@@ -1,9 +1,6 @@
 import NativeReanimatedModule from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import type {
-  WorkletFunctionWithRemoteFunction,
-  WorkletizableFunction,
-} from './commonTypes';
+import type { WorkletFunction } from './commonTypes';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -12,7 +9,15 @@ import {
 const IS_JEST = isJest();
 const IS_WEB = shouldBeUseWeb();
 
-let _runOnUIQueue: Array<[WorkletFunctionWithRemoteFunction<any>, any[]]> = [];
+/**
+ * An array of [worklet, args] pairs.
+ * */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _runOnUIQueue: Array<[WorkletFunction<any, unknown>, any[]]> = [];
+// TODO TYPESCRIPT
+// above line should be:
+// let _runOnUIQueue: Array<[WorkletFunction<any[], unknown>, any[]]> = [];
+// but for some reason TypeScript gives CLI error on that
 
 export function setupMicrotasks() {
   'worklet';
@@ -20,10 +25,8 @@ export function setupMicrotasks() {
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
 
-  // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.queueMicrotask = (callback: () => void): number => {
+  global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
-    return -1;
   };
 
   global.__callMicrotasks = () => {
@@ -55,14 +58,16 @@ export const callMicrotasks = shouldBeUseWeb()
     }
   : callMicrotasksOnUIThread;
 
+type runOnUIAPI = <A extends unknown[], R>(
+  worklet: (...args: A) => R
+) => WorkletFunction<A, R>;
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
  * waits for other worklets to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
  * at once making sure they will run within the same frame boundaries on the UI thread.
  */
-
-export const runOnUI = (<A extends any[], R>(
-  worklet: WorkletFunctionWithRemoteFunction<R>
+export const runOnUI = (<A extends unknown[], R>(
+  worklet: WorkletFunction<A, R>
 ): ((...args: A) => void) => {
   'worklet';
   if (__DEV__ && !IS_WEB && _WORKLET) {
@@ -118,20 +123,21 @@ export const runOnUI = (<A extends any[], R>(
       });
     }
   };
-}) as unknown as <A extends unknown[], R>(
-  worklet: WorkletizableFunction<A, R>
-) => (...args: A) => void;
+}) as unknown as runOnUIAPI;
 // This cast is necessary (and very smart B])
 // since worklet is a different object
 // when you type TypeScript code and a different object
 // once Reanimated Babel Plugin has transpiled it
 // and runOnUI is in execution.
 
+type runOnUIImmediatelyAPI = <A extends unknown[], R>(
+  worklet: (...args: A) => R
+) => WorkletFunction<A, R>;
 /**
  * Schedule a worklet to execute on the UI runtime skipping batching mechanism.
  */
-export const runOnUIImmediately = (<A extends any[], R>(
-  worklet: WorkletFunctionWithRemoteFunction<R>
+export const runOnUIImmediately = (<A extends unknown[], R>(
+  worklet: WorkletFunction<A, R>
 ): ((...args: A) => void) => {
   'worklet';
   if (__DEV__ && !IS_WEB && _WORKLET) {
@@ -150,9 +156,8 @@ export const runOnUIImmediately = (<A extends any[], R>(
       })
     );
   };
-}) as unknown as <A extends unknown[], R>(
-  worklet: WorkletizableFunction<A, R>
-) => (...args: A) => void;
+  // This cast is necessary (and very smart B])
+}) as unknown as runOnUIImmediatelyAPI;
 
 if (__DEV__ && !IS_WEB) {
   const f = () => {
@@ -166,24 +171,46 @@ if (__DEV__ && !IS_WEB) {
   }
 }
 
-export function runOnJS<A extends any[], R>(
-  fun: WorkletFunctionWithRemoteFunction<R>
+type ReleaseRemoteFunction<A extends unknown[], R> = {
+  (...args: A): R;
+};
+
+type DevRemoteFunction<A extends unknown[], R> = {
+  __functionInDEV: (...args: A) => R;
+};
+
+type RemoteFunction<A extends unknown[], R> =
+  | ReleaseRemoteFunction<A, R>
+  | DevRemoteFunction<A, R>;
+
+// runOnJS could get a plain JS function on JS thread
+// a remoteFunction on UI thread
+// or a remote function with __remoteFunction on UI thread in dev mode
+/**
+ * Returns a function that can be called to be executed asynchronously on both
+ * UI and JS threads.
+ */
+export function runOnJS<A extends unknown[], R>(
+  fun: ((...args: A) => R) | RemoteFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (fun.__remoteFunction) {
-    // in development mode the function provided as `fun` throws an error message
+  if ('__functionInDEV' in fun) {
+    // In development mode the function provided as `fun` throws an error message
     // such that when someone accidently calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we purt the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = fun.__remoteFunction as any;
-    // TODO TYPESCRIPT: this is obviously wrong since __remoteFunction
-    // is not a worklet function (or is it?)
+    // see that they should use `runOnJS` instead. To facilitate that we put the
+    // reference to the original remote function in the `__functionInDEV` property
+    // but only in DEV.
+    fun = fun.__functionInDEV;
   }
   return (...args) => {
     _scheduleOnJS(
-      fun,
+      // TypeScript cannot infer that now fun cannot have __remoteFunction property
+      // TODO TYPESCRIPT cast for any will be removed when _scheduleOnJS is properly typed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fun as unknown as RemoteFunction<A, R> as any,
       args.length > 0
-        ? (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+        ? // TODO TYPESCRIPT this cast is terrible but will be fixed
+          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
         : undefined
     );
   };

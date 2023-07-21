@@ -1,6 +1,11 @@
-import type { ShadowNodeWrapper } from '../commonTypes';
+import type { __Context, ShadowNodeWrapper } from '../commonTypes';
 
 export type DependencyList = Array<unknown> | undefined;
+
+export interface ContextWithDependencies<TContext extends __Context> {
+  context: TContext;
+  savedDependencies: DependencyList;
+}
 
 export interface Descriptor {
   tag: number;

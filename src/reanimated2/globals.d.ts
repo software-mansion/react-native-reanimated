@@ -8,7 +8,7 @@ import type {
   ShareableRef,
   ShareableSyncDataHolderRef,
   ShadowNodeWrapper,
-  ComplexWorkletFunction,
+  __ComplexWorkletFunction,
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { NativeReanimated } from './NativeReanimated/NativeReanimated';
@@ -46,7 +46,7 @@ declare global {
     data: ShareableRef<any>
   ) => void;
   var _scheduleOnJS: (
-    fun: ComplexWorkletFunction<A, R>,
+    fun: __ComplexWorkletFunction<A, R>,
     args?: unknown[]
   ) => void;
   var _updatePropsPaper:
