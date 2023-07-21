@@ -115,6 +115,10 @@ export interface NativeEvent<T> {
 export interface ComplexWorkletFunction<A extends any[], R>
   extends WorkletFunction {
   (...args: A): R;
+  /**
+   * This prop is present only in DEV mode as a fallback for
+   * direct calls to RN thread functions on UI thread.
+   */
   __functionInDEV?: (...args: A) => R;
 }
 
