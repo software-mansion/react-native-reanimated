@@ -57,6 +57,12 @@ export const callMicrotasks = IS_NATIVE
       // on web flushing is a noop as immediates are handled by the browser
     };
 
+// This API type is necessary and will be the standard when dealing with
+// possible worklets. That's because during static analysis of TypeScript
+// functions that get worklets as arguments are just simple functions until
+// they get transpiled by babel. Therefore inside those functions they can be
+// treated as proper worklets. Henceforth we can safely type it as sending a plain
+// function and handling a worklet inside by casting to an 'API' type.
 type runOnUIAPI = <A extends unknown[], R>(
   worklet: (...args: A) => R
 ) => WorkletFunction<A, R>;
@@ -123,12 +129,8 @@ export const runOnUI = (<A extends unknown[], R>(
     }
   };
 }) as unknown as runOnUIAPI;
-// This cast is necessary (and very smart B])
-// since worklet is a different object
-// when you type TypeScript code and a different object
-// once Reanimated Babel Plugin has transpiled it
-// and runOnUI is in execution.
 
+// Check comment on runOnUIAPI type to understand this type.
 type runOnUIImmediatelyAPI = <A extends unknown[], R>(
   worklet: (...args: A) => R
 ) => WorkletFunction<A, R>;
@@ -155,7 +157,6 @@ export const runOnUIImmediately = (<A extends unknown[], R>(
       })
     );
   };
-  // This cast is necessary (and very smart B])
 }) as unknown as runOnUIImmediatelyAPI;
 
 if (__DEV__ && IS_NATIVE) {
@@ -201,8 +202,9 @@ export function runOnJS<A extends unknown[], R>(
 ): (...args: A) => void {
   'worklet';
   if ('__workletHash' in fun) {
-    // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
-    // and pass the worklet as a first argument followed by original arguments
+    // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
+    // and pass the worklet as a first argument followed by original arguments.
+
     // Weirdly TypeScript cannot infer that fun is `WorkletFunction<A, R>` here so I had to cast
     return (...args) =>
       runOnJS(runWorkletOnJS<A, R>)(fun as WorkletFunction<A, R>, ...args);
