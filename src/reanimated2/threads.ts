@@ -18,9 +18,8 @@ export function setupMicrotasks() {
   let isExecutingMicrotasksQueue = false;
 
   // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.queueMicrotask = (callback: () => void): number => {
+  global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
-    return -1;
   };
 
   global.__callMicrotasks = () => {
@@ -157,12 +156,13 @@ export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (fun.__remoteFunction) {
-    // in development mode the function provided as `fun` throws an error message
+  if (fun.__functionInDEV) {
+    // In development mode the function provided as `fun` throws an error message
     // such that when someone accidently calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we purt the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = fun.__remoteFunction;
+    // see that they should use `runOnJS` instead. To facilitate that we put the
+    // reference to the original remote function in the `__functionInDEV` property
+    // but only in DEV.
+    fun = fun.__functionInDEV;
   }
   return (...args) => {
     _scheduleOnJS(
