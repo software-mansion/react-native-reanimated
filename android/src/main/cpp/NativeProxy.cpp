@@ -155,10 +155,10 @@ void NativeProxy::installJSIBindings(
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(
-    std::string s,
+    const std::string &eventName,
     const int emitterReactTag) {
   return nativeReanimatedModule_->isAnyHandlerWaitingForEvent(
-      s, emitterReactTag);
+      eventName, emitterReactTag);
 }
 
 void NativeProxy::performOperations() {
