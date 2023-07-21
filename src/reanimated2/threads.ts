@@ -7,7 +7,7 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
-const IS_WEB = shouldBeUseWeb();
+const IS_NATIVE = !shouldBeUseWeb();
 
 /**
  * An array of [worklet, args] pairs.
@@ -24,7 +24,6 @@ export function setupMicrotasks() {
 
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
-
   global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
@@ -52,11 +51,11 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
-export const callMicrotasks = shouldBeUseWeb()
-  ? () => {
+export const callMicrotasks = IS_NATIVE
+  ? callMicrotasksOnUIThread
+  : () => {
       // on web flushing is a noop as immediates are handled by the browser
-    }
-  : callMicrotasksOnUIThread;
+    };
 
 type runOnUIAPI = <A extends unknown[], R>(
   worklet: (...args: A) => R
@@ -70,12 +69,12 @@ export const runOnUI = (<A extends unknown[], R>(
   worklet: WorkletFunction<A, R>
 ): ((...args: A) => void) => {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
       'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
     throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
@@ -140,12 +139,12 @@ export const runOnUIImmediately = (<A extends unknown[], R>(
   worklet: WorkletFunction<A, R>
 ): ((...args: A) => void) => {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
       'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
     throw new Error('runOnUIImmediately() can only be used on worklets');
   }
   return (...args) => {
@@ -159,7 +158,7 @@ export const runOnUIImmediately = (<A extends unknown[], R>(
   // This cast is necessary (and very smart B])
 }) as unknown as runOnUIImmediatelyAPI;
 
-if (__DEV__ && !IS_WEB) {
+if (__DEV__ && IS_NATIVE) {
   const f = () => {
     'worklet';
   };
@@ -176,7 +175,7 @@ type ReleaseRemoteFunction<A extends unknown[], R> = {
 };
 
 type DevRemoteFunction<A extends unknown[], R> = {
-  __functionInDEV: (...args: A) => R;
+  __remoteFunction: (...args: A) => R;
 };
 
 type RemoteFunction<A extends unknown[], R> =
@@ -194,13 +193,13 @@ export function runOnJS<A extends unknown[], R>(
   fun: ((...args: A) => R) | RemoteFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if ('__functionInDEV' in fun) {
+  if ('__remoteFunction' in fun) {
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidently calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we put the
     // reference to the original remote function in the `__functionInDEV` property
     // but only in DEV.
-    fun = fun.__functionInDEV;
+    fun = fun.__remoteFunction;
   }
   return (...args) => {
     _scheduleOnJS(

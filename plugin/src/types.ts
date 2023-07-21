@@ -9,6 +9,7 @@ import {
 export interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
+  processNestedWorklets?: boolean;
 }
 
 export interface ReanimatedPluginPass {

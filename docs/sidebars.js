@@ -60,6 +60,7 @@ module.exports = {
           'Native methods': [
             'api/nativeMethods/measure',
             'api/nativeMethods/scrollTo',
+            'api/nativeMethods/dispatchCommand',
           ],
           Miscellaneous: [
             'api/miscellaneous/getRelativeCoords',

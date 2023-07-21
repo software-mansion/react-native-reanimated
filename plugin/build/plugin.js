@@ -86,6 +86,7 @@ var require_commonObjects = __commonJS({
       "_measurePaper",
       "_measureFabric",
       "_scrollToPaper",
+      "_dispatchCommandPaper",
       "_dispatchCommandFabric",
       "_setGestureState",
       "isNaN",
@@ -548,18 +549,28 @@ var require_processIfWorkletNode = __commonJS({
     exports2.processIfWorkletNode = void 0;
     var types_1 = require("@babel/types");
     var processIfWorkletFunction_1 = require_processIfWorkletFunction();
+    function hasWorkletDirective(directives) {
+      return directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet");
+    }
     function processIfWorkletNode(fun, state) {
+      let shouldBeProcessed = false;
       fun.traverse({
         DirectiveLiteral(path) {
           const value = path.node.value;
-          if (value === "worklet" && path.getFunctionParent() === fun && (0, types_1.isBlockStatement)(fun.node.body)) {
-            const directives = fun.node.body.directives;
-            if (directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet")) {
-              (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
+          if (value === "worklet" && (0, types_1.isBlockStatement)(fun.node.body)) {
+            const parent = path.getFunctionParent();
+            if (parent === fun) {
+              const directives = fun.node.body.directives;
+              shouldBeProcessed = hasWorkletDirective(directives);
+            } else if (state.opts.processNestedWorklets && ((parent === null || parent === void 0 ? void 0 : parent.isFunctionDeclaration()) || (parent === null || parent === void 0 ? void 0 : parent.isFunctionExpression()) || (parent === null || parent === void 0 ? void 0 : parent.isArrowFunctionExpression()))) {
+              processIfWorkletNode(parent, state);
             }
           }
         }
       });
+      if (shouldBeProcessed) {
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
+      }
     }
     exports2.processIfWorkletNode = processIfWorkletNode;
   }

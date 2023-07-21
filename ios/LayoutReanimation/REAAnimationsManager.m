@@ -121,7 +121,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   return view;
 }
 
-- (void)endLayoutAnimationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView
+- (void)endLayoutAnimationForTag:(NSNumber *)tag removeView:(BOOL)removeView
 {
   UIView *view = [self viewForTag:tag];
 
