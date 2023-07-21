@@ -46,8 +46,4 @@ void Scheduler::setRuntimeManager(
 
 Scheduler::~Scheduler() {}
 
-Scheduler::Scheduler() {
-  scheduledOnUI_ = false;
-}
-
 } // namespace reanimated
