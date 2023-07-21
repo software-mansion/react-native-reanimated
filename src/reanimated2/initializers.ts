@@ -77,7 +77,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
       handleCache!.set(objectToUnpack, value);
     }
     return value;
-  } else if (category === 'RNFunctionRef') {
+  } else if (category === 'RemoteFunction') {
     const fun = () => {
       throw new Error(`Tried to synchronously call a non-worklet function on the UI thread.
 
@@ -85,7 +85,7 @@ Possible solutions are:
   a) If you want to synchronously execute this method, mark it as a worklet
   b) If you want to execute this function on the JS thread, wrap it using \`runOnJS\``);
     };
-    fun.__functionInDEV = objectToUnpack;
+    fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
     throw new Error('data type not recognized by unpack method');

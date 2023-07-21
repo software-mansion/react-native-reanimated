@@ -260,7 +260,7 @@ class ShareableRemoteFunction
       return runtimeHelper_->valueUnpacker->call(
           rt,
           ShareableJSRef::newHostObject(rt, shared_from_this()),
-          jsi::String::createFromAscii(rt, "RNFunctionRef"));
+          jsi::String::createFromAscii(rt, "RemoteFunction"));
 #else
       return ShareableJSRef::newHostObject(rt, shared_from_this());
 #endif
