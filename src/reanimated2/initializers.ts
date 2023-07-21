@@ -9,7 +9,7 @@ import {
 } from './threads';
 
 // callGuard is only used with debug builds
-function callGuardDEV<T extends Array<any>, U>(
+function callGuardDEV<T extends Array<unknown>, U>(
   fn: (...args: T) => U,
   ...args: T
 ): void {
