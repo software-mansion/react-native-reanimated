@@ -143,11 +143,14 @@ export function makeShareableCloneRecursive<T>(
             const babelVersion = value.__initData.version;
             if (babelVersion === undefined) {
               throw new Error(
-                '[Reanimated] Unknown version of Reanimated Babel plugin. Using release bundle with debug build of the app is not supported. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.'
+                `[Reanimated] Unknown version of Reanimated Babel plugin. Using release bundle with debug build of the app is not supported. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin. If you've recently upgraded \`react-native-reanimated\` try resetting your Metro bundler cache with \`yarn start --reset-cache\`, \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again. Offending code was:
+
+\`${(value.__initData.code as string).substring(0, 255)}\``
               );
             } else if (babelVersion !== jsVersion) {
-              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
-              \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.`);
+              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`, \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin. Offending code was:
+
+\`${(value.__initData.code as string).substring(0, 255)}\``);
             }
             registerWorkletStackDetails(
               value.__workletHash,
