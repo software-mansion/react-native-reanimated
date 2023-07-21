@@ -96,6 +96,11 @@ Possible solutions are:
   }
 }
 
+// @ts-ignore TODO TYPESCRIPT
+if (__DEV__ && Object.keys(valueUnpacker._closure).length !== 0) {
+  throw new Error('[Reanimated] `valueUnpacker` must have empty closure');
+}
+
 export function setupCallGuard() {
   'worklet';
   global.__callGuardDEV = callGuardDEV;
