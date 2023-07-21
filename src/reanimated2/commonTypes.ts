@@ -69,8 +69,8 @@ export interface SharedValue<T> {
   modify: (modifier: (value: T) => T) => void;
 }
 
-// The below type is used for HostObjects retured by the JSI API that don't have
-// any accessable fields or methods but can carry data that is accessed from the
+// The below type is used for HostObjects returned by the JSI API that don't have
+// any accessible fields or methods but can carry data that is accessed from the
 // c++ side. We add a field to the type to make it possible for typescript to recognize
 // which JSI methods accept those types as arguments and to be able to correctly type
 // check other methods that may use them. However, this field is not actually defined

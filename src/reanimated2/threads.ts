@@ -7,7 +7,7 @@ import {
 } from './shareables';
 
 const IS_JEST = isJest();
-const IS_WEB = shouldBeUseWeb();
+const IS_NATIVE = !shouldBeUseWeb();
 
 let _runOnUIQueue: Array<[ComplexWorkletFunction<any[], any>, any[]]> = [];
 
@@ -17,7 +17,6 @@ export function setupMicrotasks() {
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
 
-  // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
   global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
@@ -45,11 +44,11 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
-export const callMicrotasks = shouldBeUseWeb()
-  ? () => {
+export const callMicrotasks = IS_NATIVE
+  ? callMicrotasksOnUIThread
+  : () => {
       // on web flushing is a noop as immediates are handled by the browser
-    }
-  : callMicrotasksOnUIThread;
+    };
 
 /**
  * Schedule a worklet to execute on the UI runtime. This method does not schedule the work immediately but instead
@@ -60,12 +59,12 @@ export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
       'runOnUI() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
     throw new Error('runOnUI() can only be used on worklets');
   }
   return (...args) => {
@@ -122,12 +121,12 @@ export function runOnUIImmediately<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-  if (__DEV__ && !IS_WEB && _WORKLET) {
+  if (__DEV__ && IS_NATIVE && _WORKLET) {
     throw new Error(
       'runOnUIImmediately() cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !IS_WEB && worklet.__workletHash === undefined) {
+  if (__DEV__ && IS_NATIVE && worklet.__workletHash === undefined) {
     throw new Error('runOnUIImmediately() can only be used on worklets');
   }
   return (...args) => {
@@ -140,7 +139,7 @@ export function runOnUIImmediately<A extends any[], R>(
   };
 }
 
-if (__DEV__ && !IS_WEB) {
+if (__DEV__ && IS_NATIVE) {
   const f = () => {
     'worklet';
   };
@@ -152,10 +151,24 @@ if (__DEV__ && !IS_WEB) {
   }
 }
 
+function runWorkletOnJS<A extends any[], R>(
+  worklet: ComplexWorkletFunction<A, R>,
+  ...args: A
+): void {
+  // remote function that calls a worklet synchronously on the JS runtime
+  worklet(...args);
+}
+
 export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
+
+  if (fun.__workletHash) {
+    // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
+    // and pass the worklet as a first argument followed by original arguments
+    return (...args) => runOnJS(runWorkletOnJS<A, R>)(fun, ...args);
+  }
   if (fun.__functionInDEV) {
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidently calls it directly on the UI runtime, they

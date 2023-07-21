@@ -26,12 +26,11 @@ function startObservingProgress(
 function stopObservingProgress(
   tag: number,
   sharedValue: SharedValue<number>,
-  cancelled: boolean,
   removeView: boolean
 ): void {
   'worklet';
   sharedValue.removeListener(tag + TAG_OFFSET);
-  _notifyAboutEnd(tag, cancelled, removeView);
+  _notifyAboutEnd(tag, removeView);
 }
 
 function createLayoutAnimationManager() {
@@ -70,7 +69,7 @@ function createLayoutAnimationManager() {
         value = makeUIMutable(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
-        stopObservingProgress(tag, value, false, false);
+        stopObservingProgress(tag, value, false);
         value._value = style.initialValues;
       }
 
@@ -82,7 +81,7 @@ function createLayoutAnimationManager() {
           enteringAnimationForTag.delete(tag);
           mutableValuesForTag.delete(tag);
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
-          stopObservingProgress(tag, value, finished, shouldRemoveView);
+          stopObservingProgress(tag, value, shouldRemoveView);
         }
         style.callback &&
           style.callback(finished === undefined ? false : finished);
@@ -96,7 +95,7 @@ function createLayoutAnimationManager() {
       if (!value) {
         return;
       }
-      stopObservingProgress(tag, value, true, true);
+      stopObservingProgress(tag, value, true);
     },
   };
 }

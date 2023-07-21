@@ -176,7 +176,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
-  jsi::Runtime *runtime_;
+  jsi::Runtime *rnRuntime_;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
@@ -203,9 +203,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
-  void setGlobalProperties(
-      jsi::Runtime &jsRuntime,
-      const std::shared_ptr<jsi::Runtime> &uiRuntime);
   void setupLayoutAnimations();
 
   double getCurrentTime();
@@ -237,6 +234,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const jsi::Value &nativeProps);
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
   void scrollTo(int viewTag, double x, double y, bool animated);
+  void dispatchCommand(
+      jsi::Runtime &rt,
+      const int viewTag,
+      const jsi::Value &commandNameValue,
+      const jsi::Value &argsValue);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
   void handleEvent(
@@ -272,7 +274,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rt,
+      jsi::Runtime *rnRuntime,
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations

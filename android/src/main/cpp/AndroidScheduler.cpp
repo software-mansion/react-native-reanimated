@@ -21,9 +21,9 @@ class SchedulerWrapper : public Scheduler {
 
   void scheduleOnUI(std::function<void()> job) override {
     Scheduler::scheduleOnUI(job);
-    if (!scheduledOnUI) {
-      scheduledOnUI = true;
-      scheduler_->cthis()->scheduleOnUI();
+    if (!scheduledOnUI_) {
+      scheduledOnUI_ = true;
+      scheduler_->cthis()->scheduleTriggerOnUI();
     }
   }
 
@@ -44,8 +44,9 @@ void AndroidScheduler::triggerUI() {
   scheduler_->triggerUI();
 }
 
-void AndroidScheduler::scheduleOnUI() {
-  static auto method = javaPart_->getClass()->getMethod<void()>("scheduleOnUI");
+void AndroidScheduler::scheduleTriggerOnUI() {
+  static const auto method =
+      javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
   method(javaPart_.get());
 }
 
