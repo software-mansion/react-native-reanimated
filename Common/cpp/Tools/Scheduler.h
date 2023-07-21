@@ -80,8 +80,8 @@ class Scheduler {
   virtual ~Scheduler();
 
  protected:
-  std::atomic<bool> scheduledOnUI{};
-  Queue<std::function<void()>> uiJobs;
+  std::atomic<bool> scheduledOnUI_{false};
+  Queue<std::function<void()>> uiJobs_;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::weak_ptr<RuntimeManager> weakRuntimeManager_;
 };

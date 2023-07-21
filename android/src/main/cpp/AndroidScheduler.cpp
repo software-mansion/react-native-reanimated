@@ -21,8 +21,8 @@ class SchedulerWrapper : public Scheduler {
 
   void scheduleOnUI(std::function<void()> job) override {
     Scheduler::scheduleOnUI(job);
-    if (!scheduledOnUI) {
-      scheduledOnUI = true;
+    if (!scheduledOnUI_) {
+      scheduledOnUI_ = true;
       scheduler_->cthis()->scheduleTriggerOnUI();
     }
   }
