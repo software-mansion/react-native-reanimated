@@ -38,7 +38,7 @@ class Shareable {
     ObjectType,
     ArrayType,
     WorkletType,
-    RemoteFunctionType,
+    RNFunctionRefType,
     HandleType,
     SynchronizedDataHolder,
     HostObjectType,
@@ -239,19 +239,18 @@ class ShareableWorklet : public ShareableObject {
   }
 };
 
-class ShareableRemoteFunction
-    : public Shareable,
-      public std::enable_shared_from_this<ShareableRemoteFunction> {
+class RNFunctionRef : public Shareable,
+                      public std::enable_shared_from_this<RNFunctionRef> {
  private:
   jsi::Function function_;
   std::shared_ptr<JSRuntimeHelper> runtimeHelper_;
 
  public:
-  ShareableRemoteFunction(
+  RNFunctionRef(
       const std::shared_ptr<JSRuntimeHelper> &runtimeHelper,
       jsi::Runtime &,
       jsi::Function &&function)
-      : Shareable(RemoteFunctionType),
+      : Shareable(RNFunctionRefType),
         function_(std::move(function)),
         runtimeHelper_(runtimeHelper) {}
   jsi::Value toJSValue(jsi::Runtime &rt) override {

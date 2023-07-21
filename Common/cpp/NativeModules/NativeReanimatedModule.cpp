@@ -205,7 +205,7 @@ void NativeReanimatedModule::scheduleOnJS(
     jsi::Runtime &rt,
     const jsi::Value &remoteFun,
     const jsi::Value &argsValue) {
-  auto shareableRemoteFun = extractShareableOrThrow<ShareableRemoteFunction>(
+  auto shareableRemoteFun = extractShareableOrThrow<RNFunctionRef>(
       rt,
       remoteFun,
       "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
@@ -275,7 +275,7 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
         shareable =
             std::make_shared<ShareableHostFunction>(rt, std::move(function));
       } else {
-        shareable = std::make_shared<ShareableRemoteFunction>(
+        shareable = std::make_shared<RNFunctionRef>(
             runtimeHelper, rt, std::move(function));
       }
     } else if (object.isArray(rt)) {
