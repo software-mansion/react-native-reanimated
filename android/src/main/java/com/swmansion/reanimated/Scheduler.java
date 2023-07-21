@@ -36,7 +36,7 @@ public class Scheduler {
   public native void triggerUI();
 
   @DoNotStrip
-  private void scheduleOnUI() {
+  private void scheduleTriggerOnUI() {
     UiThreadUtil.runOnUiThread(
         new GuardedRunnable(mContext.getExceptionHandler()) {
           public void runGuarded() {
