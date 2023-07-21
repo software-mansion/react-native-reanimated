@@ -39,6 +39,11 @@ using MeasureFunction = std::function<
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
+using DispatchCommandFunction = std::function<void(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 
@@ -72,6 +77,7 @@ struct PlatformDepMethodsHolder {
 #else
   UpdatePropsFunction updatePropsFunction;
   ScrollToFunction scrollToFunction;
+  DispatchCommandFunction dispatchCommandFunction;
   MeasureFunction measureFunction;
   ConfigurePropsFunction configurePropsFunction;
 #endif

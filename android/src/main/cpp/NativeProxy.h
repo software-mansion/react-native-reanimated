@@ -236,6 +236,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const jsi::Value &nativeProps);
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
   void scrollTo(int viewTag, double x, double y, bool animated);
+  void dispatchCommand(
+      jsi::Runtime &rt,
+      const int viewTag,
+      const jsi::Value &commandNameValue,
+      const jsi::Value &argsValue);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
   void handleEvent(

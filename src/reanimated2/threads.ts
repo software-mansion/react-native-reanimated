@@ -16,11 +16,8 @@ export function setupMicrotasks() {
 
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
-
-  // @ts-ignore – typescript expects this to conform to NodeJS definition and expects the return value to be NodeJS.Immediate which is an object and not a number
-  global.queueMicrotask = (callback: () => void): number => {
+  global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
-    return -1;
   };
 
   global.__callMicrotasks = () => {
