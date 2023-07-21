@@ -120,6 +120,7 @@ export default class JSReanimated {
           2.0 * (qx * qy + qw * qz),
           qw * qw + qx * qx - qy * qy - qz * qz
         );
+        // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
         (eventHandler as any)({
           qw,
           qx,
@@ -136,6 +137,7 @@ export default class JSReanimated {
         let { x, y, z } = sensor;
         [x, y, z] =
           this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
+        // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
         (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
       };
     }
