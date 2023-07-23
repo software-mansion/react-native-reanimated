@@ -162,6 +162,10 @@ export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
+  if (!IS_NATIVE || !_WORKLET) {
+    // if we are already on the JS thread, we just schedule the worklet on the JS queue
+    return (...args) => queueMicrotask(args ? () => fun(...args) : fun);
+  }
   if (fun.__workletHash) {
     // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments
