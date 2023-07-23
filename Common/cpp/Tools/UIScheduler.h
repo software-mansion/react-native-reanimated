@@ -16,12 +16,12 @@ namespace reanimated {
 
 class RuntimeManager;
 
-class Scheduler {
+class UIScheduler {
  public:
   void setRuntimeManager(std::shared_ptr<RuntimeManager> runtimeManager);
   virtual void scheduleOnUI(std::function<void()> job);
   virtual void triggerUI();
-  virtual ~Scheduler();
+  virtual ~UIScheduler();
 
  protected:
   std::atomic<bool> scheduledOnUI_{false};

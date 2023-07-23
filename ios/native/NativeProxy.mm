@@ -171,7 +171,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto rnRuntime = reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
   std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
 
-  std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>();
+  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSScheduler>();
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
 
   auto nodesManager = reaModule.nodesManager;
@@ -202,7 +202,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
 #else
   // Layout Animations start
-  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
@@ -288,7 +287,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsInvoker,
-      scheduler,
+      uiScheduler,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
@@ -297,7 +296,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #endif
       platformDepMethodsHolder);
 
-  scheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+  uiScheduler->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

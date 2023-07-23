@@ -30,7 +30,7 @@ NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
     jsi::Runtime *rnRuntime,
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
-    std::shared_ptr<Scheduler> scheduler,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
@@ -42,7 +42,7 @@ NativeProxy::NativeProxy(
       rnRuntime_(rnRuntime),
       jsCallInvoker_(jsCallInvoker),
       layoutAnimations_(std::move(_layoutAnimations)),
-      scheduler_(scheduler)
+      uiScheduler_(uiScheduler)
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       propsRegistry_(std::make_shared<PropsRegistry>())
@@ -112,7 +112,7 @@ void NativeProxy::installJSIBindings(
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
-      scheduler_,
+      uiScheduler_,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
@@ -121,7 +121,7 @@ void NativeProxy::installJSIBindings(
 #endif
       getPlatformDependentMethods());
 
-  scheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
+  uiScheduler_->setRuntimeManager(nativeReanimatedModule->runtimeManager_);
   nativeReanimatedModule_ = nativeReanimatedModule;
 
 #ifdef RCT_NEW_ARCH_ENABLED

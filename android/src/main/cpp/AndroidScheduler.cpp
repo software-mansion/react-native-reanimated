@@ -10,7 +10,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-class SchedulerWrapper : public Scheduler {
+class SchedulerWrapper : public UIScheduler {
  private:
   jni::global_ref<AndroidScheduler::javaobject> scheduler_;
 
@@ -20,7 +20,7 @@ class SchedulerWrapper : public Scheduler {
       : scheduler_(scheduler) {}
 
   void scheduleOnUI(std::function<void()> job) override {
-    Scheduler::scheduleOnUI(job);
+    UIScheduler::scheduleOnUI(job);
     if (!scheduledOnUI_) {
       scheduledOnUI_ = true;
       scheduler_->cthis()->scheduleTriggerOnUI();
@@ -33,7 +33,7 @@ class SchedulerWrapper : public Scheduler {
 AndroidScheduler::AndroidScheduler(
     jni::alias_ref<AndroidScheduler::javaobject> jThis)
     : javaPart_(jni::make_global(jThis)),
-      scheduler_(new SchedulerWrapper(jni::make_global(jThis))) {}
+      uiScheduler_(new SchedulerWrapper(jni::make_global(jThis))) {}
 
 jni::local_ref<AndroidScheduler::jhybriddata> AndroidScheduler::initHybrid(
     jni::alias_ref<jhybridobject> jThis) {
@@ -41,7 +41,7 @@ jni::local_ref<AndroidScheduler::jhybriddata> AndroidScheduler::initHybrid(
 }
 
 void AndroidScheduler::triggerUI() {
-  scheduler_->triggerUI();
+  uiScheduler_->triggerUI();
 }
 
 void AndroidScheduler::scheduleTriggerOnUI() {

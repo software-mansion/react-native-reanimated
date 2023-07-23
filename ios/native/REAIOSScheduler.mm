@@ -18,7 +18,7 @@ void REAIOSScheduler::scheduleOnUI(std::function<void()> job)
     return;
   }
 
-  Scheduler::scheduleOnUI(job);
+  UIScheduler::scheduleOnUI(job);
 
   if (!scheduledOnUI_) {
     __block std::weak_ptr<RuntimeManager> blockRuntimeManager = weakRuntimeManager_;

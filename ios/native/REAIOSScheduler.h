@@ -1,7 +1,7 @@
-#import <RNReanimated/Scheduler.h>
+#import <RNReanimated/UIScheduler.h>
 #import <React/RCTUIManager.h>
 #import <ReactCommon/CallInvoker.h>
-#include <stdio.h>
+
 #include <memory>
 
 namespace reanimated {
@@ -9,7 +9,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-class REAIOSScheduler : public Scheduler {
+class REAIOSScheduler : public UIScheduler {
  public:
   void scheduleOnUI(std::function<void()> job) override;
 };

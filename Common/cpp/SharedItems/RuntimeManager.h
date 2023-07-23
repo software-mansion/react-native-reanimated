@@ -5,12 +5,7 @@
 #include "RuntimeDecorator.h"
 
 #include "JSScheduler.h"
-
-#ifdef __APPLE__
-#include <RNReanimated/Scheduler.h>
-#else
-#include "Scheduler.h"
-#endif
+#include "UIScheduler.h"
 
 namespace reanimated {
 
@@ -23,10 +18,10 @@ class RuntimeManager {
  public:
   RuntimeManager(
       std::shared_ptr<jsi::Runtime> runtime,
-      std::shared_ptr<Scheduler> scheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       RuntimeType runtimeType = RuntimeType::Worklet)
-      : runtime(runtime), scheduler(scheduler), jsScheduler_(jsScheduler) {
+      : runtime(runtime), uiScheduler_(uiScheduler), jsScheduler_(jsScheduler) {
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
 
@@ -37,7 +32,7 @@ class RuntimeManager {
   /**
    Holds the Scheduler that is responsible for scheduling work on the UI Thread.
    */
-  std::shared_ptr<Scheduler> scheduler;
+  std::shared_ptr<UIScheduler> uiScheduler_;
   /**
    Holds the Scheduler that is responsible for scheduling work on the React-JS
    Thread.

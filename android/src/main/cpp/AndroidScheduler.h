@@ -5,13 +5,10 @@
 #include <jsi/jsi.h>
 #include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JMessageQueueThread.h>
+
 #include <memory>
 
-#ifdef __APPLE__
-#include <RNReanimated/Scheduler.h>
-#else
-#include "Scheduler.h"
-#endif
+#include "UIScheduler.h"
 
 namespace reanimated {
 
@@ -25,8 +22,8 @@ class AndroidScheduler : public jni::HybridClass<AndroidScheduler> {
       jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
-  std::shared_ptr<Scheduler> getScheduler() {
-    return scheduler_;
+  std::shared_ptr<UIScheduler> getScheduler() {
+    return uiScheduler_;
   }
 
   void scheduleTriggerOnUI();
@@ -37,7 +34,7 @@ class AndroidScheduler : public jni::HybridClass<AndroidScheduler> {
   void triggerUI();
 
   jni::global_ref<AndroidScheduler::javaobject> javaPart_;
-  std::shared_ptr<Scheduler> scheduler_;
+  std::shared_ptr<UIScheduler> uiScheduler_;
 
   explicit AndroidScheduler(
       jni::alias_ref<AndroidScheduler::jhybridobject> jThis);
