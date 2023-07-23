@@ -6,11 +6,6 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-REAIOSScheduler::REAIOSScheduler(std::shared_ptr<CallInvoker> jsInvoker)
-{
-  this->jsCallInvoker_ = jsInvoker;
-}
-
 void REAIOSScheduler::scheduleOnUI(std::function<void()> job)
 {
   const auto runtimeManager = weakRuntimeManager_.lock();

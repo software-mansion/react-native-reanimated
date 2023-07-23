@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+#include "JSScheduler.h"
+
 #ifdef __APPLE__
 #include <RNReanimated/Scheduler.h>
 #else
@@ -44,13 +46,18 @@ class JSRuntimeHelper {
   jsi::Runtime *rnRuntime_; // React-Native's main JS runtime
   jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
   std::shared_ptr<Scheduler> scheduler_;
+  std::shared_ptr<JSScheduler> jsScheduler_;
 
  public:
   JSRuntimeHelper(
       jsi::Runtime *rnRuntime,
       jsi::Runtime *uiRuntime,
-      const std::shared_ptr<Scheduler> &scheduler)
-      : rnRuntime_(rnRuntime), uiRuntime_(uiRuntime), scheduler_(scheduler) {}
+      const std::shared_ptr<Scheduler> &scheduler,
+      const std::shared_ptr<JSScheduler> &jsScheduler)
+      : rnRuntime_(rnRuntime),
+        uiRuntime_(uiRuntime),
+        scheduler_(scheduler),
+        jsScheduler_(jsScheduler) {}
 
   volatile bool uiRuntimeDestroyed = false;
   std::unique_ptr<CoreFunction> callGuard;
@@ -77,7 +84,7 @@ class JSRuntimeHelper {
   }
 
   void scheduleOnJS(std::function<void()> job) {
-    scheduler_->scheduleOnJS(job);
+    jsScheduler_->scheduleOnJS(job);
   }
 
   template <typename... Args>

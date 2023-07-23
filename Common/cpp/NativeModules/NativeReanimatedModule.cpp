@@ -44,8 +44,11 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      runtimeManager_(
-          std::make_shared<RuntimeManager>(rt, scheduler, RuntimeType::UI)),
+      runtimeManager_(std::make_shared<RuntimeManager>(
+          rt,
+          scheduler,
+          std::make_shared<JSScheduler>(jsInvoker),
+          RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -159,7 +162,10 @@ void NativeReanimatedModule::installCoreFunctions(
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper = std::make_shared<JSRuntimeHelper>(
-        &rt, runtimeManager_->runtime.get(), runtimeManager_->scheduler);
+        &rt,
+        runtimeManager_->runtime.get(),
+        runtimeManager_->scheduler,
+        runtimeManager_->jsScheduler_);
   }
   runtimeHelper->callGuard =
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
@@ -213,7 +219,7 @@ void NativeReanimatedModule::scheduleOnJS(
       ? nullptr
       : extractShareableOrThrow(rt, argsValue);
   auto jsRuntime = this->runtimeHelper->rnRuntime();
-  runtimeManager_->scheduler->scheduleOnJS([=] {
+  runtimeManager_->jsScheduler_->scheduleOnJS([=] {
     jsi::Runtime &rt = *jsRuntime;
     auto remoteFun = shareableRemoteFun->getJSValue(rt);
     if (shareableArgs == nullptr) {
@@ -369,7 +375,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
         jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
         std::string resultStr = result.asString(rt).utf8(rt);
 
-        runtimeManager_->scheduler->scheduleOnJS([&rt, resultStr, funPtr]() {
+        runtimeManager_->jsScheduler_->scheduleOnJS([&rt, resultStr, funPtr]() {
           const jsi::String resultValue =
               jsi::String::createFromUtf8(rt, resultStr);
           funPtr->call(rt, resultValue);
