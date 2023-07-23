@@ -9,7 +9,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-class REAIOSScheduler : public UIScheduler {
+class REAIOSUIScheduler : public UIScheduler {
  public:
   void scheduleOnUI(std::function<void()> job) override;
 };

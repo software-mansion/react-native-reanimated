@@ -1,4 +1,4 @@
-#import <RNReanimated/REAIOSScheduler.h>
+#import <RNReanimated/REAIOSUIScheduler.h>
 #import <RNReanimated/RuntimeManager.h>
 
 namespace reanimated {
@@ -6,7 +6,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-void REAIOSScheduler::scheduleOnUI(std::function<void()> job)
+void REAIOSUIScheduler::scheduleOnUI(std::function<void()> job)
 {
   const auto runtimeManager = weakRuntimeManager_.lock();
   if (!runtimeManager) {
