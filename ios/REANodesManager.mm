@@ -175,12 +175,26 @@ using namespace facebook::react;
 
 - (CADisplayLink *)getDisplayLink
 {
+  RCTAssertMainQueue();
+
   if (!_displayLink) {
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return _displayLink;
+}
+
+- (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
+{
+  __weak __typeof__(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^{
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    displayLinkOperation([strongSelf getDisplayLink]);
+  });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -215,16 +229,19 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
-  RCTExecuteOnMainQueue(^{
-    [[self getDisplayLink] setPaused:YES];
-  });
+  [self useDisplayLinkOnMainQueue:^(CADisplayLink *displayLink) {
+    [displayLink setPaused:YES];
+  }];
+
   return self;
 }
 
 - (void)invalidate
 {
   _eventHandler = nil;
-  [[self getDisplayLink] invalidate];
+  [self useDisplayLinkOnMainQueue:^(CADisplayLink *displayLink) {
+    [displayLink invalidate];
+  }];
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
