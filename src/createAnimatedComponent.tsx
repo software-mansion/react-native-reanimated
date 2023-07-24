@@ -54,6 +54,12 @@ import { isSharedValue } from './reanimated2';
 import type { AnimateProps } from './reanimated2/helperTypes';
 import { removeFromPropsRegistry } from './reanimated2/PropsRegistry';
 
+import {
+  Animations,
+  AnimationsTypes,
+  WEB_ANIMATIONS_ID,
+} from './reanimated2/platform-specific/webAnimations';
+
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
@@ -300,6 +306,10 @@ export default function createAnimatedComponent(
       this._detachStyles();
       this._detachInlineProps();
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
+
+      if (isWeb()) {
+        this.handleExitWeb();
+      }
     }
 
     componentDidMount() {
@@ -735,10 +745,97 @@ export default function createAnimatedComponent(
       return props;
     }
 
+    handleWebAnimations(props: any, unmount = false) {
+      if (!unmount) {
+        if (props.entering) {
+          const animationName = props.entering.name as AnimationsTypes;
+
+          if (
+            !Object.prototype.hasOwnProperty.call(Animations, animationName)
+          ) {
+            return props;
+          }
+
+          props.style = {
+            ...(props.style ?? {}), // old styles
+            transition: `margin ${Animations[animationName].duration}s`, // layout
+            animation: `${animationName} ${Animations[animationName].duration}s ease-out`, // entering
+            // exiting
+          };
+        }
+      } else {
+        if (props.exiting) {
+          const animationName = props.exiting.name as AnimationsTypes;
+
+          if (
+            !Object.prototype.hasOwnProperty.call(Animations, animationName)
+          ) {
+            return props;
+          }
+          props.style = {
+            ...(props.style ?? {}), // old styles
+            transition: `margin ${Animations[animationName].duration}s`, // layout
+            animation: `${animationName} ${Animations[animationName].duration}s ease-out`, // entering
+            // exiting
+          };
+        }
+      }
+
+      if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
+        return props;
+      }
+
+      const style = document.createElement('style');
+      style.id = WEB_ANIMATIONS_ID;
+
+      document.head.appendChild(style);
+
+      for (const property in Animations) {
+        style.sheet?.insertRule(Animations[property as AnimationsTypes].style);
+      }
+
+      return props;
+    }
+
+    handleExitWeb() {
+      const exiting = this.props.exiting;
+
+      if (!exiting) {
+        return;
+      }
+
+      const viewTag = findNodeHandle(this) as unknown as HTMLElement;
+      console.log(viewTag);
+
+      const parent = viewTag.parentElement;
+      console.log(parent);
+      const clone = viewTag.cloneNode(true) as HTMLElement;
+
+      const animationName =
+        typeof exiting === 'function'
+          ? (exiting.name as AnimationsTypes)
+          : (exiting.constructor.name as AnimationsTypes);
+
+      clone.style.transition = `margin ${Animations[animationName].duration}s`;
+      clone.style.animationName = animationName;
+      clone.style.animationDuration = `${Animations[animationName].duration}s`;
+      clone.style.animationFillMode = 'forwards';
+
+      parent!.appendChild(clone);
+
+      setTimeout(() => {
+        parent?.removeChild(clone);
+      }, Animations[animationName].duration * 1000);
+    }
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
+      }
+
+      if (isWeb()) {
+        this.handleWebAnimations(props);
       }
 
       if (this._isFirstRender) {
