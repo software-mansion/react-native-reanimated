@@ -56,7 +56,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return mReanimatedNativeHierarchyManager;
   }
 
-  public void setScheduler(AndroidUIScheduler androidUIScheduler) {
+  public void setAndroidUIScheduler(AndroidUIScheduler androidUIScheduler) {
     mWeakAndroidUIScheduler = new WeakReference<>(androidUIScheduler);
   }
 

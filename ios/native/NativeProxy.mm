@@ -172,7 +172,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<jsi::Runtime> uiRuntime = ReanimatedRuntime::make(rnRuntime, jsQueue);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
 
   auto nodesManager = reaModule.nodesManager;
 
@@ -285,7 +284,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsInvoker,
       uiScheduler,
       uiRuntime,

@@ -12,7 +12,7 @@ class RuntimeManager;
 
 class UIScheduler {
  public:
-  void setRuntimeManager(std::shared_ptr<RuntimeManager> runtimeManager);
+  void setRuntimeManager(const std::shared_ptr<RuntimeManager> &runtimeManager);
   virtual void scheduleOnUI(std::function<void()> job);
   virtual void triggerUI();
   virtual ~UIScheduler();

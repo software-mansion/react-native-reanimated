@@ -28,7 +28,7 @@ void UIScheduler::triggerUI() {
 }
 
 void UIScheduler::setRuntimeManager(
-    std::shared_ptr<RuntimeManager> runtimeManager) {
+    const std::shared_ptr<RuntimeManager> &runtimeManager) {
   weakRuntimeManager_ = runtimeManager;
 }
 

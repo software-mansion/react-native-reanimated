@@ -14,7 +14,7 @@ class JSScheduler {
   void scheduleOnJS(std::function<void()> job);
 
  protected:
-  std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
+  const std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
 };
 
 } // namespace reanimated

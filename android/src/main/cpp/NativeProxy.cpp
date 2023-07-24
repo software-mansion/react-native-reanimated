@@ -29,7 +29,7 @@ using namespace react;
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
     jsi::Runtime *rnRuntime,
-    std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
