@@ -232,14 +232,11 @@ export function makeShareableCloneRecursive<T>(
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
 }
 
-// Do not try to call `console.log` inside this function as `runOnJS` will call it
-// and then you get into call stack exceeded. Use _log instead (on UI).
 export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {
   'worklet';
-  if (USE_STUB_IMPLEMENTATION || !_WORKLET) {
+  if (USE_STUB_IMPLEMENTATION) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
-    // see more details in the comment where USE_STUB_IMPLEMENTATION is defined. We also don't
-    // need to make shareable clones when `runOnJS` is called on JS thread.
+    // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
     return value;
   }
   function cloneRecursive<T>(value: T): ShareableRef<T> {

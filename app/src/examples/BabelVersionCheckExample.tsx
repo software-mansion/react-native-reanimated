@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet, Text } from 'react-native';
 import { runOnUI } from 'react-native-reanimated';
 
-function offender() {
+function shortOffender() {
   'worklet';
   let I = 'am';
   let a = 'very';
@@ -22,31 +22,25 @@ function longOffender() {
 }
 
 interface EvilButtonProps {
-  version?: string;
-  long?: boolean;
+  version: string | undefined;
+  long: boolean;
 }
 
 function EvilButton({ version, long }: EvilButtonProps) {
-  const [pressed, setPressed] = React.useState(false);
-
   function onPressOut() {
-    setPressed(false);
     if (long) {
       // @ts-ignore this is fine
       longOffender.__initData.version = version;
       runOnUI(longOffender)();
     } else {
       // @ts-ignore this is fine
-      offender.__initData.version = version;
-      runOnUI(offender)();
+      shortOffender.__initData.version = version;
+      runOnUI(shortOffender)();
     }
   }
 
   return (
-    <Pressable
-      style={[styles.button, pressed && { backgroundColor: '#3366dd' }]}
-      onPressIn={() => setPressed(true)}
-      onPressOut={onPressOut}>
+    <Pressable style={styles.button} onPressOut={onPressOut}>
       <Text style={styles.text}>
         {long
           ? 'long worklet check'
@@ -58,12 +52,12 @@ function EvilButton({ version, long }: EvilButtonProps) {
   );
 }
 
-export default function BabelVersioningExample() {
+export default function BabelVersionCheckExample() {
   return (
     <View style={styles.container}>
-      <EvilButton />
-      <EvilButton version="wrong version" />
-      <EvilButton long={true} />
+      <EvilButton version={undefined} long={false} />
+      <EvilButton version="wrong version" long={false} />
+      <EvilButton version={undefined} long={true} />
     </View>
   );
 }

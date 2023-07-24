@@ -93,7 +93,7 @@ import VolumeExample from './VolumeExample';
 import MatrixTransform from './MatrixTransform';
 import PendulumExample from './PendulumExample';
 import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
-import BabelVersioningExample from './BabelVersioningExample';
+import BabelVersionCheckExample from './BabelVersionCheckExample';
 
 interface Example {
   icon?: string;
@@ -260,10 +260,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'runOnJS / runOnUI',
     screen: WorkletExample,
   },
-  BabelVersioningExample: {
+  BabelVersionCheckExample: {
     icon: '📦',
-    title: 'Babel versioning mismatch',
-    screen: BabelVersioningExample,
+    title: 'Babel version check',
+    screen: BabelVersionCheckExample,
   },
   TransformExample: {
     icon: '🔄',
