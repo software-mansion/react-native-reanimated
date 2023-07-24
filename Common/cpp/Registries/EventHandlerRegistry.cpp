@@ -9,12 +9,12 @@ void EventHandlerRegistry::registerEventHandler(
     std::shared_ptr<WorkletEventHandler> eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto &eventName = eventHandler->getEventName();
-  const auto emitterReactTag = eventHandler->getEmitterReactTag();
   auto handlerId = eventHandler->getHandlerId();
 
-  if (emitterReactTag == -1) {
+  if (eventHandler->ignoreEmitterReactTag()) {
     eventMappings[eventName][handlerId] = eventHandler;
   } else {
+    const auto emitterReactTag = eventHandler->getEmitterReactTag();
     const auto eventHash = std::make_pair(emitterReactTag, eventName);
     eventMappingsWithTag[eventHash][handlerId] = eventHandler;
   }
@@ -25,10 +25,10 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
-    const auto &eventName = handlerIt->second->getEventName();
-    const auto emitterReactTag = handlerIt->second->getEmitterReactTag();
+    const auto eventHandler = handlerIt->second;
+    const auto &eventName = eventHandler->getEventName();
 
-    if (emitterReactTag == -1) {
+    if (eventHandler->ignoreEmitterReactTag()) {
       auto eventMappingIt = eventMappings.find(eventName);
       auto &handlersMap = eventMappingIt->second;
       handlersMap.erase(id);
@@ -36,6 +36,7 @@ void EventHandlerRegistry::unregisterEventHandler(uint64_t id) {
         eventMappings.erase(eventMappingIt);
       }
     } else {
+      const auto emitterReactTag = eventHandler->getEmitterReactTag();
       const auto eventHash = std::make_pair(emitterReactTag, eventName);
       auto eventMappingIt = eventMappingsWithTag.find(eventHash);
       auto &handlersMap = eventMappingIt->second;

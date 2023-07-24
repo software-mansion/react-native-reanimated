@@ -21,4 +21,8 @@ uint64_t WorkletEventHandler::getEmitterReactTag() const {
   return emitterReactTag_;
 }
 
+bool WorkletEventHandler::ignoreEmitterReactTag() const {
+  return emitterReactTag_ == -1;
+}
+
 } // namespace reanimated
