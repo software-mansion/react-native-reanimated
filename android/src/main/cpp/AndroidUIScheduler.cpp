@@ -1,7 +1,9 @@
 #include "AndroidUIScheduler.h"
+
 #include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+
 #include <memory>
 #include <string>
 
@@ -12,18 +14,18 @@ using namespace react;
 
 class UISchedulerWrapper : public UIScheduler {
  private:
-  jni::global_ref<AndroidUIScheduler::javaobject> scheduler_;
+  jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
 
  public:
   explicit UISchedulerWrapper(
-      jni::global_ref<AndroidUIScheduler::javaobject> scheduler)
-      : scheduler_(scheduler) {}
+      jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
+      : androidUiScheduler_(androidUiScheduler) {}
 
   void scheduleOnUI(std::function<void()> job) override {
     UIScheduler::scheduleOnUI(job);
     if (!scheduledOnUI_) {
       scheduledOnUI_ = true;
-      scheduler_->cthis()->scheduleTriggerOnUI();
+      androidUiScheduler_->cthis()->scheduleTriggerOnUI();
     }
   }
 
