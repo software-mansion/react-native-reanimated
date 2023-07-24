@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-#include "AndroidScheduler.h"
+#include "AndroidUIScheduler.h"
 #include "JsiUtils.h"
 #include "LayoutAnimationsManager.h"
 #include "NativeProxy.h"
@@ -75,7 +75,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
-    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
+    jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
@@ -84,12 +84,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #endif
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto scheduler = androidScheduler->cthis()->getScheduler();
+  auto uiScheduler = androidUiScheduler->cthis()->getScheduler();
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
-      scheduler,
+      uiScheduler,
       make_global(layoutAnimations)
 #ifdef RCT_NEW_ARCH_ENABLED
           ,

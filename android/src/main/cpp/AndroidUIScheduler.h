@@ -14,10 +14,10 @@ namespace reanimated {
 
 using namespace facebook;
 
-class AndroidScheduler : public jni::HybridClass<AndroidScheduler> {
+class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/Scheduler;";
+      "Lcom/swmansion/reanimated/AndroidUIScheduler;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
@@ -33,11 +33,11 @@ class AndroidScheduler : public jni::HybridClass<AndroidScheduler> {
 
   void triggerUI();
 
-  jni::global_ref<AndroidScheduler::javaobject> javaPart_;
+  jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
   std::shared_ptr<UIScheduler> uiScheduler_;
 
-  explicit AndroidScheduler(
-      jni::alias_ref<AndroidScheduler::jhybridobject> jThis);
+  explicit AndroidUIScheduler(
+      jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);
 };
 
 } // namespace reanimated

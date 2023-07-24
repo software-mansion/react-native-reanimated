@@ -1,4 +1,4 @@
-#include "AndroidScheduler.h"
+#include "AndroidUIScheduler.h"
 #include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
@@ -10,13 +10,13 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-class SchedulerWrapper : public UIScheduler {
+class UISchedulerWrapper : public UIScheduler {
  private:
-  jni::global_ref<AndroidScheduler::javaobject> scheduler_;
+  jni::global_ref<AndroidUIScheduler::javaobject> scheduler_;
 
  public:
-  explicit SchedulerWrapper(
-      jni::global_ref<AndroidScheduler::javaobject> scheduler)
+  explicit UISchedulerWrapper(
+      jni::global_ref<AndroidUIScheduler::javaobject> scheduler)
       : scheduler_(scheduler) {}
 
   void scheduleOnUI(std::function<void()> job) override {
@@ -27,33 +27,33 @@ class SchedulerWrapper : public UIScheduler {
     }
   }
 
-  ~SchedulerWrapper() {}
+  ~UISchedulerWrapper() {}
 };
 
-AndroidScheduler::AndroidScheduler(
-    jni::alias_ref<AndroidScheduler::javaobject> jThis)
+AndroidUIScheduler::AndroidUIScheduler(
+    jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
     : javaPart_(jni::make_global(jThis)),
-      uiScheduler_(new SchedulerWrapper(jni::make_global(jThis))) {}
+      uiScheduler_(new UISchedulerWrapper(jni::make_global(jThis))) {}
 
-jni::local_ref<AndroidScheduler::jhybriddata> AndroidScheduler::initHybrid(
+jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
     jni::alias_ref<jhybridobject> jThis) {
   return makeCxxInstance(jThis);
 }
 
-void AndroidScheduler::triggerUI() {
+void AndroidUIScheduler::triggerUI() {
   uiScheduler_->triggerUI();
 }
 
-void AndroidScheduler::scheduleTriggerOnUI() {
+void AndroidUIScheduler::scheduleTriggerOnUI() {
   static const auto method =
       javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
   method(javaPart_.get());
 }
 
-void AndroidScheduler::registerNatives() {
+void AndroidUIScheduler::registerNatives() {
   registerHybrid({
-      makeNativeMethod("initHybrid", AndroidScheduler::initHybrid),
-      makeNativeMethod("triggerUI", AndroidScheduler::triggerUI),
+      makeNativeMethod("initHybrid", AndroidUIScheduler::initHybrid),
+      makeNativeMethod("triggerUI", AndroidUIScheduler::triggerUI),
   });
 }
 
