@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, Text } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 import { runOnUI } from 'react-native-reanimated';
 
 function shortOffender() {
@@ -27,7 +27,7 @@ interface EvilButtonProps {
 }
 
 function EvilButton({ version, long }: EvilButtonProps) {
-  function onPressOut() {
+  function onPress() {
     if (long) {
       // @ts-ignore this is fine
       longOffender.__initData.version = version;
@@ -40,15 +40,16 @@ function EvilButton({ version, long }: EvilButtonProps) {
   }
 
   return (
-    <Pressable style={styles.button} onPressOut={onPressOut}>
-      <Text style={styles.text}>
-        {long
+    <Button
+      onPress={onPress}
+      title={
+        long
           ? 'long worklet check'
           : version
           ? 'wrong version check'
-          : 'undefined version check'}
-      </Text>
-    </Pressable>
+          : 'undefined version check'
+      }
+    />
   );
 }
 
@@ -67,19 +68,5 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  button: {
-    backgroundColor: '#4488dd',
-    padding: 10,
-    borderRadius: 50,
-    margin: 10,
-    height: 80,
-    width: 240,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    color: 'white',
-    fontSize: 16,
   },
 });
