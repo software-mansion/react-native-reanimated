@@ -96,42 +96,43 @@ export type MapperRegistry = {
 
 export type WorkletClosure = Record<string, unknown>;
 
-interface ReleaseInitData {
+interface WorkletInitDataRelease {
   code: string;
 }
 
-interface DevInitData {
+interface WorkletInitDataDev {
   code: string;
   location: string;
   sourceMap: string;
   version: string;
 }
-interface ReleaseWorkletBase {
+
+interface WorkletBaseRelease {
   _closure: WorkletClosure;
-  __initData: ReleaseInitData;
+  __initData: WorkletInitDataRelease;
   __workletHash: number;
 }
 
-interface DevWorkletBase {
+interface WorkletBaseDev {
   _closure: WorkletClosure;
-  __initData: DevInitData;
+  __initData: WorkletInitDataDev;
   __workletHash: number;
   __stackDetails: Error;
 }
 
-// A stands for Arguments, R stands for Return value
+// `A` stands for Arguments, `R` stands for Return value
 
-type ReleaseWorkletFunction<A extends unknown[], R> = ReleaseWorkletBase & {
+type WorkletFunctionRelease<A extends unknown[], R> = WorkletBaseRelease & {
   (...args: A): R;
 };
 
-type DevWorkletFunction<A extends unknown[], R> = DevWorkletBase & {
+type WorkletFunctionDev<A extends unknown[], R> = WorkletBaseDev & {
   (...args: A): R;
 };
 
 export type WorkletFunction<A extends unknown[], T> =
-  | ReleaseWorkletFunction<A, T>
-  | DevWorkletFunction<A, T>;
+  | WorkletFunctionRelease<A, T>
+  | WorkletFunctionDev<A, T>;
 
 /**
  * @deprecated
