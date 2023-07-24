@@ -21,34 +21,32 @@ function longOffender() {
   b = a;
 }
 
-function giveVersion(version?: string) {
-  // @ts-ignore this is fine
-  offender.__initData.version = version;
+interface EvilButtonProps {
+  version?: string;
+  long?: boolean;
 }
 
-function giveVersionLonger(version?: string) {
-  // @ts-ignore this is fine
-  longOffender.__initData.version = version;
-}
-
-function EvilButton({ version, long }: { version?: string; long?: boolean }) {
+function EvilButton({ version, long }: EvilButtonProps) {
   const [pressed, setPressed] = React.useState(false);
+
+  function onPressOut() {
+    setPressed(false);
+    if (long) {
+      // @ts-ignore this is fine
+      longOffender.__initData.version = version;
+      runOnUI(longOffender)();
+    } else {
+      // @ts-ignore this is fine
+      offender.__initData.version = version;
+      runOnUI(offender)();
+    }
+  }
+
   return (
     <Pressable
-      style={[styles.button, pressed && { backgroundColor: '#3366DDFF' }]}
-      onPressIn={() => {
-        setPressed(true);
-      }}
-      onPressOut={() => {
-        setPressed(false);
-        if (long) {
-          giveVersionLonger(version);
-          runOnUI(longOffender)();
-        } else {
-          giveVersion(version);
-          runOnUI(offender)();
-        }
-      }}>
+      style={[styles.button, pressed && { backgroundColor: '#3366dd' }]}
+      onPressIn={() => setPressed(true)}
+      onPressOut={onPressOut}>
       <Text style={styles.text}>
         {long
           ? 'long worklet check'
@@ -77,7 +75,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   button: {
-    backgroundColor: '#4488DDFF',
+    backgroundColor: '#4488dd',
     padding: 10,
     borderRadius: 50,
     margin: 10,

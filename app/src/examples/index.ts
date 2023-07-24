@@ -262,7 +262,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   BabelVersioningExample: {
     icon: '📦',
-    title: 'Babel versioning',
+    title: 'Babel versioning mismatch',
     screen: BabelVersioningExample,
   },
   TransformExample: {
