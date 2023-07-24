@@ -250,9 +250,10 @@ function transposeMatrix(matrix: AffineMatrix): AffineMatrix {
 }
 
 function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
+  'worklet';
   if (__DEV__ && a.length !== b.length) {
     throw new Error(
-      `Cannot calculate inner product of two vectors of cerent length. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
+      `Cannot calculate inner product of two vectors of different lengths. Length of ${a} is ${a.length} and length of ${b} is ${b.length}.`
     );
   }
 }
