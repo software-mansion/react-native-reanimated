@@ -217,8 +217,9 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif
-  [[self getDisplayLink] setPaused:YES];
-
+  RCTExecuteOnMainQueue(^{
+    [[self getDisplayLink] setPaused:YES];
+  });
   return self;
 }
 
