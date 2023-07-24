@@ -1,24 +1,27 @@
-import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { isChromeDebugger, isJest, isWeb } from '../PlatformChecker';
-import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
+import type {
+  ShareableRef,
+  ShareableSyncDataHolderRef,
+  Value3D,
+  ValueRotation,
+} from '../commonTypes';
 import { SensorType } from '../commonTypes';
 import type { WebSensor } from './WebSensor';
 
-export default class JSReanimated extends NativeReanimated {
+export default class JSReanimated {
+  native = false;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
 
-  constructor() {
-    super(false);
-  }
-
-  makeShareableClone<T>(value: T): ShareableRef<T> {
-    return { __hostObjectShareableJSRef: value };
+  makeShareableClone<T>(): ShareableRef<T> {
+    throw new Error(
+      '[Reanimated] makeShareableClone should never be called in JSReanimated.'
+    );
   }
 
   installCoreFunctions(
-    _callGuard: <T extends Array<any>, U>(
+    _callGuard: <T extends Array<unknown>, U>(
       fn: (...args: T) => U,
       ...args: T
     ) => void,
@@ -72,8 +75,8 @@ export default class JSReanimated extends NativeReanimated {
   registerSensor(
     sensorType: SensorType,
     interval: number,
-    iosReferenceFrame: number,
-    eventHandler: (data: Value3D | ValueRotation) => void
+    _iosReferenceFrame: number,
+    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number {
     if (this.platform === undefined) {
       this.detectPlatform();
@@ -118,7 +121,8 @@ export default class JSReanimated extends NativeReanimated {
           2.0 * (qx * qy + qw * qz),
           qw * qw + qx * qx - qy * qy - qz * qz
         );
-        eventHandler({
+        // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+        (eventHandler as any)({
           qw,
           qx,
           qy,
@@ -134,7 +138,8 @@ export default class JSReanimated extends NativeReanimated {
         let { x, y, z } = sensor;
         [x, y, z] =
           this.platform === Platform.WEB_ANDROID ? [-x, -y, -z] : [x, y, z];
-        eventHandler({ x, y, z, interfaceOrientation: 0 });
+        // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+        (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
       };
     }
     sensor.addEventListener('reading', callback);
@@ -222,6 +227,36 @@ export default class JSReanimated extends NativeReanimated {
     } else {
       this.platform = Platform.WEB;
     }
+  }
+
+  makeSynchronizedDataHolder<T>(
+    _valueRef: ShareableRef<T>
+  ): ShareableSyncDataHolderRef<T> {
+    throw new Error(
+      '[Reanimated] makeSynchronizedDataHolder is not available in JSReanimated.'
+    );
+  }
+
+  getDataSynchronously<T>(_ref: ShareableSyncDataHolderRef<T>): T {
+    throw new Error(
+      '[Reanimated] getDataSynchronously is not available in JSReanimated.'
+    );
+  }
+
+  getViewProp<T>(
+    _viewTag: string,
+    _propName: string,
+    _callback?: (result: T) => void
+  ): Promise<T> {
+    throw new Error(
+      '[Reanimated] getViewProp is not available in JSReanimated.'
+    );
+  }
+
+  configureProps() {
+    throw new Error(
+      '[Reanimated] configureProps is not available in JSReanimated.'
+    );
   }
 }
 
