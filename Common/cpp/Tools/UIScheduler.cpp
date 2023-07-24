@@ -2,6 +2,8 @@
 #include "ReanimatedRuntime.h"
 #include "RuntimeManager.h"
 
+#include <utility>
+
 namespace reanimated {
 
 void UIScheduler::scheduleOnUI(std::function<void()> job) {
