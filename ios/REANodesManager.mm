@@ -175,8 +175,6 @@ using namespace facebook::react;
 
 - (CADisplayLink *)getDisplayLink
 {
-  RCTAssertMainQueue();
-
   if (!_displayLink) {
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
     _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
