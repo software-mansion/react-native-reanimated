@@ -114,8 +114,6 @@ void NativeProxy::installJSIBindings(
       ReanimatedRuntime::make("Reanimated UI runtime");
   WorkletRuntimeCollector::install(*uiRuntime);
 
-  auto jsScheduler = std::make_shared<JSScheduler>(jsCallInvoker_);
-
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       uiScheduler_,

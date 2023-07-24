@@ -173,7 +173,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   WorkletRuntimeCollector::install(*uiRuntime);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  auto jsScheduler = std::make_shared<JSScheduler>(jsInvoker);
 
   auto nodesManager = reaModule.nodesManager;
 
