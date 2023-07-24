@@ -22,7 +22,7 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
       jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
-  std::shared_ptr<UIScheduler> getScheduler() {
+  std::shared_ptr<UIScheduler> getUIScheduler() {
     return uiScheduler_;
   }
 

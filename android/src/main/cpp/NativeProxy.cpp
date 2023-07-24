@@ -84,7 +84,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #endif
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto uiScheduler = androidUiScheduler->cthis()->getScheduler();
+  auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
