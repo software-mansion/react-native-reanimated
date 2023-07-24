@@ -499,7 +499,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private boolean removeOrAnimateExitRecursive(View view, boolean shouldRemove) {
     int tag = view.getId();
     ViewManager viewManager = resolveViewManager(tag);
-    
+
     if (viewManager != null) {
       String viewManagerName = viewManager.getName();
       if (viewManagerName.equals("RCTModalHostView")
