@@ -162,10 +162,7 @@ void NativeReanimatedModule::installCoreFunctions(
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper = std::make_shared<JSRuntimeHelper>(
-        &rt,
-        runtimeManager_->runtime.get(),
-        runtimeManager_->uiScheduler_,
-        runtimeManager_->jsScheduler_);
+        &rt, runtimeManager_->uiScheduler_, runtimeManager_->jsScheduler_);
   }
 
 #ifdef DEBUG

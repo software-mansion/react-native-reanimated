@@ -16,18 +16,15 @@ namespace reanimated {
 class JSRuntimeHelper {
  private:
   jsi::Runtime *rnRuntime_; // React-Native's main JS runtime
-  jsi::Runtime *uiRuntime_; // UI runtime created by Reanimated
   std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<JSScheduler> jsScheduler_;
 
  public:
   JSRuntimeHelper(
       jsi::Runtime *rnRuntime,
-      jsi::Runtime *uiRuntime,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<JSScheduler> &jsScheduler)
       : rnRuntime_(rnRuntime),
-        uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler),
         jsScheduler_(jsScheduler) {}
 
