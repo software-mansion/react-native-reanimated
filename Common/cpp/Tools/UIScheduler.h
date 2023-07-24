@@ -2,18 +2,18 @@
 
 #include <ReactCommon/CallInvoker.h>
 
-#include "RuntimeManager.h"
+#include <memory>
+
 #include "ThreadSafeQueue.h"
 
-#include <memory>
-#include <utility>
-
 namespace reanimated {
+
+class RuntimeManager;
 
 class UIScheduler {
  public:
   void setRuntimeManager(const std::shared_ptr<RuntimeManager> &runtimeManager);
-  virtual void scheduleOnUI(std::function<void()> &&job);
+  virtual void scheduleOnUI(std::function<void()> job);
   virtual void triggerUI();
   virtual ~UIScheduler();
 

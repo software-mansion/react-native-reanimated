@@ -77,7 +77,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
-    jni::alias_ref<AndroidUIScheduler::javaobject> androidUIScheduler,
+    jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
@@ -86,7 +86,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #endif
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
+  auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
       jThis,
       (jsi::Runtime *)jsContext,
@@ -119,7 +119,6 @@ void NativeProxy::installJSIBindings(
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
       uiScheduler_,
-      jsScheduler,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing

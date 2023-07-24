@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 namespace reanimated {
 
@@ -15,18 +14,18 @@ using namespace react;
 
 class UISchedulerWrapper : public UIScheduler {
  private:
-  jni::global_ref<AndroidUIScheduler::javaobject> scheduler_;
+  jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
 
  public:
   explicit UISchedulerWrapper(
-      jni::global_ref<AndroidUIScheduler::javaobject> scheduler)
-      : scheduler_(scheduler) {}
+      jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
+      : androidUiScheduler_(androidUiScheduler) {}
 
-  void scheduleOnUI(std::function<void()> &&job) override {
-    UIScheduler::scheduleOnUI(std::move(job));
+  void scheduleOnUI(std::function<void()> job) override {
+    UIScheduler::scheduleOnUI(job);
     if (!scheduledOnUI_) {
       scheduledOnUI_ = true;
-      scheduler_->cthis()->scheduleTriggerOnUI();
+      androidUiScheduler_->cthis()->scheduleTriggerOnUI();
     }
   }
 
@@ -36,7 +35,8 @@ class UISchedulerWrapper : public UIScheduler {
 AndroidUIScheduler::AndroidUIScheduler(
     jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
     : javaPart_(jni::make_global(jThis)),
-      uiScheduler_(new UISchedulerWrapper(jni::make_global(jThis))) {}
+      uiScheduler_(
+          std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
 
 jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
     jni::alias_ref<jhybridobject> jThis) {

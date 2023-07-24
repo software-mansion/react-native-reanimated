@@ -1,9 +1,11 @@
 #include "UIScheduler.h"
 #include "ReanimatedRuntime.h"
 
+#include <utility>
+
 namespace reanimated {
 
-void UIScheduler::scheduleOnUI(std::function<void()> &&job) {
+void UIScheduler::scheduleOnUI(std::function<void()> job) {
   uiJobs_.push(std::move(job));
 }
 

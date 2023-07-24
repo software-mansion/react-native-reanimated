@@ -98,7 +98,7 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
-    std::shared_ptr<CallInvoker> jsCallInvoker)
+    const std::shared_ptr<CallInvoker> &jsInvoker)
 {
   REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
 
@@ -175,8 +175,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(jsCallInvoker);
 
-  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
-
   auto nodesManager = reaModule.nodesManager;
 
   auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
@@ -205,7 +203,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
 #else
   // Layout Animations start
-  __block std::weak_ptr<UIScheduler> weakUiScheduler = uiScheduler;
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
   __weak REAAnimationsManager *weakAnimationsManager = animationsManager;
   std::weak_ptr<jsi::Runtime> weakUiRuntime = uiRuntime;
@@ -289,10 +286,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       maybeFlushUIUpdatesQueueFunction,
   };
 
-  nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      jsCallInvoker,
+  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      jsInvoker,
       uiScheduler,
-      jsScheduler,
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing

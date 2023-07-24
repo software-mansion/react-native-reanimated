@@ -6,7 +6,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-void REAIOSUIScheduler::scheduleOnUI(std::function<void()> &&job)
+void REAIOSUIScheduler::scheduleOnUI(std::function<void()> job)
 {
   const auto runtimeManager = weakRuntimeManager_.lock();
   if (!runtimeManager) {
@@ -18,7 +18,7 @@ void REAIOSUIScheduler::scheduleOnUI(std::function<void()> &&job)
     return;
   }
 
-  UIScheduler::scheduleOnUI(std::move(job));
+  UIScheduler::scheduleOnUI(job);
 
   if (!scheduledOnUI_) {
     __block std::weak_ptr<RuntimeManager> blockRuntimeManager = weakRuntimeManager_;

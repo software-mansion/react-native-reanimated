@@ -32,7 +32,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class AnimationsManager implements ViewHierarchyObserver {
-  private WeakReference<AndroidUIScheduler> mAndroidUIScheduler;
+  private WeakReference<AndroidUIScheduler> mWeakAndroidUIScheduler;
   private ReactContext mContext;
   private UIManagerModule mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
@@ -57,7 +57,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public void setAndroidUIScheduler(AndroidUIScheduler androidUIScheduler) {
-    mAndroidUIScheduler = new WeakReference<>(androidUIScheduler);
+    mWeakAndroidUIScheduler = new WeakReference<>(androidUIScheduler);
   }
 
   public AnimationsManager(ReactContext context, UIManagerModule uiManagerModule) {
@@ -102,9 +102,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    AndroidUIScheduler strongAndroidUIScheduler = mAndroidUIScheduler.get();
-    if (strongAndroidUIScheduler != null) {
-      strongAndroidUIScheduler.triggerUI();
+    AndroidUIScheduler androidUIScheduler = mWeakAndroidUIScheduler.get();
+    if (androidUIScheduler != null) {
+      androidUIScheduler.triggerUI();
     }
 
     int tag = view.getId();

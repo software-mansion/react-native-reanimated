@@ -6,6 +6,7 @@
 
 #include "JSScheduler.h"
 #include "RuntimeDecorator.h"
+#include "UIScheduler.h"
 
 using namespace facebook;
 
@@ -20,8 +21,8 @@ class RuntimeManager {
  public:
   RuntimeManager(
       std::shared_ptr<jsi::Runtime> runtime,
-      std::shared_ptr<UIScheduler> uiScheduler,
-      std::shared_ptr<JSScheduler> jsScheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<JSScheduler> &jsScheduler,
       RuntimeType runtimeType = RuntimeType::Worklet)
       : runtime(runtime), uiScheduler_(uiScheduler), jsScheduler_(jsScheduler) {
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
@@ -32,12 +33,11 @@ class RuntimeManager {
    */
   std::shared_ptr<jsi::Runtime> runtime;
   /**
-   Holds the UIScheduler that is responsible for scheduling work on the UI
-   Thread.
+   Holds the Scheduler that is responsible for scheduling work on the UI Thread.
    */
   std::shared_ptr<UIScheduler> uiScheduler_;
   /**
-   Holds the JSScheduler that is responsible for scheduling work on the React-JS
+   Holds the Scheduler that is responsible for scheduling work on the React-JS
    Thread.
    */
   std::shared_ptr<JSScheduler> jsScheduler_;

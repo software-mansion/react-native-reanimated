@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-void JSScheduler::scheduleOnJS(std::function<void()> &&job) {
+void JSScheduler::scheduleOnJS(std::function<void()> job) {
   jsCallInvoker_->invokeAsync(std::move(job));
 }
 

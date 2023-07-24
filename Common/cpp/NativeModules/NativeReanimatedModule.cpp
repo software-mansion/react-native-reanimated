@@ -36,7 +36,6 @@ namespace reanimated {
 NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
@@ -49,7 +48,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       runtimeManager_(std::make_shared<RuntimeManager>(
           rt,
           uiScheduler,
-          jsScheduler,
+          std::make_shared<JSScheduler>(jsInvoker),
           RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
@@ -163,7 +162,10 @@ void NativeReanimatedModule::installCoreFunctions(
     // initialize runtimeHelper here if not already present. We expect only one
     // instace of the helper to exists.
     runtimeHelper = std::make_shared<JSRuntimeHelper>(
-        &rt, runtimeManager_->uiScheduler_, runtimeManager_->jsScheduler_);
+        &rt,
+        runtimeManager_->runtime.get(),
+        runtimeManager_->uiScheduler_,
+        runtimeManager_->jsScheduler_);
   }
 
 #ifdef DEBUG
