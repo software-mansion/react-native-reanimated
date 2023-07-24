@@ -5,7 +5,7 @@ declare global {
   /**
    * This global variable is a diagnostic/development tool.
    *
-   * It's set to TRUE on UI thread and to FALSE on JS thread.
+   * It is `true` on UI thread and to `false` on JS thread.
    *
    * It used to be necessary in the past for some of the
    * functionalities of react-native-reanimated to work
