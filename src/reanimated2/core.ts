@@ -68,7 +68,7 @@ export function getSensorContainer(): SensorContainer {
 export function registerEventHandler<T>(
   eventHandler: (event: T) => void,
   eventName: string,
-  emitterReactTag?: number
+  emitterReactTag = -1
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';

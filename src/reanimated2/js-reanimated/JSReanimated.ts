@@ -38,7 +38,7 @@ export default class JSReanimated {
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
     _eventName: string,
-    _emitterReactTag?: number
+    _emitterReactTag: number
   ): number {
     // noop
     return -1;

@@ -32,7 +32,7 @@ export interface NativeReanimatedModule {
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
-    emitterReactTag?: number
+    emitterReactTag: number
   ): number;
   unregisterEventHandler(id: number): void;
   getViewProp<T>(
@@ -136,7 +136,7 @@ export class NativeReanimated {
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
-    emitterReactTag?: number
+    emitterReactTag: number
   ) {
     return this.InnerNativeModule.registerEventHandler(
       eventHandler,

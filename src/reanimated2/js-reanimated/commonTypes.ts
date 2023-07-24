@@ -47,7 +47,7 @@ export interface JSReanimated {
   registerEventHandler<T>(
     eventHandler: (event: T) => void,
     eventName: string,
-    emitterReactTag?: number
+    emitterReactTag: number
   ): string;
   unregisterEventHandler(_: string): void;
   enableLayoutAnimations(): void;
