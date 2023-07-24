@@ -6,7 +6,7 @@
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
     "test:update-snapshot": "jest --updateSnapshot",
-    "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
+    "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__  && yarn prettier --check src __tests__ __typetests__",
     "lint:plugin": "cd plugin && yarn lint && cd ..",
     "lint:docs": "cd docs && yarn lint && cd ..",
@@ -161,8 +161,7 @@
     "android/src/**/*.java": "yarn format:java",
     "android/src/**/*.{h,cpp}": "yarn format:android",
     "ios/**/*.{h,m,mm,cpp}": "yarn format:ios",
-    "Common/**/*.{h,cpp}": "yarn format:common",
-    "docs/**/*.{md,mdx}": "yarn lint:docs"
+    "Common/**/*.{h,cpp}": "yarn format:common"
   },
   "react-native-builder-bob": {
     "source": "src",

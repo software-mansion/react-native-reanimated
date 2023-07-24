@@ -124,6 +124,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
+      platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
       scheduleOnJS,
@@ -207,7 +208,7 @@ void NativeReanimatedModule::scheduleOnJS(
   auto shareableRemoteFun = extractShareableOrThrow<ShareableRemoteFunction>(
       rt,
       remoteFun,
-      "Incompatible object passed to scheduleOnJS. It is only allowed to schedule functions defined on the React Native JS runtime this way.");
+      "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
   auto shareableArgs = argsValue.isUndefined()
       ? nullptr
       : extractShareableOrThrow(rt, argsValue);

@@ -20,7 +20,7 @@ const _shareableFlag = Symbol('shareable flag');
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
-function isHostObject(value: any): boolean {
+function isHostObject(value: NonNullable<object>): boolean {
   // We could use JSI to determine whether an object is a host object, however
   // the below workaround works well and is way faster than an additional JSI call.
   // We use the fact that host objects have broken implementation of `hasOwnProperty`

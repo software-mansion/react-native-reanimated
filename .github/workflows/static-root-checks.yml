@@ -25,7 +25,9 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
-      - name: Install node dependencies 🧶
+      - name: Clear annotations
+        run: scripts/clear-annotations.sh
+      - name: Install node dependencies
         run: yarn
       - name: Check types
         run: yarn tsc --noEmit

@@ -62,6 +62,15 @@ export const ReanimatedFlatList = forwardRef(
         : styles.verticallyInverted
       : undefined;
 
+    // Set default scrollEventThrottle, because user expects
+    // to have continuous scroll events and
+    // react-native defaults it to 50 for FlatLists.
+    // We set it to 1 so we have peace until
+    // there are 960 fps screens.
+    if (!('scrollEventThrottle' in restProps)) {
+      restProps.scrollEventThrottle = 1;
+    }
+
     const cellRenderer = React.useMemo(
       () => createCellRenderer(itemLayoutAnimation, cellStyle),
       [cellStyle]

@@ -15,7 +15,6 @@
 #include "NativeProxy.h"
 #include "PlatformDepMethodsHolder.h"
 #include "ReanimatedRuntime.h"
-#include "ReanimatedVersion.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include "FabricUtils.h"
@@ -142,16 +141,17 @@ void NativeProxy::installJSIBindings(
   //  reactScheduler_ = binding->getScheduler();
   //  reactScheduler_->addEventListener(eventListener_);
 #endif
+  auto &rnRuntime = *rnRuntime_;
+  auto isReducedMotion = getIsReducedMotion();
+  RuntimeDecorator::decorateRNRuntime(rnRuntime, uiRuntime, isReducedMotion);
 
-  auto &rt = *rnRuntime_;
-  setGlobalProperties(rt, uiRuntime);
   registerEventHandler();
   setupLayoutAnimations();
 
-  rt.global().setProperty(
-      rt,
-      jsi::PropNameID::forAscii(rt, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(rt, nativeReanimatedModule));
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
+      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
@@ -257,6 +257,28 @@ void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
   static const auto method =
       getJniMethod<void(int, double, double, bool)>("scrollTo");
   method(javaPart_.get(), viewTag, x, y, animated);
+}
+
+inline jni::local_ref<ReadableArray::javaobject> castReadableArray(
+    jni::local_ref<ReadableNativeArray::javaobject> const &nativeArray) {
+  return make_local(
+      reinterpret_cast<ReadableArray::javaobject>(nativeArray.get()));
+}
+
+void NativeProxy::dispatchCommand(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue) {
+  static const auto method = getJniMethod<void(
+      int, jni::local_ref<JString>, jni::local_ref<ReadableArray::javaobject>)>(
+      "dispatchCommand");
+  local_ref<JString> commandId =
+      jni::make_jstring(commandNameValue.asString(rt).utf8(rt).c_str());
+  jni::local_ref<ReadableArray::javaobject> commandArgs =
+      castReadableArray(ReadableNativeArray::newObjectCxxArgs(
+          jsi::dynamicFromValue(rt, argsValue)));
+  method(javaPart_.get(), viewTag, commandId, commandArgs);
 }
 
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
@@ -405,6 +427,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto measureFunction = bindThis(&NativeProxy::measure);
 
   auto scrollToFunction = bindThis(&NativeProxy::scrollTo);
+
+  auto dispatchCommandFunction = bindThis(&NativeProxy::dispatchCommand);
 #endif
 
   auto getCurrentTime = bindThis(&NativeProxy::getCurrentTime);
@@ -446,6 +470,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 #else
       updatePropsFunction,
       scrollToFunction,
+      dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
 #endif
@@ -459,38 +484,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
   };
-}
-
-void NativeProxy::setGlobalProperties(
-    jsi::Runtime &jsRuntime,
-    const std::shared_ptr<jsi::Runtime> &uiRuntime) {
-  auto workletRuntimeValue =
-      jsRuntime.global()
-          .getPropertyAsObject(jsRuntime, "ArrayBuffer")
-          .asFunction(jsRuntime)
-          .callAsConstructor(jsRuntime, {static_cast<double>(sizeof(void *))});
-  uintptr_t *workletRuntimeData = reinterpret_cast<uintptr_t *>(
-      workletRuntimeValue.getObject(jsRuntime).getArrayBuffer(jsRuntime).data(
-          jsRuntime));
-  workletRuntimeData[0] = reinterpret_cast<uintptr_t>(uiRuntime.get());
-
-  jsRuntime.global().setProperty(
-      jsRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
-
-  jsRuntime.global().setProperty(jsRuntime, "_WORKLET", false);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-  jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", true);
-#else
-  jsRuntime.global().setProperty(jsRuntime, "_IS_FABRIC", false);
-#endif
-
-  auto version = getReanimatedVersionString(jsRuntime);
-  jsRuntime.global().setProperty(jsRuntime, "_REANIMATED_VERSION_CPP", version);
-
-  auto isReducedMotion = getIsReducedMotion();
-  jsRuntime.global().setProperty(
-      jsRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
 }
 
 void NativeProxy::setupLayoutAnimations() {
