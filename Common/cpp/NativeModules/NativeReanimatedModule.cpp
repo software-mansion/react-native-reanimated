@@ -205,7 +205,7 @@ void NativeReanimatedModule::scheduleOnJS(
     jsi::Runtime &rt,
     const jsi::Value &remoteFun,
     const jsi::Value &argsValue) {
-  auto shareableRemoteFun = extractShareableOrThrow<RNFunctionRef>(
+  auto shareableFunction = extractShareableOrThrow<ShareableFunction>(
       rt,
       remoteFun,
       "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
@@ -215,10 +215,10 @@ void NativeReanimatedModule::scheduleOnJS(
   auto jsRuntime = this->runtimeHelper->rnRuntime();
   runtimeManager_->scheduler->scheduleOnJS([=] {
     jsi::Runtime &rt = *jsRuntime;
-    auto remoteFun = shareableRemoteFun->getJSValue(rt);
+    auto fun = shareableFunction->getJSValue(rt);
     if (shareableArgs == nullptr) {
       // fast path for remote function w/o arguments
-      remoteFun.asObject(rt).asFunction(rt).call(rt);
+      fun.asObject(rt).asFunction(rt).call(rt);
     } else {
       auto argsArray = shareableArgs->getJSValue(rt).asObject(rt).asArray(rt);
       auto argsSize = argsArray.size(rt);
@@ -228,7 +228,7 @@ void NativeReanimatedModule::scheduleOnJS(
       for (size_t i = 0; i < argsSize; i++) {
         args[i] = argsArray.getValueAtIndex(rt, i);
       }
-      remoteFun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
+      fun.asObject(rt).asFunction(rt).call(rt, args, argsSize);
     }
   });
 }
@@ -275,7 +275,7 @@ jsi::Value NativeReanimatedModule::makeShareableClone(
         shareable =
             std::make_shared<ShareableHostFunction>(rt, std::move(function));
       } else {
-        shareable = std::make_shared<RNFunctionRef>(
+        shareable = std::make_shared<ShareableFunction>(
             runtimeHelper, rt, std::move(function));
       }
     } else if (object.isArray(rt)) {

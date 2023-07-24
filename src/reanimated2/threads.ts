@@ -16,7 +16,6 @@ export function setupMicrotasks() {
 
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
-
   global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
@@ -163,7 +162,6 @@ export function runOnJS<A extends any[], R>(
   fun: ComplexWorkletFunction<A, R>
 ): (...args: A) => void {
   'worklet';
-
   if (fun.__workletHash) {
     // if `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments

@@ -25,7 +25,10 @@ function callGuardDEV<T extends Array<unknown>, U>(
   }
 }
 
-function valueUnpacker(objectToUnpack: any, category?: string): any {
+function valueUnpacker(
+  objectToUnpack: any,
+  isShareableFunctionDev?: boolean
+): any {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -77,7 +80,7 @@ function valueUnpacker(objectToUnpack: any, category?: string): any {
       handleCache!.set(objectToUnpack, value);
     }
     return value;
-  } else if (category === 'RNFunctionRef') {
+  } else if (isShareableFunctionDev) {
     const fun = () => {
       throw new Error(`Tried to synchronously call a non-worklet function on the UI thread.
 
