@@ -21,44 +21,37 @@ function longOffender() {
   b = a;
 }
 
-interface EvilButtonProps {
-  version: string | undefined;
-  long: boolean;
-}
-
-function EvilButton({ version, long }: EvilButtonProps) {
-  function onPress() {
-    if (long) {
-      // @ts-ignore this is fine
-      longOffender.__initData.version = version;
-      runOnUI(longOffender)();
-    } else {
-      // @ts-ignore this is fine
-      shortOffender.__initData.version = version;
-      runOnUI(shortOffender)();
-    }
-  }
-
-  return (
-    <Button
-      onPress={onPress}
-      title={
-        long
-          ? 'long worklet check'
-          : version
-          ? 'wrong version check'
-          : 'undefined version check'
-      }
-    />
-  );
-}
-
 export default function BabelVersionCheckExample() {
+  const handlePress1 = () => {
+    // @ts-ignore this is fine
+    shortOffender.__initData.version = undefined;
+    runOnUI(shortOffender)();
+  };
+
+  const handlePress2 = () => {
+    // @ts-ignore this is fine
+    longOffender.__initData.version = undefined;
+    runOnUI(longOffender)();
+  };
+
+  const handlePress3 = () => {
+    // @ts-ignore this is fine
+    shortOffender.__initData.version = 'x.y.z';
+    runOnUI(shortOffender)();
+  };
+
+  const handlePress4 = () => {
+    // @ts-ignore this is fine
+    longOffender.__initData.version = 'x.y.z';
+    runOnUI(longOffender)();
+  };
+
   return (
     <View style={styles.container}>
-      <EvilButton version={undefined} long={false} />
-      <EvilButton version="wrong version" long={false} />
-      <EvilButton version={undefined} long={true} />
+      <Button onPress={handlePress1} title="Unknown version short worklet" />
+      <Button onPress={handlePress2} title="Unknown version long worklet" />
+      <Button onPress={handlePress3} title="Wrong version short worklet" />
+      <Button onPress={handlePress4} title="Wrong version long worklet" />
     </View>
   );
 }
