@@ -1,5 +1,5 @@
 import NativeReanimatedModule from './NativeReanimated';
-import type { ShareableRef } from './commonTypes';
+import type { ShareableRef, WorkletFunction } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
@@ -142,12 +142,16 @@ export function makeShareableCloneRecursive<T>(
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion === undefined) {
-              throw new Error(
-                '[Reanimated] Unknown version of Reanimated Babel plugin. Using release bundle with debug build of the app is not supported. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.'
-              );
+              throw new Error(`[Reanimated] Unknown version of Reanimated Babel plugin.
+1. Try resetting your Metro bundler cache with \`yarn start --reset-cache\`, \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.
+2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
+3. Using release bundle with debug build of the app is not supported.
+Offending code was: \`${getWorkletCode(value)}\``);
             } else if (babelVersion !== jsVersion) {
-              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}). Please clear your Metro bundler cache with \`yarn start --reset-cache\`,
-              \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again. If the issue still persists, make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.`);
+              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
+1. Try resetting your Metro bundler cache with \`yarn start --reset-cache\`, \`npm start -- --reset-cache\` or \`expo start -c\` and run the app again.
+2. Make sure that none of your dependencies contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin.
+Offending code was: \`${getWorkletCode(value)}\``);
             }
             registerWorkletStackDetails(
               value.__workletHash,
@@ -227,6 +231,20 @@ export function makeShareableCloneRecursive<T>(
     }
   }
   return NativeReanimatedModule.makeShareableClone(value, shouldPersistRemote);
+}
+
+const WORKLET_CODE_THRESHOLD = 255;
+
+function getWorkletCode(value: WorkletFunction) {
+  // @ts-ignore this is fine
+  const code = value?.__initData?.code;
+  if (!code) {
+    return 'unknown';
+  }
+  if (code.length > WORKLET_CODE_THRESHOLD) {
+    return `${code.substring(0, WORKLET_CODE_THRESHOLD)}...`;
+  }
+  return code;
 }
 
 export function makeShareableCloneOnUIRecursive<T>(value: T): ShareableRef<T> {

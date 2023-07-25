@@ -173,6 +173,30 @@ using namespace facebook::react;
 #endif
 }
 
+- (CADisplayLink *)getDisplayLink
+{
+  RCTAssertMainQueue();
+
+  if (!_displayLink) {
+    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+    _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
+    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  }
+  return _displayLink;
+}
+
+- (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
+{
+  __weak __typeof__(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^{
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    displayLinkOperation([strongSelf getDisplayLink]);
+  });
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                                 bridge:(RCTBridge *)bridge
@@ -191,13 +215,6 @@ using namespace facebook::react;
       // no-op
     };
   }
-
-  _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
-  _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-  [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-  [_displayLink setPaused:true];
-  return self;
-}
 #else
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
 {
@@ -211,19 +228,20 @@ using namespace facebook::react;
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
     _shouldFlushUpdateBuffer = false;
   }
+#endif
+  [self useDisplayLinkOnMainQueue:^(CADisplayLink *displayLink) {
+    [displayLink setPaused:YES];
+  }];
 
-  _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
-  _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-  [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-  [_displayLink setPaused:true];
   return self;
 }
-#endif
 
 - (void)invalidate
 {
   _eventHandler = nil;
-  [_displayLink invalidate];
+  [self useDisplayLinkOnMainQueue:^(CADisplayLink *displayLink) {
+    [displayLink invalidate];
+  }];
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -235,7 +253,7 @@ using namespace facebook::react;
 
 - (void)operationsBatchDidComplete
 {
-  if (![_displayLink isPaused]) {
+  if (![[self getDisplayLink] isPaused]) {
     // if display link is set it means some of the operations that have run as a part of the batch
     // requested updates. We want updates to be run in the same frame as in which operations have
     // been scheduled as it may mean the new view has just been mounted and expects its initial
@@ -267,27 +285,16 @@ using namespace facebook::react;
 
 - (void)startUpdatingOnAnimationFrame
 {
-  // Setting _currentAnimationTimestamp here is connected with manual triggering of performOperations
-  // in operationsBatchDidComplete. If new node has been created and clock has not been started,
-  // _displayLink won't be initialized soon enough and _displayLink.timestamp will be 0.
-  // However, CADisplayLink is using CACurrentMediaTime so if there's need to perform one more
-  // evaluation, it could be used it here. In usual case, CACurrentMediaTime is not being used in
-  // favor of setting it with _displayLink.timestamp in onAnimationFrame method.
-  _currentAnimationTimestamp = CACurrentMediaTime();
-  [_displayLink setPaused:false];
+  [[self getDisplayLink] setPaused:NO];
 }
 
 - (void)stopUpdatingOnAnimationFrame
 {
-  if (_displayLink) {
-    [_displayLink setPaused:true];
-  }
+  [[self getDisplayLink] setPaused:YES];
 }
 
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
 {
-  _currentAnimationTimestamp = _displayLink.timestamp;
-
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
 
@@ -558,7 +565,7 @@ using namespace facebook::react;
 
 - (void)maybeFlushUIUpdatesQueue
 {
-  if ([_displayLink isPaused]) {
+  if ([[self getDisplayLink] isPaused]) {
     [self performOperations];
   }
 }
