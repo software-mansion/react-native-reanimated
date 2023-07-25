@@ -230,8 +230,8 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     }
   }
 
-  if (newProps[@"transformMatrix"]) {
-    NSArray *matrix = newProps[@"transformMatrix"];
+  if (newProps[@"transformToRestore"]) {
+    NSArray *matrix = newProps[@"transformToRestore"];
     CGFloat a = [matrix[0] floatValue];
     CGFloat b = [matrix[1] floatValue];
     CGFloat c = [matrix[3] floatValue];
@@ -239,7 +239,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     CGFloat tx = [matrix[6] floatValue];
     CGFloat ty = [matrix[7] floatValue];
     view.transform = CGAffineTransformMake(a, b, c, d, tx, ty);
-    [newProps removeObjectForKey:@"transformMatrix"];
+    [newProps removeObjectForKey:@"transformToRestore"];
   }
 
   NSMutableDictionary *componentDataByName = [_uiManager valueForKey:@"_componentDataByName"];

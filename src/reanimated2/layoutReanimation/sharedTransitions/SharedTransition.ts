@@ -135,9 +135,13 @@ export class SharedTransition {
         for (const propName of supportedProps) {
           if (propName === 'transform') {
             const matrix = values.targetTransformMatrix;
-            animations.transformMatrix = withTiming(matrix, {
-              duration: transitionDuration,
-            });
+            animations.transform = [
+              {
+                matrix: withTiming(matrix, {
+                  duration: transitionDuration,
+                }),
+              },
+            ];
           } else {
             const keyToTargetValue =
               'target' + propName.charAt(0).toUpperCase() + propName.slice(1);
@@ -150,7 +154,7 @@ export class SharedTransition {
 
       for (const propName in animations) {
         if (propName === 'transform') {
-          initialValues.transformMatrix = values.currentTransformMatrix;
+          initialValues.transform = [{ matrix: values.currentTransformMatrix }];
         } else {
           const keyToCurrentValue =
             'current' + propName.charAt(0).toUpperCase() + propName.slice(1);
@@ -176,13 +180,38 @@ export class SharedTransition {
           // matrix instead of interpolating scale, translate, rotate, etc. separately
           const currentMatrix = values.currentTransformMatrix as number[];
           const targetMatrix = values.targetTransformMatrix as number[];
-          const newMatrix = new Array(9);
-          for (let i = 0; i < 9; i++) {
-            newMatrix[i] =
-              progress * (targetMatrix[i] - currentMatrix[i]) +
-              currentMatrix[i];
-          }
-          newStyles.transformMatrix = newMatrix;
+
+          // react-native uses 4x4 affine matrix in the following format,
+          // which is transposition of usual format found in the web
+          // [ a  b  0  0 ]
+          // [ c  d  0  0 ]
+          // [ 0  0  1  0 ]
+          // [ tx ty 0  1 ]
+
+          const newMatrix = [
+            progress * (targetMatrix[0] - currentMatrix[0]) + currentMatrix[0],
+            progress * (targetMatrix[1] - currentMatrix[1]) + currentMatrix[1],
+            0,
+            0,
+
+            progress * (targetMatrix[3] - currentMatrix[3]) + currentMatrix[3],
+            progress * (targetMatrix[4] - currentMatrix[4]) + currentMatrix[4],
+            0,
+            0,
+
+            0,
+            0,
+            1,
+            0,
+
+            progress * (targetMatrix[6] - currentMatrix[6]) + currentMatrix[6],
+            progress * (targetMatrix[7] - currentMatrix[7]) + currentMatrix[7],
+            0,
+            1,
+          ];
+
+          // @ts-expect-error this is fine
+          newStyles.transform = [{ matrix: newMatrix }];
         } else {
           // PropertyName == propertyName with capitalized fist letter, (width -> Width)
           const PropertyName =
