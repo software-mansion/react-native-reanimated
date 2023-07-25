@@ -14,12 +14,10 @@ export interface Descriptor {
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
-export interface RefObjectFunction<T extends Component> {
+export interface AnimatedRef<T extends Component> {
   current: T | null;
   (component?: T):
     | number // Paper
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
 }
-
-export type AnimatedRef<T extends Component> = RefObjectFunction<T>;
