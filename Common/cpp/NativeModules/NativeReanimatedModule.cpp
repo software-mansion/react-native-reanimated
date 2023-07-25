@@ -617,7 +617,7 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
 
-          ShadowTreeCloner shadowTreeCloner{uiManager_, surfaceId_};
+          ShadowTreeCloner shadowTreeCloner{*uiManager_, surfaceId_};
 
           {
             auto lock = propsRegistry_->createLock();
