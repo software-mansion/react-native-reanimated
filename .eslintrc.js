@@ -30,6 +30,7 @@ module.exports = {
       {
         'ts-ignore': 'allow-with-description',
         'ts-expect-error': 'allow-with-description',
+        'ts-prune-ignore-next': 'allow-with-description',
       },
     ],
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
