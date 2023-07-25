@@ -308,7 +308,7 @@ export default function createAnimatedComponent(
       this._sharedElementTransition?.unregisterTransition(this._viewTag);
 
       if (isWeb()) {
-        this.handleExitWeb();
+        this.handleExitingAnimationsWeb();
       }
     }
 
@@ -745,44 +745,23 @@ export default function createAnimatedComponent(
       return props;
     }
 
-    handleWebAnimations(props: any, unmount = false) {
-      if (!unmount) {
-        if (props.entering) {
-          const animationName = props.entering.name as AnimationsTypes;
+    handleEnteringAnimationsWeb(props: any): void {
+      if (props.entering) {
+        const animationName = props.entering.name as AnimationsTypes;
 
-          if (
-            !Object.prototype.hasOwnProperty.call(Animations, animationName)
-          ) {
-            return props;
-          }
-
-          props.style = {
-            ...(props.style ?? {}), // old styles
-            transition: `margin ${Animations[animationName].duration}s`, // layout
-            animation: `${animationName} ${Animations[animationName].duration}s ease-out`, // entering
-            // exiting
-          };
+        if (!animationName) {
+          return;
         }
-      } else {
-        if (props.exiting) {
-          const animationName = props.exiting.name as AnimationsTypes;
 
-          if (
-            !Object.prototype.hasOwnProperty.call(Animations, animationName)
-          ) {
-            return props;
-          }
-          props.style = {
-            ...(props.style ?? {}), // old styles
-            transition: `margin ${Animations[animationName].duration}s`, // layout
-            animation: `${animationName} ${Animations[animationName].duration}s ease-out`, // entering
-            // exiting
-          };
-        }
+        props.style = {
+          ...(props.style ?? {}),
+          transition: `margin ${Animations[animationName].duration}s`,
+          animation: `${animationName} ${Animations[animationName].duration}s ease-out`,
+        };
       }
 
       if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
-        return props;
+        return;
       }
 
       const style = document.createElement('style');
@@ -793,11 +772,9 @@ export default function createAnimatedComponent(
       for (const property in Animations) {
         style.sheet?.insertRule(Animations[property as AnimationsTypes].style);
       }
-
-      return props;
     }
 
-    handleExitWeb() {
+    handleExitingAnimationsWeb(): void {
       const exiting = this.props.exiting;
 
       if (!exiting) {
@@ -835,7 +812,7 @@ export default function createAnimatedComponent(
       }
 
       if (isWeb()) {
-        this.handleWebAnimations(props);
+        this.handleEnteringAnimationsWeb(props);
       }
 
       if (this._isFirstRender) {
