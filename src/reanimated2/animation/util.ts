@@ -77,6 +77,17 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
 }
 
 /**
+ * Returns whether the motion should be reduced for a specified config.
+ * By default returns the system setting.
+ */
+export function getReduceMotionFromConfig(
+  config: ReducedMotionConfig = 'system'
+) {
+  'worklet';
+  return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
+}
+
+/**
  * Returns the value that should be assigned to `animation.reduceMotion`
  * for a given config. If the config is not defined, `undefined` is returned.
  */
@@ -89,17 +100,6 @@ export function getReduceMotionForAnimation(config?: ReducedMotionConfig) {
   }
 
   return getReduceMotionFromConfig(config);
-}
-
-/**
- * Returns whether the motion should be reduced for a specified config.
- * By default returns the system setting.
- */
-export function getReduceMotionFromConfig(
-  config: ReducedMotionConfig = 'system'
-) {
-  'worklet';
-  return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
 }
 
 function applyProgressToMatrix(
