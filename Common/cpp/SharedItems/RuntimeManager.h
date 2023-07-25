@@ -6,7 +6,6 @@
 
 #include "JSScheduler.h"
 #include "RuntimeDecorator.h"
-#include "UIScheduler.h"
 
 using namespace facebook;
 

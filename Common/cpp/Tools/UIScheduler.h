@@ -4,11 +4,10 @@
 
 #include <memory>
 
+#include "RuntimeManager.h"
 #include "ThreadSafeQueue.h"
 
 namespace reanimated {
-
-class RuntimeManager;
 
 class UIScheduler {
  public:
