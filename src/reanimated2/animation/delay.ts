@@ -73,6 +73,9 @@ export const withDelay = function <T extends AnimationObject>(
         } else {
           animation.previousAnimation = previousAnimation;
         }
+
+        // child animations inherit the setting, unless they already have it defined
+        // they will have it defined only if the user used the `reduceMotion` prop
         if (nextAnimation.reduceMotion === undefined) {
           nextAnimation.reduceMotion = animation.reduceMotion;
         }

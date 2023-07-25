@@ -23,7 +23,6 @@ import type {
   AnimatableValueObject,
 } from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
-import { IS_REDUCED_MOTION } from '../utils';
 import {
   AffineMatrixFlat,
   AffineMatrix,
@@ -36,8 +35,10 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
+import { isReducedMotion } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
+const IS_REDUCED_MOTION = isReducedMotion();
 
 export type UserUpdater = () => AnimatedStyle;
 
@@ -413,11 +414,11 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       if (animation.toValue !== undefined) {
         animation.current = animation.toValue;
       } else {
-        // if there is no toValue, then the base function is responsible for setting the current value
+        // if there is no `toValue`, then the base function is responsible for setting the current value
         baseOnStart(animation, value, timestamp, previousAnimation);
       }
       animation.startTime = 0;
-      animation.onFrame = (_: Animation<AnimationObject>, __: Timestamp) => {
+      animation.onFrame = () => {
         return true;
       };
       return;

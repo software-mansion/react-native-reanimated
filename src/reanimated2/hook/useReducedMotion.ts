@@ -1,4 +1,6 @@
-import { IS_REDUCED_MOTION } from '../utils';
+import { isReducedMotion } from '../PlatformChecker';
+
+const IS_REDUCED_MOTION = isReducedMotion();
 
 export function useReducedMotion() {
   return IS_REDUCED_MOTION;

@@ -95,6 +95,8 @@ export function withSequence(
         now: Timestamp,
         previousAnimation: SequenceAnimation
       ): void {
+        // child animations inherit the setting, unless they already have it defined
+        // they will have it defined only if the user used the `reduceMotion` prop
         animations.forEach((anim) => {
           if (anim.reduceMotion === undefined) {
             anim.reduceMotion = animation.reduceMotion;
@@ -108,8 +110,13 @@ export function withSequence(
           ] as SequenceAnimation;
         }
 
-        const currentAnim = animations[animation.animationIndex];
-        currentAnim.onStart(currentAnim, value, now, previousAnimation);
+        const currentAnimation = animations[animation.animationIndex];
+        currentAnimation.onStart(
+          currentAnimation,
+          value,
+          now,
+          previousAnimation
+        );
       }
 
       return {

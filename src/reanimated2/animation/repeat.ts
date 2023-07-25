@@ -21,7 +21,7 @@ export const withRepeat = function <T extends AnimationObject>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,
   reverse = false,
-  _reduceMotion?: ReducedMotionConfig,
+  reduceMotion?: ReducedMotionConfig,
   callback?: AnimationCallback
 ): Animation<RepeatAnimation> {
   'worklet';
@@ -36,10 +36,11 @@ export const withRepeat = function <T extends AnimationObject>(
           ? _nextAnimation()
           : _nextAnimation;
 
-      const isEven = reverse && (numberOfReps <= 0 || numberOfReps % 2 === 0);
+      const isEvenNumberOfReps =
+        reverse && (numberOfReps <= 0 || numberOfReps % 2 === 0);
 
       function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
-        if (animation.reduceMotion && isEven) {
+        if (animation.reduceMotion && isEvenNumberOfReps) {
           return true;
         }
 
@@ -96,11 +97,13 @@ export const withRepeat = function <T extends AnimationObject>(
         animation.startValue = value;
         animation.reps = 0;
 
+        // child animations inherit the setting, unless they already have it defined
+        // they will have it defined only if the user used the `reduceMotion` prop
         if (nextAnimation.reduceMotion === undefined) {
           nextAnimation.reduceMotion = animation.reduceMotion;
         }
 
-        if (animation.reduceMotion && isEven) {
+        if (animation.reduceMotion && isEvenNumberOfReps) {
           animation.current = animation.startValue;
         } else {
           nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
@@ -115,7 +118,7 @@ export const withRepeat = function <T extends AnimationObject>(
         current: nextAnimation.current,
         callback: repCallback,
         startValue: 0,
-        reduceMotion: shouldReduceMotion(_reduceMotion),
+        reduceMotion: shouldReduceMotion(reduceMotion),
       };
     }
   );

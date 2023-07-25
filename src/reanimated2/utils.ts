@@ -2,11 +2,6 @@ import type { Component } from 'react';
 import { measure } from './NativeMethods';
 import type { AnimatedRef } from './hook/commonTypes';
 import type { SharedValue } from './commonTypes';
-import { isWeb } from './PlatformChecker';
-
-export const IS_REDUCED_MOTION = isWeb()
-  ? !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
-  : global._REANIMATED_IS_REDUCED_MOTION ?? false;
 
 export interface ComponentCoords {
   x: number;

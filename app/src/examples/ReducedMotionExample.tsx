@@ -20,6 +20,7 @@ import {
 const duration = 2000;
 const toValue = 100;
 const initialValue = -100;
+let exampleNumber = 0;
 
 const SIMPLE_EXAMPLES = [
   { animation: withTiming(toValue, { duration }), text: 'withTiming' },
@@ -107,13 +108,17 @@ const EXAMPLES = [
   },
 ];
 
-export default function App() {
+export default function ReducedMotionExample() {
   const [currentExample, setCurrentExample] = useState(0);
 
   return (
     <View style={styles.container}>
-      {EXAMPLES.map((x, i) => (
-        <Button key={i} onPress={() => setCurrentExample(i)} title={x.title} />
+      {EXAMPLES.map((example, i) => (
+        <Button
+          key={i}
+          onPress={() => setCurrentExample(i)}
+          title={example.title}
+        />
       ))}
       {EXAMPLES[currentExample].component}
     </View>
@@ -145,15 +150,20 @@ function mapExamples(
     text: string;
   }[]
 ) {
-  return examples.map((example, i) => {
-    return (
-      <Example key={i} animation={example.animation} text={example.text} />
-    );
-  });
+  return (
+    <View key={exampleNumber++}>
+      {examples.map((example, i) => {
+        return (
+          <Example key={i} animation={example.animation} text={example.text} />
+        );
+      })}
+    </View>
+  );
 }
 
 function Example(props: { animation: number; text: string }) {
   const sv = useSharedValue(initialValue);
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: sv.value }],
   }));
