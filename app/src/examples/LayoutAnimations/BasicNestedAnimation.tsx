@@ -36,7 +36,7 @@ export default function BasicNestedAnimation() {
         <Animated.View
           entering={FadeInLeft.duration(1500)}
           exiting={FadeOutRight.duration(1500)}
-          style={[styles.box1]}>
+          style={styles.box1}>
           <Animated.View style={[styles.box2, animatedStyle]} />
         </Animated.View>
       )}

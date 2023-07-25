@@ -13,36 +13,27 @@ REAIOSScheduler::REAIOSScheduler(std::shared_ptr<CallInvoker> jsInvoker)
 
 void REAIOSScheduler::scheduleOnUI(std::function<void()> job)
 {
-  if (runtimeManager.lock() == nullptr) {
+  const auto runtimeManager = weakRuntimeManager_.lock();
+  if (!runtimeManager) {
     return;
   }
 
   if ([NSThread isMainThread]) {
-    if (runtimeManager.lock()) {
-      job();
-    }
+    job();
     return;
   }
 
   Scheduler::scheduleOnUI(job);
-  if ([NSThread isMainThread]) {
-    if (runtimeManager.lock()) {
-      triggerUI();
-    }
-    return;
-  }
 
-  if (!this->scheduledOnUI) {
-    __block std::weak_ptr<RuntimeManager> blockRuntimeManager = runtimeManager;
+  if (!scheduledOnUI_) {
+    __block std::weak_ptr<RuntimeManager> blockRuntimeManager = weakRuntimeManager_;
 
     dispatch_async(dispatch_get_main_queue(), ^{
-      if (blockRuntimeManager.lock()) {
+      if (const auto runtimeManager = blockRuntimeManager.lock()) {
         triggerUI();
       }
     });
   }
 }
-
-REAIOSScheduler::~REAIOSScheduler() {}
 
 } // namespace reanimated

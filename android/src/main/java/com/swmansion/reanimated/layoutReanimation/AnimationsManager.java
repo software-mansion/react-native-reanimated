@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import com.facebook.react.BuildConfig;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -178,6 +179,26 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (hasAnimationForTag(view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
       mSharedTransitionManager.notifyAboutNewView(view);
     }
+    if (BuildConfig.DEBUG) {
+      checkDuplicateSharedTag(view);
+    }
+  }
+
+  private void checkDuplicateSharedTag(View view) {
+    int viewTag = view.getId();
+
+    ViewParent parent = view.getParent();
+    while (parent != null) {
+      if (parent.getClass().getSimpleName().equals("Screen")) {
+        break;
+      }
+      parent = (ViewParent) parent.getParent();
+    }
+
+    if (parent != null) {
+      int screenTag = ((View) parent).getId();
+      mNativeMethodsHolder.checkDuplicateSharedTag(viewTag, screenTag);
+    }
   }
 
   public void progressLayoutAnimation(
@@ -204,7 +225,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     setNewProps(newStyle, view, viewManager, parentViewManager, parent.getId(), isSharedTransition);
   }
 
-  public void endLayoutAnimation(int tag, boolean cancelled, boolean removeView) {
+  public void endLayoutAnimation(int tag, boolean removeView) {
     View view = resolveView(tag);
 
     if (view == null) {
@@ -479,9 +500,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
     int tag = view.getId();
     ViewManager viewManager = resolveViewManager(tag);
 
-    if (viewManager != null && viewManager.getName().equals("RNSScreenStack")) {
-      cancelAnimationsRecursive(view);
-      return false;
+    if (viewManager != null) {
+      String viewManagerName = viewManager.getName();
+      if (viewManagerName.equals("RCTModalHostView")
+          || viewManagerName.equals("RNSScreen")
+          || viewManagerName.equals("RNSScreenStack")) {
+        // don't run exiting animation when ScreenStack, Screen, or Modal are removing
+        cancelAnimationsRecursive(view);
+        return false;
+      }
     }
 
     boolean hasExitAnimation =
@@ -546,13 +573,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     return true;
-  }
-
-  public void clearAnimationConfigForTag(int tag) {
-    View view = resolveView(tag);
-    if (view != null) {
-      clearAnimationConfigRecursive(view);
-    }
   }
 
   public void clearAnimationConfigRecursive(View view) {
@@ -626,7 +646,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void cancelAnimationsRecursive(View view) {
     if (mExitingViews.containsKey(view.getId())) {
-      endLayoutAnimation(view.getId(), true, true);
+      endLayoutAnimation(view.getId(), true);
     } else if (view instanceof ViewGroup && mExitingSubviewCountMap.containsKey(view.getId())) {
       cancelAnimationsInSubviews((ViewGroup) view);
     }
@@ -641,7 +661,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
 
       if (mExitingViews.containsKey(child.getId())) {
-        endLayoutAnimation(child.getId(), true, true);
+        endLayoutAnimation(child.getId(), true);
       } else if (child instanceof ViewGroup && mExitingSubviewCountMap.containsKey(child.getId())) {
         cancelAnimationsInSubviews((ViewGroup) child);
       }

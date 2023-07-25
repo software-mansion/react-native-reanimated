@@ -6,6 +6,7 @@ export {
   useWorkletCallback,
 } from './Hooks';
 export { useSharedValue } from './useSharedValue';
+export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
 export type { AnimatedStyleResult } from './useAnimatedStyle';
 export { useAnimatedGestureHandler } from './useAnimatedGestureHandler';

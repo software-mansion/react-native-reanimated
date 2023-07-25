@@ -24,6 +24,10 @@
 #include "Shareables.h"
 #include "WorkletEventHandler.h"
 
+#ifdef DEBUG
+#include "JSLogger.h"
+#endif
+
 using namespace facebook;
 
 namespace reanimated {
@@ -32,7 +36,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::shared_ptr<Scheduler> &scheduler,
     const std::shared_ptr<jsi::Runtime> &rt,
-    const std::shared_ptr<ErrorHandler> &errorHandler,
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
@@ -41,11 +44,8 @@ NativeReanimatedModule::NativeReanimatedModule(
 #endif
     PlatformDepMethodsHolder platformDepMethodsHolder)
     : NativeReanimatedModuleSpec(jsInvoker),
-      runtimeManager_(std::make_shared<RuntimeManager>(
-          rt,
-          errorHandler,
-          scheduler,
-          RuntimeType::UI)),
+      runtimeManager_(
+          std::make_shared<RuntimeManager>(rt, scheduler, RuntimeType::UI)),
       eventHandlerRegistry(std::make_unique<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -124,6 +124,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.updatePropsFunction,
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.scrollToFunction,
+      platformDepMethodsHolder.dispatchCommandFunction,
 #endif
       requestAnimationFrame,
       scheduleOnJS,
@@ -164,6 +165,12 @@ void NativeReanimatedModule::installCoreFunctions(
       std::make_unique<CoreFunction>(runtimeHelper.get(), callGuard);
   runtimeHelper->valueUnpacker =
       std::make_unique<CoreFunction>(runtimeHelper.get(), valueUnpacker);
+#ifdef DEBUG
+  // We initialize jsLogger_ here because we need runtimeHelper
+  // to be initialized already
+  jsLogger_ = std::make_shared<JSLogger>(runtimeHelper);
+  layoutAnimationsManager_.setJSLogger(jsLogger_);
+#endif
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
@@ -201,7 +208,7 @@ void NativeReanimatedModule::scheduleOnJS(
   auto shareableRemoteFun = extractShareableOrThrow<ShareableRemoteFunction>(
       rt,
       remoteFun,
-      "Incompatible object passed to scheduleOnJS. It is only allowed to schedule functions defined on the React Native JS runtime this way.");
+      "Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
   auto shareableArgs = argsValue.isUndefined()
       ? nullptr
       : extractShareableOrThrow(rt, argsValue);
@@ -337,7 +344,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
 }
 
 void NativeReanimatedModule::unregisterEventHandler(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   runtimeManager_->scheduler->scheduleOnUI(
@@ -373,7 +380,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
 }
 
 jsi::Value NativeReanimatedModule::enableLayoutAnimations(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
@@ -384,8 +391,9 @@ jsi::Value NativeReanimatedModule::configureProps(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
+  (void)uiProps; // unused variable on Fabric
   jsi::Array array = nativeProps.asObject(rt).asArray(rt);
-  for (int i = 0; i < array.size(rt); ++i) {
+  for (size_t i = 0; i < array.size(rt); ++i) {
     std::string name = array.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     nativePropNames_.insert(name);
   }
@@ -446,7 +454,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
 }
 
 void NativeReanimatedModule::unregisterSensor(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &sensorId) {
   animatedSensorModule.unregisterSensor(sensorId);
 }
@@ -733,7 +741,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
-    jsi::Runtime &rt,
+    jsi::Runtime &,
     const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction(listenerId.asNumber());
 }

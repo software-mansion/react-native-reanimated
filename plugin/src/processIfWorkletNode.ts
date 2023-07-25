@@ -1,43 +1,52 @@
 import type { NodePath } from '@babel/core';
-import type {
-  FunctionDeclaration,
-  FunctionExpression,
-  ArrowFunctionExpression,
-} from '@babel/types';
 import { isBlockStatement, isDirectiveLiteral } from '@babel/types';
+import type { BlockStatement } from '@babel/types';
 import { processIfWorkletFunction } from './processIfWorkletFunction';
-import type { ReanimatedPluginPass } from './types';
+import type { ExplicitWorklet, ReanimatedPluginPass } from './types';
+
+function hasWorkletDirective(directives: BlockStatement['directives']) {
+  return (
+    directives &&
+    directives.length > 0 &&
+    directives.some(
+      (directive) =>
+        isDirectiveLiteral(directive.value) &&
+        directive.value.value === 'worklet'
+    )
+  );
+}
 
 export function processIfWorkletNode(
-  fun: NodePath<
-    FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
-  >,
+  fun: NodePath<ExplicitWorklet>,
   state: ReanimatedPluginPass
 ) {
+  let shouldBeProcessed = false;
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;
-      if (
-        value === 'worklet' &&
-        path.getFunctionParent() === fun &&
-        isBlockStatement(fun.node.body)
-      ) {
-        // make sure "worklet" is listed among directives for the fun
-        // this is necessary as because of some bug, babel will attempt to
-        // process replaced function if it is nested inside another function
-        const directives = fun.node.body.directives;
-        if (
-          directives &&
-          directives.length > 0 &&
-          directives.some(
-            (directive) =>
-              isDirectiveLiteral(directive.value) &&
-              directive.value.value === 'worklet'
-          )
+      if (value === 'worklet' && isBlockStatement(fun.node.body)) {
+        const parent = path.getFunctionParent();
+        if (parent === fun) {
+          // make sure "worklet" is listed among directives for the fun
+          // this is necessary as because of some bug, babel will attempt to
+          // process replaced function if it is nested inside another function
+          const directives = fun.node.body.directives;
+
+          shouldBeProcessed = hasWorkletDirective(directives);
+        } else if (
+          state.opts.processNestedWorklets &&
+          // use better function for that once proper merges come to life
+          (parent?.isFunctionDeclaration() ||
+            parent?.isFunctionExpression() ||
+            parent?.isArrowFunctionExpression())
         ) {
-          processIfWorkletFunction(fun, state);
+          processIfWorkletNode(parent, state);
         }
       }
     },
   });
+
+  if (shouldBeProcessed) {
+    processIfWorkletFunction(fun, state);
+  }
 }

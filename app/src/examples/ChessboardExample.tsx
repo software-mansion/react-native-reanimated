@@ -72,9 +72,6 @@ const styles = StyleSheet.create({
     height: 400,
     // prevents calling _state->updateState from RNScreens after each change because of view flattening
   },
-  buttons: {
-    marginVertical: 50,
-  },
   chessboard: {
     alignItems: 'flex-start',
   },

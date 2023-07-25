@@ -1,7 +1,7 @@
 #import <RNReanimated/REAAnimationsManager.h>
 #import <RNReanimated/REASharedElement.h>
 #import <RNReanimated/REASharedTransitionManager.h>
-#import <RNReanimated/REAUIManager.h>
+#import <RNReanimated/REASwizzledUIManager.h>
 #import <React/RCTComponentData.h>
 #import <React/RCTTextView.h>
 #import <React/UIView+Private.h>
@@ -30,7 +30,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 
 @implementation REAAnimationsManager {
   RCTUIManager *_uiManager;
-  REAUIManager *_reaUiManager;
+  REASwizzledUIManager *_reaSwizzledUIManager;
   NSMutableSet<NSNumber *> *_enteringViews;
   NSMutableDictionary<NSNumber *, REASnapshot *> *_enteringViewTargetValues;
   NSMutableDictionary<NSNumber *, UIView *> *_exitingViews;
@@ -43,6 +43,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   REAHasAnimationBlock _hasAnimationForTag;
   REAAnimationRemovingBlock _clearAnimationConfigForTag;
   REASharedTransitionManager *_sharedTransitionManager;
+#ifdef DEBUG
+  REACheckDuplicateSharedTagBlock _checkDuplicateSharedTag;
+#endif
 }
 
 + (NSArray *)layoutKeys
@@ -59,7 +62,6 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   if (self = [super init]) {
     _uiManager = uiManager;
-    _reaUiManager = (REAUIManager *)uiManager;
     _exitingViews = [NSMutableDictionary new];
     _exitingSubviewsCountMap = [NSMutableDictionary new];
     _ancestorsToRemove = [NSMutableSet new];
@@ -74,6 +76,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
       [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
     }
     _sharedTransitionManager = [[REASharedTransitionManager alloc] initWithAnimationsManager:self];
+    _reaSwizzledUIManager = [[REASwizzledUIManager alloc] initWithUIManager:uiManager withAnimationManager:self];
   }
   return self;
 }
@@ -103,15 +106,22 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   _clearAnimationConfigForTag = clearAnimation;
 }
 
+#ifdef DEBUG
+- (void)setCheckDuplicateSharedTagBlock:(REACheckDuplicateSharedTagBlock)checkDuplicateSharedTag
+{
+  _checkDuplicateSharedTag = checkDuplicateSharedTag;
+}
+#endif
+
 - (UIView *)viewForTag:(NSNumber *)tag
 {
   UIView *view;
-  (view = [_reaUiManager viewForReactTag:tag]) || (view = [_exitingViews objectForKey:tag]) ||
+  (view = [_uiManager viewForReactTag:tag]) || (view = [_exitingViews objectForKey:tag]) ||
       (view = [_sharedTransitionManager getTransitioningView:tag]);
   return view;
 }
 
-- (void)endLayoutAnimationForTag:(NSNumber *)tag cancelled:(BOOL)cancelled removeView:(BOOL)removeView
+- (void)endLayoutAnimationForTag:(NSNumber *)tag removeView:(BOOL)removeView
 {
   UIView *view = [self viewForTag:tag];
 
@@ -131,7 +141,7 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
     [self endAnimationsRecursive:view];
     [view removeFromSuperview];
   }
-  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag]];
+  [_sharedTransitionManager finishSharedAnimation:[self viewForTag:tag] removeView:removeView];
 }
 
 - (void)endAnimationsRecursive:(UIView *)view
@@ -533,6 +543,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
   if (_hasAnimationForTag(viewTag, SHARED_ELEMENT_TRANSITION)) {
     if (type == ENTERING) {
       [_sharedTransitionManager notifyAboutNewView:view];
+#ifdef DEBUG
+      _checkDuplicateSharedTag(view, viewTag);
+#endif
     } else {
       [_sharedTransitionManager notifyAboutViewLayout:view withViewFrame:frame];
     }
@@ -572,6 +585,11 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 - (void)startAnimationForTag:(NSNumber *)tag type:(LayoutAnimationType)type yogaValues:(NSDictionary *)yogaValues
 {
   _startAnimationForTag(tag, type, yogaValues);
+}
+
+- (void)onScreenRemoval:(UIView *)screen stack:(UIView *)stack
+{
+  [_sharedTransitionManager onScreenRemoval:screen stack:stack];
 }
 
 @end

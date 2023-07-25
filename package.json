@@ -6,8 +6,8 @@
     "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
     "test:update-snapshot": "jest --updateSnapshot",
-    "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios && yarn lint:docs",
-    "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
+    "lint": "yarn lint:js && yarn lint:plugin && yarn lint:cpp && yarn lint:java && yarn lint:ios",
+    "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__  && yarn prettier --check src __tests__ __typetests__",
     "lint:plugin": "cd plugin && yarn lint && cd ..",
     "lint:docs": "cd docs && yarn lint && cd ..",
     "lint:java": "./android/gradlew -p android spotlessCheck -q",
@@ -125,12 +125,13 @@
     "babel-plugin-module-resolver": "^5.0.0",
     "clang-format": "^1.6.0",
     "code-tag": "^1.1.0",
-    "eslint": "^8.8.0",
+    "eslint": "^8.44.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-import-resolver-babel-module": "^5.3.1",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jest": "^27.2.1",
+    "eslint-plugin-no-inline-styles": "^1.0.5",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-standard": "^5.0.0",
@@ -150,7 +151,7 @@
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin",
+      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs --ignore-pattern plugin --ignore-pattern .eslintrc.js --ignore-pattern jest.config.js --ignore-pattern __typetests__",
       "prettier --write"
     ],
     "plugin/**/*.ts": "yarn lint:plugin",
@@ -158,8 +159,7 @@
     "android/src/**/*.java": "yarn format:java",
     "android/src/**/*.{h,cpp}": "yarn format:android",
     "ios/**/*.{h,m,mm,cpp}": "yarn format:ios",
-    "Common/**/*.{h,cpp}": "yarn format:common",
-    "docs/**/*.{md,mdx}": "yarn lint:docs"
+    "Common/**/*.{h,cpp}": "yarn format:common"
   },
   "react-native-builder-bob": {
     "source": "src",

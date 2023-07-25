@@ -1,95 +1,36 @@
 import NativeReanimatedModule from './NativeReanimated';
-import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
+import { nativeShouldBeMock, isWeb } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
-  BasicWorkletFunction,
   SensorConfig,
   SensorType,
   SharedValue,
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import {
-  makeShareableCloneRecursive,
-  makeShareable as makeShareableUnwrapped,
-} from './shareables';
-import { startMapper as startMapperUnwrapped } from './mappers';
-import {
-  makeMutable as makeMutableUnwrapped,
-  makeRemote as makeRemoteUnwrapped,
-} from './mutables';
+import { makeShareableCloneRecursive } from './shareables';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './layoutReanimation';
 import { initializeUIRuntime } from './initializers';
+import type {
+  ProgressAnimationCallback,
+  SharedTransitionAnimationsFunction,
+} from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 
-export { stopMapper } from './mappers';
+export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI } from './threads';
+export { makeShareable } from './shareables';
+export { makeMutable, makeRemote } from './mutables';
 
 export type ReanimatedConsole = Pick<
   Console,
   'debug' | 'log' | 'warn' | 'info' | 'error'
 >;
 
-const testWorklet: BasicWorkletFunction<void> = () => {
-  'worklet';
-};
-
-const throwUninitializedReanimatedException = () => {
-  throw new Error(
-    "Failed to initialize react-native-reanimated library, make sure you followed installation steps here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation/ \n1) Make sure reanimated's babel plugin is installed in your babel.config.js (you should have 'react-native-reanimated/plugin' listed there - also see the above link for details) \n2) Make sure you reset build cache after updating the config, run: yarn start --reset-cache"
-  );
-};
-
-export const checkPluginState: (throwError: boolean) => boolean = (
-  throwError = true
-) => {
-  if (!testWorklet.__workletHash && !shouldBeUseWeb()) {
-    if (throwError) {
-      throwUninitializedReanimatedException();
-    }
-    return false;
-  }
-  return true;
-};
-
-export const isConfigured: (throwError?: boolean) => boolean = (
-  throwError = false
-) => {
-  return checkPluginState(throwError);
-};
-
-export const isConfiguredCheck: () => void = () => {
-  checkPluginState(true);
-};
-
-const configurationCheckWrapper = __DEV__
-  ? <T extends Array<any>, U>(fn: (...args: T) => U) => {
-      return (...args: T): U => {
-        isConfigured(true);
-        return fn(...args);
-      };
-    }
-  : <T extends Array<any>, U>(fn: (...args: T) => U) => fn;
-
-export const startMapper = __DEV__
-  ? configurationCheckWrapper(startMapperUnwrapped)
-  : startMapperUnwrapped;
-
-export const makeShareable = __DEV__
-  ? configurationCheckWrapper(makeShareableUnwrapped)
-  : makeShareableUnwrapped;
-
-export const makeMutable = __DEV__
-  ? configurationCheckWrapper(makeMutableUnwrapped)
-  : makeMutableUnwrapped;
-
-export const makeRemote = __DEV__
-  ? configurationCheckWrapper(makeRemoteUnwrapped)
-  : makeRemoteUnwrapped;
-
+// this is for web implementation
 global._WORKLET = false;
 global._log = function (s: string) {
   console.log(s);
@@ -127,7 +68,7 @@ export function getSensorContainer(): SensorContainer {
 export function registerEventHandler<T>(
   eventHash: string,
   eventHandler: (event: T) => void
-): string {
+): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
     global.__frameTimestamp = eventTimestamp;
@@ -141,7 +82,7 @@ export function registerEventHandler<T>(
   );
 }
 
-export function unregisterEventHandler(id: string): void {
+export function unregisterEventHandler(id: number): void {
   return NativeReanimatedModule.unregisterEventHandler(id);
 }
 
@@ -198,8 +139,7 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-// initialize UI runtime if applicable
-if (!isWeb() && isConfigured()) {
+if (!isWeb()) {
   initializeUIRuntime();
 }
 
@@ -235,7 +175,11 @@ export function enableLayoutAnimations(
 export function configureLayoutAnimations(
   viewTag: number,
   type: LayoutAnimationType,
-  config: LayoutAnimationFunction | Keyframe,
+  config:
+    | LayoutAnimationFunction
+    | Keyframe
+    | SharedTransitionAnimationsFunction
+    | ProgressAnimationCallback,
   sharedTransitionTag = ''
 ): void {
   NativeReanimatedModule.configureLayoutAnimation(

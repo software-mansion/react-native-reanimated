@@ -1,12 +1,15 @@
 package com.swmansion.reanimated.nativeProxy;
 
+import android.content.ContentResolver;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
@@ -113,6 +116,11 @@ public abstract class NativeProxyCommon {
   }
 
   @DoNotStrip
+  public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
+    mNodesManager.dispatchCommand(viewTag, commandId, commandArgs);
+  }
+
+  @DoNotStrip
   public void setGestureState(int handlerTag, int newState) {
     if (gestureHandlerStateManager != null) {
       gestureHandlerStateManager.setGestureHandlerState(handlerTag, newState);
@@ -202,6 +210,15 @@ public abstract class NativeProxyCommon {
             .getAnimationsManager();
 
     animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
+  }
+
+  @DoNotStrip
+  public boolean getIsReducedMotion() {
+    ContentResolver mContentResolver = mContext.get().getContentResolver();
+    String rawValue =
+        Settings.Global.getString(mContentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE);
+    float parsedValue = rawValue != null ? Float.parseFloat(rawValue) : 1f;
+    return parsedValue == 0f;
   }
 
   @DoNotStrip

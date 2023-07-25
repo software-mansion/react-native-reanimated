@@ -51,6 +51,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  fullWidth: {
+    width: '100%',
+  },
 });
 
 function Participant({
@@ -65,7 +68,7 @@ function Participant({
       entering={LightSpeedInLeft}
       exiting={LightSpeedOutRight}
       layout={Layout.springify()}
-      style={[styles.participantView]}>
+      style={styles.participantView}>
       <Text>{name}</Text>
       <Button title="Remove" color="red" onPress={onRemove} />
     </Animated.View>
@@ -91,8 +94,8 @@ export default function AnimatedListExample(): React.ReactElement {
   };
 
   return (
-    <View style={[styles.listView]}>
-      <ScrollView style={[{ width: '100%' }]}>
+    <View style={styles.listView}>
+      <ScrollView style={styles.fullWidth}>
         {participantList.map((participant) => (
           <Participant
             key={participant.id}
@@ -102,8 +105,8 @@ export default function AnimatedListExample(): React.ReactElement {
         ))}
       </ScrollView>
 
-      <View style={[styles.bottomRow]}>
-        <View style={[styles.textInput]}>
+      <View style={styles.bottomRow}>
+        <View style={styles.textInput}>
           <Text>Add participant: </Text>
           <TextInput
             placeholder="Name"

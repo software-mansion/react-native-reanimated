@@ -70,6 +70,7 @@ var require_commonObjects = __commonJS({
       "Proxy",
       "WeakRef",
       "Set",
+      "Intl",
       "_log",
       "_scheduleOnJS",
       "_makeShareableClone",
@@ -85,6 +86,7 @@ var require_commonObjects = __commonJS({
       "_measurePaper",
       "_measureFabric",
       "_scrollToPaper",
+      "_dispatchCommandPaper",
       "_dispatchCommandFabric",
       "_setGestureState",
       "isNaN",
@@ -103,7 +105,8 @@ var require_utils = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isRelease = void 0;
     function isRelease() {
-      return process.env.BABEL_ENV && ["production", "release"].includes(process.env.BABEL_ENV);
+      var _a;
+      return !!((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(/(prod|release|stag[ei])/i));
     }
     exports2.isRelease = isRelease;
   }
@@ -157,6 +160,7 @@ var require_buildWorkletString = __commonJS({
     var convertSourceMap = __importStar(require("convert-source-map"));
     var fs = __importStar(require("fs"));
     var utils_1 = require_utils();
+    var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, closureVariables, name, inputMap) {
       const draftExpression = fun.program.body.find((obj) => (0, types_1.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_1.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "'draftExpression' is undefined");
@@ -166,7 +170,7 @@ var require_buildWorkletString = __commonJS({
       const workletFunction = (0, types_1.functionExpression)((0, types_1.identifier)(name), expression.params, expression.body);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "'inputMap' is undefined");
-      const includeSourceMap = shouldGenerateSourceMap();
+      const includeSourceMap = !(0, utils_1.isRelease)();
       if (includeSourceMap) {
         inputMap.sourcesContent = [];
         for (const sourceFile of inputMap.sources) {
@@ -175,7 +179,7 @@ var require_buildWorkletString = __commonJS({
       }
       const transformed = (0, core_1.transformSync)(code, {
         plugins: [prependClosureVariablesIfNecessary(closureVariables)],
-        compact: !includeSourceMap,
+        compact: true,
         sourceMaps: includeSourceMap,
         inputSourceMap: inputMap,
         ast: false,
@@ -186,20 +190,18 @@ var require_buildWorkletString = __commonJS({
       (0, assert_1.strict)(transformed, "'transformed' is null");
       let sourceMap;
       if (includeSourceMap) {
-        sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
-        delete sourceMap.sourcesContent;
+        if (shouldMockSourceMap()) {
+          sourceMap = MOCK_SOURCE_MAP;
+        } else {
+          sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+          delete sourceMap.sourcesContent;
+        }
       }
       return [transformed.code, JSON.stringify(sourceMap)];
     }
     exports2.buildWorkletString = buildWorkletString;
-    function shouldGenerateSourceMap() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_SOURCEMAP === "jest") {
-        return false;
-      }
-      return true;
+    function shouldMockSourceMap() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
     }
     function prependClosure(path, closureVariables, closureDeclaration) {
       if (closureVariables.length === 0 || !(0, types_1.isProgram)(path.parent)) {
@@ -253,16 +255,11 @@ var require_makeWorklet = __commonJS({
     var buildWorkletString_1 = require_buildWorkletString();
     var commonObjects_12 = require_commonObjects();
     var utils_1 = require_utils();
-    var version = require("../../package.json").version;
+    var REAL_VERSION = require("../../package.json").version;
+    var MOCK_VERSION = "x.y.z";
     function makeWorklet(fun, state) {
       const functionName = makeWorkletName(fun);
-      fun.traverse({
-        DirectiveLiteral(path) {
-          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
-            path.parentPath.remove();
-          }
-        }
-      });
+      removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "'state.file.opts.filename' is undefined");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
@@ -296,10 +293,6 @@ var require_makeWorklet = __commonJS({
       const [funString, sourceMapString] = (0, buildWorkletString_1.buildWorkletString)(transformed.ast, variables, functionName, transformed.map);
       (0, assert_1.strict)(funString, "'funString' is undefined");
       const workletHash = hash(funString);
-      let location = state.file.opts.filename;
-      if (state.opts.relativeSourceLocation) {
-        location = (0, path_1.relative)(state.cwd, location);
-      }
       let lineOffset = 1;
       if (variables.length > 0) {
         lineOffset -= variables.length + 2;
@@ -309,11 +302,22 @@ var require_makeWorklet = __commonJS({
       (0, assert_1.strict)(pathForStringDefinitions.parentPath, "'pathForStringDefinitions.parentPath' is null");
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
       const initDataObjectExpression = (0, types_1.objectExpression)([
-        (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString)),
-        (0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location))
+        (0, types_1.objectProperty)((0, types_1.identifier)("code"), (0, types_1.stringLiteral)(funString))
       ]);
+      const shouldInjectLocation = !(0, utils_1.isRelease)();
+      if (shouldInjectLocation) {
+        let location = state.file.opts.filename;
+        if (state.opts.relativeSourceLocation) {
+          location = (0, path_1.relative)(state.cwd, location);
+        }
+        initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("location"), (0, types_1.stringLiteral)(location)));
+      }
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("sourceMap"), (0, types_1.stringLiteral)(sourceMapString)));
+      }
+      const shouldInjectVersion = !(0, utils_1.isRelease)();
+      if (shouldInjectVersion) {
+        initDataObjectExpression.properties.push((0, types_1.objectProperty)((0, types_1.identifier)("version"), (0, types_1.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
       pathForStringDefinitions.insertBefore((0, types_1.variableDeclaration)("const", [
         (0, types_1.variableDeclarator)(initDataId, initDataObjectExpression)
@@ -337,23 +341,23 @@ var require_makeWorklet = __commonJS({
           ]))
         ]));
         statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__stackDetails"), false), (0, types_1.identifier)("_e"))));
-        if (shouldInjectVersion()) {
-          statements.push((0, types_1.expressionStatement)((0, types_1.assignmentExpression)("=", (0, types_1.memberExpression)(privateFunctionId, (0, types_1.identifier)("__version"), false), (0, types_1.stringLiteral)(version))));
-        }
       }
       statements.push((0, types_1.returnStatement)(privateFunctionId));
       const newFun = (0, types_1.functionExpression)(void 0, [], (0, types_1.blockStatement)(statements));
       return newFun;
     }
     exports2.makeWorklet = makeWorklet;
-    function shouldInjectVersion() {
-      if ((0, utils_1.isRelease)()) {
-        return false;
-      }
-      if (process.env.REANIMATED_JEST_DISABLE_VERSION === "jest") {
-        return false;
-      }
-      return true;
+    function removeWorkletDirective(fun) {
+      fun.traverse({
+        DirectiveLiteral(path) {
+          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
+            path.parentPath.remove();
+          }
+        }
+      });
+    }
+    function shouldMockVersion() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function hash(str) {
       let i = str.length;
@@ -545,78 +549,30 @@ var require_processIfWorkletNode = __commonJS({
     exports2.processIfWorkletNode = void 0;
     var types_1 = require("@babel/types");
     var processIfWorkletFunction_1 = require_processIfWorkletFunction();
+    function hasWorkletDirective(directives) {
+      return directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet");
+    }
     function processIfWorkletNode(fun, state) {
+      let shouldBeProcessed = false;
       fun.traverse({
         DirectiveLiteral(path) {
           const value = path.node.value;
-          if (value === "worklet" && path.getFunctionParent() === fun && (0, types_1.isBlockStatement)(fun.node.body)) {
-            const directives = fun.node.body.directives;
-            if (directives && directives.length > 0 && directives.some((directive) => (0, types_1.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet")) {
-              (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
+          if (value === "worklet" && (0, types_1.isBlockStatement)(fun.node.body)) {
+            const parent = path.getFunctionParent();
+            if (parent === fun) {
+              const directives = fun.node.body.directives;
+              shouldBeProcessed = hasWorkletDirective(directives);
+            } else if (state.opts.processNestedWorklets && ((parent === null || parent === void 0 ? void 0 : parent.isFunctionDeclaration()) || (parent === null || parent === void 0 ? void 0 : parent.isFunctionExpression()) || (parent === null || parent === void 0 ? void 0 : parent.isArrowFunctionExpression()))) {
+              processIfWorkletNode(parent, state);
             }
           }
         }
       });
+      if (shouldBeProcessed) {
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(fun, state);
+      }
     }
     exports2.processIfWorkletNode = processIfWorkletNode;
-  }
-});
-
-// lib/processIfGestureHandlerEventCallbackFunctionNode.js
-var require_processIfGestureHandlerEventCallbackFunctionNode = __commonJS({
-  "lib/processIfGestureHandlerEventCallbackFunctionNode.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processIfGestureHandlerEventCallbackFunctionNode = void 0;
-    var types_1 = require("@babel/types");
-    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
-    var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
-      "Tap",
-      "Pan",
-      "Pinch",
-      "Rotation",
-      "Fling",
-      "LongPress",
-      "ForceTouch",
-      "Native",
-      "Manual",
-      "Race",
-      "Simultaneous",
-      "Exclusive"
-    ]);
-    var gestureHandlerBuilderMethods = /* @__PURE__ */ new Set([
-      "onBegin",
-      "onStart",
-      "onEnd",
-      "onFinalize",
-      "onUpdate",
-      "onChange",
-      "onTouchesDown",
-      "onTouchesMove",
-      "onTouchesUp",
-      "onTouchesCancelled"
-    ]);
-    function processIfGestureHandlerEventCallbackFunctionNode(path, state) {
-      if ((0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee)) {
-        (0, processIfWorkletFunction_1.processIfWorkletFunction)(path, state);
-      }
-    }
-    exports2.processIfGestureHandlerEventCallbackFunctionNode = processIfGestureHandlerEventCallbackFunctionNode;
-    function isGestureObjectEventCallbackMethod(exp) {
-      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && gestureHandlerBuilderMethods.has(exp.property.name) && containsGestureObject(exp.object);
-    }
-    function containsGestureObject(exp) {
-      if (isGestureObject(exp)) {
-        return true;
-      }
-      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && containsGestureObject(exp.callee.object)) {
-        return true;
-      }
-      return false;
-    }
-    function isGestureObject(exp) {
-      return (0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.object) && exp.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(exp.callee.property) && gestureHandlerGestureObjects.has(exp.callee.property.name);
-    }
   }
 });
 
@@ -701,13 +657,243 @@ var require_processInlineStylesWarning = __commonJS({
   }
 });
 
+// lib/isGestureHandlerEventCallback.js
+var require_isGestureHandlerEventCallback = __commonJS({
+  "lib/isGestureHandlerEventCallback.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isGestureHandlerEventCallback = void 0;
+    var types_1 = require("@babel/types");
+    var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
+      "Tap",
+      "Pan",
+      "Pinch",
+      "Rotation",
+      "Fling",
+      "LongPress",
+      "ForceTouch",
+      "Native",
+      "Manual",
+      "Race",
+      "Simultaneous",
+      "Exclusive"
+    ]);
+    var gestureHandlerBuilderMethods = /* @__PURE__ */ new Set([
+      "onBegin",
+      "onStart",
+      "onEnd",
+      "onFinalize",
+      "onUpdate",
+      "onChange",
+      "onTouchesDown",
+      "onTouchesMove",
+      "onTouchesUp",
+      "onTouchesCancelled"
+    ]);
+    function isGestureHandlerEventCallback(path) {
+      return (0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee);
+    }
+    exports2.isGestureHandlerEventCallback = isGestureHandlerEventCallback;
+    function isGestureObjectEventCallbackMethod(exp) {
+      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && gestureHandlerBuilderMethods.has(exp.property.name) && containsGestureObject(exp.object);
+    }
+    function containsGestureObject(exp) {
+      if (isGestureObject(exp)) {
+        return true;
+      }
+      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && containsGestureObject(exp.callee.object)) {
+        return true;
+      }
+      return false;
+    }
+    function isGestureObject(exp) {
+      return (0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.object) && exp.callee.object.name === "Gesture" && (0, types_1.isIdentifier)(exp.callee.property) && gestureHandlerGestureObjects.has(exp.callee.property.name);
+    }
+  }
+});
+
+// lib/isLayoutAnimationCallback.js
+var require_isLayoutAnimationCallback = __commonJS({
+  "lib/isLayoutAnimationCallback.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isLayoutAnimationCallback = void 0;
+    var types_1 = require("@babel/types");
+    var EntryExitAnimations = /* @__PURE__ */ new Set([
+      "BounceIn",
+      "BounceInDown",
+      "BounceInLeft",
+      "BounceInRight",
+      "BounceInUp",
+      "BounceOut",
+      "BounceOutDown",
+      "BounceOutLeft",
+      "BounceOutRight",
+      "BounceOutUp",
+      "FadeIn",
+      "FadeInDown",
+      "FadeInLeft",
+      "FadeInRight",
+      "FadeInUp",
+      "FadeOut",
+      "FadeOutDown",
+      "FadeOutLeft",
+      "FadeOutRight",
+      "FadeOutUp",
+      "FlipInEasyX",
+      "FlipInEasyY",
+      "FlipInXDown",
+      "FlipInXUp",
+      "FlipInYLeft",
+      "FlipInYRight",
+      "FlipOutEasyX",
+      "FlipOutEasyY",
+      "FlipOutXDown",
+      "FlipOutXUp",
+      "FlipOutYLeft",
+      "FlipOutYRight",
+      "LightSpeedInLeft",
+      "LightSpeedInRight",
+      "LightSpeedOutLeft",
+      "LightSpeedOutRight",
+      "PinwheelIn",
+      "PinwheelOut",
+      "RollInLeft",
+      "RollInRight",
+      "RollOutLeft",
+      "RollOutRight",
+      "RotateInDownLeft",
+      "RotateInDownRight",
+      "RotateInUpLeft",
+      "RotateInUpRight",
+      "RotateOutDownLeft",
+      "RotateOutDownRight",
+      "RotateOutUpLeft",
+      "RotateOutUpRight",
+      "SlideInDown",
+      "SlideInLeft",
+      "SlideInRight",
+      "SlideInUp",
+      "SlideOutDown",
+      "SlideOutLeft",
+      "SlideOutRight",
+      "SlideOutUp",
+      "StretchInX",
+      "StretchInY",
+      "StretchOutX",
+      "StretchOutY",
+      "ZoomIn",
+      "ZoomInDown",
+      "ZoomInEasyDown",
+      "ZoomInEasyUp",
+      "ZoomInLeft",
+      "ZoomInRight",
+      "ZoomInRotate",
+      "ZoomInUp",
+      "ZoomOut",
+      "ZoomOutDown",
+      "ZoomOutEasyDown",
+      "ZoomOutEasyUp",
+      "ZoomOutLeft",
+      "ZoomOutRight",
+      "ZoomOutRotate",
+      "ZoomOutUp"
+    ]);
+    var LayoutTransitions = /* @__PURE__ */ new Set([
+      "Layout",
+      "SequencedTransition",
+      "FadingTransition",
+      "JumpingTransition",
+      "CurvedTransition",
+      "EntryExitTransition"
+    ]);
+    var LayoutAnimations = /* @__PURE__ */ new Set([
+      ...EntryExitAnimations,
+      ...LayoutTransitions
+    ]);
+    var BaseAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      "build",
+      "duration",
+      "delay",
+      "getDuration",
+      "randomDelay",
+      "getDelay",
+      "getDelayFunction"
+    ]);
+    var ComplexAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      "easing",
+      "rotate",
+      "springify",
+      "damping",
+      "mass",
+      "stiffness",
+      "overshootClamping",
+      "restDisplacementThreshold",
+      "restSpeedThreshold",
+      "withInitialValues",
+      "getAnimationAndConfig"
+    ]);
+    var DefaultTransitionChainableMethods = /* @__PURE__ */ new Set([
+      "easingX",
+      "easingY",
+      "easingWidth",
+      "easingHeight",
+      "entering",
+      "exiting",
+      "reverse"
+    ]);
+    var LayoutAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      ...BaseAnimationsChainableMethods,
+      ...ComplexAnimationsChainableMethods,
+      ...DefaultTransitionChainableMethods
+    ]);
+    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set(["withCallback"]);
+    function isLayoutAnimationCallback(path) {
+      return (0, types_1.isCallExpression)(path.parent) && (0, types_1.isExpression)(path.parent.callee) && isLayoutAnimationCallbackMethod(path.parent.callee);
+    }
+    exports2.isLayoutAnimationCallback = isLayoutAnimationCallback;
+    function isLayoutAnimationCallbackMethod(exp) {
+      return (0, types_1.isMemberExpression)(exp) && (0, types_1.isIdentifier)(exp.property) && LayoutAnimationsCallbacks.has(exp.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.object);
+    }
+    function isLayoutAnimationsChainableOrNewOperator(exp) {
+      if ((0, types_1.isIdentifier)(exp) && LayoutAnimations.has(exp.name)) {
+        return true;
+      } else if ((0, types_1.isNewExpression)(exp) && (0, types_1.isIdentifier)(exp.callee) && LayoutAnimations.has(exp.callee.name)) {
+        return true;
+      }
+      if ((0, types_1.isCallExpression)(exp) && (0, types_1.isMemberExpression)(exp.callee) && (0, types_1.isIdentifier)(exp.callee.property) && LayoutAnimationsChainableMethods.has(exp.callee.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.callee.object)) {
+        return true;
+      }
+      return false;
+    }
+  }
+});
+
+// lib/processIfCallback.js
+var require_processIfCallback = __commonJS({
+  "lib/processIfCallback.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfCallback = void 0;
+    var isGestureHandlerEventCallback_1 = require_isGestureHandlerEventCallback();
+    var processIfWorkletFunction_1 = require_processIfWorkletFunction();
+    var isLayoutAnimationCallback_1 = require_isLayoutAnimationCallback();
+    function processIfCallback(path, state) {
+      if ((0, isGestureHandlerEventCallback_1.isGestureHandlerEventCallback)(path) || (0, isLayoutAnimationCallback_1.isLayoutAnimationCallback)(path)) {
+        (0, processIfWorkletFunction_1.processIfWorkletFunction)(path, state);
+      }
+    }
+    exports2.processIfCallback = processIfCallback;
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var commonObjects_1 = require_commonObjects();
 var processForCalleesWorklets_1 = require_processForCalleesWorklets();
 var processIfWorkletNode_1 = require_processIfWorkletNode();
-var processIfGestureHandlerEventCallbackFunctionNode_1 = require_processIfGestureHandlerEventCallbackFunctionNode();
 var processInlineStylesWarning_1 = require_processInlineStylesWarning();
+var processIfCallback_1 = require_processIfCallback();
 module.exports = function() {
   return {
     pre() {
@@ -726,7 +912,7 @@ module.exports = function() {
       "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression": {
         enter(path, state) {
           (0, processIfWorkletNode_1.processIfWorkletNode)(path, state);
-          (0, processIfGestureHandlerEventCallbackFunctionNode_1.processIfGestureHandlerEventCallbackFunctionNode)(path, state);
+          (0, processIfCallback_1.processIfCallback)(path, state);
         }
       },
       JSXAttribute: {

@@ -44,7 +44,7 @@ function AnimatedView({ pokemon }: { pokemon: Pokemon }) {
     <Animated.View
       entering={SlideInLeft}
       exiting={SlideOutRight}
-      style={[styles.animatedView]}>
+      style={styles.animatedView}>
       <AnimatedImage
         entering={SlideInLeft.delay(300).springify()}
         source={pokemon.img}
@@ -62,20 +62,14 @@ function AnimatedView({ pokemon }: { pokemon: Pokemon }) {
 export default function Carousel(): React.ReactElement {
   const [currentIndex, incrementIndex] = useState(0);
   return (
-    <View style={{ flexDirection: 'column-reverse' }}>
+    <View style={styles.columnReverse}>
       <Button
         title="toggle"
         onPress={() => {
           incrementIndex((prev) => (prev + 1) % DATA.length);
         }}
       />
-      <View
-        style={{
-          height: 400,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-        }}>
+      <View style={styles.carouselContainer}>
         <AnimatedView key={currentIndex} pokemon={DATA[currentIndex]} />
       </View>
     </View>
@@ -83,6 +77,13 @@ export default function Carousel(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  columnReverse: { flexDirection: 'column-reverse' },
+  carouselContainer: {
+    height: 400,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
   animatedView: {
     height: 300,
     width: 200,

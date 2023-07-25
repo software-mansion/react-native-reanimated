@@ -56,10 +56,10 @@ function Box({ label, state }: { label: string; state: boolean }) {
 export default function CustomLayoutAnimationScreen(): React.ReactElement {
   const [state, setState] = useState(true);
   return (
-    <View style={{ marginTop: 30 }}>
-      <View style={{ height: 300 }}>
+    <View style={styles.marginTop}>
+      <View style={styles.height}>
         <View
-          style={{ flexDirection: state ? 'row' : 'column', borderWidth: 1 }}>
+          style={[{ flexDirection: state ? 'row' : 'column' }, styles.border]}>
           <Box key="a" label="A" state={state} />
           <Box key="b" label="B" state={state} />
           <Box key="c" label="C" state={state} />
@@ -77,6 +77,12 @@ export default function CustomLayoutAnimationScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  marginTop: {
+    marginTop: 30,
+  },
+  height: {
+    height: 300,
+  },
   box: {
     margin: 20,
     padding: 5,
@@ -84,5 +90,8 @@ const styles = StyleSheet.create({
     borderColor: 'black',
     width: 60,
     height: 60,
+  },
+  border: {
+    borderWidth: 1,
   },
 });
