@@ -316,6 +316,11 @@ export default function createAnimatedComponent(
       this._attachNativeEvents();
       this._attachAnimatedStyles();
       this._attachInlineProps();
+
+      if (isWeb()) {
+        this.insertWebAnimations();
+        this.handleEnteringAnimationsWeb();
+      }
     }
 
     _getEventViewRef() {
@@ -745,21 +750,46 @@ export default function createAnimatedComponent(
       return props;
     }
 
-    handleEnteringAnimationsWeb(props: any): void {
-      if (!props.entering) {
-        return;
-      }
-      const animationName = props.entering.name as AnimationsTypes;
-
-      if (!animationName) {
+    handleEnteringAnimationsWeb(): void {
+      const entering = this.props.entering;
+      if (!entering) {
         return;
       }
 
-      props.style = {
-        ...(props.style ?? {}),
-        transition: `margin ${Animations[animationName].duration}s`,
-        animation: `${animationName} ${Animations[animationName].duration}s ease-out`,
-      };
+      const animationName =
+        typeof entering === 'function'
+          ? (entering.name as AnimationsTypes)
+          : (entering.constructor.name as AnimationsTypes);
+
+      // Prevents crashes if animationName doesn't exist in Animation
+      if (!Object.prototype.hasOwnProperty.call(Animations, animationName)) {
+        return;
+      }
+
+      const delay = Object.prototype.hasOwnProperty.call(entering, 'delayV')
+        ? // @ts-ignore already checked if property exists
+          entering.delayV
+        : 0;
+
+      const element = findNodeHandle(this) as unknown as HTMLElement;
+
+      element.style.visibility = 'hidden';
+      element.style.position = 'absolute';
+
+      if (delay === 0) {
+        element.style.visibility = 'visible';
+        element.style.position = 'initial';
+      } else {
+        setTimeout(() => {
+          element.style.visibility = 'visible';
+          element.style.position = 'initial';
+        }, delay);
+      }
+
+      element.style.transition = `margin ${Animations[animationName].duration}s`;
+      element.style.animationName = animationName;
+      element.style.animationDuration = `${Animations[animationName].duration}s`;
+      element.style.animationDelay = `${delay / 1000}s`;
     }
 
     handleExitingAnimationsWeb(): void {
@@ -778,6 +808,10 @@ export default function createAnimatedComponent(
           ? (exiting.name as AnimationsTypes)
           : (exiting.constructor.name as AnimationsTypes);
 
+      if (!Object.prototype.hasOwnProperty.call(Animations, animationName)) {
+        return;
+      }
+
       tmpElement.style.transition = `margin ${Animations[animationName].duration}s`;
       tmpElement.style.animationName = animationName;
       tmpElement.style.animationDuration = `${Animations[animationName].duration}s`;
@@ -793,7 +827,6 @@ export default function createAnimatedComponent(
     }
 
     insertWebAnimations(): void {
-      // If style element already exists, we don't have to append it one more time
       if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
         return;
       }
@@ -815,11 +848,6 @@ export default function createAnimatedComponent(
 
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
-      }
-
-      if (isWeb()) {
-        this.insertWebAnimations();
-        this.handleEnteringAnimationsWeb(props);
       }
 
       if (this._isFirstRender) {
