@@ -84,7 +84,6 @@ export default function AnimatedStyleUpdateExample(): React.ReactElement {
       'worklet';
       foo();
     });
-    // TODO: fix missing stack trace - inject evalWithSourceMap
   };
 
   const handlePress7 = () => {
