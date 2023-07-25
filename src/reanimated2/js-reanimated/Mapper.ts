@@ -3,6 +3,7 @@ import { shouldBeUseWeb } from '../PlatformChecker';
 import type { JSReanimated } from './commonTypes';
 import MutableValue from './MutableValue';
 
+// ts-prune-ignore-next
 export default class Mapper<T> {
   static MAPPER_ID = 1;
   id: number;
