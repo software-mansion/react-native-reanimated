@@ -1,4 +1,4 @@
-import { defineAnimation, shouldReduceMotion } from './util';
+import { defineAnimation, getReduceMotionForConfig } from './util';
 import type {
   NextAnimation,
   ReducedMotionConfig,
@@ -126,7 +126,7 @@ export function withSequence(
         animationIndex: 0,
         current: animations[0].current,
         callback,
-        reduceMotion: shouldReduceMotion(reduceMotion),
+        reduceMotion: getReduceMotionForConfig(reduceMotion),
       } as SequenceAnimation;
     }
   );
