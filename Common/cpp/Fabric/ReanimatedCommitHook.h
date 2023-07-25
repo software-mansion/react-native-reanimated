@@ -17,7 +17,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
       const std::shared_ptr<PropsRegistry> &propsRegistry,
       const std::shared_ptr<UIManager> &uiManager);
 
-  ~ReanimatedCommitHook() noexcept;
+  ~ReanimatedCommitHook() noexcept override;
 
   void commitHookWasRegistered(UIManager const &) const noexcept override {}
 
