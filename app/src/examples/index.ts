@@ -27,6 +27,7 @@ import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
@@ -92,6 +93,7 @@ import VolumeExample from './VolumeExample';
 import MatrixTransform from './MatrixTransform';
 import PendulumExample from './PendulumExample';
 import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
+import BabelVersionCheckExample from './BabelVersionCheckExample';
 
 interface Example {
   icon?: string;
@@ -252,6 +254,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useScrollViewOffset',
     screen: ScrollViewOffsetExample,
   },
+  DispatchCommandExample: {
+    icon: '🫡',
+    title: 'Dispatch command',
+    screen: DispatchCommandExample,
+  },
   MeasureExample: {
     icon: '📐',
     title: 'measure',
@@ -261,6 +268,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧵',
     title: 'runOnJS / runOnUI',
     screen: WorkletExample,
+  },
+  BabelVersionCheckExample: {
+    icon: '📦',
+    title: 'Babel version check',
+    screen: BabelVersionCheckExample,
   },
   TransformExample: {
     icon: '🔄',

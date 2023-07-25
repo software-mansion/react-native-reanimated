@@ -38,6 +38,12 @@
 - (void *)runtime;
 @end
 
+@interface RCTUIManager (DispatchCommand)
+- (void)dispatchViewManagerCommand:(nonnull NSNumber *)reactTag
+                         commandID:(id /*(NSString or NSNumber) */)commandID
+                       commandArgs:(NSArray<id> *)commandArgs;
+@end
+
 namespace reanimated {
 
 using namespace facebook;
@@ -123,6 +129,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
     scrollTo(viewTag, uiManager, x, y, animated);
   };
+
+  auto dispatchCommandFunction =
+      [uiManager](
+          jsi::Runtime &rt, const int tag, const jsi::Value &commandNameValue, const jsi::Value &argsValue) -> void {
+    NSNumber *viewTag = [NSNumber numberWithInt:tag];
+    NSString *commandID = [NSString stringWithCString:commandNameValue.asString(rt).utf8(rt).c_str()
+                                             encoding:[NSString defaultCStringEncoding]];
+    NSArray *commandArgs = convertJSIArrayToNSArray(rt, argsValue.asObject(rt).asArray(rt));
+    RCTExecuteOnUIManagerQueue(^{
+      [uiManager dispatchViewManagerCommand:viewTag commandID:commandID commandArgs:commandArgs];
+    });
+  };
+
 #endif
 
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
@@ -252,6 +271,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 #else
       updatePropsFunction,
       scrollToFunction,
+      dispatchCommandFunction,
       measureFunction,
       configurePropsFunction,
 #endif

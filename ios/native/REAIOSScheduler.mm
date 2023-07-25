@@ -25,7 +25,7 @@ void REAIOSScheduler::scheduleOnUI(std::function<void()> job)
 
   Scheduler::scheduleOnUI(job);
 
-  if (!this->scheduledOnUI) {
+  if (!scheduledOnUI_) {
     __block std::weak_ptr<RuntimeManager> blockRuntimeManager = weakRuntimeManager_;
 
     dispatch_async(dispatch_get_main_queue(), ^{
