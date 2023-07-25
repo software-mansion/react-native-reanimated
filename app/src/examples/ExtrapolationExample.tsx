@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import Animated, {
   useAnimatedGestureHandler,
@@ -84,14 +84,14 @@ export default function ExtrapolationExample(): React.ReactElement {
   }));
 
   return (
-    <View>
+    <>
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View style={[styles.circle, styles.topCircle, stylez]} />
       </PanGestureHandler>
       <Animated.View style={[styles.circle, button1Style]} />
       <Animated.View style={[styles.circle, button2Style]} />
       <Animated.View style={[styles.circle, button3Style]} />
-    </View>
+    </>
   );
 }
 
