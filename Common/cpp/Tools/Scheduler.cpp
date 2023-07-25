@@ -10,7 +10,7 @@
 namespace reanimated {
 
 void Scheduler::scheduleOnUI(std::function<void()> job) {
-  uiJobs.push(std::move(job));
+  uiJobs_.push(std::move(job));
 }
 
 void Scheduler::scheduleOnJS(std::function<void()> job) {
@@ -18,17 +18,18 @@ void Scheduler::scheduleOnJS(std::function<void()> job) {
 }
 
 void Scheduler::triggerUI() {
-  scheduledOnUI = false;
+  scheduledOnUI_ = false;
 #if JS_RUNTIME_HERMES
   // JSI's scope defined here allows for JSI-objects to be cleared up after
   // each runtime loop. Within these loops we typically create some temporary
   // JSI objects and hence it allows for such objects to be garbage collected
   // much sooner.
   // Apparently the scope API is only supported on Hermes at the moment.
-  auto scope = jsi::Scope(*weakRuntimeManager_.lock()->runtime);
+  const auto runtimeManager = weakRuntimeManager_.lock();
+  const auto scope = jsi::Scope(*runtimeManager->runtime);
 #endif
-  while (uiJobs.getSize()) {
-    auto job = uiJobs.pop();
+  while (uiJobs_.getSize()) {
+    const auto job = uiJobs_.pop();
     job();
   }
 }
@@ -44,9 +45,5 @@ void Scheduler::setRuntimeManager(
 }
 
 Scheduler::~Scheduler() {}
-
-Scheduler::Scheduler() {
-  this->scheduledOnUI = false;
-}
 
 } // namespace reanimated

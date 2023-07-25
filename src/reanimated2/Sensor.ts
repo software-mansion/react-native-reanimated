@@ -33,7 +33,7 @@ function initSensorData(
   }
 }
 
-export default class Sensor<T> {
+export default class Sensor {
   public listenersNumber = 0;
   private sensorId: number | null = null;
   private sensorType: SensorType;
@@ -47,7 +47,7 @@ export default class Sensor<T> {
   }
 
   register(
-    eventHandler: ShareableRef<T> | ((data: Value3D | ValueRotation) => void)
+    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ) {
     const config = this.config;
     const sensorType = this.sensorType;
