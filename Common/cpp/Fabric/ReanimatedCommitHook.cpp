@@ -8,6 +8,16 @@
 using namespace facebook::react;
 
 namespace reanimated {
+ReanimatedCommitHook::ReanimatedCommitHook(
+    const std::shared_ptr<PropsRegistry> &propsRegistry,
+    const std::shared_ptr<UIManager> &uiManager)
+    : propsRegistry_(propsRegistry), uiManager_(uiManager) {
+  uiManager_->registerCommitHook(*this);
+}
+
+ReanimatedCommitHook::~ReanimatedCommitHook() {
+  uiManager_->unregisterCommitHook(*this);
+}
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
