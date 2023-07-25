@@ -15,7 +15,7 @@ ReanimatedCommitHook::ReanimatedCommitHook(
   uiManager_->registerCommitHook(*this);
 }
 
-ReanimatedCommitHook::~ReanimatedCommitHook() {
+ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
