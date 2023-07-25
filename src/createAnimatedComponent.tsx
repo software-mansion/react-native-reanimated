@@ -746,32 +746,20 @@ export default function createAnimatedComponent(
     }
 
     handleEnteringAnimationsWeb(props: any): void {
-      if (props.entering) {
-        const animationName = props.entering.name as AnimationsTypes;
-
-        if (!animationName) {
-          return;
-        }
-
-        props.style = {
-          ...(props.style ?? {}),
-          transition: `margin ${Animations[animationName].duration}s`,
-          animation: `${animationName} ${Animations[animationName].duration}s ease-out`,
-        };
+      if (!props.entering) {
+        return;
       }
+      const animationName = props.entering.name as AnimationsTypes;
 
-      if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
+      if (!animationName) {
         return;
       }
 
-      const style = document.createElement('style');
-      style.id = WEB_ANIMATIONS_ID;
-
-      document.head.appendChild(style);
-
-      for (const property in Animations) {
-        style.sheet?.insertRule(Animations[property as AnimationsTypes].style);
-      }
+      props.style = {
+        ...(props.style ?? {}),
+        transition: `margin ${Animations[animationName].duration}s`,
+        animation: `${animationName} ${Animations[animationName].duration}s ease-out`,
+      };
     }
 
     handleExitingAnimationsWeb(): void {
@@ -781,37 +769,56 @@ export default function createAnimatedComponent(
         return;
       }
 
-      const viewTag = findNodeHandle(this) as unknown as HTMLElement;
-      console.log(viewTag);
-
-      const parent = viewTag.parentElement;
-      console.log(parent);
-      const clone = viewTag.cloneNode(true) as HTMLElement;
+      const element = findNodeHandle(this) as unknown as HTMLElement;
+      const parent = element.parentElement;
+      const tmpElement = element.cloneNode(true) as HTMLElement;
 
       const animationName =
         typeof exiting === 'function'
           ? (exiting.name as AnimationsTypes)
           : (exiting.constructor.name as AnimationsTypes);
 
-      clone.style.transition = `margin ${Animations[animationName].duration}s`;
-      clone.style.animationName = animationName;
-      clone.style.animationDuration = `${Animations[animationName].duration}s`;
-      clone.style.animationFillMode = 'forwards';
+      tmpElement.style.transition = `margin ${Animations[animationName].duration}s`;
+      tmpElement.style.animationName = animationName;
+      tmpElement.style.animationDuration = `${Animations[animationName].duration}s`;
+      tmpElement.style.animationFillMode = 'forwards'; // Prevents returning to base state after animation finishes
 
-      parent!.appendChild(clone);
+      parent?.appendChild(tmpElement);
+
+      const animationTimeMs = Animations[animationName].duration * 1000;
 
       setTimeout(() => {
-        parent?.removeChild(clone);
-      }, Animations[animationName].duration * 1000);
+        parent?.removeChild(tmpElement);
+      }, animationTimeMs);
+    }
+
+    insertWebAnimations(): void {
+      // If style element already exists, we don't have to append it one more time
+      if (document.getElementById(WEB_ANIMATIONS_ID) !== null) {
+        return;
+      }
+
+      const style = document.createElement('style');
+      style.id = WEB_ANIMATIONS_ID;
+
+      document.head.appendChild(style);
+
+      for (const animationName in Animations) {
+        style.sheet?.insertRule(
+          Animations[animationName as AnimationsTypes].style
+        );
+      }
     }
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
       }
 
       if (isWeb()) {
+        this.insertWebAnimations();
         this.handleEnteringAnimationsWeb(props);
       }
 
