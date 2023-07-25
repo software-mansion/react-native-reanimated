@@ -1,4 +1,4 @@
-import { defineAnimation, getReduceMotionForConfig } from './util';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   Timestamp,
@@ -96,7 +96,7 @@ export const withDelay = function <T extends AnimationObject>(
         previousAnimation: null,
         startTime: 0,
         started: false,
-        reduceMotion: getReduceMotionForConfig(reduceMotion),
+        reduceMotion: getReduceMotionForAnimation(reduceMotion),
       };
     }
   );

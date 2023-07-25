@@ -1,4 +1,4 @@
-import { defineAnimation, getReduceMotionForConfig } from './util';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -118,7 +118,7 @@ export const withRepeat = function <T extends AnimationObject>(
         current: nextAnimation.current,
         callback: repCallback,
         startValue: 0,
-        reduceMotion: getReduceMotionForConfig(reduceMotion),
+        reduceMotion: getReduceMotionForAnimation(reduceMotion),
       };
     }
   );

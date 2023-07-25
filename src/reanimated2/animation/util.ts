@@ -80,20 +80,26 @@ function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
  * Returns the value that should be assigned to `animation.reduceMotion`
  * for a given config. If the config is not defined, `undefined` is returned.
  */
-export function getReduceMotionForConfig(config?: ReducedMotionConfig) {
+export function getReduceMotionForAnimation(config?: ReducedMotionConfig) {
   'worklet';
   // if the config is not defined, we want `reduceMotion` to be undefined,
   // so the parent animation knows if it should overwrite it
-  if (!config) {
+  if (config === undefined) {
     return undefined;
   }
 
-  return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
+  return getReduceMotionFromConfig(config);
 }
 
-function getDefaultReduceMotion() {
+/**
+ * Returns whether the motion should be reduced for a specified config.
+ * By default returns the system setting.
+ */
+export function getReduceMotionFromConfig(
+  config: ReducedMotionConfig = 'system'
+) {
   'worklet';
-  return getReduceMotionForConfig('system');
+  return config === 'system' ? IS_REDUCED_MOTION : config === 'always';
 }
 
 function applyProgressToMatrix(
@@ -125,7 +131,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       previousAnimation: Animation<AnimationObject>
     ) => {
       if (animation.reduceMotion === undefined) {
-        animation.reduceMotion = getDefaultReduceMotion();
+        animation.reduceMotion = getReduceMotionFromConfig();
       }
       return baseOnStart(animation, value, timestamp, previousAnimation);
     };
@@ -419,7 +425,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     previousAnimation: Animation<AnimationObject>
   ) => {
     if (animation.reduceMotion === undefined) {
-      animation.reduceMotion = getDefaultReduceMotion();
+      animation.reduceMotion = getReduceMotionFromConfig();
     }
     if (animation.reduceMotion) {
       if (animation.toValue !== undefined) {

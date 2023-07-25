@@ -1,4 +1,4 @@
-import { defineAnimation, getReduceMotionForConfig } from './util';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -205,7 +205,7 @@ export const withDecay = function (
       current: 0,
       lastTimestamp: 0,
       startTimestamp: 0,
-      reduceMotion: getReduceMotionForConfig(config.reduceMotion),
+      reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as DecayAnimation;
   });
 } as unknown as withDecayType;

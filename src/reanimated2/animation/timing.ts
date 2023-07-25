@@ -1,6 +1,6 @@
 import type { EasingFn, EasingFactoryFn } from '../Easing';
 import { Easing } from '../Easing';
-import { defineAnimation, getReduceMotionForConfig } from './util';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
   Animation,
   AnimationCallback,
@@ -116,7 +116,7 @@ export const withTiming = function (
       easing: () => 0,
       current: toValue,
       callback,
-      reduceMotion: getReduceMotionForConfig(userConfig?.reduceMotion),
+      reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
     } as TimingAnimation;
   });
 } as withTimingType;
