@@ -20,7 +20,6 @@ import {
 const duration = 2000;
 const toValue = 100;
 const initialValue = -100;
-let exampleNumber = 0;
 
 const SIMPLE_EXAMPLES = [
   { animation: withTiming(toValue, { duration }), text: 'withTiming' },
@@ -87,29 +86,27 @@ const CONFIG_EXAMPLES = [
 const EXAMPLES = [
   {
     title: 'Simple',
-    component: (
-      <>
-        <HookExample />
-        {mapExamples(SIMPLE_EXAMPLES)}
-      </>
-    ),
+    component: <HookExample />,
+    exampleList: SIMPLE_EXAMPLES,
   },
   {
     title: 'Repeat',
-    component: mapExamples(REPEAT_EXAMPLES),
+    exampleList: REPEAT_EXAMPLES,
   },
   {
     title: 'Decay',
     component: <DecayExample />,
+    exampleList: [],
   },
   {
     title: 'Config',
-    component: mapExamples(CONFIG_EXAMPLES),
+    exampleList: CONFIG_EXAMPLES,
   },
 ];
 
 export default function ReducedMotionExample() {
   const [currentExample, setCurrentExample] = useState(0);
+  const { component, exampleList } = EXAMPLES[currentExample];
 
   return (
     <View style={styles.container}>
@@ -120,7 +117,18 @@ export default function ReducedMotionExample() {
           title={example.title}
         />
       ))}
-      {EXAMPLES[currentExample].component}
+      {component}
+      <View key={currentExample}>
+        {exampleList.map((example, i) => {
+          return (
+            <Example
+              key={i}
+              animation={example.animation}
+              text={example.text}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -141,23 +149,6 @@ function HookExample() {
     <Animated.View style={[styles.box, animatedStyle]}>
       <Text style={styles.text}>useReducedMotion</Text>
     </Animated.View>
-  );
-}
-
-function mapExamples(
-  examples: {
-    animation: number;
-    text: string;
-  }[]
-) {
-  return (
-    <View key={exampleNumber++}>
-      {examples.map((example, i) => {
-        return (
-          <Example key={i} animation={example.animation} text={example.text} />
-        );
-      })}
-    </View>
   );
 }
 
