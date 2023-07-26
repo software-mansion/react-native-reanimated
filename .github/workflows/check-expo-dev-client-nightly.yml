@@ -1,0 +1,64 @@
+name: Check Expo dev-client nightly build
+on:
+  pull_request:
+    paths:
+      - .github/workflows/check-expo-dev-client-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    runs-on: macos-12
+    strategy:
+      matrix:
+        react-native-architecture: ['Paper', 'Fabric']
+      fail-fast: false
+    concurrency:
+      group: ios-expo-dev-client-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Create Expo app
+        run: npx create-expo-app app
+      - name: Install expo-dev-client
+        working-directory: app
+        run: npx expo install expo-dev-client
+      - name: Install Reanimated
+        working-directory: app
+        run: npm install github:software-mansion/react-native-reanimated
+      - name: Install Paper Pods
+        if: ${{ matrix.react-native-architecture == 'Paper' }}
+        working-directory: app/ios
+        run: pod install
+      - name: Install Fabric Pods
+        if: ${{ matrix.react-native-architecture == 'Fabric' }}
+        working-directory: app/ios
+        run: export RCT_NEW_ARCH_ENABLED=1 && pod install
+      - name: Build app
+        working-directory: app
+        run: npx expo run:ios
+  build_android:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        react-native-architecture: ['Paper', 'Fabric']
+      fail-fast: false
+    concurrency:
+      group: android-expo-dev-client-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Create Expo app
+        run: npx create-expo-app app
+      - name: Install expo-dev-client
+        working-directory: app
+        run: npx expo install expo-dev-client
+      - name: Install Reanimated
+        working-directory: app
+        run: npm install github:software-mansion/react-native-reanimated
+      - name: Install Fabric Pods
+        if: ${{ matrix.react-native-architecture == 'Fabric' }}
+        working-directory: app/android
+        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
+      - name: Build app
+        working-directory: app
+        run: npx expo run:android
