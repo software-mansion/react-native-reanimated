@@ -1,85 +1,103 @@
-import React, { useEffect, useState } from 'react';
 import Animated, {
-  useSharedValue,
-  useAnimatedProps,
   Easing,
-  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import LottieView from 'lottie-react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 
-export function useStartupAnimation() {
-  const [hasLoadingFinished, setHasLoadingFinished] = useState<boolean>(false);
-  const [hasEntryAnimationFinished, setHasEntryAnimationFinished] =
-    useState<boolean>(false);
-  const [hasExitAnimationFinished, setHasExitAnimationFinished] =
-    useState<boolean>(false);
+import React from 'react';
 
-  const isUnmounting = hasLoadingFinished && hasEntryAnimationFinished;
+const { width, height } = Dimensions.get('window');
 
-  const animationProgressController = useSharedValue(0);
+function getRandomWidth() {
+  return Math.random() * width;
+}
 
-  const animatedProps = useAnimatedProps(() => ({
-    progress: animationProgressController.value,
-  }));
+function getRandomHeight() {
+  return Math.random() * height;
+}
 
-  useEffect(() => {
-    setTimeout(() => {
-      setHasLoadingFinished(true);
-    }, 10_000);
+function getRandomHue() {
+  return 100 + Math.random() * 100;
+}
+
+function getRandomPositionDiff() {
+  return -100 + Math.random() * 200;
+}
+
+function getRandomHueDiff() {
+  return Math.random() * 100;
+}
+
+function Circle() {
+  const left = useSharedValue(getRandomWidth());
+  const top = useSharedValue(getRandomHeight());
+  const hue = useSharedValue(getRandomHue());
+
+  const duration = 2000 + Math.random() * 1000;
+  const power = Math.random();
+  const config = { duration, easing: Easing.linear };
+
+  const update = () => {
+    left.value = withTiming(left.value + getRandomPositionDiff(), config);
+    top.value = withTiming(top.value + getRandomPositionDiff(), config);
+    hue.value = withTiming(hue.value + getRandomHueDiff(), config);
+  };
+
+  React.useEffect(() => {
+    update();
+    const id = setInterval(update, duration);
+    return () => clearInterval(id);
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const size = 100 + power * 250;
+    return {
+      backgroundColor: `hsl(${hue.value}, 100%, 50%)`,
+      width: size,
+      height: size,
+      top: top.value - size / 2,
+      left: left.value - size / 2,
+      opacity: 0.1 + (1 - power) * 0.1,
+    };
   }, []);
 
-  useEffect(() => {
-    if (hasExitAnimationFinished) {
-      console.log('FINISHED ANIMATION');
-    }
-  }, [hasExitAnimationFinished]);
-
-  useEffect(() => {
-    animationProgressController.value = withTiming(
-      0.61,
-      {
-        duration: 1500,
-        easing: Easing.linear,
-      },
-      (hasFinished) =>
-        hasFinished && runOnJS(setHasEntryAnimationFinished)(hasFinished)
-    );
-  }, [animationProgressController, setHasEntryAnimationFinished]);
-
-  useEffect(() => {
-    if (isUnmounting) {
-      animationProgressController.value = withTiming(
-        1,
-        {
-          duration: 750,
-          easing: Easing.linear,
-        },
-        (hasFinished) =>
-          hasFinished && runOnJS(setHasExitAnimationFinished)(hasFinished)
-      );
-    }
-  }, [animationProgressController, isUnmounting, setHasExitAnimationFinished]);
-
-  return {
-    animatedProps,
-    isUnmounting,
-    setHasEntryAnimationFinished,
-  };
+  return <Animated.View style={[styles.bokeh, animatedStyle]} />;
 }
 
-const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
+interface BokehProps {
+  count: number;
+}
 
-export default function App() {
-  const { animatedProps } = useStartupAnimation();
-
+function Bokeh({ count }: BokehProps) {
   return (
-    <AnimatedLottieView
-      animatedProps={animatedProps}
-      source={require('./assets/LottieLogo1.json')}
-      resizeMode={'cover'}
-      autoPlay={false}
-      loop={false}
-    />
+    <>
+      {[...Array(count)].map((_, i) => (
+        <Circle key={i} />
+      ))}
+    </>
   );
 }
+
+export default function BokehExample() {
+  return (
+    <View style={styles.container}>
+      <Bokeh count={100} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'black',
+    overflow: 'hidden',
+  },
+  bokeh: {
+    position: 'absolute',
+    borderRadius: 9999,
+  },
+});
