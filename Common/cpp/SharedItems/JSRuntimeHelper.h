@@ -18,7 +18,7 @@ namespace reanimated {
 class JSRuntimeHelper;
 
 // Core functions are not allowed to capture outside variables, otherwise they'd
-// try to access __closure variable which is something we want to avoid for
+// try to access `__closure` variable which is something we want to avoid for
 // simplicity reasons.
 class CoreFunction {
  private:
