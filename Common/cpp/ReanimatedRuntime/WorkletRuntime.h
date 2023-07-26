@@ -2,12 +2,13 @@
 
 #include <hermes/hermes.h>
 #include <jsi/jsi.h>
-#include <thread>
 
 #include "Shareables.h"
 
 #include <memory>
 #include <string>
+#include <thread>
+#include <utility>
 #include <vector>
 
 using namespace facebook;
@@ -29,6 +30,16 @@ class WorkletRuntime : public jsi::HostObject {
     return runtime_;
   }
 
+  template <typename... Args>
+  inline void runGuarded(
+      const std::shared_ptr<ShareableWorklet> &shareableWorklet,
+      Args &&...args) {
+    runOnRuntimeGuarded(
+        *runtime_,
+        shareableWorklet->getJSValue(*runtime_),
+        std::forward<Args>(args)...);
+  }
+
   std::string toString() const {
     return "<WorkletRuntime \"" + name_ + "\">";
   }
@@ -38,12 +49,10 @@ class WorkletRuntime : public jsi::HostObject {
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 };
 
-std::shared_ptr<jsi::Runtime> runtimeFromValue(
+// This function needs to be non-inline to avoid problems with dynamic_cast on
+// Android
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &value);
-// this function extracts the underlying runtime from
-// jsi::HostObject<WorkletRuntime> this function is meant to be called on the
-// main RN runtime this function needs to be non-inline to avoid problems with
-// dynamic_cast on Android
 
 } // namespace reanimated

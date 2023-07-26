@@ -51,10 +51,10 @@ std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
   return result;
 }
 
-std::shared_ptr<jsi::Runtime> runtimeFromValue(
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &value) {
-  return value.getObject(rt).getHostObject<WorkletRuntime>(rt)->getRuntime();
+  return value.getObject(rt).getHostObject<WorkletRuntime>(rt);
 }
 
 } // namespace reanimated

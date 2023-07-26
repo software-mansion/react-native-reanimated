@@ -20,6 +20,7 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt);
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // DEBUG
 
+// If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
 inline void runOnRuntimeGuarded(
     jsi::Runtime &rt,

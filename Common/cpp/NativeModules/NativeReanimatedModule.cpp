@@ -184,15 +184,13 @@ NativeReanimatedModule::~NativeReanimatedModule() {
 void NativeReanimatedModule::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
-  auto shareableWorklet = extractShareableOrThrow(rt, worklet);
+  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "only worklets can be scheduled to run on UI");
   assert(
       shareableWorklet->valueType() == Shareable::WorkletType &&
       "only worklets can be scheduled to run on UI");
-  uiScheduler_->scheduleOnUI([=] {
-    jsi::Runtime &uiRuntime = *uiWorkletRuntime_->getRuntime();
-    auto workletValue = shareableWorklet->getJSValue(uiRuntime);
-    runOnRuntimeGuarded(uiRuntime, workletValue);
-  });
+  uiScheduler_->scheduleOnUI(
+      [=] { uiWorkletRuntime_->runGuarded(shareableWorklet); });
 }
 
 void NativeReanimatedModule::scheduleOnJS(
@@ -662,13 +660,12 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent) {
-  auto shareableHandler = extractShareableOrThrow(rt, handlerWorklet);
+  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
+      rt, handlerWorklet, "keyboard event handler must be a worklet");
   return subscribeForKeyboardEventsFunction(
       [=](int keyboardState, int height) {
-        jsi::Runtime &rt = *uiWorkletRuntime_->getRuntime();
-        auto handler = shareableHandler->getJSValue(rt);
-        runOnRuntimeGuarded(
-            rt, handler, jsi::Value(keyboardState), jsi::Value(height));
+        uiWorkletRuntime_->runGuarded(
+            shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool());
 }

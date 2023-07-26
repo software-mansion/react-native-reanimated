@@ -23,7 +23,8 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const jsi::Value &sensorDataHandler) {
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
-  auto shareableHandler = extractShareableOrThrow(rt, sensorDataHandler);
+  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
+      rt, sensorDataHandler, "sensor event handler must be a worklet");
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType,
@@ -64,8 +65,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
         value.setProperty(
             uiRuntime, "interfaceOrientation", orientationDegrees);
 
-        auto handler = shareableHandler->getJSValue(uiRuntime);
-        runOnRuntimeGuarded(uiRuntime, handler, value);
+        uiWorkletRuntime->runGuarded(shareableHandler, value);
       });
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);
