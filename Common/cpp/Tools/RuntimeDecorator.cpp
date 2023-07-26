@@ -22,18 +22,6 @@ static const std::function<void(jsi::Runtime &, jsi::Value const &)> logValue =
       }
     };
 
-std::unordered_map<RuntimePointer, RuntimeType>
-    &RuntimeDecorator::runtimeRegistry() {
-  static std::unordered_map<RuntimePointer, RuntimeType> runtimeRegistry;
-  return runtimeRegistry;
-}
-
-void RuntimeDecorator::registerRuntime(
-    jsi::Runtime *runtime,
-    RuntimeType runtimeType) {
-  runtimeRegistry().insert({runtime, runtimeType});
-}
-
 void RuntimeDecorator::decorateRuntime(
     jsi::Runtime &rt,
     const std::string &label) {
